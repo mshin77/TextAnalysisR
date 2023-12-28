@@ -1,0 +1,10 @@
+^TextAnalysisR\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^\.github$
+^codecov\.yml$
+^pkgdown$
+^CRAN-SUBMISSION$

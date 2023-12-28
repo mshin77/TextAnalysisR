@@ -1,0 +1,119 @@
+---
+title: "Text-Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Text-Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+library(TextAnalysisR)
+```
+
+The `TextAnalysisR` package provides a supporting workflow for text mining analysis. The `TextAnalysisR.app()` function allows users to launch and browse a Shiny app. This web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph' as well as 'widyr' (network analysis). 'tidytext' was implemented to tidy non-tidy format objects.
+
+## Installation
+
+The development version from [GitHub](https://github.com/mshin77/TextAnalysisR) with:
+
+```{r, message=FALSE, eval=FALSE}
+install.packages("devtools")
+devtools::install_github("mshin77/TextAnalysisR")
+```
+
+## Browse the interative Shiny app
+
+Launch and browse the TextAnalysisR app:
+
+```{r, message=FALSE, eval=FALSE}
+library(TextAnalysisR)
+TextAnalysisR.app()
+```
+
+### Preprocess Text Data
+
+Preprocess text data using the `preprocess_texts` function:
+
+```{r, message=FALSE, eval=FALSE}
+data <- TextAnalysisR::SpecialEduTech 
+
+# Preprocess text data
+preprocessed_data <- preprocess_texts(data, text_field = "united_texts")
+```
+
+### Plot Word Frequency
+
+Use the `plot_word_frequency` function to plot word frequency results:
+
+```{r, message=FALSE, eval=FALSE}
+# data is a document-feature matrix (dfm) object through the quanteda package.
+
+# Plot word frequency for the top 20 terms
+word_freq_plot <- plot_word_frequency(data, n = 20)
+print(word_freq_plot)
+```
+
+### Extract Frequently Observed Words
+
+Use the `extract_frequent_word` function to extract frequently observed top words:
+
+```{r, message=FALSE, eval=FALSE}
+# data is a document-feature matrix (dfm) object through the quanteda package.
+
+# Extract the top 20 frequent words
+top_words <- extract_frequent_word(data, n = 20)
+print(top_words)
+```
+
+### Plot Topic-Term Probabilities
+
+Use the `plot_topic_term` function to visualize topic-term probabilities:
+
+```{r, message=FALSE, eval=FALSE}
+# data is a tidy data frame that includes term (word)-topic probabilities.
+
+# Plot topic-term probabilities for the top 10 terms
+topic_term_plot <- plot_topic_term(data, top_n = 10)
+print(topic_term_plot)
+```
+
+### Examine Highest Word Probabilities
+
+Use the `examine_top_terms` function to examine the highest word probabilities for each topic:
+
+```{r, message=FALSE, eval=FALSE}
+# data is a tidy data frame that includes term (word)-topic probabilities.
+
+# Examine the top 5 terms with the highest term-topic probabilities
+top_terms <- examine_top_terms(data, top_n = 5)
+print(top_terms)
+```
+
+### Plot Topic Probability
+
+Visualize document-topic probabilities using the `plot_topic_probability` function:
+
+```{r, message=FALSE, eval=FALSE}
+# data is a tidy data frame that includes document-topic probabilities.
+
+# Plot document-topic probabilities for the top 15 topics
+topic_prob_plot <- plot_topic_probability(data, top_n = 15)
+print(topic_prob_plot)
+```
+
+### Plot Topic Probability Table
+
+Create a table of document-topic probabilities using the `plot_topic_probability_table` function:
+
+```{r, message=FALSE, eval=FALSE}
+# data is a tidy data frame that includes document-topic probabilities.
+
+# Create a table of document-topic probabilities for the top 15 topics
+topic_prob_table <- plot_topic_probability_table(gamma_td, top_n = 15)
+print(topic_prob_table)
+```
+
+
+
+
