@@ -1,28 +1,22 @@
 
-
 suppressPackageStartupMessages({
-    library(dplyr)
-    library(ggplot2)
-    library(quanteda)
-    library(shiny)
-    library(stm)
-    library(tidyr)
-    library(tidytext)
-    library(ggraph)
-    library(widyr)
-    library(markdown)
+  library(dplyr)
+  library(ggplot2)
+  library(quanteda)
+  library(shiny)
+  library(stm)
+  library(tidyr)
+  library(tidytext)
+  library(ggraph)
+  library(widyr)
+  library(markdown)
+  library(TextAnalysisR)
 })
 
-load("source/dictionary_list_1.rda")
-load("source/dictionary_list_2.rda")
-load("source/SpecialEduTech.rda")
-load("source/stopwords_list.rda")
-source("source/text_mining_functions.R")
+Sys.setlocale(category = "LC_ALL", locale = "en_US.UTF-8")
 
 server <- shinyServer(function(input, output, session) {
-
-  Sys.setlocale(category = "LC_ALL", locale = "en_US.UTF-8")
-
+  
     observe({
         if (input$dataset_choice == "SpecialEduTech") {
             shinyjs::disable("file")
@@ -47,7 +41,6 @@ server <- shinyServer(function(input, output, session) {
         }
         return(data)
     })
-
 
     output$data_table <-
         DT::renderDataTable(mydata(), rownames = FALSE)
