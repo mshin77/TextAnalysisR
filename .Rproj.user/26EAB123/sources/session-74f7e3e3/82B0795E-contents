@@ -1,0 +1,154 @@
+# LAB 44: CREATE AN R PACKAGE STEPS ----
+
+# RESOURCES:
+# - R PACKAGES: https://r-pkgs.org/index.html
+
+# LIBRARIES FOR SETUP ----
+library(usethis)
+library(available)
+library(devtools)
+library(pkgdown)
+library(tidyverse)
+
+# 1.0 CHECK IF PACKAGE IS AVAILABLE ----
+# - DO THIS IF GOING ON CRAN (PUBLIC)
+# - NOT REQUIRED FOR PRIVATE
+available::available("TextAnalysisR")
+
+# * Create package ----
+usethis::create_package("../TextAnalysisR")
+
+# 2.0 SETTING THE PACKAGE UP ----
+
+# * Setup git
+usethis::use_git()
+
+# * Code Repository ----
+# - Requires setup of GH Auth Token: browse_github_token()
+# - Refresh your R Session once you update your '.Renviron'
+usethis::use_github()
+
+# * Basic Package Setup ----
+usethis::use_roxygen_md()
+usethis::use_gpl3_license()
+usethis::use_readme_rmd()
+usethis::use_news_md()
+usethis::use_vignette("getting-started", title = "Getting Started with HR Churn")
+
+# * Development ----
+usethis::use_pipe()
+usethis::use_tidy_eval()
+usethis::use_tibble()
+
+# * Create a Function ----
+usethis::use_r("text_mining_functions.R")
+
+# * Sample Data ----
+# - For testing/documentation purposes
+Acronym <- readr::read_csv("d")
+
+usethis::use_data()
+
+# * Tests ----
+usethis::use_testthat()
+usethis::use_test("TextAnalysisR")
+
+# * Pkgdown Website ----
+usethis::use_pkgdown()
+
+# * Continuous Integration ----
+usethis::use_github_action()
+# usethis::use_travis()
+# usethis::use_jenkins()
+
+
+
+usethis::use_github_action()
+
+usethis::use_coverage("codecov")
+usethis::use_github_action("check-standard")
+usethis::use_github_action("test-coverage")
+usethis::use_pkgdown()
+
+usethis::use_pkgdown(config_file = "_pkgdown.yml", destdir = "docs")
+usethis::use_pkgdown_github_pages()
+usethis::use_github_action("pkgdown")
+
+# usethis::use_pkgdown()
+# usethis::use_github_action("pkgdown")
+
+
+# usethis::use_pkgdown_github_pages()
+pkgdown::build_site()
+usethis::use_github_pages()
+
+
+
+pkgdown::deploy_to_branch(
+    pkg = "C:/Users/shinm/Dropbox/Myself/text mining paper/textminingapp",
+    commit_message = construct_commit_message(pkg),
+    clean = FALSE,
+    branch = "gh-pages",
+    remote = "origin",
+    github_pages = (branch == "gh-pages")
+)
+
+getwd()
+
+
+pkgdown::build_site(
+    pkg = "C:/Users/shinm/Dropbox/Myself/text mining paper/textminingapp",
+    examples = TRUE,
+    run_dont_run = FALSE,
+    seed = 1014,
+    lazy = FALSE,
+    override = list(),
+    preview = NA,
+    devel = FALSE,
+    new_process = !devel,
+    install = !devel
+    # document = "DEPRECATED"
+)
+
+
+
+# 3.0 SAMPLE DESCRIPTION FILE ----
+
+# Package: hr.churn.test
+# Title: HR Churn Workflow Tools
+# Version: 0.0.0.9000
+# Authors@R: c(
+#     person("Matt", "Dancho", email = "info@business-science.io", role = c("aut", "cre")),
+#     person("Business Science", role = "cph"))
+# Description:
+#     Human Resources churn workflow analysis tools and PowerPoint Report Automation.
+# License: MIT + file LICENSE
+# Imports:
+#     tidyquant,
+#     dplyr,
+#     ggplot2,
+#     purrr,
+#     officer,
+#     flextable,
+#     cli,
+#     magrittr,
+#     rlang (>= 0.1.2),
+#     stringr,
+#     forcats,
+#     scales,
+#     tidyselect
+# Suggests:
+#     tidyverse,
+#     testthat,
+#     knitr,
+#     rmarkdown,
+#     roxygen2
+# VignetteBuilder: knitr
+# Encoding: UTF-8
+# LazyData: true
+# Roxygen: list(markdown = TRUE)
+# RoxygenNote: 7.1.1
+# Depends:
+#     R (>= 2.10)
+# URL: https://github.com/mdancho84/hr.churn.test
+# BugReports: https://github.com/mdancho84/hr.churn.test/issues
