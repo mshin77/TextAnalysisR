@@ -48,23 +48,13 @@ word_freq_plot <- plot_word_frequency(data, n = 20)
 print(word_freq_plot)
 ```
 
-### Extract Frequently Observed Words
-
-```{r, message=FALSE, eval=FALSE}
-# data is a document-feature matrix (dfm) object through the quanteda package.
-# Extract the top 20 frequent words.
-
-top_words <- extract_frequent_word(data, n = 20)
-print(top_words)
-```
-
 ### Plot Topic Per-Term Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
 # data is a tidy data frame that includes per-term per-topic probabilities (beta).
 # Plot per-term per-topic probabilities for the top 10 terms.
 
-topic_term_plot <- plot_topic_term(data, top_n = 10)
+topic_term_plot <- plot_topic_term(data, top_n = 5, ncol = 3)
 print(topic_term_plot)
 ```
 

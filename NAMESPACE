@@ -3,7 +3,6 @@
 export("%>%")
 export(TextAnalysisR.app)
 export(examine_top_terms)
-export(extract_frequent_word)
 export(plot_topic_term)
 export(plot_word_frequency)
 export(preprocess_texts)

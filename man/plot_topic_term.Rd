@@ -4,12 +4,14 @@
 \alias{plot_topic_term}
 \title{Plot topic per-term per-topic probabilities}
 \usage{
-plot_topic_term(data, top_n, topic_names = NULL, ...)
+plot_topic_term(data, top_n, ncol = 3, topic_names = NULL, ...)
 }
 \arguments{
 \item{data}{A tidy data frame that includes per-term per-topic probabilities (beta).}
 
 \item{top_n}{A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).}
+
+\item{ncol}{A number of columns in the facet plot.}
 
 \item{topic_names}{(Labeled) topic names}
 
@@ -29,7 +31,7 @@ dfm <- SpecialEduTech \%>\%
        preprocess_texts(text_field = "abstract") \%>\%
        quanteda::dfm()
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-data \%>\% plot_topic_term(top_n = 10)
+data \%>\% plot_topic_term(top_n = 2, ncol = 3)
 }
 })
 

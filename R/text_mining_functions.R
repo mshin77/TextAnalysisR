@@ -114,44 +114,6 @@ plot_word_frequency <-
     }
 
 
-#' @title Extract frequently observed words
-#'
-#' @name extract_frequent_word
-#'
-#' @description
-#' Extract frequently observed top n features (terms or words).
-#'
-#' @param data A document-feature matrix (dfm) object through the quanteda package.
-#' @param n A number of top n features (terms or words) frequently observed.
-#' @param ... Further arguments passed to \code{quanteda.textstats::textstat_frequency}.
-#'
-#' @export
-#' @return A character (feature) Vector extracted from \code{quanteda.textstats::textstat_frequency}.
-#' The result is a character vector of top frequent words.
-#'
-#' @examples
-#' suppressWarnings({
-#' if(requireNamespace("quanteda")){
-#' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract") %>%
-#'        quanteda::dfm()
-#' dfm %>% extract_frequent_word()
-#' }
-#' })
-#'
-#' @importFrom rlang := enquos
-#'
-extract_frequent_word <-
-    function(data, n = 20, ...) {
-
-        tstat_freq <- quanteda.textstats::textstat_frequency(data, ...)
-        tstat_freq_n_20 <- utils::head(tstat_freq, n = n)
-        top_frequency_word <- tstat_freq_n_20$feature
-
-        return(extract_frequent_word)
-    }
-
-
 # Display text mining results from the structural topic model ----
 
 #' @title Plot topic per-term per-topic probabilities
@@ -163,6 +125,7 @@ extract_frequent_word <-
 #'
 #' @param data A tidy data frame that includes per-term per-topic probabilities (beta).
 #' @param top_n A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).
+#' @param ncol A number of columns in the facet plot.
 #' @param topic_names (Labeled) topic names
 #' @param ... Further arguments passed to \code{dplyr::group_by}.
 #'
@@ -177,7 +140,7 @@ extract_frequent_word <-
 #'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-#' data %>% plot_topic_term(top_n = 10)
+#' data %>% plot_topic_term(top_n = 2, ncol = 3)
 #' }
 #' })
 #'
@@ -188,7 +151,7 @@ extract_frequent_word <-
 #' @importFrom tidytext scale_x_reordered reorder_within
 #'
 plot_topic_term <-
-    function(data, top_n, topic_names = NULL, ...) {
+    function(data, top_n, ncol = 3, topic_names = NULL, ...) {
 
         topic_term_plot <- data %>%
             group_by(topic, ...) %>%
@@ -215,7 +178,7 @@ plot_topic_term <-
         topic_term_plot <- topic_term_plot %>%
             ggplot(aes(term, beta, fill = topic)) +
             geom_col(show.legend = FALSE, alpha = 0.8) +
-            facet_wrap(~ topic, scales = "free", ncol = 3) +
+            facet_wrap(~ topic, scales = "free", ncol = ncol) +
             scale_x_reordered() +
             scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
             coord_flip() +
@@ -268,8 +231,10 @@ plot_topic_term <-
 #' @importFrom magrittr %>%
 #' @importFrom rlang := enquos
 #' @importFrom tidyr unnest
+#' @importFrom DT datatable
 #'
 examine_top_terms <-
+
   function(data, top_n, ...) {
     top_terms <- data %>%
       arrange(beta) %>%
@@ -279,7 +244,9 @@ examine_top_terms <-
       select(topic, term) %>%
       summarise(terms = list(term)) %>%
       mutate(terms = purrr::map(terms, paste, collapse = ", ")) %>%
-      unnest(cols = c(terms))
+      unnest(cols = c(terms)) %>%
+      datatable(rownames = FALSE)
+
     return(top_terms)
   }
 
@@ -390,7 +357,7 @@ topic_probability_table <-
       gamma_terms <- data %>%
         group_by(topic) %>%
         summarise(gamma = mean(gamma)) %>%
-        arrange(desc(gamma)) %>%
+        arrange(gamma) %>%
         mutate(topic = reorder(topic, gamma))
 
       topic_by_prevalence_table <- gamma_terms %>%
