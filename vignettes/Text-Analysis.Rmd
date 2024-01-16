@@ -35,7 +35,7 @@ TextAnalysisR.app()
 ```{r, message=FALSE, eval=FALSE}
 data <- TextAnalysisR::SpecialEduTech 
 
-preprocessed_data <- preprocess_texts(data, text_field = "united_texts")
+preprocessed_data <- preprocess_texts(data, text_field = "abstract")
 ```
 
 ### Plot Word Frequency
@@ -44,8 +44,11 @@ preprocessed_data <- preprocess_texts(data, text_field = "united_texts")
 # data is a document-feature matrix (dfm) object through the quanteda package.
 # Plot word frequency for the top 20 terms.
 
-word_freq_plot <- plot_word_frequency(data, n = 20)
-print(word_freq_plot)
+dfm <- SpecialEduTech %>%
+        preprocess_texts(text_field = "abstract") %>%
+        quanteda::dfm()
+
+dfm %>% plot_word_frequency(n = 20)
 ```
 
 ### Plot Topic Per-Term Per-Topic Probabilities
@@ -54,8 +57,13 @@ print(word_freq_plot)
 # data is a tidy data frame that includes per-term per-topic probabilities (beta).
 # Plot per-term per-topic probabilities for the top 10 terms.
 
-topic_term_plot <- plot_topic_term(data, top_n = 5, ncol = 3)
-print(topic_term_plot)
+dfm <- SpecialEduTech %>%
+        preprocess_texts(text_field = "abstract") %>%
+        quanteda::dfm()
+
+data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
+
+data %>% plot_topic_term(top_n = 5, ncol = 3)
 ```
 
 ### Examine Highest Per-Term Per-Topic Probabilities
@@ -65,8 +73,13 @@ print(topic_term_plot)
 # Examine the top 5 terms with the highest per-term per-topic probabilities.
 # Number of top_n can be changed.
 
-top_terms <- examine_top_terms(data, top_n = 5)
-print(top_terms)
+dfm <- SpecialEduTech %>%
+        preprocess_texts(text_field = "abstract") %>%
+        quanteda::dfm()
+
+data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
+
+data %>% examine_top_terms(top_n = 5) %>% DT::datatable(rownames = FALSE)
 ```
 
 ### Plot Per-Document Per-Topic Probabilities
@@ -76,8 +89,13 @@ print(top_terms)
 # Plot per-document per-topic probabilities for the top 15 topics.
 # Number of top_n can be changed.
 
-topic_prob_plot <- topic_probability_plot(data, top_n = 15)
-print(topic_prob_plot)
+dfm <- SpecialEduTech %>%
+        preprocess_texts(text_field = "abstract") %>%
+        quanteda::dfm()
+
+data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
+
+data %>% topic_probability_plot(top_n = 15) %>% plotly::ggplotly()
 ```
 
 ### Visualize a Table for Per-Document Per-Topic Probabilities
@@ -87,8 +105,13 @@ print(topic_prob_plot)
 # Create a table of per-document per-topic probabilities for the top 15 topics.
 # Number of top_n can be changed.
 
-topic_prob_table <- topic_probability_table(gamma_td, top_n = 15)
-print(topic_prob_table)
+dfm <- SpecialEduTech %>%
+        preprocess_texts(text_field = "abstract") %>%
+        quanteda::dfm()
+
+data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
+
+data %>% topic_probability_table(top_n = 15) %>% DT::datatable(rownames = FALSE)
 ```
 
 

@@ -223,7 +223,7 @@ plot_topic_term <-
 #'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-#' data %>% examine_top_terms(top_n = 5)
+#' data %>% examine_top_terms(top_n = 5) %>% DT::datatable(rownames = FALSE)
 #' }
 #' })
 #'
@@ -244,8 +244,7 @@ examine_top_terms <-
       select(topic, term) %>%
       summarise(terms = list(term)) %>%
       mutate(terms = purrr::map(terms, paste, collapse = ", ")) %>%
-      unnest(cols = c(terms)) %>%
-      datatable(rownames = FALSE)
+      unnest(cols = c(terms))
 
     return(top_terms)
   }
@@ -272,7 +271,7 @@ examine_top_terms <-
 #'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-#' data %>% topic_probability_plot(top_n = 15)
+#' data %>% topic_probability_plot(top_n = 15) %>% plotly::ggplotly()
 #' }
 #' })
 #'
@@ -312,10 +311,7 @@ topic_probability_plot <-
         axis.title.x = element_text(margin = margin(t = 9)),
         axis.title.y = element_text(margin = margin(r = 9))
       )
-
-    topic_by_prevalence_plot_output <- topic_by_prevalence_plot %>% ggplotly()
-
-        return(topic_by_prevalence_plot_output)
+        return(topic_by_prevalence_plot)
     }
 
 
@@ -341,7 +337,7 @@ topic_probability_plot <-
 #'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-#' data %>% topic_probability_table(top_n = 15)
+#' data %>% topic_probability_table(top_n = 15) %>% DT::datatable(rownames = FALSE)
 #' }
 #' })
 #'
@@ -372,8 +368,7 @@ topic_probability_table <-
                                                levels = levelt)
       topic_by_prevalence_table_output <- topic_by_prevalence_table %>%
         select(topic, gamma) %>%
-        mutate_if(is.numeric, ~ round(., 3)) %>%
-        datatable(rownames = FALSE)
+        mutate_if(is.numeric, ~ round(., 3))
 
         return(topic_by_prevalence_table_output)
     }

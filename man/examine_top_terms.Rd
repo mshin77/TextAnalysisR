@@ -27,7 +27,7 @@ dfm <- SpecialEduTech \%>\%
        preprocess_texts(text_field = "abstract") \%>\%
        quanteda::dfm()
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-data \%>\% examine_top_terms(top_n = 5)
+data \%>\% examine_top_terms(top_n = 5) \%>\% DT::datatable(rownames = FALSE)
 }
 })
 
