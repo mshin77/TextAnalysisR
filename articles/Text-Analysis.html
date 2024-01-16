@@ -95,92 +95,80 @@ implemented to tidy non-tidy format objects.</p>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mshin77/TextAnalysisR"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="browse-the-interative-shiny-app">Browse the interative Shiny app<a class="anchor" aria-label="anchor" href="#browse-the-interative-shiny-app"></a>
+<h2 id="launch-and-browse-the-shiny-app">Launch and Browse the Shiny app<a class="anchor" aria-label="anchor" href="#launch-and-browse-the-shiny-app"></a>
 </h2>
-<p>Launch and browse the TextAnalysisR app:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/" class="external-link">TextAnalysisR</a></span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="../reference/TextAnalysisR.app.html">TextAnalysisR.app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="preprocess-text-data">Preprocess Text Data<a class="anchor" aria-label="anchor" href="#preprocess-text-data"></a>
 </h3>
-<p>Preprocess text data using the <code>preprocess_texts</code>
-function:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span> </span>
 <span></span>
-<span><span class="co"># Preprocess text data</span></span>
 <span><span class="va">preprocessed_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">data</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="plot-word-frequency">Plot Word Frequency<a class="anchor" aria-label="anchor" href="#plot-word-frequency"></a>
 </h3>
-<p>Use the <code>plot_word_frequency</code> function to plot word
-frequency results:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data is a document-feature matrix (dfm) object through the quanteda package.</span></span>
+<span><span class="co"># Plot word frequency for the top 20 terms.</span></span>
 <span></span>
-<span><span class="co"># Plot word frequency for the top 20 terms</span></span>
 <span><span class="va">word_freq_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span><span class="va">data</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">word_freq_plot</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="extract-frequently-observed-words">Extract Frequently Observed Words<a class="anchor" aria-label="anchor" href="#extract-frequently-observed-words"></a>
 </h3>
-<p>Use the <code>extract_frequent_word</code> function to extract
-frequently observed top words:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data is a document-feature matrix (dfm) object through the quanteda package.</span></span>
+<span><span class="co"># Extract the top 20 frequent words.</span></span>
 <span></span>
-<span><span class="co"># Extract the top 20 frequent words</span></span>
 <span><span class="va">top_words</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_frequent_word.html">extract_frequent_word</a></span><span class="op">(</span><span class="va">data</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">top_words</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="plot-topic-per-term-per-topic-probabilities">Plot Topic Per-Term Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#plot-topic-per-term-per-topic-probabilities"></a>
 </h3>
-<p>Use the <code>plot_topic_term</code> function to visualize topic
-per-term per-topic probabilities:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data is a tidy data frame that includes per-term per-topic probabilities (beta).</span></span>
+<span><span class="co"># Plot per-term per-topic probabilities for the top 10 terms.</span></span>
 <span></span>
-<span><span class="co"># Plot per-term per-topic probabilities for the top 10 terms</span></span>
 <span><span class="va">topic_term_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_topic_term.html">plot_topic_term</a></span><span class="op">(</span><span class="va">data</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">topic_term_plot</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="examine-highest-per-term-per-topic-probabilities">Examine Highest Per-Term Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#examine-highest-per-term-per-topic-probabilities"></a>
 </h3>
-<p>Use the <code>examine_top_terms</code> function to examine the
-highest per-term per-topic probabilities:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data is a tidy data frame that includes per-term per-topic probabilities (beta).</span></span>
+<span><span class="co"># Examine the top 5 terms with the highest per-term per-topic probabilities.</span></span>
+<span><span class="co"># Number of top_n can be changed.</span></span>
 <span></span>
-<span><span class="co"># Examine the top 5 terms with the highest per-term per-topic probabilities (number of top_n can be changed).</span></span>
 <span><span class="va">top_terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/examine_top_terms.html">examine_top_terms</a></span><span class="op">(</span><span class="va">data</span>, top_n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">top_terms</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="plot-per-document-per-topic-probabilities">Plot Per-Document Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#plot-per-document-per-topic-probabilities"></a>
 </h3>
-<p>use the <code>topic_probability_plot</code> function to visualize
-per-document per-topic probabilities:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data is a tidy data frame that includes per-document per-topic probabilities (gamma).</span></span>
+<span><span class="co"># Plot per-document per-topic probabilities for the top 15 topics.</span></span>
+<span><span class="co"># Number of top_n can be changed.</span></span>
 <span></span>
-<span><span class="co"># Plot per-document per-topic probabilities for the top 15 topics (number of top_n can be changed)</span></span>
 <span><span class="va">topic_prob_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/topic_probability_plot.html">topic_probability_plot</a></span><span class="op">(</span><span class="va">data</span>, top_n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">topic_prob_plot</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="visualize-a-table-for-per-document-per-topic-probabilities">Visualize a Table for Per-Document Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#visualize-a-table-for-per-document-per-topic-probabilities"></a>
 </h3>
-<p>Use the <code>topic_probability_table</code> function to create a
-table of per-document per-topic probabilities:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data is a tidy data frame that includes per-document per-topic probabilities (gamma).</span></span>
+<span><span class="co"># Create a table of per-document per-topic probabilities for the top 15 topics.</span></span>
+<span><span class="co"># Number of top_n can be changed.</span></span>
 <span></span>
-<span><span class="co"># Create a table of per-document per-topic probabilities for the top 15 topics (number of top_n can be changed)</span></span>
 <span><span class="va">topic_prob_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/topic_probability_table.html">topic_probability_table</a></span><span class="op">(</span><span class="va">gamma_td</span>, top_n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">topic_prob_table</span><span class="op">)</span></span></code></pre></div>
 </div>
