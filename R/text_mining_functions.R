@@ -270,7 +270,7 @@ examine_top_terms <-
 
 #' @title Visualize a plot for document-topic probabilities
 #'
-#' @name plot_topic_probability
+#' @name topic_probability_plot
 #'
 #' @description
 #' Visualize a plot for document-topic probabilities.
@@ -288,14 +288,14 @@ examine_top_terms <-
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-#' data %>% plot_topic_probability(top_n = 15)
+#' data %>% topic_probability_plot(top_n = 15)
 #' }
 #'
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #'
-plot_topic_probability <-
+topic_probability_plot <-
     function(data, top_n, topic_names = NULL, ...) {
 
         topic_by_prevalence_plot <- data %>%
@@ -303,7 +303,9 @@ plot_topic_probability <-
             mutate(tt = as.numeric(topic)) %>%
             mutate(ord = topic) %>%
             mutate(topic = paste('Topic',topic)) %>%  arrange(ord)
+
         levelt = paste("Topic", topic_by_prevalence_plot$ord) %>% unique()
+
         topic_by_prevalence_plot$topic = factor(topic_by_prevalence_plot$topic,
                                                 levels = levelt)
         if(!is.null(topic_names)){
@@ -317,7 +319,7 @@ plot_topic_probability <-
                 factor(topic_by_prevalence_plot$topic, levels = topic_by_prevalence_plot$topic)
         }
 
-        topic_by_prevalence_plot <- topic_by_prevalence_plot %>%
+        topic_by_prevalence_plot_output <- topic_by_prevalence_plot %>%
             ggplot(aes(topic, gamma, fill = topic)) +
             geom_col(show.legend = FALSE, alpha = 0.8) +
             coord_flip() +
@@ -337,13 +339,13 @@ plot_topic_probability <-
                 axis.title.x = element_text(margin = margin(t = 9)),
                 axis.title.y = element_text(margin = margin(r = 9)))
 
-        return(topic_by_prevalence_plot)
+        return(topic_by_prevalence_plot_output)
     }
 
 
 #' @title Visualize a table for document-topic probabilities
 #'
-#' @name plot_topic_probability_table
+#' @name topic_probability_table
 #'
 #' @description
 #' Visualize a table for document-topic probabilities.
@@ -362,14 +364,14 @@ plot_topic_probability <-
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-#' data %>% plot_topic_probability_table(top_n = 15)
+#' data %>% topic_probability_table(top_n = 15)
 #' }
 #'
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #'
-plot_topic_probability_table <-
+topic_probability_table <-
     function(data, top_n, topic_names = NULL, ...) {
 
         topic_by_prevalence_table <- data %>%
@@ -377,11 +379,13 @@ plot_topic_probability_table <-
             mutate(tt = as.numeric(topic)) %>%
             mutate(ord = topic) %>%
             mutate(topic = paste('Topic',topic)) %>%  arrange(ord)
+
         levelt = paste("Topic", topic_by_prevalence_table$ord) %>% unique()
+
         topic_by_prevalence_table$topic = factor(topic_by_prevalence_table$topic,
                                                  levels = levelt)
 
-        topic_by_prevalence_table <- topic_by_prevalence_table %>%
+        topic_by_prevalence_table_output <- topic_by_prevalence_table %>%
             select(topic, gamma)
-        return(topic_by_prevalence_table)
+        return(topic_by_prevalence_table_output)
     }
