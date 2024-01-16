@@ -2,15 +2,14 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{examine_top_terms}
 \alias{examine_top_terms}
-\title{Examine highest word probabilities for each topic}
+\title{Examine highest per-term per-topic probabilities}
 \usage{
 examine_top_terms(data, top_n, ...)
 }
 \arguments{
-\item{data}{A tidy data frame that includes term-topic probabilities
-(probabilities of each word per each topic).}
+\item{data}{A tidy data frame that includes per-term per-topic probabilities (beta).}
 
-\item{top_n}{A number of top n terms with highest term-topic probabilities in each document.}
+\item{top_n}{A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).}
 
 \item{...}{Further arguments passed to \code{dplyr::group_by}.}
 }
@@ -19,7 +18,7 @@ A tibble (data frame) object with a list of word probabilities from \code{tidyte
 The result is a data frame containing word probabilities for each topic.
 }
 \description{
-Examine highest document-topic probabilities.
+Examine highest per-term per-topic probabilities.
 }
 \examples{
 if(requireNamespace("quanteda", "tidytext")){

@@ -2,15 +2,14 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{topic_probability_plot}
 \alias{topic_probability_plot}
-\title{Visualize a plot for document-topic probabilities}
+\title{Plot per-document per-topic probabilities}
 \usage{
 topic_probability_plot(data, top_n, topic_names = NULL, ...)
 }
 \arguments{
-\item{data}{A tidy data frame that includes document-topic probabilities.
-(probabilities of each topic per each document).}
+\item{data}{A tidy data frame that includes per-document per-topic probabilities (gamma).}
 
-\item{top_n}{A number of top n terms with highest document-topic probabilities.}
+\item{top_n}{A number of highest per-document per-topic probabilities (number of top_n can be changed).}
 
 \item{topic_names}{Topic names}
 
@@ -20,7 +19,7 @@ topic_probability_plot(data, top_n, topic_names = NULL, ...)
 A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
 }
 \description{
-Visualize a plot for document-topic probabilities.
+Plot per-document per-topic probabilities.
 }
 \examples{
 if(requireNamespace("quanteda", "tidytext")){

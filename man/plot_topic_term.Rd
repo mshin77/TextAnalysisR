@@ -2,15 +2,14 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{plot_topic_term}
 \alias{plot_topic_term}
-\title{Visualize a plot for highest word probabilities within each topic}
+\title{Plot topic per-term per-topic probabilities}
 \usage{
 plot_topic_term(data, top_n, topic_names = NULL, ...)
 }
 \arguments{
-\item{data}{A tidy data frame that includes term (word)-topic probabilities
-(probabilities of each word per each topic).}
+\item{data}{A tidy data frame that includes per-term per-topic probabilities (beta).}
 
-\item{top_n}{A number of top n terms frequently observed in each document.}
+\item{top_n}{A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).}
 
 \item{topic_names}{(Labeled) topic names}
 
@@ -21,7 +20,7 @@ A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{gg
 The result is a ggplot object representing the topic-term plot.
 }
 \description{
-Visualize a plot for highest word probabilities within each topic.
+Plot per-term per-topic probabilities with highest word probabilities.
 }
 \examples{
 if(requireNamespace("quanteda", "tidytext")){

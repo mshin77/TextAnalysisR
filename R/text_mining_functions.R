@@ -144,16 +144,15 @@ extract_frequent_word <-
 
 # Display text mining results from the structural topic model ----
 
-#' @title Visualize a plot for highest word probabilities within each topic
+#' @title Plot topic per-term per-topic probabilities
 #'
 #' @name plot_topic_term
 #'
 #' @description
-#' Visualize a plot for highest word probabilities within each topic.
+#' Plot per-term per-topic probabilities with highest word probabilities.
 #'
-#' @param data A tidy data frame that includes term (word)-topic probabilities
-#'                (probabilities of each word per each topic).
-#' @param top_n A number of top n terms frequently observed in each document.
+#' @param data A tidy data frame that includes per-term per-topic probabilities (beta).
+#' @param top_n A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).
 #' @param topic_names (Labeled) topic names
 #' @param ... Further arguments passed to \code{dplyr::group_by}.
 #'
@@ -225,16 +224,15 @@ plot_topic_term <-
     }
 
 
-#' @title Examine highest word probabilities for each topic
+#' @title Examine highest per-term per-topic probabilities
 #'
 #' @name examine_top_terms
 #'
 #' @description
-#' Examine highest document-topic probabilities.
+#' Examine highest per-term per-topic probabilities.
 #'
-#' @param data A tidy data frame that includes term-topic probabilities
-#'                (probabilities of each word per each topic).
-#' @param top_n A number of top n terms with highest term-topic probabilities in each document.
+#' @param data A tidy data frame that includes per-term per-topic probabilities (beta).
+#' @param top_n A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).
 #' @param ... Further arguments passed to \code{dplyr::group_by}.
 #'
 #' @export
@@ -254,30 +252,29 @@ plot_topic_term <-
 #' @importFrom tidyr unnest
 #'
 examine_top_terms <-
-    function(data, top_n, ...) {
-        top_terms <- data %>%
-            arrange(beta) %>%
-            group_by(topic, ...) %>%
-            top_n(top_n, beta) %>%
-            arrange(beta) %>%
-            select(topic, term) %>%
-            summarise(terms = list(term)) %>%
-            mutate(terms = purrr::map(terms, paste, collapse = ", ")) %>%
-            unnest(cols = c(terms))
-        return(top_terms)
-    }
+  function(data, top_n, ...) {
+    top_terms <- data %>%
+      arrange(beta) %>%
+      group_by(topic, ...) %>%
+      top_n(top_n, beta) %>%
+      arrange(beta) %>%
+      select(topic, term) %>%
+      summarise(terms = list(term)) %>%
+      mutate(terms = purrr::map(terms, paste, collapse = ", ")) %>%
+      unnest(cols = c(terms))
+    return(top_terms)
+  }
 
 
-#' @title Visualize a plot for document-topic probabilities
+#' @title Plot per-document per-topic probabilities
 #'
 #' @name topic_probability_plot
 #'
 #' @description
-#' Visualize a plot for document-topic probabilities.
+#' Plot per-document per-topic probabilities.
 #'
-#' @param data A tidy data frame that includes document-topic probabilities.
-#'                 (probabilities of each topic per each document).
-#' @param top_n A number of top n terms with highest document-topic probabilities.
+#' @param data A tidy data frame that includes per-document per-topic probabilities (gamma).
+#' @param top_n A number of highest per-document per-topic probabilities (number of top_n can be changed).
 #' @param topic_names Topic names
 #' @param ... Further arguments passed.
 #'
@@ -294,65 +291,75 @@ examine_top_terms <-
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
+#' @importFrom stats reorder
 #'
 topic_probability_plot <-
-    function(data, top_n, topic_names = NULL, ...) {
+  function(data, top_n, topic_names = NULL, ...) {
 
-        topic_by_prevalence_plot <- data %>%
-            top_n(top_n, gamma) %>%
-            mutate(tt = as.numeric(topic)) %>%
-            mutate(ord = topic) %>%
-            mutate(topic = paste('Topic',topic)) %>%  arrange(ord)
+    gamma_terms <- data %>%
+      group_by(topic) %>%
+      summarise(gamma = mean(gamma)) %>%
+      arrange(desc(gamma)) %>%
+      mutate(topic = reorder(topic, gamma))
 
-        levelt = paste("Topic", topic_by_prevalence_plot$ord) %>% unique()
+    topic_by_prevalence_plot <- gamma_terms %>%
+      top_n(top_n, gamma) %>%
+      mutate(tt = as.numeric(topic)) %>%
+      mutate(ord = topic) %>%
+      mutate(topic = paste('Topic', topic)) %>%  arrange(ord)
 
-        topic_by_prevalence_plot$topic = factor(topic_by_prevalence_plot$topic,
-                                                levels = levelt)
-        if(!is.null(topic_names)){
-            reft  = 1:length(topic_by_prevalence_plot$tt)
-            topic_by_prevalence_plot$topic =
-                topic_names[reft]
-            topic_by_prevalence_plot <- topic_by_prevalence_plot %>%
-                mutate(topic = as.character(topic)) %>%
-                mutate(topic = ifelse(!is.na(topic), topic, paste('Topic',tt)))
-            topic_by_prevalence_plot$topic =
-                factor(topic_by_prevalence_plot$topic, levels = topic_by_prevalence_plot$topic)
-        }
+    levelt = paste("Topic", topic_by_prevalence_plot$ord) %>% unique()
 
-        topic_by_prevalence_plot_output <- topic_by_prevalence_plot %>%
-            ggplot(aes(topic, gamma, fill = topic)) +
-            geom_col(show.legend = FALSE, alpha = 0.8) +
-            coord_flip() +
-            scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
-            xlab("") +
-            ylab("Topic proportion") +
-            theme_minimal(base_size = 12) +
-            theme(
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),
-                axis.line = element_line(color = "#3B3B3B", size = 0.3),
-                axis.ticks = element_line(color = "#3B3B3B", size = 0.3),
-                strip.text.x = element_text(size = 12, color = "#3B3B3B"),
-                axis.text.x = element_text(size = 12, color = "#3B3B3B"),
-                axis.text.y = element_text(size = 12, color = "#3B3B3B"),
-                axis.title = element_text(size = 12, color = "#3B3B3B"),
-                axis.title.x = element_text(margin = margin(t = 9)),
-                axis.title.y = element_text(margin = margin(r = 9)))
+    topic_by_prevalence_plot$topic = factor(topic_by_prevalence_plot$topic,
+                                            levels = levelt)
+    if (!is.null(topic_names)) {
+      reft  = 1:length(topic_by_prevalence_plot$tt)
+      topic_by_prevalence_plot$topic =
+        topic_names[reft]
+      topic_by_prevalence_plot <-
+        topic_by_prevalence_plot %>%
+        mutate(topic = as.character(topic)) %>%
+        mutate(topic = ifelse(!is.na(topic), topic, paste('Topic', tt)))
+      topic_by_prevalence_plot$topic =
+        factor(topic_by_prevalence_plot$topic,
+               levels = topic_by_prevalence_plot$topic)
+    }
+
+    topic_by_prevalence_plot_output <- topic_by_prevalence_plot %>%
+      ggplot(aes(topic, gamma, fill = topic)) +
+      geom_col(alpha = 0.8) +
+      coord_flip() +
+      scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
+      xlab("") +
+      ylab("Topic proportion") +
+      theme_minimal(base_size = 10) +
+      theme(
+        legend.position = "none",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
+        axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
+        strip.text.x = element_text(size = 10, color = "#3B3B3B"),
+        axis.text.x = element_text(size = 10, color = "#3B3B3B"),
+        axis.text.y = element_text(size = 10, color = "#3B3B3B"),
+        axis.title = element_text(size = 10, color = "#3B3B3B"),
+        axis.title.x = element_text(margin = margin(t = 9)),
+        axis.title.y = element_text(margin = margin(r = 9))
+      )
 
         return(topic_by_prevalence_plot_output)
     }
 
 
-#' @title Visualize a table for document-topic probabilities
+#' @title Visualize a table for per-document per-topic probabilities
 #'
 #' @name topic_probability_table
 #'
 #' @description
-#' Visualize a table for document-topic probabilities.
+#' Create a table of per-document per-topic probabilities.
 #'
-#' @param data A tidy data frame that includes document-topic probabilities.
-#'                 (probabilities of each topic per each document).
-#' @param top_n A number of top n terms with highest document-topic probabilities.
+#' @param data A tidy data frame that includes per-document per-topic probabilities (gamma).
+#' @param top_n A number of highest per-document per-topic probabilities (number of top_n can be changed).
 #' @param topic_names Topic names
 #' @param ... Further arguments passed.
 #'
@@ -370,22 +377,30 @@ topic_probability_plot <-
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom magrittr %>%
+#' @importFrom stats reorder
 #'
 topic_probability_table <-
     function(data, top_n, topic_names = NULL, ...) {
 
-        topic_by_prevalence_table <- data %>%
-            top_n(top_n, gamma) %>%
-            mutate(tt = as.numeric(topic)) %>%
-            mutate(ord = topic) %>%
-            mutate(topic = paste('Topic',topic)) %>%  arrange(ord)
+      gamma_terms <- data %>%
+        group_by(topic) %>%
+        summarise(gamma = mean(gamma)) %>%
+        arrange(desc(gamma)) %>%
+        mutate(topic = reorder(topic, gamma))
 
-        levelt = paste("Topic", topic_by_prevalence_table$ord) %>% unique()
+      topic_by_prevalence_table <- gamma_terms %>%
+        top_n(top_n, gamma) %>%
+        mutate(tt = as.numeric(topic)) %>%
+        mutate(ord = topic) %>%
+        mutate(topic = paste('Topic', topic)) %>%  arrange(ord)
 
-        topic_by_prevalence_table$topic = factor(topic_by_prevalence_table$topic,
-                                                 levels = levelt)
+      levelt = paste("Topic", topic_by_prevalence_table$ord) %>% unique()
 
-        topic_by_prevalence_table_output <- topic_by_prevalence_table %>%
-            select(topic, gamma)
+      topic_by_prevalence_table$topic = factor(topic_by_prevalence_table$topic,
+                                               levels = levelt)
+      topic_by_prevalence_table_output <- topic_by_prevalence_table %>%
+        select(topic, gamma) %>%
+        mutate_if(is.numeric, ~ round(., 3))
+
         return(topic_by_prevalence_table_output)
     }
