@@ -4,14 +4,12 @@
 \alias{topic_probability_plot}
 \title{Plot per-document per-topic probabilities}
 \usage{
-topic_probability_plot(data, top_n, topic_names = NULL, ...)
+topic_probability_plot(data, top_n, ...)
 }
 \arguments{
 \item{data}{A tidy data frame that includes per-document per-topic probabilities (gamma).}
 
 \item{top_n}{A number of highest per-document per-topic probabilities (number of top_n can be changed).}
-
-\item{topic_names}{Topic names}
 
 \item{...}{Further arguments passed.}
 }
@@ -23,7 +21,10 @@ Plot per-document per-topic probabilities.
 }
 \examples{
 if(requireNamespace("quanteda", "tidytext")){
-dfm <- SpecialEduTech \%>\% preprocess_texts(text_field = "abstract") \%>\% quanteda::dfm()
+dfm <- SpecialEduTech \%>\%
+       preprocess_texts(text_field = "abstract",
+       verbose = FALSE) \%>\%
+       quanteda::dfm()
 data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 data \%>\% topic_probability_plot(top_n = 15)
 }

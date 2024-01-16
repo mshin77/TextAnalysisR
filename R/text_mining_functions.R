@@ -87,7 +87,10 @@ preprocess_texts <-
 #'
 #' @examples
 #' if(requireNamespace("quanteda")){
-#' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
+#' dfm <- SpecialEduTech %>%
+#'        preprocess_texts(text_field = "abstract",
+#'        verbose = FALSE) %>%
+#'        quanteda::dfm()
 #' dfm %>% plot_word_frequency(n = 20)
 #' }
 #'
@@ -125,7 +128,10 @@ plot_word_frequency <-
 #'
 #' @examples
 #' if(requireNamespace("quanteda")){
-#' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
+#' dfm <- SpecialEduTech %>%
+#'        preprocess_texts(text_field = "abstract",
+#'        verbose = FALSE) %>%
+#'        quanteda::dfm()
 #' dfm %>% extract_frequent_word()
 #' }
 #'
@@ -162,7 +168,10 @@ extract_frequent_word <-
 #'
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
+#' dfm <- SpecialEduTech %>%
+#'        preprocess_texts(text_field = "abstract",
+#'        verbose = FALSE) %>%
+#'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 #' data %>% plot_topic_term(top_n = 10)
 #' }
@@ -241,7 +250,10 @@ plot_topic_term <-
 #'
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
+#' dfm <- SpecialEduTech %>%
+#'        preprocess_texts(text_field = "abstract",
+#'        verbose = FALSE) %>%
+#'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 #' data %>% examine_top_terms(top_n = 5)
 #' }
@@ -275,7 +287,6 @@ examine_top_terms <-
 #'
 #' @param data A tidy data frame that includes per-document per-topic probabilities (gamma).
 #' @param top_n A number of highest per-document per-topic probabilities (number of top_n can be changed).
-#' @param topic_names Topic names
 #' @param ... Further arguments passed.
 #'
 #' @export
@@ -283,7 +294,10 @@ examine_top_terms <-
 #'
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
+#' dfm <- SpecialEduTech %>%
+#'        preprocess_texts(text_field = "abstract",
+#'        verbose = FALSE) %>%
+#'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 #' data %>% topic_probability_plot(top_n = 15)
 #' }
@@ -292,9 +306,10 @@ examine_top_terms <-
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @importFrom stats reorder
+#' @importFrom plotly ggplotly
 #'
 topic_probability_plot <-
-  function(data, top_n, topic_names = NULL, ...) {
+  function(data, top_n, ...) {
 
     gamma_terms <- data %>%
       group_by(topic) %>%
@@ -303,29 +318,6 @@ topic_probability_plot <-
       mutate(topic = reorder(topic, gamma))
 
     topic_by_prevalence_plot <- gamma_terms %>%
-      top_n(top_n, gamma) %>%
-      mutate(tt = as.numeric(topic)) %>%
-      mutate(ord = topic) %>%
-      mutate(topic = paste('Topic', topic)) %>%  arrange(ord)
-
-    levelt = paste("Topic", topic_by_prevalence_plot$ord) %>% unique()
-
-    topic_by_prevalence_plot$topic = factor(topic_by_prevalence_plot$topic,
-                                            levels = levelt)
-    if (!is.null(topic_names)) {
-      reft  = 1:length(topic_by_prevalence_plot$tt)
-      topic_by_prevalence_plot$topic =
-        topic_names[reft]
-      topic_by_prevalence_plot <-
-        topic_by_prevalence_plot %>%
-        mutate(topic = as.character(topic)) %>%
-        mutate(topic = ifelse(!is.na(topic), topic, paste('Topic', tt)))
-      topic_by_prevalence_plot$topic =
-        factor(topic_by_prevalence_plot$topic,
-               levels = topic_by_prevalence_plot$topic)
-    }
-
-    topic_by_prevalence_plot_output <- topic_by_prevalence_plot %>%
       ggplot(aes(topic, gamma, fill = topic)) +
       geom_col(alpha = 0.8) +
       coord_flip() +
@@ -347,6 +339,8 @@ topic_probability_plot <-
         axis.title.y = element_text(margin = margin(r = 9))
       )
 
+    topic_by_prevalence_plot_output <- topic_by_prevalence_plot %>% ggplotly()
+
         return(topic_by_prevalence_plot_output)
     }
 
@@ -360,7 +354,6 @@ topic_probability_plot <-
 #'
 #' @param data A tidy data frame that includes per-document per-topic probabilities (gamma).
 #' @param top_n A number of highest per-document per-topic probabilities (number of top_n can be changed).
-#' @param topic_names Topic names
 #' @param ... Further arguments passed.
 #'
 #' @export
@@ -369,7 +362,10 @@ topic_probability_plot <-
 #'
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>% preprocess_texts(text_field = "abstract") %>% quanteda::dfm()
+#' dfm <- SpecialEduTech %>%
+#'        preprocess_texts(text_field = "abstract",
+#'        verbose = FALSE) %>%
+#'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 #' data %>% topic_probability_table(top_n = 15)
 #' }
@@ -380,7 +376,7 @@ topic_probability_plot <-
 #' @importFrom stats reorder
 #'
 topic_probability_table <-
-    function(data, top_n, topic_names = NULL, ...) {
+    function(data, top_n, ...) {
 
       gamma_terms <- data %>%
         group_by(topic) %>%

@@ -22,7 +22,10 @@ Plot the frequently observed top n terms.
 }
 \examples{
 if(requireNamespace("quanteda")){
-dfm <- SpecialEduTech \%>\% preprocess_texts(text_field = "abstract") \%>\% quanteda::dfm()
+dfm <- SpecialEduTech \%>\%
+       preprocess_texts(text_field = "abstract",
+       verbose = FALSE) \%>\%
+       quanteda::dfm()
 dfm \%>\% plot_word_frequency(n = 20)
 }
 

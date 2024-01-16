@@ -22,7 +22,10 @@ Examine highest per-term per-topic probabilities.
 }
 \examples{
 if(requireNamespace("quanteda", "tidytext")){
-dfm <- SpecialEduTech \%>\% preprocess_texts(text_field = "abstract") \%>\% quanteda::dfm()
+dfm <- SpecialEduTech \%>\%
+       preprocess_texts(text_field = "abstract",
+       verbose = FALSE) \%>\%
+       quanteda::dfm()
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 data \%>\% examine_top_terms(top_n = 5)
 }

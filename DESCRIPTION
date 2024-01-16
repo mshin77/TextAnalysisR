@@ -17,6 +17,7 @@ Imports:
     ggraph,
     magrittr,
     numform,
+    plotly,
     purrr,
     quanteda,
     quanteda.textstats,

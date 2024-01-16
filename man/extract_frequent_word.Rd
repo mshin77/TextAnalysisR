@@ -22,7 +22,10 @@ Extract frequently observed top n features (terms or words).
 }
 \examples{
 if(requireNamespace("quanteda")){
-dfm <- SpecialEduTech \%>\% preprocess_texts(text_field = "abstract") \%>\% quanteda::dfm()
+dfm <- SpecialEduTech \%>\%
+       preprocess_texts(text_field = "abstract",
+       verbose = FALSE) \%>\%
+       quanteda::dfm()
 dfm \%>\% extract_frequent_word()
 }
 
