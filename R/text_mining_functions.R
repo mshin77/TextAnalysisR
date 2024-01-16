@@ -47,7 +47,7 @@ preprocess_texts <-
             split_tags = TRUE,
             include_docvars = TRUE,
             padding = FALSE,
-            verbose = TRUE)
+            verbose = FALSE)
 
         # Convert the features of tokens to lowercase.
         toks_lower <- quanteda::tokens_tolower(toks_clean,
@@ -58,13 +58,13 @@ preprocess_texts <-
             quanteda::tokens_remove(quanteda::stopwords("en"),
                                     valuetype = "glob",
                                     window = 0,
-                                    verbose = TRUE,
+                                    verbose = FALSE,
                                     padding = TRUE)
 
         # Specify the minimum length in characters for tokens (at least 2).
         toks_lower_no_stop_adj <- toks_lower_no_stop %>%
             quanteda::tokens_select(min_nchar=2L,
-                                    verbose = TRUE)
+                                    verbose = FALSE)
 
         return(toks_lower_no_stop_adj)
     }
@@ -88,8 +88,7 @@ preprocess_texts <-
 #' @examples
 #' if(requireNamespace("quanteda")){
 #' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract",
-#'        verbose = FALSE) %>%
+#'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' dfm %>% plot_word_frequency(n = 20)
 #' }
@@ -129,8 +128,7 @@ plot_word_frequency <-
 #' @examples
 #' if(requireNamespace("quanteda")){
 #' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract",
-#'        verbose = FALSE) %>%
+#'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' dfm %>% extract_frequent_word()
 #' }
@@ -169,8 +167,7 @@ extract_frequent_word <-
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract",
-#'        verbose = FALSE) %>%
+#'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 #' data %>% plot_topic_term(top_n = 10)
@@ -251,8 +248,7 @@ plot_topic_term <-
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract",
-#'        verbose = FALSE) %>%
+#'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 #' data %>% examine_top_terms(top_n = 5)
@@ -295,8 +291,7 @@ examine_top_terms <-
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract",
-#'        verbose = FALSE) %>%
+#'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 #' data %>% topic_probability_plot(top_n = 15)
@@ -363,8 +358,7 @@ topic_probability_plot <-
 #' @examples
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract",
-#'        verbose = FALSE) %>%
+#'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 #' data %>% topic_probability_table(top_n = 15)
@@ -374,6 +368,7 @@ topic_probability_plot <-
 #' @import ggplot2
 #' @importFrom magrittr %>%
 #' @importFrom stats reorder
+#' @importFrom DT datatable
 #'
 topic_probability_table <-
     function(data, top_n, ...) {
@@ -396,7 +391,8 @@ topic_probability_table <-
                                                levels = levelt)
       topic_by_prevalence_table_output <- topic_by_prevalence_table %>%
         select(topic, gamma) %>%
-        mutate_if(is.numeric, ~ round(., 3))
+        mutate_if(is.numeric, ~ round(., 3)) %>%
+        datatable(rownames = FALSE)
 
         return(topic_by_prevalence_table_output)
     }

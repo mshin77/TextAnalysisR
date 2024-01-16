@@ -25,8 +25,7 @@ Plot per-term per-topic probabilities with highest word probabilities.
 \examples{
 if(requireNamespace("quanteda", "tidytext")){
 dfm <- SpecialEduTech \%>\%
-       preprocess_texts(text_field = "abstract",
-       verbose = FALSE) \%>\%
+       preprocess_texts(text_field = "abstract") \%>\%
        quanteda::dfm()
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 data \%>\% plot_topic_term(top_n = 10)

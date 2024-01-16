@@ -22,8 +22,7 @@ Plot per-document per-topic probabilities.
 \examples{
 if(requireNamespace("quanteda", "tidytext")){
 dfm <- SpecialEduTech \%>\%
-       preprocess_texts(text_field = "abstract",
-       verbose = FALSE) \%>\%
+       preprocess_texts(text_field = "abstract") \%>\%
        quanteda::dfm()
 data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 data \%>\% topic_probability_plot(top_n = 15)
