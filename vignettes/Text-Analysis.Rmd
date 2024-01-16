@@ -66,51 +66,51 @@ top_words <- extract_frequent_word(data, n = 20)
 print(top_words)
 ```
 
-### Plot Topic-Term Probabilities
+### Plot Topic Per-Term Per-Topic Probabilities
 
-Use the `plot_topic_term` function to visualize topic-term probabilities:
+Use the `plot_topic_term` function to visualize topic per-term per-topic probabilities:
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes term (word)-topic probabilities.
+# data is a tidy data frame that includes per-term per-topic probabilities (beta).
 
-# Plot topic-term probabilities for the top 10 terms
+# Plot per-term per-topic probabilities for the top 10 terms
 topic_term_plot <- plot_topic_term(data, top_n = 10)
 print(topic_term_plot)
 ```
 
-### Examine Highest Word Probabilities
+### Examine Highest Per-Term Per-Topic Probabilities
 
-Use the `examine_top_terms` function to examine the highest word probabilities for each topic:
+Use the `examine_top_terms` function to examine the highest per-term per-topic probabilities:
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes term (word)-topic probabilities.
+# data is a tidy data frame that includes per-term per-topic probabilities (beta).
 
-# Examine the top 5 terms with the highest term-topic probabilities
+# Examine the top 5 terms with the highest per-term per-topic probabilities (number of top_n can be changed).
 top_terms <- examine_top_terms(data, top_n = 5)
 print(top_terms)
 ```
 
-### Plot Topic Probability
+### Plot Per-Document Per-Topic Probabilities
 
-Visualize document-topic probabilities using the `plot_topic_probability` function:
+use the `topic_probability_plot` function to visualize per-document per-topic probabilities:
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes document-topic probabilities.
+# data is a tidy data frame that includes per-document per-topic probabilities (gamma).
 
-# Plot document-topic probabilities for the top 15 topics
-topic_prob_plot <- plot_topic_probability(data, top_n = 15)
+# Plot per-document per-topic probabilities for the top 15 topics (number of top_n can be changed)
+topic_prob_plot <- topic_probability_plot(data, top_n = 15)
 print(topic_prob_plot)
 ```
 
-### Plot Topic Probability Table
+### Visualize a Table for Per-Document Per-Topic Probabilities
 
-Create a table of document-topic probabilities using the `plot_topic_probability_table` function:
+Use the `topic_probability_table` function to create a table of per-document per-topic probabilities:
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes document-topic probabilities.
+# data is a tidy data frame that includes per-document per-topic probabilities (gamma).
 
-# Create a table of document-topic probabilities for the top 15 topics
-topic_prob_table <- plot_topic_probability_table(gamma_td, top_n = 15)
+# Create a table of per-document per-topic probabilities for the top 15 topics (number of top_n can be changed)
+topic_prob_table <- topic_probability_table(gamma_td, top_n = 15)
 print(topic_prob_table)
 ```
 
