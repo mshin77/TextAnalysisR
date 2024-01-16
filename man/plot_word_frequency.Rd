@@ -21,11 +21,13 @@ The result is a ggplot object representing the word frequency plot.
 Plot the frequently observed top n terms.
 }
 \examples{
+suppressWarnings({
 if(requireNamespace("quanteda")){
 dfm <- SpecialEduTech \%>\%
        preprocess_texts(text_field = "abstract") \%>\%
        quanteda::dfm()
 dfm \%>\% plot_word_frequency(n = 20)
 }
+})
 
 }

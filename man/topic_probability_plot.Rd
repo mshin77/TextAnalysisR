@@ -20,6 +20,7 @@ A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{gg
 Plot per-document per-topic probabilities.
 }
 \examples{
+suppressWarnings({
 if(requireNamespace("quanteda", "tidytext")){
 dfm <- SpecialEduTech \%>\%
        preprocess_texts(text_field = "abstract") \%>\%
@@ -27,5 +28,6 @@ dfm <- SpecialEduTech \%>\%
 data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 data \%>\% topic_probability_plot(top_n = 15)
 }
+})
 
 }

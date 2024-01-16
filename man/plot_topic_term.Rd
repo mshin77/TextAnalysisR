@@ -23,6 +23,7 @@ The result is a ggplot object representing the topic-term plot.
 Plot per-term per-topic probabilities with highest word probabilities.
 }
 \examples{
+suppressWarnings({
 if(requireNamespace("quanteda", "tidytext")){
 dfm <- SpecialEduTech \%>\%
        preprocess_texts(text_field = "abstract") \%>\%
@@ -30,5 +31,6 @@ dfm <- SpecialEduTech \%>\%
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 data \%>\% plot_topic_term(top_n = 10)
 }
+})
 
 }

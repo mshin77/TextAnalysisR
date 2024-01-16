@@ -19,7 +19,9 @@
 #' The result is a list of tokenized and preprocessed text data.
 #'
 #' @examples
+#' suppressWarnings({
 #' SpecialEduTech %>% preprocess_texts(text_field = "abstract")
+#' })
 #'
 #' @import quanteda
 #' @importFrom magrittr %>%
@@ -86,12 +88,14 @@ preprocess_texts <-
 #' The result is a ggplot object representing the word frequency plot.
 #'
 #' @examples
+#' suppressWarnings({
 #' if(requireNamespace("quanteda")){
 #' dfm <- SpecialEduTech %>%
 #'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' dfm %>% plot_word_frequency(n = 20)
 #' }
+#' })
 #'
 #' @importFrom magrittr %>%
 #' @importFrom rlang := enquos
@@ -126,12 +130,14 @@ plot_word_frequency <-
 #' The result is a character vector of top frequent words.
 #'
 #' @examples
+#' suppressWarnings({
 #' if(requireNamespace("quanteda")){
 #' dfm <- SpecialEduTech %>%
 #'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' dfm %>% extract_frequent_word()
 #' }
+#' })
 #'
 #' @importFrom rlang := enquos
 #'
@@ -165,6 +171,7 @@ extract_frequent_word <-
 #' The result is a ggplot object representing the topic-term plot.
 #'
 #' @examples
+#' suppressWarnings({
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
 #'        preprocess_texts(text_field = "abstract") %>%
@@ -172,6 +179,7 @@ extract_frequent_word <-
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 #' data %>% plot_topic_term(top_n = 10)
 #' }
+#' })
 #'
 #' @import dplyr
 #' @import ggplot2
@@ -246,6 +254,7 @@ plot_topic_term <-
 #' The result is a data frame containing word probabilities for each topic.
 #'
 #' @examples
+#' suppressWarnings({
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
 #'        preprocess_texts(text_field = "abstract") %>%
@@ -253,6 +262,7 @@ plot_topic_term <-
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 #' data %>% examine_top_terms(top_n = 5)
 #' }
+#' })
 #'
 #' @import dplyr
 #' @importFrom magrittr %>%
@@ -289,6 +299,7 @@ examine_top_terms <-
 #' @return A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
 #'
 #' @examples
+#' suppressWarnings({
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
 #'        preprocess_texts(text_field = "abstract") %>%
@@ -296,6 +307,7 @@ examine_top_terms <-
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 #' data %>% topic_probability_plot(top_n = 15)
 #' }
+#' })
 #'
 #' @import dplyr
 #' @import ggplot2
@@ -356,6 +368,7 @@ topic_probability_plot <-
 #' The result is a ggplot object representing the topic-term plot.
 #'
 #' @examples
+#' suppressWarnings({
 #' if(requireNamespace("quanteda", "tidytext")){
 #' dfm <- SpecialEduTech %>%
 #'        preprocess_texts(text_field = "abstract") %>%
@@ -363,6 +376,7 @@ topic_probability_plot <-
 #' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 #' data %>% topic_probability_table(top_n = 15)
 #' }
+#' })
 #'
 #' @import dplyr
 #' @import ggplot2

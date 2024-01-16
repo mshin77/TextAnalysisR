@@ -21,6 +21,7 @@ The result is a data frame containing word probabilities for each topic.
 Examine highest per-term per-topic probabilities.
 }
 \examples{
+suppressWarnings({
 if(requireNamespace("quanteda", "tidytext")){
 dfm <- SpecialEduTech \%>\%
        preprocess_texts(text_field = "abstract") \%>\%
@@ -28,5 +29,6 @@ dfm <- SpecialEduTech \%>\%
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 data \%>\% examine_top_terms(top_n = 5)
 }
+})
 
 }

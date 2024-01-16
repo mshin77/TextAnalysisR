@@ -21,11 +21,13 @@ The result is a character vector of top frequent words.
 Extract frequently observed top n features (terms or words).
 }
 \examples{
+suppressWarnings({
 if(requireNamespace("quanteda")){
 dfm <- SpecialEduTech \%>\%
        preprocess_texts(text_field = "abstract") \%>\%
        quanteda::dfm()
 dfm \%>\% extract_frequent_word()
 }
+})
 
 }

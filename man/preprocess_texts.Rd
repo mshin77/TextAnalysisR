@@ -24,6 +24,8 @@ convert the features of tokens to lowercase;
 remove stopwords; specify the minimum length in characters for tokens (at least 2).
 }
 \examples{
+suppressWarnings({
 SpecialEduTech \%>\% preprocess_texts(text_field = "abstract")
+})
 
 }
