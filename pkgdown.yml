@@ -3,7 +3,7 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   Text-Analysis: Text-Analysis.html
-last_built: 2024-01-16T08:36Z
+last_built: 2024-01-16T09:28Z
 urls:
   reference: https://mshin77.github.io/TextAnalysisR/reference
   article: https://mshin77.github.io/TextAnalysisR/articles
