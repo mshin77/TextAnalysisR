@@ -38,7 +38,7 @@ ui <- fluidPage(
         tabPanel("TextAnalysisR",
                  navlistPanel(
                    widths = c(3, 9),
-                   tabPanel("About", includeMarkdown("markdown/README.md"))
+                   tabPanel("About", includeMarkdown("markdown/about.md"))
                  )),
         tabPanel("Upload",
                  sidebarLayout(
@@ -48,7 +48,7 @@ ui <- fluidPage(
                              "dataset_choice",
                              "Upload a file or use the dataset",
                              selected = " ",
-                             choices = c(" ", "Upload an Example Dataset", "Upload Your File")
+                             choices = c(" ", "SpecialEduTech", "Upload Your File")
 
                          ),
                          fileInput(
@@ -110,7 +110,8 @@ ui <- fluidPage(
                                  "remove.var",
                                  "Remove common words.",
                                  choices = NULL,
-                                 options = list(maxItems = 20)),
+                                 options = list(maxItems = 20)
+                             ),
                              actionButton("remove", "Remove", icon = icon("minus-circle"))
                          )
                      ),
@@ -167,9 +168,9 @@ ui <- fluidPage(
                         sliderInput(
                             "K_range_1",
                             "Range of topic numbers",
-                            value = c(2, 10),
+                            value = c(5, 30),
                             min = 0,
-                            max = 50
+                            max = 100
                         ),
                         selectizeInput(
                             "categorical_var",
