@@ -15,7 +15,7 @@ suppressPackageStartupMessages({
 
 server <- shinyServer(function(input, output, session) {
     observe({
-        if (input$dataset_choice == "SpecialEduTech") {
+        if (input$dataset_choice == "Upload an Example Dataset") {
             shinyjs::disable("file")
         } else {
             shinyjs::enable("file")
@@ -23,7 +23,7 @@ server <- shinyServer(function(input, output, session) {
     })
 
     mydata <- reactive({
-        if (input$dataset_choice == "SpecialEduTech") {
+        if (input$dataset_choice == "Upload an Example Dataset") {
             data <- TextAnalysisR::SpecialEduTech
         } else {
             req(input$file)
@@ -337,7 +337,7 @@ server <- shinyServer(function(input, output, session) {
         sliderInput(
             "K_number",
             "Choose K (number of topics)",
-            value = 15,
+            value = 10,
             min = 0,
             max = 50
         )

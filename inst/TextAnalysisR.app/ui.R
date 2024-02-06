@@ -38,7 +38,7 @@ ui <- fluidPage(
         tabPanel("TextAnalysisR",
                  navlistPanel(
                    widths = c(3, 9),
-                   tabPanel("About", includeMarkdown("markdown/about.md"))
+                   tabPanel("About", includeMarkdown("markdown/README.md"))
                  )),
         tabPanel("Upload",
                  sidebarLayout(
@@ -48,7 +48,7 @@ ui <- fluidPage(
                              "dataset_choice",
                              "Upload a file or use the dataset",
                              selected = " ",
-                             choices = c(" ", "SpecialEduTech", "Upload Your File")
+                             choices = c(" ", "Upload an Example Dataset", "Upload Your File")
 
                          ),
                          fileInput(
@@ -168,9 +168,9 @@ ui <- fluidPage(
                         sliderInput(
                             "K_range_1",
                             "Range of topic numbers",
-                            value = c(5, 30),
+                            value = c(5, 20),
                             min = 0,
-                            max = 100
+                            max = 50
                         ),
                         selectizeInput(
                             "categorical_var",
@@ -487,9 +487,9 @@ ui <- fluidPage(
                              sliderInput(
                                  "co_occurence_number",
                                  "Minimum co-occurence numbers",
-                                 value = 50,
+                                 value = 5,
                                  min = 0,
-                                 max = 500
+                                 max = 100
                              ),
                              sliderInput(
                                  "correlation_value",
