@@ -45,25 +45,10 @@ preprocessed_data <- preprocess_texts(data, text_field = "abstract")
 # Plot word frequency for the top 20 terms.
 
 dfm <- SpecialEduTech %>%
-        preprocess_texts(text_field = "abstract") %>%
-        quanteda::dfm()
+  preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm()
 
 dfm %>% plot_word_frequency(n = 20)
-```
-
-### Plot Topic Per-Term Per-Topic Probabilities
-
-```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes per-term per-topic probabilities (beta).
-# Plot per-term per-topic probabilities for the top 10 terms.
-
-dfm <- SpecialEduTech %>%
-        preprocess_texts(text_field = "abstract") %>%
-        quanteda::dfm()
-
-data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-
-data %>% plot_topic_term(top_n = 5, ncol = 3)
 ```
 
 ### Examine Highest Per-Term Per-Topic Probabilities
@@ -74,12 +59,29 @@ data %>% plot_topic_term(top_n = 5, ncol = 3)
 # Number of top_n can be changed.
 
 dfm <- SpecialEduTech %>%
-        preprocess_texts(text_field = "abstract") %>%
-        quanteda::dfm()
+  preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm()
 
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 
-data %>% examine_top_terms(top_n = 5) %>% DT::datatable(rownames = FALSE)
+data %>% examine_top_terms(top_n = 5) %>%
+  dplyr::mutate_if(is.numeric, ~ round(., 3)) %>%
+  DT::datatable(rownames = FALSE)
+```
+
+### Plot Topic Per-Term Per-Topic Probabilities
+
+```{r, message=FALSE, eval=FALSE}
+# data is a tidy data frame that includes per-term per-topic probabilities (beta).
+# Plot per-term per-topic probabilities for the top 10 terms.
+
+dfm <- SpecialEduTech %>%
+  preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm()
+
+data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
+data %>% examine_top_terms(top_n = 2) %>%
+  plot_topic_term(ncol = 3)
 ```
 
 ### Plot Per-Document Per-Topic Probabilities
@@ -90,8 +92,8 @@ data %>% examine_top_terms(top_n = 5) %>% DT::datatable(rownames = FALSE)
 # Number of top_n can be changed.
 
 dfm <- SpecialEduTech %>%
-        preprocess_texts(text_field = "abstract") %>%
-        quanteda::dfm()
+  preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm()
 
 data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 
@@ -106,8 +108,8 @@ data %>% topic_probability_plot(top_n = 15) %>% plotly::ggplotly()
 # Number of top_n can be changed.
 
 dfm <- SpecialEduTech %>%
-        preprocess_texts(text_field = "abstract") %>%
-        quanteda::dfm()
+  preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm()
 
 data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 
