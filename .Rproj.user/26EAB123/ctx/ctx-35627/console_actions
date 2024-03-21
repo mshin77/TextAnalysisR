@@ -1,0 +1,16 @@
+{
+    "type": [
+        0,
+        1,
+        3,
+        3,
+        2
+    ],
+    "data": [
+        "> ",
+        "shiny::runApp('R')",
+        "Loading required package: shiny\n",
+        "Error in func(fname, ...) : app.R did not return a shiny.appobj object.\n",
+        "\nRestarting R session...\n\n"
+    ]
+}

@@ -1,0 +1,12 @@
+name: TextAnalysisR
+title: TextAnalysisR
+username: mshin77
+account: mshin77
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10439511
+bundleId: 7900121
+url: https://mshin77.shinyapps.io/TextAnalysisR/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

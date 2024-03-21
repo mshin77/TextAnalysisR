@@ -1,0 +1,8 @@
+library(TextAnalysisR)
+library(TextAnalysisR)
+library(TextAnalysisR)
+library(TextAnalysisR)
+usethis::use_pkgdown()
+usethis::use_pkgdown(config_file = "_pkgdown.yml", destdir = "docs")
+pkgdown::build_site()
+shiny::runApp('R')
