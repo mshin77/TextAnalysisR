@@ -114,93 +114,6 @@ plot_word_frequency <-
     }
 
 
-# Display text mining results from the structural topic model ----
-
-#' @title Plot topic per-term per-topic probabilities
-#'
-#' @name plot_topic_term
-#'
-#' @description
-#' Plot per-term per-topic probabilities with highest word probabilities.
-#'
-#' @param data A tidy data frame that includes per-term per-topic probabilities (beta).
-#' @param top_n A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).
-#' @param ncol A number of columns in the facet plot.
-#' @param topic_names (Labeled) topic names
-#' @param ... Further arguments passed to \code{dplyr::group_by}.
-#'
-#' @export
-#' @return A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
-#' The result is a ggplot object representing the topic-term plot.
-#'
-#' @examples
-#' suppressWarnings({
-#' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract") %>%
-#'        quanteda::dfm()
-#' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-#' data %>% plot_topic_term(top_n = 2, ncol = 3)
-#' }
-#' })
-#'
-#' @import dplyr
-#' @import ggplot2
-#' @importFrom magrittr %>%
-#' @importFrom rlang := enquos
-#' @importFrom tidytext scale_x_reordered reorder_within
-#'
-plot_topic_term <-
-    function(data, top_n, ncol = 3, topic_names = NULL, ...) {
-
-        topic_term_plot <- data %>%
-            group_by(topic, ...) %>%
-            top_n(top_n, beta) %>%
-            ungroup() %>%
-            mutate(
-                ord = factor(topic, levels = c(min(topic): max(topic))),
-                tt = as.numeric(topic),
-                topic = paste("Topic", topic),
-                term = reorder_within(term, beta, topic)) %>%
-            arrange(ord)
-        levelt = paste("Topic", topic_term_plot$ord) %>% unique()
-        topic_term_plot$topic = factor(topic_term_plot$topic,
-                                       levels = levelt)
-        if(!is.null(topic_names)){
-            topic_term_plot$topic = topic_names[topic_term_plot$tt]
-            topic_term_plot <- topic_term_plot %>%
-                mutate(topic = as.character(topic)) %>%
-                mutate(topic = ifelse(!is.na(topic), topic, paste('Topic',tt)))
-            topic_term_plot$topic =
-                factor(topic_term_plot$topic, levels = topic_term_plot$topic %>% unique())
-        }
-        topic_term_plot$tt = NULL
-        topic_term_plot <- topic_term_plot %>%
-            ggplot(aes(term, beta, fill = topic)) +
-            geom_col(show.legend = FALSE, alpha = 0.8) +
-            facet_wrap(~ topic, scales = "free", ncol = ncol) +
-            scale_x_reordered() +
-            scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
-            coord_flip() +
-            xlab("") +
-            ylab("Word probability") +
-            theme_minimal(base_size = 12) +
-            theme(
-                panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),
-                axis.line = element_line(color = "#3B3B3B", size = 0.3),
-                axis.ticks = element_line(color = "#3B3B3B", size = 0.3),
-                strip.text.x = element_text(size = 12, color = "#3B3B3B"),
-                axis.text.x = element_text(size = 12, color = "#3B3B3B"),
-                axis.text.y = element_text(size = 12, color = "#3B3B3B"),
-                axis.title = element_text(size = 12, color = "#3B3B3B"),
-                axis.title.x = element_text(margin = margin(t = 7)),
-                axis.title.y = element_text(margin = margin(r = 7)))
-
-        return(topic_term_plot)
-    }
-
-
 #' @title Examine highest per-term per-topic probabilities
 #'
 #' @name examine_top_terms
@@ -223,30 +136,112 @@ plot_topic_term <-
 #'        preprocess_texts(text_field = "abstract") %>%
 #'        quanteda::dfm()
 #' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-#' data %>% examine_top_terms(top_n = 5) %>% DT::datatable(rownames = FALSE)
+#' data %>% examine_top_terms(top_n = 5) %>%
+#' dplyr::mutate_if(is.numeric, ~ round(., 3)) %>%
+#' DT::datatable(rownames = FALSE)
 #' }
 #' })
 #'
 #' @import dplyr
 #' @importFrom magrittr %>%
 #' @importFrom rlang := enquos
-#' @importFrom tidyr unnest
-#' @importFrom DT datatable
 #'
 examine_top_terms <-
 
   function(data, top_n, ...) {
-    top_terms <- data %>%
-      arrange(beta) %>%
+    topic_term <- data %>%
       group_by(topic, ...) %>%
       top_n(top_n, beta) %>%
-      arrange(beta) %>%
-      select(topic, term) %>%
-      summarise(terms = list(term)) %>%
-      mutate(terms = purrr::map(terms, paste, collapse = ", ")) %>%
-      unnest(cols = c(terms))
+      ungroup()
 
-    return(top_terms)
+    return(topic_term)
+  }
+
+
+# Display text mining results from the structural topic model ----
+
+#' @title Plot topic per-term per-topic probabilities
+#'
+#' @name plot_topic_term
+#'
+#' @description
+#' Plot per-term per-topic probabilities with highest word probabilities.
+#'
+#' @param data A tidy data frame that includes per-term per-topic probabilities (beta).
+#' @param ncol A number of columns in the facet plot.
+#' @param topic_names (Labeled) topic names
+#' @param ... Further arguments passed to \code{dplyr::group_by}.
+#'
+#' @export
+#' @return A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
+#' The result is a ggplot object representing the topic-term plot.
+#'
+#' @examples
+#' suppressWarnings({
+#' if(requireNamespace("quanteda", "tidytext")){
+#' dfm <- SpecialEduTech %>%
+#'        preprocess_texts(text_field = "abstract") %>%
+#'        quanteda::dfm()
+#' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
+#' data %>% examine_top_terms(top_n = 2) %>%
+#' plot_topic_term(ncol = 3)
+#' }
+#' })
+#'
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom magrittr %>%
+#' @importFrom rlang := enquos
+#' @importFrom tidytext scale_x_reordered reorder_within
+#'
+plot_topic_term <-
+  function(data, ncol = ncol, topic_names = NULL, ...) {
+
+    topic_term <- data %>%
+      mutate(
+        ord = factor(topic, levels = c(min(topic): max(topic))),
+        tt = as.numeric(topic),
+        topic = paste("Topic", topic),
+        term = reorder_within(term, beta, topic)) %>%
+      arrange(ord)
+
+    levelt = paste("Topic", topic_term$ord) %>% unique()
+
+    topic_term$topic = factor(topic_term$topic,
+                              levels = levelt)
+    if(!is.null(topic_names)){
+      topic_term$topic = topic_names[topic_term$tt]
+      topic_term <- topic_term %>%
+        mutate(topic = as.character(topic)) %>%
+        mutate(topic = ifelse(!is.na(topic), topic, paste('Topic',tt)))
+      topic_term$topic =
+        factor(topic_term$topic, levels = topic_term$topic %>% unique())
+    }
+
+    topic_term$tt = NULL
+
+    topic_term_plot <- ggplot(topic_term, aes(term, beta, fill = topic)) +
+      geom_col(show.legend = FALSE, alpha = 0.8) +
+      facet_wrap(~ topic, scales = "free", ncol = ncol) +
+      scale_x_reordered() +
+      scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+      coord_flip() +
+      xlab("") +
+      ylab("Word probability") +
+      theme_minimal(base_size = 12) +
+      theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = "#3B3B3B", size = 0.3),
+        axis.ticks = element_line(color = "#3B3B3B", size = 0.3),
+        strip.text.x = element_text(size = 12, color = "#3B3B3B"),
+        axis.text.x = element_text(size = 12, color = "#3B3B3B"),
+        axis.text.y = element_text(size = 12, color = "#3B3B3B"),
+        axis.title = element_text(size = 12, color = "#3B3B3B"),
+        axis.title.x = element_text(margin = margin(t = 7)),
+        axis.title.y = element_text(margin = margin(r = 7)))
+
+    return(topic_term_plot)
   }
 
 
