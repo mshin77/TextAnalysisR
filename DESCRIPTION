@@ -14,21 +14,19 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
     dplyr,
-    DT,
     ggplot2,
     ggraph,
     magrittr,
-    numform,
     quanteda,
     quanteda.textstats,
-    plotly,
     rlang,
     shiny,
     stm,
     tibble,
     tidyr,
     tidytext,
-    widyr
+    widyr,
+    numform
 Suggests:
     covr,
     knitr,
@@ -41,4 +39,3 @@ URL: https://mshin77.github.io/TextAnalysisR/
 BugReports: https://github.com/mshin77/TextAnalysisR/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Remotes: https://github.com/mshin77/TextAnalysisR.git

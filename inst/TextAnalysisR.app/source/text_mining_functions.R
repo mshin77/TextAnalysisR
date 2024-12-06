@@ -1,15 +1,3 @@
-suppressPackageStartupMessages({
-  library(dplyr)
-  library(ggplot2)
-  library(quanteda)
-  library(tidytext)
-  library(stm)
-  library(numform)
-  library(textmineR)
-  library(widyr)
-  library(ggraph)
-  library(igraph)
-})
 
 #' @title How to Use Functions in TextAnalysisR
 #'
@@ -218,6 +206,10 @@ examine_top_terms <-
 #'   # p <- plot_topic_term(beta_td, ncol = 3)
 #'   # print(p)
 #' }
+#'
+#' @importFrom stats reorder
+#' @importFrom numform ff_num
+#'
 plot_topic_term <-
   function(data, ncol = 3, topic_names = NULL, ...) {
 

@@ -28,4 +28,5 @@ if (interactive()) {
   # p <- plot_topic_term(beta_td, ncol = 3)
   # print(p)
 }
+
 }
