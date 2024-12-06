@@ -2,33 +2,28 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{topic_probability_table}
 \alias{topic_probability_table}
-\title{Visualize a table for per-document per-topic probabilities}
+\title{Create a Table of Topic Prevalence}
 \usage{
-topic_probability_table(data, top_n, ...)
+topic_probability_table(data, top_n = 10)
 }
 \arguments{
-\item{data}{A tidy data frame that includes per-document per-topic probabilities (gamma).}
+\item{data}{A tidy data frame from \code{tidytext::tidy(stm_model, matrix="gamma")}.}
 
-\item{top_n}{A number of highest per-document per-topic probabilities (number of top_n can be changed).}
-
-\item{...}{Further arguments passed.}
+\item{top_n}{The number of topics to display, ordered by their mean prevalence.}
 }
 \value{
-A tibble (data frame) object with a list of topic probabilities from \code{tidytext::tidy}.
-The result is a ggplot object representing the topic-term plot.
+A \code{tibble} containing columns \code{topic} and \code{gamma}, where \code{topic}
+is a factor representing each topic (relabeled with a "Topic X" format), and \code{gamma} is the
+mean topic prevalence across all documents. Numeric values are rounded to three decimal places.
 }
 \description{
-Create a table of per-document per-topic probabilities.
+Given a tidy data frame of per-document per-topic probabilities (gamma),
+this function calculates the mean prevalence of each topic and returns a table of the top topics.
 }
 \examples{
-suppressWarnings({
-if(requireNamespace("quanteda", "tidytext")){
-dfm <- SpecialEduTech \%>\%
-       preprocess_texts(text_field = "abstract") \%>\%
-       quanteda::dfm()
-data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-data \%>\% topic_probability_table(top_n = 15) \%>\% DT::datatable(rownames = FALSE)
+if (interactive()) {
+  # Assume gamma_td is from tidytext::tidy(stm_model, matrix="gamma")
+  # tbl <- topic_probability_table(gamma_td, top_n = 10)
+  # print(tbl)
 }
-})
-
 }

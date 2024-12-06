@@ -32,14 +32,12 @@ ui <- fluidPage(
         )
     )),
     includeCSS("css/styles.css"),
-    titlePanel("Analyze Text Data"),
+    titlePanel("TextAnalysisR"),
     navbarPage(
-        "",
-        tabPanel("TextAnalysisR",
-                 navlistPanel(
-                   widths = c(3, 9),
-                   tabPanel("About", includeMarkdown("markdown/README.md"))
-                 )),
+      "",
+      tabPanel("About",
+               includeMarkdown("markdown/README.md")
+      ),
         tabPanel("Upload",
                  sidebarLayout(
                      sidebarPanel(

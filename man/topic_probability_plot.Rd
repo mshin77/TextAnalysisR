@@ -2,32 +2,27 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{topic_probability_plot}
 \alias{topic_probability_plot}
-\title{Plot per-document per-topic probabilities}
+\title{Plot Per-document Per-topic Probabilities}
 \usage{
-topic_probability_plot(data, top_n, ...)
+topic_probability_plot(data, top_n = 10)
 }
 \arguments{
-\item{data}{A tidy data frame that includes per-document per-topic probabilities (gamma).}
+\item{data}{A tidy data frame from \code{tidytext::tidy(stm_model, matrix="gamma")}.}
 
-\item{top_n}{A number of highest per-document per-topic probabilities (number of top_n can be changed).}
-
-\item{...}{Further arguments passed.}
+\item{top_n}{The number of topics to display, ordered by their mean prevalence.}
 }
 \value{
-A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
+A \code{ggplot} object showing a bar plot of topic prevalence. Topics are ordered by their
+mean gamma value (average prevalence across documents).
 }
 \description{
-Plot per-document per-topic probabilities.
+Given a tidy data frame of per-document per-topic probabilities (gamma),
+this function calculates the mean topic prevalence across documents and plots the top topics.
 }
 \examples{
-suppressWarnings({
-if(requireNamespace("quanteda", "tidytext")){
-dfm <- SpecialEduTech \%>\%
-       preprocess_texts(text_field = "abstract") \%>\%
-       quanteda::dfm()
-data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-data \%>\% topic_probability_plot(top_n = 15) \%>\% plotly::ggplotly()
+if (interactive()) {
+  # Assume gamma_td is from tidytext::tidy(stm_model, matrix="gamma")
+  # p <- topic_probability_plot(gamma_td, top_n = 10)
+  # print(p)
 }
-})
-
 }

@@ -2,35 +2,30 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{examine_top_terms}
 \alias{examine_top_terms}
-\title{Examine highest per-term per-topic probabilities}
+\title{Examine Highest Per-term Per-topic Probabilities}
 \usage{
 examine_top_terms(data, top_n, ...)
 }
 \arguments{
-\item{data}{A tidy data frame that includes per-term per-topic probabilities (beta).}
+\item{data}{A tidy data frame from \code{tidytext::tidy(stm_model, matrix = "beta")}.}
 
-\item{top_n}{A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).}
+\item{top_n}{The number of top terms per topic to return.}
 
 \item{...}{Further arguments passed to \code{dplyr::group_by}.}
 }
 \value{
-A tibble (data frame) object with a list of word probabilities from \code{tidytext::tidy}.
-The result is a data frame containing word probabilities for each topic.
+A \code{tibble} containing the top \code{top_n} terms for each topic. The output includes
+columns for \code{topic}, \code{term}, and \code{beta} values, restricted to the highest-probability terms.
 }
 \description{
-Examine highest per-term per-topic probabilities.
+Given a tidy data frame of word-topic probabilities (beta values) from an STM model,
+this function extracts the top terms for each topic.
 }
 \examples{
-suppressWarnings({
-if(requireNamespace("quanteda", "tidytext")){
-dfm <- SpecialEduTech \%>\%
-       preprocess_texts(text_field = "abstract") \%>\%
-       quanteda::dfm()
-data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-data \%>\% examine_top_terms(top_n = 5) \%>\%
-dplyr::mutate_if(is.numeric, ~ round(., 3)) \%>\%
-DT::datatable(rownames = FALSE)
+if (interactive()) {
+  # Assume stm_model is a fitted STM object
+  # beta_td <- tidytext::tidy(stm_model, matrix="beta")
+  # top_terms <- examine_top_terms(beta_td, top_n = 5)
+  # head(top_terms)
 }
-})
-
 }

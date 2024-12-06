@@ -2,32 +2,33 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{plot_word_frequency}
 \alias{plot_word_frequency}
-\title{Plot word frequency results.}
+\title{Plot Word Frequency Results}
 \usage{
 plot_word_frequency(data, n = 20, ...)
 }
 \arguments{
-\item{data}{A document-feature matrix (dfm) object through the quanteda package.}
+\item{data}{A \code{quanteda} dfm object.}
 
-\item{n}{The number of top n features (terms or words).}
+\item{n}{The number of top features (terms or words) to display.}
 
 \item{...}{Further arguments passed to \code{quanteda.textstats::textstat_frequency}.}
 }
 \value{
-A ggplot object output from \code{quanteda.textstats::textstat_frequency} and \code{ggplot2::ggplot}.
-The result is a ggplot object representing the word frequency plot.
+A \code{ggplot} object visualizing the top terms by their frequency. The plot
+shows each term on one axis and frequency on the other, with points representing their
+observed frequencies.
 }
 \description{
-Plot the frequently observed top n terms.
+Given a document-feature matrix (dfm), this function computes the most frequent terms
+and creates a ggplot-based visualization of term frequencies.
 }
 \examples{
-suppressWarnings({
-if(requireNamespace("quanteda")){
-dfm <- SpecialEduTech \%>\%
-       preprocess_texts(text_field = "abstract") \%>\%
-       quanteda::dfm()
-dfm \%>\% plot_word_frequency(n = 20)
+if (interactive()) {
+  d <- data.frame(text = c("This is an example.", "Another short example text."))
+  dfm_obj <- d \%>\%
+    preprocess_texts(text_field = "text") \%>\%
+    quanteda::dfm()
+  p <- plot_word_frequency(dfm_obj, n = 10)
+  print(p)
 }
-})
-
 }

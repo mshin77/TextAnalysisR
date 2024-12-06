@@ -1,8 +1,8 @@
 ---
-title: "Text-Analysis"
+title: "TextAnalysisR Vignette"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Text-Analysis}
+  %\VignetteIndexEntry{TextAnalysisR Vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -13,9 +13,11 @@ library(TextAnalysisR)
 
 The `TextAnalysisR` package provides a supporting workflow for text mining analysis. The `TextAnalysisR.app()` function allows users to launch and browse a Shiny app. This web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph' as well as 'widyr' (network analysis). 'tidytext' was implemented to tidy non-tidy format objects.
 
+**These steps are similar to those demonstrated in the Shiny web app at `TextAnalysisR::TextAnalysisR.app()`.**
+
 ## Installation
 
-The development version from [GitHub](https://github.com/mshin77/TextAnalysisR) with:
+The development version can be installed from [GitHub](https://github.com/mshin77/TextAnalysisR):
 
 ```{r, message=FALSE, eval=FALSE}
 install.packages("devtools")
@@ -27,7 +29,9 @@ devtools::install_github("mshin77/TextAnalysisR")
 ```{r, message=FALSE, eval=FALSE}
 library(TextAnalysisR)
 
-TextAnalysisR.app()
+if (interactive()) {
+  TextAnalysisR.app()
+}
 ```
 
 ### Preprocess Text Data
@@ -41,81 +45,82 @@ preprocessed_data <- preprocess_texts(data, text_field = "abstract")
 ### Plot Word Frequency
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a document-feature matrix (dfm) object through the quanteda package.
-# Plot word frequency for the top 20 terms.
+# data is a document-feature matrix (dfm) object created via quanteda.
 
 dfm <- SpecialEduTech %>%
   preprocess_texts(text_field = "abstract") %>%
   quanteda::dfm()
 
-dfm %>% plot_word_frequency(n = 20)
+# Plot top 20 terms by frequency.
+if (interactive()) {
+  dfm %>% plot_word_frequency(n = 20)
+}
 ```
 
 ### Examine Highest Per-Term Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes per-term per-topic probabilities (beta).
-# Examine the top 5 terms with the highest per-term per-topic probabilities.
-# Number of top_n can be changed.
+# data is a tidy data frame with per-term per-topic probabilities (beta).
 
 dfm <- SpecialEduTech %>%
   preprocess_texts(text_field = "abstract") %>%
   quanteda::dfm()
 
+# Assume stm_15 is a previously fitted STM model
+# and rownames(dfm) matches the documents used in stm_15.
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
 
-data %>% examine_top_terms(top_n = 5) %>%
-  dplyr::mutate_if(is.numeric, ~ round(., 3)) %>%
-  DT::datatable(rownames = FALSE)
+if (interactive()) {
+  data %>% examine_top_terms(top_n = 5) %>%
+    dplyr::mutate_if(is.numeric, ~ round(., 3)) %>%
+    DT::datatable(rownames = FALSE)
+}
 ```
 
 ### Plot Topic Per-Term Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes per-term per-topic probabilities (beta).
-# Plot per-term per-topic probabilities for the top 10 terms.
-
 dfm <- SpecialEduTech %>%
   preprocess_texts(text_field = "abstract") %>%
   quanteda::dfm()
 
+# Assume stm_15 is a fitted STM model.
 data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-data %>% examine_top_terms(top_n = 2) %>%
-  plot_topic_term(ncol = 3)
+
+if (interactive()) {
+  data %>% examine_top_terms(top_n = 2) %>%
+    plot_topic_term(ncol = 3)
+}
 ```
 
 ### Plot Per-Document Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes per-document per-topic probabilities (gamma).
-# Plot per-document per-topic probabilities for the top 15 topics.
-# Number of top_n can be changed.
-
 dfm <- SpecialEduTech %>%
   preprocess_texts(text_field = "abstract") %>%
   quanteda::dfm()
 
+# Assume stm_15 is a fitted STM model.
 data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 
-data %>% topic_probability_plot(top_n = 15) %>% plotly::ggplotly()
+if (interactive()) {
+  p <- topic_probability_plot(data, top_n = 15)
+  plotly::ggplotly(p)
+}
 ```
 
 ### Visualize a Table for Per-Document Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame that includes per-document per-topic probabilities (gamma).
-# Create a table of per-document per-topic probabilities for the top 15 topics.
-# Number of top_n can be changed.
-
 dfm <- SpecialEduTech %>%
   preprocess_texts(text_field = "abstract") %>%
   quanteda::dfm()
 
+# Assume stm_15 is a fitted STM model.
 data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
 
-data %>% topic_probability_table(top_n = 15) %>% DT::datatable(rownames = FALSE)
+if (interactive()) {
+  data %>% topic_probability_table(top_n = 15) %>% DT::datatable(rownames = FALSE)
+}
 ```
-
-
-
 

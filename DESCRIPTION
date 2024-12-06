@@ -1,17 +1,18 @@
 Package: TextAnalysisR
 Title: Text Mining Workflow Tools
-Version: 0.0.1
-Authors@R: 
+Version: 0.0.2
+Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7907-9193"))
-Description: 'TextAnalysisR' provides a supporting workflow for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), and 'ggraph' as well as 'widyr' (network analysis). 'tidytext' was implemented to tidy non-tidy format objects.
+Description: 'TextAnalysisR' provides a supporting workflow for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), and 'ggraph' as well as 'widyr' (network analysis). 'tidytext' was implemented to tidy non-tidy format objects. These steps are similar to those demonstrated in the Shiny web app at 'TextAnalysisR::TextAnalysisR.app()'.
+References: Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., & Kang, E. (2023) "A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling." <doi:10.1186/s40594-023-00414-x>
 License: MIT + file LICENSE
 Language: en-US
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
-Imports: 
+RoxygenNote: 7.3.2
+Imports:
     dplyr,
     DT,
     ggplot2,
@@ -28,7 +29,7 @@ Imports:
     tidyr,
     tidytext,
     widyr
-Suggests: 
+Suggests:
     covr,
     knitr,
     rmarkdown,

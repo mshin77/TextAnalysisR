@@ -2,30 +2,48 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{preprocess_texts}
 \alias{preprocess_texts}
-\title{Preprocess text data}
+\title{Preprocess Text Data}
 \usage{
-preprocess_texts(data, text_field = "united_texts", ...)
+preprocess_texts(
+  data,
+  text_field = "united_texts",
+  custom_stopwords = NULL,
+  min_char = 2,
+  ...
+)
 }
 \arguments{
-\item{data}{A data frame that contains text as data.}
+\item{data}{A data frame that contains text data.}
 
-\item{text_field}{A name of column that contains text data in a data frame.}
+\item{text_field}{The name of the column containing text data.}
 
-\item{...}{Further arguments passed to \code{corpus}.}
+\item{custom_stopwords}{A character vector of additional stopwords to remove. Default is NULL.}
+
+\item{min_char}{Minimum length in characters for tokens (default is 2).}
+
+\item{...}{Further arguments passed to \code{quanteda::corpus}.}
 }
 \value{
-A tokens object output from \code{quanteda::tokens}.
-The result is a list of tokenized and preprocessed text data.
+A \code{quanteda::tokens} object. This object is a list-like structure where each element
+represents a tokenized version of a single document. The tokens object can be further processed
+(e.g., converted into a dfm) for text analysis and modeling.
 }
 \description{
-Preprocess text data by conducting the following functions:
-construct a corpus; segment texts in a corpus into tokens; preprocess tokens;
-convert the features of tokens to lowercase;
-remove stopwords; specify the minimum length in characters for tokens (at least 2).
+Preprocesses text data by:
+\itemize{
+\item Constructing a corpus
+\item Tokenizing text into words
+\item Converting to lowercase
+\item Removing default English stopwords and optional custom stopwords
+\item Specifying a minimum token length.
+}
+
+Typically used before constructing a dfm and fitting an STM model.
 }
 \examples{
-suppressWarnings({
-SpecialEduTech \%>\% preprocess_texts(text_field = "abstract")
-})
-
+if (interactive()) {
+  d <- data.frame(text = c("This is an example.", "Another example of text."))
+  result_tokens <- preprocess_texts(d, text_field = "text")
+  result_tokens
+}
 }

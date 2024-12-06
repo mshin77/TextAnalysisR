@@ -1,295 +1,307 @@
-# Preprocess Text Data ----
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(ggplot2)
+  library(quanteda)
+  library(tidytext)
+  library(stm)
+  library(numform)
+  library(textmineR)
+  library(widyr)
+  library(ggraph)
+  library(igraph)
+})
 
-#' @title Preprocess text data
-#'
-#' @name preprocess_texts
+#' @title How to Use Functions in TextAnalysisR
 #'
 #' @description
-#' Preprocess text data by conducting the following functions:
-#' construct a corpus; segment texts in a corpus into tokens; preprocess tokens;
-#' convert the features of tokens to lowercase;
-#' remove stopwords; specify the minimum length in characters for tokens (at least 2).
+#' This documentation provides guidance on how to use a set of functions related to:
+#' - Word-topic probabilities (Beta)
+#' - Document-topic probabilities (Gamma)
+#' - Estimated effects of covariates on topic prevalence
+#' - Network analysis
 #'
-#' @param data A data frame that contains text as data.
-#' @param text_field A name of column that contains text data in a data frame.
-#' @param ... Further arguments passed to \code{corpus}.
+#' These steps are similar to those demonstrated in the Shiny web app at \code{TextAnalysisR::TextAnalysisR.app()}.
 #'
+#' @section Word-Topic Probabilities (Beta):
+#' 1. Fit an STM model using \code{stm::stm()}.
+#' 2. Extract the beta matrix as a tidy data frame with \code{tidytext::tidy(stm_model, matrix = "beta")}.
+#' 3. Use \code{\link{examine_top_terms}} to find top words in each topic.
+#' 4. Use \code{\link{plot_topic_term}} to visualize top terms per topic.
+#'
+#' @section Document-Topic Probabilities (Gamma):
+#' 1. Extract gamma from \code{tidytext::tidy(stm_model, matrix = "gamma")}.
+#' 2. Use \code{\link{topic_probability_plot}} to visualize topic prevalence.
+#' 3. Use \code{\link{topic_probability_table}} to obtain a table of top topics.
+#'
+#' @section Estimated Effects (Categorical and Continuous Variables):
+#' 1. Use \code{stm::estimateEffect()} to model how covariates predict topic proportions.
+#' 2. Extract effects using \code{stminsights::get_effects()} and visualize them with custom plotting functions.
+#'
+#' @section Network Analysis:
+#' 1. **Hierarchical Clustering**: Use \code{textmineR::CalcHellingerDist()} on \code{stm_model$theta}, then \code{hclust()} and \code{ggdendro::ggdendrogram()} to visualize.
+#' 2. **Text Network**: Convert the dfm to a tidy format, use \code{widyr::pairwise_cor()}, filter by correlation, and visualize with \code{igraph} + \code{ggraph}.
+#' 3. **Term Frequency Over Time**: Merge dfm counts with document-level variables, group by a continuous variable, and plot changes in term frequency over time with \code{ggplot2}.
+#'
+#' @return No return value, called for documentation purposes only.
 #' @export
-#' @return A tokens object output from \code{quanteda::tokens}.
-#' The result is a list of tokenized and preprocessed text data.
 #'
 #' @examples
-#' suppressWarnings({
-#' SpecialEduTech %>% preprocess_texts(text_field = "abstract")
-#' })
-#'
-#' @import quanteda
-#' @importFrom magrittr %>%
-#' @importFrom rlang := enquos
-
-preprocess_texts <-
-    function(data, text_field = "united_texts", ...) {
-
-        # Construct a corpus
-        corp <- quanteda::corpus(data, text_field = text_field, ...)
-
-        # Segment texts in a corpus into tokens (words or sentences) by word boundaries
-        toks <- quanteda::tokens(corp)
-
-        # Preprocess tokens
-        toks_clean <- quanteda::tokens(
-            toks,
-            what = "word",
-            remove_punct = TRUE,
-            remove_symbols = TRUE,
-            remove_numbers = TRUE,
-            remove_url = TRUE,
-            remove_separators = TRUE,
-            split_hyphens = TRUE,
-            split_tags = TRUE,
-            include_docvars = TRUE,
-            padding = FALSE,
-            verbose = FALSE)
-
-        # Convert the features of tokens to lowercase.
-        toks_lower <- quanteda::tokens_tolower(toks_clean,
-                                               keep_acronyms = FALSE)
-
-        # Remove English stopwords.
-        toks_lower_no_stop <- toks_lower %>%
-            quanteda::tokens_remove(quanteda::stopwords("en"),
-                                    valuetype = "glob",
-                                    window = 0,
-                                    verbose = FALSE,
-                                    padding = TRUE)
-
-        # Specify the minimum length in characters for tokens (at least 2).
-        toks_lower_no_stop_adj <- toks_lower_no_stop %>%
-            quanteda::tokens_select(min_nchar=2L,
-                                    verbose = FALSE)
-
-        return(toks_lower_no_stop_adj)
-    }
+#' # This section provides general guidance; no direct runnable code is required.
+how_to_use <- function() {
+  invisible(NULL)
+}
 
 
-#' @title Plot word frequency results.
-#'
-#' @name plot_word_frequency
+#' @title Preprocess Text Data
 #'
 #' @description
-#' Plot the frequently observed top n terms.
+#' Preprocesses text data by:
+#' - Constructing a corpus
+#' - Tokenizing text into words
+#' - Converting to lowercase
+#' - Removing default English stopwords and optional custom stopwords
+#' - Specifying a minimum token length.
 #'
-#' @param data A document-feature matrix (dfm) object through the quanteda package.
-#' @param n The number of top n features (terms or words).
+#' Typically used before constructing a dfm and fitting an STM model.
+#'
+#' @param data A data frame that contains text data.
+#' @param text_field The name of the column containing text data.
+#' @param custom_stopwords A character vector of additional stopwords to remove. Default is NULL.
+#' @param min_char Minimum length in characters for tokens (default is 2).
+#' @param ... Further arguments passed to \code{quanteda::corpus}.
+#'
+#' @return A \code{quanteda::tokens} object. This object is a list-like structure where each element
+#' represents a tokenized version of a single document. The tokens object can be further processed
+#' (e.g., converted into a dfm) for text analysis and modeling.
+#'
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   d <- data.frame(text = c("This is an example.", "Another example of text."))
+#'   result_tokens <- preprocess_texts(d, text_field = "text")
+#'   result_tokens
+#' }
+preprocess_texts <-
+  function(data, text_field = "united_texts", custom_stopwords = NULL, min_char = 2, ...) {
+
+    corp <- quanteda::corpus(data, text_field = text_field, ...)
+    toks <- quanteda::tokens(corp,
+                             what = "word",
+                             remove_punct = TRUE,
+                             remove_symbols = TRUE,
+                             remove_numbers = TRUE,
+                             remove_url = TRUE,
+                             remove_separators = TRUE,
+                             split_hyphens = TRUE,
+                             split_tags = TRUE,
+                             include_docvars = TRUE,
+                             padding = FALSE,
+                             verbose = FALSE)
+    toks_lower <- quanteda::tokens_tolower(toks, keep_acronyms = FALSE)
+
+    all_stopwords <- c(quanteda::stopwords("en"), custom_stopwords)
+    toks_lower_no_stop <- quanteda::tokens_remove(toks_lower,
+                                                  all_stopwords,
+                                                  valuetype = "glob",
+                                                  window = 0,
+                                                  verbose = FALSE,
+                                                  padding = TRUE)
+
+    toks_clean <- quanteda::tokens_select(toks_lower_no_stop,
+                                          min_nchar = min_char,
+                                          verbose = FALSE)
+
+    return(toks_clean)
+  }
+
+
+#' @title Plot Word Frequency Results
+#'
+#' @description
+#' Given a document-feature matrix (dfm), this function computes the most frequent terms
+#' and creates a ggplot-based visualization of term frequencies.
+#'
+#' @param data A \code{quanteda} dfm object.
+#' @param n The number of top features (terms or words) to display.
 #' @param ... Further arguments passed to \code{quanteda.textstats::textstat_frequency}.
 #'
+#' @return A \code{ggplot} object visualizing the top terms by their frequency. The plot
+#' shows each term on one axis and frequency on the other, with points representing their
+#' observed frequencies.
+#'
 #' @export
-#' @return A ggplot object output from \code{quanteda.textstats::textstat_frequency} and \code{ggplot2::ggplot}.
-#' The result is a ggplot object representing the word frequency plot.
 #'
 #' @examples
-#' suppressWarnings({
-#' if(requireNamespace("quanteda")){
-#' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract") %>%
-#'        quanteda::dfm()
-#' dfm %>% plot_word_frequency(n = 20)
+#' if (interactive()) {
+#'   d <- data.frame(text = c("This is an example.", "Another short example text."))
+#'   dfm_obj <- d %>%
+#'     preprocess_texts(text_field = "text") %>%
+#'     quanteda::dfm()
+#'   p <- plot_word_frequency(dfm_obj, n = 10)
+#'   print(p)
 #' }
-#' })
-#'
-#' @importFrom magrittr %>%
-#' @importFrom rlang := enquos
-#' @importFrom ggplot2 ggplot geom_point coord_flip labs theme_bw
-#'
 plot_word_frequency <-
-    function(data, n = 20, ...) {
-        word_frequency_plot <- data %>%
-            quanteda.textstats::textstat_frequency(n = n, ...) %>%
-            ggplot(aes(x = stats::reorder(feature, frequency), y = frequency)) +
-            geom_point(colour = "#5f7994", size = 1) +
-            coord_flip() +
-            labs(x = NULL, y = "Word frequency") +
-            theme_bw(base_size = 12)
-        return(word_frequency_plot)
-    }
+  function(data, n = 20, ...) {
+    word_freq <- quanteda.textstats::textstat_frequency(data, n = n, ...)
+    word_frequency_plot <- ggplot(word_freq, aes(x = reorder(feature, frequency), y = frequency)) +
+      geom_point(colour = "#5f7994", size = 1) +
+      coord_flip() +
+      labs(x = NULL, y = "Word frequency") +
+      theme_minimal(base_size = 10) +
+      theme(
+        legend.position = "none",
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
+        axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
+        strip.text.x = element_text(size = 10, color = "#3B3B3B"),
+        axis.text.x = element_text(size = 10, color = "#3B3B3B"),
+        axis.text.y = element_text(size = 10, color = "#3B3B3B"),
+        axis.title = element_text(size = 10, color = "#3B3B3B"),
+        axis.title.x = element_text(margin = margin(t = 9)),
+        axis.title.y = element_text(margin = margin(r = 9))
+      )
+    return(word_frequency_plot)
+  }
 
 
-#' @title Examine highest per-term per-topic probabilities
-#'
-#' @name examine_top_terms
+#' @title Examine Highest Per-term Per-topic Probabilities
 #'
 #' @description
-#' Examine highest per-term per-topic probabilities.
+#' Given a tidy data frame of word-topic probabilities (beta values) from an STM model,
+#' this function extracts the top terms for each topic.
 #'
-#' @param data A tidy data frame that includes per-term per-topic probabilities (beta).
-#' @param top_n A number of highest per-term per-topic probabilities in each document (number of top_n can be changed).
+#' @param data A tidy data frame from \code{tidytext::tidy(stm_model, matrix = "beta")}.
+#' @param top_n The number of top terms per topic to return.
 #' @param ... Further arguments passed to \code{dplyr::group_by}.
 #'
+#' @return A \code{tibble} containing the top \code{top_n} terms for each topic. The output includes
+#' columns for \code{topic}, \code{term}, and \code{beta} values, restricted to the highest-probability terms.
+#'
 #' @export
-#' @return A tibble (data frame) object with a list of word probabilities from \code{tidytext::tidy}.
-#' The result is a data frame containing word probabilities for each topic.
 #'
 #' @examples
-#' suppressWarnings({
-#' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract") %>%
-#'        quanteda::dfm()
-#' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-#' data %>% examine_top_terms(top_n = 5) %>%
-#' dplyr::mutate_if(is.numeric, ~ round(., 3)) %>%
-#' DT::datatable(rownames = FALSE)
+#' if (interactive()) {
+#'   # Assume stm_model is a fitted STM object
+#'   # beta_td <- tidytext::tidy(stm_model, matrix="beta")
+#'   # top_terms <- examine_top_terms(beta_td, top_n = 5)
+#'   # head(top_terms)
 #' }
-#' })
-#'
-#' @import dplyr
-#' @importFrom magrittr %>%
-#' @importFrom rlang := enquos
-#'
 examine_top_terms <-
-
   function(data, top_n, ...) {
     topic_term <- data %>%
       group_by(topic, ...) %>%
       top_n(top_n, beta) %>%
       ungroup()
-
     return(topic_term)
   }
 
 
-# Display text mining results from the structural topic model ----
-
-#' @title Plot topic per-term per-topic probabilities
-#'
-#' @name plot_topic_term
+#' @title Plot Topic Per-term Per-topic Probabilities
 #'
 #' @description
-#' Plot per-term per-topic probabilities with highest word probabilities.
+#' Given per-term per-topic probabilities (beta), this function creates a plot of the top terms in each topic.
 #'
-#' @param data A tidy data frame that includes per-term per-topic probabilities (beta).
-#' @param ncol A number of columns in the facet plot.
-#' @param topic_names (Labeled) topic names
+#' @param data A tidy data frame from \code{tidytext::tidy(stm_model, matrix="beta")}.
+#' @param ncol The number of columns in the facet plot.
+#' @param topic_names An optional character vector for labeling topics. If provided, must be the same length as the number of topics.
 #' @param ... Further arguments passed to \code{dplyr::group_by}.
 #'
+#' @return A \code{ggplot} object showing a facet-wrapped chart of top terms for each topic,
+#' ordered by their per-topic probability (beta). Each facet represents a topic.
+#'
 #' @export
-#' @return A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
-#' The result is a ggplot object representing the topic-term plot.
 #'
 #' @examples
-#' suppressWarnings({
-#' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract") %>%
-#'        quanteda::dfm()
-#' data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-#' data %>% examine_top_terms(top_n = 2) %>%
-#' plot_topic_term(ncol = 3)
+#' if (interactive()) {
+#'   # Assume beta_td is a tidy data frame of per-term per-topic probabilities
+#'   # p <- plot_topic_term(beta_td, ncol = 3)
+#'   # print(p)
 #' }
-#' })
-#'
-#' @import dplyr
-#' @import ggplot2
-#' @importFrom magrittr %>%
-#' @importFrom rlang := enquos
-#' @importFrom tidytext scale_x_reordered reorder_within
-#'
 plot_topic_term <-
-  function(data, ncol = ncol, topic_names = NULL, ...) {
+  function(data, ncol = 3, topic_names = NULL, ...) {
 
     topic_term <- data %>%
       mutate(
         ord = factor(topic, levels = c(min(topic): max(topic))),
         tt = as.numeric(topic),
         topic = paste("Topic", topic),
-        term = reorder_within(term, beta, topic)) %>%
+        term = tidytext::reorder_within(term, beta, topic)
+      ) %>%
       arrange(ord)
 
     levelt = paste("Topic", topic_term$ord) %>% unique()
+    topic_term$topic = factor(topic_term$topic, levels = levelt)
 
-    topic_term$topic = factor(topic_term$topic,
-                              levels = levelt)
     if(!is.null(topic_names)){
       topic_term$topic = topic_names[topic_term$tt]
       topic_term <- topic_term %>%
         mutate(topic = as.character(topic)) %>%
-        mutate(topic = ifelse(!is.na(topic), topic, paste('Topic',tt)))
-      topic_term$topic =
-        factor(topic_term$topic, levels = topic_term$topic %>% unique())
+        mutate(topic = ifelse(!is.na(topic), topic, paste('Topic', tt)))
+      topic_term$topic = factor(topic_term$topic, levels = unique(topic_term$topic))
     }
 
     topic_term$tt = NULL
 
-    topic_term_plot <- ggplot(topic_term, aes(term, beta, fill = topic)) +
+    ggplot(topic_term, aes(term, beta, fill = topic)) +
       geom_col(show.legend = FALSE, alpha = 0.8) +
       facet_wrap(~ topic, scales = "free", ncol = ncol) +
-      scale_x_reordered() +
-      scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+      tidytext::scale_x_reordered() +
+      scale_y_continuous(labels = ff_num(zero = 0, digits = 3)) +
       coord_flip() +
       xlab("") +
       ylab("Word probability") +
-      theme_minimal(base_size = 12) +
+      theme_minimal(base_size = 10) +
       theme(
+        legend.position = "none",
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
-        axis.line = element_line(color = "#3B3B3B", size = 0.3),
-        axis.ticks = element_line(color = "#3B3B3B", size = 0.3),
-        strip.text.x = element_text(size = 12, color = "#3B3B3B"),
-        axis.text.x = element_text(size = 12, color = "#3B3B3B"),
-        axis.text.y = element_text(size = 12, color = "#3B3B3B"),
-        axis.title = element_text(size = 12, color = "#3B3B3B"),
-        axis.title.x = element_text(margin = margin(t = 7)),
-        axis.title.y = element_text(margin = margin(r = 7)))
-
-    return(topic_term_plot)
+        axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
+        axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
+        strip.text.x = element_text(size = 10, color = "#3B3B3B"),
+        axis.text.x = element_text(size = 10, color = "#3B3B3B"),
+        axis.text.y = element_text(size = 10, color = "#3B3B3B"),
+        axis.title = element_text(size = 10, color = "#3B3B3B"),
+        axis.title.x = element_text(margin = margin(t = 9)),
+        axis.title.y = element_text(margin = margin(r = 9))
+      )
   }
 
 
-#' @title Plot per-document per-topic probabilities
-#'
-#' @name topic_probability_plot
+#' @title Plot Per-document Per-topic Probabilities
 #'
 #' @description
-#' Plot per-document per-topic probabilities.
+#' Given a tidy data frame of per-document per-topic probabilities (gamma),
+#' this function calculates the mean topic prevalence across documents and plots the top topics.
 #'
-#' @param data A tidy data frame that includes per-document per-topic probabilities (gamma).
-#' @param top_n A number of highest per-document per-topic probabilities (number of top_n can be changed).
-#' @param ... Further arguments passed.
+#' @param data A tidy data frame from \code{tidytext::tidy(stm_model, matrix="gamma")}.
+#' @param top_n The number of topics to display, ordered by their mean prevalence.
+#'
+#' @return A \code{ggplot} object showing a bar plot of topic prevalence. Topics are ordered by their
+#' mean gamma value (average prevalence across documents).
 #'
 #' @export
-#' @return A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
 #'
 #' @examples
-#' suppressWarnings({
-#' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract") %>%
-#'        quanteda::dfm()
-#' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-#' data %>% topic_probability_plot(top_n = 15) %>% plotly::ggplotly()
+#' if (interactive()) {
+#'   # Assume gamma_td is from tidytext::tidy(stm_model, matrix="gamma")
+#'   # p <- topic_probability_plot(gamma_td, top_n = 10)
+#'   # print(p)
 #' }
-#' })
-#'
-#' @import dplyr
-#' @import ggplot2
-#' @importFrom magrittr %>%
-#' @importFrom stats reorder
-#' @importFrom plotly ggplotly
-#'
 topic_probability_plot <-
-  function(data, top_n, ...) {
+  function(data, top_n = 10) {
 
     gamma_terms <- data %>%
       group_by(topic) %>%
       summarise(gamma = mean(gamma)) %>%
       arrange(desc(gamma)) %>%
-      mutate(topic = reorder(topic, gamma))
+      mutate(topic = reorder(topic, gamma)) %>%
+      top_n(top_n, gamma)
 
-    topic_by_prevalence_plot <- gamma_terms %>%
-      ggplot(aes(topic, gamma, fill = topic)) +
+    ggplot(gamma_terms, aes(topic, gamma, fill = topic)) +
       geom_col(alpha = 0.8) +
       coord_flip() +
-      scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
+      scale_y_continuous(labels = ff_num(zero = 0, digits = 2)) +
       xlab("") +
       ylab("Topic proportion") +
       theme_minimal(base_size = 10) +
@@ -306,64 +318,49 @@ topic_probability_plot <-
         axis.title.x = element_text(margin = margin(t = 9)),
         axis.title.y = element_text(margin = margin(r = 9))
       )
-        return(topic_by_prevalence_plot)
-    }
+  }
 
 
-#' @title Visualize a table for per-document per-topic probabilities
-#'
-#' @name topic_probability_table
+#' @title Create a Table of Topic Prevalence
 #'
 #' @description
-#' Create a table of per-document per-topic probabilities.
+#' Given a tidy data frame of per-document per-topic probabilities (gamma),
+#' this function calculates the mean prevalence of each topic and returns a table of the top topics.
 #'
-#' @param data A tidy data frame that includes per-document per-topic probabilities (gamma).
-#' @param top_n A number of highest per-document per-topic probabilities (number of top_n can be changed).
-#' @param ... Further arguments passed.
+#' @param data A tidy data frame from \code{tidytext::tidy(stm_model, matrix="gamma")}.
+#' @param top_n The number of topics to display, ordered by their mean prevalence.
+#'
+#' @return A \code{tibble} containing columns \code{topic} and \code{gamma}, where \code{topic}
+#' is a factor representing each topic (relabeled with a "Topic X" format), and \code{gamma} is the
+#' mean topic prevalence across all documents. Numeric values are rounded to three decimal places.
 #'
 #' @export
-#' @return A tibble (data frame) object with a list of topic probabilities from \code{tidytext::tidy}.
-#' The result is a ggplot object representing the topic-term plot.
 #'
 #' @examples
-#' suppressWarnings({
-#' if(requireNamespace("quanteda", "tidytext")){
-#' dfm <- SpecialEduTech %>%
-#'        preprocess_texts(text_field = "abstract") %>%
-#'        quanteda::dfm()
-#' data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-#' data %>% topic_probability_table(top_n = 15) %>% DT::datatable(rownames = FALSE)
+#' if (interactive()) {
+#'   # Assume gamma_td is from tidytext::tidy(stm_model, matrix="gamma")
+#'   # tbl <- topic_probability_table(gamma_td, top_n = 10)
+#'   # print(tbl)
 #' }
-#' })
-#'
-#' @import dplyr
-#' @import ggplot2
-#' @importFrom magrittr %>%
-#' @importFrom stats reorder
-#' @importFrom DT datatable
-#'
 topic_probability_table <-
-    function(data, top_n, ...) {
+  function(data, top_n = 10) {
 
-      gamma_terms <- data %>%
-        group_by(topic) %>%
-        summarise(gamma = mean(gamma)) %>%
-        arrange(gamma) %>%
-        mutate(topic = reorder(topic, gamma))
+    gamma_terms <- data %>%
+      group_by(topic) %>%
+      summarise(gamma = mean(gamma)) %>%
+      arrange(desc(gamma)) %>%
+      mutate(topic = reorder(topic, gamma)) %>%
+      top_n(top_n, gamma) %>%
+      mutate(tt = as.numeric(topic)) %>%
+      mutate(ord = topic) %>%
+      mutate(topic = paste('Topic', topic)) %>%
+      arrange(ord)
 
-      topic_by_prevalence_table <- gamma_terms %>%
-        top_n(top_n, gamma) %>%
-        mutate(tt = as.numeric(topic)) %>%
-        mutate(ord = topic) %>%
-        mutate(topic = paste('Topic', topic)) %>%  arrange(ord)
+    levelt = paste("Topic", gamma_terms$ord) %>% unique()
+    gamma_terms$topic = factor(gamma_terms$topic, levels = levelt)
 
-      levelt = paste("Topic", topic_by_prevalence_table$ord) %>% unique()
+    gamma_terms %>%
+      select(topic, gamma) %>%
+      mutate_if(is.numeric, ~ round(., 3))
+  }
 
-      topic_by_prevalence_table$topic = factor(topic_by_prevalence_table$topic,
-                                               levels = levelt)
-      topic_by_prevalence_table_output <- topic_by_prevalence_table %>%
-        select(topic, gamma) %>%
-        mutate_if(is.numeric, ~ round(., 3))
-
-        return(topic_by_prevalence_table_output)
-    }

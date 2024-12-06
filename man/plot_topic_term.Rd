@@ -2,36 +2,30 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{plot_topic_term}
 \alias{plot_topic_term}
-\title{Plot topic per-term per-topic probabilities}
+\title{Plot Topic Per-term Per-topic Probabilities}
 \usage{
-plot_topic_term(data, ncol = ncol, topic_names = NULL, ...)
+plot_topic_term(data, ncol = 3, topic_names = NULL, ...)
 }
 \arguments{
-\item{data}{A tidy data frame that includes per-term per-topic probabilities (beta).}
+\item{data}{A tidy data frame from \code{tidytext::tidy(stm_model, matrix="beta")}.}
 
-\item{ncol}{A number of columns in the facet plot.}
+\item{ncol}{The number of columns in the facet plot.}
 
-\item{topic_names}{(Labeled) topic names}
+\item{topic_names}{An optional character vector for labeling topics. If provided, must be the same length as the number of topics.}
 
 \item{...}{Further arguments passed to \code{dplyr::group_by}.}
 }
 \value{
-A ggplot object output from \code{stm::stm}, \code{tidytext::tidy}, and \code{ggplot2::ggplot}.
-The result is a ggplot object representing the topic-term plot.
+A \code{ggplot} object showing a facet-wrapped chart of top terms for each topic,
+ordered by their per-topic probability (beta). Each facet represents a topic.
 }
 \description{
-Plot per-term per-topic probabilities with highest word probabilities.
+Given per-term per-topic probabilities (beta), this function creates a plot of the top terms in each topic.
 }
 \examples{
-suppressWarnings({
-if(requireNamespace("quanteda", "tidytext")){
-dfm <- SpecialEduTech \%>\%
-       preprocess_texts(text_field = "abstract") \%>\%
-       quanteda::dfm()
-data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-data \%>\% examine_top_terms(top_n = 2) \%>\%
-plot_topic_term(ncol = 3)
+if (interactive()) {
+  # Assume beta_td is a tidy data frame of per-term per-topic probabilities
+  # p <- plot_topic_term(beta_td, ncol = 3)
+  # print(p)
 }
-})
-
 }
