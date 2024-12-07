@@ -94,91 +94,119 @@ web app at <code><a href="../reference/TextAnalysisR.app.html">TextAnalysisR::Te
 <h3 id="preprocess-text-data">Preprocess Text Data<a class="anchor" aria-label="anchor" href="#preprocess-text-data"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span> </span>
-<span></span>
-<span><span class="va">preprocessed_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">data</span>, text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span></span>
+<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">df</span>, text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span></span>
+<span><span class="va">tokens</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="plot-word-frequency">Plot Word Frequency<a class="anchor" aria-label="anchor" href="#plot-word-frequency"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># data is a document-feature matrix (dfm) object created via quanteda.</span></span>
-<span></span>
-<span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span></span>
+<span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span>text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Plot top 20 terms by frequency.</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">dfm</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span><span class="va">dfm_object</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="examine-highest-per-term-per-topic-probabilities">Examine Highest Per-Term Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#examine-highest-per-term-per-topic-probabilities"></a>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># data is a tidy data frame with per-term per-topic probabilities (beta).</span></span>
-<span></span>
-<span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span></span>
+<span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span>text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/convert.html" class="external-link">convert</a></span><span class="op">(</span><span class="va">dfm_object</span>, to <span class="op">=</span> <span class="st">"stm"</span><span class="op">)</span> </span>
+<span><span class="va">stm_model</span> <span class="op">&lt;-</span> <span class="fu">stm</span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">documents</span>,</span>
+<span>                 <span class="va">out</span><span class="op">$</span><span class="va">vocab</span>,</span>
+<span>                 data <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">meta</span>,</span>
+<span>                 prevalence <span class="op">=</span> <span class="op">~</span> </span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">1980</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">1980</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">1990</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">1990</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">2000</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">2000</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">2010</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">2010</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                 max.em.its <span class="op">=</span> <span class="fl">75</span>,</span>
+<span>                 init.type <span class="op">=</span> <span class="st">'Spectral'</span>,</span>
+<span>                 K <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>                 verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Assume stm_15 is a previously fitted STM model</span></span>
-<span><span class="co"># and rownames(dfm) matches the documents used in stm_15.</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_15</span>, document_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">dfm</span><span class="op">)</span>, log <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">data</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/examine_top_terms.html">examine_top_terms</a></span><span class="op">(</span>top_n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate_all.html" class="external-link">mutate_if</a></span><span class="op">(</span><span class="va">is.numeric</span>, <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">.</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>    <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/datatable.html" class="external-link">datatable</a></span><span class="op">(</span>rownames <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="va">beta_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_model</span>, matrix<span class="op">=</span><span class="st">"beta"</span><span class="op">)</span></span>
+<span><span class="va">top_terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/examine_top_terms.html">examine_top_terms</a></span><span class="op">(</span><span class="va">beta_td</span>, top_n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">top_terms</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="plot-topic-per-term-per-topic-probabilities">Plot Topic Per-Term Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#plot-topic-per-term-per-topic-probabilities"></a>
 </h3>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span>text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Assume stm_15 is a fitted STM model.</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_15</span>, document_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">dfm</span><span class="op">)</span>, log <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">data</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/examine_top_terms.html">examine_top_terms</a></span><span class="op">(</span>top_n <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>    <span class="fu"><a href="../reference/plot_topic_term.html">plot_topic_term</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Assume stm_model is a fitted STM model.</span></span>
+<span><span class="va">beta_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_model</span>, matrix <span class="op">=</span> <span class="st">"beta"</span>, log <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_topic_term.html">plot_topic_term</a></span><span class="op">(</span><span class="va">beta_td</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="plot-per-document-per-topic-probabilities">Plot Per-Document Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#plot-per-document-per-topic-probabilities"></a>
 </h3>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span>text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Assume stm_15 is a fitted STM model.</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_15</span>, matrix <span class="op">=</span> <span class="st">"gamma"</span>, document_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">dfm</span><span class="op">)</span>, log <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/topic_probability_plot.html">topic_probability_plot</a></span><span class="op">(</span><span class="va">data</span>, top_n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
-<span>  <span class="fu">plotly</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/plotly/man/ggplotly.html" class="external-link">ggplotly</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Assume stm_model is a fitted STM model.</span></span>
+<span><span class="va">gamma_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_model</span>, matrix <span class="op">=</span> <span class="st">"gamma"</span>, document_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">dfm</span><span class="op">)</span>, log <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/topic_probability_plot.html">topic_probability_plot</a></span><span class="op">(</span><span class="va">gamma_td</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plot</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="visualize-a-table-for-per-document-per-topic-probabilities">Visualize a Table for Per-Document Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#visualize-a-table-for-per-document-per-topic-probabilities"></a>
+<h3 id="create-a-table-for-per-document-per-topic-probabilities">Create a Table for Per-Document Per-Topic Probabilities<a class="anchor" aria-label="anchor" href="#create-a-table-for-per-document-per-topic-probabilities"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span>text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<code class="sourceCode R"><span><span class="co"># Assume stm_model is a fitted STM model.</span></span>
+<span><span class="va">gamma_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_model</span>, matrix<span class="op">=</span><span class="st">"gamma"</span><span class="op">)</span></span>
+<span><span class="va">table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/topic_probability_table.html">topic_probability_table</a></span><span class="op">(</span><span class="va">gamma_td</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">table</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="plot-a-hierarchical-clustering-dendrogram">Plot a Hierarchical Clustering Dendrogram<a class="anchor" aria-label="anchor" href="#plot-a-hierarchical-clustering-dendrogram"></a>
+</h3>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Assume stm_model is a fitted STM model.</span></span>
+<span><span class="va">gamma_matrix</span> <span class="op">&lt;-</span> <span class="va">stm_model</span><span class="op">$</span><span class="va">gamma</span></span>
+<span><span class="fu"><a href="../reference/hierarchical_clustering.html">hierarchical_clustering</a></span><span class="op">(</span><span class="va">gamma_matrix</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="plot-a-word-co-occurrence-network">Plot a Word Co-occurrence Network<a class="anchor" aria-label="anchor" href="#plot-a-word-co-occurrence-network"></a>
+</h3>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span></span>
+<span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">df</span>, text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Assume stm_15 is a fitted STM model.</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_15</span>, matrix <span class="op">=</span> <span class="st">"gamma"</span>, document_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">dfm</span><span class="op">)</span>, log <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">data</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu"><a href="../reference/topic_probability_table.html">topic_probability_table</a></span><span class="op">(</span>top_n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu">DT</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/DT/man/datatable.html" class="external-link">datatable</a></span><span class="op">(</span>rownames <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="va">dfm_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_word_co_occurrence_network.html">plot_word_co_occurrence_network</a></span><span class="op">(</span><span class="va">dfm_td</span>,</span>
+<span>                                term_col <span class="op">=</span> <span class="st">"abstract"</span>,</span>
+<span>                                doc_col <span class="op">=</span> <span class="st">"document"</span>,</span>
+<span>                                co_occur_n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="plot-a-word-correlation-network">Plot a Word Correlation Network<a class="anchor" aria-label="anchor" href="#plot-a-word-correlation-network"></a>
+</h3>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span></span>
+<span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">df</span>, text_field <span class="op">=</span> <span class="st">""</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">dfm_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_word_correlation_network.html">plot_word_correlation_network</a></span><span class="op">(</span><span class="va">dfm_td</span>,</span>
+<span>                              term_col <span class="op">=</span> <span class="st">"abstract"</span>,</span>
+<span>                              doc_col <span class="op">=</span> <span class="st">"document"</span>,</span>
+<span>                              correlation_threshold <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="visualize-word-frequency-trends-over-time">Visualize Word Frequency Trends Over Time<a class="anchor" aria-label="anchor" href="#visualize-word-frequency-trends-over-time"></a>
+</h3>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Assume stm_model is a fitted STM model.</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="../reference/SpecialEduTech.html">SpecialEduTech</a></span></span>
+<span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">df</span>, text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">gamma_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_model</span>, matrix <span class="op">=</span> <span class="st">"gamma"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/word_frequency_trends.html">word_frequency_trends</a></span><span class="op">(</span><span class="va">dfm_object</span>, </span>
+<span>                      <span class="va">gamma_td</span>, time_variable <span class="op">=</span> <span class="st">"year"</span>, </span>
+<span>                      selected_terms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"computer"</span>, <span class="st">"disability"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

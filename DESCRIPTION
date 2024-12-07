@@ -4,8 +4,8 @@ Version: 0.0.2
 Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7907-9193"))
-Description: 'TextAnalysisR' provides a supporting workflow for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), and 'ggraph' as well as 'widyr' (network analysis). 'tidytext' was implemented to tidy non-tidy format objects. These steps are similar to those demonstrated in the Shiny web app at 'TextAnalysisR::TextAnalysisR.app()'.
-References: Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., & Kang, E. (2023) "A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling." <doi:10.1186/s40594-023-00414-x>
+Description: 'TextAnalysisR' provides a supporting workflow for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph', and 'widyr' (network analysis). 'tidytext' is implemented to tidy non-tidy format objects. The R Shiny web app is available at 'TextAnalysisR::TextAnalysisR.app()' or 'https://textanalysisr.org'. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app. 
+References: Shin, M., Park, H., & Kang, E. (2024) "Development of education policies and practices for students with learning disabilities in South Korea using Delphi surveys and topic modeling." Learning Disability Quarterly. <https://github.com/mshin77/Korea-LD-policy>; Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., & Kang, E. (2023) "A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling." International Journal of STEM Education, 10(1), 1-23. <https://github.com/mshin77/math-tech-sped>
 License: MIT + file LICENSE
 Language: en-US
 Encoding: UTF-8
@@ -26,7 +26,11 @@ Imports:
     tidyr,
     tidytext,
     widyr,
-    numform
+    numform,
+    ggdendro,
+    igraph,
+    textmineR,
+    scales 
 Suggests:
     covr,
     knitr,

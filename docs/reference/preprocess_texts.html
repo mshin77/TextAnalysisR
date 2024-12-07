@@ -65,7 +65,7 @@ Typically used before constructing a dfm and fitting an STM model."></head><body
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">preprocess_texts</span><span class="op">(</span></span>
-<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">df</span>,</span>
 <span>  text_field <span class="op">=</span> <span class="st">"united_texts"</span>,</span>
 <span>  custom_stopwords <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_char <span class="op">=</span> <span class="fl">2</span>,</span>
@@ -77,7 +77,7 @@ Typically used before constructing a dfm and fitting an STM model."></head><body
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
+<dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
 <dd><p>A data frame that contains text data.</p></dd>
 
 
@@ -99,17 +99,16 @@ Typically used before constructing a dfm and fitting an STM model."></head><body
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code><a href="https://quanteda.io/reference/tokens.html" class="external-link">quanteda::tokens</a></code> object. This object is a list-like structure where each element
-represents a tokenized version of a single document. The tokens object can be further processed
-(e.g., converted into a dfm) for text analysis and modeling.</p>
+    <p>A <code><a href="https://quanteda.io/reference/tokens.html" class="external-link">quanteda::tokens</a></code> object. The output is a list of tokens. Each token is a word in the text data.
+The function removes punctuation, symbols, numbers, URLs, and stopwords. It also converts all words to lowercase.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>text <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"This is an example."</span>, <span class="st">"Another example of text."</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">result_tokens</span> <span class="op">&lt;-</span> <span class="fu">preprocess_texts</span><span class="op">(</span><span class="va">d</span>, text_field <span class="op">=</span> <span class="st">"text"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">result_tokens</span></span></span>
+<span class="r-in"><span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span></span>
+<span class="r-in"><span>  <span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">preprocess_texts</span><span class="op">(</span><span class="va">df</span>, text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">tokens</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>

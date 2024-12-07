@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Text Mining Workflow Tools">
-<meta name="description" content="TextAnalysisR provides a supporting workflow for text mining analysis. The web app incorporates quanteda (text preprocessing), stm (structural topic modeling), and ggraph as well as widyr (network analysis). tidytext was implemented to tidy non-tidy format objects. These steps are similar to those demonstrated in the Shiny web app at TextAnalysisR::TextAnalysisR.app().">
-<meta property="og:description" content="TextAnalysisR provides a supporting workflow for text mining analysis. The web app incorporates quanteda (text preprocessing), stm (structural topic modeling), and ggraph as well as widyr (network analysis). tidytext was implemented to tidy non-tidy format objects. These steps are similar to those demonstrated in the Shiny web app at TextAnalysisR::TextAnalysisR.app().">
+<meta name="description" content="TextAnalysisR provides a supporting workflow for text mining analysis. The web app incorporates quanteda (text preprocessing), stm (structural topic modeling), ggraph, and widyr (network analysis). tidytext is implemented to tidy non-tidy format objects. The R Shiny web app is available at TextAnalysisR::TextAnalysisR.app() or https://textanalysisr.org. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app.">
+<meta property="og:description" content="TextAnalysisR provides a supporting workflow for text mining analysis. The web app incorporates quanteda (text preprocessing), stm (structural topic modeling), ggraph, and widyr (network analysis). tidytext is implemented to tidy non-tidy format objects. The R Shiny web app is available at TextAnalysisR::TextAnalysisR.app() or https://textanalysisr.org. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -53,7 +53,7 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9">
-<p><code>TextAnalysisR</code> provides a supporting workflow for text mining analysis. The web app incorporates <a href="https://github.com/quanteda/quanteda" class="external-link">quanteda</a> (text preprocessing), <a href="https://github.com/bstewart/stm" class="external-link">stm</a> (structural topic modeling), and <a href="https://github.com/thomasp85/ggraph" class="external-link">ggraph</a> as well as <a href="https://github.com/juliasilge/widyr" class="external-link">widyr</a> (network analysis). <a href="https://github.com/cran/tidytext" class="external-link">tidytext</a> was implemented to tidy non-tidy format objects.</p>
+<p><code>TextAnalysisR</code> provides a supporting workflow for text mining analysis. The web app incorporates <a href="https://github.com/quanteda/quanteda" class="external-link">quanteda</a> (text preprocessing), <a href="https://github.com/bstewart/stm" class="external-link">stm</a> (structural topic modeling), <a href="https://github.com/thomasp85/ggraph" class="external-link">ggraph</a>, and <a href="https://github.com/juliasilge/widyr" class="external-link">widyr</a> (network analysis). <a href="https://github.com/cran/tidytext" class="external-link">tidytext</a> is implemented to tidy non-tidy format objects. The R Shiny web app is available at <code><a href="reference/TextAnalysisR.app.html">TextAnalysisR::TextAnalysisR.app()</a></code> or <a href="https://textanalysisr.org" class="external-link uri">https://textanalysisr.org</a>. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app.</p>
 <div class="section level2">
 <h2 id="installation">Installation:<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -73,15 +73,17 @@
 <h2 id="citation">Citation:<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <ul>
-<li><p>Shin, M. (2023). <em>TextAnalysisR: Text mining workflow tools</em> (R package version 0.0.1) [Computer software]. <a href="https://mshin77.github.io/TextAnalysisR" class="uri">https://mshin77.github.io/TextAnalysisR</a></p></li>
-<li><p>Shin, M. (2023). <em>TextAnalysisR: Analyze text data</em> [Web application]. <a href="https://www.textanalysisr.org" class="external-link uri">https://www.textanalysisr.org</a></p></li>
+<li><p>Shin, M. (2024). <em>TextAnalysisR: Text mining workflow tools</em> (R package version 0.0.2) [Computer software]. <a href="https://mshin77.github.io/TextAnalysisR" class="uri">https://mshin77.github.io/TextAnalysisR</a></p></li>
+<li><p>Shin, M. (2024). <em>TextAnalysisR: Text mining workflow tools</em> [Web application]. <a href="https://www.textanalysisr.org" class="external-link uri">https://www.textanalysisr.org</a></p></li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="reference">Reference:<a class="anchor" aria-label="anchor" href="#reference"></a>
+<h2 id="references">References:<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
-<li>Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., &amp; Kang, E. (2023). A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling. <em>International Journal of STEM Education, 10</em>(1), 1-23. <a href="https://doi.org/10.1186/s40594-023-00414-x" class="external-link uri">https://doi.org/10.1186/s40594-023-00414-x</a>
+<li>Shin, M., Park, H., &amp; Kang, E. (2024). Development of education policies and practices for students with learning disabilities in South Korea using Delphi surveys and topic modeling. <em>Learning Disability Quarterly</em>. <a href="https://github.com/mshin77/Korea-LD-policy" class="external-link">GitHub</a>
+</li>
+<li>Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., &amp; Kang, E. (2023). A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling. <em>International Journal of STEM Education, 10</em>(1), 1-23. <a href="https://github.com/mshin77/math-tech-sped" class="external-link">GitHub</a>
 </li>
 </ul>
 </div>

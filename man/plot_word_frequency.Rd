@@ -2,12 +2,12 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{plot_word_frequency}
 \alias{plot_word_frequency}
-\title{Plot Word Frequency Results}
+\title{Plot Word Frequency}
 \usage{
-plot_word_frequency(data, n = 20, ...)
+plot_word_frequency(dfm_object, n = 20, ...)
 }
 \arguments{
-\item{data}{A \code{quanteda} dfm object.}
+\item{dfm_object}{A \code{quanteda} dfm object.}
 
 \item{n}{The number of top features (terms or words) to display.}
 
@@ -24,11 +24,11 @@ and creates a ggplot-based visualization of term frequencies.
 }
 \examples{
 if (interactive()) {
-  d <- data.frame(text = c("This is an example.", "Another short example text."))
-  dfm_obj <- d \%>\%
-    preprocess_texts(text_field = "text") \%>\%
+  df <- TextAnalysisR::SpecialEduTech
+  dfm_object <- df \%>\%
+    preprocess_texts(text_field = "abstract") \%>\%
     quanteda::dfm()
-  p <- plot_word_frequency(dfm_obj, n = 10)
-  print(p)
+  plot <- plot_word_frequency(dfm_object, n = 20)
+  print(plot)
 }
 }

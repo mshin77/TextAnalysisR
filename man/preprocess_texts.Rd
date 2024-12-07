@@ -5,7 +5,7 @@
 \title{Preprocess Text Data}
 \usage{
 preprocess_texts(
-  data,
+  df,
   text_field = "united_texts",
   custom_stopwords = NULL,
   min_char = 2,
@@ -13,7 +13,7 @@ preprocess_texts(
 )
 }
 \arguments{
-\item{data}{A data frame that contains text data.}
+\item{df}{A data frame that contains text data.}
 
 \item{text_field}{The name of the column containing text data.}
 
@@ -24,9 +24,8 @@ preprocess_texts(
 \item{...}{Further arguments passed to \code{quanteda::corpus}.}
 }
 \value{
-A \code{quanteda::tokens} object. This object is a list-like structure where each element
-represents a tokenized version of a single document. The tokens object can be further processed
-(e.g., converted into a dfm) for text analysis and modeling.
+A \code{quanteda::tokens} object. The output is a list of tokens. Each token is a word in the text data.
+The function removes punctuation, symbols, numbers, URLs, and stopwords. It also converts all words to lowercase.
 }
 \description{
 Preprocesses text data by:
@@ -42,8 +41,8 @@ Typically used before constructing a dfm and fitting an STM model.
 }
 \examples{
 if (interactive()) {
-  d <- data.frame(text = c("This is an example.", "Another example of text."))
-  result_tokens <- preprocess_texts(d, text_field = "text")
-  result_tokens
+  df <- TextAnalysisR::SpecialEduTech
+  tokens <- preprocess_texts(df, text_field = "abstract")
+  tokens
 }
 }

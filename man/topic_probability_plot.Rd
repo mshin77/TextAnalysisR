@@ -2,12 +2,13 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{topic_probability_plot}
 \alias{topic_probability_plot}
-\title{Plot Per-document Per-topic Probabilities}
+\title{Plot Per-Document Per-Topic Probabilities}
 \usage{
-topic_probability_plot(data, top_n = 10)
+topic_probability_plot(gamma_td, top_n = 10)
 }
 \arguments{
-\item{data}{A tidy data frame from \code{tidytext::tidy(stm_model, matrix="gamma")}.}
+\item{gamma_td}{A tidy data frame derived from \code{tidytext::tidy(stm_model, matrix = "gamma")},
+where \code{stm_model} is a fitted Structural Topic Model created using \code{stm::stm()}.}
 
 \item{top_n}{The number of topics to display, ordered by their mean prevalence.}
 }
@@ -21,8 +22,9 @@ this function calculates the mean topic prevalence across documents and plots th
 }
 \examples{
 if (interactive()) {
-  # Assume gamma_td is from tidytext::tidy(stm_model, matrix="gamma")
-  # p <- topic_probability_plot(gamma_td, top_n = 10)
-  # print(p)
+  # Assume stm_model is a fitted STM model.
+  gamma_td <- tidytext::tidy(stm_model, matrix="gamma")
+  plot <- topic_probability_plot(gamma_td, top_n = 10)
+  print(plot)
 }
 }

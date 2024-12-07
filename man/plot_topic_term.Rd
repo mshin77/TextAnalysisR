@@ -4,10 +4,11 @@
 \alias{plot_topic_term}
 \title{Plot Topic Per-term Per-topic Probabilities}
 \usage{
-plot_topic_term(data, ncol = 3, topic_names = NULL, ...)
+plot_topic_term(beta_td, ncol = 3, topic_names = NULL, ...)
 }
 \arguments{
-\item{data}{A tidy data frame from \code{tidytext::tidy(stm_model, matrix="beta")}.}
+\item{beta_td}{A tidy data frame from \code{tidytext::tidy(stm_model, matrix = "beta")},
+where \code{stm_model} is a fitted Structural Topic Model created using \code{stm::stm()}.}
 
 \item{ncol}{The number of columns in the facet plot.}
 
@@ -24,9 +25,10 @@ Given per-term per-topic probabilities (beta), this function creates a plot of t
 }
 \examples{
 if (interactive()) {
-  # Assume beta_td is a tidy data frame of per-term per-topic probabilities
-  # p <- plot_topic_term(beta_td, ncol = 3)
-  # print(p)
+  # Assume stm_model is a fitted STM model.
+  beta_td <- tidytext::tidy(stm_model, matrix = "beta", log = FALSE)
+  plot <- plot_topic_term(beta_td, ncol = 3)
+  print(plot)
 }
 
 }

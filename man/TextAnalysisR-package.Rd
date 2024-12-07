@@ -6,7 +6,7 @@
 \alias{TextAnalysisR-package}
 \title{TextAnalysisR: Text Mining Workflow Tools}
 \description{
-'TextAnalysisR' provides a supporting workflow for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), and 'ggraph' as well as 'widyr' (network analysis). 'tidytext' was implemented to tidy non-tidy format objects. These steps are similar to those demonstrated in the Shiny web app at 'TextAnalysisR::TextAnalysisR.app()'.
+'TextAnalysisR' provides a supporting workflow for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph', and 'widyr' (network analysis). 'tidytext' is implemented to tidy non-tidy format objects. The R Shiny web app is available at 'TextAnalysisR::TextAnalysisR.app()' or 'https://textanalysisr.org'. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app.
 }
 \seealso{
 Useful links:

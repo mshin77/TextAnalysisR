@@ -37,90 +37,121 @@ if (interactive()) {
 ### Preprocess Text Data
 
 ```{r, message=FALSE, eval=FALSE}
-data <- TextAnalysisR::SpecialEduTech 
-
-preprocessed_data <- preprocess_texts(data, text_field = "abstract")
+df <- TextAnalysisR::SpecialEduTech
+tokens <- preprocess_texts(df, text_field = "abstract")
+tokens
 ```
 
 ### Plot Word Frequency
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a document-feature matrix (dfm) object created via quanteda.
-
-dfm <- SpecialEduTech %>%
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- df %>%
   preprocess_texts(text_field = "abstract") %>%
   quanteda::dfm()
-
-# Plot top 20 terms by frequency.
-if (interactive()) {
-  dfm %>% plot_word_frequency(n = 20)
-}
+plot <- plot_word_frequency(dfm_object, n = 20)
+print(plot)
 ```
 
 ### Examine Highest Per-Term Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-# data is a tidy data frame with per-term per-topic probabilities (beta).
-
-dfm <- SpecialEduTech %>%
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- df %>%
   preprocess_texts(text_field = "abstract") %>%
   quanteda::dfm()
+out <- quanteda::convert(dfm_object, to = "stm") 
+stm_model <- stm(out$documents,
+                 out$vocab,
+                 data = out$meta,
+                 prevalence = ~ 
+                   I((year >= 1980)*(year - 1980)) +
+                   I((year >= 1990)*(year - 1990)) +
+                   I((year >= 2000)*(year - 2000)) +
+                   I((year >= 2010)*(year - 2010)),
+                 max.em.its = 75,
+                 init.type = 'Spectral',
+                 K = 15,
+                 verbose = FALSE)
 
-# Assume stm_15 is a previously fitted STM model
-# and rownames(dfm) matches the documents used in stm_15.
-data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-
-if (interactive()) {
-  data %>% examine_top_terms(top_n = 5) %>%
-    dplyr::mutate_if(is.numeric, ~ round(., 3)) %>%
-    DT::datatable(rownames = FALSE)
-}
+beta_td <- tidytext::tidy(stm_model, matrix="beta")
+top_terms <- examine_top_terms(beta_td, top_n = 5)
+head(top_terms)
 ```
 
 ### Plot Topic Per-Term Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-dfm <- SpecialEduTech %>%
-  preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm()
-
-# Assume stm_15 is a fitted STM model.
-data <- tidytext::tidy(stm_15, document_names = rownames(dfm), log = FALSE)
-
-if (interactive()) {
-  data %>% examine_top_terms(top_n = 2) %>%
-    plot_topic_term(ncol = 3)
-}
+# Assume stm_model is a fitted STM model.
+beta_td <- tidytext::tidy(stm_model, matrix = "beta", log = FALSE)
+plot <- plot_topic_term(beta_td, ncol = 3)
+print(plot)
 ```
 
 ### Plot Per-Document Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-dfm <- SpecialEduTech %>%
-  preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm()
-
-# Assume stm_15 is a fitted STM model.
-data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-
-if (interactive()) {
-  p <- topic_probability_plot(data, top_n = 15)
-  plotly::ggplotly(p)
-}
+# Assume stm_model is a fitted STM model.
+gamma_td <- tidytext::tidy(stm_model, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
+plot <- topic_probability_plot(gamma_td, top_n = 10)
+print(plot)
 ```
 
-### Visualize a Table for Per-Document Per-Topic Probabilities
+### Create a Table for Per-Document Per-Topic Probabilities
 
 ```{r, message=FALSE, eval=FALSE}
-dfm <- SpecialEduTech %>%
-  preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm()
-
-# Assume stm_15 is a fitted STM model.
-data <- tidytext::tidy(stm_15, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-
-if (interactive()) {
-  data %>% topic_probability_table(top_n = 15) %>% DT::datatable(rownames = FALSE)
-}
+# Assume stm_model is a fitted STM model.
+gamma_td <- tidytext::tidy(stm_model, matrix="gamma")
+table <- topic_probability_table(gamma_td, top_n = 10)
+print(table)
 ```
+
+### Plot a Hierarchical Clustering Dendrogram
+
+```{r, message=FALSE, eval=FALSE}
+# Assume stm_model is a fitted STM model.
+gamma_matrix <- stm_model$gamma
+hierarchical_clustering(gamma_matrix, method = "ward.D2")
+```
+
+### Plot a Word Co-occurrence Network
+
+```{r, message=FALSE, eval=FALSE}
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- preprocess_texts(df, text_field = "abstract") %>%
+  quanteda::dfm()
+dfm_td <- tidytext::tidy(dfm_object)
+plot_word_co_occurrence_network(dfm_td,
+                                term_col = "abstract",
+                                doc_col = "document",
+                                co_occur_n = 5)
+```
+
+### Plot a Word Correlation Network
+
+```{r, message=FALSE, eval=FALSE}
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- preprocess_texts(df, text_field = "") %>%
+  quanteda::dfm()
+dfm_td <- tidytext::tidy(dfm_object)
+plot_word_correlation_network(dfm_td,
+                              term_col = "abstract",
+                              doc_col = "document",
+                              correlation_threshold = 0.3)
+```
+
+### Visualize Word Frequency Trends Over Time
+
+```{r, message=FALSE, eval=FALSE}
+# Assume stm_model is a fitted STM model.
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- preprocess_texts(df, text_field = "abstract") %>% quanteda::dfm()
+gamma_td <- tidytext::tidy(stm_model, matrix = "gamma")
+word_frequency_trends(dfm_object, 
+                      gamma_td, time_variable = "year", 
+                      selected_terms = c("computer", "disability"))
+```
+
+
+  
 
