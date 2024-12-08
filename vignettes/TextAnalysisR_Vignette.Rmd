@@ -106,14 +106,6 @@ table <- topic_probability_table(gamma_td, top_n = 10)
 print(table)
 ```
 
-### Plot a Hierarchical Clustering Dendrogram
-
-```{r, message=FALSE, eval=FALSE}
-# Assume stm_model is a fitted STM model.
-gamma_matrix <- stm_model$gamma
-hierarchical_clustering(gamma_matrix, method = "ward.D2")
-```
-
 ### Plot a Word Co-occurrence Network
 
 ```{r, message=FALSE, eval=FALSE}

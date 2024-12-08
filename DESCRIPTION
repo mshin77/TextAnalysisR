@@ -27,9 +27,7 @@ Imports:
     tidytext,
     widyr,
     numform,
-    ggdendro,
     igraph,
-    textmineR,
     scales 
 Suggests:
     covr,
