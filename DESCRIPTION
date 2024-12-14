@@ -28,7 +28,8 @@ Imports:
     widyr,
     numform,
     igraph,
-    scales 
+    scales,
+    plotly
 Suggests:
     covr,
     knitr,

@@ -38,7 +38,7 @@ if (interactive()) {
 
 ```{r, message=FALSE, eval=FALSE}
 df <- TextAnalysisR::SpecialEduTech
-tokens <- preprocess_texts(df, text_field = "abstract")
+tokens <- TextAnalysisR::preprocess_texts(df, text_field = "abstract")
 tokens
 ```
 
@@ -47,24 +47,116 @@ tokens
 ```{r, message=FALSE, eval=FALSE}
 df <- TextAnalysisR::SpecialEduTech
 dfm_object <- df %>%
-  preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm()
-plot <- plot_word_frequency(dfm_object, n = 20)
-print(plot)
+  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm() %>%
+  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
+  .[quanteda::ntoken(.) > 0, ]
+TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
 ```
 
-### Examine Highest Per-Term Per-Topic Probabilities
+### Evaluate Optimal Number of Topics
 
 ```{r, message=FALSE, eval=FALSE}
 df <- TextAnalysisR::SpecialEduTech
 dfm_object <- df %>%
-  preprocess_texts(text_field = "abstract") %>%
+  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm() %>%
+  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
+  .[quanteda::ntoken(.) > 0, ]
+TextAnalysisR::evaluate_optimal_topic_number(
+  dfm_object = dfm_object,
+  K_range = 5:30,
+  max.em.its = 75,
+  categorical_var = "reference_type",
+  continuous_var = "year")
+```
+
+### Plot Highest Word Probabilities for Each Topic
+
+```{r, message=FALSE, eval=FALSE}
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- df %>%
+  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm() %>%
+  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
+  .[quanteda::ntoken(.) > 0, ]
+TextAnalysisR::plot_word_probabilities(
+  dfm_object = dfm_object,
+  K_number = 15,
+  max.em.its = 75,
+  categorical_var = "reference_type",
+  continuous_var = "year",
+  top_n = 10,
+  ncol = 3,
+  height = 2000,
+  width = 1000,
+  verbose = TRUE)
+```
+
+### Plot Mean Topic Prevalence Across Documents
+
+```{r, message=FALSE, eval=FALSE}
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- df %>%
+  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm() %>%
+  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
+  .[quanteda::ntoken(.) > 0, ]
+TextAnalysisR::plot_mean_topic_prevalence(
+  dfm_object = dfm_object,
+  K_number = 15,
+  max.em.its = 75,
+  categorical_var = "reference_type",
+  continuous_var = "year",
+  top_n = 15,
+  height = 500,
+  width = 1000,
+  verbose = TRUE)
+```
+
+### Plot a Word Co-occurrence Network
+
+```{r, message=FALSE, eval=FALSE}
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- df %>%
+  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
+  quanteda::dfm() %>%
+  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
+  .[quanteda::ntoken(.) > 0, ]
+TextAnalysisR::plot_word_co_occurrence_network(dfm_object,
+                                term_col = "abstract",
+                                document = "document",
+                                co_occur_n = 5,
+                                height = 700,
+                                width = 1000)
+```
+
+### Plot a Word Correlation Network
+
+```{r, message=FALSE, eval=FALSE}
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- preprocess_texts(df, text_field = "text") %>%
+  quanteda::dfm()
+dfm_td <- tidytext::tidy(dfm_object)
+TextAnalysisR::plot_word_correlation_network(dfm_td,
+                              term_col = "abstract",
+                              doc_col = "document",
+                              correlation_threshold = 0.3,
+                              height = 700,
+                              width = 1000)
+```
+
+### Visualize Word Frequency Trends Over Time
+
+```{r, message=FALSE, eval=FALSE}
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- preprocess_texts(df, text_field = "abstract") %>%
   quanteda::dfm()
 out <- quanteda::convert(dfm_object, to = "stm") 
-stm_model <- stm(out$documents,
+stm_model <- stm::stm(out$documents,
                  out$vocab,
                  data = out$meta,
-                 prevalence = ~ 
+                 prevalence = ~
                    I((year >= 1980)*(year - 1980)) +
                    I((year >= 1990)*(year - 1990)) +
                    I((year >= 2000)*(year - 2000)) +
@@ -73,75 +165,11 @@ stm_model <- stm(out$documents,
                  init.type = 'Spectral',
                  K = 15,
                  verbose = FALSE)
-
-beta_td <- tidytext::tidy(stm_model, matrix="beta")
-top_terms <- examine_top_terms(beta_td, top_n = 5)
-head(top_terms)
-```
-
-### Plot Topic Per-Term Per-Topic Probabilities
-
-```{r, message=FALSE, eval=FALSE}
-# Assume stm_model is a fitted STM model.
-beta_td <- tidytext::tidy(stm_model, matrix = "beta", log = FALSE)
-plot <- plot_topic_term(beta_td, ncol = 3)
-print(plot)
-```
-
-### Plot Per-Document Per-Topic Probabilities
-
-```{r, message=FALSE, eval=FALSE}
-# Assume stm_model is a fitted STM model.
-gamma_td <- tidytext::tidy(stm_model, matrix = "gamma", document_names = rownames(dfm), log = FALSE)
-plot <- topic_probability_plot(gamma_td, top_n = 10)
-print(plot)
-```
-
-### Create a Table for Per-Document Per-Topic Probabilities
-
-```{r, message=FALSE, eval=FALSE}
-# Assume stm_model is a fitted STM model.
-gamma_td <- tidytext::tidy(stm_model, matrix="gamma")
-table <- topic_probability_table(gamma_td, top_n = 10)
-print(table)
-```
-
-### Plot a Word Co-occurrence Network
-
-```{r, message=FALSE, eval=FALSE}
-df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "abstract") %>%
-  quanteda::dfm()
-dfm_td <- tidytext::tidy(dfm_object)
-plot_word_co_occurrence_network(dfm_td,
-                                term_col = "abstract",
-                                doc_col = "document",
-                                co_occur_n = 5)
-```
-
-### Plot a Word Correlation Network
-
-```{r, message=FALSE, eval=FALSE}
-df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "") %>%
-  quanteda::dfm()
-dfm_td <- tidytext::tidy(dfm_object)
-plot_word_correlation_network(dfm_td,
-                              term_col = "abstract",
-                              doc_col = "document",
-                              correlation_threshold = 0.3)
-```
-
-### Visualize Word Frequency Trends Over Time
-
-```{r, message=FALSE, eval=FALSE}
-# Assume stm_model is a fitted STM model.
-df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "abstract") %>% quanteda::dfm()
 gamma_td <- tidytext::tidy(stm_model, matrix = "gamma")
-word_frequency_trends(dfm_object, 
-                      gamma_td, time_variable = "year", 
-                      selected_terms = c("computer", "disability"))
+TextAnalysisR::word_frequency_trends(dfm_object,
+                      gamma_td, time_variable = "year",
+                      selected_terms = c("computer", "disability"),
+                      height = 700, width = 1000)
 ```
 
 

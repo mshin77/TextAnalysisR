@@ -2,9 +2,16 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{word_frequency_trends}
 \alias{word_frequency_trends}
-\title{Visualize Word Frequency Trends Over Time}
+\title{Word Frequency Trends Over Time}
 \usage{
-word_frequency_trends(dfm_object, gamma_td, time_variable, selected_terms)
+word_frequency_trends(
+  dfm_object,
+  gamma_td,
+  time_variable,
+  selected_terms,
+  height = 700,
+  width = 1000
+)
 }
 \arguments{
 \item{dfm_object}{A \code{quanteda} dfm object representing document-feature matrix.}
@@ -14,15 +21,15 @@ word_frequency_trends(dfm_object, gamma_td, time_variable, selected_terms)
 \item{time_variable}{The column name for the time variable (e.g., "year").}
 
 \item{selected_terms}{A vector of terms to analyze trends for.}
+
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{700}.}
+
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
 }
 \value{
-A ggplot2 line plot showing word frequency trends.
-
-A ggplot object showing word frequency trends over time.
+A Plotly object showing interactive word frequency trends over time.
 }
 \description{
-Analyze and visualize the change in word frequencies over time or any continuous variable.
-
 Analyze and visualize word frequency trends over time for a fixed term column.
 }
 \examples{
@@ -30,20 +37,25 @@ if (interactive()) {
 df <- TextAnalysisR::SpecialEduTech
 dfm_object <- preprocess_texts(df, text_field = "abstract") \%>\%
  quanteda::dfm()
-word_frequency_trends(dfm_object, gamma_td,
-                     time_variable = "year",
-                     selected_terms = c("computer", "disability"))
-}
-
-if (interactive()) {
-# Assume stm_model is a fitted STM model.
-df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "abstract") \%>\%
- quanteda::dfm()
+out <- quanteda::convert(dfm_object, to = "stm")
+stm_15 <- stm::stm(out$documents,
+                  out$vocab,
+                  data = out$meta,
+                  prevalence = ~
+                    I((year >= 1980)*(year - 1980)) +
+                    I((year >= 1990)*(year - 1990)) +
+                    I((year >= 2000)*(year - 2000)) +
+                    I((year >= 2010)*(year - 2010)),
+                  max.em.its = 75,
+                  init.type = 'Spectral',
+                  K = 15,
+                  verbose = FALSE)
+stm_model <- stm_15
 gamma_td <- tidytext::tidy(stm_model, matrix = "gamma")
-word_frequency_trends(dfm_object,
-                     gamma_td, time_variable = "year",
-                     selected_terms = c("computer", "disability"))
+TextAnalysisR::word_frequency_trends(dfm_object,
+                                    gamma_td, time_variable = "year",
+                                    selected_terms = c("computer", "disability"),
+                                    height = 700, width = 1000)
 }
 
 }

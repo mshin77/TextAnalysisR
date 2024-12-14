@@ -24,11 +24,12 @@ and creates a ggplot-based visualization of term frequencies.
 }
 \examples{
 if (interactive()) {
-  df <- TextAnalysisR::SpecialEduTech
-  dfm_object <- df \%>\%
-    preprocess_texts(text_field = "abstract") \%>\%
-    quanteda::dfm()
-  plot <- plot_word_frequency(dfm_object, n = 20)
-  print(plot)
+df <- TextAnalysisR::SpecialEduTech
+dfm_object <- df \%>\%
+  TextAnalysisR::preprocess_texts(text_field = "abstract") \%>\%
+  quanteda::dfm() \%>\%
+  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) \%>\%
+  .[quanteda::ntoken(.) > 0, ]
+TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
 }
 }

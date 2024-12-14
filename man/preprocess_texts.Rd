@@ -42,7 +42,7 @@ Typically used before constructing a dfm and fitting an STM model.
 \examples{
 if (interactive()) {
   df <- TextAnalysisR::SpecialEduTech
-  tokens <- preprocess_texts(df, text_field = "abstract")
+  tokens <- TextAnalysisR::preprocess_texts(df, text_field = "abstract")
   tokens
 }
 }

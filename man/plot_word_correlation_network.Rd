@@ -9,7 +9,9 @@ plot_word_correlation_network(
   term_col = "term",
   doc_col = "document",
   co_occur_n = 2,
-  correlation_threshold = 0.3
+  correlation_threshold = 0.3,
+  height = 700,
+  width = 1000
 )
 }
 \arguments{
@@ -24,9 +26,13 @@ after preprocessing text data.}
 \item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 2).}
 
 \item{correlation_threshold}{Minimum correlation value to include edges in the graph (default is 0.3).}
+
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{700}.}
+
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
 }
 \value{
-A \code{ggraph} object visualizing the word correlation network.
+A Plotly object visualizing the interactive word correlation network.
 }
 \description{
 Visualize the correlation relationships between terms in the corpus based on pairwise correlations.
@@ -37,10 +43,12 @@ df <- TextAnalysisR::SpecialEduTech
 dfm_object <- preprocess_texts(df, text_field = "text") \%>\%
  quanteda::dfm()
 dfm_td <- tidytext::tidy(dfm_object)
-plot_word_correlation_network(dfm_td,
+TextAnalysisR::plot_word_correlation_network(dfm_td,
                              term_col = "abstract",
                              doc_col = "document",
-                             correlation_threshold = 0.3)
+                             correlation_threshold = 0.3,
+                             height = 700,
+                             width = 1000)
 }
 
 
