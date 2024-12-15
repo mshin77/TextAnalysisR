@@ -124,11 +124,11 @@ dfm_object <- df %>%
   quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
   .[quanteda::ntoken(.) > 0, ]
 TextAnalysisR::plot_word_co_occurrence_network(dfm_object,
-                                term_col = "abstract",
-                                document = "document",
-                                co_occur_n = 5,
-                                height = 700,
-                                width = 1000)
+                                               term_col = "abstract",
+                                               document = "document",
+                                               co_occur_n = 5,
+                                               height = 700,
+                                               width = 1000)
 ```
 
 ### Plot a Word Correlation Network
@@ -139,11 +139,11 @@ dfm_object <- preprocess_texts(df, text_field = "text") %>%
   quanteda::dfm()
 dfm_td <- tidytext::tidy(dfm_object)
 TextAnalysisR::plot_word_correlation_network(dfm_td,
-                              term_col = "abstract",
-                              doc_col = "document",
-                              correlation_threshold = 0.3,
-                              height = 700,
-                              width = 1000)
+                                             term_col = "abstract",
+                                             doc_col = "document",
+                                             correlation_threshold = 0.3,
+                                             height = 700,
+                                             width = 1000)
 ```
 
 ### Visualize Word Frequency Trends Over Time
@@ -154,24 +154,24 @@ dfm_object <- preprocess_texts(df, text_field = "abstract") %>%
   quanteda::dfm()
 out <- quanteda::convert(dfm_object, to = "stm") 
 stm_model <- stm::stm(out$documents,
-                 out$vocab,
-                 data = out$meta,
-                 prevalence = ~
-                   I((year >= 1980)*(year - 1980)) +
-                   I((year >= 1990)*(year - 1990)) +
-                   I((year >= 2000)*(year - 2000)) +
-                   I((year >= 2010)*(year - 2010)),
-                 max.em.its = 75,
-                 init.type = 'Spectral',
-                 K = 15,
-                 verbose = FALSE)
+                      out$vocab,
+                      data = out$meta,
+                      prevalence = ~
+                        I((year >= 1980)*(year - 1980)) +
+                        I((year >= 1990)*(year - 1990)) +
+                        I((year >= 2000)*(year - 2000)) +
+                        I((year >= 2010)*(year - 2010)),
+                      max.em.its = 75,
+                      init.type = 'Spectral',
+                      K = 15,
+                      verbose = FALSE)
 gamma_td <- tidytext::tidy(stm_model, matrix = "gamma")
 TextAnalysisR::word_frequency_trends(dfm_object,
-                      gamma_td, time_variable = "year",
-                      selected_terms = c("computer", "disability"),
-                      height = 700, width = 1000)
+                                     gamma_td, time_variable = "year",
+                                     selected_terms = c("computer", "disability"),
+                                     height = 700, width = 1000)
 ```
 
 
-  
+
 

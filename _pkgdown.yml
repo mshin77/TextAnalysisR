@@ -1,4 +1,9 @@
 url: https://mshin77.github.io/TextAnalysisR/
 template:
   bootstrap: 5
-
+navbar:
+  structure:
+    left:
+      - home
+      - reference
+      - articles

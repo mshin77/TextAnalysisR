@@ -36,7 +36,6 @@
 <li><a class="dropdown-item" href="../articles/TextAnalysisR_Vignette.html">TextAnalysisR Vignette</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -181,11 +180,11 @@ web app at <code><a href="../reference/TextAnalysisR.app.html">TextAnalysisR::Te
 <span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm_trim.html" class="external-link">dfm_trim</a></span><span class="op">(</span>min_termfreq <span class="op">=</span> <span class="fl">1</span>, min_docfreq <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="../reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="va">.</span><span class="op">[</span><span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/ntoken.html" class="external-link">ntoken</a></span><span class="op">(</span><span class="va">.</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="op">]</span></span>
 <span><span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="../reference/plot_word_co_occurrence_network.html">plot_word_co_occurrence_network</a></span><span class="op">(</span><span class="va">dfm_object</span>,</span>
-<span>                                term_col <span class="op">=</span> <span class="st">"abstract"</span>,</span>
-<span>                                document <span class="op">=</span> <span class="st">"document"</span>,</span>
-<span>                                co_occur_n <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>                                height <span class="op">=</span> <span class="fl">700</span>,</span>
-<span>                                width <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
+<span>                                               term_col <span class="op">=</span> <span class="st">"abstract"</span>,</span>
+<span>                                               document <span class="op">=</span> <span class="st">"document"</span>,</span>
+<span>                                               co_occur_n <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>                                               height <span class="op">=</span> <span class="fl">700</span>,</span>
+<span>                                               width <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="plot-a-word-correlation-network">Plot a Word Correlation Network<a class="anchor" aria-label="anchor" href="#plot-a-word-correlation-network"></a>
@@ -196,11 +195,11 @@ web app at <code><a href="../reference/TextAnalysisR.app.html">TextAnalysisR::Te
 <span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">dfm_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
 <span><span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="../reference/plot_word_correlation_network.html">plot_word_correlation_network</a></span><span class="op">(</span><span class="va">dfm_td</span>,</span>
-<span>                              term_col <span class="op">=</span> <span class="st">"abstract"</span>,</span>
-<span>                              doc_col <span class="op">=</span> <span class="st">"document"</span>,</span>
-<span>                              correlation_threshold <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>                              height <span class="op">=</span> <span class="fl">700</span>,</span>
-<span>                              width <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
+<span>                                             term_col <span class="op">=</span> <span class="st">"abstract"</span>,</span>
+<span>                                             doc_col <span class="op">=</span> <span class="st">"document"</span>,</span>
+<span>                                             correlation_threshold <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>                                             height <span class="op">=</span> <span class="fl">700</span>,</span>
+<span>                                             width <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="visualize-word-frequency-trends-over-time">Visualize Word Frequency Trends Over Time<a class="anchor" aria-label="anchor" href="#visualize-word-frequency-trends-over-time"></a>
@@ -211,22 +210,22 @@ web app at <code><a href="../reference/TextAnalysisR.app.html">TextAnalysisR::Te
 <span>  <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/convert.html" class="external-link">convert</a></span><span class="op">(</span><span class="va">dfm_object</span>, to <span class="op">=</span> <span class="st">"stm"</span><span class="op">)</span> </span>
 <span><span class="va">stm_model</span> <span class="op">&lt;-</span> <span class="fu">stm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/stm/man/stm.html" class="external-link">stm</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">documents</span>,</span>
-<span>                 <span class="va">out</span><span class="op">$</span><span class="va">vocab</span>,</span>
-<span>                 data <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">meta</span>,</span>
-<span>                 prevalence <span class="op">=</span> <span class="op">~</span></span>
-<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">1980</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">1980</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">1990</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">1990</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">2000</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">2000</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>                   <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">2010</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">2010</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>                 max.em.its <span class="op">=</span> <span class="fl">75</span>,</span>
-<span>                 init.type <span class="op">=</span> <span class="st">'Spectral'</span>,</span>
-<span>                 K <span class="op">=</span> <span class="fl">15</span>,</span>
-<span>                 verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>                      <span class="va">out</span><span class="op">$</span><span class="va">vocab</span>,</span>
+<span>                      data <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">meta</span>,</span>
+<span>                      prevalence <span class="op">=</span> <span class="op">~</span></span>
+<span>                        <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">1980</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">1980</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>                        <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">1990</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">1990</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>                        <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">2000</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">2000</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>                        <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="op">(</span><span class="va">year</span> <span class="op">&gt;=</span> <span class="fl">2010</span><span class="op">)</span><span class="op">*</span><span class="op">(</span><span class="va">year</span> <span class="op">-</span> <span class="fl">2010</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                      max.em.its <span class="op">=</span> <span class="fl">75</span>,</span>
+<span>                      init.type <span class="op">=</span> <span class="st">'Spectral'</span>,</span>
+<span>                      K <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>                      verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">gamma_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">stm_model</span>, matrix <span class="op">=</span> <span class="st">"gamma"</span><span class="op">)</span></span>
 <span><span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="../reference/word_frequency_trends.html">word_frequency_trends</a></span><span class="op">(</span><span class="va">dfm_object</span>,</span>
-<span>                      <span class="va">gamma_td</span>, time_variable <span class="op">=</span> <span class="st">"year"</span>,</span>
-<span>                      selected_terms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"computer"</span>, <span class="st">"disability"</span><span class="op">)</span>,</span>
-<span>                      height <span class="op">=</span> <span class="fl">700</span>, width <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
+<span>                                     <span class="va">gamma_td</span>, time_variable <span class="op">=</span> <span class="st">"year"</span>,</span>
+<span>                                     selected_terms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"computer"</span>, <span class="st">"disability"</span><span class="op">)</span>,</span>
+<span>                                     height <span class="op">=</span> <span class="fl">700</span>, width <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
