@@ -64,7 +64,7 @@ Typically used before constructing a dfm and fitting an STM model."></head><body
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">preprocess_texts</span><span class="op">(</span></span>
-<span>  <span class="va">df</span>,</span>
+<span>  <span class="va">united_tbl</span>,</span>
 <span>  text_field <span class="op">=</span> <span class="st">"united_texts"</span>,</span>
 <span>  custom_stopwords <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_char <span class="op">=</span> <span class="fl">2</span>,</span>
@@ -76,12 +76,12 @@ Typically used before constructing a dfm and fitting an STM model."></head><body
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
+<dl><dt id="arg-united-tbl">united_tbl<a class="anchor" aria-label="anchor" href="#arg-united-tbl"></a></dt>
 <dd><p>A data frame that contains text data.</p></dd>
 
 
 <dt id="arg-text-field">text_field<a class="anchor" aria-label="anchor" href="#arg-text-field"></a></dt>
-<dd><p>The name of the column containing text data.</p></dd>
+<dd><p>The name of the column in <code>united_tbl</code> that contains text data.</p></dd>
 
 
 <dt id="arg-custom-stopwords">custom_stopwords<a class="anchor" aria-label="anchor" href="#arg-custom-stopwords"></a></dt>
@@ -98,15 +98,16 @@ Typically used before constructing a dfm and fitting an STM model."></head><body
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code><a href="https://quanteda.io/reference/tokens.html" class="external-link">quanteda::tokens</a></code> object. The output is a list of tokens. Each token is a word in the text data.
-The function removes punctuation, symbols, numbers, URLs, and stopwords. It also converts all words to lowercase.</p>
+    <p>A <code>quanteda</code> tokens object. Each row in the object represents a document, and each column represents a token.
+The object is ready for constructing a dfm and fitting an STM model.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span></span>
-<span class="r-in"><span>  <span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">preprocess_texts</span><span class="op">(</span><span class="va">df</span>, text_field <span class="op">=</span> <span class="st">"abstract"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="unite_text_cols.html">unite_text_cols</a></span><span class="op">(</span><span class="va">df</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">preprocess_texts</span><span class="op">(</span><span class="va">united_tbl</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">tokens</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
