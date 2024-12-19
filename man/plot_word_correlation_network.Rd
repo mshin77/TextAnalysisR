@@ -5,31 +5,23 @@
 \title{Plot a Word Correlation Network}
 \usage{
 plot_word_correlation_network(
-  dfm_td,
-  term_col = "term",
-  doc_col = "document",
-  co_occur_n = 2,
-  correlation_threshold = 0.3,
-  height = 700,
-  width = 1000
+  dfm_object,
+  co_occur_n = 30,
+  corr_n = 0.4,
+  height = 900,
+  width = 800
 )
 }
 \arguments{
-\item{dfm_td}{A tidy data frame of terms (output of \code{tidytext::tidy(dfm_object)}),
-where \code{dfm_object} is a document-feature matrix created using \code{quanteda::dfm()}
-after preprocessing text data.}
+\item{dfm_object}{A quanteda document-feature matrix (dfm).}
 
-\item{term_col}{The column name for terms (default is "term").}
+\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 30).}
 
-\item{doc_col}{The column name for document IDs (default is "document").}
+\item{corr_n}{Minimum correlation value for filtering terms (default is 0.4).}
 
-\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 2).}
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
 
-\item{correlation_threshold}{Minimum correlation value to include edges in the graph (default is 0.3).}
-
-\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{700}.}
-
-\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{800}.}
 }
 \value{
 A Plotly object visualizing the interactive word correlation network.
@@ -39,17 +31,15 @@ Visualize the correlation relationships between terms in the corpus based on pai
 }
 \examples{
 if (interactive()) {
-df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "text") \%>\%
- quanteda::dfm()
-dfm_td <- tidytext::tidy(dfm_object)
-TextAnalysisR::plot_word_correlation_network(dfm_td,
-                             term_col = "abstract",
-                             doc_col = "document",
-                             correlation_threshold = 0.3,
-                             height = 700,
-                             width = 1000)
+  df <- TextAnalysisR::SpecialEduTech
+  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+  dfm_object <- quanteda::dfm(tokens)
+  TextAnalysisR::plot_word_correlation_network(
+    dfm_object,
+    co_occur_n = 30,
+    corr_n = 0.4,
+    height = 900,
+    width = 800)
 }
-
-
 }

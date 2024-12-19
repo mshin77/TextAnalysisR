@@ -6,25 +6,19 @@
 \usage{
 plot_word_co_occurrence_network(
   dfm_object,
-  term_col = "term",
-  document = "document",
-  co_occur_n = 2,
-  height = 700,
-  width = 1000
+  co_occur_n = 200,
+  height = 900,
+  width = 800
 )
 }
 \arguments{
 \item{dfm_object}{A quanteda document-feature matrix (dfm).}
 
-\item{term_col}{The column name for terms (default is "term").}
+\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 200).}
 
-\item{document}{The column name for document IDs (default is "document").}
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
 
-\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 2).}
-
-\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{700}.}
-
-\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{800}.}
 }
 \value{
 A Plotly object visualizing the interactive word co-occurrence network.
@@ -34,19 +28,14 @@ Visualize the co-occurrence relationships between terms in the corpus based on p
 }
 \examples{
 if (interactive()) {
- df <- TextAnalysisR::SpecialEduTech
- dfm_object <- df \%>\%
-   TextAnalysisR::preprocess_texts(text_field = "abstract") \%>\%
-   quanteda::dfm() \%>\%
-   quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) \%>\%
-   .[quanteda::ntoken(.) > 0, ]
-TextAnalysisR::plot_word_co_occurrence_network(dfm_object,
-                               term_col = "abstract",
-                               document = "document",
-                               co_occur_n = 5,
-                               height = 700,
-                               width = 1000)
+  df <- TextAnalysisR::SpecialEduTech
+  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+  dfm_object <- quanteda::dfm(tokens)
+  TextAnalysisR::plot_word_co_occurrence_network(
+    dfm_object,
+    co_occur_n = 200,
+    height = 900,
+    width = 800)
 }
-
-
 }

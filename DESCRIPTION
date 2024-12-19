@@ -29,7 +29,8 @@ Imports:
     numform,
     igraph,
     scales,
-    plotly
+    plotly,
+    purrr
 Suggests:
     covr,
     knitr,

@@ -6,11 +6,13 @@
 \usage{
 plot_mean_topic_prevalence(
   dfm_object,
-  K_number,
+  topic_n,
   max.em.its = 75,
   categorical_var = NULL,
   continuous_var = NULL,
-  top_n = 15,
+  top_term_n = 10,
+  top_topic_n = 15,
+  topic_names = NULL,
   height = 500,
   width = 1000,
   verbose = TRUE,
@@ -20,7 +22,7 @@ plot_mean_topic_prevalence(
 \arguments{
 \item{dfm_object}{A quanteda document-feature matrix (dfm).}
 
-\item{K_number}{The number of topics to display.}
+\item{topic_n}{The number of topics to display.}
 
 \item{max.em.its}{Maximum number of EM iterations (default: 75).}
 
@@ -28,13 +30,17 @@ plot_mean_topic_prevalence(
 
 \item{continuous_var}{An optional character string for a continuous variable in the metadata.}
 
-\item{top_n}{The number of topics to display, ordered by their mean prevalence.}
+\item{top_term_n}{The number of top terms to display for each topic (default: 10).}
+
+\item{top_topic_n}{The number of top topics to display (default: 15).}
+
+\item{topic_names}{An optional character vector for labeling topics. If provided, must be the same length as the number of topics.}
 
 \item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{500}.}
 
 \item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
 
-\item{verbose}{Logical; if \code{TRUE}, prints progress information (default: TRUE).}
+\item{verbose}{Logical; if \code{TRUE}, prints progress information (default: FALSE).}
 
 \item{...}{Further arguments passed to \code{stm::searchK}.}
 }
@@ -45,21 +51,23 @@ mean gamma value (average prevalence across documents).
 \description{
 This function calculates the mean topic prevalence across documents and plots the top topics.
 }
+\details{
+If \code{topic_names} is provided, it replaces the default "Topic \{n\}" labels with custom names.#'
+}
 \examples{
 if (interactive()) {
- df <- TextAnalysisR::SpecialEduTech
- dfm_object <- df \%>\%
-   TextAnalysisR::preprocess_texts(text_field = "abstract") \%>\%
-   quanteda::dfm() \%>\%
-   quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) \%>\%
-   .[quanteda::ntoken(.) > 0, ]
+  df <- TextAnalysisR::SpecialEduTech
+  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+  dfm_object <- quanteda::dfm(tokens)
 TextAnalysisR::plot_mean_topic_prevalence(
   dfm_object = dfm_object,
-  K_number = 15,
+  topic_n = 15,
   max.em.its = 75,
   categorical_var = "reference_type",
   continuous_var = "year",
-  top_n = 15,
+  top_term_n = 10,
+  top_topic_n = 15,
   height = 500,
   width = 1000,
   verbose = TRUE)

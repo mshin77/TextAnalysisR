@@ -5,7 +5,7 @@
 \title{Preprocess Text Data}
 \usage{
 preprocess_texts(
-  df,
+  united_tbl,
   text_field = "united_texts",
   custom_stopwords = NULL,
   min_char = 2,
@@ -13,9 +13,9 @@ preprocess_texts(
 )
 }
 \arguments{
-\item{df}{A data frame that contains text data.}
+\item{united_tbl}{A data frame that contains text data.}
 
-\item{text_field}{The name of the column containing text data.}
+\item{text_field}{The name of the column in \code{united_tbl} that contains text data.}
 
 \item{custom_stopwords}{A character vector of additional stopwords to remove. Default is NULL.}
 
@@ -24,8 +24,8 @@ preprocess_texts(
 \item{...}{Further arguments passed to \code{quanteda::corpus}.}
 }
 \value{
-A \code{quanteda::tokens} object. The output is a list of tokens. Each token is a word in the text data.
-The function removes punctuation, symbols, numbers, URLs, and stopwords. It also converts all words to lowercase.
+A \code{quanteda} tokens object. Each row in the object represents a document, and each column represents a token.
+The object is ready for constructing a dfm and fitting an STM model.
 }
 \description{
 Preprocesses text data by:
@@ -42,7 +42,8 @@ Typically used before constructing a dfm and fitting an STM model.
 \examples{
 if (interactive()) {
   df <- TextAnalysisR::SpecialEduTech
-  tokens <- TextAnalysisR::preprocess_texts(df, text_field = "abstract")
+  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
   tokens
 }
 }

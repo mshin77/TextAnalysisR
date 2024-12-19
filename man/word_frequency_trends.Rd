@@ -2,27 +2,27 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{word_frequency_trends}
 \alias{word_frequency_trends}
-\title{Word Frequency Trends Over Time}
+\title{Plot Word Frequency Trends Over Time}
 \usage{
 word_frequency_trends(
   dfm_object,
-  gamma_td,
+  stm_model,
   time_variable,
   selected_terms,
-  height = 700,
+  height = 500,
   width = 1000
 )
 }
 \arguments{
-\item{dfm_object}{A \code{quanteda} dfm object representing document-feature matrix.}
+\item{dfm_object}{A quanteda document-feature matrix (dfm).}
 
-\item{gamma_td}{A tidy data frame of document-topic probabilities (gamma).}
+\item{stm_model}{An STM model object.}
 
 \item{time_variable}{The column name for the time variable (e.g., "year").}
 
 \item{selected_terms}{A vector of terms to analyze trends for.}
 
-\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{700}.}
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{500}.}
 
 \item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
 }
@@ -32,30 +32,22 @@ A Plotly object showing interactive word frequency trends over time.
 \description{
 Analyze and visualize word frequency trends over time for a fixed term column.
 }
+\details{
+This function requires a fitted STM model object and a quanteda dfm object.
+}
 \examples{
 if (interactive()) {
-df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "abstract") \%>\%
- quanteda::dfm()
-out <- quanteda::convert(dfm_object, to = "stm")
-stm_15 <- stm::stm(out$documents,
-                  out$vocab,
-                  data = out$meta,
-                  prevalence = ~
-                    I((year >= 1980)*(year - 1980)) +
-                    I((year >= 1990)*(year - 1990)) +
-                    I((year >= 2000)*(year - 2000)) +
-                    I((year >= 2010)*(year - 2010)),
-                  max.em.its = 75,
-                  init.type = 'Spectral',
-                  K = 15,
-                  verbose = FALSE)
-stm_model <- stm_15
-gamma_td <- tidytext::tidy(stm_model, matrix = "gamma")
-TextAnalysisR::word_frequency_trends(dfm_object,
-                                    gamma_td, time_variable = "year",
-                                    selected_terms = c("computer", "disability"),
-                                    height = 700, width = 1000)
+  df <- TextAnalysisR::SpecialEduTech
+  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+  dfm_object <- quanteda::dfm(tokens)
+  stm_15 <- TextAnalysisR::stm_15
+  TextAnalysisR::word_frequency_trends(dfm_object,
+                                    stm_model = stm_15,
+                                    time_variable = "year",
+                                    selected_terms = c("calculator", "computer"),
+                                    height = 500,
+                                    width = 1000)
 }
 
 }

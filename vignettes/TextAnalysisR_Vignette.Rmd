@@ -7,6 +7,12 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, 
+  warning = FALSE)
+```
+
 ```{r, include = FALSE}
 library(TextAnalysisR)
 ```
@@ -19,14 +25,14 @@ The `TextAnalysisR` package provides a supporting workflow for text mining analy
 
 The development version can be installed from [GitHub](https://github.com/mshin77/TextAnalysisR):
 
-```{r, message=FALSE, eval=FALSE}
+```{r, eval=FALSE}
 install.packages("devtools")
 devtools::install_github("mshin77/TextAnalysisR")
 ```
 
 ## Launch and Browse the Shiny app
 
-```{r, message=FALSE, eval=FALSE}
+```{r, eval=FALSE}
 library(TextAnalysisR)
 
 if (interactive()) {
@@ -34,144 +40,133 @@ if (interactive()) {
 }
 ```
 
+### Unite Text Columns
+
+```{r}
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+united_tbl
+```
+
 ### Preprocess Text Data
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-tokens <- TextAnalysisR::preprocess_texts(df, text_field = "abstract")
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts", verbose = FALSE)
 tokens
 ```
 
 ### Plot Word Frequency
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-dfm_object <- df %>%
-  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm() %>%
-  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
-  .[quanteda::ntoken(.) > 0, ]
-TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+word_frequency_plot <- TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
+word_frequency_plot
 ```
 
 ### Evaluate Optimal Number of Topics
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-dfm_object <- df %>%
-  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm() %>%
-  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
-  .[quanteda::ntoken(.) > 0, ]
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
 TextAnalysisR::evaluate_optimal_topic_number(
   dfm_object = dfm_object,
-  K_range = 5:30,
+  topic_range = 5:30,
   max.em.its = 75,
   categorical_var = "reference_type",
-  continuous_var = "year")
+  continuous_var = "year",
+  height = 600,
+  width = 800,
+  verbose = FALSE)
 ```
 
 ### Plot Highest Word Probabilities for Each Topic
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-dfm_object <- df %>%
-  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm() %>%
-  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
-  .[quanteda::ntoken(.) > 0, ]
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
 TextAnalysisR::plot_word_probabilities(
   dfm_object = dfm_object,
-  K_number = 15,
+  topic_n = 15,
   max.em.its = 75,
   categorical_var = "reference_type",
   continuous_var = "year",
-  top_n = 10,
+  top_term_n = 10,
   ncol = 3,
-  height = 2000,
-  width = 1000,
-  verbose = TRUE)
+  height = 1200,
+  width = 800,
+  verbose = FALSE)
 ```
 
 ### Plot Mean Topic Prevalence Across Documents
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-dfm_object <- df %>%
-  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm() %>%
-  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
-  .[quanteda::ntoken(.) > 0, ]
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
 TextAnalysisR::plot_mean_topic_prevalence(
   dfm_object = dfm_object,
-  K_number = 15,
+  topic_n = 15,
   max.em.its = 75,
   categorical_var = "reference_type",
   continuous_var = "year",
-  top_n = 15,
+  top_term_n = 10,
+  top_topic_n = 15,
   height = 500,
   width = 1000,
-  verbose = TRUE)
+  verbose = FALSE)
 ```
 
 ### Plot a Word Co-occurrence Network
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-dfm_object <- df %>%
-  TextAnalysisR::preprocess_texts(text_field = "abstract") %>%
-  quanteda::dfm() %>%
-  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) %>%
-  .[quanteda::ntoken(.) > 0, ]
-TextAnalysisR::plot_word_co_occurrence_network(dfm_object,
-                                               term_col = "abstract",
-                                               document = "document",
-                                               co_occur_n = 5,
-                                               height = 700,
-                                               width = 1000)
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+TextAnalysisR::plot_word_co_occurrence_network(
+  dfm_object,
+  co_occur_n = 200,
+  height = 900,
+  width = 800)
 ```
 
 ### Plot a Word Correlation Network
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "text") %>%
-  quanteda::dfm()
-dfm_td <- tidytext::tidy(dfm_object)
-TextAnalysisR::plot_word_correlation_network(dfm_td,
-                                             term_col = "abstract",
-                                             doc_col = "document",
-                                             correlation_threshold = 0.3,
-                                             height = 700,
-                                             width = 1000)
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+TextAnalysisR::plot_word_correlation_network(
+  dfm_object,
+  co_occur_n = 30,
+  corr_n = 0.4,
+  height = 900,
+  width = 800)
 ```
 
-### Visualize Word Frequency Trends Over Time
+### Plot Word Frequency Trends Over Time
 
-```{r, message=FALSE, eval=FALSE}
+```{r}
 df <- TextAnalysisR::SpecialEduTech
-dfm_object <- preprocess_texts(df, text_field = "abstract") %>%
-  quanteda::dfm()
-out <- quanteda::convert(dfm_object, to = "stm") 
-stm_model <- stm::stm(out$documents,
-                      out$vocab,
-                      data = out$meta,
-                      prevalence = ~
-                        I((year >= 1980)*(year - 1980)) +
-                        I((year >= 1990)*(year - 1990)) +
-                        I((year >= 2000)*(year - 2000)) +
-                        I((year >= 2010)*(year - 2010)),
-                      max.em.its = 75,
-                      init.type = 'Spectral',
-                      K = 15,
-                      verbose = FALSE)
-gamma_td <- tidytext::tidy(stm_model, matrix = "gamma")
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+stm_15 <- TextAnalysisR::stm_15
 TextAnalysisR::word_frequency_trends(dfm_object,
-                                     gamma_td, time_variable = "year",
-                                     selected_terms = c("computer", "disability"),
-                                     height = 700, width = 1000)
+                                     stm_model = stm_15,
+                                     time_variable = "year",
+                                     selected_terms = c("calculator", "computer"),
+                                     height = 500,
+                                     width = 1000)
 ```
-
-
-
-

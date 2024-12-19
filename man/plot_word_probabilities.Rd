@@ -6,15 +6,15 @@
 \usage{
 plot_word_probabilities(
   dfm_object,
-  K_number,
+  topic_n,
   max.em.its = 75,
   categorical_var = NULL,
   continuous_var = NULL,
-  top_n = 10,
+  top_term_n = 10,
   ncol = 3,
   topic_names = NULL,
-  height = 2000,
-  width = 1000,
+  height = 1200,
+  width = 800,
   verbose = TRUE,
   ...
 )
@@ -22,7 +22,7 @@ plot_word_probabilities(
 \arguments{
 \item{dfm_object}{A quanteda document-feature matrix (dfm).}
 
-\item{K_number}{The number of topics to display.}
+\item{topic_n}{The number of topics to display.}
 
 \item{max.em.its}{Maximum number of EM iterations (default: 75).}
 
@@ -30,17 +30,17 @@ plot_word_probabilities(
 
 \item{continuous_var}{An optional character string for a continuous variable in the metadata.}
 
-\item{top_n}{The number of top terms to display for each topic.}
+\item{top_term_n}{The number of top terms to display for each topic (default: 10).}
 
-\item{ncol}{The number of columns in the facet plot.}
+\item{ncol}{The number of columns in the facet plot (default: 3).}
 
 \item{topic_names}{An optional character vector for labeling topics. If provided, must be the same length as the number of topics.}
 
-\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{1200}.}
 
-\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{800}.}
 
-\item{verbose}{Logical; if \code{TRUE}, prints progress information (default: TRUE).}
+\item{verbose}{Logical; if \code{TRUE}, prints progress information.}
 
 \item{...}{Further arguments passed to \code{stm::searchK}.}
 }
@@ -57,23 +57,21 @@ If \code{topic_names} is provided, it replaces the default "Topic \{n\}" labels 
 }
 \examples{
 if (interactive()) {
-df <- TextAnalysisR::SpecialEduTech
-dfm_object <- df \%>\%
-  TextAnalysisR::preprocess_texts(text_field = "abstract") \%>\%
-  quanteda::dfm() \%>\%
-  quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) \%>\%
-  .[quanteda::ntoken(.) > 0, ]
+  df <- TextAnalysisR::SpecialEduTech
+  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+  dfm_object <- quanteda::dfm(tokens)
 TextAnalysisR::plot_word_probabilities(
- dfm_object = dfm_object,
- K_number = 15,
- max.em.its = 75,
- categorical_var = "reference_type",
- continuous_var = "year",
- top_n = 10,
- ncol = 3,
- height = 2000,
- width = 1000,
- verbose = TRUE)
+  dfm_object = dfm_object,
+  topic_n = 15,
+  max.em.its = 75,
+  categorical_var = "reference_type",
+  continuous_var = "year",
+  top_term_n = 10,
+  ncol = 3,
+  height = 1200,
+  width = 800,
+  verbose = TRUE)
 }
 
 }

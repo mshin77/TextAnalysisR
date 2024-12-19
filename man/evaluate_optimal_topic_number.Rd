@@ -6,18 +6,20 @@
 \usage{
 evaluate_optimal_topic_number(
   dfm_object,
-  K_range,
+  topic_range,
   max.em.its = 75,
   categorical_var = NULL,
   continuous_var = NULL,
+  height = 600,
+  width = 800,
   verbose = TRUE,
   ...
 )
 }
 \arguments{
-\item{dfm_object}{A quanteda document-feature matrix (dfm).}
+\item{dfm_object}{A \code{quanteda} document-feature matrix (dfm).}
 
-\item{K_range}{A numeric vector specifying the range of topics (K) to search over.}
+\item{topic_range}{A numeric vector specifying the range of topics (K) to search over.}
 
 \item{max.em.its}{Maximum number of EM iterations (default: 75).}
 
@@ -25,12 +27,16 @@ evaluate_optimal_topic_number(
 
 \item{continuous_var}{An optional character string for a continuous variable in the metadata.}
 
-\item{verbose}{Logical; if \code{TRUE}, prints progress information (default: TRUE).}
+\item{height}{The height of the resulting Plotly plot in pixels (default: 600).}
+
+\item{width}{The width of the resulting Plotly plot in pixels (default: 800).}
+
+\item{verbose}{Logical; if \code{TRUE}, prints progress information.}
 
 \item{...}{Further arguments passed to \code{stm::searchK}.}
 }
 \value{
-A Plotly object showing the diagnostics for the number of topics (K).
+A \code{plotly} object showing the diagnostics for the number of topics (K).
 }
 \description{
 This function performs a search for the optimal number of topics (K) using \code{stm::searchK}
@@ -39,18 +45,20 @@ and lower bound metrics.
 }
 \examples{
 if (interactive()) {
- df <- TextAnalysisR::SpecialEduTech
- dfm_object <- df \%>\%
-   TextAnalysisR::preprocess_texts(text_field = "abstract") \%>\%
-   quanteda::dfm() \%>\%
-   quanteda::dfm_trim(min_termfreq = 1, min_docfreq = 1) \%>\%
-   .[quanteda::ntoken(.) > 0, ]
- TextAnalysisR::evaluate_optimal_topic_number(
-   dfm_object = dfm_object,
-   K_range = 5:30,
-   max.em.its = 75,
-   categorical_var = "reference_type",
-   continuous_var = "year")
+  df <- TextAnalysisR::SpecialEduTech
+  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+  dfm_object <- quanteda::dfm(tokens)
+  TextAnalysisR::evaluate_optimal_topic_number(
+    dfm_object = dfm_object,
+    topic_range = 5:30,
+    max.em.its = 75,
+    categorical_var = "reference_type",
+    continuous_var = "year",
+    height = 600,
+    width = 800,
+    verbose = TRUE
+  )
 }
 
 }
