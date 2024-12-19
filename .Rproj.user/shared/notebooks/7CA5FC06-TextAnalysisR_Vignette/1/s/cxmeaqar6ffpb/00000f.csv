@@ -1,0 +1,16 @@
+"0","df <- TextAnalysisR::SpecialEduTech"
+"0","dfm_object <- df %>%"
+"0","  TextAnalysisR::preprocess_texts(text_field = ""abstract"") %>%"
+"0","  quanteda::dfm() "
+"0","TextAnalysisR::evaluate_optimal_topic_number("
+"0","  dfm_object = dfm_object,"
+"0","  K_range = 5:30,"
+"0","  max.em.its = 75,"
+"0","  categorical_var = ""reference_type"","
+"0","  continuous_var = ""year"","
+"0","  verbose = FALSE)"
+"2","Error in makeTopMatrix(prevalence, data) : Error creating model matrix.
+                 This could be caused by many things including
+                 explicit calls to a namespace within the formula.
+                 Try a simpler formula.
+"

@@ -1,0 +1,5 @@
+"0","df <- TextAnalysisR::SpecialEduTech"
+"0","dfm_object <- df %>%"
+"0","  TextAnalysisR::preprocess_texts(text_field = ""abstract"") %>%"
+"0","  quanteda::dfm() "
+"0","TextAnalysisR::plot_word_frequency(dfm_object, n = 20)"
