@@ -43,13 +43,11 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_word_correlation_network</span><span class="op">(</span></span>
-<span>  <span class="va">dfm_td</span>,</span>
-<span>  term_col <span class="op">=</span> <span class="st">"term"</span>,</span>
-<span>  doc_col <span class="op">=</span> <span class="st">"document"</span>,</span>
-<span>  co_occur_n <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  correlation_threshold <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>  height <span class="op">=</span> <span class="fl">700</span>,</span>
-<span>  width <span class="op">=</span> <span class="fl">1000</span></span>
+<span>  <span class="va">dfm_object</span>,</span>
+<span>  co_occur_n <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  corr_n <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>  height <span class="op">=</span> <span class="fl">900</span>,</span>
+<span>  width <span class="op">=</span> <span class="fl">800</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -57,34 +55,24 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-dfm-td">dfm_td<a class="anchor" aria-label="anchor" href="#arg-dfm-td"></a></dt>
-<dd><p>A tidy data frame of terms (output of <code>tidytext::tidy(dfm_object)</code>),
-where <code>dfm_object</code> is a document-feature matrix created using <code><a href="https://quanteda.io/reference/dfm.html" class="external-link">quanteda::dfm()</a></code>
-after preprocessing text data.</p></dd>
-
-
-<dt id="arg-term-col">term_col<a class="anchor" aria-label="anchor" href="#arg-term-col"></a></dt>
-<dd><p>The column name for terms (default is "term").</p></dd>
-
-
-<dt id="arg-doc-col">doc_col<a class="anchor" aria-label="anchor" href="#arg-doc-col"></a></dt>
-<dd><p>The column name for document IDs (default is "document").</p></dd>
+<dl><dt id="arg-dfm-object">dfm_object<a class="anchor" aria-label="anchor" href="#arg-dfm-object"></a></dt>
+<dd><p>A quanteda document-feature matrix (dfm).</p></dd>
 
 
 <dt id="arg-co-occur-n">co_occur_n<a class="anchor" aria-label="anchor" href="#arg-co-occur-n"></a></dt>
-<dd><p>Minimum number of co-occurrences for filtering terms (default is 2).</p></dd>
+<dd><p>Minimum number of co-occurrences for filtering terms (default is 30).</p></dd>
 
 
-<dt id="arg-correlation-threshold">correlation_threshold<a class="anchor" aria-label="anchor" href="#arg-correlation-threshold"></a></dt>
-<dd><p>Minimum correlation value to include edges in the graph (default is 0.3).</p></dd>
+<dt id="arg-corr-n">corr_n<a class="anchor" aria-label="anchor" href="#arg-corr-n"></a></dt>
+<dd><p>Minimum correlation value for filtering terms (default is 0.4).</p></dd>
 
 
 <dt id="arg-height">height<a class="anchor" aria-label="anchor" href="#arg-height"></a></dt>
-<dd><p>The height of the resulting Plotly plot, in pixels. Defaults to <code>700</code>.</p></dd>
+<dd><p>The height of the resulting Plotly plot, in pixels. Defaults to <code>900</code>.</p></dd>
 
 
 <dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
-<dd><p>The width of the resulting Plotly plot, in pixels. Defaults to <code>1000</code>.</p></dd>
+<dd><p>The width of the resulting Plotly plot, in pixels. Defaults to <code>800</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -95,19 +83,17 @@ after preprocessing text data.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span></span>
-<span class="r-in"><span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu"><a href="preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">df</span>, text_field <span class="op">=</span> <span class="st">"text"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dfm_td</span> <span class="op">&lt;-</span> <span class="fu">tidytext</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">plot_word_correlation_network</span><span class="op">(</span><span class="va">dfm_td</span>,</span></span>
-<span class="r-in"><span>                             term_col <span class="op">=</span> <span class="st">"abstract"</span>,</span></span>
-<span class="r-in"><span>                             doc_col <span class="op">=</span> <span class="st">"document"</span>,</span></span>
-<span class="r-in"><span>                             correlation_threshold <span class="op">=</span> <span class="fl">0.3</span>,</span></span>
-<span class="r-in"><span>                             height <span class="op">=</span> <span class="fl">700</span>,</span></span>
-<span class="r-in"><span>                             width <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span></span>
+<span class="r-in"><span>  <span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="unite_text_cols.html">unite_text_cols</a></span><span class="op">(</span><span class="va">df</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="preprocess_texts.html">preprocess_texts</a></span><span class="op">(</span><span class="va">united_tbl</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">plot_word_correlation_network</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">dfm_object</span>,</span></span>
+<span class="r-in"><span>    co_occur_n <span class="op">=</span> <span class="fl">30</span>,</span></span>
+<span class="r-in"><span>    corr_n <span class="op">=</span> <span class="fl">0.4</span>,</span></span>
+<span class="r-in"><span>    height <span class="op">=</span> <span class="fl">900</span>,</span></span>
+<span class="r-in"><span>    width <span class="op">=</span> <span class="fl">800</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
