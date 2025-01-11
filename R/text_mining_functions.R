@@ -145,6 +145,67 @@ plot_word_frequency <-
   }
 
 
+#' @title Remove Common Words Across Documents
+#'
+#' @description
+#' This function removes specified common words from a tokens object and applies two dictionaries
+#' to categorize the remaining tokens. It returns a document-feature matrix (dfm) based on the
+#' processed tokens. If no words are specified for removal, it returns an initial dfm using the
+#' provided initialization function.
+#'
+#' @param tokens A \code{tokens} object from the \code{quanteda} package, typically processed
+#'   using functions like \code{tokens_select} or \code{tokens_remove}.
+#' @param remove_vars A character vector of words to remove from the tokens. If \code{NULL},
+#'   the function returns the result of \code{dfm_init_func()}.
+#' @param dfm_object A \code{dfm} object to process after removing the specified words.
+#'
+#' @return A \code{dfm} object with the specified words removed and the remaining tokens categorized
+#'
+#' @importFrom quanteda tokens_remove tokens_lookup dfm dictionary
+#'
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   df <- TextAnalysisR::SpecialEduTech
+#'   united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+#'   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+#'   dfm_object <- quanteda::dfm(tokens)
+#'   TextAnalysisR::remove_common_words(tokens = tokens,
+#'                                      remove_vars = c("level", "testing"),
+#'                                      dfm_object = dfm_object)
+#' }
+remove_common_words <- function(tokens, remove_vars, dfm_object) {
+
+  dictionary_list_1 <- TextAnalysisR::dictionary_list_1
+  dictionary_list_2 <- TextAnalysisR::dictionary_list_2
+
+  if (!is.null(remove_vars)) {
+    removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+
+    removed_tokens_dict_int <- quanteda::tokens_lookup(
+      removed_processed_tokens,
+      dictionary = dictionary(dictionary_list_1),
+      valuetype = "glob",
+      verbose = TRUE,
+      exclusive = FALSE,
+      capkeys = FALSE
+    )
+
+    removed_tokens_dict <- quanteda::tokens_lookup(
+      removed_tokens_dict_int,
+      dictionary = dictionary(dictionary_list_2),
+      valuetype = "glob",
+      verbose = TRUE,
+      exclusive = FALSE,
+      capkeys = FALSE
+    )
+
+    quanteda::dfm(removed_tokens_dict)
+
+  }
+}
+
 
 #' @title Evaluate Optimal Number of Topics
 #'
@@ -200,62 +261,46 @@ evaluate_optimal_topic_number <- function(dfm_object,
                                           width = 800,
                                           verbose = TRUE, ...) {
 
-  if (!is.null(categorical_var) && !(categorical_var %in% names(quanteda::docvars(dfm_object)))) {
-    stop(paste("Categorical variable", categorical_var, "is missing in dfm_object's document variables."))
-  }
-
-  if (!is.null(continuous_var) && !(continuous_var %in% names(quanteda::docvars(dfm_object)))) {
-    stop(paste("Continuous variable", continuous_var, "is missing in dfm_object's document variables."))
-  }
-
   out <- quanteda::convert(dfm_object, to = "stm")
 
-  if (!all(c("meta", "documents", "vocab") %in% names(out))) {
-    stop("Conversion of dfm_object must result in 'meta', 'documents', and 'vocab'.")
+  if (is.null(out$meta) || is.null(out$documents) || is.null(out$vocab)) {
+    stop("Conversion to STM format failed. Please ensure your dfm_object is correctly formatted.")
   }
 
-  meta <- out$meta
-  documents <- out$documents
-  vocab <- out$vocab
-
-  if (nrow(meta) != length(documents)) {
-    stop("Number of rows in 'meta' does not match number of 'documents' after conversion.")
-  }
+  categorical_var <- if (!is.null(categorical_var)) as.character(categorical_var) else NULL
+  continuous_var <- if (!is.null(continuous_var)) as.character(continuous_var) else NULL
 
   if (!is.null(categorical_var)) {
-    meta[[categorical_var]] <- as.factor(meta[[categorical_var]])
+    categorical_var <- unlist(strsplit(categorical_var, ",\\s*"))
   }
   if (!is.null(continuous_var)) {
-    meta[[continuous_var]] <- as.numeric(meta[[continuous_var]])
-    if (any(is.na(meta[[continuous_var]]))) {
-      stop(paste("Continuous variable", continuous_var, "contains NA values. Please handle them before proceeding."))
-    }
+    continuous_var <- unlist(strsplit(continuous_var, ",\\s*"))
   }
 
-  message("Variable types in metadata:")
-  # print(str(meta))
+  missing_vars <- setdiff(c(categorical_var, continuous_var), names(out$meta))
+  if (length(missing_vars) > 0) {
+    stop("The following variables are missing in the metadata: ", paste(missing_vars, collapse = ", "))
+  }
 
   terms <- c()
-  if (!is.null(categorical_var)) {
+  if (!is.null(categorical_var) && length(categorical_var) > 0) {
     terms <- c(terms, categorical_var)
   }
-  if (!is.null(continuous_var)) {
-    terms <- c(terms, paste0("s(", continuous_var, ")"))
+  if (!is.null(continuous_var) && length(continuous_var) > 0) {
+    terms <- c(terms, continuous_var)
   }
-  if (length(terms) > 0) {
-    formula_string <- paste("~", paste(terms, collapse = " + "))
-    prevalence_formula <- as.formula(formula_string)
-    message("Prevalence formula: ", deparse(prevalence_formula))
+
+  prevalence_formula <- if (length(terms) > 0) {
+    as.formula(paste("~", paste(terms, collapse = " + ")))
   } else {
-    prevalence_formula <- NULL
-    message("No prevalence formula specified.")
+    NULL
   }
 
   search_result <- tryCatch({
     stm::searchK(
-      data = meta,
-      documents = documents,
-      vocab = vocab,
+      data = out$meta,
+      documents = out$documents,
+      vocab = out$vocab,
       max.em.its = max.em.its,
       init.type = "Spectral",
       K = topic_range,
@@ -281,7 +326,9 @@ evaluate_optimal_topic_number <- function(dfm_object,
     type = 'scatter',
     mode = 'lines+markers',
     text = ~paste("K:", K, "<br>Held-out Likelihood:", round(heldout, 3)),
-    hoverinfo = 'text'
+    hoverinfo = 'text',
+    width = width,
+    height = height
   )
 
   p2 <- plotly::plot_ly(
@@ -291,7 +338,9 @@ evaluate_optimal_topic_number <- function(dfm_object,
     type = 'scatter',
     mode = 'lines+markers',
     text = ~paste("K:", K, "<br>Residuals:", round(residual, 3)),
-    hoverinfo = 'text'
+    hoverinfo = 'text',
+    width = width,
+    height = height
   )
 
   p3 <- plotly::plot_ly(
@@ -301,7 +350,9 @@ evaluate_optimal_topic_number <- function(dfm_object,
     type = 'scatter',
     mode = 'lines+markers',
     text = ~paste("K:", K, "<br>Semantic Coherence:", round(semcoh, 3)),
-    hoverinfo = 'text'
+    hoverinfo = 'text',
+    width = width,
+    height = height
   )
 
   p4 <- plotly::plot_ly(
@@ -311,13 +362,13 @@ evaluate_optimal_topic_number <- function(dfm_object,
     type = 'scatter',
     mode = 'lines+markers',
     text = ~paste("K:", K, "<br>Lower Bound:", round(lbound, 3)),
-    hoverinfo = 'text'
+    hoverinfo = 'text',
+    width = width,
+    height = height
   )
 
   plotly::subplot(p1, p2, p3, p4, nrows = 2, margin = 0.1) %>%
     plotly::layout(
-      height = height,
-      width = width,
       title = list(
         text = "Model Diagnostics by Number of Topics (K)",
         font = list(size = 16)
@@ -359,7 +410,6 @@ evaluate_optimal_topic_number <- function(dfm_object,
       )
     )
 }
-
 
 
 #' @title Plot Highest Word Probabilities for Each Topic
