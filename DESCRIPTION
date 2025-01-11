@@ -1,10 +1,11 @@
 Package: TextAnalysisR
-Title: Text Mining Workflow Tools
+Title: A text mining workflow tool
 Version: 0.0.2
+Date: 2025-01-11
 Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7907-9193"))
-Description: 'TextAnalysisR' provides a supporting workflow for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph', and 'widyr' (network analysis). 'tidytext' is implemented to tidy non-tidy format objects. The R Shiny web app is available at 'TextAnalysisR::TextAnalysisR.app()' or 'https://textanalysisr.org'. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app. 
+Description: 'TextAnalysisR' provides a supporting workflow tool for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph', and 'widyr' (network analysis). 'tidytext' is implemented to tidy non-tidy format objects. The R Shiny web app is available at 'TextAnalysisR::TextAnalysisR.app()' or 'https://textanalysisr.org'. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app. 
 References: Shin, M., Park, H., & Kang, E. (2024) "Development of education policies and practices for students with learning disabilities in South Korea using Delphi surveys and topic modeling." Learning Disability Quarterly. <https://github.com/mshin77/Korea-LD-policy>; Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., & Kang, E. (2023) "A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling." International Journal of STEM Education, 10(1), 1-23. <https://github.com/mshin77/math-tech-sped>
 License: MIT + file LICENSE
 Language: en-US
@@ -39,7 +40,7 @@ Suggests:
     spelling,
     testthat (>= 3.0.0)
 Depends: R (>= 2.10)
-URL: https://mshin77.github.io/TextAnalysisR/
+URL: https://mshin77.github.io/TextAnalysisR
 BugReports: https://github.com/mshin77/TextAnalysisR/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3

@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 library(TextAnalysisR)
 ```
 
-The `TextAnalysisR` package provides a supporting workflow for text mining analysis. The `TextAnalysisR.app()` function allows users to launch and browse a Shiny app. This web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph' as well as 'widyr' (network analysis). 'tidytext' was implemented to tidy non-tidy format objects.
+`TextAnalysisR` provides a supporting workflow tool for text mining analysis. The web app incorporates [quanteda](https://github.com/quanteda/quanteda) (text preprocessing), [stm](https://github.com/bstewart/stm) (structural topic modeling), [ggraph](https://github.com/thomasp85/ggraph), and [widyr](https://github.com/juliasilge/widyr) (network analysis). [tidytext](https://github.com/cran/tidytext) is implemented to tidy non-tidy format objects. The R Shiny web app is available at `TextAnalysisR::TextAnalysisR.app()` or [https://textanalysisr.org](https://textanalysisr.org). Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app. 
 
 **These steps are similar to those demonstrated in the Shiny web app at `TextAnalysisR::TextAnalysisR.app()`.**
 
@@ -137,7 +137,7 @@ TextAnalysisR::plot_mean_topic_prevalence(
   top_term_n = 10,
   top_topic_n = 15,
   height = 500,
-  width = 1000,
+  width = 900,
   verbose = FALSE)
 ```
 
@@ -183,5 +183,5 @@ TextAnalysisR::word_frequency_trends(dfm_object,
                                      continuous_variable = "year",
                                      selected_terms = c("calculator", "computer"),
                                      height = 500,
-                                     width = 1000)
+                                     width = 900)
 ```
