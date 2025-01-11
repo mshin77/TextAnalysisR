@@ -2,12 +2,12 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{word_frequency_trends}
 \alias{word_frequency_trends}
-\title{Plot Word Frequency Trends Over Time}
+\title{Plot Word Frequency Across a Continuous Variable}
 \usage{
 word_frequency_trends(
   dfm_object,
   stm_model,
-  time_variable,
+  continuous_variable,
   selected_terms,
   height = 500,
   width = 1000
@@ -18,7 +18,7 @@ word_frequency_trends(
 
 \item{stm_model}{An STM model object.}
 
-\item{time_variable}{The column name for the time variable (e.g., "year").}
+\item{continuous_variable}{A continuous variable in the metadata.}
 
 \item{selected_terms}{A vector of terms to analyze trends for.}
 
@@ -27,10 +27,10 @@ word_frequency_trends(
 \item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
 }
 \value{
-A Plotly object showing interactive word frequency trends over time.
+A Plotly object visualizing the word frequency trends across the continuous variable.
 }
 \description{
-Analyze and visualize word frequency trends over time for a fixed term column.
+Visualize the word frequency trends across a continuous variable in the metadata.
 }
 \details{
 This function requires a fitted STM model object and a quanteda dfm object.
@@ -44,7 +44,7 @@ if (interactive()) {
   stm_15 <- TextAnalysisR::stm_15
   TextAnalysisR::word_frequency_trends(dfm_object,
                                     stm_model = stm_15,
-                                    time_variable = "year",
+                                    continuous_variable = "year",
                                     selected_terms = c("calculator", "computer"),
                                     height = 500,
                                     width = 1000)

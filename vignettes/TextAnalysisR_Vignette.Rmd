@@ -170,9 +170,9 @@ TextAnalysisR::plot_word_correlation_network(
   width = 800)
 ```
 
-### Plot Word Frequency Trends Over Time
+### Plot Word Frequency Across a Continuous Variable
 
-```{r, fig.alt= "Plot Word Frequency Trends Over Time"}
+```{r, fig.alt= "Plot Word Frequency Across a Continuous Variable"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
@@ -180,7 +180,7 @@ dfm_object <- quanteda::dfm(tokens)
 stm_15 <- TextAnalysisR::stm_15
 TextAnalysisR::word_frequency_trends(dfm_object,
                                      stm_model = stm_15,
-                                     time_variable = "year",
+                                     continuous_variable = "year",
                                      selected_terms = c("calculator", "computer"),
                                      height = 500,
                                      width = 1000)

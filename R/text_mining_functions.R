@@ -1148,18 +1148,18 @@ plot_word_correlation_network <- function(dfm_object,
 }
 
 
-#' @title Plot Word Frequency Trends Over Time
+#' @title Plot Word Frequency Across a Continuous Variable
 #'
-#' @description Analyze and visualize word frequency trends over time for a fixed term column.
+#' @description Visualize the word frequency trends across a continuous variable in the metadata.
 #'
 #' @param dfm_object A quanteda document-feature matrix (dfm).
 #' @param stm_model An STM model object.
-#' @param time_variable The column name for the time variable (e.g., "year").
+#' @param continuous_variable A continuous variable in the metadata.
 #' @param selected_terms A vector of terms to analyze trends for.
 #' @param height The height of the resulting Plotly plot, in pixels. Defaults to \code{500}.
 #' @param width The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.
 #'
-#' @return A Plotly object showing interactive word frequency trends over time.
+#' @return A Plotly object visualizing the word frequency trends across the continuous variable.
 #'
 #' @details This function requires a fitted STM model object and a quanteda dfm object.
 #'
@@ -1174,7 +1174,7 @@ plot_word_correlation_network <- function(dfm_object,
 #'   stm_15 <- TextAnalysisR::stm_15
 #'   TextAnalysisR::word_frequency_trends(dfm_object,
 #'                                     stm_model = stm_15,
-#'                                     time_variable = "year",
+#'                                     continuous_variable = "year",
 #'                                     selected_terms = c("calculator", "computer"),
 #'                                     height = 500,
 #'                                     width = 1000)
@@ -1184,7 +1184,7 @@ plot_word_correlation_network <- function(dfm_object,
 #' @importFrom plotly ggplotly
 word_frequency_trends <- function(dfm_object,
                                   stm_model,
-                                  time_variable,
+                                  continuous_variable,
                                   selected_terms,
                                   height = 500,
                                   width = 1000) {
@@ -1212,20 +1212,20 @@ word_frequency_trends <- function(dfm_object,
     stop("'document' column is missing after joins.")
   }
 
-  year_term_counts <- dfm_gamma_td %>%
+  con_var_term_counts <- dfm_gamma_td %>%
     tibble::as_tibble() %>%
-    dplyr::group_by(!!rlang::sym(time_variable)) %>%
+    dplyr::group_by(!!rlang::sym(continuous_variable)) %>%
     dplyr::mutate(
       total_count = sum(count),
       term_proportion = count / total_count
     ) %>%
     dplyr::ungroup()
 
-  year_term_gg <- year_term_counts %>%
+  year_term_gg <- con_var_term_counts %>%
     dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
     dplyr::filter(term %in% selected_terms) %>%
     ggplot2::ggplot(ggplot2::aes(
-      x = !!rlang::sym(time_variable),
+      x = !!rlang::sym(continuous_variable),
       y = term_proportion,
       group = term,
       text = paste0("Term Proportion: ", sprintf("%.3f", term_proportion))
@@ -1233,10 +1233,10 @@ word_frequency_trends <- function(dfm_object,
     ggplot2::geom_point(color = "#636363", alpha = 0.6, size = 1) +
     ggplot2::geom_smooth(color = "#337ab7",
                          se = TRUE,
-                         method = "loess",
+                         method = "gam",
                          linewidth = 0.5,
                          formula = y ~ x) +
-    ggplot2::facet_wrap(~ term, scales = "free_y") +
+    ggplot2::facet_wrap(~ term, scales = "free") +
     ggplot2::scale_y_continuous(labels = scales::percent_format()) +
     ggplot2::labs(x = "", y = "") +
     ggplot2::theme_minimal(base_size = 11) +
