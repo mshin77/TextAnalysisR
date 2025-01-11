@@ -10,7 +10,8 @@ vignette: >
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   message = FALSE, 
-  warning = FALSE)
+  warning = FALSE
+)
 ```
 
 ```{r, include = FALSE}
@@ -59,7 +60,7 @@ tokens
 
 ### Plot Word Frequency
 
-```{r}
+```{r, fig.alt= "Word Frequency Plot"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
@@ -68,9 +69,23 @@ word_frequency_plot <- TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
 word_frequency_plot
 ```
 
+### Remove Common Words Across Documents
+
+```{r, fig.alt= "Remove Common Words Across Documents"}
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+dfm_removed <- TextAnalysisR::remove_common_words(tokens = tokens, 
+                                   remove_vars = c("students", "study"), 
+                                   dfm_object = dfm_object)
+TextAnalysisR::plot_word_frequency(dfm_removed, n = 20)
+```
+
+
 ### Evaluate Optimal Number of Topics
 
-```{r}
+```{r, fig.alt= "Evaluate Optimal Number of Topics"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
@@ -88,7 +103,7 @@ TextAnalysisR::evaluate_optimal_topic_number(
 
 ### Plot Highest Word Probabilities for Each Topic
 
-```{r}
+```{r, fig.alt= "Plot Highest Word Probabilities for Each Topic"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
@@ -108,7 +123,7 @@ TextAnalysisR::plot_word_probabilities(
 
 ### Plot Mean Topic Prevalence Across Documents
 
-```{r}
+```{r, fig.alt= "Plot Mean Topic Prevalence Across Documents"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
@@ -128,7 +143,7 @@ TextAnalysisR::plot_mean_topic_prevalence(
 
 ### Plot a Word Co-occurrence Network
 
-```{r}
+```{r, fig.alt= "Plot a Word Co-occurrence Network"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
@@ -142,7 +157,7 @@ TextAnalysisR::plot_word_co_occurrence_network(
 
 ### Plot a Word Correlation Network
 
-```{r}
+```{r, fig.alt= "Plot a Word Correlation Network"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
@@ -157,7 +172,7 @@ TextAnalysisR::plot_word_correlation_network(
 
 ### Plot Word Frequency Trends Over Time
 
-```{r}
+```{r, fig.alt= "Plot Word Frequency Trends Over Time"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
