@@ -73,5 +73,4 @@ TextAnalysisR::plot_word_probabilities(
   width = 800,
   verbose = TRUE)
 }
-
 }

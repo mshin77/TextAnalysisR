@@ -226,6 +226,13 @@ remove_common_words <- function(tokens, remove_vars, dfm_object) {
 #'
 #' @return A \code{plotly} object showing the diagnostics for the number of topics (K).
 #'
+#' @importFrom quanteda convert
+#' @importFrom stm searchK
+#' @importFrom plotly plot_ly subplot layout
+#' @importFrom dplyr mutate select
+#' @importFrom stats as.formula
+#' @importFrom utils str
+#'
 #' @export
 #'
 #' @examples
@@ -245,13 +252,6 @@ remove_common_words <- function(tokens, remove_vars, dfm_object) {
 #'     verbose = TRUE
 #'   )
 #' }
-#'
-#' @importFrom quanteda convert
-#' @importFrom stm searchK
-#' @importFrom plotly plot_ly subplot layout
-#' @importFrom dplyr mutate select
-#' @importFrom stats as.formula
-#' @importFrom utils str
 evaluate_optimal_topic_number <- function(dfm_object,
                                           topic_range,
                                           max.em.its = 75,
@@ -437,6 +437,11 @@ evaluate_optimal_topic_number <- function(dfm_object,
 #' @details
 #' If \code{topic_names} is provided, it replaces the default "Topic \{n\}" labels with custom names.
 #'
+#' @importFrom stats reorder
+#' @importFrom numform ff_num
+#' @importFrom plotly ggplotly layout
+#' @importFrom tidytext reorder_within scale_x_reordered
+#'
 #' @export
 #'
 #' @examples
@@ -457,11 +462,6 @@ evaluate_optimal_topic_number <- function(dfm_object,
 #'   width = 800,
 #'   verbose = TRUE)
 #' }
-#'
-#' @importFrom stats reorder
-#' @importFrom numform ff_num
-#' @importFrom plotly ggplotly layout
-#' @importFrom tidytext reorder_within scale_x_reordered
 plot_word_probabilities <- function(dfm_object,
                                     topic_n,
                                     max.em.its = 75,
@@ -599,7 +599,7 @@ plot_word_probabilities <- function(dfm_object,
 #'   top_term_n = 10,
 #'   top_topic_n = 15,
 #'   height = 500,
-#'   width = 1000,
+#'   width = 900,
 #'   verbose = TRUE)
 #' }
 #'
@@ -616,7 +616,7 @@ plot_mean_topic_prevalence <- function(dfm_object,
                                        top_topic_n = 15,
                                        topic_names = NULL,
                                        height = 500,
-                                       width = 1000,
+                                       width = 900,
                                        verbose = TRUE, ...) {
 
   out <- quanteda::convert(dfm_object, to = "stm")
@@ -717,19 +717,17 @@ plot_mean_topic_prevalence <- function(dfm_object,
     )
 }
 
-
-#' @title Plot a Word Co-occurrence Network
+#' @title Analyze and Visualize Word Co-occurrence Networks
 #'
 #' @description
-#' Visualize the co-occurrence relationships between terms in the corpus based on pairwise counts.
+#' This function creates a word co-occurrence network based on a document-feature matrix (dfm).
 #'
 #' @param dfm_object A quanteda document-feature matrix (dfm).
 #' @param co_occur_n Minimum number of co-occurrences for filtering terms (default is 200).
 #' @param height The height of the resulting Plotly plot, in pixels. Defaults to \code{900}.
 #' @param width The width of the resulting Plotly plot, in pixels. Defaults to \code{800}.
 #'
-#' @return A Plotly object visualizing the interactive word co-occurrence network.
-#' @export
+#' @return A list containing a Plotly object and a data frame with the results.
 #'
 #' @importFrom igraph graph_from_data_frame V vcount degree betweenness closeness eigen_centrality layout_with_fr
 #' @importFrom plotly plot_ly add_segments add_markers layout
@@ -739,8 +737,11 @@ plot_mean_topic_prevalence <- function(dfm_object,
 #' @importFrom widyr pairwise_count
 #' @importFrom scales rescale
 #' @importFrom stats quantile
+#' @importFrom DT datatable
 #' @importFrom shiny showNotification
 #' @importFrom rlang sym
+#'
+#' @export
 #'
 #' @examples
 #' if (interactive()) {
@@ -748,13 +749,15 @@ plot_mean_topic_prevalence <- function(dfm_object,
 #'   united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 #'   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 #'   dfm_object <- quanteda::dfm(tokens)
-#'   TextAnalysisR::plot_word_co_occurrence_network(
-#'     dfm_object,
-#'     co_occur_n = 200,
-#'     height = 900,
-#'     width = 800)
+#'   word_co_occurrence_network_results <- TextAnalysisR::word_co_occurrence_network(
+#'                                         dfm_object,
+#'                                         co_occur_n = 200,
+#'                                         height = 900,
+#'                                         width = 800)
+#'   word_co_occurrence_network_results$plot
+#'   word_co_occurrence_network_results$table
 #' }
-plot_word_co_occurrence_network <- function(dfm_object,
+word_co_occurrence_network <- function(dfm_object,
                                             co_occur_n = 200,
                                             height = 900,
                                             width = 800) {
@@ -915,7 +918,7 @@ plot_word_co_occurrence_network <- function(dfm_object,
     )
   })
 
-  plot <- plot %>%
+  word_co_occurrence_plotly <- plot %>%
     plotly::layout(
       dragmode = "pan",
       title = list(text = "Word Co-occurrence Network", font = list(size = 16)),
@@ -926,14 +929,33 @@ plot_word_co_occurrence_network <- function(dfm_object,
       annotations = annotations
     )
 
-  plot
+  layout_df <- layout_df %>%
+    mutate_if(is.numeric, round, digits = 3)
+
+  list(
+    plot = word_co_occurrence_plotly,
+    table = DT::datatable(
+      layout_df,
+      rownames = FALSE,
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        scrollY = "400px",
+        width = "80%"
+      )
+    ) %>%
+      DT::formatStyle(
+        columns = colnames(layout_df),
+        `font-size` = "16px"
+      )
+  )
 }
 
 
-#' @title Plot a Word Correlation Network
+#' @title Analyze and Visualize Word Correlation Networks
 #'
 #' @description
-#' Visualize the correlation relationships between terms in the corpus based on pairwise correlations.
+#' This function creates a word correlation network based on a document-feature matrix (dfm).
 #'
 #' @param dfm_object A quanteda document-feature matrix (dfm).
 #' @param co_occur_n Minimum number of co-occurrences for filtering terms (default is 30).
@@ -941,8 +963,7 @@ plot_word_co_occurrence_network <- function(dfm_object,
 #' @param height The height of the resulting Plotly plot, in pixels. Defaults to \code{900}.
 #' @param width The width of the resulting Plotly plot, in pixels. Defaults to \code{800}.
 #'
-#' @return A Plotly object visualizing the interactive word correlation network.
-#' @export
+#' @return A list containing a Plotly object and a data frame with the results.
 #'
 #' @importFrom igraph graph_from_data_frame V vcount degree betweenness closeness eigen_centrality layout_with_fr
 #' @importFrom plotly plot_ly add_segments add_markers layout
@@ -952,7 +973,10 @@ plot_word_co_occurrence_network <- function(dfm_object,
 #' @importFrom widyr pairwise_cor
 #' @importFrom scales rescale
 #' @importFrom stats quantile
+#' @importFrom DT datatable
 #' @importFrom shiny showNotification
+#'
+#' @export
 #'
 #' @examples
 #' if (interactive()) {
@@ -960,14 +984,16 @@ plot_word_co_occurrence_network <- function(dfm_object,
 #'   united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 #'   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 #'   dfm_object <- quanteda::dfm(tokens)
-#'   TextAnalysisR::plot_word_correlation_network(
-#'     dfm_object,
-#'     co_occur_n = 30,
-#'     corr_n = 0.4,
-#'     height = 900,
-#'     width = 800)
+#'   word_correlation_network_results <- TextAnalysisR::word_correlation_network(
+#'                                       dfm_object,
+#'                                       co_occur_n = 30,
+#'                                       corr_n = 0.4,
+#'                                       height = 900,
+#'                                       width = 800)
+#'   word_correlation_network_results$plot
+#'   word_correlation_network_results$table
 #' }
-plot_word_correlation_network <- function(dfm_object,
+word_correlation_network <- function(dfm_object,
                                           co_occur_n = 30,
                                           corr_n = 0.4,
                                           height = 900,
@@ -1133,7 +1159,7 @@ plot_word_correlation_network <- function(dfm_object,
     )
   })
 
-  plot <- plot %>%
+  word_correlation_plotly <- plot %>%
     plotly::layout(
       dragmode = "pan",
       title = list(text = "Word Correlation Network", font = list(size = 16)),
@@ -1144,24 +1170,48 @@ plot_word_correlation_network <- function(dfm_object,
       annotations = annotations
     )
 
-  plot
+  layout_df <- layout_df %>%
+    mutate_if(is.numeric, round, digits = 3)
+
+  list(
+    plot = word_correlation_plotly,
+    table = DT::datatable(
+      layout_df,
+      rownames = FALSE,
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        scrollY = "400px",
+        width = "80%"
+      )
+    ) %>%
+      DT::formatStyle(
+        columns = colnames(layout_df),
+        `font-size` = "16px"
+      )
+  )
 }
 
 
-#' @title Plot Word Frequency Across a Continuous Variable
+#' @title Analyze and Visualize Trends in Word Frequency
 #'
-#' @description Visualize the word frequency trends across a continuous variable in the metadata.
+#' @description
+#' This function analyzes and visualizes trends in word frequency based on a document-feature matrix (dfm) and a fitted STM model.
 #'
 #' @param dfm_object A quanteda document-feature matrix (dfm).
 #' @param stm_model An STM model object.
 #' @param continuous_variable A continuous variable in the metadata.
 #' @param selected_terms A vector of terms to analyze trends for.
 #' @param height The height of the resulting Plotly plot, in pixels. Defaults to \code{500}.
-#' @param width The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.
+#' @param width The width of the resulting Plotly plot, in pixels. Defaults to \code{900}.
 #'
-#' @return A Plotly object visualizing the word frequency trends across the continuous variable.
+#' @return A list containing a Plotly object and a data frame with the results.
 #'
 #' @details This function requires a fitted STM model object and a quanteda dfm object.
+#'
+#' @importFrom stats glm reformulate
+#' @importFrom plotly ggplotly
+#' @importFrom DT datatable
 #'
 #' @export
 #'
@@ -1172,22 +1222,21 @@ plot_word_correlation_network <- function(dfm_object,
 #'   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 #'   dfm_object <- quanteda::dfm(tokens)
 #'   stm_15 <- TextAnalysisR::stm_15
-#'   TextAnalysisR::word_frequency_trends(dfm_object,
+#'   word_frequency_trends_results <- TextAnalysisR::word_frequency_trends(dfm_object,
 #'                                     stm_model = stm_15,
 #'                                     continuous_variable = "year",
 #'                                     selected_terms = c("calculator", "computer"),
 #'                                     height = 500,
-#'                                     width = 1000)
+#'                                     width = 900)
+#'   word_frequency_trends_results$plot
+#'   word_frequency_trends_results$table
 #' }
-#'
-#' @importFrom stats glm reformulate
-#' @importFrom plotly ggplotly
 word_frequency_trends <- function(dfm_object,
                                   stm_model,
                                   continuous_variable,
                                   selected_terms,
                                   height = 500,
-                                  width = 1000) {
+                                  width = 900) {
   dfm_td <- tidytext::tidy(dfm_object) %>%
     tibble::as_tibble()
 
@@ -1221,13 +1270,17 @@ word_frequency_trends <- function(dfm_object,
     ) %>%
     dplyr::ungroup()
 
-  year_term_gg <- con_var_term_counts %>%
-    dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
-    dplyr::filter(term %in% selected_terms) %>%
+  con_var_term_counts_filtered <- con_var_term_counts %>%
+    dplyr::mutate(
+      across(where(is.numeric), ~ round(., 3)),
+      term = as.factor(term)) %>%
+    dplyr::filter(term %in% selected_terms)
+
+  con_var_term_gg <- con_var_term_counts_filtered %>%
     ggplot2::ggplot(ggplot2::aes(
       x = !!rlang::sym(continuous_variable),
       y = term_proportion,
-      group = term,
+      group = interaction(term, !!rlang::sym(continuous_variable)),
       text = paste0("Term Proportion: ", sprintf("%.3f", term_proportion))
     )) +
     ggplot2::geom_point(color = "#636363", alpha = 0.6, size = 1) +
@@ -1254,8 +1307,8 @@ word_frequency_trends <- function(dfm_object,
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 9))
     )
 
-  plotly::ggplotly(
-    year_term_gg,
+  con_var_term_plotly <-plotly::ggplotly(
+    con_var_term_gg,
     height = height,
     width = width,
     tooltip = "text"
@@ -1263,8 +1316,29 @@ word_frequency_trends <- function(dfm_object,
     plotly::layout(
       margin = list(l = 40, r = 150, t = 60, b = 40)
     )
-}
 
+  con_var_term_counts_filtered <- con_var_term_counts_filtered %>%
+    select(document, topic, gamma, term) %>%
+    mutate_if(is.numeric, round, digits = 3)
+
+  list(
+    plot = con_var_term_plotly,
+    table = DT::datatable(
+      con_var_term_counts_filtered,
+      rownames = FALSE,
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        scrollY = "400px",
+        width = "80%"
+      )
+    ) %>%
+      DT::formatStyle(
+        columns = colnames(con_var_term_counts_filtered),
+        `font-size` = "16px"
+      )
+  )
+}
 
 
 

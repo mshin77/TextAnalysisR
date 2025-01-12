@@ -14,8 +14,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/index.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/pipe.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_mean_topic_prevalence.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_word_correlation_network.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_word_co_occurrence_network.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_word_frequency.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_word_probabilities.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/preprocess_texts.html</loc></url>
@@ -26,6 +24,8 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/TextAnalysisR-package.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/TextAnalysisR.app.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/unite_text_cols.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/word_correlation_network.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/word_frequency_trends.html</loc></url>
 </urlset>
 

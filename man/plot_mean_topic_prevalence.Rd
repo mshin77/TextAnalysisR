@@ -14,7 +14,7 @@ plot_mean_topic_prevalence(
   top_topic_n = 15,
   topic_names = NULL,
   height = 500,
-  width = 1000,
+  width = 900,
   verbose = TRUE,
   ...
 )
@@ -69,7 +69,7 @@ TextAnalysisR::plot_mean_topic_prevalence(
   top_term_n = 10,
   top_topic_n = 15,
   height = 500,
-  width = 1000,
+  width = 900,
   verbose = TRUE)
 }
 

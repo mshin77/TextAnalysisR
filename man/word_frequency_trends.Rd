@@ -2,7 +2,7 @@
 % Please edit documentation in R/text_mining_functions.R
 \name{word_frequency_trends}
 \alias{word_frequency_trends}
-\title{Plot Word Frequency Across a Continuous Variable}
+\title{Analyze and Visualize Trends in Word Frequency}
 \usage{
 word_frequency_trends(
   dfm_object,
@@ -10,7 +10,7 @@ word_frequency_trends(
   continuous_variable,
   selected_terms,
   height = 500,
-  width = 1000
+  width = 900
 )
 }
 \arguments{
@@ -24,13 +24,13 @@ word_frequency_trends(
 
 \item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{500}.}
 
-\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
 }
 \value{
-A Plotly object visualizing the word frequency trends across the continuous variable.
+A list containing a Plotly object and a data frame with the results.
 }
 \description{
-Visualize the word frequency trends across a continuous variable in the metadata.
+This function analyzes and visualizes trends in word frequency based on a document-feature matrix (dfm) and a fitted STM model.
 }
 \details{
 This function requires a fitted STM model object and a quanteda dfm object.
@@ -42,12 +42,13 @@ if (interactive()) {
   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
   dfm_object <- quanteda::dfm(tokens)
   stm_15 <- TextAnalysisR::stm_15
-  TextAnalysisR::word_frequency_trends(dfm_object,
+  word_frequency_trends_results <- TextAnalysisR::word_frequency_trends(dfm_object,
                                     stm_model = stm_15,
                                     continuous_variable = "year",
                                     selected_terms = c("calculator", "computer"),
                                     height = 500,
-                                    width = 1000)
+                                    width = 900)
+  word_frequency_trends_results$plot
+  word_frequency_trends_results$table
 }
-
 }

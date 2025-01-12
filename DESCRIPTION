@@ -31,7 +31,8 @@ Imports:
     igraph,
     scales,
     plotly,
-    purrr
+    purrr,
+    DT
 Suggests:
     covr,
     knitr,

@@ -54,7 +54,9 @@ united_tbl
 ```{r}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
-tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts", verbose = FALSE)
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, 
+                                          text_field = "united_texts", 
+                                          verbose = FALSE)
 tokens
 ```
 
@@ -130,7 +132,7 @@ tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts
 dfm_object <- quanteda::dfm(tokens)
 TextAnalysisR::plot_mean_topic_prevalence(
   dfm_object = dfm_object,
-  topic_n = 15,
+  topic_n = 5,
   max.em.its = 75,
   categorical_var = "reference_type",
   continuous_var = "year",
@@ -141,47 +143,69 @@ TextAnalysisR::plot_mean_topic_prevalence(
   verbose = FALSE)
 ```
 
-### Plot a Word Co-occurrence Network
+### Analyze and Visualize Word Co-occurrence Networks
 
-```{r, fig.alt= "Plot a Word Co-occurrence Network"}
+```{r, fig.alt= "Word Co-occurrence Network"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 dfm_object <- quanteda::dfm(tokens)
-TextAnalysisR::plot_word_co_occurrence_network(
-  dfm_object,
-  co_occur_n = 200,
-  height = 900,
-  width = 800)
+word_co_occurrence_network_results <- 
+  TextAnalysisR::word_co_occurrence_network(
+    dfm_object,
+    co_occur_n = 200,
+    height = 900,
+    width = 800)
+word_co_occurrence_network_results$plot
 ```
 
-### Plot a Word Correlation Network
 
-```{r, fig.alt= "Plot a Word Correlation Network"}
+```{r}
+word_co_occurrence_network_results$table
+```
+
+### Analyze and Visualize Word Correlation Networks
+
+```{r, fig.alt= "Word Correlation Network"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 dfm_object <- quanteda::dfm(tokens)
-TextAnalysisR::plot_word_correlation_network(
-  dfm_object,
-  co_occur_n = 30,
-  corr_n = 0.4,
-  height = 900,
-  width = 800)
+word_correlation_network_results <- 
+  TextAnalysisR::word_correlation_network(
+    dfm_object,
+    co_occur_n = 30,
+    corr_n = 0.4,
+    height = 900,
+    width = 800)
+word_correlation_network_results$plot
 ```
 
-### Plot Word Frequency Across a Continuous Variable
 
-```{r, fig.alt= "Plot Word Frequency Across a Continuous Variable"}
+```{r}
+word_correlation_network_results$table
+```
+
+### Analyze and Visualize Trends in Word Frequency
+
+```{r, fig.alt= "Word Frequency Across a Continuous Variable"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 dfm_object <- quanteda::dfm(tokens)
 stm_15 <- TextAnalysisR::stm_15
-TextAnalysisR::word_frequency_trends(dfm_object,
-                                     stm_model = stm_15,
-                                     continuous_variable = "year",
-                                     selected_terms = c("calculator", "computer"),
-                                     height = 500,
-                                     width = 900)
+word_frequency_trends_results <- 
+  TextAnalysisR::word_frequency_trends(
+    dfm_object,
+    stm_model = stm_15,
+    continuous_variable = "year",
+    selected_terms = c("calculator", "computer"),
+    height = 500,
+    width = 900)
+word_frequency_trends_results$plot
+```
+
+
+```{r}
+word_frequency_trends_results$table
 ```

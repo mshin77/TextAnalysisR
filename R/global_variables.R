@@ -8,5 +8,6 @@ globalVariables(names = c(
   "cooccur_count", "line_group", "min_count", "max_count",
   "label", "degree_log", "eigenvector",
   "min_corr", "max_corr",
-  "categorical_var", "continuous_var"
+  "categorical_var", "continuous_var",
+  "word_frequency_trends"
 ))
