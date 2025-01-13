@@ -32,7 +32,8 @@ Imports:
     scales,
     plotly,
     purrr,
-    DT
+    DT,
+    randomcoloR
 Suggests:
     covr,
     knitr,

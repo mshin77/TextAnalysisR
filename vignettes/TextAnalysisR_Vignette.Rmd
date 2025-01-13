@@ -155,7 +155,7 @@ word_co_occurrence_network_results <-
     dfm_object,
     co_occur_n = 200,
     height = 900,
-    width = 800)
+    width = 900)
 word_co_occurrence_network_results$plot
 ```
 
@@ -177,7 +177,7 @@ word_correlation_network_results <-
     co_occur_n = 30,
     corr_n = 0.4,
     height = 900,
-    width = 800)
+    width = 900)
 word_correlation_network_results$plot
 ```
 

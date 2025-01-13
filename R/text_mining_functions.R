@@ -528,7 +528,7 @@ plot_word_probabilities <- function(dfm_object,
     topic_term_plot,
     aes(term, beta, fill = topic, text = paste("Topic:", topic, "<br>Beta:", sprintf("%.3f", beta)))
   ) +
-    geom_col(show.legend = FALSE, alpha = 0.8) +
+    geom_col(show.legend = FALSE, alpha = 0.9) +
     facet_wrap(~ topic, scales = "free", ncol = ncol, strip.position = "top") +
     scale_x_reordered() +
     scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
@@ -691,7 +691,7 @@ plot_mean_topic_prevalence <- function(dfm_object,
                text = paste("Topic:", topic, "<br>Terms:",
                             terms, "<br>Gamma:", sprintf("%.3f", gamma)))
     ) +
-    geom_col(alpha = 0.8) +
+    geom_col(alpha = 0.9) +
     coord_flip() +
     scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
     xlab(" ") +
@@ -782,14 +782,19 @@ word_co_occurrence_network <- function(dfm_object,
   igraph::V(co_occur_graph)$closeness <- igraph::closeness(co_occur_graph)
   igraph::V(co_occur_graph)$eigenvector <- igraph::eigen_centrality(co_occur_graph)$vector
 
+  leiden_clusters <- igraph::cluster_leiden(co_occur_graph)
+  igraph::V(co_occur_graph)$community <- leiden_clusters$membership
+
   layout <- igraph::layout_with_fr(co_occur_graph)
   layout_df <- as.data.frame(layout)
   colnames(layout_df) <- c("x", "y")
+
   layout_df$label <- igraph::V(co_occur_graph)$name
   layout_df$degree <- igraph::V(co_occur_graph)$degree
   layout_df$betweenness <- igraph::V(co_occur_graph)$betweenness
   layout_df$closeness <- igraph::V(co_occur_graph)$closeness
   layout_df$eigenvector <- igraph::V(co_occur_graph)$eigenvector
+  layout_df$community <- igraph::V(co_occur_graph)$community
 
   edge_data <- igraph::as_data_frame(co_occur_graph, what = "edges") %>%
     mutate(
@@ -826,17 +831,16 @@ word_co_occurrence_network <- function(dfm_object,
       degree_log = log1p(degree),
       size = scales::rescale(degree_log, to = c(12, 30)),
       text_size = scales::rescale(degree_log, to = c(14, 20)),
-      alpha = scales::rescale(degree_log, to = c(0.2, 0.9)),
+      alpha = scales::rescale(degree_log, to = c(0.2, 1)),
       hover_text = paste(
         "Word:", label,
         "<br>Degree:", degree,
         "<br>Betweenness:", round(betweenness, 2),
         "<br>Closeness:", round(closeness, 2),
-        "<br>Eigenvector:", round(eigenvector, 2)
+        "<br>Eigenvector:", round(eigenvector, 2),
+        "<br>Community:", community
       )
     )
-
-  color_scale <- 'Viridis'
 
   plot <- plotly::plot_ly(
     type = 'scatter',
@@ -880,19 +884,31 @@ word_co_occurrence_network <- function(dfm_object,
       )
     )
 
+  node_data$community <- as.factor(node_data$community)
+
+  combined_colors <- c(
+    "#CAB2D6", "#4DAF4A", "#FFD92F", "#D9D9D9", "#8AEA3C", "#FFFFB3", "#E5C494", "#FDBF6F",
+    "#FFFF99", "#8C3150", "#7E7304", "#6A3D9A", "#A6CEE3", "#BC80BD", "#377EB8", "#8DA0CB",
+    "#0139F7", "#8DD3C7", "#33E1EB", "#B3B3B3", "#E41A1C", "#0D4F15", "#FC8D62", "#B4BFCC",
+    "#BEBADA", "#E31A1C", "#FDB462", "#FCCDE5", "#7A46E2", "#B2DF8A", "#499CD8", "#66C2A5",
+    "#B15928", "#6F8DD0", "#FB9A99", "#ADEE4C", "#33A02C", "#B3DE69", "#4A2333", "#984EA3",
+    "#B43FD8", "#E78AC3", "#5DA45C", "#80B1D3", "#FF7F00", "#B872A8", "#1F78B4", "#A6D854",
+    "#2F4F4F", "#7FFF00"
+  )
+
+  combined_colors <- unique(combined_colors)
+
+  number_communities <- length(unique(node_data$community))
+
+  if (number_communities > length(combined_colors)) {
+    extra_colors <- randomcoloR::distinctColorPalette(number_communities - length(combined_colors))
+    combined_colors <- c(combined_colors, extra_colors)
+  }
+
   marker_params <- list(
     size = ~size,
-    color = ~degree,
-    colorscale = color_scale,
-    showscale = TRUE,
-    colorbar = list(
-      title = "Degree Centrality",
-      len = 0.25,
-      x = 1.1,
-      y = 0.6
-    ),
-    line = list(width = 2, color = '#FFFFFF'),
-    opacity = ~alpha
+    showscale = FALSE,
+    line = list(width = 2, color = '#FFFFFF')
   )
 
   plot <- plot %>%
@@ -901,9 +917,11 @@ word_co_occurrence_network <- function(dfm_object,
       x = ~x,
       y = ~y,
       marker = marker_params,
+      color = ~community,
+      colors = combined_colors,
       hoverinfo = 'text',
       text = ~hover_text,
-      showlegend = FALSE
+      showlegend = TRUE
     )
 
   annotations <- lapply(1:nrow(node_data), function(i) {
@@ -929,23 +947,35 @@ word_co_occurrence_network <- function(dfm_object,
       annotations = annotations
     )
 
-  layout_df <- layout_df %>%
+  layout_dff <- layout_df %>%
+    dplyr::select(-c("x", "y")) %>%
     mutate_if(is.numeric, round, digits = 3)
 
   list(
     plot = word_co_occurrence_plotly,
     table = DT::datatable(
-      layout_df,
+      layout_dff,
       rownames = FALSE,
+      extensions = 'Buttons',
       options = list(
         pageLength = 10,
         scrollX = TRUE,
         scrollY = "400px",
-        width = "80%"
+        width = "80%",
+        dom = 'Bfrtip',
+        buttons = list(
+          'copy',
+          'print',
+          list(
+            extend = 'collection',
+            buttons = c('csv', 'excel', 'pdf'),
+            text = 'Download'
+          )
+        )
       )
     ) %>%
       DT::formatStyle(
-        columns = colnames(layout_df),
+        columns = colnames(layout_dff),
         `font-size` = "16px"
       )
   )
@@ -1022,14 +1052,19 @@ word_correlation_network <- function(dfm_object,
   igraph::V(term_cor_graph)$closeness <- igraph::closeness(term_cor_graph)
   igraph::V(term_cor_graph)$eigenvector <- igraph::eigen_centrality(term_cor_graph)$vector
 
+  leiden_clusters <- igraph::cluster_leiden(term_cor_graph)
+  igraph::V(term_cor_graph)$community <- leiden_clusters$membership
+
   layout <- igraph::layout_with_fr(term_cor_graph)
   layout_df <- as.data.frame(layout)
   colnames(layout_df) <- c("x", "y")
+
   layout_df$label <- igraph::V(term_cor_graph)$name
   layout_df$degree <- igraph::V(term_cor_graph)$degree
   layout_df$betweenness <- igraph::V(term_cor_graph)$betweenness
   layout_df$closeness <- igraph::V(term_cor_graph)$closeness
   layout_df$eigenvector <- igraph::V(term_cor_graph)$eigenvector
+  layout_df$community <- igraph::V(term_cor_graph)$community
 
   edge_data <- igraph::as_data_frame(term_cor_graph, what = "edges") %>%
     mutate(
@@ -1067,17 +1102,16 @@ word_correlation_network <- function(dfm_object,
       degree_log = log1p(degree),
       size = scales::rescale(degree_log, to = c(12, 30)),
       text_size = scales::rescale(degree_log, to = c(14, 20)),
-      alpha = scales::rescale(degree_log, to = c(0.2, 0.9)),
+      alpha = scales::rescale(degree_log, to = c(0.2, 1)),
       hover_text = paste(
         "Word:", label,
         "<br>Degree:", degree,
         "<br>Betweenness:", round(betweenness, 2),
         "<br>Closeness:", round(closeness, 2),
-        "<br>Eigenvector:", round(eigenvector, 2)
+        "<br>Eigenvector:", round(eigenvector, 2),
+        "<br>Community:", community
       )
     )
-
-  color_scale <- 'Viridis'
 
   plot <- plotly::plot_ly(
     type = 'scatter',
@@ -1121,19 +1155,31 @@ word_correlation_network <- function(dfm_object,
       )
     )
 
+  node_data$community <- as.factor(node_data$community)
+
+  combined_colors <- c(
+    "#CAB2D6", "#4DAF4A", "#FFD92F", "#D9D9D9", "#8AEA3C", "#FFFFB3", "#E5C494", "#FDBF6F",
+    "#FFFF99", "#8C3150", "#7E7304", "#6A3D9A", "#A6CEE3", "#BC80BD", "#377EB8", "#8DA0CB",
+    "#0139F7", "#8DD3C7", "#33E1EB", "#B3B3B3", "#E41A1C", "#0D4F15", "#FC8D62", "#B4BFCC",
+    "#BEBADA", "#E31A1C", "#FDB462", "#FCCDE5", "#7A46E2", "#B2DF8A", "#499CD8", "#66C2A5",
+    "#B15928", "#6F8DD0", "#FB9A99", "#ADEE4C", "#33A02C", "#B3DE69", "#4A2333", "#984EA3",
+    "#B43FD8", "#E78AC3", "#5DA45C", "#80B1D3", "#FF7F00", "#B872A8", "#1F78B4", "#A6D854",
+    "#2F4F4F", "#7FFF00"
+  )
+
+  combined_colors <- unique(combined_colors)
+
+  number_communities <- length(unique(node_data$community))
+
+  if (number_communities > length(combined_colors)) {
+    extra_colors <- randomcoloR::distinctColorPalette(number_communities - length(combined_colors))
+    combined_colors <- c(combined_colors, extra_colors)
+  }
+
   marker_params <- list(
     size = ~size,
-    color = ~degree,
-    colorscale = color_scale,
-    showscale = TRUE,
-    colorbar = list(
-      title = "Degree Centrality",
-      len = 0.25,
-      x = 1.1,
-      y = 0.6
-    ),
-    line = list(width = 2, color = '#FFFFFF'),
-    opacity = ~alpha
+    showscale = FALSE,
+    line = list(width = 2, color = '#FFFFFF')
   )
 
   plot <- plot %>%
@@ -1142,9 +1188,11 @@ word_correlation_network <- function(dfm_object,
       x = ~x,
       y = ~y,
       marker = marker_params,
+      color = ~community,
+      colors = combined_colors,
       hoverinfo = 'text',
       text = ~hover_text,
-      showlegend = FALSE
+      showlegend = TRUE
     )
 
   annotations <- lapply(1:nrow(node_data), function(i) {
@@ -1170,23 +1218,35 @@ word_correlation_network <- function(dfm_object,
       annotations = annotations
     )
 
-  layout_df <- layout_df %>%
+  layout_dff <- layout_df %>%
+    dplyr::select(-c("x", "y")) %>%
     mutate_if(is.numeric, round, digits = 3)
 
   list(
     plot = word_correlation_plotly,
     table = DT::datatable(
-      layout_df,
+      layout_dff,
       rownames = FALSE,
+      extensions = 'Buttons',
       options = list(
         pageLength = 10,
         scrollX = TRUE,
         scrollY = "400px",
-        width = "80%"
+        width = "80%",
+        dom = 'Bfrtip',
+        buttons = list(
+          'copy',
+          'print',
+          list(
+            extend = 'collection',
+            buttons = c('csv', 'excel', 'pdf'),
+            text = 'Download'
+          )
+        )
       )
     ) %>%
       DT::formatStyle(
-        columns = colnames(layout_df),
+        columns = colnames(layout_dff),
         `font-size` = "16px"
       )
   )
@@ -1283,7 +1343,7 @@ word_frequency_trends <- function(dfm_object,
       group = interaction(term, !!rlang::sym(continuous_variable)),
       text = paste0("Term Proportion: ", sprintf("%.3f", term_proportion))
     )) +
-    ggplot2::geom_point(color = "#636363", alpha = 0.6, size = 1) +
+    ggplot2::geom_point(color = "#636363", alpha = 0.8, size = 1) +
     ggplot2::geom_smooth(color = "#337ab7",
                          se = TRUE,
                          method = "gam",
