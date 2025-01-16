@@ -8,8 +8,9 @@ word_correlation_network(
   dfm_object,
   co_occur_n = 30,
   corr_n = 0.4,
-  height = 900,
-  width = 800
+  top_node_n = 40,
+  height = 1000,
+  width = 900
 )
 }
 \arguments{
@@ -19,9 +20,11 @@ word_correlation_network(
 
 \item{corr_n}{Minimum correlation value for filtering terms (default is 0.4).}
 
-\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
+\item{top_node_n}{Number of top nodes to display (default is 40).}
 
-\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{800}.}
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{1000}.}
+
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
 }
 \value{
 A list containing a Plotly object and a data frame with the results.
@@ -39,9 +42,11 @@ if (interactive()) {
                                       dfm_object,
                                       co_occur_n = 30,
                                       corr_n = 0.4,
-                                      height = 900,
-                                      width = 800)
+                                      top_node_n = 40,
+                                      height = 1000,
+                                      width = 900)
   word_correlation_network_results$plot
   word_correlation_network_results$table
+  word_correlation_network_results$summary
 }
 }

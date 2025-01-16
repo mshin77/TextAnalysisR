@@ -14,10 +14,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r, include = FALSE}
-library(TextAnalysisR)
-```
-
 `TextAnalysisR` provides a supporting workflow tool for text mining analysis. The web app incorporates [quanteda](https://github.com/quanteda/quanteda) (text preprocessing), [stm](https://github.com/bstewart/stm) (structural topic modeling), [ggraph](https://github.com/thomasp85/ggraph), and [widyr](https://github.com/juliasilge/widyr) (network analysis). [tidytext](https://github.com/cran/tidytext) is implemented to tidy non-tidy format objects. The R Shiny web app is available at `TextAnalysisR::TextAnalysisR.app()` or [https://textanalysisr.org](https://textanalysisr.org). Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app. 
 
 **These steps are similar to those demonstrated in the Shiny web app at `TextAnalysisR::TextAnalysisR.app()`.**
@@ -31,11 +27,15 @@ install.packages("devtools")
 devtools::install_github("mshin77/TextAnalysisR")
 ```
 
-## Launch and Browse the Shiny app
+## Load the TextAnalysisR Package
+
+```{r}
+library(TextAnalysisR)
+```
+
+## Alternatively, Launch and Browse the Shiny App
 
 ```{r, eval=FALSE}
-library(TextAnalysisR)
-
 if (interactive()) {
   TextAnalysisR.app()
 }
@@ -143,7 +143,9 @@ TextAnalysisR::plot_mean_topic_prevalence(
   verbose = FALSE)
 ```
 
-### Analyze and Visualize Word Co-occurrence Networks
+### Analyze and Visualize Word Co-Occurrence Networks
+
+#### Word Co-occurrence Network Plot 
 
 ```{r, fig.alt= "Word Co-occurrence Network"}
 df <- TextAnalysisR::SpecialEduTech
@@ -153,18 +155,29 @@ dfm_object <- quanteda::dfm(tokens)
 word_co_occurrence_network_results <- 
   TextAnalysisR::word_co_occurrence_network(
     dfm_object,
-    co_occur_n = 200,
-    height = 900,
+    co_occur_n = 130,
+    top_node_n = 30,
+    height = 800,
     width = 900)
 word_co_occurrence_network_results$plot
 ```
 
+#### Word Co-occurrence Network Centrality Table
 
 ```{r}
 word_co_occurrence_network_results$table
 ```
 
+#### Word Co-occurrence Network Summary 
+
+```{r}
+word_co_occurrence_network_results$summary
+```
+
+
 ### Analyze and Visualize Word Correlation Networks
+
+#### Word Correlation Network Plot 
 
 ```{r, fig.alt= "Word Correlation Network"}
 df <- TextAnalysisR::SpecialEduTech
@@ -176,17 +189,27 @@ word_correlation_network_results <-
     dfm_object,
     co_occur_n = 30,
     corr_n = 0.4,
-    height = 900,
+    top_node_n = 40,
+    height = 1000,
     width = 900)
 word_correlation_network_results$plot
 ```
 
+#### Word Correlation Network Centrality Table
 
 ```{r}
 word_correlation_network_results$table
 ```
 
+#### Word Correlation Network Summary 
+
+```{r}
+word_correlation_network_results$summary
+```
+
 ### Analyze and Visualize Trends in Word Frequency
+
+#### Word Frequency Trend Plot
 
 ```{r, fig.alt= "Word Frequency Across a Continuous Variable"}
 df <- TextAnalysisR::SpecialEduTech
@@ -205,6 +228,7 @@ word_frequency_trends_results <-
 word_frequency_trends_results$plot
 ```
 
+#### Word Frequency Trend Table
 
 ```{r}
 word_frequency_trends_results$table

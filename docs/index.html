@@ -54,22 +54,26 @@
   <main id="main" class="col-md-9">
 <p><code>TextAnalysisR</code> provides a supporting workflow tool for text mining analysis. The web app incorporates <a href="https://github.com/quanteda/quanteda" class="external-link">quanteda</a> (text preprocessing), <a href="https://github.com/bstewart/stm" class="external-link">stm</a> (structural topic modeling), <a href="https://github.com/thomasp85/ggraph" class="external-link">ggraph</a>, and <a href="https://github.com/juliasilge/widyr" class="external-link">widyr</a> (network analysis). <a href="https://github.com/cran/tidytext" class="external-link">tidytext</a> is implemented to tidy non-tidy format objects. The R Shiny web app is available at <code><a href="reference/TextAnalysisR.app.html">TextAnalysisR::TextAnalysisR.app()</a></code> or <a href="https://textanalysisr.org" class="external-link uri">https://textanalysisr.org</a>. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app.</p>
 <div class="section level2">
-<h2 id="installation">Installation:<a class="anchor" aria-label="anchor" href="#installation"></a>
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <p>The development version from <a href="https://github.com/mshin77/TextAnalysisR" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"devtools"</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"mshin77/TextAnalysisR"</span>)</span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="run-the-shiny-app">Run the Shiny App:<a class="anchor" aria-label="anchor" href="#run-the-shiny-app"></a>
+<h2 id="load-the-textanalysisr-package">Load the TextAnalysisR Package<a class="anchor" aria-label="anchor" href="#load-the-textanalysisr-package"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(TextAnalysisR)</span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="alternatively-launch-and-browse-the-shiny-app">Alternatively, Launch and Browse the Shiny App<a class="anchor" aria-label="anchor" href="#alternatively-launch-and-browse-the-shiny-app"></a>
 </h2>
 <p>Access the web app at <a href="https://www.textanalysisr.org" class="external-link uri">https://www.textanalysisr.org</a>.</p>
 <p>Launch and browser the TextAnalysisR.app on the local computer:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(TextAnalysisR)</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">TextAnalysisR.app</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">TextAnalysisR.app</span>()</span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="citation">Citation:<a class="anchor" aria-label="anchor" href="#citation"></a>
+<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
 <ul>
 <li><p>Shin, M. (2025). <em>TextAnalysisR: A text mining workflow tool</em> (R package version 0.0.2) [Computer software]. <a href="https://mshin77.github.io/TextAnalysisR" class="uri">https://mshin77.github.io/TextAnalysisR</a></p></li>
@@ -77,13 +81,11 @@
 </ul>
 </div>
 <div class="section level2">
-<h2 id="references">References:<a class="anchor" aria-label="anchor" href="#references"></a>
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
-<li>Shin, M., Park, H., &amp; Kang, E. (2024). Development of education policies and practices for students with learning disabilities in South Korea using Delphi surveys and topic modeling. <em>Learning Disability Quarterly</em>. <a href="https://github.com/mshin77/Korea-LD-policy" class="external-link">GitHub</a>
-</li>
-<li>Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., &amp; Kang, E. (2023). A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling. <em>International Journal of STEM Education, 10</em>(1), 1-23. <a href="https://github.com/mshin77/math-tech-sped" class="external-link">GitHub</a>
-</li>
+<li><p>Shin, M., Park, H., &amp; Kang, E. (2024). Development of education policies and practices for students with learning disabilities in South Korea using Delphi surveys and topic modeling. <em>Learning Disability Quarterly</em>. <a href="https://github.com/mshin77/Korea-LD-policy" class="external-link">GitHub</a></p></li>
+<li><p>Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., &amp; Kang, E. (2023). A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling. <em>International Journal of STEM Education, 10</em>(1), 1-23. <a href="https://github.com/mshin77/math-tech-sped" class="external-link">GitHub</a></p></li>
 </ul>
 </div>
 

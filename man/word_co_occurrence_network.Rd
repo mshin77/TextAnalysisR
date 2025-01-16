@@ -6,19 +6,22 @@
 \usage{
 word_co_occurrence_network(
   dfm_object,
-  co_occur_n = 200,
-  height = 900,
-  width = 800
+  co_occur_n = 130,
+  top_node_n = 30,
+  height = 800,
+  width = 900
 )
 }
 \arguments{
 \item{dfm_object}{A quanteda document-feature matrix (dfm).}
 
-\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 200).}
+\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 130).}
 
-\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
+\item{top_node_n}{Number of top nodes to display (default is 30).}
 
-\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{800}.}
+\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{800}.}
+
+\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
 }
 \value{
 A list containing a Plotly object and a data frame with the results.
@@ -34,10 +37,12 @@ if (interactive()) {
   dfm_object <- quanteda::dfm(tokens)
   word_co_occurrence_network_results <- TextAnalysisR::word_co_occurrence_network(
                                         dfm_object,
-                                        co_occur_n = 200,
-                                        height = 900,
-                                        width = 800)
+                                        co_occur_n = 130,
+                                        top_node_n = 30,
+                                        height = 800,
+                                        width = 900)
   word_co_occurrence_network_results$plot
   word_co_occurrence_network_results$table
+  word_co_occurrence_network_results$summary
 }
 }
