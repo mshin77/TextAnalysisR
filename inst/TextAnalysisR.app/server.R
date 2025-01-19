@@ -15,6 +15,7 @@ suppressPackageStartupMessages({
   library(rlang)
   library(broom)
   library(igraph)
+  library(splines)
 })
 
 server <- shinyServer(function(input, output, session) {
@@ -1016,7 +1017,7 @@ server <- shinyServer(function(input, output, session) {
   output$cat_table_uiOutput <- renderUI({
     req(input$effect_cat_btn)
     req(input$display_cat)
-    tags$div(
+    htmltools::tags$div(
       style = "margin-top: 20px;",
       DT::dataTableOutput("cat_table")
     )
@@ -1121,7 +1122,7 @@ server <- shinyServer(function(input, output, session) {
   output$con_table_uiOutput <- renderUI({
     req(input$effect_con_btn)
     req(input$display_con)
-    tags$div(
+    htmltools::tags$div(
       style = "margin-top: 20px;",
       DT::dataTableOutput("con_table")
     )
@@ -1669,6 +1670,15 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$plot_term, {
 
+    if (!requireNamespace("htmltools", quietly = TRUE) ||
+        !requireNamespace("splines", quietly = TRUE) ||
+        !requireNamespace("broom", quietly = TRUE)) {
+      stop(
+        "The 'htmltools', 'splines', and 'broom' packages are required for this functionality. ",
+        "Please install them using install.packages(c('htmltools', 'splines', 'broom'))."
+      )
+    }
+
     vm <- isolate(input$type_terms)
     if (!is.null(vm)) {
       dfm_outcome_obj <- dfm_outcome()
@@ -1691,7 +1701,7 @@ server <- shinyServer(function(input, output, session) {
         group_by(!!rlang::sym(input$continuous_var_3)) %>%
         mutate(
           con_3_total = sum(count),
-          term_proportion = count / con_3_total
+          word_proportion = count / con_3_total
         ) %>%
         ungroup()
 
@@ -1706,7 +1716,7 @@ server <- shinyServer(function(input, output, session) {
           filter(term %in% vm) %>%
           ggplot(aes(
             x = !!rlang::sym(input$continuous_var_3),
-            y = term_proportion,
+            y = word_proportion,
             group = term
           )) +
           geom_point(color = "#337ab7", alpha = 0.6, size = 1) +
@@ -1746,7 +1756,7 @@ server <- shinyServer(function(input, output, session) {
         do(
           tidy(
             glm(
-              cbind(count, con_3_total - count) ~ s(!!rlang::sym(input$continuous_var_3)),
+              cbind(count, con_3_total - count) ~ splines::bs(!!rlang::sym(input$continuous_var_3)),
               weights = con_3_total,
               family = binomial(link = "logit"),
               data = .
@@ -1764,10 +1774,10 @@ server <- shinyServer(function(input, output, session) {
             arrange(word) %>%
             group_by(word) %>%
             group_map(~ {
-              tagList(
-                tags$div(
+              htmltools::tagList(
+                htmltools::tags$div(
                   style = "margin-bottom: 20px;",
-                  tags$p(
+                  htmltools::tags$p(
                     style = "font-weight: bold; text-align: center;",
                     .y$word
                   )
@@ -1784,13 +1794,17 @@ server <- shinyServer(function(input, output, session) {
                       dom = 'Bfrtip',
                       buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
                     )
+                  ) %>%
+                  DT::formatStyle(
+                    columns = names(.x),
+                    `font-size` = "16px"
                   )
               )
             })
-          tagList(tables)
+          htmltools::tagList(tables)
         } else {
-          tagList(
-            tags$p("No significant results to display.")
+          htmltools::tagList(
+            htmltools::tags$p("No significant results to display.")
           )
         }
       })
@@ -1801,13 +1815,13 @@ server <- shinyServer(function(input, output, session) {
 
   output$line_con_var_plot_uiOutput <- renderUI({
     req(input$plot_term > 0, input$continuous_var_3, input$type_terms)
-    tagList(
+    htmltools::tagList(
       plotly::plotlyOutput(
         "line_con_var_plot",
         height = input$height_line_con_var_plot,
         width = input$width_line_con_var_plot
       ),
-      tags$div(
+      htmltools::tags$div(
         style = "margin-top: 20px;",
         uiOutput("significance_results_table")
       )

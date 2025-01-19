@@ -207,31 +207,31 @@ word_correlation_network_results$table
 word_correlation_network_results$summary
 ```
 
-### Analyze and Visualize Term Proportions by a Continuous Variable
+### Analyze and Visualize Word Proportions Across a Continuous Variable
 
-#### Term Proportions by a Continuous Variable Plot
+#### Word Proportions Across a Continuous Variable Plot
 
-```{r, fig.alt= "Term Proportion by a Continuous Variable"}
+```{r, fig.alt= "Word Proportion across a Continuous Variable"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 dfm_object <- quanteda::dfm(tokens)
 stm_15 <- TextAnalysisR::stm_15
-term_proportion_results <- 
-  TextAnalysisR::term_proportion(
+word_proportion_results <- 
+  TextAnalysisR::word_proportion(
     dfm_object,
     stm_model = stm_15,
     continuous_variable = "year",
     selected_terms = c("calculator", "computer"),
     height = 500,
     width = 900)
-term_proportion_results$plot
+word_proportion_results$plot
 ```
 
-#### Generalized Additive Model with Logit Link Table
+#### Generalized Linear Model with B-splines and Logit Link Table
 
 ```{r}
-term_proportion_results$table
+word_proportion_results$table
 ```
 
 

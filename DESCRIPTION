@@ -35,7 +35,9 @@ Imports:
     DT,
     RColorBrewer
 Suggests:
+    broom,
     htmltools,
+    splines,
     covr,
     knitr,
     rmarkdown,

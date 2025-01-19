@@ -1389,10 +1389,10 @@ word_correlation_network <- function(dfm_object,
 }
 
 
-#' @title Analyze and Visualize Term Proportions by a Continuous Variable
+#' @title Analyze and Visualize Word Proportions Across a Continuous Variable
 #'
 #' @description
-#' This function analyzes and visualizes term proportions by a continuous variable.
+#' This function analyzes and visualizes word proportions across a continuous variable.
 #'
 #' @param dfm_object A quanteda document-feature matrix (dfm).
 #' @param stm_model An STM model object.
@@ -1404,6 +1404,9 @@ word_correlation_network <- function(dfm_object,
 #' @return A list containing Plotly objects and tables with the results.
 #'
 #' @details This function requires a fitted STM model object and a quanteda dfm object.
+#' The continuous variable should be a column in the metadata of the dfm object.
+#' The selected terms should be a vector of terms to analyze trends for.
+#' The required packages are 'htmltools' and 'splines' in addition to the packages loaded by the function.
 #'
 #' @importFrom stats glm reformulate binomial
 #' @importFrom plotly ggplotly
@@ -1418,141 +1421,147 @@ word_correlation_network <- function(dfm_object,
 #'   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 #'   dfm_object <- quanteda::dfm(tokens)
 #'   stm_15 <- TextAnalysisR::stm_15
-#'   term_proportion_results <- TextAnalysisR::term_proportion(
+#'   word_proportion_results <- TextAnalysisR::word_proportion(
 #'                              dfm_object,
 #'                              stm_model = stm_15,
 #'                              continuous_variable = "year",
 #'                              selected_terms = c("calculator", "computer"),
 #'                              height = 500,
 #'                              width = 900)
-#'   term_proportion_results$plot
-#'   term_proportion_results$table
+#'   word_proportion_results$plot
+#'   word_proportion_results$table
 #' }
-term_proportion <- function(dfm_object,
-                            stm_model,
-                            continuous_variable,
-                            selected_terms,
-                            height = 500,
-                            width = 900) {
+word_proportion <- function(dfm_object,
+              stm_model,
+              continuous_variable,
+              selected_terms,
+              height = 500,
+              width = 900) {
 
-  if (requireNamespace("htmltools", quietly = TRUE)) {
-
-    dfm_outcome_obj <- dfm_object
-    dfm_td <- tidytext::tidy(dfm_object)
-    gamma_td <-
-      tidytext::tidy(
-        stm_model,
-        matrix = "gamma",
-        document_names = rownames(dfm_object)
-      )
-    dfm_outcome_obj@docvars$document <- dfm_outcome_obj@docvars$docname_
-
-    dfm_gamma_td <- gamma_td %>%
-      left_join(dfm_outcome_obj@docvars,
-                by = c("document" = "document")) %>%
-      left_join(dfm_td, by = c("document" = "document"), relationship = "many-to-many")
-
-    con_var_term_counts <- dfm_gamma_td %>%
-      tibble::as_tibble() %>%
-      group_by(!!rlang::sym(continuous_variable)) %>%
-      mutate(
-        con_3_total = sum(count),
-        term_proportion = count / con_3_total
-      ) %>%
-      ungroup()
-
-    con_var_term_gg <- con_var_term_counts %>%
-      mutate(term = factor(term, levels = selected_terms)) %>%
-      mutate(across(where(is.numeric), ~ round(., 3))) %>%
-      filter(term %in% selected_terms) %>%
-      ggplot(aes(
-        x = !!rlang::sym(continuous_variable),
-        y = term_proportion,
-        group = term
-      )) +
-      geom_point(color = "#337ab7", alpha = 0.6, size = 1) +
-      geom_line(color = "#337ab7", alpha = 0.6, linewidth = 0.5) +
-      facet_wrap(~ term, scales = "free") +
-      scale_y_continuous(labels = scales::percent_format()) +
-      labs(y = "Term Proportion (%)") +
-      theme_minimal(base_size = 11) +
-      theme(
-        legend.position = "none",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
-        axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
-        strip.text.x = element_text(size = 11, color = "#3B3B3B"),
-        axis.text.x = element_text(size = 11, color = "#3B3B3B"),
-        axis.text.y = element_text(size = 11, color = "#3B3B3B"),
-        axis.title = element_text(size = 11, color = "#3B3B3B"),
-        axis.title.x = element_text(margin = margin(t = 9)),
-        axis.title.y = element_text(margin = margin(r = 11))
-      )
-
-    con_var_term_plotly <- plotly::ggplotly(
-      con_var_term_gg,
-      height = height,
-      width = width
-    ) %>%
-      plotly::layout(
-        margin = list(l = 40, r = 150, t = 60, b = 40)
-      )
-
-    significance_results <- con_var_term_counts %>%
-      mutate(word = term) %>%
-      filter(word %in% selected_terms) %>%
-      group_by(word) %>%
-      do(
-        tidy(
-          glm(
-            cbind(count, con_3_total - count) ~ s(!!rlang::sym(continuous_variable)),
-            weights = con_3_total,
-            family = binomial(link = "logit"),
-            data = .
-          )
-        )
-      ) %>%
-      mutate(`odds ratio` = exp(estimate)) %>%
-      rename(`logit` = estimate) %>%
-      ungroup()
-
-    significance_results_tables <- significance_results %>%
-      mutate(word = factor(word, levels = selected_terms)) %>%
-      arrange(word) %>%
-      group_by(word) %>%
-      group_map(~ {
-        htmltools::tagList(
-          htmltools::tags$div(
-            style = "margin-bottom: 20px;",
-            htmltools::tags$p(
-              style = "font-weight: bold; text-align: center;",
-              .y$word
-            )
-          ),
-          .x %>%
-            mutate_if(is.numeric, ~ round(., 3)) %>%
-            DT::datatable(
-              rownames = FALSE,
-              extensions = 'Buttons',
-              options = list(
-                scrollX = TRUE,
-                scrollY = "400px",
-                width = "80%",
-                dom = 'Bfrtip',
-                buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-              )
-            )
-        )
-      })
-
-    list(
-      plot = con_var_term_plotly,
-      table = htmltools::tagList(significance_results_tables) %>% htmltools::browsable()
+  if (!requireNamespace("htmltools", quietly = TRUE) ||
+      !requireNamespace("splines", quietly = TRUE) ||
+      !requireNamespace("broom", quietly = TRUE)) {
+    stop(
+      "The 'htmltools', 'splines', and 'broom' packages are required for this functionality. ",
+      "Please install them using install.packages(c('htmltools', 'splines', 'broom'))."
     )
-
-  } else {
-    stop("htmltools is required for rendering this report. Please install it.")
   }
 
+  dfm_outcome_obj <- dfm_object
+  dfm_td <- tidytext::tidy(dfm_object)
+  gamma_td <-
+  tidytext::tidy(
+    stm_model,
+    matrix = "gamma",
+    document_names = rownames(dfm_object)
+  )
+  dfm_outcome_obj@docvars$document <- dfm_outcome_obj@docvars$docname_
+
+  dfm_gamma_td <- gamma_td %>%
+  left_join(dfm_outcome_obj@docvars,
+        by = c("document" = "document")) %>%
+  left_join(dfm_td, by = c("document" = "document"), relationship = "many-to-many")
+
+  con_var_term_counts <- dfm_gamma_td %>%
+  tibble::as_tibble() %>%
+  group_by(!!rlang::sym(continuous_variable)) %>%
+  mutate(
+    con_3_total = sum(count),
+    word_proportion = count / con_3_total
+  ) %>%
+  ungroup()
+
+  con_var_term_gg <- con_var_term_counts %>%
+  mutate(term = factor(term, levels = selected_terms)) %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  filter(term %in% selected_terms) %>%
+  ggplot(aes(
+    x = !!rlang::sym(continuous_variable),
+    y = word_proportion,
+    group = term
+  )) +
+  geom_point(color = "#337ab7", alpha = 0.6, size = 1) +
+  geom_line(color = "#337ab7", alpha = 0.6, linewidth = 0.5) +
+  facet_wrap(~ term, scales = "free") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(y = "Word Proportion (%)") +
+  theme_minimal(base_size = 11) +
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
+    axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
+    strip.text.x = element_text(size = 11, color = "#3B3B3B"),
+    axis.text.x = element_text(size = 11, color = "#3B3B3B"),
+    axis.text.y = element_text(size = 11, color = "#3B3B3B"),
+    axis.title = element_text(size = 11, color = "#3B3B3B"),
+    axis.title.x = element_text(margin = margin(t = 9)),
+    axis.title.y = element_text(margin = margin(r = 11))
+  )
+
+  con_var_term_plotly <- plotly::ggplotly(
+  con_var_term_gg,
+  height = height,
+  width = width
+  ) %>%
+  plotly::layout(
+    margin = list(l = 40, r = 150, t = 60, b = 40)
+  )
+
+  significance_results <- con_var_term_counts %>%
+  mutate(word = term) %>%
+  filter(word %in% selected_terms) %>%
+  group_by(word) %>%
+  do(
+    broom::tidy(
+    glm(
+      cbind(count, con_3_total - count) ~ splines::bs(!!rlang::sym(continuous_variable)),
+      weights = con_3_total,
+      family = binomial(link = "logit"),
+      data = .
+    )
+    )
+  ) %>%
+  mutate(`odds ratio` = exp(estimate)) %>%
+  rename(`logit` = estimate) %>%
+  ungroup()
+
+  significance_results_tables <- significance_results %>%
+  mutate(word = factor(word, levels = selected_terms)) %>%
+  arrange(word) %>%
+  group_by(word) %>%
+  group_map(~ {
+    htmltools::tagList(
+      htmltools::tags$div(
+      style = "margin-bottom: 20px;",
+      htmltools::tags$p(
+      style = "font-weight: bold; text-align: center;",
+      .y$word
+      )
+    ),
+    .x %>%
+      mutate_if(is.numeric, ~ round(., 3)) %>%
+      DT::datatable(
+      rownames = FALSE,
+      extensions = 'Buttons',
+      options = list(
+        scrollX = TRUE,
+        scrollY = "400px",
+        width = "80%",
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+      )
+      ) %>%
+      DT::formatStyle(
+        columns = names(.x),
+        `font-size` = "16px"
+      )
+    )
+  })
+
+  list(
+  plot = con_var_term_plotly,
+  table = htmltools::tagList(significance_results_tables) %>% htmltools::browsable()
+  )
 }
