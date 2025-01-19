@@ -32,8 +32,10 @@ Imports:
     scales,
     plotly,
     purrr,
-    DT
+    DT,
+    RColorBrewer
 Suggests:
+    htmltools,
     covr,
     knitr,
     rmarkdown,

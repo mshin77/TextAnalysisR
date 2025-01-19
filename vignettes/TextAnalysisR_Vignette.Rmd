@@ -207,29 +207,31 @@ word_correlation_network_results$table
 word_correlation_network_results$summary
 ```
 
-### Analyze and Visualize Trends in Word Frequency
+### Analyze and Visualize Term Proportions by a Continuous Variable
 
-#### Word Frequency Trend Plot
+#### Term Proportions by a Continuous Variable Plot
 
-```{r, fig.alt= "Word Frequency Across a Continuous Variable"}
+```{r, fig.alt= "Term Proportion by a Continuous Variable"}
 df <- TextAnalysisR::SpecialEduTech
 united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
 tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
 dfm_object <- quanteda::dfm(tokens)
 stm_15 <- TextAnalysisR::stm_15
-word_frequency_trends_results <- 
-  TextAnalysisR::word_frequency_trends(
+term_proportion_results <- 
+  TextAnalysisR::term_proportion(
     dfm_object,
     stm_model = stm_15,
     continuous_variable = "year",
     selected_terms = c("calculator", "computer"),
     height = 500,
     width = 900)
-word_frequency_trends_results$plot
+term_proportion_results$plot
 ```
 
-#### Word Frequency Trend Table
+#### Generalized Additive Model with Logit Link Table
 
 ```{r}
-word_frequency_trends_results$table
+term_proportion_results$table
 ```
+
+

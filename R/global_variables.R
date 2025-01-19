@@ -9,5 +9,6 @@ globalVariables(names = c(
   "label", "degree_log", "eigenvector",
   "min_corr", "max_corr",
   "categorical_var", "continuous_var",
-  "word_frequency_trends", "community"
+  "word_frequency_trends", "community",
+  "con_3_total", "word"
 ))
