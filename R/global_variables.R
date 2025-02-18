@@ -10,5 +10,9 @@ globalVariables(names = c(
   "min_corr", "max_corr",
   "categorical_var", "continuous_var",
   "word_frequency_trends", "community",
-  "con_3_total", "word"
+  "con_3_total", "word",
+  "labeled_topic", "model_type", "word_frequency",
+  "odds.ratio", "std.error", "p.value", "statistic",
+  "odds ratio", "std.error (odds ratio)",
+  "united_texts"
 ))

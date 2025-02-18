@@ -6,8 +6,10 @@
 \usage{
 word_co_occurrence_network(
   dfm_object,
-  co_occur_n = 130,
+  doc_var = NULL,
+  co_occur_n = 50,
   top_node_n = 30,
+  nrows = 1,
   height = 800,
   width = 900
 )
@@ -15,16 +17,20 @@ word_co_occurrence_network(
 \arguments{
 \item{dfm_object}{A quanteda document-feature matrix (dfm).}
 
-\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default is 130).}
+\item{doc_var}{A document-level metadata variable (default: NULL).}
 
-\item{top_node_n}{Number of top nodes to display (default is 30).}
+\item{co_occur_n}{Minimum number of co-occurrences for filtering terms (default: 50).}
 
-\item{height}{The height of the resulting Plotly plot, in pixels. Defaults to \code{800}.}
+\item{top_node_n}{Number of top nodes to display (default: 30).}
 
-\item{width}{The width of the resulting Plotly plot, in pixels. Defaults to \code{900}.}
+\item{nrows}{Number of rows to display in the table (default: 1).}
+
+\item{height}{The height of the resulting Plotly plot, in pixels (default: 800).}
+
+\item{width}{The width of the resulting Plotly plot, in pixels (default: 900).}
 }
 \value{
-A list containing a Plotly object and a data frame with the results.
+A list containing the Plotly plot, a data frame of the network layout, and the igraph graph object.
 }
 \description{
 This function creates a word co-occurrence network based on a document-feature matrix (dfm).
@@ -32,17 +38,23 @@ This function creates a word co-occurrence network based on a document-feature m
 \examples{
 if (interactive()) {
   df <- TextAnalysisR::SpecialEduTech
+
   united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+
   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+
   dfm_object <- quanteda::dfm(tokens)
+
   word_co_occurrence_network_results <- TextAnalysisR::word_co_occurrence_network(
                                         dfm_object,
-                                        co_occur_n = 130,
+                                        doc_var = "reference_type",
+                                        co_occur_n = 50,
                                         top_node_n = 30,
+                                        nrows = 1,
                                         height = 800,
                                         width = 900)
-  word_co_occurrence_network_results$plot
-  word_co_occurrence_network_results$table
-  word_co_occurrence_network_results$summary
+  print(word_co_occurrence_network_results$plot)
+  print(word_co_occurrence_network_results$table)
+  print(word_co_occurrence_network_results$summary)
 }
 }

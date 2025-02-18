@@ -25,10 +25,14 @@ and creates a ggplot-based visualization of term frequencies.
 \examples{
 if (interactive()) {
   df <- TextAnalysisR::SpecialEduTech
+
   united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+
   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+
   dfm_object <- quanteda::dfm(tokens)
+
   word_frequency_plot <- TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
-  word_frequency_plot
+  print(word_frequency_plot)
 }
 }

@@ -31,7 +31,7 @@ evaluate_optimal_topic_number(
 
 \item{width}{The width of the resulting Plotly plot in pixels (default: 800).}
 
-\item{verbose}{Logical; if \code{TRUE}, prints progress information.}
+\item{verbose}{Logical; if TRUE, prints progress information.}
 
 \item{...}{Further arguments passed to \code{stm::searchK}.}
 }
@@ -46,18 +46,22 @@ and lower bound metrics.
 \examples{
 if (interactive()) {
   df <- TextAnalysisR::SpecialEduTech
+
   united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+
   tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+
   dfm_object <- quanteda::dfm(tokens)
-  TextAnalysisR::evaluate_optimal_topic_number(
-    dfm_object = dfm_object,
-    topic_range = 5:30,
-    max.em.its = 75,
-    categorical_var = "reference_type",
-    continuous_var = "year",
-    height = 600,
-    width = 800,
-    verbose = TRUE
-  )
+
+  optimal_topic_range <- TextAnalysisR::evaluate_optimal_topic_number(
+                           dfm_object = dfm_object,
+                           topic_range = 5:30,
+                           max.em.its = 75,
+                           categorical_var = "reference_type",
+                           continuous_var = "year",
+                           height = 600,
+                           width = 800,
+                           verbose = TRUE)
+  print(optimal_topic_range)
 }
 }

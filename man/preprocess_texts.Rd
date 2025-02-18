@@ -7,25 +7,54 @@
 preprocess_texts(
   united_tbl,
   text_field = "united_texts",
-  custom_stopwords = NULL,
   min_char = 2,
+  remove_punct = TRUE,
+  remove_symbols = TRUE,
+  remove_numbers = TRUE,
+  remove_url = TRUE,
+  remove_separators = TRUE,
+  split_hyphens = TRUE,
+  split_tags = TRUE,
+  include_docvars = TRUE,
+  keep_acronyms = FALSE,
+  padding = FALSE,
+  verbose = FALSE,
   ...
 )
 }
 \arguments{
 \item{united_tbl}{A data frame that contains text data.}
 
-\item{text_field}{The name of the column in \code{united_tbl} that contains text data.}
+\item{text_field}{The name of the column that contains the text data.}
 
-\item{custom_stopwords}{A character vector of additional stopwords to remove. Default is NULL.}
+\item{min_char}{The minimum number of characters for a token to be included (default: 2).}
 
-\item{min_char}{Minimum length in characters for tokens (default is 2).}
+\item{remove_punct}{Logical; remove punctuation from the text (default: TRUE).}
 
-\item{...}{Further arguments passed to \code{quanteda::corpus}.}
+\item{remove_symbols}{Logical; remove symbols from the text (default: TRUE).}
+
+\item{remove_numbers}{Logical; remove numbers from the text (default: TRUE).}
+
+\item{remove_url}{Logical; remove URLs from the text (default: TRUE).}
+
+\item{remove_separators}{Logical; remove separators from the text (default: TRUE).}
+
+\item{split_hyphens}{Logical; split hyphenated words into separate tokens (default: TRUE).}
+
+\item{split_tags}{Logical; split tags into separate tokens (default: TRUE).}
+
+\item{include_docvars}{Logical; include document variables in the tokens object (default: TRUE).}
+
+\item{keep_acronyms}{Logical; keep acronyms in the text (default: FALSE).}
+
+\item{padding}{Logical; add padding to the tokens object (default: FALSE).}
+
+\item{verbose}{Logical; print verbose output (default: FALSE).}
+
+\item{...}{Additional arguments passed to \code{quanteda::tokens}.}
 }
 \value{
-A \code{quanteda} tokens object. Each row in the object represents a document, and each column represents a token.
-The object is ready for constructing a dfm and fitting an STM model.
+A \code{tokens} object that contains the preprocessed text data.
 }
 \description{
 Preprocesses text data by:
@@ -33,7 +62,6 @@ Preprocesses text data by:
 \item Constructing a corpus
 \item Tokenizing text into words
 \item Converting to lowercase
-\item Removing default English stopwords and optional custom stopwords
 \item Specifying a minimum token length.
 }
 
@@ -41,9 +69,24 @@ Typically used before constructing a dfm and fitting an STM model.
 }
 \examples{
 if (interactive()) {
-  df <- TextAnalysisR::SpecialEduTech
-  united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
-  tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
-  tokens
+df <- TextAnalysisR::SpecialEduTech
+
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+
+tokens <- TextAnalysisR::preprocess_texts(united_tbl,
+                                         text_field = "united_texts",
+                                         min_char = 2,
+                                         remove_punct = TRUE,
+                                         remove_symbols = TRUE,
+                                         remove_numbers = TRUE,
+                                         remove_url = TRUE,
+                                         remove_separators = TRUE,
+                                         split_hyphens = TRUE,
+                                         split_tags = TRUE,
+                                         include_docvars = TRUE,
+                                         keep_acronyms = FALSE,
+                                         padding = FALSE,
+                                         verbose = FALSE)
+print(tokens)
 }
 }

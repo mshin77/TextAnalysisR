@@ -20,7 +20,8 @@ This function unites specified text columns in a data frame into a single column
 \examples{
 if (interactive()) {
   df <- TextAnalysisR::SpecialEduTech
+
   united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
-  united_tbl
+  print(united_tbl)
 }
 }
