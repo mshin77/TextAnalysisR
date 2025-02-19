@@ -1,0 +1,512 @@
+x = !!rlang::sym(continuous_variable),
+y = term_proportion,
+group = term
+)) +
+geom_point(color = "#337ab7", alpha = 0.6, size = 1) +
+geom_line(color = "#337ab7", alpha = 0.6, size = 0.5) +
+facet_wrap(~ term, scales = "free") +
+scale_y_continuous(labels = scales::percent_format()) +
+labs(y = "Term Proportion (%)") +
+theme_minimal(base_size = 11) +
+theme(
+legend.position = "none",
+panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(),
+axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
+axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
+strip.text.x = element_text(size = 11, color = "#3B3B3B"),
+axis.text.x = element_text(size = 11, color = "#3B3B3B"),
+axis.text.y = element_text(size = 11, color = "#3B3B3B"),
+axis.title = element_text(size = 11, color = "#3B3B3B"),
+axis.title.x = element_text(margin = margin(t = 9)),
+axis.title.y = element_text(margin = margin(r = 11))
+)
+con_var_term_plotly <-
+plotly::ggplotly(con_var_term_gg,
+height = height,
+width = width) %>%
+plotly::layout(margin = list(l = 40, r = 150, t = 60, b = 40))
+significance_results <-
+con_var_term_counts_filtered %>%
+mutate(word = term) %>%
+group_by(word) %>%
+do(
+tidy(
+glm(
+cbind(count, con_3_total - count) ~ s(!!rlang::sym(continuous_variable)),
+weights = con_3_total,
+family = binomial(link = "logit"),
+data = .
+)
+)
+) %>%
+mutate(`estimate (odds ratio)` = exp(estimate)) %>%
+rename(`estimate (logit)` = estimate) %>%
+ungroup()
+if (nrow(significance_results) > 0) {
+significance_results_tables <- significance_results %>%
+mutate(word = factor(word, levels = selected_terms)) %>%
+arrange(word) %>%
+group_by(word) %>%
+group_map(~ {
+tagList(
+tags$div(
+style = "margin-bottom: 20px;",
+tags$p(
+style = "font-weight: bold; text-align: center;",
+.y$word
+)
+),
+.x %>%
+mutate_if(is.numeric, ~ round(., 3)) %>%
+DT::datatable(
+rownames = FALSE,
+options = list(
+scrollX = TRUE,
+pageLength = 10
+)
+)
+)
+})
+tagList(significance_results_tables)
+} else {
+tagList(
+tags$p("No significant results to display.")
+)
+}
+if (!is.data.frame(significance_results_tables)) {
+significance_results_tables <- as.data.frame(significance_results_tables)
+}
+if (!is.data.frame(con_var_term_counts_filtered)) {
+con_var_term_counts_filtered <- as.data.frame(con_var_term_counts_filtered)
+}
+list(
+plot = con_var_term_plotly,
+statistics = DT::datatable(
+significance_results_tables,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(significance_results_tables),
+`font-size` = "16px"
+),
+summary = DT::datatable(
+con_var_term_counts_filtered,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(con_var_term_counts_filtered),
+`font-size` = "16px"
+)
+)
+}
+word_frequency_trends(
+dfm_object,
+stm_model = stm_15,
+continuous_variable = "year",
+selected_terms = c("calculator", "computer"),
+height = 500,
+width = 900)$plot
+word_frequency_trends <- function(dfm_object,
+stm_model,
+continuous_variable,
+selected_terms,
+height = 500,
+width = 900) {
+dfm_outcome_obj <- dfm_object
+dfm_td <- tidytext::tidy(dfm_object)
+gamma_td <-
+tidytext::tidy(
+stm_model,
+matrix = "gamma",
+document_names = rownames(dfm_object)
+)
+dfm_outcome_obj@docvars$document <- dfm_outcome_obj@docvars$docname_
+dfm_gamma_td <- gamma_td %>%
+left_join(dfm_outcome_obj@docvars,
+by = c("document" = "document")) %>%
+left_join(dfm_td, by = c("document" = "document"), relationship = "many-to-many")
+con_var_term_counts <- dfm_gamma_td %>%
+tibble::as_tibble() %>%
+dplyr::group_by(!!rlang::sym(continuous_variable)) %>%
+dplyr::mutate(
+con_3_total = sum(count),
+term_proportion = count / con_3_total
+) %>%
+dplyr::ungroup()
+con_var_term_counts_filtered <- con_var_term_counts %>%
+mutate(term = factor(term, levels = selected_terms)) %>%
+mutate(across(where(is.numeric), ~ round(., 3))) %>%
+filter(term %in% selected_terms)
+con_var_term_gg <- con_var_term_counts %>%
+ggplot(aes(
+x = !!rlang::sym(continuous_variable),
+y = term_proportion,
+group = term
+)) +
+geom_point(color = "#337ab7", alpha = 0.6, size = 1) +
+geom_line(color = "#337ab7", alpha = 0.6, size = 0.5) +
+facet_wrap(~ term, scales = "free") +
+scale_y_continuous(labels = scales::percent_format()) +
+labs(y = "Term Proportion (%)") +
+theme_minimal(base_size = 11) +
+theme(
+legend.position = "none",
+panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(),
+axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
+axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
+strip.text.x = element_text(size = 11, color = "#3B3B3B"),
+axis.text.x = element_text(size = 11, color = "#3B3B3B"),
+axis.text.y = element_text(size = 11, color = "#3B3B3B"),
+axis.title = element_text(size = 11, color = "#3B3B3B"),
+axis.title.x = element_text(margin = margin(t = 9)),
+axis.title.y = element_text(margin = margin(r = 11))
+)
+con_var_term_plotly <-
+plotly::ggplotly(con_var_term_gg,
+height = height,
+width = width) %>%
+plotly::layout(margin = list(l = 40, r = 150, t = 60, b = 40))
+significance_results <-
+con_var_term_counts_filtered %>%
+mutate(word = term) %>%
+group_by(word) %>%
+do(
+tidy(
+glm(
+cbind(count, con_3_total - count) ~ s(!!rlang::sym(continuous_variable)),
+weights = con_3_total,
+family = binomial(link = "logit"),
+data = .
+)
+)
+) %>%
+mutate(`estimate (odds ratio)` = exp(estimate)) %>%
+rename(`estimate (logit)` = estimate) %>%
+ungroup()
+if (nrow(significance_results) > 0) {
+significance_results_tables <- significance_results %>%
+mutate(word = factor(word, levels = selected_terms)) %>%
+arrange(word) %>%
+group_by(word) %>%
+group_map(~ {
+tagList(
+tags$div(
+style = "margin-bottom: 20px;",
+tags$p(
+style = "font-weight: bold; text-align: center;",
+.y$word
+)
+),
+.x %>%
+mutate_if(is.numeric, ~ round(., 3)) %>%
+DT::datatable(
+rownames = FALSE,
+options = list(
+scrollX = TRUE,
+pageLength = 10
+)
+)
+)
+})
+tagList(significance_results_tables)
+} else {
+tagList(
+tags$p("No significant results to display.")
+)
+}
+if (!is.data.frame(significance_results_tables)) {
+if (inherits(significance_results_tables, "shiny.tag")) {
+stop("significance_results_tables contains shiny UI components and cannot be converted to a data frame.")
+}
+significance_results_tables <- as.data.frame(significance_results_tables)
+}
+if (!is.data.frame(con_var_term_counts_filtered)) {
+if (inherits(con_var_term_counts_filtered, "shiny.tag")) {
+stop("con_var_term_counts_filtered contains shiny UI components and cannot be converted to a data frame.")
+}
+con_var_term_counts_filtered <- as.data.frame(con_var_term_counts_filtered)
+}
+list(
+plot = con_var_term_plotly,
+statistics = DT::datatable(
+significance_results_tables,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(significance_results_tables),
+`font-size` = "16px"
+),
+summary = DT::datatable(
+con_var_term_counts_filtered,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(con_var_term_counts_filtered),
+`font-size` = "16px"
+)
+)
+}
+word_frequency_trends(
+dfm_object,
+stm_model = stm_15,
+continuous_variable = "year",
+selected_terms = c("calculator", "computer"),
+height = 500,
+width = 900)$plot
+word_frequency_trends <- function(dfm_object,
+stm_model,
+continuous_variable,
+selected_terms,
+height = 500,
+width = 900) {
+dfm_outcome_obj <- dfm_object
+dfm_td <- tidytext::tidy(dfm_object)
+gamma_td <-
+tidytext::tidy(
+stm_model,
+matrix = "gamma",
+document_names = rownames(dfm_object)
+)
+dfm_outcome_obj@docvars$document <- dfm_outcome_obj@docvars$docname_
+dfm_gamma_td <- gamma_td %>%
+dplyr::left_join(dfm_outcome_obj@docvars,
+by = c("document" = "document")) %>%
+dplyr::left_join(dfm_td, by = c("document" = "document"), relationship = "many-to-many")
+con_var_term_counts <- dfm_gamma_td %>%
+tibble::as_tibble() %>%
+dplyr::group_by(!!rlang::sym(continuous_variable)) %>%
+dplyr::mutate(
+con_3_total = sum(count),
+term_proportion = count / con_3_total
+) %>%
+dplyr::ungroup()
+con_var_term_counts_filtered <- con_var_term_counts %>%
+mutate(term = factor(term, levels = selected_terms)) %>%
+mutate(across(where(is.numeric), ~ round(., 3))) %>%
+filter(term %in% selected_terms)
+con_var_term_gg <- con_var_term_counts %>%
+ggplot(aes(
+x = !!rlang::sym(continuous_variable),
+y = term_proportion,
+group = term
+)) +
+geom_point(color = "#337ab7", alpha = 0.6, size = 1) +
+geom_line(color = "#337ab7", alpha = 0.6, size = 0.5) +
+facet_wrap(~ term, scales = "free") +
+scale_y_continuous(labels = scales::percent_format()) +
+labs(y = "Term Proportion (%)") +
+theme_minimal(base_size = 11) +
+theme(
+legend.position = "none",
+panel.grid.major = element_blank(),
+panel.grid.minor = element_blank(),
+axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
+axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
+strip.text.x = element_text(size = 11, color = "#3B3B3B"),
+axis.text.x = element_text(size = 11, color = "#3B3B3B"),
+axis.text.y = element_text(size = 11, color = "#3B3B3B"),
+axis.title = element_text(size = 11, color = "#3B3B3B"),
+axis.title.x = element_text(margin = margin(t = 9)),
+axis.title.y = element_text(margin = margin(r = 11))
+)
+con_var_term_plotly <-
+plotly::ggplotly(con_var_term_gg,
+height = height,
+width = width) %>%
+plotly::layout(margin = list(l = 40, r = 150, t = 60, b = 40))
+significance_results <-
+con_var_term_counts_filtered %>%
+mutate(word = term) %>%
+group_by(word) %>%
+do(
+tidy(
+glm(
+cbind(count, con_3_total - count) ~ s(!!rlang::sym(continuous_variable)),
+weights = con_3_total,
+family = binomial(link = "logit"),
+data = .
+)
+)
+) %>%
+mutate(`estimate (odds ratio)` = exp(estimate)) %>%
+rename(`estimate (logit)` = estimate) %>%
+ungroup()
+if (nrow(significance_results) > 0) {
+significance_results_tables <- significance_results %>%
+mutate(word = factor(word, levels = selected_terms)) %>%
+arrange(word) %>%
+mutate_if(is.numeric, ~ round(., 3))
+} else {
+significance_results_tables <- significance_results
+}
+list(
+plot = con_var_term_plotly,
+statistics = DT::datatable(
+significance_results_tables,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(significance_results_tables),
+`font-size` = "16px"
+),
+summary = DT::datatable(
+con_var_term_counts_filtered,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(con_var_term_counts_filtered),
+`font-size` = "16px"
+)
+)
+}
+word_frequency_trends(
+dfm_object,
+stm_model = stm_15,
+continuous_variable = "year",
+selected_terms = c("calculator", "computer"),
+height = 500,
+width = 900)$plot
+test <- word_frequency_trends(
+dfm_object,
+stm_model = stm_15,
+continuous_variable = "year",
+selected_terms = c("calculator", "computer"),
+height = 500,
+width = 900)
+test <- word_frequency_trends(
+dfm_object,
+stm_model = stm_15,
+continuous_variable = "year",
+selected_terms = c("calculator", "computer"),
+height = 500,
+width = 900)
+test$plot
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+install.packages(c("bayestestR", "bit64", "fastmatch", "gld", "httr2", "igraph", "performance", "pkgbuild", "quanteda", "raster", "Rcpp", "rlang", "systemfonts", "TH.data"))
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')

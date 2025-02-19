@@ -1,0 +1,512 @@
+if (igraph::vcount(co_occur_graph_directed) == 0) {
+showNotification("No co-occurrence relationships meet the threshold.", type = "error")
+return(NULL)
+}
+igraph::V(co_occur_graph_directed)$degree <- igraph::degree(co_occur_graph_directed, mode = "all")
+igraph::V(co_occur_graph_directed)$closeness <- igraph::closeness(co_occur_graph_directed, mode = "all")
+igraph::V(co_occur_graph_directed)$betweenness <- igraph::betweenness(co_occur_graph_directed, directed = TRUE)
+igraph::V(co_occur_graph_directed)$page_rank <- igraph::page_rank(co_occur_graph_directed)$vector
+igraph::V(co_occur_graph_directed)$eigenvector <- igraph::eigen_centrality(co_occur_graph_directed, directed = TRUE)$vector
+igraph::V(co_occur_graph_directed)$authority <- igraph::authority_score(co_occur_graph_directed)$vector
+igraph::V(co_occur_graph_directed)$hub <- igraph::hub_score(co_occur_graph_directed)$vector
+co_occur_graph_undirected <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
+if (igraph::vcount(co_occur_graph_undirected) == 0) {
+showNotification("No co-occurrence relationships meet the threshold.", type = "error")
+return(NULL)
+}
+igraph::V(co_occur_graph_undirected)$community <- igraph::cluster_leiden(co_occur_graph_undirected)$membership
+layout <- igraph::layout_with_fr(co_occur_graph_directed)
+layout_df <- as.data.frame(layout)
+colnames(layout_df) <- c("x", "y")
+layout_df$label <- igraph::V(co_occur_graph_directed)$name
+layout_df$degree <- igraph::V(co_occur_graph_directed)$degree
+layout_df$closeness <- igraph::V(co_occur_graph_directed)$closeness
+layout_df$betweenness <- igraph::V(co_occur_graph_directed)$betweenness
+layout_df$page_rank <- igraph::V(co_occur_graph_directed)$page_rank
+layout_df$eigenvector <- igraph::V(co_occur_graph_directed)$eigenvector
+layout_df$authority <- igraph::V(co_occur_graph_directed)$authority
+layout_df$hub <- igraph::V(co_occur_graph_directed)$hub
+layout_df$community <- igraph::V(co_occur_graph_undirected)$community
+edge_data <- igraph::as_data_frame(co_occur_graph_directed, what = "edges") %>%
+mutate(
+x = layout_df$x[match(from, layout_df$label)],
+y = layout_df$y[match(from, layout_df$label)],
+xend = layout_df$x[match(to, layout_df$label)],
+yend = layout_df$y[match(to, layout_df$label)],
+cooccur_count = n
+) %>%
+select(from, to, x, y, xend, yend, cooccur_count)
+edge_data <- edge_data %>%
+mutate(
+line_group = as.integer(cut(
+cooccur_count,
+breaks = unique(quantile(cooccur_count, probs = seq(0, 1, length.out = 6), na.rm = TRUE)),
+include.lowest = TRUE
+)),
+line_width = scales::rescale(line_group, to = c(1, 5)),
+alpha = scales::rescale(line_group, to = c(0.1, 0.3))
+)
+edge_group_labels <- edge_data %>%
+group_by(line_group) %>%
+summarise(
+min_count = min(cooccur_count, na.rm = TRUE),
+max_count = max(cooccur_count, na.rm = TRUE)
+) %>%
+mutate(label = paste0("Count: ", min_count, " - ", max_count)) %>%
+pull(label)
+node_data <- layout_df %>%
+mutate(
+degree_log = log1p(degree),
+size = scales::rescale(degree_log, to = c(12, 30)),
+text_size = scales::rescale(degree_log, to = c(14, 20)),
+alpha = scales::rescale(degree_log, to = c(0.2, 1)),
+hover_text = paste(
+"Word:", label,
+"<br>Degree:", degree,
+"<br>Betweenness:", round(betweenness, 2),
+"<br>Closeness:", round(closeness, 2),
+"<br>Eigenvector:", round(eigenvector, 2),
+"<br>Page Rank:", round(page_rank, 2),
+"<br>Authority:", round(authority, 2),
+"<br>Hub:", round(hub, 2),
+"<br>Community:", community
+)
+)
+plot <- plotly::plot_ly(
+type = 'scatter',
+mode = 'markers',
+width = width,
+height = height
+)
+for (i in unique(edge_data$line_group)) {
+edge_subset <- edge_data %>% filter(line_group == i)
+edge_label <- edge_group_labels[i]
+if (nrow(edge_subset) > 0) {
+plot <- plot %>%
+add_segments(
+data = edge_subset,
+x = ~x,
+y = ~y,
+xend = ~xend,
+yend = ~yend,
+line = list(color = 'rgba(0, 0, 255, 0.6)', width = ~line_width),
+hoverinfo = 'text',
+text = ~paste("Co-occurrence:", cooccur_count,
+"<br>Source:", from,
+"<br>Target:", to),
+opacity = ~alpha,
+showlegend = TRUE,
+name = edge_label,
+legendgroup = "Edges"
+)
+}
+}
+plot <- plot %>%
+plotly::layout(
+legend = list(
+title = list(text = "Co-occurrence"),
+orientation = "v",
+x = 1.1,
+y = 1,
+xanchor = "left",
+yanchor = "top"
+)
+)
+node_data$community <- as.factor(node_data$community)
+combined_colors <- c(
+"#D9D9D9", "#8AEA3C", "#FFFFB3", "#E5C494", "#FDBF6F","#CAB2D6", "#4DAF4A", "#FFD92F",
+"#FFFF99", "#8C3150", "#7E7304", "#6A3D9A", "#A6CEE3", "#BC80BD", "#377EB8", "#8DA0CB",
+"#0139F7", "#8DD3C7", "#33E1EB", "#B3B3B3", "#E41A1C", "#0D4F15", "#FC8D62", "#B4BFCC",
+"#BEBADA", "#E31A1C", "#FDB462", "#FCCDE5", "#7A46E2", "#B2DF8A", "#499CD8", "#66C2A5",
+"#B15928", "#6F8DD0", "#FB9A99", "#ADEE4C", "#33A02C", "#B3DE69", "#4A2333", "#984EA3",
+"#B43FD8", "#E78AC3", "#5DA45C", "#80B1D3", "#FF7F00", "#B872A8", "#1F78B4", "#A6D854",
+"#2F4F4F", "#7FFF00"
+)
+combined_colors <- unique(combined_colors)
+number_communities <- length(unique(node_data$community))
+if (number_communities > length(combined_colors)) {
+extra_colors <- randomcoloR::distinctColorPalette(number_communities - length(combined_colors))
+combined_colors <- c(combined_colors, extra_colors)
+}
+marker_params <- list(
+size = ~size,
+showscale = FALSE,
+line = list(width = 2, color = '#FFFFFF')
+)
+plot <- plot %>%
+plotly::add_markers(
+data = node_data,
+x = ~x,
+y = ~y,
+marker = marker_params,
+color = ~community,
+colors = combined_colors,
+hoverinfo = 'text',
+text = ~hover_text,
+showlegend = TRUE
+)
+top_nodes <- head(node_data[order(-node_data$degree), ], top_node_n)
+annotations <- lapply(1:nrow(top_nodes), function(i) {
+list(
+x = top_nodes$x[i],
+y = top_nodes$y[i],
+text = top_nodes$label[i],
+xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
+yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
+xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
+yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
+showarrow = FALSE,
+font = list(size = top_nodes$text_size[i], color = 'black')
+)
+})
+word_co_occurrence_plotly <- plot %>%
+plotly::layout(
+dragmode = "pan",
+title = list(text = "Word Co-occurrence Network", font = list(size = 16)),
+showlegend = TRUE,
+xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+yaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+margin = list(l = 40, r = 100, t = 60, b = 40),
+annotations = annotations
+)
+layout_dff <- layout_df %>%
+dplyr::select(-c("x", "y")) %>%
+mutate_if(is.numeric, round, digits = 3)
+summary <- data.frame(
+Metric = c("Node Count", "Edge Count", "Graph Density", "Graph Diameter", "Path Length (Average)"),
+Value = c(
+igraph::vcount(co_occur_graph_directed),
+igraph::ecount(co_occur_graph_directed),
+igraph::graph.density(co_occur_graph_directed),
+igraph::diameter(co_occur_graph_directed),
+igraph::average.path.length(co_occur_graph_directed)
+)
+) %>%
+mutate_if(is.numeric, round, digits = 3)
+list(
+plot = word_co_occurrence_plotly,
+table = DT::datatable(
+layout_dff,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(layout_dff),
+`font-size` = "16px"
+),
+summary = DT::datatable(summary, rownames = FALSE, extensions = 'Buttons',
+options = list(
+pageLength = 5,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(summary),
+`font-size` = "16px"
+)
+)
+}
+word_co_occurrence_network(
+dfm_object,
+co_occur_n = 130,
+top_node_n = 30,
+height = 800,
+width = 900)$plot
+word_co_occurrence_network(
+dfm_object,
+co_occur_n = 50,
+top_node_n = 30,
+height = 800,
+width = 900)$plot
+word_co_occurrence_network <- function(dfm_object,
+co_occur_n = 130,
+top_node_n = 30,
+height = 800,
+width = 900) {
+dfm_td <- tidytext::tidy(dfm_object) %>%
+tibble::as_tibble()
+term_co_occur <- dfm_td %>%
+count(document, term) %>%
+widyr::pairwise_count(term, document, sort = TRUE) %>%
+filter(n >= co_occur_n)
+co_occur_graph_directed <- igraph::graph_from_data_frame(term_co_occur, directed = TRUE)
+if (igraph::vcount(co_occur_graph_directed) == 0) {
+showNotification("No co-occurrence relationships meet the threshold.", type = "error")
+return(NULL)
+}
+igraph::V(co_occur_graph_directed)$degree <- igraph::degree(co_occur_graph_directed, mode = "all")
+igraph::V(co_occur_graph_directed)$closeness <- igraph::closeness(co_occur_graph_directed, mode = "all")
+igraph::V(co_occur_graph_directed)$betweenness <- igraph::betweenness(co_occur_graph_directed, directed = TRUE)
+igraph::V(co_occur_graph_directed)$page_rank <- igraph::page_rank(co_occur_graph_directed)$vector
+igraph::V(co_occur_graph_directed)$eigenvector <- igraph::eigen_centrality(co_occur_graph_directed, directed = TRUE)$vector
+igraph::V(co_occur_graph_directed)$authority <- igraph::authority_score(co_occur_graph_directed)$vector
+igraph::V(co_occur_graph_directed)$hub <- igraph::hub_score(co_occur_graph_directed)$vector
+co_occur_graph_undirected <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
+if (igraph::vcount(co_occur_graph_undirected) == 0) {
+showNotification("No co-occurrence relationships meet the threshold.", type = "error")
+return(NULL)
+}
+igraph::V(co_occur_graph_undirected)$community <- igraph::cluster_leiden(co_occur_graph_undirected)$membership
+layout <- igraph::layout_with_fr(co_occur_graph_directed)
+layout_df <- as.data.frame(layout)
+colnames(layout_df) <- c("x", "y")
+layout_df$label <- igraph::V(co_occur_graph_directed)$name
+layout_df$degree <- igraph::V(co_occur_graph_directed)$degree
+layout_df$closeness <- igraph::V(co_occur_graph_directed)$closeness
+layout_df$betweenness <- igraph::V(co_occur_graph_directed)$betweenness
+layout_df$page_rank <- igraph::V(co_occur_graph_directed)$page_rank
+layout_df$eigenvector <- igraph::V(co_occur_graph_directed)$eigenvector
+layout_df$authority <- igraph::V(co_occur_graph_directed)$authority
+layout_df$hub <- igraph::V(co_occur_graph_directed)$hub
+layout_df$community <- igraph::V(co_occur_graph_undirected)$community
+edge_data <- igraph::as_data_frame(co_occur_graph_directed, what = "edges") %>%
+mutate(
+x = layout_df$x[match(from, layout_df$label)],
+y = layout_df$y[match(from, layout_df$label)],
+xend = layout_df$x[match(to, layout_df$label)],
+yend = layout_df$y[match(to, layout_df$label)],
+cooccur_count = n
+) %>%
+select(from, to, x, y, xend, yend, cooccur_count)
+edge_data <- edge_data %>%
+mutate(
+line_group = as.integer(cut(
+cooccur_count,
+breaks = unique(quantile(cooccur_count, probs = seq(0, 1, length.out = 6), na.rm = TRUE)),
+include.lowest = TRUE
+)),
+line_width = scales::rescale(line_group, to = c(1, 5)),
+alpha = scales::rescale(line_group, to = c(0.1, 0.3))
+)
+edge_group_labels <- edge_data %>%
+group_by(line_group) %>%
+summarise(
+min_count = min(cooccur_count, na.rm = TRUE),
+max_count = max(cooccur_count, na.rm = TRUE)
+) %>%
+mutate(label = paste0("Count: ", min_count, " - ", max_count)) %>%
+pull(label)
+node_data <- layout_df %>%
+mutate(
+degree_log = log1p(degree),
+size = scales::rescale(degree_log, to = c(12, 30)),
+text_size = scales::rescale(degree_log, to = c(14, 20)),
+alpha = scales::rescale(degree_log, to = c(0.2, 1)),
+hover_text = paste(
+"Word:", label,
+"<br>Degree:", degree,
+"<br>Closeness:", round(closeness, 2),
+"<br>Betweenness:", round(betweenness, 2),
+"<br>Page Rank:", round(page_rank, 2),
+"<br>Eigenvector:", round(eigenvector, 2),
+"<br>Authority:", round(authority, 2),
+"<br>Hub:", round(hub, 2),
+"<br>Community:", community
+)
+)
+plot <- plotly::plot_ly(
+type = 'scatter',
+mode = 'markers',
+width = width,
+height = height
+)
+for (i in unique(edge_data$line_group)) {
+edge_subset <- edge_data %>% filter(line_group == i)
+edge_label <- edge_group_labels[i]
+if (nrow(edge_subset) > 0) {
+plot <- plot %>%
+add_segments(
+data = edge_subset,
+x = ~x,
+y = ~y,
+xend = ~xend,
+yend = ~yend,
+line = list(color = 'rgba(0, 0, 255, 0.6)', width = ~line_width),
+hoverinfo = 'text',
+text = ~paste("Co-occurrence:", cooccur_count,
+"<br>Source:", from,
+"<br>Target:", to),
+opacity = ~alpha,
+showlegend = TRUE,
+name = edge_label,
+legendgroup = "Edges"
+)
+}
+}
+plot <- plot %>%
+plotly::layout(
+legend = list(
+title = list(text = "Co-occurrence"),
+orientation = "v",
+x = 1.1,
+y = 1,
+xanchor = "left",
+yanchor = "top"
+)
+)
+node_data$community <- as.factor(node_data$community)
+combined_colors <- c(
+"#D9D9D9", "#8AEA3C", "#FFFFB3", "#E5C494", "#FDBF6F","#CAB2D6", "#4DAF4A", "#FFD92F",
+"#FFFF99", "#8C3150", "#7E7304", "#6A3D9A", "#A6CEE3", "#BC80BD", "#377EB8", "#8DA0CB",
+"#0139F7", "#8DD3C7", "#33E1EB", "#B3B3B3", "#E41A1C", "#0D4F15", "#FC8D62", "#B4BFCC",
+"#BEBADA", "#E31A1C", "#FDB462", "#FCCDE5", "#7A46E2", "#B2DF8A", "#499CD8", "#66C2A5",
+"#B15928", "#6F8DD0", "#FB9A99", "#ADEE4C", "#33A02C", "#B3DE69", "#4A2333", "#984EA3",
+"#B43FD8", "#E78AC3", "#5DA45C", "#80B1D3", "#FF7F00", "#B872A8", "#1F78B4", "#A6D854",
+"#2F4F4F", "#7FFF00"
+)
+combined_colors <- unique(combined_colors)
+number_communities <- length(unique(node_data$community))
+if (number_communities > length(combined_colors)) {
+extra_colors <- randomcoloR::distinctColorPalette(number_communities - length(combined_colors))
+combined_colors <- c(combined_colors, extra_colors)
+}
+marker_params <- list(
+size = ~size,
+showscale = FALSE,
+line = list(width = 2, color = '#FFFFFF')
+)
+plot <- plot %>%
+plotly::add_markers(
+data = node_data,
+x = ~x,
+y = ~y,
+marker = marker_params,
+color = ~community,
+colors = combined_colors,
+hoverinfo = 'text',
+text = ~hover_text,
+showlegend = TRUE
+)
+top_nodes <- head(node_data[order(-node_data$degree), ], top_node_n)
+annotations <- lapply(1:nrow(top_nodes), function(i) {
+list(
+x = top_nodes$x[i],
+y = top_nodes$y[i],
+text = top_nodes$label[i],
+xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
+yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
+xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
+yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
+showarrow = FALSE,
+font = list(size = top_nodes$text_size[i], color = 'black')
+)
+})
+word_co_occurrence_plotly <- plot %>%
+plotly::layout(
+dragmode = "pan",
+title = list(text = "Word Co-occurrence Network", font = list(size = 16)),
+showlegend = TRUE,
+xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+yaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+margin = list(l = 40, r = 100, t = 60, b = 40),
+annotations = annotations
+)
+layout_dff <- layout_df %>%
+dplyr::select(-c("x", "y")) %>%
+mutate_if(is.numeric, round, digits = 3)
+summary <- data.frame(
+Metric = c("Node Count", "Edge Count", "Graph Density", "Graph Diameter", "Path Length (Average)"),
+Value = c(
+igraph::vcount(co_occur_graph_directed),
+igraph::ecount(co_occur_graph_directed),
+igraph::graph.density(co_occur_graph_directed),
+igraph::diameter(co_occur_graph_directed),
+igraph::average.path.length(co_occur_graph_directed)
+)
+) %>%
+mutate_if(is.numeric, round, digits = 3)
+list(
+plot = word_co_occurrence_plotly,
+table = DT::datatable(
+layout_dff,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+pageLength = 10,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(layout_dff),
+`font-size` = "16px"
+),
+summary = DT::datatable(summary, rownames = FALSE, extensions = 'Buttons',
+options = list(
+pageLength = 5,
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = list(
+'copy',
+'print',
+list(
+extend = 'collection',
+buttons = c('csv', 'excel', 'pdf'),
+text = 'Download'
+)
+)
+)
+) %>%
+DT::formatStyle(
+columns = colnames(summary),
+`font-size` = "16px"
+)
+)
+}
+word_co_occurrence_network(
+dfm_object,
+co_occur_n = 50,
+top_node_n = 30,
+height = 800,
+width = 900)$plot
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()

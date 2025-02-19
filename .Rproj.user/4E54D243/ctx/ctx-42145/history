@@ -1,0 +1,512 @@
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+dfm_object@docvars$docid_
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+tidytext::tidy(dfm_object)
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+tidytext::tidy(dfm_object)
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+top_topic_terms <- beta_td %>%
+dplyr::group_by(topic) %>%
+dplyr::slice_max(order_by = beta, n = top_term_n) %>%
+dplyr::ungroup()
+runApp('inst/TextAnalysisR.app')
+setwd("C:/Users/shinm/Dropbox/apps/TextAnalysisR/inst/TextAnalysisR.app")
+shiny::runApp()
+runApp()
+shiny::runApp('inst/TextAnalysisR.app')
+unlist(TextAnalysisR::dictionary_list_1)
+(TextAnalysisR::dictionary_list_1)
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+quanteda.textstats::textstat_collocations()
+?quanteda.textstats::textstat_collocations()
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+capture_all_output <- function(expr) {
+message_lines <- character(0)
+# Capture everything printed to the normal output stream
+output_lines <- withCallingHandlers(
+expr = capture.output({
+force(expr)
+}, type = "output"),
+# Capture and store messages into message_lines
+message = function(m) {
+message_lines <<- c(message_lines, m$message)
+invokeRestart("muffleMessage")
+}
+)
+c(output_lines, message_lines)
+}
+preprocess_texts <- function(united_tbl,
+text_field = "united_texts",
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE,
+include_stopwords = TRUE,
+verbose = FALSE) {
+# Capture all output from these operations
+verbose_output <- capture_all_output({
+if (verbose) message("Creating corpus...")
+corp <- corpus(united_tbl[[text_field]])
+if (verbose) message("Tokenizing text...")
+toks <- tokens(
+corp,
+what = "word",
+remove_punct = remove_punct,
+remove_symbols = remove_symbols,
+remove_numbers = remove_numbers,
+remove_url = remove_url,
+remove_separators = remove_separators,
+split_hyphens = split_hyphens,
+split_tags = split_tags,
+include_docvars = TRUE,
+padding = FALSE,
+verbose = verbose
+)
+if (verbose) message("Converting tokens to lowercase...")
+toks_lower <- tokens_tolower(toks, keep_acronyms = keep_acronyms)
+# Optional stopwords removal
+all_stops <- if (include_stopwords) stopwords("en") else NULL
+if (verbose) message("Removing stopwords...")
+toks_no_stops <- tokens_remove(toks_lower, all_stops, verbose = verbose, padding = TRUE)
+if (verbose) message("Selecting tokens with minimum character length...")
+toks_clean <- tokens_select(toks_no_stops, min_nchar = min_char, verbose = verbose)
+if (verbose) message("Finished preprocessing.")
+})
+list(toks_clean = toks_clean, verbose_output = verbose_output)
+}
+detect_multi_word_expressions <- function(toks_clean) {
+tstat <- quanteda.textstats::textstat_collocations(toks_clean, size = 2:3, min_count = 2)
+tstat_collocation <- tstat$collocation
+return(tstat_collocation)
+}
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+min_char = 2,
+remove_punct = input$remove_punct,
+remove_symbols = input$remove_symbols,
+remove_numbers = input$remove_numbers,
+remove_url = input$remove_url,
+remove_separators = input$remove_separators,
+split_hyphens = input$split_hyphens,
+split_tags = input$split_tags,
+keep_acronyms = input$keep_acronyms,
+include_stopwords = input$include_stopwords,
+verbose = TRUE
+)
+preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+custom_stopwords = NULL,
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE
+include_stopwords = TRUE,
+preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+custom_stopwords = NULL,
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE,
+include_stopwords = TRUE,
+verbose = TRUE
+)
+preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE,
+include_stopwords = TRUE,
+verbose = TRUE
+)
+result <- preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE,
+include_stopwords = TRUE,
+verbose = TRUE
+)
+result$toks_clean
+result$verbose_output
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')

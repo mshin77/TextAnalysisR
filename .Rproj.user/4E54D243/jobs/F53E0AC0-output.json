@@ -1,0 +1,7 @@
+[1,"Installing 'dotenv' ...\r\n"]
+[1,"\r\n"]
+[2,"Installing package into 'C:/Users/shinm/AppData/Local/R/win-library/4.4'\r\n(as 'lib' is unspecified)\r\n"]
+[2,"trying URL 'https://cran.rstudio.com/bin/windows/contrib/4.4/dotenv_1.0.3.zip'\r\nContent type 'application/zip' length 17690 bytes (17 KB)\r\n==================================================\r\ndownloaded 17 KB\r\n\r\n"]
+[1,"The downloaded binary packages are in\r\n"]
+[1,"\tC:\\Users\\shinm\\AppData\\Local\\Temp\\RtmpUThvjg\\downloaded_packages\r\n"]
+[2,"\r\n\r\n✔ Package 'dotenv' successfully installed.\r\n"]

@@ -1,0 +1,512 @@
+united_tbl,
+text_field = "united_texts",
+custom_stopwords = NULL,
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE
+include_stopwords = TRUE,
+preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+custom_stopwords = NULL,
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE,
+include_stopwords = TRUE,
+verbose = TRUE
+)
+preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE,
+include_stopwords = TRUE,
+verbose = TRUE
+)
+result <- preprocess_texts(
+united_tbl,
+text_field = "united_texts",
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+keep_acronyms = FALSE,
+include_stopwords = TRUE,
+verbose = TRUE
+)
+result$toks_clean
+result$verbose_output
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+remove_common_words <- function(tokens, remove_vars, pattern, dfm_object) {
+if (!is.null(remove_vars)) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = pattern,
+valuetype = "glob",
+verbose = FALSE,
+exclusive = FALSE,
+capkeys = FALSE
+)
+quanteda::dfm(removed_tokens_dict)
+}
+}
+remove_common_words <- function(tokens, remove_vars, pattern, dfm_object) {
+if (!is.null(remove_vars)) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = pattern,
+valuetype = "glob",
+verbose = FALSE,
+exclusive = FALSE,
+capkeys = FALSE
+)
+quanteda::dfm(removed_tokens_dict)
+}
+}
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+remove_common_words(tokens = tokens,
+remove_vars = c("level", "testing"),
+pattern = c("hearing impairment", "learning disab", "speech recognit", "visual disabilit"),
+dfm_object = dfm_object)
+remove_common_words <- function(tokens, remove_vars, pattern, dfm_object) {
+if (!is.null(remove_vars)) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = pattern = phrase(pattern),
+remove_common_words <- function(tokens, remove_vars, pattern, dfm_object) {
+if (!is.null(remove_vars)) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = phrase(pattern),
+valuetype = "glob",
+verbose = FALSE,
+exclusive = FALSE,
+capkeys = FALSE
+)
+quanteda::dfm(removed_tokens_dict)
+}
+}
+remove_common_words(tokens = tokens,
+remove_vars = c("level", "testing"),
+pattern = c("hearing impairment*", "learning disab*", "speech recognit*", "visual disabilit*"),
+dfm_object = dfm_object)
+remove_common_words <- function(tokens, remove_vars, pattern, dfm_object) {
+if (!is.null(remove_vars)) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+if (!is.list(pattern)) {
+pattern <- list(pattern)
+}
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = phrase(pattern),
+valuetype = "glob",
+verbose = FALSE
+)
+return(quanteda::dfm(removed_tokens_dict_int))
+}
+return(dfm_object)
+}
+remove_common_words <- function(tokens, remove_vars, pattern, dfm_object) {
+if (!is.null(remove_vars)) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+if (!is.list(pattern)) {
+pattern <- list(pattern)
+}
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = phrase(pattern),
+valuetype = "glob",
+verbose = FALSE
+)
+return(quanteda::dfm(removed_tokens_dict_int))
+}
+return(dfm_object)
+}
+remove_common_words <- function(tokens, remove_vars = NULL, pattern = NULL, dfm_object) {
+if (!inherits(tokens, "tokens")) {
+stop("Error: `tokens` must be a quanteda `tokens` object.")
+}
+if (!inherits(dfm_object, "dfm")) {
+stop("Error: `dfm_object` must be a quanteda `dfm` object.")
+}
+if (!is.null(remove_vars) && length(remove_vars) > 0) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+} else {
+removed_processed_tokens <- tokens
+}
+if (!is.null(pattern) && length(pattern) > 0) {
+if (!is.list(pattern)) {
+pattern <- list(pattern)
+}
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = phrase(pattern),
+valuetype = "glob",
+verbose = FALSE
+)
+} else {
+removed_tokens_dict_int <- removed_processed_tokens
+}
+return(quanteda::dfm(removed_tokens_dict_int))
+}
+remove_common_words(tokens = tokens,
+remove_vars = c("level", "testing"),
+pattern = c("hearing impairment*", "learning disab*", "speech recognit*", "visual disabilit*"),
+dfm_object = dfm_object)
+remove_common_words <- function(tokens, remove_vars = NULL, pattern = NULL, dfm_object) {
+if (!inherits(tokens, "tokens")) {
+stop("Error: `tokens` must be a quanteda `tokens` object.")
+}
+if (!inherits(dfm_object, "dfm")) {
+stop("Error: `dfm_object` must be a quanteda `dfm` object.")
+}
+if (!is.null(remove_vars) && length(remove_vars) > 0) {
+removed_processed_tokens <- quanteda::tokens_remove(tokens, remove_vars)
+} else {
+removed_processed_tokens <- tokens
+}
+if (!is.null(pattern) && length(pattern) > 0) {
+if (!is.list(pattern)) {
+pattern <- list(pattern)
+}
+removed_tokens_dict_int <- quanteda::tokens_compound(
+removed_processed_tokens,
+pattern = as.phrase(pattern),
+valuetype = "glob",
+verbose = FALSE
+)
+} else {
+removed_tokens_dict_int <- removed_processed_tokens
+}
+return(quanteda::dfm(removed_tokens_dict_int))
+}
+remove_common_words(tokens = tokens,
+remove_vars = c("level", "testing"),
+pattern = c("hearing impairment*", "learning disab*", "speech recognit*", "visual disabilit*"),
+dfm_object = dfm_object)
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+dfm_object@docvars$docname_
+dfm_td <- tidytext::tidy(dfm_outcome())
+dfm_td <- tidytext::tidy(dfm_object)
+dfm_tdd <- dfm_td %>%
+left_join(dfm_object@docvars,
+by = c("document" = "document"))
+dfm_object@docvars$document <- dfm_object@docvars$docname_
+dfm_tdd <- dfm_td %>%
+left_join(dfm_object@docvars,
+by = c("document" = "document"))
+dfm_tdd
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+install.packages(c("bibliometrix", "broom.helpers", "bslib", "chromote", "DescTools", "doBy", "emmeans", "Matrix", "multcomp", "openssl", "openxlsx", "parallelly", "quantreg", "sp", "stars", "terra", "tmap", "V8", "vegan", "zip"))
+install.packages("Matrix")
+install.packages("Matrix")
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+docvars_df <- as.data.frame(quanteda::docvars(dfm_object))
+dfm_object@docvars$docname_
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+?quanteda::tokens_remove
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+setwd("C:/Users/shinm/Dropbox/apps/TextAnalysisR/inst/TextAnalysisR.app")
+runApp()
+setwd("C:/Users/shinm/Dropbox/apps/TextAnalysisR/inst/TextAnalysisR.app")
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+runApp()
+?stm::`stm-package`
+stm::stm()
+?stm::stm
+create_stm_model <- function(dfm_object,
+topic_n,
+max.em.its = 75,
+init.type = "Spectral",
+categorical_var = NULL,
+continuous_var = NULL,
+verbose = TRUE,
+control_params = list(),
+...) {
+out <- tryCatch({
+quanteda::convert(dfm_object, to = "stm")
+}, error = function(e) {
+stop("Error converting dfm_object to STM format: ", e$message)
+})
+if (!all(c("meta", "documents", "vocab") %in% names(out))) {
+stop("Conversion of dfm_object must result in 'meta', 'documents', and 'vocab'.")
+}
+documents <- out$documents
+meta <- out$meta
+vocab <- out$vocab
+terms <- character()
+if (!is.null(categorical_var)) {
+terms <- c(terms, categorical_var)
+}
+if (!is.null(continuous_var)) {
+for (var in continuous_var) {
+terms <- c(terms, paste0("stm::s(", var, ")"))
+}
+}
+prevalence_formula <- NULL
+if (length(terms) > 0) {
+form_str <- paste("~", paste(terms, collapse = " + "))
+prevalence_formula <- as.formula(form_str)
+environment(prevalence_formula) <- environment()
+}
+cat("Prevalence formula:\n")
+print(prevalence_formula)
+cat("\nHead of meta:\n")
+print(utils::head(meta))
+if (!is.null(prevalence_formula)) {
+tryCatch({
+mm <- model.matrix(prevalence_formula, data = meta)
+cat("\nHead of model matrix:\n")
+print(utils::head(mm))
+}, error = function(e) {
+stop("Error creating model matrix: ", e$message)
+})
+}
+default_control <- list(
+gamma.enet = 1,
+tau.maxit = NULL,
+tau.tol = 1e-5,
+nlambda = 500,
+alpha = (50 / topic_n) + 1,
+eta = 0.01
+)
+control_params <- modifyList(default_control, control_params)
+stm_model <- stm::stm(
+documents   = documents,
+vocab       = vocab,
+K           = topic_n,
+prevalence  = prevalence_formula,
+max.em.its  = max.em.its,
+init.type   = init.type,
+verbose     = verbose,
+data        = meta,
+control     = control_params,
+...
+)
+return(stm_model)
+}
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+stm_15 <- create_stm_model(
+dfm_object,
+topic_n = 15,
+max.em.its = 75,
+init.type = "Spectral",
+categorical_var = "reference_type",
+continuous_var = "year",
+verbose = TRUE,
+control_params = list(
+gamma.enet = 1,
+tau.tol = 1e-5,
+nlambda = 500,
+alpha = (50 / 15) + 1,
+eta = 0.01
+)
+)
+stm_15
+shiny::runApp('inst/TextAnalysisR.app')
+setwd("C:/Users/shinm/Dropbox/apps/TextAnalysisR/inst/TextAnalysisR.app")
+runApp()

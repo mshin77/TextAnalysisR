@@ -1,0 +1,8 @@
+"0","file_info <- data.frame(filepath = ""inst/extdata/SpecialEduTech.xlsx"")"
+"0","mydata <- TextAnalysisR::process_files(dataset_choice = ""Upload Your File"","
+"0","                                       file_info = file_info)"
+"2","Error processing file: inst/extdata/SpecialEduTech.xlsx: `path` does not exist: ‘inst/extdata/SpecialEduTech.xlsx’
+"
+"2","Error in TextAnalysisR::process_files(dataset_choice = ""Upload Your File"",  : 
+  'united_texts' column not found in the uploaded files
+"

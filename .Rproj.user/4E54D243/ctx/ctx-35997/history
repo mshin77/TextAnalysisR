@@ -1,0 +1,512 @@
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+width = width,
+scrollX = TRUE,
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+)
+) %>% DT::formatStyle(columns = colnames(layout_dff), `font-size` = "16px")
+summary_df <- data.frame(
+Metric = c("Nodes", "Edges", "Density", "Diameter",
+"Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
+"Modularity", "Assortativity", "Geodesic Distance (Mean)"),
+Value = c(
+igraph::vcount(co_occur_graph),
+igraph::ecount(co_occur_graph),
+igraph::edge_density(co_occur_graph),
+igraph::diameter(co_occur_graph),
+igraph::transitivity(co_occur_graph, type = "global"),
+mean(igraph::transitivity(co_occur_graph, type = "local"), na.rm = TRUE),
+igraph::modularity(co_occur_graph, membership = igraph::V(co_occur_graph)$community),
+igraph::assortativity_degree(co_occur_graph),
+mean(igraph::distances(co_occur_graph)[igraph::distances(co_occur_graph) != Inf], na.rm = TRUE)
+)
+) %>% dplyr::mutate_if(is.numeric, round, digits = 3)
+summary_obj <- DT::datatable(summary_df,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+width = width,
+scrollX = TRUE,
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+)
+) %>% DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
+table_wrapped <- htmltools::tagList(
+htmltools::tags$div(
+style = "margin-bottom: 20px;",
+htmltools::tags$p("All Documents",
+style = "font-weight: bold; text-align: center; font-size: 11pt;")
+),
+table_obj
+)
+summary_wrapped <- htmltools::tagList(
+htmltools::tags$div(
+style = "margin-bottom: 20px;",
+htmltools::tags$p("All Documents Summary",
+style = "font-weight: bold; text-align: center; font-size: 11pt;")
+),
+summary_obj
+)
+final_result <- tibble::tibble(
+plot = list(p),
+table = list(table_wrapped),
+summary = list(summary_wrapped)
+)
+## If interactive, display the output in the RStudio Viewer.
+if (interactive() && requireNamespace("rstudioapi", quietly = TRUE)) {
+tmp_file <- tempfile(fileext = ".html")
+htmltools::save_html(
+htmltools::tagList(
+htmltools::h1("Word Co-occurrence Network Output"),
+htmltools::h2("Plot"),
+final_result$plot[[1]],
+htmltools::h2("Table"),
+final_result$table[[1]],
+htmltools::h2("Summary"),
+final_result$summary[[1]]
+),
+file = tmp_file
+)
+rstudioapi::viewer(tmp_file)
+}
+return(final_result)
+}
+}
+test2 <- word_co_occurrence_network(dfm_object, doc_var = "reference_type", co_occur_n = 10)
+word_co_occurrence_network <- function(dfm_object,
+doc_var = NULL,
+co_occur_n = 130,
+top_node_n = 30,
+height = 800,
+width = 900) {
+library(plotly)
+# Ensure htmltools and other dependencies are installed and loaded correctly
+required_packages <- c("igraph", "plotly", "tidyverse", "widyr", "DT", "htmltools")
+missing_packages <- required_packages[!required_packages %in% installed.packages()[,"Package"]]
+if (length(missing_packages) > 0) {
+install.packages(missing_packages)
+}
+# Now reload all necessary libraries
+library(igraph)
+library(plotly)
+library(tidyverse)
+library(widyr)
+library(DT)
+library(htmltools)
+# Make sure plotly rendering is enabled correctly
+plotly::config(plot_ly(), displayModeBar = TRUE)
+dfm_outcome_obj <- dfm_object
+dfm_td <- tidytext::tidy(dfm_object)
+dfm_outcome_obj@docvars$document <- dfm_outcome_obj@docvars$docname_
+dfm_td <- dfm_td %>% dplyr::left_join(dfm_outcome_obj@docvars, by = c("document" = "document"))
+if (!is.null(doc_var) && !doc_var %in% colnames(dfm_td)) {
+warning("Column ", doc_var, " not found in data. Ignoring the grouping.")
+doc_var <- NULL
+}
+if (!is.null(doc_var)) {
+grp_results <- dfm_td %>%
+dplyr::group_by(!!rlang::sym(doc_var)) %>%
+dplyr::group_modify(~ {
+group_val <- .y[[doc_var]]
+subset_df <- .x
+term_co_occur <- subset_df %>%
+widyr::pairwise_count(term, document, sort = TRUE) %>%
+dplyr::filter(n >= co_occur_n) %>%
+dplyr::select(item1, item2, n)
+co_occur_graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
+if (igraph::vcount(co_occur_graph) == 0) {
+message(paste("No co-occurrence relationships meet the threshold for", group_val))
+return(tibble::tibble(
+plot = list(""),  # Return empty string for plot when no data
+table = list(""),  # Return empty string for table when no data
+summary = list("")  # Return empty string for summary when no data
+))
+}
+igraph::V(co_occur_graph)$degree      <- igraph::degree(co_occur_graph)
+igraph::V(co_occur_graph)$betweenness <- igraph::betweenness(co_occur_graph)
+igraph::V(co_occur_graph)$closeness   <- igraph::closeness(co_occur_graph)
+igraph::V(co_occur_graph)$eigenvector <- igraph::eigen_centrality(co_occur_graph)$vector
+igraph::V(co_occur_graph)$community   <- igraph::cluster_leiden(co_occur_graph)$membership
+layout <- igraph::layout_with_fr(co_occur_graph)
+layout_df <- as.data.frame(layout)
+colnames(layout_df) <- c("x", "y")
+layout_df$label       <- igraph::V(co_occur_graph)$name
+layout_df$degree      <- igraph::V(co_occur_graph)$degree
+layout_df$betweenness <- igraph::V(co_occur_graph)$betweenness
+layout_df$closeness   <- igraph::V(co_occur_graph)$closeness
+layout_df$eigenvector <- igraph::V(co_occur_graph)$eigenvector
+layout_df$community   <- igraph::V(co_occur_graph)$community
+edge_data <- igraph::as_data_frame(co_occur_graph, what = "edges") %>%
+dplyr::mutate(
+x    = layout_df$x[match(from, layout_df$label)],
+y    = layout_df$y[match(from, layout_df$label)],
+xend = layout_df$x[match(to, layout_df$label)],
+yend = layout_df$y[match(to, layout_df$label)],
+cooccur_count = n
+) %>%
+dplyr::select(from, to, x, y, xend, yend, cooccur_count) %>%
+dplyr::mutate(
+line_group = as.integer(cut(cooccur_count,
+breaks = unique(quantile(cooccur_count,
+probs = seq(0, 1, length.out = 6),
+na.rm = TRUE)),
+include.lowest = TRUE)),
+line_width = scales::rescale(line_group, to = c(1, 5)),
+alpha      = scales::rescale(line_group, to = c(0.1, 0.3))
+)
+edge_group_labels <- edge_data %>%
+dplyr::group_by(line_group) %>%
+dplyr::summarise(
+min_count = min(cooccur_count, na.rm = TRUE),
+max_count = max(cooccur_count, na.rm = TRUE)
+) %>%
+dplyr::mutate(label = paste0("Count: ", min_count, " - ", max_count)) %>%
+dplyr::pull(label)
+node_data <- layout_df %>%
+dplyr::mutate(
+degree_log = log1p(degree),
+size       = scales::rescale(degree_log, to = c(12, 30)),
+text_size  = scales::rescale(degree_log, to = c(14, 20)),
+alpha      = scales::rescale(degree_log, to = c(0.2, 1)),
+hover_text = paste(
+"Word:", label,
+"<br>Degree:", degree,
+"<br>Betweenness:", round(betweenness, 2),
+"<br>Closeness:", round(closeness, 2),
+"<br>Eigenvector:", round(eigenvector, 2),
+"<br>Community:", community
+)
+)
+n_communities <- length(unique(node_data$community))
+if (n_communities >= 3 && n_communities <= 8) {
+palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
+} else if (n_communities > 8) {
+palette <- colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
+} else if (n_communities > 0 && n_communities < 3) {
+palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
+} else {
+palette <- rep("#000000", n_communities)
+}
+node_data$community <- factor(node_data$community, levels = unique(node_data$community))
+community_levels <- levels(node_data$community)
+names(palette) <- community_levels
+node_data$color <- palette[as.character(node_data$community)]
+p <- plotly::plot_ly(
+type = 'scatter',
+mode = 'markers',
+width = width,
+height = height
+)
+for (i in unique(edge_data$line_group)) {
+edge_subset <- edge_data %>% dplyr::filter(line_group == i) %>%
+dplyr::mutate(
+mid_x = (x + xend) / 2,
+mid_y = (y + yend) / 2
+)
+if (nrow(edge_subset) > 0) {
+p <- p %>%
+plotly::add_segments(
+data = edge_subset,
+x = ~x,
+y = ~y,
+xend = ~xend,
+yend = ~yend,
+line = list(color = '#5C5CFF', width = ~line_width),
+hoverinfo = 'none',
+opacity = ~alpha,
+showlegend = TRUE,
+name = edge_group_labels[i],
+legendgroup = "Edges"
+) %>%
+plotly::add_trace(
+data = edge_subset,
+x = ~mid_x,
+y = ~mid_y,
+type = 'scatter',
+mode = 'markers',
+marker = list(size = 0.1, color = '#e0f7ff', opacity = 0),
+text = ~paste0("Co-occurrence: ", cooccur_count,
+"<br>Source: ", from,
+"<br>Target: ", to),
+hoverinfo = 'text',
+showlegend = FALSE
+)
+}
+}
+layout_dff <- layout_df %>%
+dplyr::select(-c("x", "y")) %>%
+dplyr::mutate_if(is.numeric, round, digits = 3)
+table_obj <- DT::datatable(layout_dff,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+width = width,
+scrollX = TRUE,
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+)
+) %>% DT::formatStyle(columns = colnames(layout_dff), `font-size` = "16px")
+summary_df <- data.frame(
+Metric = c("Nodes", "Edges", "Density", "Diameter",
+"Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
+"Modularity", "Assortativity", "Geodesic Distance (Mean)"),
+Value = c(
+igraph::vcount(co_occur_graph),
+igraph::ecount(co_occur_graph),
+igraph::edge_density(co_occur_graph),
+igraph::diameter(co_occur_graph),
+igraph::transitivity(co_occur_graph, type = "global"),
+mean(igraph::transitivity(co_occur_graph, type = "local"), na.rm = TRUE),
+igraph::modularity(co_occur_graph, membership = igraph::V(co_occur_graph)$community),
+igraph::assortativity_degree(co_occur_graph),
+mean(igraph::distances(co_occur_graph)[igraph::distances(co_occur_graph) != Inf], na.rm = TRUE)
+)
+) %>% dplyr::mutate_if(is.numeric, round, digits = 3)
+summary_obj <- DT::datatable(summary_df,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+width = width,
+scrollX = TRUE,
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+)
+) %>% DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
+table_wrapped <- htmltools::tagList(
+htmltools::tags$div(
+style = "margin-bottom: 20px;",
+htmltools::tags$p(group_val,
+style = "font-weight: bold; text-align: center; font-size: 11pt;")
+),
+table_obj
+)
+summary_wrapped <- htmltools::tagList(
+htmltools::tags$div(
+style = "margin-bottom: 20px;",
+htmltools::tags$p(group_val,
+style = "font-weight: bold; text-align: center; font-size: 11pt;")
+),
+summary_obj
+)
+return(tibble::tibble(
+plot = list(ifelse(is.null(p), "", p)),
+table = list(ifelse(is.null(table_wrapped), "", table_wrapped)),
+summary = list(ifelse(is.null(summary_wrapped), "", summary_wrapped))
+))
+}) %>%
+dplyr::ungroup()
+plots_list <- grp_results$plot
+combined_plot <- plotly::subplot(plots_list,
+nrows = 1,
+shareX = TRUE,
+shareY = TRUE,
+titleX = TRUE,
+titleY = TRUE)
+tables_list <- htmltools::tagList(grp_results$table)
+summaries_list <- htmltools::tagList(grp_results$summary)
+final_result <- list(plot = combined_plot,
+table = tables_list,
+summary = summaries_list)
+} else {
+term_co_occur <- dfm_td %>%
+widyr::pairwise_count(term, document, sort = TRUE) %>%
+dplyr::filter(n >= co_occur_n)
+co_occur_graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
+if (igraph::vcount(co_occur_graph) == 0) {
+message("No co-occurrence relationships meet the threshold.")
+return(NULL)
+}
+igraph::V(co_occur_graph)$degree      <- igraph::degree(co_occur_graph)
+igraph::V(co_occur_graph)$betweenness <- igraph::betweenness(co_occur_graph)
+igraph::V(co_occur_graph)$closeness   <- igraph::closeness(co_occur_graph)
+igraph::V(co_occur_graph)$eigenvector <- igraph::eigen_centrality(co_occur_graph)$vector
+igraph::V(co_occur_graph)$community   <- igraph::cluster_leiden(co_occur_graph)$membership
+layout <- igraph::layout_with_fr(co_occur_graph)
+layout_df <- as.data.frame(layout)
+colnames(layout_df) <- c("x", "y")
+layout_df$label       <- igraph::V(co_occur_graph)$name
+layout_df$degree      <- igraph::V(co_occur_graph)$degree
+layout_df$betweenness <- igraph::V(co_occur_graph)$betweenness
+layout_df$closeness   <- igraph::V(co_occur_graph)$closeness
+layout_df$eigenvector <- igraph::V(co_occur_graph)$eigenvector
+layout_df$community   <- igraph::V(co_occur_graph)$community
+edge_data <- igraph::as_data_frame(co_occur_graph, what = "edges") %>%
+dplyr::mutate(
+x = layout_df$x[match(from, layout_df$label)],
+y = layout_df$y[match(from, layout_df$label)],
+xend = layout_df$x[match(to, layout_df$label)],
+yend = layout_df$y[match(to, layout_df$label)],
+cooccur_count = n
+) %>%
+dplyr::select(from, to, x, y, xend, yend, cooccur_count) %>%
+dplyr::mutate(
+line_group = as.integer(cut(cooccur_count,
+breaks = unique(quantile(cooccur_count, probs = seq(0, 1, length.out = 6), na.rm = TRUE)),
+include.lowest = TRUE)),
+line_width = scales::rescale(line_group, to = c(1, 5)),
+alpha = scales::rescale(line_group, to = c(0.1, 0.3))
+)
+edge_group_labels <- edge_data %>%
+dplyr::group_by(line_group) %>%
+dplyr::summarise(
+min_count = min(cooccur_count, na.rm = TRUE),
+max_count = max(cooccur_count, na.rm = TRUE)
+) %>%
+dplyr::mutate(label = paste0("Count: ", min_count, " - ", max_count)) %>%
+dplyr::pull(label)
+node_data <- layout_df %>%
+dplyr::mutate(
+degree_log = log1p(degree),
+size = scales::rescale(degree_log, to = c(12, 30)),
+text_size = scales::rescale(degree_log, to = c(14, 20)),
+alpha = scales::rescale(degree_log, to = c(0.2, 1)),
+hover_text = paste(
+"Word:", label,
+"<br>Degree:", degree,
+"<br>Betweenness:", round(betweenness, 2),
+"<br>Closeness:", round(closeness, 2),
+"<br>Eigenvector:", round(eigenvector, 2),
+"<br>Community:", community
+)
+)
+n_communities <- length(unique(node_data$community))
+if (n_communities >= 3 && n_communities <= 8) {
+palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
+} else if (n_communities > 8) {
+palette <- colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
+} else if (n_communities > 0 && n_communities < 3) {
+palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
+} else {
+palette <- rep("#000000", n_communities)
+}
+node_data$community <- factor(node_data$community, levels = unique(node_data$community))
+community_levels <- levels(node_data$community)
+names(palette) <- community_levels
+node_data$color <- palette[as.character(node_data$community)]
+p <- plotly::plot_ly(
+type = 'scatter',
+mode = 'markers',
+width = width,
+height = height
+)
+for (i in unique(edge_data$line_group)) {
+edge_subset <- edge_data %>% dplyr::filter(line_group == i) %>%
+dplyr::mutate(
+mid_x = (x + xend) / 2,
+mid_y = (y + yend) / 2
+)
+if (nrow(edge_subset) > 0) {
+p <- p %>%
+plotly::add_segments(
+data = edge_subset,
+x = ~x,
+y = ~y,
+xend = ~xend,
+yend = ~yend,
+line = list(color = '#5C5CFF', width = ~line_width),
+hoverinfo = 'none',
+opacity = ~alpha,
+showlegend = TRUE,
+name = edge_group_labels[i],
+legendgroup = "Edges"
+) %>%
+plotly::add_trace(
+data = edge_subset,
+x = ~mid_x,
+y = ~mid_y,
+type = 'scatter',
+mode = 'markers',
+marker = list(size = 0.1, color = '#e0f7ff', opacity = 0),
+text = ~paste0("Co-occurrence: ", cooccur_count,
+"<br>Source: ", from,
+"<br>Target: ", to),
+hoverinfo = 'text',
+showlegend = FALSE
+)
+}
+}
+layout_dff <- layout_df %>%
+dplyr::select(-c("x", "y")) %>%
+dplyr::mutate_if(is.numeric, round, digits = 3)
+table_obj <- DT::datatable(layout_dff,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+width = width,
+scrollX = TRUE,
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+)
+) %>% DT::formatStyle(columns = colnames(layout_dff), `font-size` = "16px")
+summary_df <- data.frame(
+Metric = c("Nodes", "Edges", "Density", "Diameter",
+"Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
+"Modularity", "Assortativity", "Geodesic Distance (Mean)"),
+Value = c(
+igraph::vcount(co_occur_graph),
+igraph::ecount(co_occur_graph),
+igraph::edge_density(co_occur_graph),
+igraph::diameter(co_occur_graph),
+igraph::transitivity(co_occur_graph, type = "global"),
+mean(igraph::transitivity(co_occur_graph, type = "local"), na.rm = TRUE),
+igraph::modularity(co_occur_graph, membership = igraph::V(co_occur_graph)$community),
+igraph::assortativity_degree(co_occur_graph),
+mean(igraph::distances(co_occur_graph)[igraph::distances(co_occur_graph) != Inf], na.rm = TRUE)
+)
+) %>% dplyr::mutate_if(is.numeric, round, digits = 3)
+summary_obj <- DT::datatable(summary_df,
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+width = width,
+scrollX = TRUE,
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+)
+) %>% DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
+table_wrapped <- htmltools::tagList(
+htmltools::tags$div(
+style = "margin-bottom: 20px;",
+htmltools::tags$p("All Documents",
+style = "font-weight: bold; text-align: center; font-size: 11pt;")
+),
+table_obj
+)
+summary_wrapped <- htmltools::tagList(
+htmltools::tags$div(
+style = "margin-bottom: 20px;",
+htmltools::tags$p("All Documents Summary",
+style = "font-weight: bold; text-align: center; font-size: 11pt;")
+),
+summary_obj
+)
+final_result <- tibble::tibble(
+plot = list(p),
+table = list(table_wrapped),
+summary = list(summary_wrapped)
+)
+## If interactive, display the output in the RStudio Viewer.
+if (interactive() && requireNamespace("rstudioapi", quietly = TRUE)) {
+tmp_file <- tempfile(fileext = ".html")
+htmltools::save_html(
+htmltools::tagList(
+htmltools::h1("Word Co-occurrence Network Output"),
+htmltools::h2("Plot"),
+ifelse(is.null(final_result$plot[[1]]), "", final_result$plot[[1]]),
+htmltools::h2("Table"),
+ifelse(is.null(final_result$table[[1]]), "", final_result$table[[1]]),
+htmltools::h2("Summary"),
+ifelse(is.null(final_result$summary[[1]]), "", final_result$summary[[1]])
+),
+file = tmp_file
+)
+suppressWarnings(rstudioapi::viewer(tmp_file))
+}
+return(final_result)
+}
+}
+test2 <- word_co_occurrence_network(dfm_object, doc_var = "reference_type", co_occur_n = 100)
+test2 <- word_co_occurrence_network(dfm_object, doc_var = "reference_type", co_occur_n = 50)
+test2 <- word_co_occurrence_network(dfm_object, doc_var = "reference_type", co_occur_n = 20)

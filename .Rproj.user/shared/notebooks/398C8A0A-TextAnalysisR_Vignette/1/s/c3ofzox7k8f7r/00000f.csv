@@ -1,0 +1,142 @@
+"0","top_labeled_topic_terms <- TextAnalysisR::generate_topic_labels("
+"0","  top_topic_terms,"
+"0","  model = ""gpt-3.5-turbo"","
+"0","  temperature = 0.5,"
+"0","  openai_api_key = ""your_openai_api_key"","
+"0","  verbose = FALSE)"
+"2","Warning: OpenAI API request failed for topic '1': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '2': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '3': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '4': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '5': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '6': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '7': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '8': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '9': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '10': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '11': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '12': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '13': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '14': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"2","Warning: OpenAI API request failed for topic '15': {
+    ""error"": {
+        ""message"": ""Incorrect API key provided: your_ope*******_key. You can find your API key at https://platform.openai.com/account/api-keys."",
+        ""type"": ""invalid_request_error"",
+        ""param"": null,
+        ""code"": ""invalid_api_key""
+    }
+}
+"
+"0","print(top_labeled_topic_terms)"

@@ -1,0 +1,7 @@
+"0","top_labeled_topic_terms <- TextAnalysisR::generate_topic_labels("
+"0","  top_topic_terms,"
+"0","  model = ""gpt-3.5-turbo"","
+"0","  temperature = 0.5,"
+"0","  verbose = FALSE)"
+"2","Error: object 'top_topic_terms' not found
+"

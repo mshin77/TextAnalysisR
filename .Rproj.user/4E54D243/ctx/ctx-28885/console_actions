@@ -1,0 +1,14 @@
+{
+    "type": [
+        0,
+        1,
+        3,
+        2
+    ],
+    "data": [
+        "> ",
+        "runApp('inst/TextAnalysisR.app')",
+        "\nListening on http://127.0.0.1:6981\n",
+        "\nRestarting R session...\n\n"
+    ]
+}

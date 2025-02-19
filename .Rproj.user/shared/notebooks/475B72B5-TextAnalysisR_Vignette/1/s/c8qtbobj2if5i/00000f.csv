@@ -1,0 +1,8 @@
+"0","word_probability_plot <- TextAnalysisR::word_probability_plot("
+"0","  top_labeled_topic_terms,"
+"0","  topic_label = ""topic_label"","
+"0","  ncol = 3,"
+"0","  height = 1200,"
+"0","  width = 800)"
+"0",""
+"0","print(word_probability_plot)"

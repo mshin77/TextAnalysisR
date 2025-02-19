@@ -1,0 +1,5 @@
+"0","df <- TextAnalysisR::SpecialEduTech"
+"0",""
+"0","united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c(""title"", ""keyword"", ""abstract""))"
+"0",""
+"0","united_tbl"

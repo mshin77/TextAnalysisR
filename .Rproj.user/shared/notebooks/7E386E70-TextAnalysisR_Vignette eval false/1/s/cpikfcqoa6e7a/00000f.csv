@@ -1,0 +1,5 @@
+"0","text_input <- paste0(""The purpose of this study was to conduct a content analysis of "","
+"0","                     ""research on technology use."")"
+"0","mydata <- TextAnalysisR::process_files(dataset_choice = ""Copy and Paste Text"","
+"0","                                       text_input = text_input)"
+"0","mydata"

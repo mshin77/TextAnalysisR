@@ -1,0 +1,3 @@
+"0","dfm_object_init <- quanteda::dfm(toks_compound)"
+"0",""
+"0","TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)"

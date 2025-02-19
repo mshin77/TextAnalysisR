@@ -1,0 +1,7 @@
+"0","common_words <- c(""study"", ""based"", ""learning"", ""students"", ""research"", ""results"")"
+"0",""
+"0","toks_removed_common <- quanteda::tokens_remove(toks_removed, pattern = common_words, verbose = FALSE)"
+"0",""
+"0","dfm_object_init <- quanteda::dfm(toks_removed_common)"
+"0",""
+"0","TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)"

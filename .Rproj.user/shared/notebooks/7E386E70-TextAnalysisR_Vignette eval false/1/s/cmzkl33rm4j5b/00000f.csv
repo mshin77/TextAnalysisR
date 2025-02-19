@@ -1,0 +1,4 @@
+"0","file_info <- data.frame(filepath = ""inst/extdata/SpecialEduTech.xlsx"")"
+"0","mydata <- TextAnalysisR::process_files(dataset_choice = ""Upload Your File"","
+"0","                                       file_info = file_info)"
+"0","head(mydata)"

@@ -1,0 +1,512 @@
+igraph::assortativity_degree(g),
+mean(igraph::distances(g)[igraph::distances(g) != Inf], na.rm = TRUE)
+)
+) %>%
+dplyr::mutate_if(is.numeric, round, digits = 3)
+summary_table <- DT::datatable(summary_df, rownames = FALSE,
+extensions = 'Buttons',
+options = list(scrollX = TRUE,
+width = "80%",
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
+DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
+htmltools::tagList(
+htmltools::tags$div(
+style = "margin-bottom: 20px;",
+htmltools::tags$p(
+group_label,
+style = "font-weight: bold; text-align: center; font-size: 14pt;"
+)
+),
+summary_table
+)
+}
+build_network_plot <- function(data, group_level = NULL) {
+term_cor <- data %>%
+group_by(term) %>%
+filter(n() >= common_term_n) %>%
+widyr::pairwise_cor(term, document, sort = TRUE) %>%
+dplyr::ungroup() %>%
+dplyr::filter(correlation > corr_n)
+graph <- igraph::graph_from_data_frame(term_cor, directed = FALSE)
+if(igraph::vcount(graph) == 0) {
+message("No correlation relationships meet the threshold.")
+return(NULL)
+}
+igraph::V(graph)$degree      <- igraph::degree(graph)
+igraph::V(graph)$betweenness <- igraph::betweenness(graph)
+igraph::V(graph)$closeness   <- igraph::closeness(graph)
+igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
+igraph::V(graph)$community   <- igraph::cluster_leiden(graph)$membership
+layout_mat <- igraph::layout_with_fr(graph)
+layout_df <- as.data.frame(layout_mat) %>% stats::setNames(c("x", "y"))
+layout_df <- layout_df %>%
+dplyr::mutate(label       = igraph::V(graph)$name,
+degree      = igraph::V(graph)$degree,
+betweenness = igraph::V(graph)$betweenness,
+closeness   = igraph::V(graph)$closeness,
+eigenvector = igraph::V(graph)$eigenvector,
+community   = igraph::V(graph)$community)
+edge_data <- igraph::as_data_frame(graph, what = "edges") %>%
+dplyr::mutate(x    = layout_df$x[match(from, layout_df$label)],
+y    = layout_df$y[match(from, layout_df$label)],
+xend = layout_df$x[match(to, layout_df$label)],
+yend = layout_df$y[match(to, layout_df$label)],
+correlation = correlation) %>%
+dplyr::select(from, to, x, y, xend, yend, correlation) %>%
+dplyr::mutate(line_group = as.integer({
+b <- unique(stats::quantile(correlation, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
+if (length(b) < 2) {
+b <- c(b, b[length(b)] + 1e-6)
+}
+cut(correlation, breaks = b, include.lowest = TRUE)
+}),
+line_width = scales::rescale(line_group, to = c(1, 5)),
+alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
+edge_group_labels <- edge_data %>%
+group_by(line_group) %>%
+dplyr::summarise(
+min_corr = min(correlation, na.rm = TRUE),
+max_corr = max(correlation, na.rm = TRUE)
+) %>%
+dplyr::mutate(label = paste0("Correlation: ", round(min_corr, 2), " - ", round(max_corr, 2))) %>%
+dplyr::pull(label)
+node_data <- layout_df %>%
+dplyr::mutate(
+degree_log = log1p(degree),
+size = scales::rescale(degree_log, to = c(12, 30)),
+text_size = scales::rescale(degree_log, to = c(14, 20)),
+alpha = scales::rescale(degree_log, to = c(0.2, 1)),
+hover_text = paste(
+"Word:", label,
+"<br>Degree:", degree,
+"<br>Betweenness:", round(betweenness, 2),
+"<br>Closeness:", round(closeness, 2),
+"<br>Eigenvector:", round(eigenvector, 2),
+"<br>Community:", community,
+if (!is.null(doc_var)) {
+if (length(docvar_levels) > 1) {
+paste0("<br>", doc_var, ": ", group_level)
+} else {
+paste0("<br>", doc_var)
+}
+} else ""
+)
+)
+n_communities <- length(unique(node_data$community))
+if (n_communities >= 3 && n_communities <= 8) {
+palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
+} else if (n_communities > 8) {
+palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
+} else if (n_communities > 0 && n_communities < 3) {
+palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
+} else {
+palette <- rep("#000000", n_communities)
+}
+node_data$community <- factor(node_data$community, levels = unique(node_data$community))
+community_levels <- levels(node_data$community)
+names(palette) <- community_levels
+node_data$color <- palette[as.character(node_data$community)]
+p <- plotly::plot_ly(type = 'scatter', mode = 'markers', width = width, height = height)
+for (lg in unique(edge_data$line_group)) {
+esub <- dplyr::filter(edge_data, line_group == lg) %>%
+dplyr::mutate(mid_x = (x + xend) / 2,
+mid_y = (y + yend) / 2)
+if (nrow(esub) > 0) {
+p <- p %>%
+plotly::add_segments(data = esub, x = ~x, y = ~y,
+xend = ~xend, yend = ~yend,
+line = list(color = '#5C5CFF', width = ~line_width),
+hoverinfo = 'none', opacity = ~alpha,
+showlegend = TRUE, name = edge_group_labels[lg],
+legendgroup = "Edges") %>%
+plotly::add_trace(data = esub, x = ~mid_x, y = ~mid_y, type = 'scatter',
+mode = 'markers',
+marker = list(size = 0.1, color = '#e0f7ff', opacity = 0),
+text = ~paste("Correlation:", correlation,
+"<br>Source:", from,
+"<br>Target:", to),
+hoverinfo = 'text', showlegend = FALSE)
+}
+}
+for(comm in community_levels) {
+comm_data <- dplyr::filter(node_data, community == comm)
+p <- p %>% plotly::add_markers(data = comm_data, x = ~x, y = ~y,
+marker = list(size = ~size, color = palette[comm],
+showscale = FALSE,
+line = list(width = 3, color = '#FFFFFF')),
+hoverinfo = 'text', text = ~hover_text,
+showlegend = TRUE, name = paste("Community", comm),
+legendgroup = "Community")
+}
+top_nodes <- dplyr::arrange(node_data, desc(degree)) %>% head(top_node_n)
+annotations <- lapply(1:nrow(top_nodes), function(i) {
+list(x = top_nodes$x[i],
+y = top_nodes$y[i],
+text = top_nodes$label[i],
+xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
+yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
+xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
+yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
+showarrow = FALSE,
+font = list(size = top_nodes$text_size[i], color = 'black'))
+})
+p <- p %>% plotly::layout(dragmode = "pan",
+title = list(text = "Word Correlation Network", font = list(size = 19, color = "black", family = "Arial Black")),
+showlegend = TRUE,
+xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+yaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+margin = list(l = 40, r = 100, t = 60, b = 40),
+annotations = annotations,
+legend = list(title = list(text = "Correlation"),
+orientation = "v", x = 1.1, y = 1,
+xanchor = "left", yanchor = "top"))
+list(plot = p, layout_df = layout_df, graph = graph)
+}
+if (!is.null(doc_var) && length(docvar_levels) > 1) {
+plots_list <- dfm_td %>%
+dplyr::ungroup() %>%
+dplyr::group_by(!!rlang::sym(doc_var)) %>%
+dplyr::group_map(~ {
+group_level <- .y[[doc_var]]
+print(paste("Processing group level:", group_level))
+if (is.null(group_level)) {
+stop("doc_var is missing or not found in the current group")
+}
+net <- build_network_plot(.x, group_level)
+if (!is.null(net)) {
+net$plot %>% plotly::layout(
+annotations = list(
+list(
+text = group_level,
+x = 0.42,
+xanchor = "center",
+y = 0.98,
+yanchor = "bottom",
+yref = "paper",
+showarrow = FALSE,
+font = list(size = 19, color = "black", family = "Arial Black")
+)
+)
+)
+} else {
+NULL
+}
+})
+combined_plot <- plotly::subplot(plots_list, nrows = 1, shareX = TRUE, shareY = TRUE,
+titleX = TRUE, titleY = TRUE)
+table_list <- lapply(docvar_levels, function(level) {
+print(paste("Generating table for level:", level))
+group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
+net <- build_network_plot(group_data)
+if (!is.null(net)) build_table(net, level) else NULL
+})
+summary_list <- lapply(docvar_levels, function(level) {
+print(paste("Generating summary for level:", level))
+group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
+net <- build_network_plot(group_data)
+if (!is.null(net)) build_summary(net, level) else NULL
+})
+return(list(
+plot = combined_plot,
+table = table_list %>% htmltools::tagList() %>% htmltools::browsable(),
+summary = summary_list %>% htmltools::tagList() %>% htmltools::browsable()
+))
+} else {
+net <- build_network_plot(dfm_td)
+if (is.null(net)) {
+message("No network generated.")
+return(NULL)
+}
+return(list(
+plot = net$plot,
+table = build_table(net, if (!is.null(doc_var)) paste("Network Centrality Table for", doc_var) else "Network Centrality Table") %>% htmltools::browsable(),
+summary = build_summary(net, if (!is.null(doc_var)) paste("Network Summary for", doc_var) else "Network Summary") %>% htmltools::browsable()
+))
+}
+}
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+tokens <- TextAnalysisR::preprocess_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+results <-
+word_correlation_network(
+dfm_object,
+common_term_n = 30,
+corr_n = 0.4,
+top_node_n = 40,
+height = 1000,
+width = 900)
+results$plot
+results$
+TAB;E
+results$table
+results$summary
+runApp()
+shiny::runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+shiny::runApp('inst/TextAnalysisR.app')
+runApp()
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+runApp('inst/TextAnalysisR.app')
+?quanteda::tokens_compound
+runApp('inst/TextAnalysisR.app')
+if (dataset_choice == "Upload an Example Dataset") {
+data <- TextAnalysisR::SpecialEduTech
+} else if (dataset_choice == "Copy and Paste Text") {
+if (is.null(text_input)) stop("No text provided")
+data <- data.frame(united_texts = text_input, stringsAsFactors = FALSE)
+} else if (dataset_choice == "Upload Your File") {
+if (is.null(file_info)) stop("No file provided")
+data_list <- lapply(seq_len(nrow(file_info)), function(i) {
+filepath <- file_info$filepath[i]
+ext <- tolower(tools::file_ext(filepath))
+df <- tryCatch({
+if (ext %in% c("xlsx", "xls", "xlsm")) {
+readxl::read_excel(filepath, col_names = FALSE)
+} else if (ext == "csv") {
+read.csv(filepath, header = FALSE)
+} else if (ext == "pdf") {
+tryCatch({
+data.frame(united_texts = pdftools::pdf_text(filepath), stringsAsFactors = FALSE)
+}, error = function(e) {
+message("Error processing PDF file: ", filepath, ": ", e$message)
+data.frame(united_texts = "", stringsAsFactors = FALSE)
+})
+} else if (ext == "docx") {
+data.frame(united_texts = textreadr::read_docx(filepath), stringsAsFactors = FALSE)
+} else {
+stop("Unsupported file extension: ", ext)
+}
+}, error = function(e) {
+message("Error processing file: ", filepath, ": ", e$message)
+NULL
+})
+if (is.null(df)) return(NULL)
+if (ncol(df) == 1) {
+colnames(df) <- "united_texts"
+} else {
+df <- dplyr::mutate(df, united_texts = do.call(paste, c(as.data.frame(df), sep = " ")))
+df <- dplyr::select(df, united_texts)
+}
+return(df)
+})
+data_list <- Filter(Negate(is.null), data_list)
+data <- dplyr::bind_rows(data_list)
+if ("united_texts" %in% colnames(data)) {
+data <- data.frame(united_texts = data$united_texts, stringsAsFactors = FALSE)
+} else {
+stop("'united_texts' column not found in the uploaded files")
+}
+}
+install.packages("textreadr")
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+knitr::opts_chunk$set(
+message = FALSE,
+warning = FALSE
+)
+library(tidyverse)
+library(TextAnalysisR)
+knitr::opts_chunk$set(
+message = FALSE,
+warning = FALSE
+)
+library(tidyverse)
+mydata <- TextAnalysisR::process_files(dataset_choice = "Upload an Example Dataset")
+head(mydata)
+df <- TextAnalysisR::SpecialEduTech
+united_tbl <- TextAnalysisR::unite_text_cols(df, listed_vars = c("title", "keyword", "abstract"))
+united_tbl
+tokens <- TextAnalysisR::preprocess_texts(united_tbl,
+text_field = "united_texts",
+min_char = 2,
+remove_punct = TRUE,
+remove_symbols = TRUE,
+remove_numbers = TRUE,
+remove_url = TRUE,
+remove_separators = TRUE,
+split_hyphens = TRUE,
+split_tags = TRUE,
+include_docvars = TRUE,
+keep_acronyms = FALSE,
+padding = FALSE,
+verbose = FALSE)
+collocations <- TextAnalysisR::detect_multi_word_expressions(tokens, size = 2:5,
+min_count = 2)
+head(collocations)
+custom_dict <- quanteda::dictionary(list(custom = c("learning disabilities", "problem solving", "assisted instruction")))
+toks_compound <- quanteda::tokens_compound(
+tokens,
+pattern = custom_dict,
+concatenator = "_",
+valuetype = "glob",
+window = 0,
+case_insensitive = TRUE,
+join = TRUE,
+keep_unigrams = FALSE,
+verbose = TRUE
+)
+dfm_object_init <- quanteda::dfm(toks_compound)
+TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)
+stopwords <- stopwords::stopwords("en", source = "snowball")
+toks_removed <- quanteda::tokens_remove(toks_compound, pattern = stopwords, verbose = FALSE)
+dfm_object_init <- quanteda::dfm(toks_removed)
+TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)
+common_words <- c("study", "based", "learning", "students", "research", "results")
+toks_removed_common <- quanteda::tokens_remove(toks_removed, pattern = common_words, verbose = FALSE)
+dfm_object_init <- quanteda::dfm(toks_removed_common)
+TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)
+texts <- sapply(toks_removed_common, paste, collapse = " ")
+parsed <- spacyr::spacy_parse(x = texts, lemma = TRUE, entity = FALSE, pos = FALSE)
+toks_lemmatized <- quanteda::as.tokens(parsed, use_lemma = TRUE)
+dfm_object <- quanteda::dfm(toks_lemmatized)
+quanteda::docvars(dfm_object) <- quanteda::docvars(dfm_object_init)
+TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
+out <- quanteda::convert(dfm_object, to = "stm")
+stm_15 <- stm::stm(
+data = out$meta,
+documents = out$documents,
+vocab = out$vocab,
+max.em.its = 75,
+init.type = "Spectral",
+K = 15,
+prevalence = ~ reference_type + s(year),
+verbose = FALSE)
+View(out)
+out <- quanteda::convert(dfm_object, to = "stm")
+library(stm)
+stm_15 <- stm(
+data = out$meta,
+documents = out$documents,
+vocab = out$vocab,
+max.em.its = 75,
+init.type = "Spectral",
+K = 15,
+prevalence = ~ reference_type + s(year),
+verbose = FALSE)
+top_topic_terms <- TextAnalysisR::select_top_topic_terms(
+stm_model = stm_15,
+top_term_n = 10,
+verbose = FALSE
+)
+top_topic_terms %>%
+mutate_if(is.numeric, ~ round(., 3)) %>%
+DT::datatable(
+rownames = FALSE,
+extensions = 'Buttons',
+options = list(
+scrollX = TRUE,
+scrollY = "400px",
+width = "80%",
+dom = 'Bfrtip',
+buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+)
+) %>%
+DT::formatStyle(
+columns = c("topic", "term", "beta"),
+fontSize = '16px'
+)
+?dplyr
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()
+pkgdown::build_site()
+pkgdown::clean_site()
+pkgdown::clean_site()

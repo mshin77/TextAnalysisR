@@ -1,0 +1,7 @@
+"0","stopwords <- stopwords::stopwords(""en"", source = ""snowball"")"
+"0",""
+"0","toks_removed <- quanteda::tokens_remove(toks_compound, pattern = stopwords, verbose = FALSE)"
+"0",""
+"0","dfm_object_init <- quanteda::dfm(toks_removed)"
+"0",""
+"0","TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)"

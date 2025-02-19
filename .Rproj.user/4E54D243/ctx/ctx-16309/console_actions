@@ -1,0 +1,22 @@
+{
+    "type": [
+        0,
+        1,
+        3,
+        0,
+        1,
+        2,
+        3,
+        2
+    ],
+    "data": [
+        "> ",
+        "shiny::runApp('inst/TextAnalysisR.app')",
+        "Loading required package: shiny\n\nListening on http://127.0.0.1:3157\n",
+        "> ",
+        "pkgdown::clean_site()",
+        "\u001B[38;5;252mCleaning \u001B[34mTextAnalysisR\u001B[38;5;252m pkgdown docs from \u001B]8;;file://C:/Users/shinm/Dropbox/apps/TextAnalysisR/docs\u0007\u001B[34mC:/Users/shinm/Dropbox/apps/TextAnalysisR/docs\u001B[38;5;252m\u001B]8;;\u0007\u001B[39m\n",
+        "Error: [EBUSY] Failed to remove 'C:/Users/shinm/Dropbox/apps/TextAnalysisR/docs/articles': resource busy or locked\n",
+        "\nRestarting R session...\n\n"
+    ]
+}
