@@ -2154,7 +2154,7 @@ output$topic_download_table <- downloadHandler(
   })
 
   session$onSessionEnded(function() {
-    spacyr::spacy_finalize()
+    # spacyr::spacy_finalize()
     Sys.unsetenv("OPENAI_API_KEY")
     shiny::showNotification("OpenAI API Key has been removed from the environment.", type = "message", duration = 3)
     stopApp()
