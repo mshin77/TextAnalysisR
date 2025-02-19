@@ -16,8 +16,6 @@ knitr::opts_chunk$set(
 <img src="man/figures/logo.png" align="right" width=150px alt="TextAnalysisR Logo">
 
 <!-- badges: start -->
-
-[![R-CMD-check](https://github.com/mshin77/TextAnalysisR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mshin77/TextAnalysisR/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 `TextAnalysisR` provides a supporting workflow tool for text mining analysis. The web app incorporates [quanteda](https://github.com/quanteda/quanteda) (text preprocessing), [stm](https://github.com/bstewart/stm) (structural topic modeling), [ggraph](https://github.com/thomasp85/ggraph), and [widyr](https://github.com/juliasilge/widyr) (network analysis). [tidytext](https://github.com/cran/tidytext) is implemented to tidy non-tidy format objects. The R Shiny web app is available at `TextAnalysisR::TextAnalysisR.app()` or [https://textanalysisr.org](https://textanalysisr.org). Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app. 
