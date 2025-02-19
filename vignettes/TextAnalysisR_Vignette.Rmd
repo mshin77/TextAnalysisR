@@ -141,31 +141,31 @@ TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)
 
 #### Remove Predefined Stopwords
 
-```{r}
+```{r, fig.alt= "Word Frequency Plot After Removing Stopwords"}
 stopwords <- stopwords::stopwords("en", source = "snowball")
 
 toks_removed <- quanteda::tokens_remove(toks_compound, pattern = stopwords, verbose = FALSE)
 
-dfm_object_init <- quanteda::dfm(toks_removed)
+dfm_init <- quanteda::dfm(toks_removed)
 
-TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)
+TextAnalysisR::plot_word_frequency(dfm_init, n = 20)
 ```
 
 #### Remove Common Words in the Dataset
 
-```{r}
+```{r, fig.alt= "Word Frequency Plot After Removing Common Words"}
 common_words <- c("study", "based", "learning", "students", "research", "results")
 
 toks_removed_common <- quanteda::tokens_remove(toks_removed, pattern = common_words, verbose = FALSE)
 
-dfm_object_init <- quanteda::dfm(toks_removed_common)
+dfm_init_updated <- quanteda::dfm(toks_removed_common)
 
-TextAnalysisR::plot_word_frequency(dfm_object_init, n = 20)
+TextAnalysisR::plot_word_frequency(dfm_init_updated, n = 20)
 ```
 
 #### Lemmatize Tokens
 
-```{r}
+```{r, fig.alt= "Word Frequency Plot After Lemmatizing Tokens"}
 library(spacyr)
 texts <- sapply(toks_removed_common, paste, collapse = " ")
 
@@ -175,7 +175,7 @@ toks_lemmatized <- quanteda::as.tokens(parsed, use_lemma = TRUE)
 
 dfm_object <- quanteda::dfm(toks_lemmatized)
 
-quanteda::docvars(dfm_object) <- quanteda::docvars(dfm_object_init)
+quanteda::docvars(dfm_object) <- quanteda::docvars(dfm_init_updated)
 
 TextAnalysisR::plot_word_frequency(dfm_object, n = 20)
 ```
@@ -413,7 +413,7 @@ word_probability_plot
 
 ##### Plot mean topic prevalence across documents
 
-```{r}
+```{r, fig.alt= "Plot Mean Topic Prevalence Across Documents"}
 topic_probability_plot <- TextAnalysisR::topic_probability_plot(
   stm_model= stm_15,
   top_n = 10,
