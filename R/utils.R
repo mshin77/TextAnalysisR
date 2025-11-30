@@ -726,6 +726,7 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
   off_diagonal <- similarity_matrix[upper.tri(similarity_matrix) | lower.tri(similarity_matrix)]
 
   metrics <- list(
+    n_docs = nrow(similarity_matrix),
     mean_similarity = round(mean(off_diagonal, na.rm = TRUE), 4),
     median_similarity = round(median(off_diagonal, na.rm = TRUE), 4),
     std_similarity = round(sd(off_diagonal, na.rm = TRUE), 4),

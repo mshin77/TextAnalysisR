@@ -1853,7 +1853,7 @@ Supports:
             )
           ),
             conditionalPanel(
-              condition = "input.document_clustering_method != 'none'",
+              condition = "output.has_clustering_results",
             wellPanel(
               style = "padding: 12px; margin-top: 15px; background-color: #f8f9fa;",
             tags$h5(strong("AI-Powered Cluster Labels"), style = "color: #0c1f4a; margin-bottom: 15px;"),

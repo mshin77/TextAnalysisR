@@ -9,7 +9,7 @@ plot_lexical_diversity_distribution(lexdiv_data, metric, title = NULL)
 \arguments{
 \item{lexdiv_data}{Data frame from lexical_diversity_analysis()}
 
-\item{metric}{Metric to plot (e.g., "TTR", "MTLD", "CTTR")}
+\item{metric}{Metric to plot. Recommended: "MTLD" or "MATTR" (text-length independent)}
 
 \item{title}{Plot title (default: auto-generated)}
 }
@@ -27,7 +27,7 @@ corp <- quanteda::corpus(texts)
 toks <- quanteda::tokens(corp)
 dfm_obj <- quanteda::dfm(toks)
 result <- lexical_diversity_analysis(dfm_obj)
-plot <- plot_lexical_diversity_distribution(result$lexical_diversity, "TTR")
+plot <- plot_lexical_diversity_distribution(result$lexical_diversity, "MTLD")
 print(plot)
 }
 }

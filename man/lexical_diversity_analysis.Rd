@@ -10,15 +10,14 @@ lexical_diversity_analysis(dfm_object, measures = "all")
 \item{dfm_object}{A document-feature matrix from quanteda}
 
 \item{measures}{Character vector of measures to calculate. Options:
-"all", "TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Maas", "MTLD", "MATTR"}
+"all", "MTLD" (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas", "K", "D"}
 }
 \value{
-A data frame with documents and their lexical diversity scores
+A list with lexical_diversity (data frame) and summary_stats
 }
 \description{
-Calculates comprehensive lexical diversity metrics including TTR, MTLD,
-CTTR, Herdan, Summer, Maas, and more. These metrics measure vocabulary
-richness and lexical sophistication.
+Calculates lexical diversity metrics to measure vocabulary richness.
+MTLD and MATTR are most stable and text-length independent.
 }
 \examples{
 \dontrun{

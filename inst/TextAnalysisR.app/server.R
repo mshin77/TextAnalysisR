@@ -213,23 +213,15 @@ server <- shinyServer(function(input, output, session) {
 
   # Show Python setup instructions modal
   observeEvent(input$show_python_setup, {
+    output$modal_python_setup_output <- renderPrint({
+      cat("Run in R console:\n\n")
+      cat("TextAnalysisR::setup_python_env()\n\n")
+      cat("Then restart the app.")
+    })
+
     showModal(modalDialog(
-      title = "Setup Python Environment for Enhanced PDF Processing",
-      HTML("
-        <p><strong>Enhanced PDF features require Python environment setup:</strong></p>
-        <ol style='line-height: 2;'>
-          <li><strong>Install Python 3.9+</strong> from <a href='https://www.python.org/downloads/' target='_blank'>python.org</a></li>
-          <li><strong>Run in R console:</strong><br><code style='background: #f1f5f9; padding: 8px; display: block; margin-top: 5px;'>TextAnalysisR::setup_python_env()</code></li>
-          <li><strong>Restart the app</strong> to enable Python features</li>
-        </ol>
-        <p style='margin-top: 15px;'><strong>Benefits:</strong></p>
-        <ul>
-          <li>Better PDF table extraction (pdfplumber)</li>
-          <li>Multimodal analysis (images/charts with Ollama/OpenAI)</li>
-          <li>LangGraph workflows for AI-assisted analysis</li>
-        </ul>
-        <p style='margin-top: 15px; color: #64748B;'><em>Note: R Package with Python provides full features.</em></p>
-      "),
+      title = "Python Setup",
+      verbatimTextOutput("modal_python_setup_output"),
       easyClose = TRUE,
       footer = modalButton("Close")
     ))
@@ -5973,8 +5965,17 @@ server <- shinyServer(function(input, output, session) {
       if (!is.null(texts_df) && input$sentiment_category_var %in% names(texts_df) &&
           !is.null(doc_sentiment) && "sentiment" %in% names(doc_sentiment)) {
 
+        # Create row index for joining
+        texts_df_with_idx <- texts_df %>%
+          mutate(row_idx = row_number(),
+                 doc_name = paste0("text", row_idx))
+
         doc_sentiment_with_group <- doc_sentiment %>%
-          mutate(category_var = texts_df[[input$sentiment_category_var]][document])
+          left_join(
+            texts_df_with_idx %>% select(doc_name, !!rlang::sym(input$sentiment_category_var)),
+            by = c("document" = "doc_name")
+          ) %>%
+          rename(category_var = !!rlang::sym(input$sentiment_category_var))
 
         grouped_sentiment <- doc_sentiment_with_group %>%
           filter(!is.na(category_var)) %>%
@@ -7045,15 +7046,14 @@ server <- shinyServer(function(input, output, session) {
               "lexdiv_metric_select",
               "Select Metric:",
               choices = c(
+                "MTLD (Recommended)" = "MTLD",
+                "MATTR (Recommended)" = "MATTR",
+                "MSTTR (Mean Segmental TTR)" = "MSTTR",
                 "TTR (Type-Token Ratio)" = "TTR",
-                "MTLD (Measure of Textual Lexical Diversity)" = "MTLD",
-                "MATTR (Moving Average TTR)" = "MATTR",
                 "CTTR (Corrected TTR)" = "CTTR",
-                "Herdan's C" = "C",
-                "Summer's S" = "S",
                 "Maas" = "Maas",
-                "Dugast's U" = "U",
-                "Yule's K" = "K"
+                "Yule's K" = "K",
+                "Simpson's D" = "D"
               ),
               selected = lexical_diversity_results$selected_metric
             )
@@ -7172,7 +7172,9 @@ server <- shinyServer(function(input, output, session) {
     req(lexical_diversity_results$analyzed)
     req(lexical_diversity_results$data)
 
-    create_analysis_datatable(lexical_diversity_results$data)
+    lex_data <- lexical_diversity_results$data
+    numeric_cols <- setdiff(names(lex_data), "document")
+    create_analysis_datatable(lex_data, numeric_cols = numeric_cols, digits = 2)
   })
 
   keyword_results <- reactiveValues(
@@ -12633,6 +12635,11 @@ server <- shinyServer(function(input, output, session) {
   })
   outputOptions(output, "has_clusters", suspendWhenHidden = FALSE)
 
+  output$has_clustering_results <- reactive({
+    !is.null(comparison_results$clustering)
+  })
+  outputOptions(output, "has_clustering_results", suspendWhenHidden = FALSE)
+
   output$analysis_run <- reactive({
     isTRUE(document_clustering_results$analysis_run)
   })
@@ -17863,10 +17870,13 @@ server <- shinyServer(function(input, output, session) {
   }
 
   top_terms_selected <- reactive({
-    req(topic_table_data())
-
     topic_data <- topic_table_data()
-    if (!is.data.frame(topic_data)) {
+    if (is.null(topic_data) || !is.data.frame(topic_data)) {
+      return(NULL)
+    }
+
+    beta_data <- beta_td()
+    if (is.null(beta_data) || !is.data.frame(beta_data)) {
       return(NULL)
     }
 
@@ -17874,7 +17884,7 @@ server <- shinyServer(function(input, output, session) {
       dplyr::select(topic, topic_label) %>%
       dplyr::distinct()
 
-    beta_td() %>%
+    beta_data %>%
       dplyr::group_by(topic) %>%
       dplyr::top_n(input$top_term_number_2, beta) %>%
       dplyr::arrange(beta) %>%
@@ -17905,6 +17915,12 @@ server <- shinyServer(function(input, output, session) {
           return(NULL)
         }
 
+        top_terms <- top_terms_selected()
+        if (!is.data.frame(top_terms)) {
+          showNotification("Top terms data is not available.", type = "error")
+          return(NULL)
+        }
+
         topic_mapping <- topic_data %>%
           dplyr::select(topic, topic_label) %>%
           dplyr::distinct()
@@ -17920,12 +17936,12 @@ server <- shinyServer(function(input, output, session) {
             dplyr::group_by(topic) %>%
             dplyr::summarise(gamma = mean(gamma)) %>%
             dplyr::arrange(desc(gamma)) %>%
-            dplyr::left_join(top_terms_selected(), by = "topic") %>%
+            dplyr::left_join(top_terms, by = "topic") %>%
             dplyr::left_join(topic_mapping, by = "topic") %>%
             dplyr::mutate(topic = reorder(topic, gamma))
         } else {
           package_result %>%
-            dplyr::left_join(top_terms_selected(), by = "topic") %>%
+            dplyr::left_join(top_terms, by = "topic") %>%
             dplyr::left_join(topic_mapping, by = "topic") %>%
             dplyr::mutate(topic = reorder(topic, gamma))
         }

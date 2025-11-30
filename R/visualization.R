@@ -831,6 +831,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
                 yanchor = "top"
               )
             },
+            margin = list(l = 80, r = 40, t = 80, b = 60),
             xaxis = list(
               title = "Document Index",
               titlefont = list(size = 18, family = "Roboto"),
@@ -898,6 +899,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
                 yanchor = "top"
               )
             },
+            margin = list(l = 80, r = 40, t = 80, b = 60),
             xaxis = list(
               title = "Component 1",
               titlefont = list(size = 18, family = "Roboto"),

@@ -212,15 +212,14 @@ plot_top_readability_documents <- function(readability_data,
 #' Lexical Diversity Analysis
 #'
 #' @description
-#' Calculates comprehensive lexical diversity metrics including TTR, MTLD,
-#' CTTR, Herdan, Summer, Maas, and more. These metrics measure vocabulary
-#' richness and lexical sophistication.
+#' Calculates lexical diversity metrics to measure vocabulary richness.
+#' MTLD and MATTR are most stable and text-length independent.
 #'
 #' @param dfm_object A document-feature matrix from quanteda
 #' @param measures Character vector of measures to calculate. Options:
-#'   "all", "TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Maas", "MTLD", "MATTR"
+#'   "all", "MTLD" (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas", "K", "D"
 #'
-#' @return A data frame with documents and their lexical diversity scores
+#' @return A list with lexical_diversity (data frame) and summary_stats
 #'
 #' @export
 #'
@@ -244,7 +243,7 @@ lexical_diversity_analysis <- function(dfm_object,
     stop("Package 'quanteda.textstats' is required. Please install it.")
   }
 
-  valid_measures <- c("TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Maas", "MTLD", "MATTR")
+  valid_measures <- c("TTR", "CTTR", "K", "D", "Maas", "MTLD", "MSTTR", "MATTR")
 
   if ("all" %in% measures) {
     measures_to_use <- valid_measures
@@ -256,21 +255,41 @@ lexical_diversity_analysis <- function(dfm_object,
   }
 
   tryCatch({
-    lexdiv_results <- quanteda.textstats::textstat_lexdiv(
-      dfm_object,
-      measure = measures_to_use
+    # Calculate minimum document length to set appropriate window size
+    doc_lengths <- quanteda::ntoken(dfm_object)
+    min_length <- min(doc_lengths)
+
+    # Set window size for MATTR/MSTTR (default is 100, adjust if documents are shorter)
+    window_size <- min(100, max(10, min_length))
+
+    # Suppress warnings about window size adjustments
+    lexdiv_results <- suppressWarnings(
+      quanteda.textstats::textstat_lexdiv(
+        dfm_object,
+        measure = measures_to_use,
+        MATTR_window = window_size,
+        MSTTR_segment = window_size
+      )
     )
 
-    lexdiv_results$document <- quanteda::docnames(dfm_object)
+    # Get actual column names from result (first column is 'document')
+    actual_measures <- setdiff(names(lexdiv_results), "document")
 
-    lexdiv_results <- lexdiv_results[, c("document", measures_to_use)]
+    # Add document names if not present
+    if (!"document" %in% names(lexdiv_results)) {
+      lexdiv_results$document <- quanteda::docnames(dfm_object)
+    }
+
+    # Select only columns that exist
+    cols_to_keep <- c("document", intersect(actual_measures, names(lexdiv_results)))
+    lexdiv_results <- lexdiv_results[, cols_to_keep, drop = FALSE]
 
     summary_stats <- list(
       n_documents = nrow(lexdiv_results),
-      measures_calculated = measures_to_use
+      measures_calculated = actual_measures
     )
 
-    for (measure in measures_to_use) {
+    for (measure in actual_measures) {
       if (measure %in% names(lexdiv_results)) {
         summary_stats[[paste0(measure, "_mean")]] <- mean(lexdiv_results[[measure]], na.rm = TRUE)
         summary_stats[[paste0(measure, "_median")]] <- median(lexdiv_results[[measure]], na.rm = TRUE)
@@ -295,7 +314,7 @@ lexical_diversity_analysis <- function(dfm_object,
 #' Creates a boxplot showing the distribution of a lexical diversity metric.
 #'
 #' @param lexdiv_data Data frame from lexical_diversity_analysis()
-#' @param metric Metric to plot (e.g., "TTR", "MTLD", "CTTR")
+#' @param metric Metric to plot. Recommended: "MTLD" or "MATTR" (text-length independent)
 #' @param title Plot title (default: auto-generated)
 #'
 #' @return A plotly boxplot
@@ -310,7 +329,7 @@ lexical_diversity_analysis <- function(dfm_object,
 #' toks <- quanteda::tokens(corp)
 #' dfm_obj <- quanteda::dfm(toks)
 #' result <- lexical_diversity_analysis(dfm_obj)
-#' plot <- plot_lexical_diversity_distribution(result$lexical_diversity, "TTR")
+#' plot <- plot_lexical_diversity_distribution(result$lexical_diversity, "MTLD")
 #' print(plot)
 #' }
 plot_lexical_diversity_distribution <- function(lexdiv_data,
@@ -326,30 +345,31 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
   }
 
   if (is.null(title)) {
-    title <- paste(metric, "Distribution")
+    title <- paste(metric, "- Overall Distribution")
+  }
+
+  metric_values <- lexdiv_data[[metric]]
+  metric_values <- metric_values[is.finite(metric_values)]
+
+  if (length(metric_values) == 0) {
+    return(plot_error("No valid data for selected metric"))
   }
 
   plotly::plot_ly(
-    y = lexdiv_data[[metric]],
+    y = metric_values,
     type = "box",
-    name = metric,
+    name = "Distribution",
     marker = list(color = "#8B5CF6"),
-    boxmean = "sd"
+    line = list(color = "#0c1f4a"),
+    fillcolor = "rgba(139, 92, 246, 0.7)",
+    hoverinfo = "y",
+    hoverlabel = get_plotly_hover_config()
   ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = metric),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
-      ),
-      margin = list(t = 60, b = 60, l = 80, r = 40),
-      hoverlabel = get_plotly_hover_config()
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+    apply_standard_plotly_layout(
+      title = title,
+      yaxis_title = metric,
+      margin = list(t = 60, b = 60, l = 80, r = 40)
+    )
 }
 
 
