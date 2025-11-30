@@ -936,7 +936,35 @@ Supports:
                         style = "color: #337ab7; font-size: 16px;",
                         title = "Click for detailed metric descriptions")
             ),
+            selectizeInput(
+              "lexdiv_doc_id_var",
+              "Document ID variable",
+              choices = NULL,
+              selected = "",
+              options = list(
+                allowEmptyOption = TRUE,
+                persist = TRUE,
+                placeholder = "Optional"
+              )
+            ),
             br(),
+            checkboxGroupInput(
+              "lexdiv_metrics",
+              "Metrics to calculate",
+              choices = c(
+                "MTLD (Most Recommended)" = "MTLD",
+                "MATTR (Recommended)" = "MATTR",
+                "MSTTR (Mean Segmental TTR)" = "MSTTR",
+                "TTR (Type-Token Ratio)" = "TTR",
+                "CTTR (Corrected TTR)" = "CTTR",
+                "Herdan's C" = "C",
+                "Guiraud's R" = "R",
+                "Maas" = "Maas",
+                "Yule's K" = "K",
+                "Simpson's D" = "D"
+              ),
+              selected = c("MTLD", "MATTR", "TTR")
+            ),
             actionButton("run_lexdiv_analysis", "Analyze", class = "btn-primary btn-block")
           ),
           conditionalPanel(

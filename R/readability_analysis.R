@@ -243,15 +243,22 @@ lexical_diversity_analysis <- function(dfm_object,
     stop("Package 'quanteda.textstats' is required. Please install it.")
   }
 
-  valid_measures <- c("TTR", "CTTR", "K", "D", "Maas", "MTLD", "MSTTR", "MATTR")
+  # Measures available in quanteda.textstats
+
+  quanteda_measures <- c("TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Vm", "Maas", "MATTR", "MSTTR")
+
+  # MTLD requires koRpus package (most recommended measure per McCarthy & Jarvis 2010)
+  mtld_requested <- FALSE
 
   if ("all" %in% measures) {
-    measures_to_use <- valid_measures
+    measures_to_use <- quanteda_measures
+    mtld_requested <- TRUE
   } else {
-    measures_to_use <- intersect(measures, valid_measures)
-    if (length(measures_to_use) == 0) {
-      stop("No valid measures specified. Valid options: ", paste(valid_measures, collapse = ", "))
+    if ("MTLD" %in% measures) {
+      mtld_requested <- TRUE
+      measures <- setdiff(measures, "MTLD")
     }
+    measures_to_use <- intersect(measures, quanteda_measures)
   }
 
   tryCatch({
@@ -262,15 +269,51 @@ lexical_diversity_analysis <- function(dfm_object,
     # Set window size for MATTR/MSTTR (default is 100, adjust if documents are shorter)
     window_size <- min(100, max(10, min_length))
 
-    # Suppress warnings about window size adjustments
-    lexdiv_results <- suppressWarnings(
-      quanteda.textstats::textstat_lexdiv(
-        dfm_object,
-        measure = measures_to_use,
-        MATTR_window = window_size,
-        MSTTR_segment = window_size
+    # Calculate quanteda measures if any requested
+    if (length(measures_to_use) > 0) {
+      lexdiv_results <- suppressWarnings(
+        quanteda.textstats::textstat_lexdiv(
+          dfm_object,
+          measure = measures_to_use,
+          MATTR_window = window_size,
+          MSTTR_segment = window_size
+        )
       )
-    )
+    } else {
+      # Create empty data frame with document names
+      lexdiv_results <- data.frame(document = quanteda::docnames(dfm_object))
+    }
+
+    # Add MTLD using koRpus if requested and available
+    if (mtld_requested) {
+      if (requireNamespace("koRpus", quietly = TRUE)) {
+        tryCatch({
+          # Get texts from dfm
+          texts <- sapply(seq_len(quanteda::ndoc(dfm_object)), function(i) {
+            tokens <- names(dfm_object[i, dfm_object[i, ] > 0])
+            paste(rep(tokens, dfm_object[i, dfm_object[i, ] > 0]), collapse = " ")
+          })
+
+          # Calculate MTLD for each document
+          mtld_values <- sapply(texts, function(txt) {
+            if (nchar(txt) < 10) return(NA_real_)
+            tryCatch({
+              # Tokenize text for koRpus
+              tokens <- unlist(strsplit(txt, "\\s+"))
+              if (length(tokens) < 10) return(NA_real_)
+              # Use koRpus MTLD function
+              koRpus::MTLD(tokens, factor.size = 0.72, char = "")@MTLD$MTLD
+            }, error = function(e) NA_real_)
+          })
+
+          lexdiv_results$MTLD <- as.numeric(mtld_values)
+        }, error = function(e) {
+          message("MTLD calculation failed: ", e$message, ". Skipping MTLD.")
+        })
+      } else {
+        message("koRpus package not available. Install with: install.packages('koRpus') for MTLD calculation.")
+      }
+    }
 
     # Get actual column names from result (first column is 'document')
     actual_measures <- setdiff(names(lexdiv_results), "document")
