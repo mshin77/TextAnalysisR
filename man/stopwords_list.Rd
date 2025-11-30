@@ -3,18 +3,11 @@
 \docType{data}
 \name{stopwords_list}
 \alias{stopwords_list}
-\title{Data-driven stopword list}
+\title{Stopwords List}
 \format{
-An object of class \code{character} of length 117.
-}
-\usage{
-stopwords_list
+A character vector of stopwords
 }
 \description{
-Contains stopword list that was created based on inverse document frequency from \code{SpecialEduTech}
-}
-\examples{
-stopwords_list
-
+A dataset containing stopwords for text preprocessing
 }
 \keyword{datasets}

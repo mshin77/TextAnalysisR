@@ -3,18 +3,11 @@
 \docType{data}
 \name{acronym}
 \alias{acronym}
-\title{Acronym list}
+\title{Acronym List}
 \format{
-An object of class \code{spec_tbl_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 145 rows and 2 columns.
-}
-\usage{
-acronym
+A character vector of acronyms
 }
 \description{
-Contains acronyms commonly observed in the bibliographic data of research on the use of technology in teaching mathematics to students with disabilities.
-}
-\examples{
-acronym
-
+A dataset containing common acronyms used in text processing
 }
 \keyword{datasets}

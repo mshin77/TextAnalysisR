@@ -1,18 +1,22 @@
 Package: TextAnalysisR
-Title: A text mining workflow tool
-Version: 0.0.2
-Date: 2025-01-11
+Title: Text Mining Workflow Tool
+Version: 0.0.3
+Date: 2025-11-29
 Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0001-7907-9193"))
-Description: 'TextAnalysisR' provides a supporting workflow tool for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph', and 'widyr' (network analysis). 'tidytext' is implemented to tidy non-tidy format objects. The R Shiny web app is available at 'TextAnalysisR::TextAnalysisR.app()' or 'https://textanalysisr.org'. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app. 
-References: Shin, M., Park, H., & Kang, E. (2024) "Development of education policies and practices for students with learning disabilities in South Korea using Delphi surveys and topic modeling." Learning Disability Quarterly. <https://github.com/mshin77/Korea-LD-policy>; Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., & Kang, E. (2023) "A content analysis of research on technology use for teaching mathematics to students with disabilities: word networks and topic modeling." International Journal of STEM Education, 10(1), 1-23. <https://github.com/mshin77/math-tech-sped>
-License: MIT + file LICENSE
+           comment = c(ORCID = "0000-0001-7907-9193", affiliation = "Illinois State University"))
+Description: Comprehensive toolkit for text mining and natural language processing with
+    interactive 'Shiny' interface. Import documents from multiple formats (PDF, DOCX,
+    XLSX, CSV, TXT), preprocess with 'quanteda', and perform topic modeling ('stm'),
+    semantic analysis, sentiment analysis, and network visualization. Features
+    AI-assisted workflows via 'LangGraph', WCAG 2.1 AA accessibility, multi-language
+    support, and enterprise security for production deployment.
+License: GPL (>= 3) + file LICENSE
 Language: en-US
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     dplyr,
     ggplot2,
@@ -20,6 +24,7 @@ Imports:
     magrittr,
     quanteda,
     quanteda.textstats,
+    reticulate (>= 1.28),
     rlang,
     shiny,
     stm,
@@ -27,13 +32,24 @@ Imports:
     tidyr,
     tidytext,
     widyr,
-    numform,
-    igraph,
-    scales,
-    plotly,
-    DT,
-    broom
+    igraph
 Suggests:
+    spacyr,
+    aricode,
+    plotly,
+    visNetwork,
+    DT,
+    broom,
+    numform,
+    scales,
+    shinybusy,
+    cluster,
+    moments,
+    Rtsne,
+    clusterCrit,
+    dbscan,
+    mclust,
+    umap,
     pdftools,
     readxl,
     officer,
@@ -42,9 +58,12 @@ Suggests:
     jsonlite,
     progress,
     RColorBrewer,
-    MASS,    
+    MASS,
     pscl,
     htmltools,
+    htmlwidgets,
+    textdata,
+    syuzhet,
     covr,
     knitr,
     rmarkdown,

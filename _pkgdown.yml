@@ -1,10 +1,209 @@
 url: https://mshin77.github.io/TextAnalysisR/
 template:
-  development: false
   bootstrap: 5
+
+reference:
+- title: "App"
+  contents:
+  - run_app
+  - import_files
+
+- title: "Preprocessing"
+  contents:
+  - unite_cols
+  - prep_texts
+  - detect_multi_words
+  - get_available_dfm
+
+- title: "Lexical Analysis"
+  contents:
+  - starts_with("extract_keywords")
+  - plot_keyword_comparison
+  - plot_tfidf_keywords
+  - plot_keyness_keywords
+  - plot_word_frequency
+  - calculate_word_frequency
+  - plot_readability_distribution
+  - plot_readability_by_group
+  - plot_top_readability_documents
+  - plot_lexical_diversity_distribution
+  - calculate_text_readability
+  - lexical_frequency_analysis
+  - lexical_diversity_analysis
+
+- title: "Sentiment Analysis"
+  contents:
+  - analyze_sentiment
+  - sentiment_lexicon_analysis
+  - sentiment_embedding_analysis
+  - starts_with("plot_sentiment")
+  - plot_emotion_radar
+  - plot_document_sentiment_trajectory
+  - plot_top_sentiment_documents
+
+- title: "Network Analysis"
+  contents:
+  - plot_cooccurrence_network
+  - plot_correlation_network
+  - semantic_cooccurrence_network
+  - semantic_correlation_network
+
+- title: "Topic Modeling"
+  contents:
+  - find_optimal_k
+  - starts_with("fit_")
+  - generate_topic_labels
+  - generate_topic_keywords
+  - get_topic_terms
+  - calculate_topic_probability
+  - identify_topic_trends
+  - plot_topic_probability
+  - plot_topic_effects_categorical
+  - plot_topic_effects_continuous
+  - plot_word_probability
+  - run_text_workflow
+
+- title: "Semantic Analysis"
+  contents:
+  - generate_embeddings
+  - reduce_dimensions
+  - calculate_document_similarity
+  - calculate_cosine_similarity
+  - semantic_similarity_analysis
+  - semantic_document_clustering
+  - cluster_embeddings
+  - analyze_document_clustering
+  - export_document_clustering
+  - starts_with("generate_cluster")
+  - temporal_semantic_analysis
+  - analyze_semantic_evolution
+  - plot_semantic_viz
+
+- title: "PDF Processing"
+  contents:
+  - starts_with("extract_text")
+  - starts_with("extract_tables")
+  - starts_with("extract_pdf")
+  - starts_with("process_pdf")
+  - starts_with("detect_pdf")
+
+- title: "AI Integration"
+  contents:
+  - check_ollama
+  - list_ollama_models
+  - call_ollama
+  - check_vision_models
+  - get_recommended_ollama_model
+  - init_langgraph
+  - generate_topic_labels_langgraph
+  - validate_topic_labels_langgraph
+  - run_rag_search
+  - format_label_candidates
+  - create_label_selection_data
+  - setup_python_env
+  - check_python_env
+  - check_multimodal_prerequisites
+
+- title: "Data"
+  contents:
+  - SpecialEduTech
+  - acronym
+  - stm_15
+  - dictionary_list_1
+  - dictionary_list_2
+  - stopwords_list
+
+- title: "Shiny Helpers"
+  contents:
+  - starts_with("show_")
+  - remove_notification_by_id
+  - get_dfm_setup_instructions
+  - check_web_deployment
+  - check_feature
+  - get_feature_status
+  - require_feature
+  - plot_error
+  - apply_standard_plotly_layout
+  - create_standard_ggplot_theme
+  - get_plotly_hover_config
+  - get_sentiment_color
+  - get_sentiment_colors
+  - create_message_table
+  - create_analysis_datatable
+
+- title: "Security & Accessibility"
+  contents:
+  - validate_file_upload
+  - sanitize_text_input
+  - check_rate_limit
+  - log_security_event
+  - validate_api_key
+  - calculate_contrast_ratio
+  - check_wcag_contrast
+  - generate_aria_label
+  - create_sr_text
+  - validate_keyboard_navigation
+  - check_alt_text
+
+- title: "Internal"
+  contents:
+  - starts_with("validate_")
+  - starts_with("calculate_")
+  - starts_with("run_")
+  - cross_analysis_validation
+  - find_topic_matches
+  - analyze_topic_evolution
+  - generate_semantic_topic_keywords
+  - TextAnalysisR-package
+  - "`%>%`"
+
+articles:
+- title: "Getting Started"
+  navbar: ~
+  contents:
+  - quickstart
+  - installation
+
+- title: "Analysis"
+  contents:
+  - preprocessing
+  - lexical_analysis
+  - semantic_analysis
+  - topic_modeling
+
+- title: "Advanced"
+  contents:
+  - python_environment
+  - multimodal_analysis
+  - cybersecurity
+  - web_accessibility
+
 navbar:
   structure:
-    left:
-      - home
-      - reference
-      - articles
+    left: [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+      - text: Getting Started
+        href: articles/quickstart.html
+      - text: Installation
+        href: articles/installation.html
+      - text: "---"
+      - text: Preprocessing
+        href: articles/preprocessing.html
+      - text: Lexical Analysis
+        href: articles/lexical_analysis.html
+      - text: Semantic Analysis
+        href: articles/semantic_analysis.html
+      - text: Topic Modeling
+        href: articles/topic_modeling.html
+      - text: "---"
+      - text: Python Environment
+        href: articles/python_environment.html
+      - text: Multimodal Analysis
+        href: articles/multimodal_analysis.html

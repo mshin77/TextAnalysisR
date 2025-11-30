@@ -4,11 +4,11 @@
 \name{TextAnalysisR-package}
 \alias{TextAnalysisR}
 \alias{TextAnalysisR-package}
-\title{TextAnalysisR: A text mining workflow tool}
+\title{TextAnalysisR: Text Mining Workflow Tool}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-'TextAnalysisR' provides a supporting workflow tool for text mining analysis. The web app incorporates 'quanteda' (text preprocessing), 'stm' (structural topic modeling), 'ggraph', and 'widyr' (network analysis). 'tidytext' is implemented to tidy non-tidy format objects. The R Shiny web app is available at 'TextAnalysisR::TextAnalysisR.app()' or 'https://textanalysisr.org'. Functions are provided for completing word-topic probabilities, document-topic probabilities, estimated effects of covariates on topic prevalence, and network analysis, similar to tasks available in the web app.
+Comprehensive toolkit for text mining and natural language processing with interactive 'Shiny' interface. Import documents from multiple formats (PDF, DOCX, XLSX, CSV, TXT), preprocess with 'quanteda', and perform topic modeling ('stm'), semantic analysis, sentiment analysis, and network visualization. Features AI-assisted workflows via 'LangGraph', WCAG 2.1 AA accessibility, multi-language support, and enterprise security for production deployment.
 }
 \seealso{
 Useful links:
@@ -19,7 +19,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Mikyung Shin \email{shin.mikyung@gmail.com} (\href{https://orcid.org/0000-0001-7907-9193}{ORCID})
+\strong{Maintainer}: Mikyung Shin \email{shin.mikyung@gmail.com} (\href{https://orcid.org/0000-0001-7907-9193}{ORCID}) (Illinois State University)
 
 }
 \keyword{internal}

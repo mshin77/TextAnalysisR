@@ -1,9 +1,18 @@
-pandoc: '3.2'
-pkgdown: 2.1.1
+pandoc: 3.6.3
+pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
-  TextAnalysisR_Vignette: TextAnalysisR_Vignette.html
-last_built: 2025-02-19T15:36Z
+  cybersecurity: cybersecurity.html
+  installation: installation.html
+  lexical_analysis: lexical_analysis.html
+  multimodal_analysis: multimodal_analysis.html
+  preprocessing: preprocessing.html
+  python_environment: python_environment.html
+  quickstart: quickstart.html
+  semantic_analysis: semantic_analysis.html
+  topic_modeling: topic_modeling.html
+  web_accessibility: web_accessibility.html
+last_built: 2025-11-30T04:44Z
 urls:
   reference: https://mshin77.github.io/TextAnalysisR/reference
   article: https://mshin77.github.io/TextAnalysisR/articles

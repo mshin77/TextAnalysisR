@@ -1,23 +1,25 @@
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+<img src="man/figures/logo.png" alt="TextAnalysisR Logo" align="right" width="150px"/>
 
-<img src="man/figures/logo.png" align="right" width=150px alt="TextAnalysisR Logo">
+[![R-CMD-check](https://github.com/mshin77/TextAnalysisR/workflows/R-CMD-check/badge.svg)](https://github.com/mshin77/TextAnalysisR/actions)
+[![Project Status:
+Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![License:
+GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-<!-- badges: start -->
-<!-- badges: end -->
-
-`TextAnalysisR` provides a supporting workflow tool for text mining
-analysis. The web app incorporates
-[quanteda](https://github.com/quanteda/quanteda) (text preprocessing),
-[stm](https://github.com/bstewart/stm) (structural topic modeling),
-[ggraph](https://github.com/thomasp85/ggraph), and
-[widyr](https://github.com/juliasilge/widyr) (network analysis).
-[tidytext](https://github.com/cran/tidytext) is implemented to tidy
-non-tidy format objects. The R Shiny web app is available at
-`TextAnalysisR::TextAnalysisR.app()` or <https://textanalysisr.org>.
-Functions are provided for completing word-topic probabilities,
-document-topic probabilities, estimated effects of covariates on topic
-prevalence, and network analysis, similar to tasks available in the web
-app.
+Comprehensive toolkit for text mining and natural language processing
+with an interactive `Shiny` interface. Import documents from multiple
+formats (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`) using
+[Marker](https://github.com/VikParuchuri/marker) for PDF extraction,
+preprocess with [quanteda](https://github.com/quanteda/quanteda), and
+perform linguistic analysis via [spacyr](https://spacyr.quanteda.io/),
+topic modeling ([stm](https://github.com/bstewart/stm),
+[BERTopic](https://maartengr.github.io/BERTopic/)), semantic analysis,
+sentiment analysis, and network visualization with
+[plotly](https://plotly.com/r/). Features AI-assisted workflows via
+[LangGraph](https://github.com/langchain-ai/langgraph) and
+[Ollama](https://ollama.ai) for local LLMs, `WCAG 2.1 AA` accessibility,
+multi-language support, and enterprise security for production
+deployment.
 
 ## Installation
 
@@ -35,30 +37,21 @@ The development version from
 
 Access the web app at <https://www.textanalysisr.org>.
 
-Launch and browser the TextAnalysisR.app on the local computer:
+Launch and browse the app on the local computer:
 
-    TextAnalysisR.app()
+    run_app()
+
+## Getting Started
+
+See [Quick
+Start](https://mshin77.github.io/TextAnalysisR/articles/quickstart.html)
+for tutorials.
 
 ## Citation
 
 -   Shin, M. (2025). *TextAnalysisR: A text mining workflow tool* (R
-    package version 0.0.2) \[Computer software\].
+    package version 0.0.3) \[Computer software\].
     <https://mshin77.github.io/TextAnalysisR>
 
 -   Shin, M. (2025). *TextAnalysisR: A text mining workflow tool* \[Web
     application\]. <https://www.textanalysisr.org>
-
-## References
-
--   Shin, M., Park, H., & Kang, E. (2024). Development of education
-    policies and practices for students with learning disabilities in
-    South Korea using Delphi surveys and topic modeling. *Learning
-    Disability Quarterly*.
-    [GitHub](https://github.com/mshin77/Korea-LD-policy)
-
--   Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., &
-    Kang, E. (2023). A content analysis of research on technology use
-    for teaching mathematics to students with disabilities: word
-    networks and topic modeling. *International Journal of STEM
-    Education, 10*(1), 1-23.
-    [GitHub](https://github.com/mshin77/math-tech-sped)

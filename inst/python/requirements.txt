@@ -1,0 +1,16 @@
+# Core packages for TextAnalysisR Python integration
+# LangGraph workflows
+langchain-core>=0.3.0
+langchain-ollama>=0.2.0
+langgraph>=0.2.0
+langgraph-checkpoint>=2.0.0
+ollama>=0.3.0
+
+# PDF processing
+pdfplumber>=0.10.0
+
+# Optional: Deep learning features (embeddings, sentiment)
+# Uncomment if needed - requires ~500MB+ download
+# sentence-transformers>=2.2.0
+# transformers>=4.30.0
+# torch>=2.0.0

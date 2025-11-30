@@ -3,18 +3,11 @@
 \docType{data}
 \name{dictionary_list_1}
 \alias{dictionary_list_1}
-\title{Data-driven dictionary list 1}
+\title{Dictionary List 1}
 \format{
-An object of class \code{list} of length 235.
-}
-\usage{
-dictionary_list_1
+A character vector of dictionary terms
 }
 \description{
-Contains a dictionary using wildcard values and compound words from \code{SpecialEduTech}
-}
-\examples{
-dictionary_list_1
-
+A dataset containing dictionary terms for text analysis
 }
 \keyword{datasets}

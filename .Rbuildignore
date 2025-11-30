@@ -1,5 +1,6 @@
 ^TextAnalysisR\.Rproj$
 ^\.Rproj\.user$
+^\.claude$
 ^LICENSE\.md$
 ^README\.Rmd$
 ^_pkgdown\.yml$
@@ -8,3 +9,12 @@
 ^codecov\.yml$
 ^pkgdown$
 ^CRAN-SUBMISSION$
+^www$
+^.*\.Rcheck$
+^.*\.tar\.gz$
+^\.Rhistory$
+^test_.*\.R$
+^run_checks\.R$
+^\.Renviron$
+^check_package\.R$
+^vignettes$

@@ -1,0 +1,83 @@
+---
+title: "Semantic Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Semantic Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
+```
+
+Semantic analysis finds patterns of meaning using embeddings and neural networks.
+
+## Setup
+
+```{r}
+library(TextAnalysisR)
+
+mydata <- SpecialEduTech
+united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
+tokens <- prep_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+```
+
+## Document Similarity
+
+```{r}
+similarity <- semantic_similarity_analysis(
+  texts = united_tbl$united_texts,
+  method = "cosine"
+)
+```
+
+## Sentiment Analysis
+
+### Lexicon-based (no Python)
+
+```{r}
+sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+plot_sentiment_distribution(sentiment$document_sentiment)
+```
+
+### Neural (requires Python)
+
+```{r}
+sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
+```
+
+## Document Clustering
+
+```{r}
+clusters <- semantic_document_clustering(
+  texts = united_tbl$united_texts,
+  n_clusters = 5
+)
+
+# AI-generated labels (optional)
+labels <- generate_cluster_labels(
+  clusters$cluster_keywords,
+  provider = "ollama"  # or "openai"
+)
+```
+
+## Temporal Analysis
+
+Track themes over time:
+
+```{r}
+temporal <- temporal_semantic_analysis(
+  texts = united_tbl$united_texts,
+  timestamps = united_tbl$year
+)
+```
+
+## Embedding Models
+
+| Model | Speed | Quality |
+|-------|-------|---------|
+| all-MiniLM-L6-v2 | Fast | Good |
+| all-mpnet-base-v2 | Slow | Best |
+| paraphrase-multilingual | Medium | Multilingual |

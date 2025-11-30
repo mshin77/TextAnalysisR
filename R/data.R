@@ -7,48 +7,7 @@
 #'
 "SpecialEduTech"
 
-
-#' Acronym list
-#'
-#' Contains acronyms commonly observed in the bibliographic data of research on the use of technology in teaching mathematics to students with disabilities.
-#'
-#' @examples
-#' acronym
-#'
-"acronym"
-
-
-#' Data-driven stopword list
-#'
-#' Contains stopword list that was created based on inverse document frequency from \code{SpecialEduTech}
-#'
-#' @examples
-#' stopwords_list
-#'
-"stopwords_list"
-
-
-#' Data-driven dictionary list 1
-#'
-#' Contains a dictionary using wildcard values and compound words from \code{SpecialEduTech}
-#'
-#' @examples
-#' dictionary_list_1
-#'
-"dictionary_list_1"
-
-
-#' Data-driven dictionary list 2
-#'
-#' Contains a dictionary using wildcard values and compound words from \code{SpecialEduTech}
-#'
-#' @examples
-#' dictionary_list_2
-#'
-"dictionary_list_2"
-
-
-#' An example structure of a structural topic model  
+#' An example structure of a structural topic model
 #'
 #' Contains 15 topics, topic prevalences, and etc. from \code{stm::stm}.
 #'
@@ -56,3 +15,43 @@
 #' stm_15
 #'
 "stm_15"
+
+#' Acronym List
+#'
+#' A dataset containing common acronyms used in text processing
+#'
+#' @format A character vector of acronyms
+#' @name acronym
+#' @docType data
+#' @keywords datasets
+NULL
+
+#' Dictionary List 1
+#'
+#' A dataset containing dictionary terms for text analysis
+#'
+#' @format A character vector of dictionary terms
+#' @name dictionary_list_1
+#' @docType data
+#' @keywords datasets
+NULL
+
+#' Dictionary List 2
+#'
+#' A dataset containing additional dictionary terms for text analysis
+#'
+#' @format A character vector of dictionary terms
+#' @name dictionary_list_2
+#' @docType data
+#' @keywords datasets
+NULL
+
+#' Stopwords List
+#'
+#' A dataset containing stopwords for text preprocessing
+#'
+#' @format A character vector of stopwords
+#' @name stopwords_list
+#' @docType data
+#' @keywords datasets
+NULL
