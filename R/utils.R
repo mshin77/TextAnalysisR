@@ -130,16 +130,25 @@ show_web_banner <- function(disabled = NULL) {
   feature_list <- paste0("<li>", disabled, "</li>", collapse = "")
 
   shiny::tagList(
-    shiny::tags$div(
-      class = "alert alert-info", role = "alert",
-      style = "margin: 10px; padding: 15px; border-radius: 8px;",
-      shiny::tags$h5(shiny::icon("info-circle"), " Web Version", style = "margin-top: 0;"),
-      shiny::tags$p("For full features, install the R package:"),
-      shiny::tags$code("remotes::install_github('mshin77/TextAnalysisR')"),
-      shiny::tags$details(
-        style = "margin-top: 10px;",
-        shiny::tags$summary("Unavailable features"),
-        shiny::HTML(paste0("<ul style='margin-top: 5px;'>", feature_list, "</ul>"))
+    shiny::tags$details(
+      class = "web-version-note",
+      style = "margin: 10px; padding: 8px 12px; background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; font-size: 14px;",
+      shiny::tags$summary(
+        style = "cursor: pointer; color: #1E40AF; font-weight: 500;",
+        shiny::icon("info-circle"),
+        " Web version - some features limited"
+      ),
+      shiny::tags$div(
+        style = "margin-top: 8px; padding-left: 5px; color: #374151;",
+        shiny::tags$p(
+          style = "margin: 5px 0;",
+          "For full features: ",
+          shiny::tags$code(
+            style = "background: #F3F4F6; padding: 2px 6px; border-radius: 3px; font-size: 13px;",
+            "remotes::install_github('mshin77/TextAnalysisR')"
+          )
+        ),
+        shiny::HTML(paste0("<ul style='margin: 5px 0; padding-left: 20px; color: #6B7280;'>", feature_list, "</ul>"))
       )
     )
   )
