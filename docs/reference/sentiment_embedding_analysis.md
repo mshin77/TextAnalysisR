@@ -1,0 +1,88 @@
+# Embedding-based Sentiment Analysis
+
+Performs sentiment analysis using transformer-based embeddings and
+neural models. This approach uses pre-trained language models for
+contextual sentiment detection without requiring sentiment lexicons.
+Particularly effective for handling:
+
+- Complex contextual sentiment
+
+- Implicit sentiment and sarcasm
+
+- Domain-specific sentiment
+
+- Negation and intensifiers (automatically handled by the model)
+
+## Usage
+
+``` r
+sentiment_embedding_analysis(
+  texts,
+  embeddings = NULL,
+  model_name = "distilbert-base-uncased-finetuned-sst-2-english",
+  doc_names = NULL,
+  use_gpu = FALSE
+)
+```
+
+## Arguments
+
+- texts:
+
+  Character vector of texts to analyze
+
+- embeddings:
+
+  Optional pre-computed embedding matrix (from generate_embeddings)
+
+- model_name:
+
+  Sentiment model name (default:
+  "distilbert-base-uncased-finetuned-sst-2-english")
+
+- doc_names:
+
+  Optional document names/IDs
+
+- use_gpu:
+
+  Whether to use GPU if available (default: FALSE)
+
+## Value
+
+A list containing:
+
+- document_sentiment:
+
+  Data frame with document-level sentiment scores and classifications
+
+- emotion_scores:
+
+  NULL (emotion detection not currently supported for embeddings)
+
+- summary_stats:
+
+  Summary statistics including document counts and average scores
+
+- model_used:
+
+  Name of the transformer model used
+
+- feature_type:
+
+  "embeddings"
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+texts <- c(
+  "The results significantly improved student outcomes.",
+  "The intervention showed no clear benefit.",
+  "Students reported difficulty with the material."
+)
+result <- sentiment_embedding_analysis(texts)
+print(result$document_sentiment)
+print(result$summary_stats)
+} # }
+```
