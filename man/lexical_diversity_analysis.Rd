@@ -4,13 +4,15 @@
 \alias{lexical_diversity_analysis}
 \title{Lexical Diversity Analysis}
 \usage{
-lexical_diversity_analysis(dfm_object, measures = "all")
+lexical_diversity_analysis(dfm_object, measures = "all", texts = NULL)
 }
 \arguments{
-\item{dfm_object}{A document-feature matrix from quanteda}
+\item{dfm_object}{A document-feature matrix or tokens object from quanteda}
 
 \item{measures}{Character vector of measures to calculate. Options:
 "all", "MTLD" (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas", "K", "D"}
+
+\item{texts}{Optional character vector of original texts for calculating average sentence length}
 }
 \value{
 A list with lexical_diversity (data frame) and summary_stats
@@ -26,7 +28,7 @@ texts <- SpecialEduTech$abstract[1:10]
 corp <- quanteda::corpus(texts)
 toks <- quanteda::tokens(corp)
 dfm_obj <- quanteda::dfm(toks)
-lex_div <- lexical_diversity_analysis(dfm_obj)
+lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
 print(lex_div)
 }
 

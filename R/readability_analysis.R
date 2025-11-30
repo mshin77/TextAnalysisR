@@ -160,6 +160,9 @@ plot_top_readability_documents <- function(readability_data,
     stop(paste("Metric", metric, "not found in readability data"))
   }
 
+  # Handle both "Document" and "document" column names
+  doc_col <- if ("Document" %in% names(readability_data)) "Document" else "document"
+
   sorted_data <- readability_data %>%
     dplyr::arrange(if (order == "highest") dplyr::desc(.data[[metric]]) else .data[[metric]]) %>%
     head(top_n)
@@ -169,7 +172,7 @@ plot_top_readability_documents <- function(readability_data,
   }
 
   sorted_data$tooltip_text <- paste0(
-    "<b>", sorted_data$document, "</b><br>",
+    "<b>", sorted_data[[doc_col]], "</b><br>",
     metric, ": ", round(sorted_data[[metric]], 2)
   )
 
@@ -177,7 +180,7 @@ plot_top_readability_documents <- function(readability_data,
 
   plotly::plot_ly(
     data = sorted_data,
-    x = ~document,
+    x = as.formula(paste0("~`", doc_col, "`")),
     y = ~.data[[metric]],
     type = "bar",
     marker = list(color = "#4A90E2"),
@@ -215,9 +218,10 @@ plot_top_readability_documents <- function(readability_data,
 #' Calculates lexical diversity metrics to measure vocabulary richness.
 #' MTLD and MATTR are most stable and text-length independent.
 #'
-#' @param dfm_object A document-feature matrix from quanteda
+#' @param dfm_object A document-feature matrix or tokens object from quanteda
 #' @param measures Character vector of measures to calculate. Options:
 #'   "all", "MTLD" (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas", "K", "D"
+#' @param texts Optional character vector of original texts for calculating average sentence length
 #'
 #' @return A list with lexical_diversity (data frame) and summary_stats
 #'
@@ -230,14 +234,15 @@ plot_top_readability_documents <- function(readability_data,
 #' corp <- quanteda::corpus(texts)
 #' toks <- quanteda::tokens(corp)
 #' dfm_obj <- quanteda::dfm(toks)
-#' lex_div <- lexical_diversity_analysis(dfm_obj)
+#' lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
 #' print(lex_div)
 #' }
 #'
 #' @importFrom quanteda.textstats textstat_lexdiv
 #' @importFrom quanteda docnames
 lexical_diversity_analysis <- function(dfm_object,
-                                      measures = "all") {
+                                      measures = "all",
+                                      texts = NULL) {
 
   if (!requireNamespace("quanteda.textstats", quietly = TRUE)) {
     stop("Package 'quanteda.textstats' is required. Please install it.")
@@ -284,48 +289,119 @@ lexical_diversity_analysis <- function(dfm_object,
       lexdiv_results <- data.frame(document = quanteda::docnames(dfm_object))
     }
 
-    # Add MTLD using koRpus if requested and available
+    # Add MTLD if requested - use custom implementation (McCarthy & Jarvis 2010)
     if (mtld_requested) {
-      if (requireNamespace("koRpus", quietly = TRUE)) {
-        tryCatch({
-          # Get texts from dfm
-          texts <- sapply(seq_len(quanteda::ndoc(dfm_object)), function(i) {
-            tokens <- names(dfm_object[i, dfm_object[i, ] > 0])
-            paste(rep(tokens, dfm_object[i, dfm_object[i, ] > 0]), collapse = " ")
-          })
+      tryCatch({
+        # Custom MTLD implementation based on McCarthy & Jarvis (2010)
+        calculate_mtld <- function(tokens, factor_size = 0.72) {
+          if (length(tokens) < 10) return(NA_real_)
 
-          # Calculate MTLD for each document
-          mtld_values <- sapply(texts, function(txt) {
-            if (nchar(txt) < 10) return(NA_real_)
-            tryCatch({
-              # Tokenize text for koRpus
-              tokens <- unlist(strsplit(txt, "\\s+"))
-              if (length(tokens) < 10) return(NA_real_)
-              # Use koRpus MTLD function
-              koRpus::MTLD(tokens, factor.size = 0.72, char = "")@MTLD$MTLD
-            }, error = function(e) NA_real_)
-          })
+          # Forward MTLD
+          forward_factors <- 0
+          current_ttr <- 1
+          factor_tokens <- c()
 
-          lexdiv_results$MTLD <- as.numeric(mtld_values)
-        }, error = function(e) {
-          message("MTLD calculation failed: ", e$message, ". Skipping MTLD.")
+          for (token in tokens) {
+            factor_tokens <- c(factor_tokens, token)
+            current_ttr <- length(unique(factor_tokens)) / length(factor_tokens)
+
+            if (current_ttr <= factor_size) {
+              forward_factors <- forward_factors + 1
+              factor_tokens <- c()
+              current_ttr <- 1
+            }
+          }
+
+          # Add partial factor
+          if (length(factor_tokens) > 0) {
+            partial <- (1 - current_ttr) / (1 - factor_size)
+            forward_factors <- forward_factors + partial
+          }
+
+          forward_mtld <- if (forward_factors > 0) length(tokens) / forward_factors else NA_real_
+
+          # Backward MTLD
+          tokens_rev <- rev(tokens)
+          backward_factors <- 0
+          factor_tokens <- c()
+
+          for (token in tokens_rev) {
+            factor_tokens <- c(factor_tokens, token)
+            current_ttr <- length(unique(factor_tokens)) / length(factor_tokens)
+
+            if (current_ttr <= factor_size) {
+              backward_factors <- backward_factors + 1
+              factor_tokens <- c()
+              current_ttr <- 1
+            }
+          }
+
+          if (length(factor_tokens) > 0) {
+            partial <- (1 - current_ttr) / (1 - factor_size)
+            backward_factors <- backward_factors + partial
+          }
+
+          backward_mtld <- if (backward_factors > 0) length(tokens) / backward_factors else NA_real_
+
+          # Average forward and backward
+          mtld <- mean(c(forward_mtld, backward_mtld), na.rm = TRUE)
+          return(mtld)
+        }
+
+        # Get tokens for each document - handle both tokens and dfm objects
+        mtld_values <- sapply(seq_len(quanteda::ndoc(dfm_object)), function(i) {
+          # Check if input is a tokens object or dfm
+          if (inherits(dfm_object, "tokens")) {
+            # Direct access to token sequence (preserves order)
+            doc_tokens <- as.character(dfm_object[[i]])
+          } else {
+            # Extract from DFM (reconstruct sequence - order not preserved)
+            doc_row <- dfm_object[i, ]
+            token_counts <- as.vector(doc_row)
+            token_names <- quanteda::featnames(dfm_object)
+            non_zero <- token_counts > 0
+            if (sum(non_zero) < 10) return(NA_real_)
+            doc_tokens <- rep(token_names[non_zero], token_counts[non_zero])
+          }
+
+          if (length(doc_tokens) < 10) return(NA_real_)
+
+          calculate_mtld(doc_tokens)
         })
-      } else {
-        message("koRpus package not available. Install with: install.packages('koRpus') for MTLD calculation.")
-      }
-    }
 
-    # Get actual column names from result (first column is 'document')
-    actual_measures <- setdiff(names(lexdiv_results), "document")
+        lexdiv_results$MTLD <- as.numeric(mtld_values)
+      }, error = function(e) {
+        message("MTLD calculation failed: ", e$message, ". Skipping MTLD.")
+      })
+    }
 
     # Add document names if not present
     if (!"document" %in% names(lexdiv_results)) {
       lexdiv_results$document <- quanteda::docnames(dfm_object)
     }
 
+    # Standardize document names to "Doc 1, Doc 2..." format
+    lexdiv_results$document <- paste0("Doc ", seq_len(nrow(lexdiv_results)))
+
+    # Get actual column names from result (after MTLD is added)
+    actual_measures <- setdiff(names(lexdiv_results), "document")
+
     # Select only columns that exist
-    cols_to_keep <- c("document", intersect(actual_measures, names(lexdiv_results)))
+    cols_to_keep <- c("document", actual_measures)
     lexdiv_results <- lexdiv_results[, cols_to_keep, drop = FALSE]
+
+    # Add Average Sentence Length if texts provided
+    if (!is.null(texts) && length(texts) == nrow(lexdiv_results)) {
+      avg_sentence_length <- sapply(texts, function(t) {
+        sents <- unlist(strsplit(t, "[.!?]+"))
+        sents <- sents[nzchar(trimws(sents))]
+        words <- unlist(strsplit(paste(sents, collapse = " "), "\\s+"))
+        if (length(sents) == 0) return(NA)
+        length(words) / length(sents)
+      })
+      lexdiv_results$`Avg Sentence Length` <- avg_sentence_length
+      actual_measures <- c(actual_measures, "Avg Sentence Length")
+    }
 
     summary_stats <- list(
       n_documents = nrow(lexdiv_results),

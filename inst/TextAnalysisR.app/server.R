@@ -6822,10 +6822,7 @@ server <- shinyServer(function(input, output, session) {
       "gunning_fog" = "Gunning Fog",
       "smog" = "SMOG",
       "ari" = "Automated Readability Index",
-      "coleman_liau" = "Coleman-Liau",
-      "Lexical Diversity (TTR)" = "Lexical Diversity (TTR)",
-      "Lexical Diversity (MTLD)" = "Lexical Diversity (MTLD)",
-      "Avg Sentence Length" = "Avg Sentence Length"
+      "coleman_liau" = "Coleman-Liau"
     )
 
     display_names <- sapply(metric_names, function(m) {
@@ -6879,7 +6876,7 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch({
       texts <- united_tbl()$united_texts
-      doc_names <- paste0("doc", seq_len(nrow(united_tbl())))
+      doc_names <- paste0("Doc ", seq_len(nrow(united_tbl())))
 
       selected_metrics <- input$readability_metrics
 
@@ -6892,8 +6889,8 @@ server <- shinyServer(function(input, output, session) {
       readability_scores <- TextAnalysisR::calculate_text_readability(
         texts = texts,
         metrics = selected_metrics,
-        include_lexical_diversity = TRUE,
-        include_sentence_stats = TRUE,
+        include_lexical_diversity = FALSE,
+        include_sentence_stats = FALSE,
         dfm_for_lexdiv = dfm_to_use,
         doc_names = doc_names
       )
@@ -7162,9 +7159,21 @@ server <- shinyServer(function(input, output, session) {
         selected_metrics <- "all"
       }
 
+      # Get texts for average sentence length calculation
+      texts_for_lexdiv <- NULL
+      tryCatch({
+        text_col <- input$text_column
+        if (!is.null(text_col) && text_col %in% names(united_tbl())) {
+          texts_for_lexdiv <- as.character(united_tbl()[[text_col]])
+        }
+      }, error = function(e) {
+        texts_for_lexdiv <- NULL
+      })
+
       result <- TextAnalysisR::lexical_diversity_analysis(
         dfm_object = tokens_to_use,
-        measures = selected_metrics
+        measures = selected_metrics,
+        texts = texts_for_lexdiv
       )
 
       lexical_diversity_results$analyzed <- TRUE
