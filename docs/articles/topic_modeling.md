@@ -1,0 +1,80 @@
+# Topic Modeling
+
+Topic modeling discovers hidden themes in text collections.
+
+## Setup
+
+``` r
+library(TextAnalysisR)
+
+mydata <- SpecialEduTech
+united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
+tokens <- prep_texts(united_tbl, text_field = "united_texts")
+dfm_object <- quanteda::dfm(tokens)
+```
+
+## Find Optimal Topics
+
+``` r
+find_optimal_k(dfm_object, topic_range = 5:30)
+```
+
+## STM (Statistical)
+
+Works with metadata like year or document type:
+
+``` r
+out <- quanteda::convert(dfm_object, to = "stm")
+
+model <- stm::stm(
+  documents = out$documents,
+  vocab = out$vocab,
+  K = 15,
+  prevalence = ~ reference_type + s(year),
+  data = out$meta
+)
+
+# View topics
+terms <- get_topic_terms(model, top_term_n = 10)
+```
+
+## Embedding-based (Semantic)
+
+Captures meaning using neural networks:
+
+``` r
+results <- fit_semantic_model(
+  texts = united_tbl$united_texts,
+  n_topics = 15
+)
+```
+
+## Hybrid
+
+Combines statistical and semantic approaches:
+
+``` r
+results <- fit_hybrid_model(
+  texts = united_tbl$united_texts,
+  metadata = united_tbl[, c("reference_type", "year")],
+  n_topics_stm = 15
+)
+```
+
+## AI Topic Labels
+
+``` r
+labels <- generate_topic_labels(
+  terms,
+  model = "gpt-4o-mini",
+  openai_api_key = Sys.getenv("OPENAI_API_KEY")
+)
+```
+
+## Methods Comparison
+
+| Method    | Speed  | Metadata | Meaning       |
+|-----------|--------|----------|---------------|
+| STM       | Fast   | Yes      | Word patterns |
+| Embedding | Medium | No       | Semantic      |
+| Hybrid    | Slow   | Yes      | Both          |

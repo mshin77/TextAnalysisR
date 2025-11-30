@@ -1,0 +1,55 @@
+# Python Environment
+
+Python enables advanced features: PDF tables, embeddings, and AI
+analysis.
+
+## Quick Setup
+
+``` r
+library(TextAnalysisR)
+setup_python_env()
+```
+
+Uses conda if available, otherwise virtualenv.
+
+## Check Status
+
+``` r
+check_python_env()
+```
+
+## Common Issues
+
+### “Another Python already initialized”
+
+Set preferred environment in `.Rprofile`:
+
+``` r
+Sys.setenv(RETICULATE_PYTHON_ENV = "textanalysisr-env")
+```
+
+Then restart R.
+
+### Environment in OneDrive
+
+Avoid OneDrive paths. Use:
+
+``` r
+setup_python_env(method = "virtualenv", envpath = "C:/Python/envs")
+```
+
+## Deep Learning (Optional)
+
+For embeddings and neural sentiment:
+
+``` bash
+pip install sentence-transformers transformers torch
+```
+
+## Diagnostics
+
+``` r
+library(reticulate)
+py_config()
+conda_list()
+```
