@@ -6,20 +6,25 @@ MTLD and MATTR are most stable and text-length independent.
 ## Usage
 
 ``` r
-lexical_diversity_analysis(dfm_object, measures = "all")
+lexical_diversity_analysis(dfm_object, measures = "all", texts = NULL)
 ```
 
 ## Arguments
 
 - dfm_object:
 
-  A document-feature matrix from quanteda
+  A document-feature matrix or tokens object from quanteda
 
 - measures:
 
   Character vector of measures to calculate. Options: "all", "MTLD"
   (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas",
   "K", "D"
+
+- texts:
+
+  Optional character vector of original texts for calculating average
+  sentence length
 
 ## Value
 
@@ -34,7 +39,7 @@ texts <- SpecialEduTech$abstract[1:10]
 corp <- quanteda::corpus(texts)
 toks <- quanteda::tokens(corp)
 dfm_obj <- quanteda::dfm(toks)
-lex_div <- lexical_diversity_analysis(dfm_obj)
+lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
 print(lex_div)
 } # }
 ```
