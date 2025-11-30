@@ -1,0 +1,121 @@
+# Analyze and Visualize Word Co-occurrence Networks
+
+This function creates a word co-occurrence network based on a
+document-feature matrix (dfm).
+
+## Usage
+
+``` r
+plot_cooccurrence_network(
+  dfm_object,
+  doc_var = NULL,
+  co_occur_n = 50,
+  top_node_n = 30,
+  nrows = 1,
+  height = 800,
+  width = 900,
+  category = NULL,
+  use_category_specific = FALSE,
+  category_params = NULL
+)
+```
+
+## Arguments
+
+- dfm_object:
+
+  A quanteda document-feature matrix (dfm).
+
+- doc_var:
+
+  A document-level metadata variable (default: NULL).
+
+- co_occur_n:
+
+  Minimum number of co-occurrences for filtering terms (default: 50).
+
+- top_node_n:
+
+  Number of top nodes to display (default: 30).
+
+- nrows:
+
+  Number of rows to display in the table (default: 1).
+
+- height:
+
+  The height of the resulting Plotly plot, in pixels (default: 800).
+
+- width:
+
+  The width of the resulting Plotly plot, in pixels (default: 900).
+
+- category:
+
+  An optional category to filter the data (default: NULL).
+
+- use_category_specific:
+
+  Logical; if TRUE, uses category-specific parameters (default: FALSE).
+
+- category_params:
+
+  A named list of parameters for each category level (default: NULL).
+
+## Value
+
+A list containing the Plotly plot, a data frame of the network layout,
+and the igraph graph object.
+
+## Examples
+
+``` r
+if (interactive()) {
+  mydata <- TextAnalysisR::SpecialEduTech
+
+  united_tbl <- TextAnalysisR::unite_cols(
+    mydata,
+    listed_vars = c("title", "keyword", "abstract")
+  )
+
+  tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
+
+  dfm_object <- quanteda::dfm(tokens)
+
+  # Overall
+  word_co_occurrence_network_results <- TextAnalysisR::plot_cooccurrence_network(
+                                        dfm_object,
+                                        doc_var = "reference_type",
+                                        co_occur_n = 30,
+                                        top_node_n = 0,
+                                        nrows = 1,
+                                        height = 800,
+                                        width = 900)
+
+  print(word_co_occurrence_network_results$plot)
+  print(word_co_occurrence_network_results$table)
+  print(word_co_occurrence_network_results$summary)
+
+  # Journal article
+ category_params <- list(
+  "journal_article" = list(co_occur_n = 80, top_node_n = 20),
+  "thesis" = list(co_occur_n = 30, top_node_n = 20)
+)
+
+ word_co_occurrence_category <- TextAnalysisR::plot_cooccurrence_network(
+  dfm_object,
+  doc_var = "reference_type",
+  use_category_specific = TRUE,
+  category_params = category_params)
+
+ print(word_co_occurrence_category$journal_article$plot)
+ print(word_co_occurrence_category$journal_article$table)
+ print(word_co_occurrence_category$journal_article$summary)
+
+ # Thesis
+ print(word_co_occurrence_category$thesis$plot)
+ print(word_co_occurrence_category$thesis$table)
+ print(word_co_occurrence_category$thesis$summary)
+
+}
+```
