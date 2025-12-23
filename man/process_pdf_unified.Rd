@@ -35,3 +35,12 @@ Unified PDF processing with automatic fallback:
 \item Multimodal (Python + Vision) 2. Python pdfplumber 3. R pdftools
 }
 }
+\seealso{
+Other preprocessing: 
+\code{\link{detect_multi_words}()},
+\code{\link{get_available_dfm}()},
+\code{\link{import_files}()},
+\code{\link{prep_texts}()},
+\code{\link{unite_cols}()}
+}
+\concept{preprocessing}

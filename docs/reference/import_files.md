@@ -28,6 +28,15 @@ import_files(dataset_choice, file_info = NULL, text_input = NULL)
 
 A data frame containing the processed data.
 
+## See also
+
+Other preprocessing:
+[`detect_multi_words()`](https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.md),
+[`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
+[`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
+[`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),
+[`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)
+
 ## Examples
 
 ``` r

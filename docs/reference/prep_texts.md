@@ -36,6 +36,11 @@ prep_texts(
   include_docvars = TRUE,
   keep_acronyms = FALSE,
   padding = FALSE,
+  remove_stopwords = FALSE,
+  stopwords_source = "snowball",
+  stopwords_language = "en",
+  custom_stopwords = NULL,
+  custom_valuetype = "glob",
   verbose = FALSE,
   ...
 )
@@ -102,6 +107,28 @@ prep_texts(
 
   Logical; add padding to the tokens object (default: FALSE).
 
+- remove_stopwords:
+
+  Logical; remove stopwords from the text (default: FALSE).
+
+- stopwords_source:
+
+  Character; source for stopwords, e.g., "snowball", "stopwords-iso"
+  (default: "snowball").
+
+- stopwords_language:
+
+  Character; language for stopwords (default: "en").
+
+- custom_stopwords:
+
+  Character vector; additional words to remove (default: NULL).
+
+- custom_valuetype:
+
+  Character; valuetype for custom_stopwords pattern matching, one of
+  "glob", "regex", or "fixed" (default: "glob").
+
 - verbose:
 
   Logical; print verbose output (default: FALSE).
@@ -114,6 +141,15 @@ prep_texts(
 ## Value
 
 A `tokens` object that contains the preprocessed text data.
+
+## See also
+
+Other preprocessing:
+[`detect_multi_words()`](https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.md),
+[`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
+[`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
+[`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),
+[`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)
 
 ## Examples
 

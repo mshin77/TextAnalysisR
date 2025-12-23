@@ -46,3 +46,12 @@ process_pdf_unified(
 ## Value
 
 List: success, data, type, method, message
+
+## See also
+
+Other preprocessing:
+[`detect_multi_words()`](https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.md),
+[`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
+[`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
+[`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
+[`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)

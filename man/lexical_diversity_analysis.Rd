@@ -4,15 +4,18 @@
 \alias{lexical_diversity_analysis}
 \title{Lexical Diversity Analysis}
 \usage{
-lexical_diversity_analysis(dfm_object, measures = "all", texts = NULL)
+lexical_diversity_analysis(x, measures = "all", texts = NULL)
 }
 \arguments{
-\item{dfm_object}{A document-feature matrix or tokens object from quanteda}
+\item{x}{A tokens object (preferred) or document-feature matrix from quanteda.
+For accurate MTLD calculation, pass a tokens object or provide the \code{texts} parameter.
+DFM input loses token order, which affects MTLD accuracy (McCarthy & Jarvis, 2010).}
 
 \item{measures}{Character vector of measures to calculate. Options:
 "all", "MTLD" (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas", "K", "D"}
 
-\item{texts}{Optional character vector of original texts for calculating average sentence length}
+\item{texts}{Optional character vector of original texts. Required for accurate MTLD
+when passing a DFM (since DFM loses token order). Also used for average sentence length.}
 }
 \value{
 A list with lexical_diversity (data frame) and summary_stats
@@ -27,9 +30,27 @@ data(SpecialEduTech)
 texts <- SpecialEduTech$abstract[1:10]
 corp <- quanteda::corpus(texts)
 toks <- quanteda::tokens(corp)
+# Preferred: pass tokens object for accurate MTLD
+lex_div <- lexical_diversity_analysis(toks, texts = texts)
+# Alternative: pass DFM with texts for MTLD accuracy
 dfm_obj <- quanteda::dfm(toks)
 lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
 print(lex_div)
 }
 
 }
+\seealso{
+Other lexical: 
+\code{\link{calculate_text_readability}()},
+\code{\link{extract_keywords_keyness}()},
+\code{\link{extract_keywords_tfidf}()},
+\code{\link{lexical_frequency_analysis}()},
+\code{\link{plot_keyness_keywords}()},
+\code{\link{plot_keyword_comparison}()},
+\code{\link{plot_lexical_diversity_distribution}()},
+\code{\link{plot_readability_by_group}()},
+\code{\link{plot_readability_distribution}()},
+\code{\link{plot_tfidf_keywords}()},
+\code{\link{plot_top_readability_documents}()}
+}
+\concept{lexical}

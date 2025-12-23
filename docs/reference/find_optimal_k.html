@@ -30,6 +30,8 @@ Produces diagnostic plots to help select the best K value."><meta property="og:i
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -58,6 +60,8 @@ Produces diagnostic plots to help select the best K value.</p>
 <span>  <span class="va">dfm_object</span>,</span>
 <span>  <span class="va">topic_range</span>,</span>
 <span>  max.em.its <span class="op">=</span> <span class="fl">75</span>,</span>
+<span>  emtol <span class="op">=</span> <span class="fl">1e-04</span>,</span>
+<span>  cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  categorical_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  continuous_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  height <span class="op">=</span> <span class="fl">600</span>,</span>
@@ -81,6 +85,16 @@ Produces diagnostic plots to help select the best K value.</p>
 
 <dt id="arg-max-em-its">max.em.its<a class="anchor" aria-label="anchor" href="#arg-max-em-its"></a></dt>
 <dd><p>Maximum number of EM iterations (default: 75).</p></dd>
+
+
+<dt id="arg-emtol">emtol<a class="anchor" aria-label="anchor" href="#arg-emtol"></a></dt>
+<dd><p>Convergence tolerance for EM algorithm (default: 1e-04).
+Higher values (e.g., 1e-03) speed up fitting but may reduce precision.</p></dd>
+
+
+<dt id="arg-cores">cores<a class="anchor" aria-label="anchor" href="#arg-cores"></a></dt>
+<dd><p>Number of CPU cores to use for parallel processing (default: 1).
+Set to higher values for faster searchK on multi-core systems.</p></dd>
 
 
 <dt id="arg-categorical-var">categorical_var<a class="anchor" aria-label="anchor" href="#arg-categorical-var"></a></dt>
@@ -110,6 +124,33 @@ Produces diagnostic plots to help select the best K value.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list containing search results and diagnostic plots.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p>Other topic-modeling:
+<code><a href="analyze_semantic_evolution.html">analyze_semantic_evolution()</a></code>,
+<code><a href="assess_hybrid_stability.html">assess_hybrid_stability()</a></code>,
+<code><a href="calculate_assignment_consistency.html">calculate_assignment_consistency()</a></code>,
+<code><a href="calculate_eval_metrics_internal.html">calculate_eval_metrics_internal()</a></code>,
+<code><a href="calculate_keyword_stability.html">calculate_keyword_stability()</a></code>,
+<code><a href="calculate_semantic_drift.html">calculate_semantic_drift()</a></code>,
+<code><a href="calculate_topic_probability.html">calculate_topic_probability()</a></code>,
+<code><a href="calculate_topic_stability.html">calculate_topic_stability()</a></code>,
+<code><a href="find_topic_matches.html">find_topic_matches()</a></code>,
+<code><a href="fit_embedding_topics.html">fit_embedding_topics()</a></code>,
+<code><a href="fit_hybrid_model.html">fit_hybrid_model()</a></code>,
+<code><a href="fit_temporal_model.html">fit_temporal_model()</a></code>,
+<code><a href="generate_topic_labels.html">generate_topic_labels()</a></code>,
+<code><a href="get_topic_prevalence.html">get_topic_prevalence()</a></code>,
+<code><a href="get_topic_terms.html">get_topic_terms()</a></code>,
+<code><a href="get_topic_texts.html">get_topic_texts()</a></code>,
+<code><a href="identify_topic_trends.html">identify_topic_trends()</a></code>,
+<code><a href="plot_model_comparison.html">plot_model_comparison()</a></code>,
+<code><a href="plot_quality_metrics.html">plot_quality_metrics()</a></code>,
+<code><a href="run_contrastive_topics_internal.html">run_contrastive_topics_internal()</a></code>,
+<code><a href="run_neural_topics_internal.html">run_neural_topics_internal()</a></code>,
+<code><a href="run_temporal_topics_internal.html">run_temporal_topics_internal()</a></code>,
+<code><a href="validate_semantic_coherence.html">validate_semantic_coherence()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -31,3 +31,12 @@ if (interactive()) {
   print(united_tbl)
 }
 }
+\seealso{
+Other preprocessing: 
+\code{\link{detect_multi_words}()},
+\code{\link{get_available_dfm}()},
+\code{\link{import_files}()},
+\code{\link{prep_texts}()},
+\code{\link{process_pdf_unified}()}
+}
+\concept{preprocessing}

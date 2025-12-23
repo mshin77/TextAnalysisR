@@ -26,3 +26,15 @@ A plotly polar chart
 \description{
 Creates a polar/radar chart for NRC emotion analysis with optional grouping.
 }
+\seealso{
+Other sentiment: 
+\code{\link{analyze_sentiment}()},
+\code{\link{plot_document_sentiment_trajectory}()},
+\code{\link{plot_sentiment_boxplot}()},
+\code{\link{plot_sentiment_by_category}()},
+\code{\link{plot_sentiment_distribution}()},
+\code{\link{plot_sentiment_violin}()},
+\code{\link{sentiment_embedding_analysis}()},
+\code{\link{sentiment_lexicon_analysis}()}
+}
+\concept{sentiment}

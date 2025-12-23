@@ -48,6 +48,8 @@
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -99,6 +101,48 @@ neural networks.</p>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"cosine"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<hr>
+<details><summary><strong>Similarity Methods</strong>
+</summary><p>Semantic analysis measures document similarity using different
+approaches to capture meaning, from simple vocabulary matching to deep
+neural representations.</p>
+<p><strong>Methods:</strong></p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="41%">
+<col width="32%">
+</colgroup>
+<thead><tr class="header">
+<th>Method</th>
+<th>Description</th>
+<th>Best For</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Words</td>
+<td>Lexical analysis using word frequency vectors (bag-of-words)</td>
+<td>Finding documents with shared terminology</td>
+</tr>
+<tr class="even">
+<td>N-grams</td>
+<td>Phrase-based analysis capturing word sequences</td>
+<td>Detecting similar phraseology</td>
+</tr>
+<tr class="odd">
+<td>Embeddings</td>
+<td>Deep semantic analysis using transformer models</td>
+<td>Conceptual similarity, handles synonyms</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usage:</strong> Choose method based on your analysis goals.
+Words and n-grams are faster and interpretable. Embeddings capture
+deeper meaning but require more computation. All methods use cosine
+similarity for comparison.</p>
+<p><strong>Learn More:</strong> <a href="https://www.sbert.net/" class="external-link">Sentence Transformers
+Documentation</a></p>
+</details><hr>
 </div>
 <div class="section level2">
 <h2 id="sentiment-analysis">Sentiment Analysis<a class="anchor" aria-label="anchor" href="#sentiment-analysis"></a>
@@ -115,6 +159,7 @@ neural networks.</p>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sentiment_embedding_analysis.html">sentiment_embedding_analysis</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span></code></pre></div>
+<hr>
 </div>
 </div>
 <div class="section level2">
@@ -131,44 +176,147 @@ neural networks.</p>
 <span>  <span class="va">clusters</span><span class="op">$</span><span class="va">cluster_keywords</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"ollama"</span>  <span class="co"># or "openai"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<hr>
+<details><summary><strong>Clustering Algorithms</strong>
+</summary><p>Clustering groups documents with similar semantic content into
+categories. Documents within a cluster are more similar to each other
+than to documents in other clusters.</p>
+<p><strong>Algorithms:</strong></p>
+<table class="table">
+<colgroup>
+<col width="32%">
+<col width="38%">
+<col width="29%">
+</colgroup>
+<thead><tr class="header">
+<th>Algorithm</th>
+<th>Description</th>
+<th>Use Case</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>K-means</td>
+<td>Creates K spherical clusters</td>
+<td>Fast, simple, requires specifying K</td>
+</tr>
+<tr class="even">
+<td>Hierarchical</td>
+<td>Builds tree of clusters</td>
+<td>Exploring nested structures</td>
+</tr>
+<tr class="odd">
+<td>DBSCAN</td>
+<td>Density-based, finds outliers</td>
+<td>Arbitrarily shaped clusters</td>
+</tr>
+<tr class="even">
+<td>HDBSCAN</td>
+<td>Hierarchical density-based</td>
+<td>Auto-determines cluster count</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usage:</strong> Choose discovery mode (Automatic, Manual,
+Advanced). Select semantic feature space and algorithm. Automatic mode
+finds optimal cluster count. Use visualizations and quality metrics to
+evaluate results.</p>
+<p><strong>Learn More:</strong> <a href="https://scikit-learn.org/stable/modules/clustering.html" class="external-link">scikit-learn
+Clustering Guide</a></p>
+</details><hr>
+<details><summary><strong>Dimensionality Reduction</strong>
+</summary><p>Dimensionality reduction transforms high-dimensional data into 2D or
+3D visualizations while preserving the structure and relationships
+between documents.</p>
+<p><strong>Algorithms:</strong></p>
+<table class="table">
+<colgroup>
+<col width="30%">
+<col width="36%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Algorithm</th>
+<th>Description</th>
+<th>Trade-offs</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>PCA</td>
+<td>Principal Component Analysis, finds linear patterns</td>
+<td>Fast, interpretable</td>
+</tr>
+<tr class="even">
+<td>t-SNE</td>
+<td>Preserves local structure, reveals clusters</td>
+<td>Slow, good for visualization</td>
+</tr>
+<tr class="odd">
+<td>UMAP</td>
+<td>Balances local and global structure</td>
+<td>Faster than t-SNE, better topology</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Usage:</strong> Select a semantic feature space (words,
+n-grams, or embeddings), then choose a reduction method. Adjust
+parameters (perplexity, neighbors, dimensions) based on your data size
+and structure. Use for visual exploration before clustering.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reduce_dimensions.html">reduce_dimensions</a></span><span class="op">(</span><span class="va">embeddings</span>, method <span class="op">=</span> <span class="st">"umap"</span>, n_components <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_semantic_viz.html">plot_semantic_viz</a></span><span class="op">(</span><span class="va">reduced</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Learn More:</strong> <a href="https://scikit-learn.org/stable/modules/manifold.html" class="external-link">scikit-learn
+Manifold Learning</a></p>
+</details><hr>
 </div>
 <div class="section level2">
 <h2 id="temporal-analysis">Temporal Analysis<a class="anchor" aria-label="anchor" href="#temporal-analysis"></a>
 </h2>
 <p>Track themes over time:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">temporal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/temporal_semantic_analysis.html">temporal_semantic_analysis</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  timestamps <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">year</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="embedding-models">Embedding Models<a class="anchor" aria-label="anchor" href="#embedding-models"></a>
-</h2>
-<table class="table">
+<hr>
+<details><summary><strong>Embedding Models</strong>
+</summary><table class="table">
 <thead><tr class="header">
 <th>Model</th>
 <th>Speed</th>
 <th>Quality</th>
+<th>Use Case</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td>all-MiniLM-L6-v2</td>
 <td>Fast</td>
 <td>Good</td>
+<td>General purpose</td>
 </tr>
 <tr class="even">
 <td>all-mpnet-base-v2</td>
 <td>Slow</td>
 <td>Best</td>
+<td>Highest quality</td>
 </tr>
 <tr class="odd">
 <td>paraphrase-multilingual</td>
 <td>Medium</td>
-<td>Multilingual</td>
+<td>Good</td>
+<td>Multiple languages</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Learn More:</strong> <a href="https://www.sbert.net/docs/pretrained_models.html" class="external-link">Sentence
+Transformers Models</a></p>
+</details><hr>
+</div>
+<div class="section level2">
+<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h2>
+<ul>
+<li><a href="topic_modeling.html">Topic Modeling</a></li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

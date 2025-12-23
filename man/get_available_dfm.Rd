@@ -42,3 +42,12 @@ dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning")
 result <- get_available_dfm(dfm_init = dfm1)
 }
 }
+\seealso{
+Other preprocessing: 
+\code{\link{detect_multi_words}()},
+\code{\link{import_files}()},
+\code{\link{prep_texts}()},
+\code{\link{process_pdf_unified}()},
+\code{\link{unite_cols}()}
+}
+\concept{preprocessing}

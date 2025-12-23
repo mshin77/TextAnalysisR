@@ -21,7 +21,7 @@ print(status)
 #> [1] FALSE
 #> 
 #> $ollama
-#> [1] FALSE
+#> [1] TRUE
 #> 
 #> $langgraph
 #> [1] FALSE

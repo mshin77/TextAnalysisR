@@ -37,3 +37,15 @@ results <- analyze_sentiment(texts)
 print(results)
 }
 }
+\seealso{
+Other sentiment: 
+\code{\link{plot_document_sentiment_trajectory}()},
+\code{\link{plot_emotion_radar}()},
+\code{\link{plot_sentiment_boxplot}()},
+\code{\link{plot_sentiment_by_category}()},
+\code{\link{plot_sentiment_distribution}()},
+\code{\link{plot_sentiment_violin}()},
+\code{\link{sentiment_embedding_analysis}()},
+\code{\link{sentiment_lexicon_analysis}()}
+}
+\concept{sentiment}

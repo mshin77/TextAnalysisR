@@ -41,3 +41,12 @@ if (interactive()) {
   head(mydata)
 }
 }
+\seealso{
+Other preprocessing: 
+\code{\link{detect_multi_words}()},
+\code{\link{get_available_dfm}()},
+\code{\link{prep_texts}()},
+\code{\link{process_pdf_unified}()},
+\code{\link{unite_cols}()}
+}
+\concept{preprocessing}

@@ -16,6 +16,7 @@
 #'     \item{sentiment}{Classification: "positive", "negative", or "neutral"}
 #'   }
 #'
+#' @family sentiment
 #' @export
 #'
 #' @examples
@@ -67,6 +68,7 @@ analyze_sentiment <- function(texts,
 #'
 #' @return A plotly bar chart
 #'
+#' @family sentiment
 #' @export
 #'
 #' @examples
@@ -123,6 +125,7 @@ plot_sentiment_distribution <- function(sentiment_data,
 #'
 #' @return A plotly grouped/stacked bar chart
 #'
+#' @family sentiment
 #' @export
 #'
 #' @examples
@@ -184,88 +187,27 @@ plot_sentiment_by_category <- function(sentiment_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       xaxis = list(
         title = list(text = category_var),
         tickangle = -45,
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         title = list(text = "Proportion"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
       ),
       barmode = if (plot_type == "stacked") "stack" else "group",
       font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-      hoverlabel = list(align = "left", font = list(size = 15)),
+      hoverlabel = list(align = "left", font = list(size = 16)),
       margin = list(l = 80, r = 40, t = 80, b = 120)
     ) %>%
     plotly::config(displayModeBar = TRUE)
 }
 
-
-#' Plot Top Documents by Sentiment Score
-#'
-#' @description
-#' Creates a bar plot of documents with highest/lowest sentiment scores.
-#'
-#' @param sentiment_data Data frame from analyze_sentiment()
-#' @param top_n Number of documents to show (default: 15)
-#' @param order Direction: "highest" or "lowest" (default: "highest")
-#' @param title Plot title (default: auto-generated)
-#'
-#' @return A plotly bar chart
-#'
-#' @export
-plot_top_sentiment_documents <- function(sentiment_data,
-                                         top_n = 15,
-                                         order = "highest",
-                                         title = NULL) {
-
-  if (!requireNamespace("plotly", quietly = TRUE) || !requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Packages 'plotly' and 'dplyr' are required.")
-  }
-
-  if (!"sentiment_score" %in% names(sentiment_data)) {
-    stop("Data must contain 'sentiment_score' column. Use analyze_sentiment() first.")
-  }
-
-  sorted_data <- sentiment_data %>%
-    dplyr::arrange(if (order == "highest") dplyr::desc(sentiment_score) else sentiment_score) %>%
-    head(top_n)
-
-  if (is.null(title)) {
-    title <- paste("Top", top_n, "Documents by Sentiment Score", paste0("(", order, ")"))
-  }
-
-  sorted_data$color <- sapply(sorted_data$sentiment_score, get_sentiment_color)
-
-  plotly::plot_ly(
-    sorted_data,
-    x = ~document,
-    y = ~sentiment_score,
-    type = "bar",
-    marker = list(color = ~color),
-    text = ~paste(
-      "<b>", document, "</b><br>",
-      "Score:", round(sentiment_score, 3), "<br>",
-      "Sentiment:", sentiment
-    ),
-    hovertemplate = "%{text}<extra></extra>",
-    textposition = "none"
-  ) %>%
-    apply_standard_plotly_layout(
-      title = title,
-      xaxis_title = "Document",
-      yaxis_title = "Sentiment Score",
-      margin = list(t = 80, b = 120, l = 80, r = 40)
-    ) %>%
-    plotly::layout(
-      xaxis = list(tickangle = -45)
-    )
-}
 
 #' Plot Document Sentiment Trajectory
 #'
@@ -280,6 +222,7 @@ plot_top_sentiment_documents <- function(sentiment_data,
 #'
 #' @return A plotly line chart with color gradient
 #'
+#' @family sentiment
 #' @export
 plot_document_sentiment_trajectory <- function(sentiment_data,
                                                top_n = NULL,
@@ -402,6 +345,7 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #' @importFrom tidytext tidy get_sentiments
 #' @importFrom dplyr inner_join group_by summarise mutate case_when ungroup n_distinct
 #' @importFrom tidyr pivot_wider pivot_longer
+#' @family sentiment
 #' @export
 #'
 #' @examples
@@ -579,6 +523,7 @@ sentiment_lexicon_analysis <- function(dfm_object,
 #'     \item{feature_type}{"embeddings"}
 #'   }
 #'
+#' @family sentiment
 #' @export
 #'
 #' @examples
@@ -695,6 +640,7 @@ sentiment_embedding_analysis <- function(texts,
 #'
 #' @return A plotly polar chart
 #'
+#' @family sentiment
 #' @export
 plot_emotion_radar <- function(emotion_data,
                                group_var = NULL,
@@ -740,7 +686,7 @@ plot_emotion_radar <- function(emotion_data,
       plotly::layout(
         title = list(
           text = title,
-          font = list(size = 18, color = "#0c1f4a", family = "Montserrat, sans-serif")
+          font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
         ),
         polar = list(
           radialaxis = list(
@@ -755,7 +701,7 @@ plot_emotion_radar <- function(emotion_data,
         font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
         hoverlabel = list(
           align = "left",
-          font = list(size = 15, family = "Roboto, sans-serif"),
+          font = list(size = 16, family = "Roboto, sans-serif"),
           maxwidth = 300
         ),
         legend = list(
@@ -789,7 +735,7 @@ plot_emotion_radar <- function(emotion_data,
       plotly::layout(
         title = list(
           text = title,
-          font = list(size = 18, color = "#0c1f4a", family = "Montserrat, sans-serif")
+          font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
         ),
         polar = list(
           radialaxis = list(
@@ -804,7 +750,7 @@ plot_emotion_radar <- function(emotion_data,
         font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
         hoverlabel = list(
           align = "left",
-          font = list(size = 15, family = "Roboto, sans-serif"),
+          font = list(size = 16, family = "Roboto, sans-serif"),
           maxwidth = 300
         ),
         showlegend = FALSE,
@@ -812,4 +758,143 @@ plot_emotion_radar <- function(emotion_data,
       ) %>%
       plotly::config(displayModeBar = TRUE)
   }
+}
+
+
+#' Plot Sentiment Box Plot by Category
+#'
+#' @description
+#' Creates a box plot showing sentiment score distribution by category.
+#'
+#' @param sentiment_data Data frame from analyze_sentiment() containing sentiment_score
+#'   and category columns
+#' @param category_var Name of the category variable column (default: "category_var")
+#' @param title Plot title (default: "Sentiment Score Distribution")
+#'
+#' @return A plotly box plot
+#'
+#' @family sentiment
+#' @export
+plot_sentiment_boxplot <- function(sentiment_data,
+                                   category_var = "category_var",
+                                   title = "Sentiment Score Distribution") {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (!category_var %in% names(sentiment_data)) {
+    stop("Category variable '", category_var, "' not found in data")
+  }
+
+  if (!"sentiment_score" %in% names(sentiment_data)) {
+    stop("sentiment_score column not found in data")
+  }
+
+  plotly::plot_ly(
+    sentiment_data,
+    x = as.formula(paste0("~", category_var)),
+    y = ~sentiment_score,
+    type = "box",
+    color = as.formula(paste0("~", category_var))
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = list(text = category_var),
+        tickangle = -45,
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = list(text = "Sentiment Score"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, family = "Roboto, sans-serif"),
+        maxwidth = 300
+      ),
+      legend = list(
+        font = list(size = 16, family = "Roboto, sans-serif")
+      ),
+      showlegend = FALSE,
+      margin = list(l = 80, r = 40, t = 80, b = 120)
+    ) %>%
+    plotly::config(displayModeBar = TRUE)
+}
+
+
+#' Plot Sentiment Violin Plot by Category
+#'
+#' @description
+#' Creates a violin plot showing sentiment score distribution by category.
+#'
+#' @param sentiment_data Data frame from analyze_sentiment() containing sentiment_score
+#'   and category columns
+#' @param category_var Name of the category variable column (default: "category_var")
+#' @param title Plot title (default: "Sentiment Score Distribution")
+#'
+#' @return A plotly violin plot
+#'
+#' @family sentiment
+#' @export
+plot_sentiment_violin <- function(sentiment_data,
+                                  category_var = "category_var",
+                                  title = "Sentiment Score Distribution") {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (!category_var %in% names(sentiment_data)) {
+    stop("Category variable '", category_var, "' not found in data")
+  }
+
+  if (!"sentiment_score" %in% names(sentiment_data)) {
+    stop("sentiment_score column not found in data")
+  }
+
+  plotly::plot_ly(
+    sentiment_data,
+    x = as.formula(paste0("~", category_var)),
+    y = ~sentiment_score,
+    type = "violin",
+    color = as.formula(paste0("~", category_var)),
+    hovertemplate = "%{x}<br>Score: %{y:.3f}<extra></extra>"
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = list(text = category_var),
+        tickangle = -45,
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = list(text = "Sentiment Score"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, family = "Roboto, sans-serif"),
+        maxwidth = 300
+      ),
+      legend = list(
+        font = list(size = 16, family = "Roboto, sans-serif")
+      ),
+      showlegend = FALSE,
+      margin = list(l = 80, r = 40, t = 80, b = 120)
+    ) %>%
+    plotly::config(displayModeBar = TRUE)
 }

@@ -3,12 +3,14 @@ template:
   bootstrap: 5
 
 reference:
-- title: "App"
+- title: "Getting Started"
+  desc: "Launch the app and import data"
   contents:
   - run_app
   - import_files
 
 - title: "Preprocessing"
+  desc: "Text preparation and feature extraction"
   contents:
   - unite_cols
   - prep_texts
@@ -16,22 +18,28 @@ reference:
   - get_available_dfm
 
 - title: "Lexical Analysis"
+  desc: "Word frequency, keywords, and readability metrics"
   contents:
+  - calculate_word_frequency
   - starts_with("extract_keywords")
-  - plot_keyword_comparison
+  - lexical_frequency_analysis
+  - lexical_diversity_analysis
+  - calculate_text_readability
+  - plot_word_frequency
   - plot_tfidf_keywords
   - plot_keyness_keywords
-  - plot_word_frequency
-  - calculate_word_frequency
+  - plot_keyword_comparison
+  - plot_ngram_frequency
+  - plot_mwe_frequency
+  - plot_pos_frequencies
+  - plot_entity_frequencies
   - plot_readability_distribution
   - plot_readability_by_group
   - plot_top_readability_documents
   - plot_lexical_diversity_distribution
-  - calculate_text_readability
-  - lexical_frequency_analysis
-  - lexical_diversity_analysis
 
 - title: "Sentiment Analysis"
+  desc: "Lexicon and embedding-based sentiment scoring"
   contents:
   - analyze_sentiment
   - sentiment_lexicon_analysis
@@ -39,35 +47,16 @@ reference:
   - starts_with("plot_sentiment")
   - plot_emotion_radar
   - plot_document_sentiment_trajectory
-  - plot_top_sentiment_documents
-
-- title: "Network Analysis"
-  contents:
-  - plot_cooccurrence_network
-  - plot_correlation_network
-  - semantic_cooccurrence_network
-  - semantic_correlation_network
-
-- title: "Topic Modeling"
-  contents:
-  - find_optimal_k
-  - starts_with("fit_")
-  - generate_topic_labels
-  - generate_topic_keywords
-  - get_topic_terms
-  - calculate_topic_probability
-  - identify_topic_trends
-  - plot_topic_probability
-  - plot_topic_effects_categorical
-  - plot_topic_effects_continuous
-  - plot_word_probability
-  - run_text_workflow
+  - get_sentiment_color
+  - get_sentiment_colors
 
 - title: "Semantic Analysis"
+  desc: "Document similarity, clustering, and embeddings"
   contents:
   - generate_embeddings
   - reduce_dimensions
   - calculate_document_similarity
+  - calculate_similarity_robust
   - calculate_cosine_similarity
   - semantic_similarity_analysis
   - semantic_document_clustering
@@ -78,42 +67,89 @@ reference:
   - temporal_semantic_analysis
   - analyze_semantic_evolution
   - plot_semantic_viz
+  - plot_similarity_heatmap
+  - plot_cross_category_heatmap
+  - plot_cluster_terms
+
+- title: "Network Analysis"
+  desc: "Word co-occurrence and correlation networks"
+  contents:
+  - semantic_cooccurrence_network
+  - semantic_correlation_network
+
+- title: "Topic Modeling"
+  desc: "STM, embedding-based, and hybrid topic models"
+  contents:
+  - find_optimal_k
+  - starts_with("fit_")
+  - get_topic_terms
+  - get_topic_prevalence
+  - get_topic_texts
+  - calculate_topic_probability
+  - calculate_topic_stability
+  - identify_topic_trends
+  - generate_topic_labels
+  - generate_topic_content
+  - plot_topic_probability
+  - plot_topic_effects_categorical
+  - plot_topic_effects_continuous
+  - plot_word_probability
+  - plot_model_comparison
+  - plot_quality_metrics
+  - plot_term_trends_continuous
 
 - title: "PDF Processing"
+  desc: "Text and table extraction from PDFs"
   contents:
+  - process_pdf_unified
+  - starts_with("process_pdf")
   - starts_with("extract_text")
   - starts_with("extract_tables")
   - starts_with("extract_pdf")
-  - starts_with("process_pdf")
   - starts_with("detect_pdf")
 
 - title: "AI Integration"
+  desc: "LLM-powered analysis with Ollama and OpenAI"
   contents:
   - check_ollama
   - list_ollama_models
   - call_ollama
+  - call_openai_chat
   - check_vision_models
   - get_recommended_ollama_model
   - init_langgraph
   - generate_topic_labels_langgraph
   - validate_topic_labels_langgraph
   - run_rag_search
+  - ai_content_generation
+  - generate_survey_items
+  - generate_topic_content
+  - get_content_type_prompt
+  - get_content_type_user_template
   - format_label_candidates
   - create_label_selection_data
+
+- title: "Python Environment"
+  desc: "Python/reticulate setup and checking"
+  contents:
   - setup_python_env
   - check_python_env
   - check_multimodal_prerequisites
 
-- title: "Data"
+- title: "Validation & Metrics"
+  desc: "Quality assessment and cross-validation"
   contents:
-  - SpecialEduTech
-  - acronym
-  - stm_15
-  - dictionary_list_1
-  - dictionary_list_2
-  - stopwords_list
+  - cross_analysis_validation
+  - validate_cross_models
+  - validate_semantic_coherence
+  - calculate_clustering_metrics
+  - calculate_cross_similarity
+  - analyze_contrastive_similarity
+  - analyze_similarity_gaps
+  - extract_cross_category_similarities
 
-- title: "Shiny Helpers"
+- title: "Shiny UI Helpers"
+  desc: "App interface components and notifications"
   contents:
   - starts_with("show_")
   - remove_notification_by_id
@@ -123,15 +159,16 @@ reference:
   - get_feature_status
   - require_feature
   - plot_error
+  - create_empty_plot_message
   - apply_standard_plotly_layout
   - create_standard_ggplot_theme
   - get_plotly_hover_config
-  - get_sentiment_color
-  - get_sentiment_colors
+  - get_dt_options
   - create_message_table
   - create_analysis_datatable
 
 - title: "Security & Accessibility"
+  desc: "Input validation and WCAG compliance"
   contents:
   - validate_file_upload
   - sanitize_text_input
@@ -145,17 +182,33 @@ reference:
   - validate_keyboard_navigation
   - check_alt_text
 
+- title: "Data"
+  desc: "Example datasets and dictionaries"
+  contents:
+  - SpecialEduTech
+  - acronym
+  - stm_15
+  - dictionary_list_1
+  - dictionary_list_2
+  - stopwords_list
+
 - title: "Internal"
   contents:
-  - starts_with("validate_")
-  - starts_with("calculate_")
+  - TextAnalysisR-package
+  - "`%>%`"
+  - run_text_workflow
   - starts_with("run_")
-  - cross_analysis_validation
   - find_topic_matches
   - analyze_topic_evolution
   - generate_semantic_topic_keywords
-  - TextAnalysisR-package
-  - "`%>%`"
+  - calculate_eval_metrics_internal
+  - calculate_semantic_drift
+  - assess_hybrid_stability
+  - compute_topic_alignment
+  - compute_hybrid_quality_metrics
+  - combine_keywords_weighted
+  - calculate_assignment_consistency
+  - calculate_keyword_stability
 
 articles:
 - title: "Getting Started"
@@ -164,19 +217,23 @@ articles:
   - quickstart
   - installation
 
-- title: "Analysis"
+- title: "Core Workflows"
   contents:
   - preprocessing
   - lexical_analysis
   - semantic_analysis
   - topic_modeling
 
-- title: "Advanced"
+- title: "Advanced Topics"
   contents:
   - python_environment
   - multimodal_analysis
   - cybersecurity
   - web_accessibility
+
+- title: "Reference"
+  contents:
+  - function_index
 
 navbar:
   structure:
@@ -207,3 +264,6 @@ navbar:
         href: articles/python_environment.html
       - text: Multimodal Analysis
         href: articles/multimodal_analysis.html
+      - text: "---"
+      - text: Function Index
+        href: articles/function_index.html

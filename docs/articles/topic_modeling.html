@@ -48,6 +48,8 @@
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -95,11 +97,29 @@
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/find_optimal_k.html">find_optimal_k</a></span><span class="op">(</span><span class="va">dfm_object</span>, topic_range <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="stm-statistical">STM (Statistical)<a class="anchor" aria-label="anchor" href="#stm-statistical"></a>
-</h2>
-<p>Works with metadata like year or document type:</p>
+<hr>
+<details><summary><strong>STM (Structural Topic Model)</strong>
+</summary><p>STM discovers latent topics using probabilistic modeling while
+incorporating document metadata as covariates. It models how topics vary
+across documents based on metadata like time, author, or category.</p>
+<p><strong>Best For:</strong></p>
+<ul>
+<li>Metadata analysis: Relate topics to document characteristics</li>
+<li>Covariate effects: Test how metadata affects topics</li>
+<li>Interpretability: Clear word-probability distributions</li>
+</ul>
+<p><strong>Quality Metrics:</strong></p>
+<ul>
+<li>
+<strong>Semantic Coherence:</strong> Measures word co-occurrence
+within topics (Mimno et al., 2011)</li>
+<li>
+<strong>Exclusivity:</strong> Measures how unique words are to each
+topic</li>
+<li>
+<strong>Held-out Likelihood:</strong> Predictive performance on
+unseen documents</li>
+</ul>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/convert.html" class="external-link">convert</a></span><span class="op">(</span><span class="va">dfm_object</span>, to <span class="op">=</span> <span class="st">"stm"</span><span class="op">)</span></span>
 <span></span>
@@ -111,29 +131,85 @@
 <span>  data <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">meta</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># View topics</span></span>
 <span><span class="va">terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_topic_terms.html">get_topic_terms</a></span><span class="op">(</span><span class="va">model</span>, top_term_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="embedding-based-semantic">Embedding-based (Semantic)<a class="anchor" aria-label="anchor" href="#embedding-based-semantic"></a>
-</h2>
-<p>Captures meaning using neural networks:</p>
+<p><strong>Learn More:</strong> <a href="https://www.structuraltopicmodel.com/" class="external-link">Structural Topic Model</a>
+| <a href="https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf" class="external-link">STM
+Vignette</a></p>
+</details><hr>
+<details><summary><strong>Embedding-based Topics (BERTopic)</strong>
+</summary><p>Uses transformer embeddings to capture semantic meaning, then applies
+UMAP dimensionality reduction and HDBSCAN clustering to discover topics.
+Creates semantically coherent topics based on deep contextual
+understanding.</p>
+<p><strong>Best For:</strong></p>
+<ul>
+<li>Semantic coherence: Capture meaning beyond word co-occurrence</li>
+<li>Short texts: Tweets, reviews, survey responses</li>
+<li>Multilingual: Handles multiple languages</li>
+</ul>
+<p><strong>Key Components:</strong></p>
+<ul>
+<li>
+<strong>Sentence Transformers:</strong> Generate contextual
+embeddings (e.g., all-MiniLM-L6-v2)</li>
+<li>
+<strong>UMAP:</strong> Dimensionality reduction preserving local
+structure</li>
+<li>
+<strong>HDBSCAN:</strong> Density-based clustering for topic
+discovery</li>
+<li>
+<strong>c-TF-IDF:</strong> Class-based TF-IDF for topic keyword
+extraction</li>
+</ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_semantic_model.html">fit_semantic_model</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_topics.html">fit_embedding_topics</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  n_topics <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="hybrid">Hybrid<a class="anchor" aria-label="anchor" href="#hybrid"></a>
-</h2>
-<p>Combines statistical and semantic approaches:</p>
+<p><strong>Learn More:</strong> <a href="https://maartengr.github.io/BERTopic/" class="external-link">BERTopic</a> | <a href="https://www.sbert.net/" class="external-link">Sentence-BERT</a></p>
+</details><hr>
+<details><summary><strong>Hybrid Topic Modeling</strong>
+</summary><p>Combines the strengths of both STM and embedding-based approaches.
+Uses transformer embeddings for semantic understanding while maintaining
+STM’s ability to model covariate relationships and provide probabilistic
+topic assignments.</p>
+<p><strong>Best For:</strong></p>
+<ul>
+<li>Best of both worlds: Need semantic coherence AND covariate
+modeling</li>
+<li>Complex research: Testing hypotheses about how metadata affects
+semantically-defined topics</li>
+<li>Validation: Compare and validate findings across different
+methodological approaches</li>
+</ul>
+<p><strong>Quality Metrics:</strong></p>
+<ul>
+<li>
+<strong>Semantic Coherence:</strong> How often top words co-occur in
+documents (higher is better)</li>
+<li>
+<strong>Exclusivity:</strong> How unique words are to each topic
+(higher is better)</li>
+<li>
+<strong>Silhouette Score:</strong> Cluster separation for embedding
+topics (-1 to 1, higher is better)</li>
+<li>
+<strong>Alignment Score:</strong> Agreement between STM and
+embedding topic assignments</li>
+<li>
+<strong>Adjusted Rand Index:</strong> Clustering agreement corrected
+for chance</li>
+</ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_hybrid_model.html">fit_hybrid_model</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  metadata <span class="op">=</span> <span class="va">united_tbl</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"reference_type"</span>, <span class="st">"year"</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>  n_topics_stm <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><strong>Learn More:</strong> <a href="https://www.structuraltopicmodel.com/" class="external-link">Structural Topic Model</a>
+| <a href="https://maartengr.github.io/BERTopic/" class="external-link">BERTopic</a></p>
+</details><hr>
 </div>
 <div class="section level2">
 <h2 id="ai-topic-labels">AI Topic Labels<a class="anchor" aria-label="anchor" href="#ai-topic-labels"></a>
@@ -141,41 +217,84 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span></span>
 <span>  <span class="va">terms</span>,</span>
-<span>  model <span class="op">=</span> <span class="st">"gpt-4o-mini"</span>,</span>
-<span>  openai_api_key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"OPENAI_API_KEY"</span><span class="op">)</span></span>
+<span>  provider <span class="op">=</span> <span class="st">"ollama"</span>  <span class="co"># or "openai"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="methods-comparison">Methods Comparison<a class="anchor" aria-label="anchor" href="#methods-comparison"></a>
-</h2>
-<table class="table">
+<hr>
+<details><summary><strong>Methods Comparison</strong>
+</summary><table class="table">
 <thead><tr class="header">
-<th>Method</th>
-<th>Speed</th>
-<th>Metadata</th>
-<th>Meaning</th>
+<th>Feature</th>
+<th>STM</th>
+<th>Embedding</th>
+<th>Hybrid</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>STM</td>
+<td>Speed</td>
 <td>Fast</td>
-<td>Yes</td>
-<td>Word patterns</td>
+<td>Medium</td>
+<td>Slow</td>
 </tr>
 <tr class="even">
-<td>Embedding</td>
-<td>Medium</td>
+<td>Metadata Support</td>
+<td>Yes</td>
 <td>No</td>
-<td>Semantic</td>
+<td>Yes</td>
 </tr>
 <tr class="odd">
-<td>Hybrid</td>
-<td>Slow</td>
-<td>Yes</td>
+<td>Semantic Meaning</td>
+<td>Word patterns</td>
+<td>Deep semantic</td>
 <td>Both</td>
+</tr>
+<tr class="even">
+<td>Interpretability</td>
+<td>High</td>
+<td>Medium</td>
+<td>High</td>
+</tr>
+<tr class="odd">
+<td>Short Texts</td>
+<td>Poor</td>
+<td>Good</td>
+<td>Good</td>
+</tr>
+<tr class="even">
+<td>Multilingual</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr class="odd">
+<td>Requires Python</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
 </tr>
 </tbody>
 </table>
+<p><strong>When to Use Each:</strong></p>
+<ul>
+<li>
+<strong>STM:</strong> Academic research with metadata, covariate
+effects, interpretability priority</li>
+<li>
+<strong>Embedding:</strong> Short texts, multilingual, semantic
+similarity over frequency</li>
+<li>
+<strong>Hybrid:</strong> High-stakes research, methodological
+validation, comprehensive analysis</li>
+</ul></details><hr>
+</div>
+<div class="section level2">
+<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h2>
+<ul>
+<li><a href="semantic_analysis.html">Semantic Analysis</a></li>
+<li>
+<a href="python_environment.html">Python Environment</a> (for
+embedding-based methods)</li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

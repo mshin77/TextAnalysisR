@@ -3,6 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   cybersecurity: cybersecurity.html
+  function_index: function_index.html
   installation: installation.html
   lexical_analysis: lexical_analysis.html
   multimodal_analysis: multimodal_analysis.html
@@ -12,7 +13,7 @@ articles:
   semantic_analysis: semantic_analysis.html
   topic_modeling: topic_modeling.html
   web_accessibility: web_accessibility.html
-last_built: 2025-11-30T18:06Z
+last_built: 2025-12-23T01:00Z
 urls:
   reference: https://mshin77.github.io/TextAnalysisR/reference
   article: https://mshin77.github.io/TextAnalysisR/articles

@@ -25,4 +25,5 @@ Logical TRUE if feature is available
 if (check_feature("ollama")) {
   # Use AI-powered labeling
 }
+#> NULL
 ```

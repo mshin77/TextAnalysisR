@@ -24,6 +24,7 @@ NULL
 #' 3. dfm_final - Final processed version
 #' 4. dfm_init - Initial unprocessed tokens
 #'
+#' @family preprocessing
 #' @export
 #'
 #' @examples
@@ -65,6 +66,7 @@ get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = 
 #'
 #' @importFrom utils read.csv
 #'
+#' @family preprocessing
 #' @export
 #'
 #' @examples
@@ -275,6 +277,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
 #'
 #' @return List: success, data, type, method, message
 #'
+#' @family preprocessing
 #' @export
 process_pdf_unified <- function(file_path,
                                 use_multimodal = FALSE,
@@ -362,6 +365,7 @@ process_pdf_unified <- function(file_path,
 #' @return A data frame with a new column "united_texts" created by uniting
 #'   the specified variables.
 #'
+#' @family preprocessing
 #' @export
 #'
 #' @examples
@@ -414,6 +418,11 @@ unite_cols <- function(df, listed_vars) {
 #' @param include_docvars Logical; include document variables in the tokens object (default: TRUE).
 #' @param keep_acronyms Logical; keep acronyms in the text (default: FALSE).
 #' @param padding Logical; add padding to the tokens object (default: FALSE).
+#' @param remove_stopwords Logical; remove stopwords from the text (default: FALSE).
+#' @param stopwords_source Character; source for stopwords, e.g., "snowball", "stopwords-iso" (default: "snowball").
+#' @param stopwords_language Character; language for stopwords (default: "en").
+#' @param custom_stopwords Character vector; additional words to remove (default: NULL).
+#' @param custom_valuetype Character; valuetype for custom_stopwords pattern matching, one of "glob", "regex", or "fixed" (default: "glob").
 #' @param verbose Logical; print verbose output (default: FALSE).
 #' @param ... Additional arguments passed to \code{quanteda::tokens}.
 #'
@@ -421,6 +430,7 @@ unite_cols <- function(df, listed_vars) {
 #'
 #' @import quanteda
 #'
+#' @family preprocessing
 #' @export
 #'
 #' @examples
@@ -463,6 +473,11 @@ prep_texts <- function(united_tbl,
                              include_docvars = TRUE,
                              keep_acronyms = FALSE,
                              padding = FALSE,
+                             remove_stopwords = FALSE,
+                             stopwords_source = "snowball",
+                             stopwords_language = "en",
+                             custom_stopwords = NULL,
+                             custom_valuetype = "glob",
                              verbose = FALSE,
                              ...) {
 
@@ -497,6 +512,18 @@ prep_texts <- function(united_tbl,
                                       min_nchar = min_char,
                                       verbose = FALSE)
 
+    if (remove_stopwords) {
+      if (verbose) message("Removing stopwords (", stopwords_language, ", ", stopwords_source, ")...")
+      sw <- stopwords::stopwords(stopwords_language, source = stopwords_source)
+      tokens <- quanteda::tokens_remove(tokens, pattern = sw, verbose = FALSE)
+    }
+
+    if (!is.null(custom_stopwords) && length(custom_stopwords) > 0) {
+      if (verbose) message("Removing custom stopwords (", length(custom_stopwords), " words)...")
+      tokens <- quanteda::tokens_remove(tokens, pattern = custom_stopwords,
+                                        valuetype = custom_valuetype, verbose = FALSE)
+    }
+
     processing_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
     if (verbose) {
@@ -526,6 +553,7 @@ prep_texts <- function(united_tbl,
 #'
 #' @return A character vector of detected collocations.
 #'
+#' @family preprocessing
 #' @export
 #'
 #' @examples

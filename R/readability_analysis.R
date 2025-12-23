@@ -9,6 +9,7 @@
 #'
 #' @return A plotly boxplot
 #'
+#' @family lexical
 #' @export
 #'
 #' @examples
@@ -56,6 +57,7 @@ plot_readability_distribution <- function(readability_data,
       yaxis_title = metric,
       margin = list(t = 60, b = 60, l = 80, r = 40)
     )
+
 }
 
 
@@ -71,6 +73,7 @@ plot_readability_distribution <- function(readability_data,
 #'
 #' @return A plotly boxplot
 #'
+#' @family lexical
 #' @export
 plot_readability_by_group <- function(readability_data,
                                       metric,
@@ -116,15 +119,15 @@ plot_readability_by_group <- function(readability_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 20, color = "#0c1f4a", family = "Roboto, sans-serif")
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       xaxis = list(
-        tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
-        tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       hoverlabel = get_plotly_hover_config(),
       margin = list(t = 60, b = 100, l = 80, r = 40)
@@ -145,6 +148,7 @@ plot_readability_by_group <- function(readability_data,
 #'
 #' @return A plotly bar chart
 #'
+#' @family lexical
 #' @export
 plot_top_readability_documents <- function(readability_data,
                                            metric,
@@ -192,18 +196,18 @@ plot_top_readability_documents <- function(readability_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       xaxis = list(
         title = list(text = "Document"),
         tickangle = text_angle,
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         title = list(text = metric),
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       margin = list(t = 60, b = 100, l = 80, r = 40),
       hoverlabel = get_plotly_hover_config()
@@ -218,13 +222,17 @@ plot_top_readability_documents <- function(readability_data,
 #' Calculates lexical diversity metrics to measure vocabulary richness.
 #' MTLD and MATTR are most stable and text-length independent.
 #'
-#' @param dfm_object A document-feature matrix or tokens object from quanteda
+#' @param x A tokens object (preferred) or document-feature matrix from quanteda.
+#'   For accurate MTLD calculation, pass a tokens object or provide the `texts` parameter.
+#'   DFM input loses token order, which affects MTLD accuracy (McCarthy & Jarvis, 2010).
 #' @param measures Character vector of measures to calculate. Options:
 #'   "all", "MTLD" (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas", "K", "D"
-#' @param texts Optional character vector of original texts for calculating average sentence length
+#' @param texts Optional character vector of original texts. Required for accurate MTLD
+#'   when passing a DFM (since DFM loses token order). Also used for average sentence length.
 #'
 #' @return A list with lexical_diversity (data frame) and summary_stats
 #'
+#' @family lexical
 #' @export
 #'
 #' @examples
@@ -233,6 +241,9 @@ plot_top_readability_documents <- function(readability_data,
 #' texts <- SpecialEduTech$abstract[1:10]
 #' corp <- quanteda::corpus(texts)
 #' toks <- quanteda::tokens(corp)
+#' # Preferred: pass tokens object for accurate MTLD
+#' lex_div <- lexical_diversity_analysis(toks, texts = texts)
+#' # Alternative: pass DFM with texts for MTLD accuracy
 #' dfm_obj <- quanteda::dfm(toks)
 #' lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
 #' print(lex_div)
@@ -240,7 +251,7 @@ plot_top_readability_documents <- function(readability_data,
 #'
 #' @importFrom quanteda.textstats textstat_lexdiv
 #' @importFrom quanteda docnames
-lexical_diversity_analysis <- function(dfm_object,
+lexical_diversity_analysis <- function(x,
                                       measures = "all",
                                       texts = NULL) {
 
@@ -266,9 +277,27 @@ lexical_diversity_analysis <- function(dfm_object,
     measures_to_use <- intersect(measures, quanteda_measures)
   }
 
+  # Determine input type and prepare tokens for MTLD if needed
+  is_tokens_input <- inherits(x, "tokens")
+
+  # For MTLD with DFM input, we need proper token sequences
+  # Create tokens from texts if available, otherwise warn
+  mtld_tokens <- NULL
+  if (mtld_requested && !is_tokens_input) {
+    if (!is.null(texts) && length(texts) == quanteda::ndoc(x)) {
+      # Create tokens from original texts to preserve order for MTLD
+      mtld_tokens <- quanteda::tokens(texts, remove_punct = TRUE)
+    } else {
+      message("Note: MTLD requires sequential token order (McCarthy & Jarvis, 2010). ",
+              "DFM input loses token order. For accurate MTLD, pass a tokens object ",
+              "or provide the 'texts' parameter. Skipping MTLD calculation.")
+      mtld_requested <- FALSE
+    }
+  }
+
   tryCatch({
     # Calculate minimum document length to set appropriate window size
-    doc_lengths <- quanteda::ntoken(dfm_object)
+    doc_lengths <- quanteda::ntoken(x)
     min_length <- min(doc_lengths)
 
     # Set window size for MATTR/MSTTR (default is 100, adjust if documents are shorter)
@@ -278,7 +307,7 @@ lexical_diversity_analysis <- function(dfm_object,
     if (length(measures_to_use) > 0) {
       lexdiv_results <- suppressWarnings(
         quanteda.textstats::textstat_lexdiv(
-          dfm_object,
+          x,
           measure = measures_to_use,
           MATTR_window = window_size,
           MSTTR_segment = window_size
@@ -286,13 +315,15 @@ lexical_diversity_analysis <- function(dfm_object,
       )
     } else {
       # Create empty data frame with document names
-      lexdiv_results <- data.frame(document = quanteda::docnames(dfm_object))
+      lexdiv_results <- data.frame(document = quanteda::docnames(x))
     }
 
     # Add MTLD if requested - use custom implementation (McCarthy & Jarvis 2010)
     if (mtld_requested) {
       tryCatch({
         # Custom MTLD implementation based on McCarthy & Jarvis (2010)
+        # MTLD analyzes text sequentially from first to last token (and reverse),
+        # counting "factors" where TTR drops below threshold (default 0.72)
         calculate_mtld <- function(tokens, factor_size = 0.72) {
           if (length(tokens) < 10) return(NA_real_)
 
@@ -348,24 +379,13 @@ lexical_diversity_analysis <- function(dfm_object,
           return(mtld)
         }
 
-        # Get tokens for each document - handle both tokens and dfm objects
-        mtld_values <- sapply(seq_len(quanteda::ndoc(dfm_object)), function(i) {
-          # Check if input is a tokens object or dfm
-          if (inherits(dfm_object, "tokens")) {
-            # Direct access to token sequence (preserves order)
-            doc_tokens <- as.character(dfm_object[[i]])
-          } else {
-            # Extract from DFM (reconstruct sequence - order not preserved)
-            doc_row <- dfm_object[i, ]
-            token_counts <- as.vector(doc_row)
-            token_names <- quanteda::featnames(dfm_object)
-            non_zero <- token_counts > 0
-            if (sum(non_zero) < 10) return(NA_real_)
-            doc_tokens <- rep(token_names[non_zero], token_counts[non_zero])
-          }
+        # Determine token source for MTLD calculation
+        tokens_for_mtld <- if (is_tokens_input) x else mtld_tokens
 
+        # Get tokens for each document
+        mtld_values <- sapply(seq_len(quanteda::ndoc(tokens_for_mtld)), function(i) {
+          doc_tokens <- as.character(tokens_for_mtld[[i]])
           if (length(doc_tokens) < 10) return(NA_real_)
-
           calculate_mtld(doc_tokens)
         })
 
@@ -377,7 +397,7 @@ lexical_diversity_analysis <- function(dfm_object,
 
     # Add document names if not present
     if (!"document" %in% names(lexdiv_results)) {
-      lexdiv_results$document <- quanteda::docnames(dfm_object)
+      lexdiv_results$document <- quanteda::docnames(x)
     }
 
     # Standardize document names to "Doc 1, Doc 2..." format
@@ -438,6 +458,7 @@ lexical_diversity_analysis <- function(dfm_object,
 #'
 #' @return A plotly boxplot
 #'
+#' @family lexical
 #' @export
 #'
 #' @examples
@@ -489,6 +510,7 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
       yaxis_title = metric,
       margin = list(t = 60, b = 60, l = 80, r = 40)
     )
+
 }
 
 
@@ -509,6 +531,7 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
 #'
 #' @return A data frame with document names and readability scores
 #'
+#' @family lexical
 #' @export
 #'
 #' @examples
@@ -628,6 +651,7 @@ calculate_text_readability <- function(texts,
 #'
 #' @param ... Arguments passed to plot_word_frequency
 #'
+#' @family lexical
 #' @export
 lexical_frequency_analysis <- function(...) {
   return(plot_word_frequency(...))

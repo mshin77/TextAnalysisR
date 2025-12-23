@@ -52,3 +52,8 @@ Computes word co-occurrence networks with community detection and network metric
 Supports multiple feature spaces: unigrams, n-grams, and embeddings.
 Based on proven implementation for intuitive network visualization.
 }
+\seealso{
+Other network: 
+\code{\link{semantic_correlation_network}()}
+}
+\concept{network}

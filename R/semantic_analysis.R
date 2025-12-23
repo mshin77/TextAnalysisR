@@ -30,6 +30,7 @@ NULL
 #'     \item{execution_time}{Time taken for analysis}
 #'   }
 #'
+#' @family semantic
 #' @export
 #'
 #' @examples
@@ -249,6 +250,7 @@ calculate_document_similarity <- function(texts,
 #'
 #' @return A list containing results from requested analyses.
 #'
+#' @family semantic
 #' @export
 #'
 #' @examples
@@ -399,6 +401,7 @@ fit_semantic_model <- function(texts,
 #'
 #' @return A list containing the reduced dimensions, method used, and additional metadata.
 #'
+#' @family semantic
 #' @export
 #'
 #' @examples
@@ -620,6 +623,7 @@ reduce_dimensions <- function(data_matrix,
 #'
 #' @return A list containing cluster assignments, method used, and quality metrics.
 #'
+#' @family semantic
 #' @export
 #'
 #' @examples
@@ -869,6 +873,7 @@ cluster_embeddings <- function(data_matrix,
 #'
 #' @return A matrix of embeddings.
 #'
+#' @family semantic
 #' @export
 generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRUE) {
 
@@ -896,6 +901,7 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
 #' @description Wrapper for calculate_document_similarity
 #' @param ... Arguments passed to calculate_document_similarity
 #' @return Similarity analysis results
+#' @family semantic
 #' @export
 semantic_similarity_analysis <- function(...) {
   return(calculate_document_similarity(...))
@@ -907,6 +913,7 @@ semantic_similarity_analysis <- function(...) {
 #' @param method Dimensionality reduction method ("PCA", "t-SNE", "UMAP")
 #' @param clusters Optional cluster assignments
 #' @param ... Additional arguments
+#' @family semantic
 #' @export
 semantic_document_clustering <- function(embeddings, method = "UMAP", clusters = NULL, ...) {
   reduced_dims <- reduce_dimensions(embeddings, method = method, ...)
@@ -932,6 +939,7 @@ semantic_document_clustering <- function(embeddings, method = "UMAP", clusters =
 #' @param clustering_method Clustering method ("none", "kmeans", "hierarchical", "dbscan", "hdbscan")
 #' @param ... Additional parameters for methods
 #' @return List containing coordinates, clusters, method info, and quality metrics
+#' @family semantic
 #' @export
 analyze_document_clustering <- function(feature_matrix,
                                   method = "UMAP",
@@ -990,6 +998,7 @@ analyze_document_clustering <- function(feature_matrix,
 #' @param method Label generation method ("tfidf", "representative", "frequent")
 #' @param n_terms Number of terms per label
 #' @return Named list of cluster labels
+#' @family semantic
 #' @export
 generate_cluster_labels_auto <- function(feature_matrix,
                                          clusters,
@@ -1040,6 +1049,7 @@ generate_cluster_labels_auto <- function(feature_matrix,
 #'
 #' @return A list of generated labels.
 #'
+#' @family semantic
 #' @export
 #'
 #' @examples
@@ -1231,6 +1241,7 @@ Generated Topic Label:"
 #' @param labels Cluster labels (optional)
 #' @param doc_ids Document IDs
 #' @param file_path Path to save the CSV file
+#' @family semantic
 #' @export
 export_document_clustering <- function(coordinates,
                                  clusters = NULL,
@@ -1262,6 +1273,7 @@ export_document_clustering <- function(coordinates,
 #' @param verbose Logical indicating whether to print progress messages
 #' @param ... Additional parameters
 #' @return List containing validation status and metrics
+#' @family semantic
 #' @export
 cross_analysis_validation <- function(results, verbose = FALSE, ...) {
   if (verbose) message("Performing cross-validation...")
@@ -1286,6 +1298,7 @@ cross_analysis_validation <- function(results, verbose = FALSE, ...) {
 #' @param verbose Logical indicating whether to print progress messages
 #' @param ... Additional parameters
 #' @return List containing temporal analysis results
+#' @family semantic
 #' @export
 temporal_semantic_analysis <- function(texts, dates, time_windows = "month", embeddings = NULL, verbose = FALSE, ...) {
   if (verbose) message("Performing temporal semantic analysis...")
@@ -1321,6 +1334,7 @@ temporal_semantic_analysis <- function(texts, dates, time_windows = "month", emb
 #'
 #' @return A list containing cross-validation metrics.
 #'
+#' @family semantic
 #' @export
 validate_cross_models <- function(semantic_results,
                                     stm_results = NULL,
@@ -1386,6 +1400,7 @@ validate_cross_models <- function(semantic_results,
 #'
 #' @return List containing similarity matrix, method used, embeddings, and diagnostics
 #'
+#' @family semantic
 #' @export
 #'
 #' @examples
@@ -1506,4 +1521,569 @@ calculate_similarity_robust <- function(texts,
     embeddings = NULL,
     diagnostics = diagnostics
   ))
+}
+
+
+#' Calculate Clustering Quality Metrics
+#'
+#' @description
+#' Calculates common clustering evaluation metrics including Silhouette Score,
+#' Davies-Bouldin Index, and Calinski-Harabasz Index.
+#'
+#' @param clusters Integer vector of cluster assignments
+#' @param data_matrix Numeric matrix of data points (rows = observations, cols = features)
+#' @param dist_matrix Optional distance matrix. If NULL, computed from data_matrix
+#' @param metrics Character vector of metrics to calculate.
+#'   Options: "silhouette", "davies_bouldin", "calinski_harabasz", or "all" (default)
+#'
+#' @return A named list containing:
+#'   \describe{
+#'     \item{silhouette}{Silhouette score (-1 to 1, higher is better)}
+#'     \item{davies_bouldin}{Davies-Bouldin index (lower is better)}
+#'     \item{calinski_harabasz}{Calinski-Harabasz index (higher is better)}
+#'     \item{n_clusters}{Number of clusters}
+#'     \item{cluster_sizes}{Table of cluster sizes}
+#'   }
+#'
+#' @details
+#' - Silhouette Score: Measures how similar an object is to its own cluster compared
+#'   to other clusters. Range: -1 to 1, higher is better.
+#' - Davies-Bouldin Index: Average similarity between each cluster and its most
+#'   similar cluster. Lower values indicate better clustering.
+#' - Calinski-Harabasz Index: Ratio of between-cluster to within-cluster variance.
+#'   Higher values indicate better-defined clusters.
+#'
+#' @family semantic
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Generate sample data
+#' set.seed(123)
+#' data <- rbind(
+#'   matrix(rnorm(100, mean = 0), ncol = 2),
+#'   matrix(rnorm(100, mean = 3), ncol = 2)
+#' )
+#' clusters <- c(rep(1, 50), rep(2, 50))
+#'
+#' metrics <- calculate_clustering_metrics(clusters, data)
+#' print(metrics)
+#' }
+calculate_clustering_metrics <- function(clusters,
+                                            data_matrix,
+                                            dist_matrix = NULL,
+                                            metrics = "all") {
+  if (is.null(clusters) || length(clusters) == 0) {
+    return(list(
+      silhouette = NA,
+      davies_bouldin = NA,
+      calinski_harabasz = NA,
+      n_clusters = 0,
+      cluster_sizes = NULL
+    ))
+  }
+
+  data_matrix <- as.matrix(data_matrix)
+  clusters <- as.numeric(as.factor(clusters))
+  unique_clusters <- unique(clusters)
+  n_clusters <- length(unique_clusters)
+  n_points <- nrow(data_matrix)
+
+  if (n_clusters <= 1) {
+    return(list(
+      silhouette = NA,
+      davies_bouldin = NA,
+      calinski_harabasz = NA,
+      n_clusters = n_clusters,
+      cluster_sizes = table(clusters)
+    ))
+  }
+
+  if (metrics == "all") {
+    metrics <- c("silhouette", "davies_bouldin", "calinski_harabasz")
+  }
+
+  result <- list(
+    n_clusters = n_clusters,
+    cluster_sizes = table(clusters)
+  )
+
+  if (is.null(dist_matrix)) {
+    dist_matrix <- stats::dist(data_matrix)
+  }
+
+  if ("silhouette" %in% metrics) {
+    result$silhouette <- tryCatch({
+      if (requireNamespace("cluster", quietly = TRUE)) {
+        sil_result <- cluster::silhouette(clusters, dist_matrix)
+        mean(sil_result[, 3])
+      } else {
+        NA
+      }
+    }, error = function(e) NA)
+  }
+
+  if ("davies_bouldin" %in% metrics) {
+    result$davies_bouldin <- tryCatch({
+      centers <- matrix(0, nrow = n_clusters, ncol = ncol(data_matrix))
+      for (i in seq_len(n_clusters)) {
+        cluster_id <- unique_clusters[i]
+        cluster_points <- data_matrix[clusters == cluster_id, , drop = FALSE]
+        if (nrow(cluster_points) > 0) {
+          centers[i, ] <- colMeans(cluster_points)
+        }
+      }
+
+      within_distances <- numeric(n_clusters)
+      for (i in seq_len(n_clusters)) {
+        cluster_id <- unique_clusters[i]
+        cluster_points <- data_matrix[clusters == cluster_id, , drop = FALSE]
+        if (nrow(cluster_points) > 0) {
+          distances <- apply(cluster_points, 1, function(x) sqrt(sum((x - centers[i, ])^2)))
+          within_distances[i] <- mean(distances)
+        }
+      }
+
+      db_values <- numeric(n_clusters)
+      for (i in seq_len(n_clusters)) {
+        max_ratio <- 0
+        for (j in seq_len(n_clusters)) {
+          if (i != j) {
+            between_distance <- sqrt(sum((centers[i, ] - centers[j, ])^2))
+            if (between_distance > 0) {
+              ratio <- (within_distances[i] + within_distances[j]) / between_distance
+              max_ratio <- max(max_ratio, ratio)
+            }
+          }
+        }
+        db_values[i] <- max_ratio
+      }
+
+      mean(db_values)
+    }, error = function(e) NA)
+  }
+
+  if ("calinski_harabasz" %in% metrics) {
+    result$calinski_harabasz <- tryCatch({
+      if (n_clusters >= n_points) {
+        return(NA)
+      }
+
+      overall_centroid <- colMeans(data_matrix)
+
+      cluster_centroids <- matrix(0, nrow = n_clusters, ncol = ncol(data_matrix))
+      cluster_sizes <- numeric(n_clusters)
+
+      for (i in seq_len(n_clusters)) {
+        cluster_id <- unique_clusters[i]
+        cluster_points <- data_matrix[clusters == cluster_id, , drop = FALSE]
+        if (nrow(cluster_points) > 0) {
+          cluster_centroids[i, ] <- colMeans(cluster_points)
+          cluster_sizes[i] <- nrow(cluster_points)
+        }
+      }
+
+      ssb <- 0
+      for (i in seq_len(n_clusters)) {
+        if (cluster_sizes[i] > 0) {
+          distance_to_overall <- sum((cluster_centroids[i, ] - overall_centroid)^2)
+          ssb <- ssb + cluster_sizes[i] * distance_to_overall
+        }
+      }
+
+      ssw <- 0
+      for (i in seq_len(n_clusters)) {
+        cluster_id <- unique_clusters[i]
+        cluster_points <- data_matrix[clusters == cluster_id, , drop = FALSE]
+        if (nrow(cluster_points) > 0) {
+          for (j in seq_len(nrow(cluster_points))) {
+            distance_to_centroid <- sum((cluster_points[j, ] - cluster_centroids[i, ])^2)
+            ssw <- ssw + distance_to_centroid
+          }
+        }
+      }
+
+      if (ssw > 0 && (n_points - n_clusters) > 0) {
+        (ssb / (n_clusters - 1)) / (ssw / (n_points - n_clusters))
+      } else {
+        NA
+      }
+    }, error = function(e) NA)
+  }
+
+  result
+}
+
+
+#' Calculate Cross-Matrix Cosine Similarity
+#'
+#' Calculates cosine similarity between two different embedding matrices,
+#' useful for comparing documents/topics across different categories or groups.
+#'
+#' @param embeddings1 A numeric matrix where rows are items and columns are embedding dimensions.
+#' @param embeddings2 A numeric matrix where rows are items and columns are embedding dimensions.
+#'   Must have the same number of columns as embeddings1.
+#' @param labels1 Optional character vector of labels for items in embeddings1.
+#' @param labels2 Optional character vector of labels for items in embeddings2.
+#' @param normalize Logical, whether to L2-normalize embeddings before computing similarity (default: TRUE).
+#'
+#' @return A list containing:
+#'   \item{similarity_matrix}{Matrix of cosine similarities (nrow(embeddings1) x nrow(embeddings2))}
+#'   \item{similarity_df}{Long-format data frame with columns: row_idx, col_idx, similarity, and optionally label1, label2}
+#'
+#' @family semantic
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Generate embeddings for two groups
+#' emb1 <- TextAnalysisR::generate_embeddings(c("text a", "text b"), verbose = FALSE)
+#' emb2 <- TextAnalysisR::generate_embeddings(c("text c", "text d", "text e"), verbose = FALSE)
+#'
+#' # Calculate cross-similarity
+#' result <- calculate_cross_similarity(
+#'   emb1, emb2,
+#'   labels1 = c("A", "B"),
+#'   labels2 = c("C", "D", "E")
+#' )
+#' print(result$similarity_matrix)
+#' print(result$similarity_df)
+#' }
+calculate_cross_similarity <- function(embeddings1,
+                                        embeddings2,
+                                        labels1 = NULL,
+                                        labels2 = NULL,
+                                        normalize = TRUE) {
+
+  embeddings1 <- as.matrix(embeddings1)
+  embeddings2 <- as.matrix(embeddings2)
+
+  if (ncol(embeddings1) != ncol(embeddings2)) {
+    stop("Embedding matrices must have the same number of columns (dimensions)")
+  }
+
+  if (normalize) {
+    norms1 <- sqrt(rowSums(embeddings1^2))
+    norms1[norms1 == 0] <- 1
+    norm_emb1 <- embeddings1 / norms1
+
+    norms2 <- sqrt(rowSums(embeddings2^2))
+    norms2[norms2 == 0] <- 1
+    norm_emb2 <- embeddings2 / norms2
+  } else {
+    norm_emb1 <- embeddings1
+    norm_emb2 <- embeddings2
+  }
+
+  similarity_matrix <- norm_emb1 %*% t(norm_emb2)
+
+  similarity_df <- tidyr::expand_grid(
+    row_idx = seq_len(nrow(embeddings1)),
+    col_idx = seq_len(nrow(embeddings2))
+  ) %>%
+    dplyr::mutate(
+      similarity = as.vector(similarity_matrix)
+    )
+
+  if (!is.null(labels1)) {
+    if (length(labels1) != nrow(embeddings1)) {
+      warning("labels1 length does not match number of rows in embeddings1")
+    } else {
+      similarity_df <- similarity_df %>%
+        dplyr::mutate(label1 = labels1[row_idx])
+    }
+  }
+
+  if (!is.null(labels2)) {
+    if (length(labels2) != nrow(embeddings2)) {
+      warning("labels2 length does not match number of rows in embeddings2")
+    } else {
+      similarity_df <- similarity_df %>%
+        dplyr::mutate(label2 = labels2[col_idx])
+    }
+  }
+
+  list(
+    similarity_matrix = similarity_matrix,
+    similarity_df = similarity_df
+  )
+}
+
+
+#' Extract Cross-Category Similarities from Full Similarity Matrix
+#'
+#' Given a full similarity matrix and category information, extracts pairwise
+#' similarities between a reference category and other categories into a long-format
+#' data frame suitable for visualization and analysis.
+#'
+#' @param similarity_matrix A square similarity matrix (n x n).
+#' @param docs_data A data frame containing document metadata with at least:
+#'   \describe{
+#'     \item{category_var}{Column indicating category membership}
+#'     \item{id_var}{Column with unique document identifiers}
+#'   }
+#' @param reference_category Character string specifying the reference category to compare against.
+#' @param compare_categories Character vector of categories to compare with the reference.
+#'   If NULL, compares with all categories except reference.
+#' @param category_var Name of the column containing category information (default: "category").
+#' @param id_var Name of the column containing document IDs (default: "display_name").
+#' @param name_var Optional name of column with display names (default: NULL, uses id_var).
+#'
+#' @return A data frame with columns:
+#'   \item{ref_id}{Reference document ID}
+#'   \item{ref_name}{Reference document name (if name_var provided)}
+#'   \item{other_id}{Comparison document ID}
+#'   \item{other_name}{Comparison document name (if name_var provided)}
+#'   \item{other_category}{Category of comparison document}
+#'   \item{similarity}{Cosine similarity value}
+#'
+#' @family semantic
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # After calculating full similarity matrix
+#' similarity_result <- TextAnalysisR::calculate_document_similarity(
+#'   texts = docs$text,
+#'   document_feature_type = "embeddings"
+#' )
+#'
+#' cross_sims <- extract_cross_category_similarities(
+#'   similarity_matrix = similarity_result$similarity_matrix,
+#'   docs_data = docs,
+#'   reference_category = "SLD",
+#'   compare_categories = c("Other Disability", "General"),
+#'   category_var = "category",
+#'   id_var = "display_name",
+#'   name_var = "doc_name"
+#' )
+#' }
+extract_cross_category_similarities <- function(similarity_matrix,
+                                                 docs_data,
+                                                 reference_category,
+                                                 compare_categories = NULL,
+                                                 category_var = "category",
+                                                 id_var = "display_name",
+                                                 name_var = NULL) {
+
+  if (!category_var %in% names(docs_data)) {
+    stop("category_var '", category_var, "' not found in docs_data")
+  }
+  if (!id_var %in% names(docs_data)) {
+    stop("id_var '", id_var, "' not found in docs_data")
+  }
+
+  docs_data <- docs_data %>%
+    dplyr::mutate(.row_idx = dplyr::row_number())
+
+  ref_indices <- docs_data %>%
+    dplyr::filter(.data[[category_var]] == reference_category) %>%
+    dplyr::pull(.row_idx)
+
+  if (length(ref_indices) == 0) {
+    stop("No documents found in reference category: ", reference_category)
+  }
+
+  if (is.null(compare_categories)) {
+    compare_categories <- unique(docs_data[[category_var]])
+    compare_categories <- compare_categories[compare_categories != reference_category]
+  }
+
+  result_list <- list()
+
+  for (comp_cat in compare_categories) {
+    comp_indices <- docs_data %>%
+      dplyr::filter(.data[[category_var]] == comp_cat) %>%
+      dplyr::pull(.row_idx)
+
+    if (length(comp_indices) == 0) next
+
+    pairs <- tidyr::expand_grid(
+      ref_idx = ref_indices,
+      other_idx = comp_indices
+    ) %>%
+      dplyr::mutate(
+        similarity = purrr::map2_dbl(ref_idx, other_idx, ~similarity_matrix[.x, .y]),
+        other_category = comp_cat
+      )
+
+    result_list[[comp_cat]] <- pairs
+  }
+
+  result <- dplyr::bind_rows(result_list)
+
+  ref_lookup <- docs_data %>%
+    dplyr::select(.row_idx, !!rlang::sym(id_var)) %>%
+    dplyr::rename(ref_id = !!rlang::sym(id_var))
+
+  other_lookup <- docs_data %>%
+    dplyr::select(.row_idx, !!rlang::sym(id_var)) %>%
+    dplyr::rename(other_id = !!rlang::sym(id_var))
+
+  result <- result %>%
+    dplyr::left_join(ref_lookup, by = c("ref_idx" = ".row_idx")) %>%
+    dplyr::left_join(other_lookup, by = c("other_idx" = ".row_idx"))
+
+  if (!is.null(name_var) && name_var %in% names(docs_data)) {
+    ref_names <- docs_data %>%
+      dplyr::select(.row_idx, !!rlang::sym(name_var)) %>%
+      dplyr::rename(ref_name = !!rlang::sym(name_var))
+
+    other_names <- docs_data %>%
+      dplyr::select(.row_idx, !!rlang::sym(name_var)) %>%
+      dplyr::rename(other_name = !!rlang::sym(name_var))
+
+    result <- result %>%
+      dplyr::left_join(ref_names, by = c("ref_idx" = ".row_idx")) %>%
+      dplyr::left_join(other_names, by = c("other_idx" = ".row_idx")) %>%
+      dplyr::select(-ref_idx, -other_idx) %>%
+      dplyr::select(ref_id, ref_name, other_id, other_name, other_category, similarity)
+  } else {
+    result <- result %>%
+      dplyr::select(-ref_idx, -other_idx) %>%
+      dplyr::select(ref_id, other_id, other_category, similarity)
+  }
+
+  result %>%
+    dplyr::mutate(other_category = factor(other_category, levels = compare_categories))
+}
+
+
+#' Analyze Similarity Gaps Between Categories
+#'
+#' Identifies unique items, missing content, and cross-category learning opportunities
+#' based on similarity thresholds. Useful for gap analysis in policy documents,
+#' topic comparisons, or any cross-category similarity study.
+#'
+#' @param similarity_data A data frame with cross-category similarities, containing:
+#'   \describe{
+#'     \item{ref_var}{Reference item identifier}
+#'     \item{other_var}{Comparison item identifier}
+#'     \item{similarity_var}{Similarity score}
+#'     \item{category_var}{Category of comparison item}
+#'   }
+#' @param ref_var Name of column with reference item IDs (default: "ref_id").
+#' @param other_var Name of column with comparison item IDs (default: "other_id").
+#' @param similarity_var Name of column with similarity values (default: "similarity").
+#' @param category_var Name of column with category information (default: "other_category").
+#' @param ref_label_var Optional column with reference item labels (for output).
+#' @param other_label_var Optional column with comparison item labels (for output).
+#' @param unique_threshold Threshold below which reference items are considered unique (default: 0.6).
+#' @param cross_policy_min Minimum similarity for cross-policy opportunities (default: 0.6).
+#' @param cross_policy_max Maximum similarity for cross-policy opportunities (default: 0.8).
+#'
+#' @return A list containing:
+#'   \item{unique_items}{Data frame of reference items with low similarity (unique content)}
+#'   \item{missing_items}{Data frame of comparison items with low similarity (content gaps)}
+#'   \item{cross_policy}{Data frame of items with moderate similarity (learning opportunities)}
+#'   \item{summary_stats}{Summary statistics by category}
+#'
+#' @family semantic
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # After extracting cross-category similarities
+#' gap_analysis <- analyze_similarity_gaps(
+#'   similarity_data = cross_sims,
+#'   ref_var = "ref_id",
+#'   other_var = "other_id",
+#'   similarity_var = "similarity",
+#'   category_var = "other_category",
+#'   unique_threshold = 0.6
+#' )
+#'
+#' print(gap_analysis$unique_items)
+#' print(gap_analysis$missing_items)
+#' print(gap_analysis$summary_stats)
+#' }
+analyze_similarity_gaps <- function(similarity_data,
+                                     ref_var = "ref_id",
+                                     other_var = "other_id",
+                                     similarity_var = "similarity",
+                                     category_var = "other_category",
+                                     ref_label_var = NULL,
+                                     other_label_var = NULL,
+                                     unique_threshold = 0.6,
+                                     cross_policy_min = 0.6,
+                                     cross_policy_max = 0.8) {
+
+  for (v in c(ref_var, other_var, similarity_var, category_var)) {
+    if (!v %in% names(similarity_data)) {
+      stop("Column '", v, "' not found in similarity_data")
+    }
+  }
+
+  summary_stats <- similarity_data %>%
+    dplyr::group_by(.data[[category_var]]) %>%
+    dplyr::summarise(
+      mean_similarity = round(mean(.data[[similarity_var]], na.rm = TRUE), 3),
+      median_similarity = round(stats::median(.data[[similarity_var]], na.rm = TRUE), 3),
+      sd_similarity = round(stats::sd(.data[[similarity_var]], na.rm = TRUE), 3),
+      min_similarity = round(min(.data[[similarity_var]], na.rm = TRUE), 3),
+      max_similarity = round(max(.data[[similarity_var]], na.rm = TRUE), 3),
+      n_pairs = dplyr::n(),
+      .groups = 'drop'
+    )
+
+  group_vars <- ref_var
+  if (!is.null(ref_label_var) && ref_label_var %in% names(similarity_data)) {
+    group_vars <- c(group_vars, ref_label_var)
+  }
+
+  unique_items <- similarity_data %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) %>%
+    dplyr::summarise(
+      max_similarity = max(.data[[similarity_var]], na.rm = TRUE),
+      min_similarity = min(.data[[similarity_var]], na.rm = TRUE),
+      .max_idx = which.max(.data[[similarity_var]]),
+      best_match = .data[[other_var]][.max_idx],
+      best_match_category = .data[[category_var]][.max_idx],
+      .groups = 'drop'
+    ) %>%
+    dplyr::select(-.max_idx) %>%
+    dplyr::filter(max_similarity < unique_threshold) %>%
+    dplyr::mutate(gap_type = "Unique")
+
+  other_group_vars <- c(other_var, category_var)
+  if (!is.null(other_label_var) && other_label_var %in% names(similarity_data)) {
+    other_group_vars <- c(other_group_vars, other_label_var)
+  }
+
+  missing_items <- similarity_data %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(other_group_vars))) %>%
+    dplyr::summarise(
+      max_similarity = max(.data[[similarity_var]], na.rm = TRUE),
+      min_similarity = min(.data[[similarity_var]], na.rm = TRUE),
+      .max_idx = which.max(.data[[similarity_var]]),
+      best_match = .data[[ref_var]][.max_idx],
+      .groups = 'drop'
+    ) %>%
+    dplyr::select(-.max_idx) %>%
+    dplyr::filter(max_similarity < unique_threshold) %>%
+    dplyr::mutate(gap_type = "Missing")
+
+  cross_policy <- similarity_data %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_vars))) %>%
+    dplyr::summarise(
+      max_similarity = max(.data[[similarity_var]], na.rm = TRUE),
+      min_similarity = min(.data[[similarity_var]], na.rm = TRUE),
+      .max_idx = which.max(.data[[similarity_var]]),
+      best_match = .data[[other_var]][.max_idx],
+      best_match_category = .data[[category_var]][.max_idx],
+      .groups = 'drop'
+    ) %>%
+    dplyr::select(-.max_idx) %>%
+    dplyr::filter(
+      max_similarity >= cross_policy_min,
+      max_similarity < cross_policy_max
+    ) %>%
+    dplyr::mutate(gap_type = "Cross-Policy")
+
+  list(
+    unique_items = unique_items,
+    missing_items = missing_items,
+    cross_policy = cross_policy,
+    summary_stats = summary_stats
+  )
 }

@@ -6,6 +6,7 @@
 #'
 #' @return Logical indicating whether Ollama is available.
 #'
+#' @family ai
 #' @export
 #'
 #' @examples
@@ -50,6 +51,7 @@ check_ollama <- function(verbose = FALSE) {
 #'
 #' @return Character vector of model names, or NULL if Ollama is unavailable.
 #'
+#' @family ai
 #' @export
 #'
 #' @examples
@@ -115,6 +117,7 @@ list_ollama_models <- function(verbose = FALSE) {
 #'
 #' @return Character string with the generated text, or NULL if failed.
 #'
+#' @family ai
 #' @export
 #'
 #' @examples
@@ -190,6 +193,7 @@ call_ollama <- function(prompt,
 #'
 #' @return Character string of recommended model, or NULL if none available.
 #'
+#' @family ai
 #' @export
 #'
 #' @examples

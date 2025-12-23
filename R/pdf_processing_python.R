@@ -15,6 +15,7 @@
 #' Uses pdfplumber Python library through reticulate.
 #' Requires Python environment setup. See \code{setup_langgraph_env()}.
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
@@ -85,6 +86,7 @@ extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
 #' Uses pdfplumber Python library through reticulate.
 #' Works with complex table layouts without Java dependency.
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
@@ -153,6 +155,7 @@ extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "texta
 #'
 #' @return Character string: "tabular", "text", or "unknown"
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
@@ -217,6 +220,7 @@ detect_pdf_content_type_py <- function(file_path, envname = "textanalysisr-env")
 #' - Better accuracy than tabulizer for complex tables
 #' - Uses same Python environment as LangGraph
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples

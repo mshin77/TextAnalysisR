@@ -565,15 +565,15 @@ calculate_word_frequency <- function(dfm_object,
     plotly::layout(
       margin = list(l = 40, r = 150, t = 60, b = 40),
       xaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B"),
-        titlefont = list(size = 16, color = "#0c1f4a")
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B"),
-        titlefont = list(size = 16, color = "#0c1f4a")
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       hoverlabel = list(
-        font = list(size = 15)
+        font = list(size = 16, family = "Roboto, sans-serif")
       )
     )
 

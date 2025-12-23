@@ -48,6 +48,8 @@
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -104,10 +106,51 @@
 <span></span>
 <span><span class="co"># 5. Create document-feature matrix</span></span>
 <span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens_clean</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="options">Options<a class="anchor" aria-label="anchor" href="#options"></a>
-</h2>
+<hr>
+<details><summary><strong>Unite Text Columns</strong>
+</summary><p>Unite combines multiple text columns into a single column for
+analysis. Useful when text content is spread across multiple fields that
+should be analyzed together.</p>
+<p><strong>Examples:</strong></p>
+<ul>
+<li>
+<strong>Survey Data:</strong> Combine multiple open-ended response
+columns</li>
+<li>
+<strong>Multi-field Text:</strong> Merge title, abstract, and body
+fields</li>
+<li>
+<strong>Comments:</strong> Concatenate multiple comment or note
+columns</li>
+</ul>
+<p><strong>Usage:</strong> Select one or multiple text columns to
+combine. Columns are concatenated with spaces between them. The united
+column becomes the text source for all subsequent preprocessing and
+analysis steps.</p>
+<p><strong>Learn More:</strong> <a href="https://tidyr.tidyverse.org/reference/unite.html" class="external-link">tidyr Unite
+Function</a></p>
+</details><hr>
+<details><summary><strong>Tokenization Options</strong>
+</summary><p>Tokenization segments continuous text into individual units (tokens),
+typically words, converting unstructured text into structured format for
+computational analysis.</p>
+<p><strong>Options:</strong></p>
+<ul>
+<li>
+<strong>Lowercase:</strong> Convert all text to lowercase to treat
+“Text” and “text” as identical</li>
+<li>
+<strong>Remove Punctuation:</strong> Strip punctuation marks like
+periods, commas, quotes</li>
+<li>
+<strong>Remove Numbers:</strong> Eliminate numeric digits (keep for
+technical texts)</li>
+<li>
+<strong>Remove Symbols:</strong> Remove special characters (@, #, $,
+etc.)</li>
+<li>
+<strong>Remove URLs:</strong> Identify and remove web addresses</li>
+</ul>
 <table class="table">
 <thead><tr class="header">
 <th>Parameter</th>
@@ -132,12 +175,95 @@
 </tr>
 </tbody>
 </table>
+<p><strong>Usage:</strong> Select preprocessing options based on your
+analysis goals. Sentence segmentation splits text into sentences before
+tokenization when sentence structure is important (e.g., sentiment
+analysis).</p>
+<p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/tokens.html" class="external-link">quanteda Tokens
+Documentation</a></p>
+</details><hr>
+<details><summary><strong>Stopword Removal</strong>
+</summary><p>Stopwords are common words (e.g., “the”, “is”, “and”) that appear
+frequently but carry little meaningful content for analysis. Removing
+them reduces noise and improves focus on content-bearing words.</p>
+<p><strong>When to Remove:</strong></p>
+<ul>
+<li>
+<strong>Topic Modeling:</strong> Helps identify content themes by
+removing function words</li>
+<li>
+<strong>Keyword Extraction:</strong> Ensures meaningful terms rise
+to the top</li>
+<li>
+<strong>Content Analysis:</strong> Focuses on substantive
+vocabulary</li>
+</ul>
+<p><strong>Usage:</strong> Use predefined stopword lists (e.g.,
+Snowball) or add custom words. For sentiment analysis or syntactic
+studies, consider keeping stopwords as they may carry important
+meaning.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tokens_clean</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_select.html" class="external-link">tokens_remove</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/stopwords/man/stopwords.html" class="external-link">stopwords</a></span><span class="op">(</span><span class="st">"en"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Learn More:</strong> <a href="https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html" class="external-link">stopwords
+Package Documentation</a></p>
+</details><hr>
+<details><summary><strong>Lemmatization</strong>
+</summary><p>Lemmatization reduces words to their base or dictionary form (lemma).
+For example, “running”, “ran”, and “runs” all become “run”. This groups
+related word forms together for more meaningful analysis.</p>
+<p><strong>Comparison:</strong></p>
+<ul>
+<li>
+<strong>Lemmatization:</strong> Uses linguistic knowledge to produce
+valid dictionary words (studies → study)</li>
+<li>
+<strong>Stemming:</strong> Uses simple rules to chop word endings
+(studies → studi)</li>
+<li>
+<strong>Advantage:</strong> Lemmatization produces readable,
+meaningful base forms</li>
+</ul>
+<p><strong>Usage:</strong> Apply lemmatization after tokenization to
+consolidate word variants. Particularly useful for topic modeling and
+keyword extraction where grouping related forms improves
+interpretability. Requires Python with spaCy.</p>
+<p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#lemmatization" class="external-link">spaCy
+Lemmatization Guide</a></p>
+</details><hr>
+<details><summary><strong>Document-Feature Matrix (DFM)</strong>
+</summary><p>A Document-Feature Matrix (DFM) is a mathematical representation
+where rows are documents, columns are unique tokens (features), and
+cells contain frequency counts. It converts unstructured text into
+structured numerical format for computational analysis.</p>
+<p><strong>Process:</strong></p>
+<ul>
+<li>
+<strong>Tokenization:</strong> Text is split into individual tokens
+(words)</li>
+<li>
+<strong>Vocabulary:</strong> All unique tokens form the matrix
+columns</li>
+<li>
+<strong>Counting:</strong> Each document-token pair is counted</li>
+<li>
+<strong>Sparse Matrix:</strong> Efficient storage format for large
+corpora</li>
+</ul>
+<p><strong>Usage:</strong> The DFM is the foundation for all downstream
+analyses including keyword extraction, topic modeling, and semantic
+analysis. Create it after preprocessing (tokenization, stopword removal,
+lemmatization).</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens_clean</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/dfm.html" class="external-link">quanteda DFM
+Documentation</a></p>
+</details><hr>
 </div>
 <div class="section level2">
 <h2 id="multi-word-expressions">Multi-word Expressions<a class="anchor" aria-label="anchor" href="#multi-word-expressions"></a>
 </h2>
 <p>Detect phrases like “machine learning”:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">

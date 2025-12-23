@@ -27,3 +27,16 @@ print(status$message)
 status <- check_vision_models("openai", api_key = Sys.getenv("OPENAI_API_KEY"))
 }
 }
+\seealso{
+Other pdf: 
+\code{\link{detect_pdf_content_type}()},
+\code{\link{detect_pdf_content_type_py}()},
+\code{\link{extract_pdf_multimodal}()},
+\code{\link{extract_pdf_smart}()},
+\code{\link{extract_tables_from_pdf_py}()},
+\code{\link{extract_text_from_pdf}()},
+\code{\link{extract_text_from_pdf_py}()},
+\code{\link{process_pdf_file}()},
+\code{\link{process_pdf_file_py}()}
+}
+\concept{pdf}

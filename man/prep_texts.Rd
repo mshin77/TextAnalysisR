@@ -19,6 +19,11 @@ prep_texts(
   include_docvars = TRUE,
   keep_acronyms = FALSE,
   padding = FALSE,
+  remove_stopwords = FALSE,
+  stopwords_source = "snowball",
+  stopwords_language = "en",
+  custom_stopwords = NULL,
+  custom_valuetype = "glob",
   verbose = FALSE,
   ...
 )
@@ -51,6 +56,16 @@ prep_texts(
 \item{keep_acronyms}{Logical; keep acronyms in the text (default: FALSE).}
 
 \item{padding}{Logical; add padding to the tokens object (default: FALSE).}
+
+\item{remove_stopwords}{Logical; remove stopwords from the text (default: FALSE).}
+
+\item{stopwords_source}{Character; source for stopwords, e.g., "snowball", "stopwords-iso" (default: "snowball").}
+
+\item{stopwords_language}{Character; language for stopwords (default: "en").}
+
+\item{custom_stopwords}{Character vector; additional words to remove (default: NULL).}
+
+\item{custom_valuetype}{Character; valuetype for custom_stopwords pattern matching, one of "glob", "regex", or "fixed" (default: "glob").}
 
 \item{verbose}{Logical; print verbose output (default: FALSE).}
 
@@ -99,3 +114,12 @@ tokens <- TextAnalysisR::prep_texts(united_tbl,
 print(tokens)
 }
 }
+\seealso{
+Other preprocessing: 
+\code{\link{detect_multi_words}()},
+\code{\link{get_available_dfm}()},
+\code{\link{import_files}()},
+\code{\link{process_pdf_unified}()},
+\code{\link{unite_cols}()}
+}
+\concept{preprocessing}

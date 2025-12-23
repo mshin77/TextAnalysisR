@@ -33,6 +33,29 @@ similarity <- semantic_similarity_analysis(
 )
 ```
 
+---
+
+<details>
+<summary><strong>Similarity Methods</strong></summary>
+
+Semantic analysis measures document similarity using different approaches to capture meaning, from simple vocabulary matching to deep neural representations.
+
+**Methods:**
+
+| Method | Description | Best For |
+|--------|-------------|----------|
+| Words | Lexical analysis using word frequency vectors (bag-of-words) | Finding documents with shared terminology |
+| N-grams | Phrase-based analysis capturing word sequences | Detecting similar phraseology |
+| Embeddings | Deep semantic analysis using transformer models | Conceptual similarity, handles synonyms |
+
+**Usage:** Choose method based on your analysis goals. Words and n-grams are faster and interpretable. Embeddings capture deeper meaning but require more computation. All methods use cosine similarity for comparison.
+
+**Learn More:** [Sentence Transformers Documentation](https://www.sbert.net/)
+
+</details>
+
+---
+
 ## Sentiment Analysis
 
 ### Lexicon-based (no Python)
@@ -47,6 +70,8 @@ plot_sentiment_distribution(sentiment$document_sentiment)
 ```{r}
 sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
 ```
+
+---
 
 ## Document Clustering
 
@@ -63,6 +88,56 @@ labels <- generate_cluster_labels(
 )
 ```
 
+---
+
+<details>
+<summary><strong>Clustering Algorithms</strong></summary>
+
+Clustering groups documents with similar semantic content into categories. Documents within a cluster are more similar to each other than to documents in other clusters.
+
+**Algorithms:**
+
+| Algorithm | Description | Use Case |
+|-----------|-------------|----------|
+| K-means | Creates K spherical clusters | Fast, simple, requires specifying K |
+| Hierarchical | Builds tree of clusters | Exploring nested structures |
+| DBSCAN | Density-based, finds outliers | Arbitrarily shaped clusters |
+| HDBSCAN | Hierarchical density-based | Auto-determines cluster count |
+
+**Usage:** Choose discovery mode (Automatic, Manual, Advanced). Select semantic feature space and algorithm. Automatic mode finds optimal cluster count. Use visualizations and quality metrics to evaluate results.
+
+**Learn More:** [scikit-learn Clustering Guide](https://scikit-learn.org/stable/modules/clustering.html)
+
+</details>
+
+---
+
+<details>
+<summary><strong>Dimensionality Reduction</strong></summary>
+
+Dimensionality reduction transforms high-dimensional data into 2D or 3D visualizations while preserving the structure and relationships between documents.
+
+**Algorithms:**
+
+| Algorithm | Description | Trade-offs |
+|-----------|-------------|------------|
+| PCA | Principal Component Analysis, finds linear patterns | Fast, interpretable |
+| t-SNE | Preserves local structure, reveals clusters | Slow, good for visualization |
+| UMAP | Balances local and global structure | Faster than t-SNE, better topology |
+
+**Usage:** Select a semantic feature space (words, n-grams, or embeddings), then choose a reduction method. Adjust parameters (perplexity, neighbors, dimensions) based on your data size and structure. Use for visual exploration before clustering.
+
+```{r}
+reduced <- reduce_dimensions(embeddings, method = "umap", n_components = 2)
+plot_semantic_viz(reduced)
+```
+
+**Learn More:** [scikit-learn Manifold Learning](https://scikit-learn.org/stable/modules/manifold.html)
+
+</details>
+
+---
+
 ## Temporal Analysis
 
 Track themes over time:
@@ -74,10 +149,23 @@ temporal <- temporal_semantic_analysis(
 )
 ```
 
-## Embedding Models
+---
 
-| Model | Speed | Quality |
-|-------|-------|---------|
-| all-MiniLM-L6-v2 | Fast | Good |
-| all-mpnet-base-v2 | Slow | Best |
-| paraphrase-multilingual | Medium | Multilingual |
+<details>
+<summary><strong>Embedding Models</strong></summary>
+
+| Model | Speed | Quality | Use Case |
+|-------|-------|---------|----------|
+| all-MiniLM-L6-v2 | Fast | Good | General purpose |
+| all-mpnet-base-v2 | Slow | Best | Highest quality |
+| paraphrase-multilingual | Medium | Good | Multiple languages |
+
+**Learn More:** [Sentence Transformers Models](https://www.sbert.net/docs/pretrained_models.html)
+
+</details>
+
+---
+
+## Next Steps
+
+- [Topic Modeling](topic_modeling.html)

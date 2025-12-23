@@ -26,3 +26,18 @@ A plotly grouped bar chart
 \description{
 Creates a grouped bar plot comparing TF-IDF scores with term frequencies.
 }
+\seealso{
+Other lexical: 
+\code{\link{calculate_text_readability}()},
+\code{\link{extract_keywords_keyness}()},
+\code{\link{extract_keywords_tfidf}()},
+\code{\link{lexical_diversity_analysis}()},
+\code{\link{lexical_frequency_analysis}()},
+\code{\link{plot_keyness_keywords}()},
+\code{\link{plot_lexical_diversity_distribution}()},
+\code{\link{plot_readability_by_group}()},
+\code{\link{plot_readability_distribution}()},
+\code{\link{plot_tfidf_keywords}()},
+\code{\link{plot_top_readability_documents}()}
+}
+\concept{lexical}

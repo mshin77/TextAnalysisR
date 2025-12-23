@@ -1,0 +1,171 @@
+---
+title: "Function Reference Cheatsheet"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Function Reference Cheatsheet}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
+```
+
+Quick reference guide organized by workflow stage.
+
+## 1. Data Import & Preprocessing
+
+| Function | Purpose |
+|----------|---------|
+| `import_files()` | Import CSV, XLSX, PDF, DOCX, TXT files |
+| `unite_cols()` | Combine multiple text columns into one |
+| `prep_texts()` | Tokenize with full preprocessing options |
+| `detect_multi_words()` | Find collocations (n-grams) |
+| `get_available_dfm()` | Get best available DFM with fallback |
+
+## 2. Lexical Analysis
+
+| Function | Purpose |
+|----------|---------|
+| `calculate_word_frequency()` | Count word frequencies |
+| `extract_keywords_tfidf()` | TF-IDF keyword extraction |
+| `extract_keywords_keyness()` | Keyness-based keywords |
+| `lexical_diversity_analysis()` | TTR, MATTR, MTLD metrics |
+| `calculate_text_readability()` | Flesch, SMOG, ARI scores |
+
+<details>
+<summary><strong>Visualization Functions</strong></summary>
+
+| Function | Purpose |
+|----------|---------|
+| `plot_word_frequency()` | Bar chart of word frequencies |
+| `plot_tfidf_keywords()` | TF-IDF keyword visualization |
+| `plot_keyness_keywords()` | Keyness comparison plot |
+| `plot_ngram_frequency()` | N-gram frequency plot |
+| `plot_readability_distribution()` | Readability score distribution |
+| `plot_lexical_diversity_distribution()` | Diversity metrics plot |
+
+</details>
+
+## 3. Sentiment Analysis
+
+| Function | Purpose |
+|----------|---------|
+| `analyze_sentiment()` | Quick sentiment scoring |
+| `sentiment_lexicon_analysis()` | Dictionary-based (no Python) |
+| `sentiment_embedding_analysis()` | Neural sentiment (Python) |
+
+<details>
+<summary><strong>Visualization Functions</strong></summary>
+
+| Function | Purpose |
+|----------|---------|
+| `plot_sentiment_distribution()` | Sentiment score histogram |
+| `plot_sentiment_by_category()` | Sentiment by group |
+| `plot_sentiment_boxplot()` | Box plot comparison |
+| `plot_emotion_radar()` | Emotion radar chart |
+
+</details>
+
+## 4. Semantic Analysis
+
+| Function | Purpose |
+|----------|---------|
+| `generate_embeddings()` | Create document embeddings |
+| `reduce_dimensions()` | PCA, t-SNE, UMAP reduction |
+| `calculate_document_similarity()` | Compute similarity matrix |
+| `semantic_similarity_analysis()` | Full similarity workflow |
+| `semantic_document_clustering()` | Cluster similar documents |
+| `generate_cluster_labels()` | AI-generated cluster names |
+
+<details>
+<summary><strong>Visualization Functions</strong></summary>
+
+| Function | Purpose |
+|----------|---------|
+| `plot_semantic_viz()` | 2D/3D semantic visualization |
+| `plot_similarity_heatmap()` | Similarity matrix heatmap |
+| `plot_cluster_terms()` | Cluster term visualization |
+
+</details>
+
+## 5. Network Analysis
+
+| Function | Purpose |
+|----------|---------|
+| `semantic_cooccurrence_network()` | Word co-occurrence graph |
+| `semantic_correlation_network()` | Word correlation graph |
+
+## 6. Topic Modeling
+
+| Function | Purpose |
+|----------|---------|
+| `find_optimal_k()` | Search for optimal topic count |
+| `fit_semantic_model()` | STM (Structural Topic Model) |
+| `fit_embedding_topics()` | Embedding-based topics (BERTopic) |
+| `fit_hybrid_model()` | STM + embeddings hybrid |
+| `get_topic_terms()` | Extract top words per topic |
+| `get_topic_prevalence()` | Calculate topic prevalence |
+| `generate_topic_labels()` | AI-generated topic names |
+
+<details>
+<summary><strong>Visualization Functions</strong></summary>
+
+| Function | Purpose |
+|----------|---------|
+| `plot_topic_probability()` | Topic probability distribution |
+| `plot_topic_effects_categorical()` | Topic effects by category |
+| `plot_topic_effects_continuous()` | Topic effects over continuous var |
+| `plot_word_probability()` | Word probability per topic |
+| `plot_quality_metrics()` | Model quality metrics |
+
+</details>
+
+## 7. PDF Processing
+
+| Function | Purpose |
+|----------|---------|
+| `process_pdf_unified()` | Auto-fallback PDF extraction |
+| `extract_text_from_pdf()` | Extract text (R) |
+| `extract_pdf_multimodal()` | Vision AI for images in PDFs |
+| `detect_pdf_content_type()` | Detect PDF content type |
+
+## 8. AI Integration
+
+| Function | Purpose |
+|----------|---------|
+| `check_ollama()` | Verify Ollama availability |
+| `call_ollama()` | Direct Ollama API call |
+| `call_openai_chat()` | OpenAI API call |
+| `generate_topic_labels_langgraph()` | Multi-agent topic labeling |
+| `generate_survey_items()` | Generate survey items |
+
+## 9. Python Environment
+
+| Function | Purpose |
+|----------|---------|
+| `setup_python_env()` | Set up Python environment |
+| `check_python_env()` | Check Python configuration |
+
+## 10. Validation & Quality
+
+<details>
+<summary><strong>Validation Functions</strong></summary>
+
+| Function | Purpose |
+|----------|---------|
+| `cross_analysis_validation()` | Cross-validate analysis |
+| `validate_semantic_coherence()` | Check semantic coherence |
+| `calculate_clustering_metrics()` | Clustering quality metrics |
+
+</details>
+
+---
+
+## Launch App
+
+The Shiny app provides an interactive interface for all functions:
+
+```{r}
+run_app()
+```

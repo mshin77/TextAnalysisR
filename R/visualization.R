@@ -3,6 +3,10 @@
 #' @importFrom quanteda.textstats textstat_frequency
 NULL
 
+# Suppress R CMD check notes for NSE variables
+utils::globalVariables(c("term", "word_frequency", "collocation", "collocation_ordered",
+                         "pos", "entity", "n", "count", "feature", "frequency"))
+
 #' @title Plot Word Probabilities by Topic
 #'
 #' @description
@@ -24,6 +28,7 @@ NULL
 #'
 #' @return A plotly object showing word probabilities faceted by topic.
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -138,37 +143,22 @@ plot_word_probability <- function(top_topic_terms,
     plotly::layout(
       xaxis = list(
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       hoverlabel = list(
         bgcolor = "#0c1f4a",
-        font = list(size = 15, color = "white", family = "Roboto, sans-serif"),
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
         bordercolor = "#0c1f4a",
         align = "left"
       )
     )
 
-  if (!is.null(title)) {
-    p <- p %>% plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat, sans-serif"),
-        x = 0.5,
-        xref = "paper",
-        xanchor = "center",
-        y = 0.98,
-        yref = "paper",
-        yanchor = "top"
-      ),
-      margin = list(t = 100, b = 60, l = 80, r = 100)
-    )
-  } else {
-    p <- p %>% plotly::layout(margin = list(t = 40, b = 60, l = 80, r = 100))
-  }
+  # Skip title to avoid overlap with facet strip labels
+  p <- p %>% plotly::layout(margin = list(t = 40, b = 60, l = 80, r = 100))
 
   p
 }
@@ -187,6 +177,7 @@ plot_word_probability <- function(top_topic_terms,
 #'
 #' @return A plotly object showing word frequency.
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -230,7 +221,7 @@ plot_word_frequency <- function(dfm_object,
       axis.ticks.y = ggplot2::element_blank(),
       axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(t = 3)),
       axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(r = 3)),
-      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a", face = "bold"),
+      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 5)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 5)),
       plot.margin = ggplot2::margin(t = 5, r = 10, b = 5, l = 5)
@@ -241,16 +232,16 @@ plot_word_frequency <- function(dfm_object,
       autosize = TRUE,
       margin = list(t = 20, b = 80, l = 80, r = 20),
       xaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B"),
-        titlefont = list(size = 16, color = "#0c1f4a")
+        title = list(text = "Frequency", font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
       ),
       yaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B"),
-        titlefont = list(size = 16, color = "#0c1f4a")
+        title = list(text = "", font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
       ),
       hoverlabel = list(
         bgcolor = "#0c1f4a",
-        font = list(size = 15, color = "white"),
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
         bordercolor = "#0c1f4a",
         align = "left"
       )
@@ -278,6 +269,7 @@ plot_word_frequency <- function(dfm_object,
 #'   Topics are ordered by their
 #' mean gamma value (average prevalence across documents).
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -385,7 +377,7 @@ plot_topic_probability <- function(stm_model = NULL,
         panel.grid.minor = element_blank(),
         axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
         axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
-        strip.text.x = element_text(size = 16, color = "#3B3B3B"),
+        strip.text.x = element_text(size = 16, color = "#0c1f4a"),
         axis.text.x = element_text(size = 16, color = "#3B3B3B"),
         axis.text.y = element_text(size = 16, color = "#3B3B3B"),
         axis.title = element_text(size = 16, color = "#0c1f4a"),
@@ -401,15 +393,15 @@ plot_topic_probability <- function(stm_model = NULL,
       plotly::layout(
         xaxis = list(
           tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          titlefont = list(size = 16, color = "#3B3B3B", family = "Montserrat, sans-serif")
+          titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
         ),
         yaxis = list(
           tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          titlefont = list(size = 16, color = "#3B3B3B", family = "Montserrat, sans-serif")
+          titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
         ),
         margin = list(t = 50, b = 40, l = 80, r = 40),
         hoverlabel = list(
-          font = list(size = 15)
+          font = list(size = 16, family = "Roboto, sans-serif")
         )
       )
 }
@@ -427,6 +419,7 @@ plot_topic_probability <- function(stm_model = NULL,
 #'
 #' @return A plotly object
 #'
+#' @family visualization
 #' @export
 plot_topic_effects_categorical <- function(effects_data,
                                            ncol = 2,
@@ -466,7 +459,7 @@ plot_topic_effects_categorical <- function(effects_data,
       panel.grid.minor = element_blank(),
       axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
       axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
-      strip.text.x = element_text(size = 16, color = "#3B3B3B", margin = margin(b = 30, t = 15)),
+      strip.text.x = element_text(size = 16, color = "#0c1f4a", margin = margin(b = 30, t = 15)),
       axis.text.x = element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = margin(t = 20)),
       axis.text.y = element_text(size = 16, color = "#3B3B3B", margin = margin(r = 20)),
       axis.title = element_text(size = 16, color = "#0c1f4a"),
@@ -479,7 +472,7 @@ plot_topic_effects_categorical <- function(effects_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
         x = 0.5,
         xref = "paper",
         xanchor = "center",
@@ -489,15 +482,15 @@ plot_topic_effects_categorical <- function(effects_data,
       ),
       xaxis = list(
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#3B3B3B", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#3B3B3B", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       margin = list(t = 100, b = 40, l = 80, r = 40),
       hoverlabel = list(
-        font = list(size = 15)
+        font = list(size = 16, family = "Roboto, sans-serif")
       )
     )
 }
@@ -515,6 +508,7 @@ plot_topic_effects_categorical <- function(effects_data,
 #'
 #' @return A plotly object
 #'
+#' @family visualization
 #' @export
 plot_topic_effects_continuous <- function(effects_data,
                                           ncol = 2,
@@ -539,7 +533,7 @@ plot_topic_effects_continuous <- function(effects_data,
       panel.grid.minor = element_blank(),
       axis.line = element_line(color = "#3B3B3B", linewidth = 0.3),
       axis.ticks = element_line(color = "#3B3B3B", linewidth = 0.3),
-      strip.text.x = element_text(size = 16, color = "#3B3B3B", margin = margin(b = 30, t = 15)),
+      strip.text.x = element_text(size = 16, color = "#0c1f4a", margin = margin(b = 30, t = 15)),
       axis.text.x = element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = margin(t = 20)),
       axis.text.y = element_text(size = 16, color = "#3B3B3B", margin = margin(r = 20)),
       axis.title = element_text(size = 16, color = "#0c1f4a"),
@@ -552,7 +546,7 @@ plot_topic_effects_continuous <- function(effects_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
         x = 0.5,
         xref = "paper",
         xanchor = "center",
@@ -562,15 +556,15 @@ plot_topic_effects_continuous <- function(effects_data,
       ),
       xaxis = list(
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#3B3B3B", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#3B3B3B", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       margin = list(t = 100, b = 40, l = 80, r = 40),
       hoverlabel = list(
-        font = list(size = 15)
+        font = list(size = 16, family = "Roboto, sans-serif")
       )
     )
 }
@@ -599,6 +593,7 @@ plot_topic_effects_continuous <- function(effects_data,
 #'
 #' @return A plotly object showing the specified visualization.
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -649,7 +644,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
           title = if (!is.null(title)) {
             list(
               text = title,
-              font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -660,7 +655,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
           } else {
             list(
               text = paste("Similarity Heatmap -", analysis_result$method),
-              font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -671,13 +666,13 @@ plot_semantic_viz <- function(analysis_result = NULL,
           },
           xaxis = list(
             title = "Documents",
-            titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto")
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
           ),
           yaxis = list(
             title = "Documents",
-            titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto")
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
           )
         )
       },
@@ -738,7 +733,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
           title = if (!is.null(title)) {
             list(
               text = title,
-              font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -750,7 +745,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
             list(
               text = paste("Dimensionality Reduction -",
                            if (!is.null(analysis_result)) analysis_result$method else "Custom"),
-              font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -764,8 +759,8 @@ plot_semantic_viz <- function(analysis_result = NULL,
                           if (!is.null(analysis_result) && !is.null(analysis_result$variance_explained))
                             paste0("(", round(analysis_result$variance_explained[1] * 100, 1), "%)")
                           else ""),
-            titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto")
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
           ),
           yaxis = list(
             title = paste("Component 2",
@@ -773,8 +768,8 @@ plot_semantic_viz <- function(analysis_result = NULL,
                               length(analysis_result$variance_explained) > 1)
                             paste0("(", round(analysis_result$variance_explained[2] * 100, 1), "%)")
                           else ""),
-            titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto")
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
           )
         )
       },
@@ -810,7 +805,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
             title = if (!is.null(title)) {
               list(
                 text = title,
-                font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
                 x = 0.5,
                 xref = "paper",
                 xanchor = "center",
@@ -822,7 +817,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
               list(
                 text = paste("Clustering Results -",
                              if (!is.null(analysis_result)) analysis_result$method else "Custom"),
-                font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
                 x = 0.5,
                 xref = "paper",
                 xanchor = "center",
@@ -834,13 +829,13 @@ plot_semantic_viz <- function(analysis_result = NULL,
             margin = list(l = 80, r = 40, t = 80, b = 60),
             xaxis = list(
               title = "Document Index",
-              titlefont = list(size = 18, family = "Roboto"),
-              tickfont = list(size = 18, family = "Roboto")
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
             ),
             yaxis = list(
               title = "Cluster",
-              titlefont = list(size = 18, family = "Roboto"),
-              tickfont = list(size = 18, family = "Roboto")
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
             )
           )
         } else {
@@ -878,7 +873,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
             title = if (!is.null(title)) {
               list(
                 text = title,
-                font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
                 x = 0.5,
                 xref = "paper",
                 xanchor = "center",
@@ -890,7 +885,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
               list(
                 text = paste("Clustering Results -",
                              if (!is.null(analysis_result)) analysis_result$method else "Custom"),
-                font = list(size = 20, color = "#0c1f4a", family = "Roboto"),
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
                 x = 0.5,
                 xref = "paper",
                 xanchor = "center",
@@ -902,13 +897,13 @@ plot_semantic_viz <- function(analysis_result = NULL,
             margin = list(l = 80, r = 40, t = 80, b = 60),
             xaxis = list(
               title = "Component 1",
-              titlefont = list(size = 18, family = "Roboto"),
-              tickfont = list(size = 18, family = "Roboto")
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
             ),
             yaxis = list(
               title = "Component 2",
-              titlefont = list(size = 18, family = "Roboto"),
-              tickfont = list(size = 18, family = "Roboto")
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
             )
           )
         }
@@ -969,7 +964,7 @@ plot_semantic_topics <- function(topic_model,
           title = if (!is.null(title)) {
             list(
               text = title,
-              font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -980,7 +975,7 @@ plot_semantic_topics <- function(topic_model,
           } else {
             list(
               text = "Topic Distribution",
-              font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -1016,7 +1011,7 @@ plot_semantic_topics <- function(topic_model,
           title = if (!is.null(title)) {
             list(
               text = title,
-              font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -1027,7 +1022,7 @@ plot_semantic_topics <- function(topic_model,
           } else {
             list(
               text = "Topic Hierarchy",
-              font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -1064,7 +1059,7 @@ plot_semantic_topics <- function(topic_model,
           title = if (!is.null(title)) {
             list(
               text = title,
-              font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -1075,7 +1070,7 @@ plot_semantic_topics <- function(topic_model,
           } else {
             list(
               text = "Document Similarity Heatmap",
-              font = list(size = 18, color = "#0c1f4a", family = "Montserrat"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
               x = 0.5,
               xref = "paper",
               xanchor = "center",
@@ -1099,4 +1094,1236 @@ plot_semantic_topics <- function(topic_model,
   }, error = function(e) {
     stop("Error creating semantic topic visualization: ", e$message)
   })
+}
+
+
+#' Plot Term Frequency Trends by Continuous Variable
+#'
+#' @description
+#' Creates a faceted line plot showing how term frequencies vary across
+#' a continuous variable (e.g., year, time period).
+#'
+#' @param term_data Data frame containing term frequencies with columns:
+#'   continuous_var, term, and word_frequency
+#' @param continuous_var Name of the continuous variable column
+#' @param terms Character vector of terms to display (optional, filters if provided)
+#' @param title Plot title (default: NULL, auto-generated)
+#' @param height Plot height in pixels (default: 600)
+#' @param width Plot width in pixels (default: NULL, auto)
+#'
+#' @return A plotly object with faceted line plots
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' term_df <- data.frame(
+#'   year = rep(2010:2020, each = 3),
+#'   term = rep(c("learning", "education", "technology"), 11),
+#'   word_frequency = sample(10:100, 33, replace = TRUE)
+#' )
+#' plot_term_trends_continuous(term_df, "year", c("learning", "education"))
+#' }
+plot_term_trends_continuous <- function(term_data,
+                                         continuous_var,
+                                         terms = NULL,
+                                         title = NULL,
+                                         height = 600,
+                                         width = NULL) {
+
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("Package 'ggplot2' is required. Please install it.")
+  }
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+  if (!requireNamespace("scales", quietly = TRUE)) {
+    stop("Package 'scales' is required. Please install it.")
+  }
+
+  if (!continuous_var %in% names(term_data)) {
+    stop("Continuous variable '", continuous_var, "' not found in data")
+  }
+
+  if (!"term" %in% names(term_data) && !"word" %in% names(term_data)) {
+    stop("term or word column not found in data")
+  }
+
+  if ("word" %in% names(term_data) && !"term" %in% names(term_data)) {
+    term_data$term <- term_data$word
+  }
+
+  if (!"word_frequency" %in% names(term_data) && !"count" %in% names(term_data)) {
+    stop("word_frequency or count column not found in data")
+  }
+
+  if ("count" %in% names(term_data) && !"word_frequency" %in% names(term_data)) {
+    term_data$word_frequency <- term_data$count
+  }
+
+  if (!is.null(terms)) {
+    term_data <- term_data %>%
+      dplyr::filter(term %in% terms) %>%
+      dplyr::mutate(term = factor(term, levels = terms))
+  }
+
+  if (is.null(title)) {
+    title <- paste("Term Frequency by", continuous_var)
+  }
+
+  p <- ggplot2::ggplot(
+    term_data,
+    ggplot2::aes(
+      x = .data[[continuous_var]],
+      y = word_frequency,
+      group = term
+    )
+  ) +
+    ggplot2::geom_point(color = "#337ab7", alpha = 0.6, size = 2.5) +
+    ggplot2::geom_line(color = "#337ab7", alpha = 0.6, linewidth = 0.5) +
+    ggplot2::facet_wrap(~term, scales = "free") +
+    ggplot2::scale_y_continuous(labels = scales::number_format(accuracy = 1)) +
+    ggplot2::labs(y = "Word Frequency", x = continuous_var) +
+    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a", family = "Roboto"),
+      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", family = "Roboto"),
+      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", family = "Roboto"),
+      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a", family = "Roboto"),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 15)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 15)),
+      plot.margin = ggplot2::margin(t = 5, r = 10, b = 25, l = 15)
+    )
+
+  plot_args <- list(p)
+  if (!is.null(height)) plot_args$height <- height
+  if (!is.null(width)) plot_args$width <- width
+
+  p_plot <- do.call(plotly::ggplotly, plot_args)
+
+  for (i in seq_along(p_plot$x$layout$annotations)) {
+    p_plot$x$layout$annotations[[i]]$font <- list(
+      size = 16,
+      color = "#0c1f4a",
+      family = "Roboto, sans-serif"
+    )
+  }
+
+  axis_names <- names(p_plot$x$layout)
+  for (axis_name in axis_names) {
+    if (grepl("^xaxis", axis_name)) {
+      p_plot$x$layout[[axis_name]]$tickfont <- list(
+        size = 14,
+        color = "#3B3B3B",
+        family = "Roboto, sans-serif"
+      )
+      p_plot$x$layout[[axis_name]]$titlefont <- list(
+        size = 16,
+        color = "#0c1f4a",
+        family = "Roboto, sans-serif"
+      )
+    }
+    if (grepl("^yaxis", axis_name)) {
+      p_plot$x$layout[[axis_name]]$tickfont <- list(
+        size = 14,
+        color = "#3B3B3B",
+        family = "Roboto, sans-serif"
+      )
+      p_plot$x$layout[[axis_name]]$titlefont <- list(
+        size = 16,
+        color = "#0c1f4a",
+        family = "Roboto, sans-serif"
+      )
+    }
+  }
+
+  p_plot %>%
+    plotly::layout(
+      margin = list(l = 80, r = 150, t = 40, b = 100),
+      font = list(
+        family = "Roboto, sans-serif",
+        size = 14,
+        color = "#3B3B3B"
+      ),
+      hoverlabel = list(
+        font = list(size = 14, family = "Roboto, sans-serif")
+      )
+    ) %>%
+    plotly::config(displayModeBar = TRUE)
+}
+
+
+#' Plot N-gram Frequency
+#'
+#' @description
+#' Creates a bar plot showing n-gram frequencies with optional highlighting
+#' of selected n-grams. Supports both detected n-grams and selected multi-word expressions.
+#'
+#' @param ngram_data Data frame containing n-gram data with columns:
+#'   \itemize{
+#'     \item \code{collocation}: The n-gram text
+#'     \item \code{count}: Frequency count
+#'     \item \code{lambda}: (optional) Lambda statistic
+#'     \item \code{z}: (optional) Z-score statistic
+#'   }
+#' @param top_n Number of top n-grams to display (default: 30)
+#' @param selected Character vector of selected n-grams to highlight (default: NULL)
+#' @param title Plot title (default: "N-gram Frequency")
+#' @param highlight_color Color for highlighted bars (default: "#10B981")
+#' @param default_color Color for non-highlighted bars (default: "#6B7280")
+#' @param height Plot height in pixels (default: 500)
+#' @param width Plot width in pixels (default: NULL for auto)
+#' @param show_stats Whether to show lambda and z-score in hover (default: TRUE)
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   ngram_df <- data.frame(
+#'     collocation = c("machine learning", "deep learning", "neural network"),
+#'     count = c(150, 120, 90),
+#'     lambda = c(5.2, 4.8, 4.1),
+#'     z = c(12.3, 10.5, 9.2)
+#'   )
+#'   plot_ngram_frequency(ngram_df, selected = c("machine learning"))
+#' }
+plot_ngram_frequency <- function(ngram_data,
+                                  top_n = 30,
+                                  selected = NULL,
+                                  title = "N-gram Frequency",
+                                  highlight_color = "#10B981",
+                                  default_color = "#6B7280",
+                                  height = 500,
+                                  width = NULL,
+                                  show_stats = TRUE) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(ngram_data) || nrow(ngram_data) == 0) {
+    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
+      plotly::layout(
+        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        annotations = list(
+          list(
+            text = "No n-grams detected. Adjust parameters and click 'Detect N-grams'",
+            x = 0.5, y = 0.5,
+            xref = "paper", yref = "paper",
+            showarrow = FALSE,
+            font = list(size = 16, color = "#6B7280", family = "Roboto")
+          )
+        )
+      ))
+  }
+
+  top_ngrams <- utils::head(ngram_data, top_n)
+
+  top_ngrams <- top_ngrams %>%
+    dplyr::mutate(
+      order_rank = dplyr::row_number(),
+      collocation_ordered = factor(collocation, levels = rev(collocation))
+    )
+
+  is_selected <- if (!is.null(selected)) {
+    top_ngrams$collocation %in% selected
+  } else {
+    rep(FALSE, nrow(top_ngrams))
+  }
+
+  hover_text <- if (show_stats && "lambda" %in% names(top_ngrams) && "z" %in% names(top_ngrams)) {
+    paste0(
+      top_ngrams$collocation, "\n",
+      "Frequency: ", top_ngrams$count, "\n",
+      "Lambda: ", round(top_ngrams$lambda, 2), "\n",
+      "Z-score: ", round(top_ngrams$z, 2)
+    )
+  } else {
+    paste0(
+      top_ngrams$collocation, "\n",
+      "Frequency: ", top_ngrams$count
+    )
+  }
+
+  p <- plotly::plot_ly(
+    data = top_ngrams,
+    x = ~collocation_ordered,
+    y = ~count,
+    type = "bar",
+    marker = list(
+      color = ifelse(is_selected, highlight_color, default_color),
+      line = list(
+        color = ifelse(is_selected, "#337ab7", "#4B5563"),
+        width = 1
+      )
+    ),
+    hoverinfo = "text",
+    hovertext = hover_text,
+    textposition = "none",
+    height = height,
+    width = width
+  )
+
+  p %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = "",
+        tickangle = -45,
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Frequency",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      margin = list(b = 150, l = 60, r = 20, t = 60),
+      showlegend = FALSE,
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      )
+    ) %>%
+    plotly::config(displayModeBar = TRUE)
+}
+
+
+#' Plot Part-of-Speech Tag Frequencies
+#'
+#' @description
+#' Creates a bar plot showing the frequency distribution of part-of-speech tags.
+#'
+#' @param pos_data Data frame containing POS data with columns:
+#'   \itemize{
+#'     \item \code{pos}: Part-of-speech tag
+#'     \item \code{n}: (optional) Pre-computed frequency count
+#'   }
+#'   If \code{n} is not present, frequencies will be computed from the data.
+#' @param top_n Number of top POS tags to display (default: 20)
+#' @param title Plot title (default: "Part-of-Speech Tag Frequency")
+#' @param color Bar color (default: "#337ab7")
+#' @param height Plot height in pixels (default: 500)
+#' @param width Plot width in pixels (default: NULL for auto)
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   pos_df <- data.frame(
+#'     pos = c("NOUN", "VERB", "ADJ", "ADV", "PRON"),
+#'     n = c(500, 400, 250, 150, 100)
+#'   )
+#'   plot_pos_frequencies(pos_df)
+#' }
+plot_pos_frequencies <- function(pos_data,
+                                  top_n = 20,
+                                  title = "Part-of-Speech Tag Frequency",
+                                  color = "#337ab7",
+                                  height = 500,
+                                  width = NULL) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(pos_data) || nrow(pos_data) == 0) {
+    return(plotly::plot_ly() %>%
+      plotly::layout(
+        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        annotations = list(
+          list(
+            text = "No POS data available",
+            x = 0.5, y = 0.5,
+            xref = "paper", yref = "paper",
+            showarrow = FALSE,
+            font = list(size = 16, color = "#6B7280", family = "Roboto")
+          )
+        )
+      ))
+  }
+
+  if (!"n" %in% names(pos_data)) {
+    pos_freq <- pos_data %>%
+      dplyr::count(pos, sort = TRUE) %>%
+      dplyr::slice_head(n = top_n)
+  } else {
+    pos_freq <- pos_data %>%
+      dplyr::arrange(dplyr::desc(n)) %>%
+      dplyr::slice_head(n = top_n)
+  }
+
+  plotly::plot_ly(
+    data = pos_freq,
+    x = ~stats::reorder(pos, n),
+    y = ~n,
+    type = "bar",
+    marker = list(color = color),
+    hoverinfo = "text",
+    hovertext = ~paste0(pos, "\nFrequency: ", n),
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = "POS Tag",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Frequency",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      margin = list(b = 100, l = 60, r = 20, t = 60),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      )
+    )
+}
+
+
+#' Plot Named Entity Frequencies
+#'
+#' @description
+#' Creates a bar plot showing the frequency distribution of named entity types.
+#'
+#' @param entity_data Data frame containing entity data with columns:
+#'   \itemize{
+#'     \item \code{entity}: Named entity type (e.g., "PERSON", "ORG", "GPE")
+#'     \item \code{n}: (optional) Pre-computed frequency count
+#'   }
+#'   If \code{n} is not present, frequencies will be computed from the data.
+#' @param top_n Number of top entity types to display (default: 20)
+#' @param title Plot title (default: "Named Entity Type Frequency")
+#' @param color Bar color (default: "#10B981")
+#' @param height Plot height in pixels (default: 500)
+#' @param width Plot width in pixels (default: NULL for auto)
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   entity_df <- data.frame(
+#'     entity = c("PERSON", "ORG", "GPE", "DATE", "MONEY"),
+#'     n = c(300, 250, 200, 150, 100)
+#'   )
+#'   plot_entity_frequencies(entity_df)
+#' }
+plot_entity_frequencies <- function(entity_data,
+                                     top_n = 20,
+                                     title = "Named Entity Type Frequency",
+                                     color = "#10B981",
+                                     height = 500,
+                                     width = NULL) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(entity_data) || nrow(entity_data) == 0) {
+    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
+      plotly::layout(
+        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        annotations = list(
+          list(
+            text = "No named entities found",
+            x = 0.5, y = 0.5,
+            xref = "paper", yref = "paper",
+            showarrow = FALSE,
+            font = list(size = 16, color = "#6B7280", family = "Roboto")
+          )
+        )
+      ))
+  }
+
+  if (!"n" %in% names(entity_data)) {
+    entity_freq <- entity_data %>%
+      dplyr::count(entity, sort = TRUE) %>%
+      dplyr::slice_head(n = top_n)
+  } else {
+    entity_freq <- entity_data %>%
+      dplyr::arrange(dplyr::desc(n)) %>%
+      dplyr::slice_head(n = top_n)
+  }
+
+  plotly::plot_ly(
+    data = entity_freq,
+    x = ~stats::reorder(entity, n),
+    y = ~n,
+    type = "bar",
+    marker = list(color = color),
+    hoverinfo = "text",
+    hovertext = ~paste0(entity, "\nFrequency: ", n),
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = "",
+        tickangle = -45,
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Frequency",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      margin = list(b = 150, l = 60, r = 20, t = 60),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      )
+    )
+}
+
+
+#' Plot Multi-Word Expression Frequency
+#'
+#' @description
+#' Creates a bar plot showing multi-word expression frequencies with optional
+#' source-based coloring to distinguish between detected and manually added expressions.
+#'
+#' @param mwe_data Data frame containing MWE data with columns:
+#'   \itemize{
+#'     \item \code{feature}: The multi-word expression text
+#'     \item \code{frequency}: Frequency count
+#'     \item \code{rank}: (optional) Rank of the expression
+#'     \item \code{docfreq}: (optional) Document frequency
+#'     \item \code{source}: (optional) Source category (e.g., "Top 20", "Manual")
+#'   }
+#' @param title Plot title (default: "Multi-Word Expression Frequency")
+#' @param color_by_source Whether to color bars by source column (default: TRUE)
+#' @param primary_color Color for primary/top expressions (default: "#10B981")
+#' @param secondary_color Color for secondary/manual expressions (default: "#A855F7")
+#' @param height Plot height in pixels (default: 500)
+#' @param width Plot width in pixels (default: NULL for auto)
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+plot_mwe_frequency <- function(mwe_data,
+                                title = "Multi-Word Expression Frequency",
+                                color_by_source = TRUE,
+                                primary_color = "#10B981",
+                                secondary_color = "#A855F7",
+                                height = 500,
+                                width = NULL) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(mwe_data) || nrow(mwe_data) == 0) {
+    return(create_empty_plot_message("No multi-word expressions found"))
+  }
+
+  if (color_by_source && "source" %in% names(mwe_data)) {
+    bar_colors <- ifelse(mwe_data$source == "Top 20", primary_color, secondary_color)
+  } else {
+    bar_colors <- primary_color
+  }
+
+  hover_text <- if (all(c("rank", "docfreq", "source") %in% names(mwe_data))) {
+    paste0(
+      mwe_data$feature, "\n",
+      "Frequency: ", mwe_data$frequency, "\n",
+      "Rank: ", mwe_data$rank, "\n",
+      "Doc Frequency: ", mwe_data$docfreq, "\n",
+      "Source: ", mwe_data$source
+    )
+  } else {
+    paste0(mwe_data$feature, "\nFrequency: ", mwe_data$frequency)
+  }
+
+  plotly::plot_ly(
+    data = mwe_data,
+    x = ~stats::reorder(feature, frequency),
+    y = ~frequency,
+    type = "bar",
+    marker = list(color = bar_colors),
+    hoverinfo = "text",
+    hovertext = hover_text,
+    textposition = "none",
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = "",
+        tickangle = -45,
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Frequency",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      margin = list(b = 150, l = 60, r = 20, t = 60),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      )
+    )
+}
+
+
+#' Plot Cross-Category Similarity Comparison
+#'
+#' @description
+#' Creates a faceted ggplot heatmap for cross-category document similarity
+#' comparison. Accepts either a pre-built long-format data frame or extracts
+#' from a similarity matrix.
+#'
+#' @param similarity_data Either a similarity matrix (square numeric matrix) or
+#'   a data frame in long format with columns for row labels, column labels,
+#'   similarity values, and category.
+#' @param docs_data Data frame with document metadata (required if similarity_data is a matrix)
+#' @param row_var Column name for row document labels (default: "ld_doc_name")
+#' @param col_var Column name for column document labels (default: "other_doc_name")
+#' @param value_var Column name for similarity values (default: "cosine_similarity")
+#' @param category_var Column name for category in long-format data or docs_data (default: "other_category")
+#' @param row_category Category for row documents (used with matrix input)
+#' @param col_categories Categories for column documents (used with matrix input)
+#' @param row_display_var Column name for row display labels in tooltip (default: NULL, uses row_var)
+#' @param col_display_var Column name for column display labels in tooltip (default: NULL, uses col_var)
+#' @param method_name Similarity method name for legend (default: "Cosine")
+#' @param title Plot title (default: NULL)
+#' @param show_values Logical; show similarity values as text on tiles (default: TRUE)
+#' @param row_label Label for y-axis (default: "Documents")
+#' @param label_max_chars Maximum characters for axis labels before truncation (default: 25)
+#' @param order_by_numeric Logical; order by numeric ID extracted from labels (default: TRUE)
+#' @param height Plot height (default: 600)
+#' @param width Plot width (default: NULL)
+#'
+#' @return A ggplot object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # With pre-built long-format data
+#' plot_cross_category_heatmap(
+#'   similarity_data = ld_similarities,
+#'   row_var = "ld_doc_name",
+#'   col_var = "other_doc_name",
+#'   value_var = "cosine_similarity",
+#'   category_var = "other_category",
+#'   row_label = "SLD Documents"
+#' )
+#' }
+plot_cross_category_heatmap <- function(similarity_data,
+                                         docs_data = NULL,
+                                         row_var = "ld_doc_name",
+                                         col_var = "other_doc_name",
+                                         value_var = "cosine_similarity",
+                                         category_var = "other_category",
+                                         row_category = NULL,
+                                         col_categories = NULL,
+                                         row_display_var = NULL,
+                                         col_display_var = NULL,
+                                         method_name = "Cosine",
+                                         title = NULL,
+                                         show_values = TRUE,
+                                         row_label = "Documents",
+                                         label_max_chars = 25,
+                                         order_by_numeric = TRUE,
+                                         height = 600,
+                                         width = NULL) {
+
+  # Detect input type: data frame (long format) or matrix
+  if (is.data.frame(similarity_data)) {
+    # Long-format data frame input
+    plot_data <- similarity_data
+
+    # Validate required columns
+    required_cols <- c(row_var, col_var, value_var, category_var)
+    missing_cols <- setdiff(required_cols, names(plot_data))
+    if (length(missing_cols) > 0) {
+      stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+    }
+
+    # Rename columns for internal use
+    plot_data <- plot_data %>%
+      dplyr::rename(
+        row_doc = !!rlang::sym(row_var),
+        col_doc = !!rlang::sym(col_var),
+        similarity = !!rlang::sym(value_var),
+        col_category = !!rlang::sym(category_var)
+      )
+
+    # Handle display variables for tooltips
+    if (!is.null(row_display_var) && row_display_var %in% names(similarity_data)) {
+      plot_data$row_display <- similarity_data[[row_display_var]]
+    } else {
+      plot_data$row_display <- plot_data$row_doc
+    }
+
+    if (!is.null(col_display_var) && col_display_var %in% names(similarity_data)) {
+      plot_data$col_display <- similarity_data[[col_display_var]]
+    } else {
+      plot_data$col_display <- plot_data$col_doc
+    }
+
+    # Create truncated labels
+    plot_data <- plot_data %>%
+      dplyr::mutate(
+        row_label_trunc = stringr::str_trunc(.data$row_doc, label_max_chars),
+        col_label_trunc = stringr::str_trunc(.data$col_doc, label_max_chars)
+      )
+
+    # Order by numeric ID if requested
+    if (order_by_numeric) {
+      plot_data <- plot_data %>%
+        dplyr::mutate(
+          row_numeric_id = as.numeric(stringr::str_extract(.data$row_doc, "\\d+")),
+          col_numeric_id = as.numeric(stringr::str_extract(.data$col_doc, "\\d+"))
+        )
+
+      row_order <- plot_data %>%
+        dplyr::arrange(.data$row_numeric_id) %>%
+        dplyr::pull(.data$row_label_trunc) %>%
+        unique()
+
+      col_order <- plot_data %>%
+        dplyr::arrange(.data$col_numeric_id) %>%
+        dplyr::pull(.data$col_label_trunc) %>%
+        unique()
+    } else {
+      row_order <- unique(plot_data$row_label_trunc)
+      col_order <- unique(plot_data$col_label_trunc)
+    }
+
+    # Get category levels
+    cat_levels <- unique(plot_data$col_category)
+
+    # Build final plot data
+    plot_data <- plot_data %>%
+      dplyr::mutate(
+        row_label_trunc = factor(.data$row_label_trunc, levels = rev(row_order)),
+        col_label_trunc = factor(.data$col_label_trunc, levels = col_order),
+        col_category = factor(.data$col_category, levels = cat_levels),
+        tooltip_text = paste0(
+          row_label, ": ", dplyr::coalesce(as.character(.data$row_display), as.character(.data$row_doc)),
+          "<br>", .data$col_category, ": ", dplyr::coalesce(as.character(.data$col_display), as.character(.data$col_doc)),
+          "<br>", method_name, " Similarity: ", round(.data$similarity, 3)
+        )
+      )
+
+  } else if (is.matrix(similarity_data)) {
+    # Matrix input - extract cross-category data
+    if (is.null(docs_data) || is.null(row_category) || is.null(col_categories)) {
+      stop("For matrix input, docs_data, row_category, and col_categories are required")
+    }
+
+    if (!category_var %in% names(docs_data)) {
+      stop("category_var '", category_var, "' not found in docs_data")
+    }
+
+    row_indices <- which(docs_data[[category_var]] == row_category)
+    if (length(row_indices) == 0) {
+      return(create_empty_plot_message(paste("No documents found for category:", row_category)))
+    }
+
+    row_docs <- docs_data[row_indices, ]
+    row_labels <- row_docs$document_id_display %||% row_docs$document_number %||% paste("Doc", row_indices)
+
+    plot_data_list <- list()
+
+    for (col_cat in col_categories) {
+      col_indices <- which(docs_data[[category_var]] == col_cat)
+      if (length(col_indices) == 0) next
+
+      col_docs <- docs_data[col_indices, ]
+      col_labels <- col_docs$document_id_display %||% col_docs$document_number %||% paste("Doc", col_indices)
+
+      sub_matrix <- similarity_data[row_indices, col_indices, drop = FALSE]
+
+      for (i in seq_along(row_indices)) {
+        for (j in seq_along(col_indices)) {
+          plot_data_list[[length(plot_data_list) + 1]] <- data.frame(
+            row_label_trunc = stringr::str_trunc(row_labels[i], label_max_chars),
+            col_label_trunc = stringr::str_trunc(col_labels[j], label_max_chars),
+            row_display = row_docs$document_id_display[i] %||% row_labels[i],
+            col_display = col_docs$document_id_display[j] %||% col_labels[j],
+            similarity = sub_matrix[i, j],
+            col_category = col_cat,
+            stringsAsFactors = FALSE
+          )
+        }
+      }
+    }
+
+    if (length(plot_data_list) == 0) {
+      return(create_empty_plot_message("No matching documents found for specified categories"))
+    }
+
+    plot_data <- do.call(rbind, plot_data_list)
+
+    row_order <- unique(plot_data$row_label_trunc)
+    col_order <- unique(plot_data$col_label_trunc)
+
+    plot_data <- plot_data %>%
+      dplyr::mutate(
+        row_label_trunc = factor(.data$row_label_trunc, levels = rev(row_order)),
+        col_label_trunc = factor(.data$col_label_trunc, levels = col_order),
+        col_category = factor(.data$col_category, levels = col_categories),
+        tooltip_text = paste0(
+          row_category, ": ", .data$row_display,
+          "<br>", .data$col_category, ": ", .data$col_display,
+          "<br>", method_name, " Similarity: ", round(.data$similarity, 3)
+        )
+      )
+
+    if (is.null(row_label) || row_label == "Documents") {
+      row_label <- paste(row_category, "Documents")
+    }
+
+  } else {
+    stop("similarity_data must be a data frame or matrix")
+  }
+
+  # Build the plot
+  p <- ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(x = .data$col_label_trunc, y = .data$row_label_trunc, fill = .data$similarity, text = .data$tooltip_text)
+  ) +
+    ggplot2::geom_tile(color = "white", linewidth = 0.1)
+
+  if (show_values) {
+    q75 <- stats::quantile(plot_data$similarity, 0.75, na.rm = TRUE)
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(
+        label = round(.data$similarity, 2),
+        color = ifelse(.data$similarity > q75, "black", "white")
+      ),
+      size = 3.5,
+      fontface = "bold",
+      show.legend = FALSE
+    ) +
+      ggplot2::scale_color_identity()
+  }
+
+  p <- p +
+    ggplot2::scale_fill_viridis_c(name = paste0(method_name, "\nSimilarity")) +
+    ggplot2::facet_wrap(~ col_category, scales = "free_x") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      strip.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 10),
+      axis.text.y = ggplot2::element_text(size = 10),
+      axis.title.x = ggplot2::element_blank(),
+      legend.title = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      legend.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      plot.title = ggplot2::element_text(size = 12, hjust = 0.5)
+    ) +
+    ggplot2::labs(y = row_label, title = title)
+
+  return(p)
+}
+
+
+#' Plot Document Similarity Heatmap
+#'
+#' @description
+#' Creates an interactive heatmap visualization of document similarity matrices
+#' with support for document metadata, feature-specific colorscales, and rich tooltips.
+#' Supports both symmetric (all-vs-all) and cross-category comparison modes.
+#'
+#' @param similarity_matrix A square numeric matrix of similarity scores
+#' @param docs_data Optional data frame with document metadata containing:
+#'   \itemize{
+#'     \item \code{document_number}: Document identifiers for axis labels
+#'     \item \code{document_id_display}: Document IDs for hover text
+#'     \item \code{category_display}: Category labels for hover text
+#'   }
+#' @param feature_type Feature space type: "words", "topics", "ngrams", or "embeddings"
+#'   (determines colorscale and display name)
+#' @param method_name Similarity method name for display (default: "Cosine")
+#' @param title Plot title (default: NULL, auto-generated from feature_type)
+#' @param category_filter Optional category filter label for title (default: NULL)
+#' @param doc_id_var Name of document ID variable (affects label text, default: NULL)
+#' @param colorscale Plotly colorscale override (default: NULL, uses feature_type default)
+#' @param height Plot height in pixels (default: 600)
+#' @param width Plot width in pixels (default: NULL for auto)
+#' @param row_category Category for row documents in cross-category mode (default: NULL)
+#' @param col_categories Character vector of categories for column documents (default: NULL)
+#' @param category_var Name of category variable in docs_data (default: "category_display")
+#' @param show_values Logical; show similarity values as text on tiles (default: FALSE)
+#' @param facet Logical; facet by column categories (default: TRUE when col_categories specified)
+#' @param row_label Label for row axis (default: NULL, uses row_category)
+#' @param output_type Output type: "plotly" or "ggplot" (default: "plotly", auto-switches to "ggplot" for faceting)
+#'
+#' @return A plotly or ggplot2 heatmap object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Simple usage with matrix only
+#' sim_matrix <- matrix(runif(25), nrow = 5)
+#' plot_similarity_heatmap(sim_matrix)
+#'
+#' # With document metadata
+#' docs <- data.frame(
+#'   document_number = paste("Doc", 1:5),
+#'   document_id_display = c("Paper A", "Paper B", "Paper C", "Paper D", "Paper E"),
+#'   category_display = c("Science", "Science", "Tech", "Tech", "Health")
+#' )
+#' plot_similarity_heatmap(sim_matrix, docs_data = docs, feature_type = "embeddings")
+#'
+#' # Cross-category comparison with faceting
+#' plot_similarity_heatmap(
+#'   sim_matrix,
+#'   docs_data = docs,
+#'   row_category = "Science",
+#'   col_categories = c("Tech", "Health"),
+#'   show_values = TRUE,
+#'   facet = TRUE
+#' )
+#' }
+plot_similarity_heatmap <- function(similarity_matrix,
+                                     docs_data = NULL,
+                                     feature_type = "words",
+                                     method_name = "Cosine",
+                                     title = NULL,
+                                     category_filter = NULL,
+                                     doc_id_var = NULL,
+                                     colorscale = NULL,
+                                     height = 600,
+                                     width = NULL,
+                                     row_category = NULL,
+                                     col_categories = NULL,
+                                     category_var = "category_display",
+                                     show_values = FALSE,
+                                     facet = NULL,
+                                     row_label = NULL,
+                                     output_type = "plotly") {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(similarity_matrix) || nrow(similarity_matrix) < 2) {
+    return(create_empty_plot_message("Need at least 2 documents for similarity analysis"))
+  }
+
+  # Cross-category mode: create faceted ggplot heatmap
+
+  if (!is.null(row_category) && !is.null(col_categories) && !is.null(docs_data)) {
+    if (is.null(facet)) facet <- TRUE
+    if (facet || output_type == "ggplot") {
+      return(plot_cross_category_heatmap(
+        similarity_data = similarity_matrix,
+        docs_data = docs_data,
+        row_category = row_category,
+        col_categories = col_categories,
+        category_var = category_var,
+        method_name = method_name,
+        title = title,
+        show_values = show_values,
+        row_label = row_label,
+        height = height,
+        width = width
+      ))
+    }
+  }
+
+  n_docs <- nrow(similarity_matrix)
+
+  feature_config <- switch(feature_type,
+    "words" = list(display_name = "Word Co-occurrence", colorscale = "Plasma"),
+    "topics" = list(display_name = "Topic Distribution", colorscale = "Inferno"),
+    "ngrams" = list(display_name = "N-gram Pattern", colorscale = "Viridis"),
+    "embeddings" = list(display_name = "Semantic Embedding", colorscale = "Magma"),
+    list(display_name = feature_type, colorscale = "Turbo")
+  )
+
+  if (!is.null(colorscale)) {
+    feature_config$colorscale <- colorscale
+  }
+
+  wrap_long_text <- function(text, max_chars = 40) {
+    text <- as.character(text)
+    if (nchar(text) <= max_chars) return(text)
+
+    words <- strsplit(text, " ")[[1]]
+    lines <- character()
+    current_line <- ""
+
+    for (word in words) {
+      if (nchar(paste(current_line, word)) > max_chars) {
+        if (nchar(current_line) > 0) {
+          lines <- c(lines, current_line)
+          current_line <- word
+        } else {
+          while (nchar(word) > max_chars) {
+            lines <- c(lines, substr(word, 1, max_chars))
+            word <- substr(word, max_chars + 1, nchar(word))
+          }
+          current_line <- word
+        }
+      } else {
+        current_line <- if (nchar(current_line) == 0) word else paste(current_line, word)
+      }
+    }
+    if (nchar(current_line) > 0) lines <- c(lines, current_line)
+
+    paste(lines, collapse = "<br>")
+  }
+
+  if (!is.null(docs_data) && nrow(docs_data) >= n_docs) {
+    docs_data <- docs_data[1:n_docs, ]
+    x_labels <- docs_data$document_number %||% paste("Doc", 1:n_docs)
+    y_labels <- x_labels
+
+    doc_ids_processed <- vapply(
+      docs_data$document_id_display %||% x_labels,
+      wrap_long_text,
+      character(1),
+      USE.NAMES = FALSE
+    )
+    cats_processed <- vapply(
+      docs_data$category_display %||% rep("", n_docs),
+      function(x) wrap_long_text(x, 35),
+      character(1),
+      USE.NAMES = FALSE
+    )
+
+    feature_method_text <- paste0(
+      "<b>Feature:</b> ", feature_type, "<br>",
+      "<b>Method:</b> ", method_name, "<br><b>Similarity:</b> "
+    )
+
+    doc_label <- if (!is.null(doc_id_var) && doc_id_var != "" && doc_id_var != "None") {
+      "ID"
+    } else {
+      "Document"
+    }
+
+    row_templates <- paste0(
+      "<b>", doc_label, ":</b> ", doc_ids_processed, "<br>",
+      "<b>Category:</b> ", cats_processed, "<br>"
+    )
+
+    col_templates <- paste0(
+      "<b>", doc_label, ":</b> ", doc_ids_processed, "<br>",
+      "<b>Category:</b> ", cats_processed, "<br>"
+    )
+
+    rounded_sim <- round(similarity_matrix, 3)
+
+    hover_text <- matrix(
+      paste0(
+        rep(row_templates, each = n_docs),
+        rep(col_templates, times = n_docs),
+        feature_method_text,
+        as.vector(t(rounded_sim))
+      ),
+      nrow = n_docs,
+      ncol = n_docs,
+      byrow = TRUE
+    )
+
+    hovertemplate <- "%{text}<extra></extra>"
+    text_matrix <- hover_text
+  } else {
+    x_labels <- paste("Doc", 1:n_docs)
+    y_labels <- x_labels
+    text_matrix <- round(similarity_matrix, 3)
+    hovertemplate <- paste0(
+      "Document: %{x}<br>Document: %{y}<br>",
+      "Feature: ", feature_type, "<br>",
+      "Method: ", method_name, "<br>",
+      "Similarity: %{text}<extra></extra>"
+    )
+  }
+
+  if (is.null(title)) {
+    title <- if (!is.null(category_filter) && category_filter != "all") {
+      paste("Document", feature_config$display_name, "Similarity:", category_filter)
+    } else {
+      paste("Document", feature_config$display_name, "Similarity Heatmap")
+    }
+  }
+
+  plotly::plot_ly(
+    z = similarity_matrix,
+    x = x_labels,
+    y = y_labels,
+    type = "heatmap",
+    colorscale = feature_config$colorscale,
+    showscale = TRUE,
+    colorbar = list(
+      title = list(
+        text = "Similarity<br>Score",
+        font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      titleside = "right",
+      len = 0.8,
+      thickness = 15
+    ),
+    text = text_matrix,
+    hovertemplate = hovertemplate,
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        x = 0.5,
+        xref = "paper",
+        xanchor = "center"
+      ),
+      xaxis = list(
+        title = "Documents",
+        tickangle = -45,
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Documents",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      plot_bgcolor = "#ffffff",
+      paper_bgcolor = "#ffffff",
+      margin = list(t = 80, b = 60, l = 100, r = 80)
+    )
+}
+
+
+#' Plot Cluster Top Terms
+#'
+#' @description
+#' Creates a horizontal bar plot showing the top terms in a cluster or document group.
+#'
+#' @param terms Named numeric vector of term frequencies, or data frame with
+#'   'term' and 'frequency' columns
+#' @param cluster_id Cluster identifier for the title (default: NULL)
+#' @param title Custom title (default: NULL, auto-generated from cluster_id)
+#' @param n_terms Number of top terms to display (default: 10)
+#' @param color Bar color (default: "#337ab7")
+#' @param height Plot height in pixels (default: 500)
+#' @param width Plot width in pixels (default: NULL for auto)
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+plot_cluster_terms <- function(terms,
+                                cluster_id = NULL,
+                                title = NULL,
+                                n_terms = 10,
+                                color = "#337ab7",
+                                height = 500,
+                                width = NULL) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(terms) || length(terms) == 0) {
+    return(create_empty_plot_message("No terms available for this cluster"))
+  }
+
+  if (is.data.frame(terms)) {
+    if (!all(c("term", "frequency") %in% names(terms))) {
+      stop("Data frame must have 'term' and 'frequency' columns")
+    }
+    terms <- terms %>%
+      dplyr::arrange(dplyr::desc(frequency)) %>%
+      dplyr::slice_head(n = n_terms)
+    term_names <- terms$term
+    term_values <- terms$frequency
+  } else {
+    top_terms <- utils::head(sort(terms, decreasing = TRUE), n_terms)
+    term_names <- names(top_terms)
+    term_values <- as.numeric(top_terms)
+  }
+
+  if (is.null(title)) {
+    title <- if (!is.null(cluster_id)) {
+      paste("Top Terms in Cluster", cluster_id)
+    } else {
+      "Top Terms"
+    }
+  }
+
+  plotly::plot_ly(
+    x = term_values,
+    y = term_names,
+    type = "bar",
+    orientation = "h",
+    marker = list(color = color),
+    hovertemplate = "%{y}<br>Frequency: %{x:.4f}<extra></extra>",
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        x = 0.5,
+        xref = "paper",
+        xanchor = "center"
+      ),
+      xaxis = list(
+        title = list(text = "Frequency"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "",
+        categoryorder = "total ascending",
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      ),
+      margin = list(l = 120, r = 40, t = 80, b = 60)
+    ) %>%
+    plotly::config(displayModeBar = TRUE)
 }

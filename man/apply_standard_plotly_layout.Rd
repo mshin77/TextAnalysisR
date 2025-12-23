@@ -36,9 +36,9 @@ This ensures all plots have uniform fonts, colors, margins, and interactive feat
 \details{
 Design standards applied:
 \itemize{
-\item Title: 20px Roboto, #0c1f4a
-\item Axis titles: 18px Roboto, #0c1f4a
-\item Axis labels: 18px Roboto, #3B3B3B
+\item Title: 18px Roboto, #0c1f4a
+\item Axis titles: 16px Roboto, #0c1f4a
+\item Axis tick labels: 16px Roboto, #3B3B3B
 \item Hover tooltips: 16px Roboto
 \item WCAG AA compliant colors
 }
@@ -54,3 +54,28 @@ p \%>\% apply_standard_plotly_layout(
 )
 }
 }
+\seealso{
+Other visualization: 
+\code{\link{create_empty_plot_message}()},
+\code{\link{create_message_table}()},
+\code{\link{create_standard_ggplot_theme}()},
+\code{\link{get_dt_options}()},
+\code{\link{get_plotly_hover_config}()},
+\code{\link{get_sentiment_color}()},
+\code{\link{get_sentiment_colors}()},
+\code{\link{plot_cluster_terms}()},
+\code{\link{plot_cross_category_heatmap}()},
+\code{\link{plot_entity_frequencies}()},
+\code{\link{plot_mwe_frequency}()},
+\code{\link{plot_ngram_frequency}()},
+\code{\link{plot_pos_frequencies}()},
+\code{\link{plot_semantic_viz}()},
+\code{\link{plot_similarity_heatmap}()},
+\code{\link{plot_term_trends_continuous}()},
+\code{\link{plot_topic_effects_categorical}()},
+\code{\link{plot_topic_effects_continuous}()},
+\code{\link{plot_topic_probability}()},
+\code{\link{plot_word_frequency}()},
+\code{\link{plot_word_probability}()}
+}
+\concept{visualization}

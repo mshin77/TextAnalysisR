@@ -84,3 +84,8 @@ semantic_correlation_network(
 ## Value
 
 A list containing plot, table, nodes, edges, and stats
+
+## See also
+
+Other network:
+[`semantic_cooccurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_cooccurrence_network.md)

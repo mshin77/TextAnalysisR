@@ -10,9 +10,7 @@ embedding component adds semantic coherence.
 estimated using the STM component via
 [`stm::estimateEffect()`](https://rdrr.io/pkg/stm/man/estimateEffect.html).
 The embedding component provides semantically meaningful topic
-representations but does not support direct covariate modeling. This
-hybrid approach combines the best of both worlds: statistical inference
-from STM and semantic quality from embeddings.
+representations but does not support direct covariate modeling.
 
 ## Usage
 
@@ -24,7 +22,8 @@ fit_hybrid_model(
   embedding_model = "all-MiniLM-L6-v2",
   stm_prevalence = NULL,
   stm_init_type = "Spectral",
-  alignment_method = "cosine",
+  compute_quality = TRUE,
+  stm_weight = 0.5,
   verbose = TRUE,
   seed = 123
 )
@@ -57,9 +56,13 @@ fit_hybrid_model(
 
   STM initialization type (default: "Spectral").
 
-- alignment_method:
+- compute_quality:
 
-  Method for aligning STM and embedding topics (default: "cosine").
+  Logical, if TRUE, computes quality metrics (default: TRUE).
+
+- stm_weight:
+
+  Weight for STM in keyword combination, 0-1 (default: 0.5).
 
 - verbose:
 
@@ -77,18 +80,52 @@ A list containing:
 
 - embedding_result: The embedding-based topic model output
 
-- alignment: Alignment metrics between the two models
+- alignment: Comprehensive alignment metrics including cosine
+  similarity, assignment agreement, correlation, and Adjusted Rand Index
 
-- combined_topics: Integrated topic representations
+- quality_metrics: Quality metrics including coherence, exclusivity,
+  silhouette scores, and combined quality score
 
-- metadata: Metadata used in modeling (needed for effect estimation)
+- combined_topics: Integrated topic representations with weighted
+  keywords
+
+- stm_data: STM-formatted data (needed for effect estimation)
+
+- metadata: Metadata used in modeling
 
 ## Note
 
 For covariate effect estimation, use
 [`stm::estimateEffect()`](https://rdrr.io/pkg/stm/man/estimateEffect.html)
-on the `stm_result$model` component. The metadata must include the
-covariates specified in `stm_prevalence`.
+on the `stm_result$model` component with `stm_data$meta` as the
+metadata.
+
+## See also
+
+Other topic-modeling:
+[`analyze_semantic_evolution()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_semantic_evolution.md),
+[`assess_hybrid_stability()`](https://mshin77.github.io/TextAnalysisR/reference/assess_hybrid_stability.md),
+[`calculate_assignment_consistency()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_assignment_consistency.md),
+[`calculate_eval_metrics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_eval_metrics_internal.md),
+[`calculate_keyword_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_keyword_stability.md),
+[`calculate_semantic_drift()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_semantic_drift.md),
+[`calculate_topic_probability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_probability.md),
+[`calculate_topic_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_stability.md),
+[`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md),
+[`find_topic_matches()`](https://mshin77.github.io/TextAnalysisR/reference/find_topic_matches.md),
+[`fit_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_topics.md),
+[`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md),
+[`generate_topic_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.md),
+[`get_topic_prevalence()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_prevalence.md),
+[`get_topic_terms()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_terms.md),
+[`get_topic_texts()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_texts.md),
+[`identify_topic_trends()`](https://mshin77.github.io/TextAnalysisR/reference/identify_topic_trends.md),
+[`plot_model_comparison()`](https://mshin77.github.io/TextAnalysisR/reference/plot_model_comparison.md),
+[`plot_quality_metrics()`](https://mshin77.github.io/TextAnalysisR/reference/plot_quality_metrics.md),
+[`run_contrastive_topics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/run_contrastive_topics_internal.md),
+[`run_neural_topics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/run_neural_topics_internal.md),
+[`run_temporal_topics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/run_temporal_topics_internal.md),
+[`validate_semantic_coherence()`](https://mshin77.github.io/TextAnalysisR/reference/validate_semantic_coherence.md)
 
 ## Examples
 
@@ -101,7 +138,19 @@ if (FALSE) { # \dontrun{
   hybrid_model <- fit_hybrid_model(
     texts = texts,
     n_topics_stm = 3,
+    compute_quality = TRUE,
     verbose = TRUE
   )
+
+  # View alignment metrics
+  hybrid_model$alignment$overall_alignment
+  hybrid_model$alignment$adjusted_rand_index
+
+  # View quality metrics
+  hybrid_model$quality_metrics$stm_coherence_mean
+  hybrid_model$quality_metrics$combined_quality
+
+  # View combined keywords with source attribution
+  hybrid_model$combined_topics[[1]]$combined_keywords
 } # }
 ```

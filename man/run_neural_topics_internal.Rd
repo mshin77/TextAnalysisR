@@ -36,3 +36,30 @@ List containing neural topic model and diagnostics
 Implements neural topic modeling using deep learning architectures for improved
 topic discovery and representation learning.
 }
+\seealso{
+Other topic-modeling: 
+\code{\link{analyze_semantic_evolution}()},
+\code{\link{assess_hybrid_stability}()},
+\code{\link{calculate_assignment_consistency}()},
+\code{\link{calculate_eval_metrics_internal}()},
+\code{\link{calculate_keyword_stability}()},
+\code{\link{calculate_semantic_drift}()},
+\code{\link{calculate_topic_probability}()},
+\code{\link{calculate_topic_stability}()},
+\code{\link{find_optimal_k}()},
+\code{\link{find_topic_matches}()},
+\code{\link{fit_embedding_topics}()},
+\code{\link{fit_hybrid_model}()},
+\code{\link{fit_temporal_model}()},
+\code{\link{generate_topic_labels}()},
+\code{\link{get_topic_prevalence}()},
+\code{\link{get_topic_terms}()},
+\code{\link{get_topic_texts}()},
+\code{\link{identify_topic_trends}()},
+\code{\link{plot_model_comparison}()},
+\code{\link{plot_quality_metrics}()},
+\code{\link{run_contrastive_topics_internal}()},
+\code{\link{run_temporal_topics_internal}()},
+\code{\link{validate_semantic_coherence}()}
+}
+\concept{topic-modeling}

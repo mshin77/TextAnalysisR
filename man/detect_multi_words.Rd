@@ -36,3 +36,12 @@ if (interactive()) {
   print(collocations)
 }
 }
+\seealso{
+Other preprocessing: 
+\code{\link{get_available_dfm}()},
+\code{\link{import_files}()},
+\code{\link{prep_texts}()},
+\code{\link{process_pdf_unified}()},
+\code{\link{unite_cols}()}
+}
+\concept{preprocessing}

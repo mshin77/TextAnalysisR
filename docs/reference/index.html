@@ -28,6 +28,8 @@
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -44,9 +46,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="app">App<a class="anchor" aria-label="anchor" href="#app"></a></h2>
+      <h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a></h2>
 
-
+      <div class="section-desc"><p>Launch the app and import data</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -69,7 +71,7 @@
       </dl></div><div class="section level2">
       <h2 id="preprocessing">Preprocessing<a class="anchor" aria-label="anchor" href="#preprocessing"></a></h2>
 
-
+      <div class="section-desc"><p>Text preparation and feature extraction</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -106,7 +108,7 @@
       </dl></div><div class="section level2">
       <h2 id="lexical-analysis">Lexical Analysis<a class="anchor" aria-label="anchor" href="#lexical-analysis"></a></h2>
 
-
+      <div class="section-desc"><p>Word frequency, keywords, and readability metrics</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -114,6 +116,13 @@
 
 
       <dl><dt>
+
+          <code><a href="calculate_word_frequency.html">calculate_word_frequency()</a></code>
+
+        </dt>
+        <dd>Analyze and Visualize Word Frequencies Across a Continuous Variable</dd>
+
+        <dt>
 
           <code><a href="extract_keywords_keyness.html">extract_keywords_keyness()</a></code>
 
@@ -129,10 +138,31 @@
 
         <dt>
 
-          <code><a href="plot_keyword_comparison.html">plot_keyword_comparison()</a></code>
+          <code><a href="lexical_frequency_analysis.html">lexical_frequency_analysis()</a></code>
 
         </dt>
-        <dd>Plot Keyword Comparison (TF-IDF vs Frequency)</dd>
+        <dd>Lexical Frequency Analysis</dd>
+
+        <dt>
+
+          <code><a href="lexical_diversity_analysis.html">lexical_diversity_analysis()</a></code>
+
+        </dt>
+        <dd>Lexical Diversity Analysis</dd>
+
+        <dt>
+
+          <code><a href="calculate_text_readability.html">calculate_text_readability()</a></code>
+
+        </dt>
+        <dd>Calculate Text Readability</dd>
+
+        <dt>
+
+          <code><a href="plot_word_frequency.html">plot_word_frequency()</a></code>
+
+        </dt>
+        <dd>Plot Word Frequency</dd>
 
         <dt>
 
@@ -150,17 +180,38 @@
 
         <dt>
 
-          <code><a href="plot_word_frequency.html">plot_word_frequency()</a></code>
+          <code><a href="plot_keyword_comparison.html">plot_keyword_comparison()</a></code>
 
         </dt>
-        <dd>Plot Word Frequency</dd>
+        <dd>Plot Keyword Comparison (TF-IDF vs Frequency)</dd>
 
         <dt>
 
-          <code><a href="calculate_word_frequency.html">calculate_word_frequency()</a></code>
+          <code><a href="plot_ngram_frequency.html">plot_ngram_frequency()</a></code>
 
         </dt>
-        <dd>Analyze and Visualize Word Frequencies Across a Continuous Variable</dd>
+        <dd>Plot N-gram Frequency</dd>
+
+        <dt>
+
+          <code><a href="plot_mwe_frequency.html">plot_mwe_frequency()</a></code>
+
+        </dt>
+        <dd>Plot Multi-Word Expression Frequency</dd>
+
+        <dt>
+
+          <code><a href="plot_pos_frequencies.html">plot_pos_frequencies()</a></code>
+
+        </dt>
+        <dd>Plot Part-of-Speech Tag Frequencies</dd>
+
+        <dt>
+
+          <code><a href="plot_entity_frequencies.html">plot_entity_frequencies()</a></code>
+
+        </dt>
+        <dd>Plot Named Entity Frequencies</dd>
 
         <dt>
 
@@ -189,31 +240,10 @@
 
         </dt>
         <dd>Plot Lexical Diversity Distribution</dd>
-
-        <dt>
-
-          <code><a href="calculate_text_readability.html">calculate_text_readability()</a></code>
-
-        </dt>
-        <dd>Calculate Text Readability</dd>
-
-        <dt>
-
-          <code><a href="lexical_frequency_analysis.html">lexical_frequency_analysis()</a></code>
-
-        </dt>
-        <dd>Lexical Frequency Analysis</dd>
-
-        <dt>
-
-          <code><a href="lexical_diversity_analysis.html">lexical_diversity_analysis()</a></code>
-
-        </dt>
-        <dd>Lexical Diversity Analysis</dd>
       </dl></div><div class="section level2">
       <h2 id="sentiment-analysis">Sentiment Analysis<a class="anchor" aria-label="anchor" href="#sentiment-analysis"></a></h2>
 
-
+      <div class="section-desc"><p>Lexicon and embedding-based sentiment scoring</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -243,6 +273,13 @@
 
         <dt>
 
+          <code><a href="plot_sentiment_boxplot.html">plot_sentiment_boxplot()</a></code>
+
+        </dt>
+        <dd>Plot Sentiment Box Plot by Category</dd>
+
+        <dt>
+
           <code><a href="plot_sentiment_by_category.html">plot_sentiment_by_category()</a></code>
 
         </dt>
@@ -254,6 +291,13 @@
 
         </dt>
         <dd>Plot Sentiment Distribution</dd>
+
+        <dt>
+
+          <code><a href="plot_sentiment_violin.html">plot_sentiment_violin()</a></code>
+
+        </dt>
+        <dd>Plot Sentiment Violin Plot by Category</dd>
 
         <dt>
 
@@ -271,165 +315,21 @@
 
         <dt>
 
-          <code><a href="plot_top_sentiment_documents.html">plot_top_sentiment_documents()</a></code>
+          <code><a href="get_sentiment_color.html">get_sentiment_color()</a></code>
 
         </dt>
-        <dd>Plot Top Documents by Sentiment Score</dd>
-      </dl></div><div class="section level2">
-      <h2 id="network-analysis">Network Analysis<a class="anchor" aria-label="anchor" href="#network-analysis"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="plot_cooccurrence_network.html">plot_cooccurrence_network()</a></code>
-
-        </dt>
-        <dd>Analyze and Visualize Word Co-occurrence Networks</dd>
+        <dd>Generate Sentiment Color Gradient</dd>
 
         <dt>
 
-          <code><a href="plot_correlation_network.html">plot_correlation_network()</a></code>
+          <code><a href="get_sentiment_colors.html">get_sentiment_colors()</a></code>
 
         </dt>
-        <dd>Analyze and Visualize Word Correlation Networks</dd>
-
-        <dt>
-
-          <code><a href="semantic_cooccurrence_network.html">semantic_cooccurrence_network()</a></code>
-
-        </dt>
-        <dd>Compute Word Co-occurrence Network</dd>
-
-        <dt>
-
-          <code><a href="semantic_correlation_network.html">semantic_correlation_network()</a></code>
-
-        </dt>
-        <dd>Compute Word Correlation Network</dd>
-      </dl></div><div class="section level2">
-      <h2 id="topic-modeling">Topic Modeling<a class="anchor" aria-label="anchor" href="#topic-modeling"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="find_optimal_k.html">find_optimal_k()</a></code>
-
-        </dt>
-        <dd>Find Optimal Number of Topics</dd>
-
-        <dt>
-
-          <code><a href="fit_embedding_topics.html">fit_embedding_topics()</a></code>
-
-        </dt>
-        <dd>Embedding-based Topic Modeling</dd>
-
-        <dt>
-
-          <code><a href="fit_hybrid_model.html">fit_hybrid_model()</a></code>
-
-        </dt>
-        <dd>Fit Hybrid Topic Model</dd>
-
-        <dt>
-
-          <code><a href="fit_semantic_model.html">fit_semantic_model()</a></code>
-
-        </dt>
-        <dd>Fit Semantic Model</dd>
-
-        <dt>
-
-          <code><a href="fit_temporal_model.html">fit_temporal_model()</a></code>
-
-        </dt>
-        <dd>Fit Temporal Topic Model</dd>
-
-        <dt>
-
-          <code><a href="generate_topic_labels.html">generate_topic_labels()</a></code>
-
-        </dt>
-        <dd>Generate Topic Labels Using OpenAI's API</dd>
-
-        <dt>
-
-          <code><a href="generate_topic_keywords.html">generate_topic_keywords()</a></code>
-
-        </dt>
-        <dd>Generate Topic Keywords</dd>
-
-        <dt>
-
-          <code><a href="get_topic_terms.html">get_topic_terms()</a></code>
-
-        </dt>
-        <dd>Select Top Terms for Each Topic</dd>
-
-        <dt>
-
-          <code><a href="calculate_topic_probability.html">calculate_topic_probability()</a></code>
-
-        </dt>
-        <dd>Calculate Topic Probabilities</dd>
-
-        <dt>
-
-          <code><a href="identify_topic_trends.html">identify_topic_trends()</a></code>
-
-        </dt>
-        <dd>Identify Topic Trends</dd>
-
-        <dt>
-
-          <code><a href="plot_topic_probability.html">plot_topic_probability()</a></code>
-
-        </dt>
-        <dd>Plot Per-Document Per-Topic Probabilities</dd>
-
-        <dt>
-
-          <code><a href="plot_topic_effects_categorical.html">plot_topic_effects_categorical()</a></code>
-
-        </dt>
-        <dd>Plot Topic Effects for Categorical Variables</dd>
-
-        <dt>
-
-          <code><a href="plot_topic_effects_continuous.html">plot_topic_effects_continuous()</a></code>
-
-        </dt>
-        <dd>Plot Topic Effects for Continuous Variables</dd>
-
-        <dt>
-
-          <code><a href="plot_word_probability.html">plot_word_probability()</a></code>
-
-        </dt>
-        <dd>Plot Word Probabilities by Topic</dd>
-
-        <dt>
-
-          <code><a href="run_text_workflow.html">run_text_workflow()</a></code>
-
-        </dt>
-        <dd>Complete Text Mining Workflow</dd>
+        <dd>Get Sentiment Color Palette</dd>
       </dl></div><div class="section level2">
       <h2 id="semantic-analysis">Semantic Analysis<a class="anchor" aria-label="anchor" href="#semantic-analysis"></a></h2>
 
-
+      <div class="section-desc"><p>Document similarity, clustering, and embeddings</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -456,6 +356,13 @@
 
         </dt>
         <dd>Calculate Document Similarity</dd>
+
+        <dt>
+
+          <code><a href="calculate_similarity_robust.html">calculate_similarity_robust()</a></code>
+
+        </dt>
+        <dd>Calculate Similarity Robust</dd>
 
         <dt>
 
@@ -533,10 +440,31 @@
 
         </dt>
         <dd>Plot Semantic Analysis Visualization</dd>
+
+        <dt>
+
+          <code><a href="plot_similarity_heatmap.html">plot_similarity_heatmap()</a></code>
+
+        </dt>
+        <dd>Plot Document Similarity Heatmap</dd>
+
+        <dt>
+
+          <code><a href="plot_cross_category_heatmap.html">plot_cross_category_heatmap()</a></code>
+
+        </dt>
+        <dd>Plot Cross-Category Similarity Comparison</dd>
+
+        <dt>
+
+          <code><a href="plot_cluster_terms.html">plot_cluster_terms()</a></code>
+
+        </dt>
+        <dd>Plot Cluster Top Terms</dd>
       </dl></div><div class="section level2">
-      <h2 id="pdf-processing">PDF Processing<a class="anchor" aria-label="anchor" href="#pdf-processing"></a></h2>
+      <h2 id="network-analysis">Network Analysis<a class="anchor" aria-label="anchor" href="#network-analysis"></a></h2>
 
-
+      <div class="section-desc"><p>Word co-occurrence and correlation networks</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -544,6 +472,199 @@
 
 
       <dl><dt>
+
+          <code><a href="semantic_cooccurrence_network.html">semantic_cooccurrence_network()</a></code>
+
+        </dt>
+        <dd>Compute Word Co-occurrence Network</dd>
+
+        <dt>
+
+          <code><a href="semantic_correlation_network.html">semantic_correlation_network()</a></code>
+
+        </dt>
+        <dd>Compute Word Correlation Network</dd>
+      </dl></div><div class="section level2">
+      <h2 id="topic-modeling">Topic Modeling<a class="anchor" aria-label="anchor" href="#topic-modeling"></a></h2>
+
+      <div class="section-desc"><p>STM, embedding-based, and hybrid topic models</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="find_optimal_k.html">find_optimal_k()</a></code>
+
+        </dt>
+        <dd>Find Optimal Number of Topics</dd>
+
+        <dt>
+
+          <code><a href="fit_embedding_topics.html">fit_embedding_topics()</a></code>
+
+        </dt>
+        <dd>Embedding-based Topic Modeling</dd>
+
+        <dt>
+
+          <code><a href="fit_hybrid_model.html">fit_hybrid_model()</a></code>
+
+        </dt>
+        <dd>Fit Hybrid Topic Model</dd>
+
+        <dt>
+
+          <code><a href="fit_semantic_model.html">fit_semantic_model()</a></code>
+
+        </dt>
+        <dd>Fit Semantic Model</dd>
+
+        <dt>
+
+          <code><a href="fit_temporal_model.html">fit_temporal_model()</a></code>
+
+        </dt>
+        <dd>Fit Temporal Topic Model</dd>
+
+        <dt>
+
+          <code><a href="get_topic_terms.html">get_topic_terms()</a></code>
+
+        </dt>
+        <dd>Select Top Terms for Each Topic</dd>
+
+        <dt>
+
+          <code><a href="get_topic_prevalence.html">get_topic_prevalence()</a></code>
+
+        </dt>
+        <dd>Get Topic Prevalence (Gamma) from STM Model</dd>
+
+        <dt>
+
+          <code><a href="get_topic_texts.html">get_topic_texts()</a></code>
+
+        </dt>
+        <dd>Convert Topic Terms to Text Strings</dd>
+
+        <dt>
+
+          <code><a href="calculate_topic_probability.html">calculate_topic_probability()</a></code>
+
+        </dt>
+        <dd>Calculate Topic Probabilities</dd>
+
+        <dt>
+
+          <code><a href="calculate_topic_stability.html">calculate_topic_stability()</a></code>
+
+        </dt>
+        <dd>Calculate Topic Stability</dd>
+
+        <dt>
+
+          <code><a href="identify_topic_trends.html">identify_topic_trends()</a></code>
+
+        </dt>
+        <dd>Identify Topic Trends</dd>
+
+        <dt>
+
+          <code><a href="generate_topic_labels.html">generate_topic_labels()</a></code>
+
+        </dt>
+        <dd>Generate Topic Labels Using OpenAI's API</dd>
+
+        <dt>
+
+          <code><a href="generate_topic_content.html">generate_topic_content()</a></code>
+
+        </dt>
+        <dd>Generate Content from Topic Terms</dd>
+
+        <dt>
+
+          <code><a href="plot_topic_probability.html">plot_topic_probability()</a></code>
+
+        </dt>
+        <dd>Plot Per-Document Per-Topic Probabilities</dd>
+
+        <dt>
+
+          <code><a href="plot_topic_effects_categorical.html">plot_topic_effects_categorical()</a></code>
+
+        </dt>
+        <dd>Plot Topic Effects for Categorical Variables</dd>
+
+        <dt>
+
+          <code><a href="plot_topic_effects_continuous.html">plot_topic_effects_continuous()</a></code>
+
+        </dt>
+        <dd>Plot Topic Effects for Continuous Variables</dd>
+
+        <dt>
+
+          <code><a href="plot_word_probability.html">plot_word_probability()</a></code>
+
+        </dt>
+        <dd>Plot Word Probabilities by Topic</dd>
+
+        <dt>
+
+          <code><a href="plot_model_comparison.html">plot_model_comparison()</a></code>
+
+        </dt>
+        <dd>Plot Topic Model Comparison Scatter</dd>
+
+        <dt>
+
+          <code><a href="plot_quality_metrics.html">plot_quality_metrics()</a></code>
+
+        </dt>
+        <dd>Plot Topic Model Quality Metrics</dd>
+
+        <dt>
+
+          <code><a href="plot_term_trends_continuous.html">plot_term_trends_continuous()</a></code>
+
+        </dt>
+        <dd>Plot Term Frequency Trends by Continuous Variable</dd>
+      </dl></div><div class="section level2">
+      <h2 id="pdf-processing">PDF Processing<a class="anchor" aria-label="anchor" href="#pdf-processing"></a></h2>
+
+      <div class="section-desc"><p>Text and table extraction from PDFs</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="process_pdf_unified.html">process_pdf_unified()</a></code>
+
+        </dt>
+        <dd>Process PDF File (Unified Entry Point)</dd>
+
+        <dt>
+
+          <code><a href="process_pdf_file.html">process_pdf_file()</a></code>
+
+        </dt>
+        <dd>Process PDF File</dd>
+
+        <dt>
+
+          <code><a href="process_pdf_file_py.html">process_pdf_file_py()</a></code>
+
+        </dt>
+        <dd>Process PDF File using Python</dd>
+
+        <dt>
 
           <code><a href="extract_text_from_pdf.html">extract_text_from_pdf()</a></code>
 
@@ -580,27 +701,6 @@
 
         <dt>
 
-          <code><a href="process_pdf_file.html">process_pdf_file()</a></code>
-
-        </dt>
-        <dd>Process PDF File</dd>
-
-        <dt>
-
-          <code><a href="process_pdf_file_py.html">process_pdf_file_py()</a></code>
-
-        </dt>
-        <dd>Process PDF File using Python</dd>
-
-        <dt>
-
-          <code><a href="process_pdf_unified.html">process_pdf_unified()</a></code>
-
-        </dt>
-        <dd>Process PDF File (Unified Entry Point)</dd>
-
-        <dt>
-
           <code><a href="detect_pdf_content_type.html">detect_pdf_content_type()</a></code>
 
         </dt>
@@ -615,7 +715,7 @@
       </dl></div><div class="section level2">
       <h2 id="ai-integration">AI Integration<a class="anchor" aria-label="anchor" href="#ai-integration"></a></h2>
 
-
+      <div class="section-desc"><p>LLM-powered analysis with Ollama and OpenAI</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -642,6 +742,13 @@
 
         </dt>
         <dd>Call Ollama for Text Generation</dd>
+
+        <dt>
+
+          <code><a href="call_openai_chat.html">call_openai_chat()</a></code>
+
+        </dt>
+        <dd>Call OpenAI Chat Completion API</dd>
 
         <dt>
 
@@ -687,6 +794,41 @@
 
         <dt>
 
+          <code><a href="ai_content_generation.html">ai_content_generation</a></code>
+
+        </dt>
+        <dd>AI-Assisted Content Generation from Topics</dd>
+
+        <dt>
+
+          <code><a href="generate_survey_items.html">generate_survey_items()</a></code>
+
+        </dt>
+        <dd>Generate Survey Items from Topic Terms</dd>
+
+        <dt>
+
+          <code><a href="generate_topic_content.html">generate_topic_content()</a></code>
+
+        </dt>
+        <dd>Generate Content from Topic Terms</dd>
+
+        <dt>
+
+          <code><a href="get_content_type_prompt.html">get_content_type_prompt()</a></code>
+
+        </dt>
+        <dd>Get Default System Prompt for Content Type</dd>
+
+        <dt>
+
+          <code><a href="get_content_type_user_template.html">get_content_type_user_template()</a></code>
+
+        </dt>
+        <dd>Get Default User Prompt Template for Content Type</dd>
+
+        <dt>
+
           <code><a href="format_label_candidates.html">format_label_candidates()</a></code>
 
         </dt>
@@ -698,8 +840,17 @@
 
         </dt>
         <dd>Create Label Selection UI Data</dd>
+      </dl></div><div class="section level2">
+      <h2 id="python-environment">Python Environment<a class="anchor" aria-label="anchor" href="#python-environment"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Python/reticulate setup and checking</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="setup_python_env.html">setup_python_env()</a></code>
 
@@ -720,9 +871,9 @@
         </dt>
         <dd>Check Multimodal Prerequisites</dd>
       </dl></div><div class="section level2">
-      <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a></h2>
+      <h2 id="validation-metrics">Validation &amp; Metrics<a class="anchor" aria-label="anchor" href="#validation-metrics"></a></h2>
 
-
+      <div class="section-desc"><p>Quality assessment and cross-validation</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -731,49 +882,63 @@
 
       <dl><dt>
 
-          <code><a href="SpecialEduTech.html">SpecialEduTech</a></code>
+          <code><a href="cross_analysis_validation.html">cross_analysis_validation()</a></code>
 
         </dt>
-        <dd>Special education technology bibliographic data</dd>
+        <dd>Cross Analysis Validation</dd>
 
         <dt>
 
-          <code><a href="acronym.html">acronym</a></code>
+          <code><a href="validate_cross_models.html">validate_cross_models()</a></code>
 
         </dt>
-        <dd>Acronym List</dd>
+        <dd>Cross-Analysis Validation</dd>
 
         <dt>
 
-          <code><a href="stm_15.html">stm_15</a></code>
+          <code><a href="validate_semantic_coherence.html">validate_semantic_coherence()</a></code>
 
         </dt>
-        <dd>An example structure of a structural topic model</dd>
+        <dd>Validate Semantic Coherence</dd>
 
         <dt>
 
-          <code><a href="dictionary_list_1.html">dictionary_list_1</a></code>
+          <code><a href="calculate_clustering_metrics.html">calculate_clustering_metrics()</a></code>
 
         </dt>
-        <dd>Dictionary List 1</dd>
+        <dd>Calculate Clustering Quality Metrics</dd>
 
         <dt>
 
-          <code><a href="dictionary_list_2.html">dictionary_list_2</a></code>
+          <code><a href="calculate_cross_similarity.html">calculate_cross_similarity()</a></code>
 
         </dt>
-        <dd>Dictionary List 2</dd>
+        <dd>Calculate Cross-Matrix Cosine Similarity</dd>
 
         <dt>
 
-          <code><a href="stopwords_list.html">stopwords_list</a></code>
+          <code><a href="analyze_contrastive_similarity.html">analyze_contrastive_similarity()</a></code>
 
         </dt>
-        <dd>Stopwords List</dd>
+        <dd>Analyze Contrastive Similarity (Alias)</dd>
+
+        <dt>
+
+          <code><a href="analyze_similarity_gaps.html">analyze_similarity_gaps()</a></code>
+
+        </dt>
+        <dd>Analyze Similarity Gaps Between Categories</dd>
+
+        <dt>
+
+          <code><a href="extract_cross_category_similarities.html">extract_cross_category_similarities()</a></code>
+
+        </dt>
+        <dd>Extract Cross-Category Similarities from Full Similarity Matrix</dd>
       </dl></div><div class="section level2">
-      <h2 id="shiny-helpers">Shiny Helpers<a class="anchor" aria-label="anchor" href="#shiny-helpers"></a></h2>
+      <h2 id="shiny-ui-helpers">Shiny UI Helpers<a class="anchor" aria-label="anchor" href="#shiny-ui-helpers"></a></h2>
 
-
+      <div class="section-desc"><p>App interface components and notifications</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -922,6 +1087,13 @@
 
         <dt>
 
+          <code><a href="create_empty_plot_message.html">create_empty_plot_message()</a></code>
+
+        </dt>
+        <dd>Create Empty Plot with Message</dd>
+
+        <dt>
+
           <code><a href="apply_standard_plotly_layout.html">apply_standard_plotly_layout()</a></code>
 
         </dt>
@@ -943,17 +1115,10 @@
 
         <dt>
 
-          <code><a href="get_sentiment_color.html">get_sentiment_color()</a></code>
+          <code><a href="get_dt_options.html">get_dt_options()</a></code>
 
         </dt>
-        <dd>Generate Sentiment Color Gradient</dd>
-
-        <dt>
-
-          <code><a href="get_sentiment_colors.html">get_sentiment_colors()</a></code>
-
-        </dt>
-        <dd>Get Sentiment Color Palette</dd>
+        <dd>Get Standard DataTable Options</dd>
 
         <dt>
 
@@ -971,7 +1136,7 @@
       </dl></div><div class="section level2">
       <h2 id="security-accessibility">Security &amp; Accessibility<a class="anchor" aria-label="anchor" href="#security-accessibility"></a></h2>
 
-
+      <div class="section-desc"><p>Input validation and WCAG compliance</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -1055,6 +1220,57 @@
         </dt>
         <dd>Check Alt Text Presence</dd>
       </dl></div><div class="section level2">
+      <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a></h2>
+
+      <div class="section-desc"><p>Example datasets and dictionaries</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="SpecialEduTech.html">SpecialEduTech</a></code>
+
+        </dt>
+        <dd>Special education technology bibliographic data</dd>
+
+        <dt>
+
+          <code><a href="acronym.html">acronym</a></code>
+
+        </dt>
+        <dd>Acronym List</dd>
+
+        <dt>
+
+          <code><a href="stm_15.html">stm_15</a></code>
+
+        </dt>
+        <dd>An example structure of a structural topic model</dd>
+
+        <dt>
+
+          <code><a href="dictionary_list_1.html">dictionary_list_1</a></code>
+
+        </dt>
+        <dd>Dictionary List 1</dd>
+
+        <dt>
+
+          <code><a href="dictionary_list_2.html">dictionary_list_2</a></code>
+
+        </dt>
+        <dd>Dictionary List 2</dd>
+
+        <dt>
+
+          <code><a href="stopwords_list.html">stopwords_list</a></code>
+
+        </dt>
+        <dd>Stopwords List</dd>
+      </dl></div><div class="section level2">
       <h2 id="internal">Internal<a class="anchor" aria-label="anchor" href="#internal"></a></h2>
 
 
@@ -1066,94 +1282,24 @@
 
       <dl><dt>
 
-          <code><a href="validate_cross_models.html">validate_cross_models()</a></code>
+          <code><a href="TextAnalysisR-package.html">TextAnalysisR</a></code> <code><a href="TextAnalysisR-package.html">TextAnalysisR-package</a></code>
 
         </dt>
-        <dd>Cross-Analysis Validation</dd>
+        <dd>TextAnalysisR: Text Mining Workflow Tool</dd>
 
         <dt>
 
-          <code><a href="validate_semantic_coherence.html">validate_semantic_coherence()</a></code>
+          <code><a href="pipe.html">`%&gt;%`</a></code>
 
         </dt>
-        <dd>Validate Semantic Coherence</dd>
+        <dd>Pipe operator</dd>
 
         <dt>
 
-          <code><a href="validate_topic_labels_langgraph.html">validate_topic_labels_langgraph()</a></code>
+          <code><a href="run_text_workflow.html">run_text_workflow()</a></code>
 
         </dt>
-        <dd>Validate User-Selected Topic Labels</dd>
-
-        <dt>
-
-          <code><a href="calculate_assignment_consistency.html">calculate_assignment_consistency()</a></code>
-
-        </dt>
-        <dd>Calculate Assignment Consistency</dd>
-
-        <dt>
-
-          <code><a href="calculate_cosine_similarity.html">calculate_cosine_similarity()</a></code>
-
-        </dt>
-        <dd>Calculate Cosine Similarity Matrix</dd>
-
-        <dt>
-
-          <code><a href="calculate_document_similarity.html">calculate_document_similarity()</a></code>
-
-        </dt>
-        <dd>Calculate Document Similarity</dd>
-
-        <dt>
-
-          <code><a href="calculate_keyword_stability.html">calculate_keyword_stability()</a></code>
-
-        </dt>
-        <dd>Calculate Keyword Stability</dd>
-
-        <dt>
-
-          <code><a href="calculate_semantic_drift.html">calculate_semantic_drift()</a></code>
-
-        </dt>
-        <dd>Calculate Semantic Drift</dd>
-
-        <dt>
-
-          <code><a href="calculate_similarity_robust.html">calculate_similarity_robust()</a></code>
-
-        </dt>
-        <dd>Calculate Similarity Robust</dd>
-
-        <dt>
-
-          <code><a href="calculate_text_readability.html">calculate_text_readability()</a></code>
-
-        </dt>
-        <dd>Calculate Text Readability</dd>
-
-        <dt>
-
-          <code><a href="calculate_topic_probability.html">calculate_topic_probability()</a></code>
-
-        </dt>
-        <dd>Calculate Topic Probabilities</dd>
-
-        <dt>
-
-          <code><a href="calculate_topic_stability.html">calculate_topic_stability()</a></code>
-
-        </dt>
-        <dd>Calculate Topic Stability</dd>
-
-        <dt>
-
-          <code><a href="calculate_word_frequency.html">calculate_word_frequency()</a></code>
-
-        </dt>
-        <dd>Analyze and Visualize Word Frequencies Across a Continuous Variable</dd>
+        <dd>Complete Text Mining Workflow</dd>
 
         <dt>
 
@@ -1185,20 +1331,6 @@
 
         <dt>
 
-          <code><a href="run_text_workflow.html">run_text_workflow()</a></code>
-
-        </dt>
-        <dd>Complete Text Mining Workflow</dd>
-
-        <dt>
-
-          <code><a href="cross_analysis_validation.html">cross_analysis_validation()</a></code>
-
-        </dt>
-        <dd>Cross Analysis Validation</dd>
-
-        <dt>
-
           <code><a href="find_topic_matches.html">find_topic_matches()</a></code>
 
         </dt>
@@ -1220,17 +1352,59 @@
 
         <dt>
 
-          <code><a href="TextAnalysisR-package.html">TextAnalysisR</a></code> <code><a href="TextAnalysisR-package.html">TextAnalysisR-package</a></code>
+          <code><a href="calculate_eval_metrics_internal.html">calculate_eval_metrics_internal()</a></code>
 
         </dt>
-        <dd>TextAnalysisR: Text Mining Workflow Tool</dd>
+        <dd>Comprehensive Evaluation Metrics Calculator</dd>
 
         <dt>
 
-          <code><a href="pipe.html">`%&gt;%`</a></code>
+          <code><a href="calculate_semantic_drift.html">calculate_semantic_drift()</a></code>
 
         </dt>
-        <dd>Pipe operator</dd>
+        <dd>Calculate Semantic Drift</dd>
+
+        <dt>
+
+          <code><a href="assess_hybrid_stability.html">assess_hybrid_stability()</a></code>
+
+        </dt>
+        <dd>Assess Hybrid Model Stability via Bootstrap</dd>
+
+        <dt>
+
+          <code><a href="compute_topic_alignment.html">compute_topic_alignment()</a></code>
+
+        </dt>
+        <dd>Compute Topic Alignment Using Cosine Similarity</dd>
+
+        <dt>
+
+          <code><a href="compute_hybrid_quality_metrics.html">compute_hybrid_quality_metrics()</a></code>
+
+        </dt>
+        <dd>Compute Hybrid Model Quality Metrics</dd>
+
+        <dt>
+
+          <code><a href="combine_keywords_weighted.html">combine_keywords_weighted()</a></code>
+
+        </dt>
+        <dd>Combine Topic Keywords with Semantic Weighting</dd>
+
+        <dt>
+
+          <code><a href="calculate_assignment_consistency.html">calculate_assignment_consistency()</a></code>
+
+        </dt>
+        <dd>Calculate Assignment Consistency</dd>
+
+        <dt>
+
+          <code><a href="calculate_keyword_stability.html">calculate_keyword_stability()</a></code>
+
+        </dt>
+        <dd>Calculate Keyword Stability</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -11,7 +11,8 @@ fit_hybrid_model(
   embedding_model = "all-MiniLM-L6-v2",
   stm_prevalence = NULL,
   stm_init_type = "Spectral",
-  alignment_method = "cosine",
+  compute_quality = TRUE,
+  stm_weight = 0.5,
   verbose = TRUE,
   seed = 123
 )
@@ -29,7 +30,9 @@ fit_hybrid_model(
 
 \item{stm_init_type}{STM initialization type (default: "Spectral").}
 
-\item{alignment_method}{Method for aligning STM and embedding topics (default: "cosine").}
+\item{compute_quality}{Logical, if TRUE, computes quality metrics (default: TRUE).}
+
+\item{stm_weight}{Weight for STM in keyword combination, 0-1 (default: 0.5).}
 
 \item{verbose}{Logical, if TRUE, prints progress messages.}
 
@@ -40,9 +43,13 @@ A list containing:
 \itemize{
 \item stm_result: The STM model output (use this for effect estimation)
 \item embedding_result: The embedding-based topic model output
-\item alignment: Alignment metrics between the two models
-\item combined_topics: Integrated topic representations
-\item metadata: Metadata used in modeling (needed for effect estimation)
+\item alignment: Comprehensive alignment metrics including cosine similarity,
+assignment agreement, correlation, and Adjusted Rand Index
+\item quality_metrics: Quality metrics including coherence, exclusivity,
+silhouette scores, and combined quality score
+\item combined_topics: Integrated topic representations with weighted keywords
+\item stm_data: STM-formatted data (needed for effect estimation)
+\item metadata: Metadata used in modeling
 }
 }
 \description{
@@ -54,13 +61,11 @@ covariate modeling capabilities, while the embedding component adds semantic coh
 \strong{Effect Estimation:} Covariate effects on topic prevalence can be estimated using
 the STM component via \code{stm::estimateEffect()}. The embedding component provides
 semantically meaningful topic representations but does not support direct covariate
-modeling. This hybrid approach combines the best of both worlds: statistical inference
-from STM and semantic quality from embeddings.
+modeling.
 }
 \note{
 For covariate effect estimation, use \code{stm::estimateEffect()} on the
-\code{stm_result$model} component. The metadata must include the covariates
-specified in \code{stm_prevalence}.
+\code{stm_result$model} component with \code{stm_data$meta} as the metadata.
 }
 \examples{
 \dontrun{
@@ -71,7 +76,46 @@ specified in \code{stm_prevalence}.
   hybrid_model <- fit_hybrid_model(
     texts = texts,
     n_topics_stm = 3,
+    compute_quality = TRUE,
     verbose = TRUE
   )
+
+  # View alignment metrics
+  hybrid_model$alignment$overall_alignment
+  hybrid_model$alignment$adjusted_rand_index
+
+  # View quality metrics
+  hybrid_model$quality_metrics$stm_coherence_mean
+  hybrid_model$quality_metrics$combined_quality
+
+  # View combined keywords with source attribution
+  hybrid_model$combined_topics[[1]]$combined_keywords
 }
 }
+\seealso{
+Other topic-modeling: 
+\code{\link{analyze_semantic_evolution}()},
+\code{\link{assess_hybrid_stability}()},
+\code{\link{calculate_assignment_consistency}()},
+\code{\link{calculate_eval_metrics_internal}()},
+\code{\link{calculate_keyword_stability}()},
+\code{\link{calculate_semantic_drift}()},
+\code{\link{calculate_topic_probability}()},
+\code{\link{calculate_topic_stability}()},
+\code{\link{find_optimal_k}()},
+\code{\link{find_topic_matches}()},
+\code{\link{fit_embedding_topics}()},
+\code{\link{fit_temporal_model}()},
+\code{\link{generate_topic_labels}()},
+\code{\link{get_topic_prevalence}()},
+\code{\link{get_topic_terms}()},
+\code{\link{get_topic_texts}()},
+\code{\link{identify_topic_trends}()},
+\code{\link{plot_model_comparison}()},
+\code{\link{plot_quality_metrics}()},
+\code{\link{run_contrastive_topics_internal}()},
+\code{\link{run_neural_topics_internal}()},
+\code{\link{run_temporal_topics_internal}()},
+\code{\link{validate_semantic_coherence}()}
+}
+\concept{topic-modeling}

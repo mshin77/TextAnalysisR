@@ -29,3 +29,15 @@ A plotly line chart with color gradient
 \description{
 Creates a line chart showing sentiment scores across documents with color gradient.
 }
+\seealso{
+Other sentiment: 
+\code{\link{analyze_sentiment}()},
+\code{\link{plot_emotion_radar}()},
+\code{\link{plot_sentiment_boxplot}()},
+\code{\link{plot_sentiment_by_category}()},
+\code{\link{plot_sentiment_distribution}()},
+\code{\link{plot_sentiment_violin}()},
+\code{\link{sentiment_embedding_analysis}()},
+\code{\link{sentiment_lexicon_analysis}()}
+}
+\concept{sentiment}

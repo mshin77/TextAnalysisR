@@ -15,12 +15,13 @@
 #'
 #' @details
 #' Design standards applied:
-#' - Title: 20px Roboto, #0c1f4a
-#' - Axis titles: 18px Roboto, #0c1f4a
-#' - Axis labels: 18px Roboto, #3B3B3B
+#' - Title: 18px Roboto, #0c1f4a
+#' - Axis titles: 16px Roboto, #0c1f4a
+#' - Axis tick labels: 16px Roboto, #3B3B3B
 #' - Hover tooltips: 16px Roboto
 #' - WCAG AA compliant colors
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -53,32 +54,37 @@ apply_standard_plotly_layout <- function(plot,
     margin = margin,
     showlegend = show_legend,
     xaxis = list(
-      tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto, sans-serif"),
-      titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
     ),
     yaxis = list(
-      tickfont = list(size = 18, color = "#3B3B3B", family = "Roboto, sans-serif"),
-      titlefont = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   )
 
   if (!is.null(title)) {
     layout_config$title <- list(
       text = title,
-      font = list(size = 20, color = "#0c1f4a", family = "Roboto, sans-serif")
+      font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   }
 
   if (!is.null(xaxis_title)) {
-    layout_config$xaxis$title <- list(text = xaxis_title)
+    layout_config$xaxis$title <- list(
+      text = xaxis_title,
+      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+    )
   }
 
   if (!is.null(yaxis_title)) {
-    layout_config$yaxis$title <- list(text = yaxis_title)
+    layout_config$yaxis$title <- list(
+      text = yaxis_title,
+      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+    )
   }
 
-  plot %>%
-    plotly::layout(layout_config) %>%
+  do.call(plotly::layout, c(list(p = plot), layout_config)) %>%
     plotly::config(displayModeBar = TRUE)
 }
 
@@ -93,6 +99,7 @@ apply_standard_plotly_layout <- function(plot,
 #'
 #' @return A list of hover label configuration parameters
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -124,6 +131,7 @@ get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") 
 #'
 #' @return A ggplot2 theme object
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -142,23 +150,23 @@ create_standard_ggplot_theme <- function(base_size = 14) {
   ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(
-        size = 20,
+        size = 18,
         color = "#0c1f4a",
         hjust = 0.5,
         family = "Roboto"
       ),
       axis.title = ggplot2::element_text(
-        size = 18,
+        size = 16,
         color = "#0c1f4a",
         family = "Roboto"
       ),
       axis.text = ggplot2::element_text(
-        size = 18,
+        size = 16,
         color = "#3B3B3B",
         family = "Roboto"
       ),
       strip.text = ggplot2::element_text(
-        size = 18,
+        size = 16,
         color = "#0c1f4a",
         family = "Roboto"
       ),
@@ -183,6 +191,7 @@ create_standard_ggplot_theme <- function(base_size = 14) {
 #'
 #' @return Named vector of colors
 #'
+#' @family visualization
 #' @export
 get_sentiment_colors <- function() {
   c(
@@ -203,6 +212,7 @@ get_sentiment_colors <- function() {
 #'
 #' @return Hex color string
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -241,6 +251,7 @@ get_sentiment_color <- function(score) {
 #'
 #' @return A DT::datatable object
 #'
+#' @family visualization
 #' @export
 #'
 #' @examples
@@ -281,4 +292,104 @@ create_message_table <- function(message,
     ),
     class = 'cell-border stripe'
   )
+}
+
+
+#' Create Empty Plot with Message
+#'
+#' @description
+#' Creates an empty plotly plot displaying a centered message.
+#' Useful for showing status messages, error states, or empty data notifications.
+#'
+#' @param message Character string message to display
+#' @param color Text color (default: "#6B7280")
+#' @param font_size Font size in pixels (default: 16)
+#'
+#' @return A plotly object with centered message annotation
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' create_empty_plot_message("No data available")
+#' create_empty_plot_message("Click 'Run Analysis' to begin", color = "#337ab7")
+#' }
+create_empty_plot_message <- function(message,
+                                       color = "#6B7280",
+                                       font_size = 16) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  plotly::plot_ly(type = "scatter", mode = "markers") %>%
+    plotly::layout(
+      xaxis = list(
+        showgrid = FALSE,
+        zeroline = FALSE,
+        showticklabels = FALSE,
+        title = ""
+      ),
+      yaxis = list(
+        showgrid = FALSE,
+        zeroline = FALSE,
+        showticklabels = FALSE,
+        title = ""
+      ),
+      annotations = list(
+        list(
+          text = message,
+          x = 0.5,
+          y = 0.5,
+          xref = "paper",
+          yref = "paper",
+          showarrow = FALSE,
+          font = list(
+            size = font_size,
+            color = color,
+            family = "Roboto, sans-serif"
+          )
+        )
+      )
+    ) %>%
+    plotly::config(displayModeBar = FALSE)
+}
+
+
+#' Get Standard DataTable Options
+#'
+#' @description
+#' Returns standardized DT::datatable options for consistent table formatting
+#' across the TextAnalysisR application.
+#'
+#' @param scroll_y Vertical scroll height (default: "400px")
+#' @param page_length Number of rows per page (default: 25)
+#' @param show_buttons Whether to show export buttons (default: TRUE
+#'
+#' @return A list of DT options
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' DT::datatable(my_data, options = get_dt_options())
+#' DT::datatable(my_data, options = get_dt_options(scroll_y = "300px"))
+#' }
+get_dt_options <- function(scroll_y = "400px",
+                            page_length = 25,
+                            show_buttons = TRUE) {
+  opts <- list(
+    scrollX = TRUE,
+    scrollY = scroll_y,
+    pageLength = page_length
+  )
+
+  if (show_buttons) {
+    opts$dom <- "Bfrtip"
+    opts$buttons <- c("copy", "csv", "excel", "pdf", "print")
+  }
+
+  opts
 }

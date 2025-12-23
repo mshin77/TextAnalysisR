@@ -8,6 +8,8 @@ find_optimal_k(
   dfm_object,
   topic_range,
   max.em.its = 75,
+  emtol = 1e-04,
+  cores = 1,
   categorical_var = NULL,
   continuous_var = NULL,
   height = 600,
@@ -22,6 +24,12 @@ find_optimal_k(
 \item{topic_range}{A vector of K values to test (e.g., 2:10).}
 
 \item{max.em.its}{Maximum number of EM iterations (default: 75).}
+
+\item{emtol}{Convergence tolerance for EM algorithm (default: 1e-04).
+Higher values (e.g., 1e-03) speed up fitting but may reduce precision.}
+
+\item{cores}{Number of CPU cores to use for parallel processing (default: 1).
+Set to higher values for faster searchK on multi-core systems.}
 
 \item{categorical_var}{Optional categorical variable(s) for prevalence.}
 
@@ -42,3 +50,30 @@ A list containing search results and diagnostic plots.
 Searches for the optimal number of topics (K) using stm::searchK.
 Produces diagnostic plots to help select the best K value.
 }
+\seealso{
+Other topic-modeling: 
+\code{\link{analyze_semantic_evolution}()},
+\code{\link{assess_hybrid_stability}()},
+\code{\link{calculate_assignment_consistency}()},
+\code{\link{calculate_eval_metrics_internal}()},
+\code{\link{calculate_keyword_stability}()},
+\code{\link{calculate_semantic_drift}()},
+\code{\link{calculate_topic_probability}()},
+\code{\link{calculate_topic_stability}()},
+\code{\link{find_topic_matches}()},
+\code{\link{fit_embedding_topics}()},
+\code{\link{fit_hybrid_model}()},
+\code{\link{fit_temporal_model}()},
+\code{\link{generate_topic_labels}()},
+\code{\link{get_topic_prevalence}()},
+\code{\link{get_topic_terms}()},
+\code{\link{get_topic_texts}()},
+\code{\link{identify_topic_trends}()},
+\code{\link{plot_model_comparison}()},
+\code{\link{plot_quality_metrics}()},
+\code{\link{run_contrastive_topics_internal}()},
+\code{\link{run_neural_topics_internal}()},
+\code{\link{run_temporal_topics_internal}()},
+\code{\link{validate_semantic_coherence}()}
+}
+\concept{topic-modeling}

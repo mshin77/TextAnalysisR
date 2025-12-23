@@ -32,6 +32,7 @@
 #' - Validation (LLM)
 #' - Conditional revision based on quality metrics
 #'
+#' @family ai
 #' @export
 #'
 #' @examples
@@ -133,6 +134,7 @@ generate_topic_labels_langgraph <- function(
 #' - distinctiveness_scores: How unique/specific labels are (0-10 scale)
 #' - overall_quality: Average of coherence and distinctiveness
 #'
+#' @family ai
 #' @export
 #'
 #' @examples
@@ -221,6 +223,7 @@ validate_topic_labels_langgraph <- function(
 #'   - reasoning: Character, LLM explanation
 #'   - candidate_number: Integer, candidate rank (1-3)
 #'
+#' @family ai
 #' @export
 #'
 #' @examples
@@ -291,6 +294,7 @@ format_label_candidates <- function(label_candidates) {
 #'   - top_terms: Character vector
 #'   - candidates: List of candidate objects
 #'
+#' @family ai
 #' @export
 #'
 #' @examples
@@ -348,6 +352,7 @@ create_label_selection_data <- function(label_candidates) {
 #' ollama pull nomic-embed-text
 #' ```
 #'
+#' @family ai
 #' @export
 #'
 #' @examples

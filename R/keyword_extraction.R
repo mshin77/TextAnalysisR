@@ -9,6 +9,7 @@
 #'
 #' @return Data frame with columns: Keyword, TF_IDF_Score, Frequency
 #'
+#' @family lexical
 #' @export
 #'
 #' @examples
@@ -63,6 +64,7 @@ extract_keywords_tfidf <- function(dfm,
 #'
 #' @return Data frame with columns: Keyword, Keyness_Score
 #'
+#' @family lexical
 #' @export
 #'
 #' @examples
@@ -119,6 +121,7 @@ extract_keywords_keyness <- function(dfm,
 #'
 #' @return A plotly bar chart
 #'
+#' @family lexical
 #' @export
 plot_tfidf_keywords <- function(tfidf_data,
                                  title = NULL,
@@ -154,18 +157,18 @@ plot_tfidf_keywords <- function(tfidf_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat")
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       xaxis = list(
         title = list(text = score_label),
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         title = list(text = ""),
         categoryorder = "trace",
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       margin = list(l = 150, r = 20, t = 60, b = 60),
       font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
@@ -189,6 +192,7 @@ plot_tfidf_keywords <- function(tfidf_data,
 #'
 #' @return A plotly bar chart
 #'
+#' @family lexical
 #' @export
 plot_keyness_keywords <- function(keyness_data,
                                   title = NULL,
@@ -229,18 +233,18 @@ plot_keyness_keywords <- function(keyness_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat")
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       xaxis = list(
         title = list(text = "Keyness Score (G\u00b2)"),
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         title = list(text = ""),
         categoryorder = "trace",
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif")
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       margin = list(l = 150, r = 20, t = 60, b = 60),
       font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
@@ -265,6 +269,7 @@ plot_keyness_keywords <- function(keyness_data,
 #'
 #' @return A plotly grouped bar chart
 #'
+#' @family lexical
 #' @export
 plot_keyword_comparison <- function(tfidf_data,
                                     top_n = 10,
@@ -306,17 +311,17 @@ plot_keyword_comparison <- function(tfidf_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Montserrat")
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       xaxis = list(
         title = list(text = "Keywords"),
         tickangle = -45,
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
       ),
       yaxis = list(
         title = list(text = "Score"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Montserrat, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
         tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
       ),
       barmode = "group",

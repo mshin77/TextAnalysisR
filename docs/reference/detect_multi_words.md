@@ -30,6 +30,15 @@ detect_multi_words(tokens, size = 2:5, min_count = 2)
 
 A character vector of detected collocations.
 
+## See also
+
+Other preprocessing:
+[`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
+[`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
+[`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
+[`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),
+[`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)
+
 ## Examples
 
 ``` r

@@ -13,6 +13,7 @@
 #' Preserves page structure and cleans whitespace.
 #' Works best with text-based PDFs (not scanned images).
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
@@ -79,6 +80,7 @@ extract_text_from_pdf <- function(file_path) {
 #'
 #' For table extraction from PDFs, use \code{\link{extract_tables_from_pdf_py}}.
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
@@ -127,6 +129,7 @@ detect_pdf_content_type <- function(file_path) {
 #' For PDFs containing tables or complex layouts, use the Python-based
 #' \code{\link{process_pdf_file_py}} which provides better table extraction.
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples

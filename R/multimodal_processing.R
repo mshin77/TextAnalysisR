@@ -171,6 +171,7 @@ check_multimodal_prerequisites <- function(
 #' - Setup: Just provide API key
 #' - Models: gpt-4-vision-preview, gpt-4o
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
@@ -283,6 +284,7 @@ extract_pdf_multimodal <- function(
 #'
 #' @return List with extracted content ready for text analysis
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
@@ -357,6 +359,7 @@ extract_pdf_smart <- function(
 #'
 #' @return List with availability status and recommendations
 #'
+#' @family pdf
 #' @export
 #'
 #' @examples
