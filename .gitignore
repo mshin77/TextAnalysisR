@@ -1,7 +1,6 @@
 .env
 security.log
 .Rproj.user
-docs
 .Rhistory
 .claude
 inst/doc
