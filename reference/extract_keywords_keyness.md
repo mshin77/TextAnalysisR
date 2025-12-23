@@ -1,0 +1,60 @@
+# Extract Keywords Using Statistical Keyness
+
+Extracts distinctive keywords by comparing document groups using
+log-likelihood ratio (G-squared).
+
+## Usage
+
+``` r
+extract_keywords_keyness(dfm, target, top_n = 20, measure = "lr")
+```
+
+## Arguments
+
+- dfm:
+
+  A quanteda dfm object
+
+- target:
+
+  Target document indices or logical vector
+
+- top_n:
+
+  Number of top keywords to extract (default: 20)
+
+- measure:
+
+  Keyness measure: "lr" (log-likelihood) or "chi2" (default: "lr")
+
+## Value
+
+Data frame with columns: Keyword, Keyness_Score
+
+## See also
+
+Other lexical:
+[`calculate_text_readability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_text_readability.md),
+[`extract_keywords_tfidf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_tfidf.md),
+[`lexical_diversity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.md),
+[`lexical_frequency_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/lexical_frequency_analysis.md),
+[`plot_keyness_keywords()`](https://mshin77.github.io/TextAnalysisR/reference/plot_keyness_keywords.md),
+[`plot_keyword_comparison()`](https://mshin77.github.io/TextAnalysisR/reference/plot_keyword_comparison.md),
+[`plot_lexical_diversity_distribution()`](https://mshin77.github.io/TextAnalysisR/reference/plot_lexical_diversity_distribution.md),
+[`plot_readability_by_group()`](https://mshin77.github.io/TextAnalysisR/reference/plot_readability_by_group.md),
+[`plot_readability_distribution()`](https://mshin77.github.io/TextAnalysisR/reference/plot_readability_distribution.md),
+[`plot_tfidf_keywords()`](https://mshin77.github.io/TextAnalysisR/reference/plot_tfidf_keywords.md),
+[`plot_top_readability_documents()`](https://mshin77.github.io/TextAnalysisR/reference/plot_top_readability_documents.md)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+library(quanteda)
+corp <- corpus(c("positive text", "negative text", "positive words"))
+dfm_obj <- dfm(tokens(corp))
+# Compare first document vs rest
+keywords <- extract_keywords_keyness(dfm_obj, target = 1)
+print(keywords)
+} # }
+```

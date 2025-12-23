@@ -1,0 +1,37 @@
+# Check WCAG Contrast Compliance
+
+Validates if color combination meets WCAG 2.1 Level AA contrast
+requirements.
+
+## Usage
+
+``` r
+check_wcag_contrast(foreground, background, large_text = FALSE)
+```
+
+## Arguments
+
+- foreground:
+
+  Foreground color (hex format)
+
+- background:
+
+  Background color (hex format)
+
+- large_text:
+
+  Logical, TRUE if text is large (18pt+ or 14pt+ bold)
+
+## Value
+
+Logical TRUE if compliant, FALSE if not
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+check_wcag_contrast("#111827", "#ffffff")  # TRUE (16:1 ratio)
+check_wcag_contrast("#6b7280", "#4a5568")  # FALSE (2.8:1 ratio)
+} # }
+```
