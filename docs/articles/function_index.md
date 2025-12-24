@@ -143,14 +143,35 @@ Quick reference guide organized by workflow stage.
 | [`generate_topic_labels_langgraph()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels_langgraph.md) | Multi-agent topic labeling |
 | [`generate_survey_items()`](https://mshin77.github.io/TextAnalysisR/reference/generate_survey_items.md) | Generate survey items |
 
-## 9. Python Environment
+## 9. NLP with spaCy (Python)
+
+| Function | Purpose |
+|----|----|
+| [`init_spacy_nlp()`](https://mshin77.github.io/TextAnalysisR/reference/init_spacy_nlp.md) | Initialize spaCy with model selection |
+| [`spacy_parse_full()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_parse_full.md) | Full parsing with POS, NER, morphology |
+| [`spacy_extract_entities()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_entities.md) | Extract named entities (span-level) |
+| [`spacy_extract_noun_chunks()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_noun_chunks.md) | Extract noun phrases |
+| [`spacy_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_similarity.md) | Semantic similarity between texts |
+| [`spacy_model_info()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_model_info.md) | Get loaded model information |
+
+**Morphological Features**
+
+| Feature          | Description        | Example Values      |
+|------------------|--------------------|---------------------|
+| `morph_Number`   | Grammatical number | Sing, Plur          |
+| `morph_Tense`    | Verb tense         | Past, Pres, Fut     |
+| `morph_VerbForm` | Verb form          | Fin, Inf, Part, Ger |
+| `morph_Person`   | Grammatical person | 1, 2, 3             |
+| `morph_Case`     | Grammatical case   | Nom, Acc, Dat, Gen  |
+
+## 10. Python Environment
 
 | Function | Purpose |
 |----|----|
 | [`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md) | Set up Python environment |
 | [`check_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/check_python_env.md) | Check Python configuration |
 
-## 10. Validation & Quality
+## 11. Validation & Quality
 
 **Validation Functions**
 

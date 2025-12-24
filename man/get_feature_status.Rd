@@ -13,6 +13,8 @@ Named list with feature availability
 Returns availability status for all optional features.
 }
 \examples{
+\donttest{
 status <- get_feature_status()
 print(status)
+}
 }

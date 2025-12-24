@@ -163,6 +163,52 @@ types (e.g., nouns and verbs for content analysis).</p>
 <p><strong>Learn More:</strong> <a href="https://universaldependencies.org/u/pos/" class="external-link">Universal Dependencies
 POS Tags</a></p>
 </details><hr>
+<details><summary><strong>Morphological Analysis</strong>
+</summary><p>Morphological analysis extracts grammatical features from words. Uses
+Python spaCy via reticulate.</p>
+<p><strong>Features:</strong></p>
+<table class="table">
+<thead><tr class="header">
+<th>Feature</th>
+<th>Description</th>
+<th>Values</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Number</td>
+<td>Singular/Plural</td>
+<td>Sing, Plur</td>
+</tr>
+<tr class="even">
+<td>Tense</td>
+<td>Verb tense</td>
+<td>Past, Pres, Fut</td>
+</tr>
+<tr class="odd">
+<td>VerbForm</td>
+<td>Verb form</td>
+<td>Fin, Inf, Part, Ger</td>
+</tr>
+<tr class="even">
+<td>Person</td>
+<td>Grammatical person</td>
+<td>1, 2, 3</td>
+</tr>
+<tr class="odd">
+<td>Case</td>
+<td>Grammatical case</td>
+<td>Nom, Acc, Dat, Gen</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spacy_parse_full.html">spacy_parse_full</a></span><span class="op">(</span><span class="va">texts</span>, include_morphology <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co"># Returns columns: morph_Number, morph_Tense, morph_VerbForm, etc.</span></span></code></pre></div>
+<p><strong>Usage:</strong> Analyze verb tenses for temporal patterns,
+number agreement, or grammatical complexity.</p>
+<p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#morphology" class="external-link">spaCy
+Morphology</a></p>
+</details><hr>
 <details><summary><strong>Named Entity Recognition</strong>
 </summary><p>Named Entity Recognition (NER) identifies and classifies named
 entities in text. Requires Python with spaCy.</p>
@@ -188,13 +234,13 @@ Named Entity Recognition</a></p>
 <div class="section level3">
 <h3 id="co-occurrence">Co-occurrence<a class="anchor" aria-label="anchor" href="#co-occurrence"></a>
 </h3>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/semantic_cooccurrence_network.html">semantic_cooccurrence_network</a></span><span class="op">(</span><span class="va">dfm_object</span>, co_occur_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="correlation">Correlation<a class="anchor" aria-label="anchor" href="#correlation"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/semantic_correlation_network.html">semantic_correlation_network</a></span><span class="op">(</span><span class="va">dfm_object</span>, min_cor <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></code></pre></div>
 <hr>
 <details><summary><strong>Readability Metrics</strong>
@@ -253,7 +299,7 @@ estimates</li>
 sentence length)</li>
 <li>Short texts may produce less reliable scores</li>
 </ul>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">readability</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_text_readability.html">calculate_text_readability</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_readability_distribution.html">plot_readability_distribution</a></span><span class="op">(</span><span class="va">readability</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_readability.html" class="external-link">quanteda
@@ -310,7 +356,7 @@ texts</li>
 <li>Maas, Yule K, and Simpson D use inverse scales (lower = more
 diverse)</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diversity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lexical_diversity_analysis.html">lexical_diversity_analysis</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_lexical_diversity_distribution.html">plot_lexical_diversity_distribution</a></span><span class="op">(</span><span class="va">diversity</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_lexdiv.html" class="external-link">quanteda

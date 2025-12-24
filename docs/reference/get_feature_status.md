@@ -15,6 +15,7 @@ Named list with feature availability
 ## Examples
 
 ``` r
+# \donttest{
 status <- get_feature_status()
 print(status)
 #> $python
@@ -41,4 +42,5 @@ print(status)
 #> $local
 #> [1] TRUE
 #> 
+# }
 ```

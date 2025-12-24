@@ -91,8 +91,10 @@ check_feature <- function(feature) {
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' status <- get_feature_status()
 #' print(status)
+#' }
 get_feature_status <- function() {
   features <- c("python", "ollama", "langgraph", "pdf_tables", "embeddings", "sentiment_deep")
   result <- lapply(features, function(f) {

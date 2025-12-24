@@ -172,14 +172,38 @@ Quick reference guide organized by workflow stage.
 | `generate_topic_labels_langgraph()` | Multi-agent topic labeling |
 | `generate_survey_items()` | Generate survey items |
 
-## 9. Python Environment
+## 9. NLP with spaCy (Python)
+
+| Function | Purpose |
+|----------|---------|
+| `init_spacy_nlp()` | Initialize spaCy with model selection |
+| `spacy_parse_full()` | Full parsing with POS, NER, morphology |
+| `spacy_extract_entities()` | Extract named entities (span-level) |
+| `spacy_extract_noun_chunks()` | Extract noun phrases |
+| `spacy_similarity()` | Semantic similarity between texts |
+| `spacy_model_info()` | Get loaded model information |
+
+<details>
+<summary><strong>Morphological Features</strong></summary>
+
+| Feature | Description | Example Values |
+|---------|-------------|----------------|
+| `morph_Number` | Grammatical number | Sing, Plur |
+| `morph_Tense` | Verb tense | Past, Pres, Fut |
+| `morph_VerbForm` | Verb form | Fin, Inf, Part, Ger |
+| `morph_Person` | Grammatical person | 1, 2, 3 |
+| `morph_Case` | Grammatical case | Nom, Acc, Dat, Gen |
+
+</details>
+
+## 10. Python Environment
 
 | Function | Purpose |
 |----------|---------|
 | `setup_python_env()` | Set up Python environment |
 | `check_python_env()` | Check Python configuration |
 
-## 10. Validation & Quality
+## 11. Validation & Quality
 
 <details>
 <summary><strong>Validation Functions</strong></summary>
