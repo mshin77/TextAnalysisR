@@ -536,7 +536,7 @@
 </table>
 </div>
 <div class="section level2">
-<h2 id="nlp-with-spacy-python">9. NLP with spaCy (Python)<a class="anchor" aria-label="anchor" href="#nlp-with-spacy-python"></a>
+<h2 id="nlp-with-spacy">9. NLP with spaCy<a class="anchor" aria-label="anchor" href="#nlp-with-spacy"></a>
 </h2>
 <table class="table">
 <thead><tr class="header">
@@ -545,66 +545,17 @@
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code><a href="../reference/init_spacy_nlp.html">init_spacy_nlp()</a></code></td>
-<td>Initialize spaCy with model selection</td>
+<td><code><a href="../reference/extract_pos_tags.html">extract_pos_tags()</a></code></td>
+<td>Extract POS tags using spacyr</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/spacy_parse_full.html">spacy_parse_full()</a></code></td>
-<td>Full parsing with POS, NER, morphology</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/spacy_extract_entities.html">spacy_extract_entities()</a></code></td>
-<td>Extract named entities (span-level)</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/spacy_extract_noun_chunks.html">spacy_extract_noun_chunks()</a></code></td>
-<td>Extract noun phrases</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/spacy_similarity.html">spacy_similarity()</a></code></td>
-<td>Semantic similarity between texts</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/spacy_model_info.html">spacy_model_info()</a></code></td>
-<td>Get loaded model information</td>
+<td><code><a href="../reference/extract_named_entities.html">extract_named_entities()</a></code></td>
+<td>Extract named entities using spacyr</td>
 </tr>
 </tbody>
 </table>
-<details><summary><strong>Morphological Features</strong>
-</summary><table class="table">
-<thead><tr class="header">
-<th>Feature</th>
-<th>Description</th>
-<th>Example Values</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>morph_Number</code></td>
-<td>Grammatical number</td>
-<td>Sing, Plur</td>
-</tr>
-<tr class="even">
-<td><code>morph_Tense</code></td>
-<td>Verb tense</td>
-<td>Past, Pres, Fut</td>
-</tr>
-<tr class="odd">
-<td><code>morph_VerbForm</code></td>
-<td>Verb form</td>
-<td>Fin, Inf, Part, Ger</td>
-</tr>
-<tr class="even">
-<td><code>morph_Person</code></td>
-<td>Grammatical person</td>
-<td>1, 2, 3</td>
-</tr>
-<tr class="odd">
-<td><code>morph_Case</code></td>
-<td>Grammatical case</td>
-<td>Nom, Acc, Dat, Gen</td>
-</tr>
-</tbody>
-</table></details>
+<p>Note: Uses the <code>spacyr</code> R package for spaCy
+integration.</p>
 </div>
 <div class="section level2">
 <h2 id="python-environment">10. Python Environment<a class="anchor" aria-label="anchor" href="#python-environment"></a>
