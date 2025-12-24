@@ -9,14 +9,16 @@ semantic_cooccurrence_network(
   doc_var = NULL,
   co_occur_n = 10,
   top_node_n = 30,
-  node_label_size = 14,
+  node_label_size = 22,
   pattern = NULL,
   showlegend = TRUE,
   seed = NULL,
   feature_type = "words",
   ngram_range = 2,
   texts = NULL,
-  embeddings = NULL
+  embeddings = NULL,
+  embedding_sim_threshold = 0.5,
+  community_method = "leiden"
 )
 }
 \arguments{
@@ -43,6 +45,10 @@ semantic_cooccurrence_network(
 \item{texts}{Optional character vector of texts for n-gram creation (default: NULL).}
 
 \item{embeddings}{Optional embedding matrix for embedding-based networks (default: NULL).}
+
+\item{embedding_sim_threshold}{Similarity threshold for embedding-based networks (default: 0.5).}
+
+\item{community_method}{Community detection method: "leiden" (default), "louvain", "label_prop", or "fast_greedy".}
 }
 \value{
 A list containing plot, table, nodes, edges, and stats

@@ -137,6 +137,117 @@ Learning](https://scikit-learn.org/stable/modules/manifold.html)
 
 ------------------------------------------------------------------------
 
+## Network Analysis
+
+Visualize semantic relationships as interactive networks with community
+detection.
+
+### Feature Spaces
+
+Networks support three feature spaces based on distributional semantics:
+
+| Feature Space | Network Type | Nodes | Edges |
+|----|----|----|----|
+| **Words** | Word co-occurrence/correlation | Words | Frequency or correlation |
+| **N-grams** | Phrase relationships | N-gram phrases | Frequency or correlation |
+| **Embeddings** | Document similarity | Documents | Cosine similarity \> threshold |
+
+### Word Co-occurrence Network
+
+``` r
+network <- semantic_cooccurrence_network(
+  dfm_object,
+  co_occur_n = 10,                    # Minimum co-occurrence count
+  top_node_n = 30,                    # Top nodes to display
+  node_label_size = 22,               # Font size (12-40)
+  feature_type = "words",             # "words", "ngrams", or "embeddings"
+  embedding_sim_threshold = 0.5,      # For embeddings: similarity cutoff
+  community_method = "leiden"         # Community detection algorithm
+)
+
+network$plot   # Interactive visNetwork plot
+network$table  # Node metrics (degree, eigenvector, community)
+network$stats  # 9 network statistics
+```
+
+### Word Correlation Network
+
+``` r
+corr_network <- semantic_correlation_network(
+  dfm_object,
+  common_term_n = 20,                 # Minimum term frequency
+  corr_n = 0.4,                       # Minimum correlation threshold
+  feature_type = "words",
+  community_method = "leiden"
+)
+```
+
+### Category-Specific Analysis
+
+Enable per-category networks in the Shiny app to generate separate
+networks for each category, displayed in a tabbed interface.
+
+------------------------------------------------------------------------
+
+**Network Statistics (9 Metrics)**
+
+Each network returns comprehensive statistics:
+
+| Metric | Description |
+|----|----|
+| Nodes | Total unique terms/documents in network |
+| Edges | Total connections between nodes |
+| Density | Proportion of possible edges present (0-1) |
+| Diameter | Longest shortest path in network |
+| Global Clustering | Overall network clustering tendency |
+| Avg Local Clustering | Average of local clustering coefficients |
+| Modularity | Quality of community structure (higher = better separation) |
+| Assortativity | Tendency of similar nodes to connect |
+| Avg Path Length | Average distance between nodes |
+
+------------------------------------------------------------------------
+
+**Embedding-Based Document Networks**
+
+When `feature_type = "embeddings"`, networks show document-to-document
+relationships:
+
+- **Nodes** = Documents (not words)
+- **Edges** = Document pairs with cosine similarity above threshold
+- **Edge weight** = Similarity score
+
+Adjust `embedding_sim_threshold` (0.3-0.9) to control network density: -
+Higher threshold → fewer, stronger connections - Lower threshold → more
+connections, may be noisy
+
+``` r
+doc_network <- semantic_cooccurrence_network(
+  dfm_object,
+  feature_type = "embeddings",
+  embeddings = my_embeddings,         # Pre-computed embedding matrix
+  embedding_sim_threshold = 0.6,      # Only connect highly similar docs
+  top_node_n = 50
+)
+```
+
+------------------------------------------------------------------------
+
+**Community Detection Methods**
+
+Community detection identifies clusters of semantically related nodes.
+
+| Method | Description | Best For |
+|----|----|----|
+| `leiden` | Modern algorithm, guarantees well-connected communities | Default, best quality |
+| `louvain` | Fast modularity optimization | Large networks |
+| `label_prop` | Propagates labels through network | Very large networks |
+| `fast_greedy` | Hierarchical agglomerative | Quick exploration |
+
+**Learn More:** [igraph Community
+Detection](https://igraph.org/r/doc/communities.html)
+
+------------------------------------------------------------------------
+
 ## Temporal Analysis
 
 Track themes over time:

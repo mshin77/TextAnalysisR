@@ -38,7 +38,10 @@ if (interactive()) {
 }
 \seealso{
 Other preprocessing: 
+\code{\link{extract_named_entities}()},
+\code{\link{extract_pos_tags}()},
 \code{\link{get_available_dfm}()},
+\code{\link{get_available_tokens}()},
 \code{\link{import_files}()},
 \code{\link{prep_texts}()},
 \code{\link{process_pdf_unified}()},

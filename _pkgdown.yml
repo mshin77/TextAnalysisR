@@ -16,14 +16,18 @@ reference:
   - prep_texts
   - detect_multi_words
   - get_available_dfm
+  - get_available_tokens
+  - extract_pos_tags
+  - extract_named_entities
 
 - title: "Lexical Analysis"
-  desc: "Word frequency, keywords, and readability metrics"
+  desc: "Word frequency, keywords, and readability"
   contents:
   - calculate_word_frequency
   - starts_with("extract_keywords")
   - lexical_frequency_analysis
   - lexical_diversity_analysis
+  - clear_lexdiv_cache
   - calculate_text_readability
   - plot_word_frequency
   - plot_tfidf_keywords
@@ -39,7 +43,7 @@ reference:
   - plot_lexical_diversity_distribution
 
 - title: "Sentiment Analysis"
-  desc: "Lexicon and embedding-based sentiment scoring"
+  desc: "Lexicon and embedding-based sentiment"
   contents:
   - analyze_sentiment
   - sentiment_lexicon_analysis
@@ -51,7 +55,7 @@ reference:
   - get_sentiment_colors
 
 - title: "Semantic Analysis"
-  desc: "Document similarity, clustering, and embeddings"
+  desc: "Similarity, clustering, and networks"
   contents:
   - generate_embeddings
   - reduce_dimensions
@@ -66,19 +70,15 @@ reference:
   - starts_with("generate_cluster")
   - temporal_semantic_analysis
   - analyze_semantic_evolution
+  - semantic_cooccurrence_network
+  - semantic_correlation_network
   - plot_semantic_viz
   - plot_similarity_heatmap
   - plot_cross_category_heatmap
   - plot_cluster_terms
 
-- title: "Network Analysis"
-  desc: "Word co-occurrence and correlation networks"
-  contents:
-  - semantic_cooccurrence_network
-  - semantic_correlation_network
-
 - title: "Topic Modeling"
-  desc: "STM, embedding-based, and hybrid topic models"
+  desc: "STM, embedding-based, and hybrid models"
   contents:
   - find_optimal_k
   - starts_with("fit_")
@@ -98,8 +98,8 @@ reference:
   - plot_quality_metrics
   - plot_term_trends_continuous
 
-- title: "PDF Processing"
-  desc: "Text and table extraction from PDFs"
+- title: "PDF & Multimodal"
+  desc: "Text extraction from PDFs with optional vision AI"
   contents:
   - process_pdf_unified
   - starts_with("process_pdf")
@@ -123,21 +123,23 @@ reference:
   - run_rag_search
   - ai_content_generation
   - generate_survey_items
-  - generate_topic_content
-  - get_content_type_prompt
-  - get_content_type_user_template
-  - format_label_candidates
-  - create_label_selection_data
 
-- title: "Python Environment"
-  desc: "Python/reticulate setup and checking"
+- title: "Python & spaCy"
+  desc: "Python environment and spaCy NLP"
   contents:
   - setup_python_env
   - check_python_env
   - check_multimodal_prerequisites
+  - spacy_nlp
+  - init_spacy_nlp
+  - spacy_parse_full
+  - spacy_extract_entities
+  - spacy_extract_noun_chunks
+  - spacy_similarity
+  - spacy_model_info
 
-- title: "Validation & Metrics"
-  desc: "Quality assessment and cross-validation"
+- title: "Validation"
+  desc: "Quality metrics and cross-validation"
   contents:
   - cross_analysis_validation
   - validate_cross_models
@@ -148,42 +150,8 @@ reference:
   - analyze_similarity_gaps
   - extract_cross_category_similarities
 
-- title: "Shiny UI Helpers"
-  desc: "App interface components and notifications"
-  contents:
-  - starts_with("show_")
-  - remove_notification_by_id
-  - get_dfm_setup_instructions
-  - check_web_deployment
-  - check_feature
-  - get_feature_status
-  - require_feature
-  - plot_error
-  - create_empty_plot_message
-  - apply_standard_plotly_layout
-  - create_standard_ggplot_theme
-  - get_plotly_hover_config
-  - get_dt_options
-  - create_message_table
-  - create_analysis_datatable
-
-- title: "Security & Accessibility"
-  desc: "Input validation and WCAG compliance"
-  contents:
-  - validate_file_upload
-  - sanitize_text_input
-  - check_rate_limit
-  - log_security_event
-  - validate_api_key
-  - calculate_contrast_ratio
-  - check_wcag_contrast
-  - generate_aria_label
-  - create_sr_text
-  - validate_keyboard_navigation
-  - check_alt_text
-
 - title: "Data"
-  desc: "Example datasets and dictionaries"
+  desc: "Example datasets"
   contents:
   - SpecialEduTech
   - acronym
@@ -192,7 +160,7 @@ reference:
   - dictionary_list_2
   - stopwords_list
 
-- title: "Internal"
+- title: "internal"
   contents:
   - TextAnalysisR-package
   - "`%>%`"
@@ -209,6 +177,36 @@ reference:
   - combine_keywords_weighted
   - calculate_assignment_consistency
   - calculate_keyword_stability
+  - get_content_type_prompt
+  - get_content_type_user_template
+  - format_label_candidates
+  - create_label_selection_data
+  - starts_with("show_")
+  - remove_notification_by_id
+  - get_dfm_setup_instructions
+  - check_web_deployment
+  - check_feature
+  - get_feature_status
+  - require_feature
+  - plot_error
+  - create_empty_plot_message
+  - apply_standard_plotly_layout
+  - create_standard_ggplot_theme
+  - get_plotly_hover_config
+  - get_dt_options
+  - create_message_table
+  - create_analysis_datatable
+  - validate_file_upload
+  - sanitize_text_input
+  - check_rate_limit
+  - log_security_event
+  - validate_api_key
+  - calculate_contrast_ratio
+  - check_wcag_contrast
+  - generate_aria_label
+  - create_sr_text
+  - validate_keyboard_navigation
+  - check_alt_text
 
 articles:
 - title: "Getting Started"

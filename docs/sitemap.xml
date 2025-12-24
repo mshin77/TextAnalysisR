@@ -56,6 +56,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_vision_models.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_wcag_contrast.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_web_deployment.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/clear_lexdiv_cache.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/combine_keywords_weighted.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/compute_hybrid_quality_metrics.html</loc></url>
@@ -76,8 +77,10 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_keyness.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_tfidf.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_named_entities.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_smart.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_pos_tags.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_tables_from_pdf_py.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf_py.html</loc></url>
@@ -99,6 +102,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels_langgraph.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_available_tokens.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_content_type_prompt.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_content_type_user_template.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_dfm_setup_instructions.html</loc></url>
@@ -108,6 +112,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_sentiment_color.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_sentiment_colors.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_spacy_nlp.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_topic_prevalence.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_topic_terms.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_topic_texts.html</loc></url>
@@ -115,6 +120,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/import_files.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/index.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/init_langgraph.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/init_spacy_nlp.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_frequency_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.html</loc></url>
@@ -184,6 +190,12 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/show_unite_texts_required_notification.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/show_warning_notification.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/show_web_banner.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_entities.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_noun_chunks.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_model_info.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_nlp.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_parse_full.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_similarity.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/SpecialEduTech.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stm_15.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stopwords_list.html</loc></url>

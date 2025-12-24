@@ -1,3 +1,19 @@
+# Package-level cache for expensive lexical diversity computations
+.lexdiv_cache <- new.env(hash = TRUE, parent = emptyenv())
+
+#' Clear Lexical Diversity Cache
+#'
+#' @description
+#' Clears the internal cache used for lexical diversity calculations.
+#' Call this function if you need to free memory or ensure fresh calculations.
+#'
+#' @return Invisible NULL
+#' @export
+clear_lexdiv_cache <- function() {
+  rm(list = ls(.lexdiv_cache), envir = .lexdiv_cache)
+  invisible(NULL)
+}
+
 #' Plot Readability Distribution
 #'
 #' @description
@@ -229,6 +245,9 @@ plot_top_readability_documents <- function(readability_data,
 #'   "all", "MTLD" (recommended), "MATTR" (recommended), "MSTTR", "TTR", "CTTR", "Maas", "K", "D"
 #' @param texts Optional character vector of original texts. Required for accurate MTLD
 #'   when passing a DFM (since DFM loses token order). Also used for average sentence length.
+#' @param cache_key Optional character string for caching expensive computations.
+#'   When provided, results are cached using this key and retrieved on subsequent calls
+#'   with the same key. Use `clear_lexdiv_cache()` to clear the cache.
 #'
 #' @return A list with lexical_diversity (data frame) and summary_stats
 #'
@@ -243,6 +262,9 @@ plot_top_readability_documents <- function(readability_data,
 #' toks <- quanteda::tokens(corp)
 #' # Preferred: pass tokens object for accurate MTLD
 #' lex_div <- lexical_diversity_analysis(toks, texts = texts)
+#' # With caching for repeated analysis
+#' cache_key <- digest::digest(texts)
+#' lex_div <- lexical_diversity_analysis(toks, texts = texts, cache_key = cache_key)
 #' # Alternative: pass DFM with texts for MTLD accuracy
 #' dfm_obj <- quanteda::dfm(toks)
 #' lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
@@ -253,7 +275,17 @@ plot_top_readability_documents <- function(readability_data,
 #' @importFrom quanteda docnames
 lexical_diversity_analysis <- function(x,
                                       measures = "all",
-                                      texts = NULL) {
+                                      texts = NULL,
+                                      cache_key = NULL) {
+
+  # Check cache first if cache_key is provided
+
+  if (!is.null(cache_key) && nzchar(cache_key)) {
+    cache_id <- paste0("lexdiv_", cache_key)
+    if (exists(cache_id, envir = .lexdiv_cache, inherits = FALSE)) {
+      return(get(cache_id, envir = .lexdiv_cache, inherits = FALSE))
+    }
+  }
 
   if (!requireNamespace("quanteda.textstats", quietly = TRUE)) {
     stop("Package 'quanteda.textstats' is required. Please install it.")
@@ -321,62 +353,57 @@ lexical_diversity_analysis <- function(x,
     # Add MTLD if requested - use custom implementation (McCarthy & Jarvis 2010)
     if (mtld_requested) {
       tryCatch({
-        # Custom MTLD implementation based on McCarthy & Jarvis (2010)
-        # MTLD analyzes text sequentially from first to last token (and reverse),
-        # counting "factors" where TTR drops below threshold (default 0.72)
+        # Optimized MTLD implementation based on McCarthy & Jarvis (2010)
+        # Uses O(n) environment-based hash tracking instead of O(n²) vector concatenation
         calculate_mtld <- function(tokens, factor_size = 0.72) {
-          if (length(tokens) < 10) return(NA_real_)
+          n <- length(tokens)
+          if (n < 10) return(NA_real_)
 
-          # Forward MTLD
-          forward_factors <- 0
-          current_ttr <- 1
-          factor_tokens <- c()
+          # Helper function to calculate MTLD in one direction using O(n) algorithm
+          mtld_one_direction <- function(toks) {
+            n_toks <- length(toks)
+            seen <- new.env(hash = TRUE, size = n_toks)
+            unique_count <- 0
+            factors <- 0
+            start_idx <- 1
 
-          for (token in tokens) {
-            factor_tokens <- c(factor_tokens, token)
-            current_ttr <- length(unique(factor_tokens)) / length(factor_tokens)
+            for (i in seq_len(n_toks)) {
+              token <- toks[i]
+              if (!exists(token, envir = seen, inherits = FALSE)) {
+                assign(token, TRUE, envir = seen)
+                unique_count <- unique_count + 1
+              }
+              current_length <- i - start_idx + 1
+              current_ttr <- unique_count / current_length
 
-            if (current_ttr <= factor_size) {
-              forward_factors <- forward_factors + 1
-              factor_tokens <- c()
-              current_ttr <- 1
+              if (current_ttr <= factor_size) {
+                factors <- factors + 1
+                # Reset for new factor
+                rm(list = ls(seen), envir = seen)
+                unique_count <- 0
+                start_idx <- i + 1
+              }
             }
-          }
 
-          # Add partial factor
-          if (length(factor_tokens) > 0) {
-            partial <- (1 - current_ttr) / (1 - factor_size)
-            forward_factors <- forward_factors + partial
-          }
-
-          forward_mtld <- if (forward_factors > 0) length(tokens) / forward_factors else NA_real_
-
-          # Backward MTLD
-          tokens_rev <- rev(tokens)
-          backward_factors <- 0
-          factor_tokens <- c()
-
-          for (token in tokens_rev) {
-            factor_tokens <- c(factor_tokens, token)
-            current_ttr <- length(unique(factor_tokens)) / length(factor_tokens)
-
-            if (current_ttr <= factor_size) {
-              backward_factors <- backward_factors + 1
-              factor_tokens <- c()
-              current_ttr <- 1
+            # Add partial factor for remaining tokens
+            if (start_idx <= n_toks) {
+              remaining_length <- n_toks - start_idx + 1
+              if (remaining_length > 0 && unique_count > 0) {
+                final_ttr <- unique_count / remaining_length
+                partial <- (1 - final_ttr) / (1 - factor_size)
+                factors <- factors + partial
+              }
             }
+
+            if (factors > 0) n_toks / factors else NA_real_
           }
 
-          if (length(factor_tokens) > 0) {
-            partial <- (1 - current_ttr) / (1 - factor_size)
-            backward_factors <- backward_factors + partial
-          }
-
-          backward_mtld <- if (backward_factors > 0) length(tokens) / backward_factors else NA_real_
+          # Forward and backward MTLD
+          forward_mtld <- mtld_one_direction(tokens)
+          backward_mtld <- mtld_one_direction(rev(tokens))
 
           # Average forward and backward
-          mtld <- mean(c(forward_mtld, backward_mtld), na.rm = TRUE)
-          return(mtld)
+          mean(c(forward_mtld, backward_mtld), na.rm = TRUE)
         }
 
         # Determine token source for MTLD calculation
@@ -436,10 +463,18 @@ lexical_diversity_analysis <- function(x,
       }
     }
 
-    return(list(
+    result <- list(
       lexical_diversity = lexdiv_results,
       summary_stats = summary_stats
-    ))
+    )
+
+    # Store in cache if cache_key provided
+    if (!is.null(cache_key) && nzchar(cache_key)) {
+      cache_id <- paste0("lexdiv_", cache_key)
+      assign(cache_id, result, envir = .lexdiv_cache)
+    }
+
+    return(result)
 
   }, error = function(e) {
     stop("Error calculating lexical diversity: ", e$message)
@@ -582,19 +617,37 @@ calculate_text_readability <- function(texts,
   mapped_metrics <- measure_map[valid_metrics]
   names(mapped_metrics) <- valid_metrics
 
+  # Batch all readability metrics in single call for performance
   all_scores <- list()
-  for (i in seq_along(valid_metrics)) {
-    metric <- valid_metrics[i]
-    measure_name <- mapped_metrics[i]
+  tryCatch({
+    # Call textstat_readability once with all measures
+    batch_scores <- quanteda.textstats::textstat_readability(corp, measure = unname(mapped_metrics))
 
-    tryCatch({
-      score <- quanteda.textstats::textstat_readability(corp, measure = measure_name)
-      all_scores[[metric]] <- score[[2]]
-    }, error = function(e) {
-      warning(paste("Could not calculate", metric, ":", e$message))
-      all_scores[[metric]] <<- rep(NA, length(texts))
-    })
-  }
+    # Extract scores for each metric
+    for (i in seq_along(valid_metrics)) {
+      metric <- valid_metrics[i]
+      measure_name <- mapped_metrics[i]
+      if (measure_name %in% names(batch_scores)) {
+        all_scores[[metric]] <- batch_scores[[measure_name]]
+      } else {
+        all_scores[[metric]] <- rep(NA, length(texts))
+      }
+    }
+  }, error = function(e) {
+    # Fallback to individual calls if batch fails
+    warning("Batch readability calculation failed, falling back to individual metrics: ", e$message)
+    for (i in seq_along(valid_metrics)) {
+      metric <- valid_metrics[i]
+      measure_name <- mapped_metrics[i]
+      tryCatch({
+        score <- quanteda.textstats::textstat_readability(corp, measure = measure_name)
+        all_scores[[metric]] <<- score[[2]]
+      }, error = function(e2) {
+        warning(paste("Could not calculate", metric, ":", e2$message))
+        all_scores[[metric]] <<- rep(NA, length(texts))
+      })
+    }
+  })
 
   readability_scores <- data.frame(Document = doc_names, stringsAsFactors = FALSE)
   for (metric in names(all_scores)) {

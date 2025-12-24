@@ -14,14 +14,16 @@ semantic_correlation_network(
   common_term_n = 20,
   corr_n = 0.4,
   top_node_n = 30,
-  node_label_size = 14,
+  node_label_size = 22,
   pattern = NULL,
   showlegend = TRUE,
   seed = NULL,
   feature_type = "words",
   ngram_range = 2,
   texts = NULL,
-  embeddings = NULL
+  embeddings = NULL,
+  embedding_sim_threshold = 0.5,
+  community_method = "leiden"
 )
 ```
 
@@ -80,6 +82,15 @@ semantic_correlation_network(
 
   Optional embedding matrix for embedding-based networks (default:
   NULL).
+
+- embedding_sim_threshold:
+
+  Similarity threshold for embedding-based networks (default: 0.5).
+
+- community_method:
+
+  Community detection method: "leiden" (default), "louvain",
+  "label_prop", or "fast_greedy".
 
 ## Value
 

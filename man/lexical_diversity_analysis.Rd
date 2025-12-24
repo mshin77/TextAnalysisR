@@ -4,7 +4,7 @@
 \alias{lexical_diversity_analysis}
 \title{Lexical Diversity Analysis}
 \usage{
-lexical_diversity_analysis(x, measures = "all", texts = NULL)
+lexical_diversity_analysis(x, measures = "all", texts = NULL, cache_key = NULL)
 }
 \arguments{
 \item{x}{A tokens object (preferred) or document-feature matrix from quanteda.
@@ -16,6 +16,10 @@ DFM input loses token order, which affects MTLD accuracy (McCarthy & Jarvis, 201
 
 \item{texts}{Optional character vector of original texts. Required for accurate MTLD
 when passing a DFM (since DFM loses token order). Also used for average sentence length.}
+
+\item{cache_key}{Optional character string for caching expensive computations.
+When provided, results are cached using this key and retrieved on subsequent calls
+with the same key. Use \code{clear_lexdiv_cache()} to clear the cache.}
 }
 \value{
 A list with lexical_diversity (data frame) and summary_stats
@@ -32,6 +36,9 @@ corp <- quanteda::corpus(texts)
 toks <- quanteda::tokens(corp)
 # Preferred: pass tokens object for accurate MTLD
 lex_div <- lexical_diversity_analysis(toks, texts = texts)
+# With caching for repeated analysis
+cache_key <- digest::digest(texts)
+lex_div <- lexical_diversity_analysis(toks, texts = texts, cache_key = cache_key)
 # Alternative: pass DFM with texts for MTLD accuracy
 dfm_obj <- quanteda::dfm(toks)
 lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)

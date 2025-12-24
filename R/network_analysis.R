@@ -40,6 +40,8 @@ NULL
 #' @param ngram_range N-gram size when feature_type = "ngrams" (default: 2).
 #' @param texts Optional character vector of texts for n-gram creation (default: NULL).
 #' @param embeddings Optional embedding matrix for embedding-based networks (default: NULL).
+#' @param embedding_sim_threshold Similarity threshold for embedding-based networks (default: 0.5).
+#' @param community_method Community detection method: "leiden" (default), "louvain", "label_prop", or "fast_greedy".
 #'
 #' @return A list containing plot, table, nodes, edges, and stats
 #' @family network
@@ -49,14 +51,16 @@ semantic_cooccurrence_network <- function(dfm_object,
                                         doc_var = NULL,
                                         co_occur_n = 10,
                                         top_node_n = 30,
-                                        node_label_size = 14,
+                                        node_label_size = 22,
                                         pattern = NULL,
                                         showlegend = TRUE,
                                         seed = NULL,
                                         feature_type = "words",
                                         ngram_range = 2,
                                         texts = NULL,
-                                        embeddings = NULL) {
+                                        embeddings = NULL,
+                                        embedding_sim_threshold = 0.5,
+                                        community_method = "leiden") {
 
   if (!is.null(seed)) set.seed(seed)
 
@@ -77,7 +81,181 @@ semantic_cooccurrence_network <- function(dfm_object,
               original_threshold, " -> ", co_occur_n)
     }
   } else if (feature_type == "embeddings" && !is.null(embeddings)) {
-    message("Creating embedding-based co-occurrence network with virtual edges")
+    message("Creating embedding-based document similarity network")
+
+    # For embeddings, create document-document similarity network
+    # Nodes = Documents, Edges = Similarity > threshold
+
+    if (!is.matrix(embeddings) || nrow(embeddings) < 2) {
+      message("Invalid embeddings matrix. Falling back to word-based network.")
+    } else {
+      # Compute cosine similarity matrix
+      norm_embeddings <- embeddings / sqrt(rowSums(embeddings^2))
+      sim_matrix <- tcrossprod(norm_embeddings)
+      diag(sim_matrix) <- 0  # Remove self-similarity
+
+      # Get document names
+      doc_names <- if (!is.null(rownames(embeddings))) {
+        rownames(embeddings)
+      } else {
+        paste0("doc_", seq_len(nrow(embeddings)))
+      }
+      rownames(sim_matrix) <- doc_names
+      colnames(sim_matrix) <- doc_names
+
+      # Create edges from similarity threshold
+      edge_list <- which(sim_matrix > embedding_sim_threshold & upper.tri(sim_matrix), arr.ind = TRUE)
+
+      if (nrow(edge_list) == 0) {
+        message("No document pairs exceed similarity threshold. Try lowering the threshold.")
+        return(NULL)
+      }
+
+      edge_df <- data.frame(
+        from = doc_names[edge_list[, 1]],
+        to = doc_names[edge_list[, 2]],
+        weight = sim_matrix[edge_list],
+        stringsAsFactors = FALSE
+      )
+
+      # Create graph
+      graph <- igraph::graph_from_data_frame(edge_df, directed = FALSE)
+      if (igraph::vcount(graph) == 0) return(NULL)
+
+      # Compute centrality measures
+      igraph::V(graph)$degree <- igraph::degree(graph)
+      igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
+
+      # Community detection
+      community_result <- switch(community_method,
+        "louvain" = igraph::cluster_louvain(graph),
+        "label_prop" = igraph::cluster_label_prop(graph),
+        "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
+        igraph::cluster_leiden(graph)
+      )
+      igraph::V(graph)$community <- community_result$membership
+
+      # Create layout table
+      layout_df <- data.frame(
+        Document = igraph::V(graph)$name,
+        Degree = igraph::V(graph)$degree,
+        Eigenvector = round(igraph::V(graph)$eigenvector, 3),
+        Community = igraph::V(graph)$community,
+        stringsAsFactors = FALSE
+      )
+
+      # Limit nodes by degree
+      node_degrees <- igraph::degree(graph)
+      sorted_indices <- order(node_degrees, decreasing = TRUE)
+      top_n <- min(top_node_n, length(sorted_indices))
+      top_indices <- sorted_indices[1:top_n]
+      top_nodes <- igraph::V(graph)$name[top_indices]
+      graph <- igraph::induced_subgraph(graph, top_nodes)
+
+      # Prepare visNetwork data
+      communities <- unique(igraph::V(graph)$community)
+      n_communities <- length(communities)
+      colors <- colorRampPalette(c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
+                                   "#9467bd", "#8c564b", "#e377c2"))(n_communities)
+      community_colors <- setNames(colors, communities)
+
+      nodes <- data.frame(
+        id = igraph::V(graph)$name,
+        label = igraph::V(graph)$name,
+        value = igraph::V(graph)$degree,
+        group = paste("Community", igraph::V(graph)$community),
+        color = community_colors[as.character(igraph::V(graph)$community)],
+        font.size = node_label_size,
+        title = paste0("<b>", igraph::V(graph)$name, "</b><br>",
+                       "Degree: ", igraph::V(graph)$degree, "<br>",
+                       "Community: ", igraph::V(graph)$community),
+        stringsAsFactors = FALSE
+      )
+
+      edge_data <- igraph::as_data_frame(graph, what = "edges")
+      edges <- data.frame(
+        from = edge_data$from,
+        to = edge_data$to,
+        value = if ("weight" %in% names(edge_data)) edge_data$weight else 1,
+        color = "#888888",
+        title = paste0("Similarity: ", round(edge_data$weight, 3)),
+        stringsAsFactors = FALSE
+      )
+
+      # Create legend
+      legend_labels <- lapply(seq_len(n_communities), function(i) {
+        list(
+          label = paste("Community", communities[i]),
+          shape = "dot",
+          color = colors[i],
+          size = 15
+        )
+      })
+
+      # Create plot
+      plot <- visNetwork::visNetwork(nodes, edges) %>%
+        visNetwork::visNodes(
+          shape = "dot",
+          scaling = list(min = 10, max = 40)
+        ) %>%
+        visNetwork::visEdges(
+          smooth = FALSE,
+          width = 1,
+          color = list(color = "#888888", opacity = 0.6)
+        ) %>%
+        visNetwork::visLayout(randomSeed = seed %||% 2025) %>%
+        visNetwork::visOptions(
+          highlightNearest = TRUE,
+          nodesIdSelection = TRUE,
+          manipulation = FALSE,
+          selectedBy = list(
+            variable = "group",
+            multiple = FALSE,
+            style = "width: 150px; height: 26px;"
+          )
+        ) %>%
+        visNetwork::visPhysics(enabled = FALSE) %>%
+        visNetwork::visInteraction(
+          hover = TRUE,
+          tooltipDelay = 0,
+          tooltipStay = 1000,
+          zoomView = TRUE,
+          dragView = TRUE
+        ) %>%
+        {if (showlegend) visNetwork::visLegend(.,
+                                                addNodes = do.call(rbind, lapply(legend_labels, as.data.frame)),
+                                                useGroups = FALSE,
+                                                position = "right",
+                                                width = 0.2,
+                                                zoom = FALSE
+        ) else .}
+
+      # Compute stats
+      safe_round <- function(x, digits = 4) {
+        if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
+        round(x, digits)
+      }
+
+      stats_list <- list(
+        nodes = igraph::vcount(graph),
+        edges = igraph::ecount(graph),
+        density = safe_round(igraph::edge_density(graph)),
+        diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
+        global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
+        avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
+        modularity = safe_round(igraph::modularity(community_result)),
+        assortativity = safe_round(igraph::assortativity_degree(graph)),
+        avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
+      )
+
+      return(list(
+        plot = plot,
+        table = layout_df,
+        nodes = nodes,
+        edges = edges,
+        stats = stats_list
+      ))
+    }
   }
 
   dfm_td <- tidytext::tidy(dfm_object)
@@ -111,7 +289,14 @@ semantic_cooccurrence_network <- function(dfm_object,
 
   igraph::V(graph)$degree <- igraph::degree(graph)
   igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-  igraph::V(graph)$community <- igraph::cluster_leiden(graph)$membership
+  # Apply selected community detection method
+  community_result <- switch(community_method,
+    "louvain" = igraph::cluster_louvain(graph),
+    "label_prop" = igraph::cluster_label_prop(graph),
+    "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
+    igraph::cluster_leiden(graph)  # default: leiden
+  )
+  igraph::V(graph)$community <- community_result$membership
 
   layout_df <- data.frame(
     Term = igraph::V(graph)$name,
@@ -179,6 +364,8 @@ semantic_cooccurrence_network <- function(dfm_object,
 
   plot <- visNetwork::visNetwork(nodes, edges) %>%
     visNetwork::visNodes(font = list(color = "black", size = node_label_size, vadjust = 0)) %>%
+    visNetwork::visEdges(smooth = FALSE) %>%
+    visNetwork::visIgraphLayout(layout = "layout_with_fr", randomSeed = ifelse(is.null(seed), 2025, seed)) %>%
     visNetwork::visOptions(
       highlightNearest = list(
         enabled = TRUE,
@@ -194,17 +381,7 @@ semantic_cooccurrence_network <- function(dfm_object,
         style = "width: 150px; height: 26px;"
       )
     ) %>%
-    visNetwork::visPhysics(
-      solver = "barnesHut",
-      barnesHut = list(
-        gravitationalConstant = -1500,
-        centralGravity = 0.4,
-        springLength = 100,
-        springConstant = 0.05,
-        avoidOverlap = 0.3
-      ),
-      stabilization = list(enabled = TRUE, iterations = 1000)
-    ) %>%
+    visNetwork::visPhysics(enabled = FALSE) %>%
     visNetwork::visInteraction(
       hover = TRUE,
       tooltipDelay = 0,
@@ -218,14 +395,24 @@ semantic_cooccurrence_network <- function(dfm_object,
                                             position = "right",
                                             width = 0.2,
                                             zoom = FALSE
-    ) else .} %>%
-    visNetwork::visLayout(randomSeed = ifelse(is.null(seed), 2025, seed))
+    ) else .}
+
+  # Compute comprehensive network statistics
+  safe_round <- function(x, digits = 4) {
+    if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
+    round(x, digits)
+  }
 
   stats_list <- list(
     nodes = igraph::vcount(graph),
     edges = igraph::ecount(graph),
-    density = round(igraph::edge_density(graph), 3),
-    diameter = igraph::diameter(graph)
+    density = safe_round(igraph::edge_density(graph)),
+    diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
+    global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
+    avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
+    modularity = safe_round(igraph::modularity(community_result)),
+    assortativity = safe_round(igraph::assortativity_degree(graph)),
+    avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
   )
 
   list(
@@ -257,6 +444,8 @@ semantic_cooccurrence_network <- function(dfm_object,
 #' @param ngram_range N-gram size when feature_type = "ngrams" (default: 2).
 #' @param texts Optional character vector of texts for n-gram creation (default: NULL).
 #' @param embeddings Optional embedding matrix for embedding-based networks (default: NULL).
+#' @param embedding_sim_threshold Similarity threshold for embedding-based networks (default: 0.5).
+#' @param community_method Community detection method: "leiden" (default), "louvain", "label_prop", or "fast_greedy".
 #'
 #' @return A list containing plot, table, nodes, edges, and stats
 #' @family network
@@ -267,14 +456,16 @@ semantic_correlation_network <- function(dfm_object,
                                        common_term_n = 20,
                                        corr_n = 0.4,
                                        top_node_n = 30,
-                                       node_label_size = 14,
+                                       node_label_size = 22,
                                        pattern = NULL,
                                        showlegend = TRUE,
                                        seed = NULL,
                                        feature_type = "words",
                                        ngram_range = 2,
                                        texts = NULL,
-                                       embeddings = NULL) {
+                                       embeddings = NULL,
+                                       embedding_sim_threshold = 0.5,
+                                       community_method = "leiden") {
 
   if (!is.null(seed)) set.seed(seed)
 
@@ -288,7 +479,181 @@ semantic_correlation_network <- function(dfm_object,
     toks_ngrams <- quanteda::tokens_ngrams(toks, n = ngram_range)
     dfm_object <- quanteda::dfm(toks_ngrams)
   } else if (feature_type == "embeddings" && !is.null(embeddings)) {
-    message("Creating embedding-based correlation network")
+    message("Creating embedding-based document similarity network")
+
+    # For embeddings, create document-document similarity network
+    # Nodes = Documents, Edges = Similarity > threshold
+
+    if (!is.matrix(embeddings) || nrow(embeddings) < 2) {
+      message("Invalid embeddings matrix. Falling back to word-based network.")
+    } else {
+      # Compute cosine similarity matrix
+      norm_embeddings <- embeddings / sqrt(rowSums(embeddings^2))
+      sim_matrix <- tcrossprod(norm_embeddings)
+      diag(sim_matrix) <- 0  # Remove self-similarity
+
+      # Get document names
+      doc_names <- if (!is.null(rownames(embeddings))) {
+        rownames(embeddings)
+      } else {
+        paste0("doc_", seq_len(nrow(embeddings)))
+      }
+      rownames(sim_matrix) <- doc_names
+      colnames(sim_matrix) <- doc_names
+
+      # Create edges from similarity threshold
+      edge_list <- which(sim_matrix > embedding_sim_threshold & upper.tri(sim_matrix), arr.ind = TRUE)
+
+      if (nrow(edge_list) == 0) {
+        message("No document pairs exceed similarity threshold. Try lowering the threshold.")
+        return(NULL)
+      }
+
+      edge_df <- data.frame(
+        from = doc_names[edge_list[, 1]],
+        to = doc_names[edge_list[, 2]],
+        weight = sim_matrix[edge_list],
+        stringsAsFactors = FALSE
+      )
+
+      # Create graph
+      graph <- igraph::graph_from_data_frame(edge_df, directed = FALSE)
+      if (igraph::vcount(graph) == 0) return(NULL)
+
+      # Compute centrality measures
+      igraph::V(graph)$degree <- igraph::degree(graph)
+      igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
+
+      # Community detection
+      community_result <- switch(community_method,
+        "louvain" = igraph::cluster_louvain(graph),
+        "label_prop" = igraph::cluster_label_prop(graph),
+        "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
+        igraph::cluster_leiden(graph)
+      )
+      igraph::V(graph)$community <- community_result$membership
+
+      # Create layout table
+      layout_df <- data.frame(
+        Document = igraph::V(graph)$name,
+        Degree = igraph::V(graph)$degree,
+        Eigenvector = round(igraph::V(graph)$eigenvector, 3),
+        Community = igraph::V(graph)$community,
+        stringsAsFactors = FALSE
+      )
+
+      # Limit nodes by degree
+      node_degrees <- igraph::degree(graph)
+      sorted_indices <- order(node_degrees, decreasing = TRUE)
+      top_n <- min(top_node_n, length(sorted_indices))
+      top_indices <- sorted_indices[1:top_n]
+      top_nodes <- igraph::V(graph)$name[top_indices]
+      graph <- igraph::induced_subgraph(graph, top_nodes)
+
+      # Prepare visNetwork data
+      communities <- unique(igraph::V(graph)$community)
+      n_communities <- length(communities)
+      colors <- colorRampPalette(c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
+                                   "#9467bd", "#8c564b", "#e377c2"))(n_communities)
+      community_colors <- setNames(colors, communities)
+
+      nodes <- data.frame(
+        id = igraph::V(graph)$name,
+        label = igraph::V(graph)$name,
+        value = igraph::V(graph)$degree,
+        group = paste("Community", igraph::V(graph)$community),
+        color = community_colors[as.character(igraph::V(graph)$community)],
+        font.size = node_label_size,
+        title = paste0("<b>", igraph::V(graph)$name, "</b><br>",
+                       "Degree: ", igraph::V(graph)$degree, "<br>",
+                       "Community: ", igraph::V(graph)$community),
+        stringsAsFactors = FALSE
+      )
+
+      edge_data <- igraph::as_data_frame(graph, what = "edges")
+      edges <- data.frame(
+        from = edge_data$from,
+        to = edge_data$to,
+        value = if ("weight" %in% names(edge_data)) edge_data$weight else 1,
+        color = "#888888",
+        title = paste0("Similarity: ", round(edge_data$weight, 3)),
+        stringsAsFactors = FALSE
+      )
+
+      # Create legend
+      legend_labels <- lapply(seq_len(n_communities), function(i) {
+        list(
+          label = paste("Community", communities[i]),
+          shape = "dot",
+          color = colors[i],
+          size = 15
+        )
+      })
+
+      # Create plot
+      plot <- visNetwork::visNetwork(nodes, edges) %>%
+        visNetwork::visNodes(
+          shape = "dot",
+          scaling = list(min = 10, max = 40)
+        ) %>%
+        visNetwork::visEdges(
+          smooth = FALSE,
+          width = 1,
+          color = list(color = "#888888", opacity = 0.6)
+        ) %>%
+        visNetwork::visLayout(randomSeed = seed %||% 2025) %>%
+        visNetwork::visOptions(
+          highlightNearest = TRUE,
+          nodesIdSelection = TRUE,
+          manipulation = FALSE,
+          selectedBy = list(
+            variable = "group",
+            multiple = FALSE,
+            style = "width: 150px; height: 26px;"
+          )
+        ) %>%
+        visNetwork::visPhysics(enabled = FALSE) %>%
+        visNetwork::visInteraction(
+          hover = TRUE,
+          tooltipDelay = 0,
+          tooltipStay = 1000,
+          zoomView = TRUE,
+          dragView = TRUE
+        ) %>%
+        {if (showlegend) visNetwork::visLegend(.,
+                                                addNodes = do.call(rbind, lapply(legend_labels, as.data.frame)),
+                                                useGroups = FALSE,
+                                                position = "right",
+                                                width = 0.2,
+                                                zoom = FALSE
+        ) else .}
+
+      # Compute stats
+      safe_round <- function(x, digits = 4) {
+        if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
+        round(x, digits)
+      }
+
+      stats_list <- list(
+        nodes = igraph::vcount(graph),
+        edges = igraph::ecount(graph),
+        density = safe_round(igraph::edge_density(graph)),
+        diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
+        global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
+        avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
+        modularity = safe_round(igraph::modularity(community_result)),
+        assortativity = safe_round(igraph::assortativity_degree(graph)),
+        avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
+      )
+
+      return(list(
+        plot = plot,
+        table = layout_df,
+        nodes = nodes,
+        edges = edges,
+        stats = stats_list
+      ))
+    }
   }
 
   dfm_td <- tidytext::tidy(dfm_object)
@@ -325,7 +690,14 @@ semantic_correlation_network <- function(dfm_object,
 
   igraph::V(graph)$degree <- igraph::degree(graph)
   igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-  igraph::V(graph)$community <- igraph::cluster_leiden(graph)$membership
+  # Apply selected community detection method
+  community_result <- switch(community_method,
+    "louvain" = igraph::cluster_louvain(graph),
+    "label_prop" = igraph::cluster_label_prop(graph),
+    "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
+    igraph::cluster_leiden(graph)  # default: leiden
+  )
+  igraph::V(graph)$community <- community_result$membership
 
   layout_df <- data.frame(
     Term = igraph::V(graph)$name,
@@ -394,6 +766,8 @@ semantic_correlation_network <- function(dfm_object,
 
   plot <- visNetwork::visNetwork(nodes, edges) %>%
     visNetwork::visNodes(font = list(color = "black", size = node_label_size, vadjust = 0)) %>%
+    visNetwork::visEdges(smooth = FALSE) %>%
+    visNetwork::visIgraphLayout(layout = "layout_with_fr", randomSeed = ifelse(is.null(seed), 2025, seed)) %>%
     visNetwork::visOptions(
       highlightNearest = list(
         enabled = TRUE,
@@ -409,17 +783,7 @@ semantic_correlation_network <- function(dfm_object,
         style = "width: 150px; height: 26px;"
       )
     ) %>%
-    visNetwork::visPhysics(
-      solver = "barnesHut",
-      barnesHut = list(
-        gravitationalConstant = -1500,
-        centralGravity = 0.4,
-        springLength = 100,
-        springConstant = 0.05,
-        avoidOverlap = 0.3
-      ),
-      stabilization = list(enabled = TRUE, iterations = 1000)
-    ) %>%
+    visNetwork::visPhysics(enabled = FALSE) %>%
     visNetwork::visInteraction(
       hover = TRUE,
       tooltipDelay = 0,
@@ -433,15 +797,25 @@ semantic_correlation_network <- function(dfm_object,
                                             position = "right",
                                             width = 0.2,
                                             zoom = FALSE
-    ) else .} %>%
-    visNetwork::visLayout(randomSeed = ifelse(is.null(seed), 2025, seed))
+    ) else .}
+
+  # Compute comprehensive network statistics
+  safe_round <- function(x, digits = 4) {
+    if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
+    round(x, digits)
+  }
 
   stats_list <- list(
     nodes = igraph::vcount(graph),
     edges = igraph::ecount(graph),
-    density = round(igraph::edge_density(graph), 3)
+    density = safe_round(igraph::edge_density(graph)),
+    diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
+    global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
+    avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
+    modularity = safe_round(igraph::modularity(community_result)),
+    assortativity = safe_round(igraph::assortativity_degree(graph)),
+    avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
   )
-
   list(
     plot = plot,
     table = layout_df,

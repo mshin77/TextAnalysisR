@@ -52,6 +52,64 @@ get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = 
   return(NULL)
 }
 
+
+#' Get Available Tokens with Fallback
+#'
+#' @description Returns the first non-NULL tokens object from a priority fallback chain.
+#' Useful when multiple token processing stages exist and you need the most processed available version.
+#'
+#' @param final_tokens Optional fully processed tokens (highest priority)
+#' @param processed_tokens Optional partially processed tokens
+#' @param preprocessed_tokens Optional early-stage preprocessed tokens
+#' @param united_tbl Optional data frame with united_texts column (lowest priority, will be tokenized)
+#'
+#' @return The first non-NULL tokens from the priority chain, or NULL if all are NULL
+#'
+#' @details
+#' Priority order (highest to lowest):
+#' 1. final_tokens - Fully processed tokens
+#' 2. processed_tokens - Partially processed tokens
+#' 3. preprocessed_tokens - Early stage preprocessed tokens
+#' 4. united_tbl - Raw text (will be tokenized if used)
+#'
+#' @family preprocessing
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' tokens <- get_available_tokens(
+#'   final_tokens = my_final_tokens,
+#'   processed_tokens = my_processed_tokens
+#' )
+#' }
+get_available_tokens <- function(final_tokens = NULL,
+                                  processed_tokens = NULL,
+                                  preprocessed_tokens = NULL,
+                                  united_tbl = NULL) {
+  if (!is.null(final_tokens)) {
+    return(final_tokens)
+  }
+
+  if (!is.null(processed_tokens)) {
+    return(processed_tokens)
+  }
+
+  if (!is.null(preprocessed_tokens)) {
+    return(preprocessed_tokens)
+  }
+
+  if (!is.null(united_tbl) && "united_texts" %in% names(united_tbl)) {
+    toks <- quanteda::tokens(united_tbl$united_texts, what = "word")
+    other_cols <- united_tbl[, !names(united_tbl) %in% "united_texts", drop = FALSE]
+    if (ncol(other_cols) > 0) {
+      quanteda::docvars(toks) <- other_cols
+    }
+    return(toks)
+  }
+
+  return(NULL)
+}
+
 #' @title Process Files
 #'
 #' @description
@@ -574,4 +632,161 @@ detect_multi_words <- function(tokens, size = 2:5, min_count = 2) {
   tstat <- quanteda.textstats::textstat_collocations(tokens, size = size, min_count = min_count)
   tstat_collocation <- tstat$collocation
   return(tstat_collocation)
+}
+
+
+#' Extract Part-of-Speech Tags from Tokens
+#'
+#' @description
+#' Uses spaCy to extract part-of-speech (POS) tags from tokenized text.
+#' Returns a data frame with token-level POS annotations.
+#'
+#' @param tokens A quanteda tokens object or character vector of texts.
+#' @param include_lemma Logical; include lemmatized forms (default: TRUE).
+#' @param include_entity Logical; include named entity recognition (default: FALSE).
+#' @param include_dependency Logical; include dependency parsing (default: FALSE).
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with columns:
+#' \itemize{
+#'   \item \code{doc_id}: Document identifier
+#'   \item \code{sentence_id}: Sentence number within document
+#'   \item \code{token_id}: Token position within sentence
+#'   \item \code{token}: Original token
+#'   \item \code{pos}: Universal POS tag (e.g., NOUN, VERB, ADJ)
+#'   \item \code{tag}: Detailed POS tag (e.g., NN, VBD, JJ)
+#'   \item \code{lemma}: Lemmatized form (if include_lemma = TRUE)
+#'   \item \code{entity}: Named entity type (if include_entity = TRUE)
+#'   \item \code{head_token_id}: Head token in dependency tree (if include_dependency = TRUE)
+#'   \item \code{dep_rel}: Dependency relation type, e.g., nsubj, dobj (if include_dependency = TRUE)
+#' }
+#'
+#' @details
+#' This function requires the spacyr package and a working Python environment
+#' with spaCy installed. If spaCy is not initialized, this function will
+#' attempt to initialize it with the specified model.
+#'
+#' @family preprocessing
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' tokens <- quanteda::tokens("The quick brown fox jumps over the lazy dog.")
+#' pos_data <- extract_pos_tags(tokens)
+#' print(pos_data)
+#' }
+extract_pos_tags <- function(tokens,
+                             include_lemma = TRUE,
+                             include_entity = FALSE,
+                             include_dependency = FALSE,
+                             model = "en_core_web_sm") {
+
+  if (!requireNamespace("spacyr", quietly = TRUE)) {
+    stop("Package 'spacyr' is required for POS tagging. Please install it with: install.packages('spacyr')")
+  }
+
+  # Convert tokens to text if needed
+  if (inherits(tokens, "tokens")) {
+    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
+  } else if (is.character(tokens)) {
+    texts <- tokens
+  } else {
+    stop("tokens must be a quanteda tokens object or character vector")
+  }
+
+  # Try to initialize spaCy if not already done
+  tryCatch({
+    # Check if spaCy is initialized by trying a simple operation
+    spacyr::spacy_parse("test", pos = FALSE, tag = FALSE, lemma = FALSE, entity = FALSE)
+  }, error = function(e) {
+    message("Initializing spaCy with model: ", model)
+    spacyr::spacy_initialize(model = model)
+  })
+
+  # Parse with POS and tag enabled
+  parsed <- spacyr::spacy_parse(
+    texts,
+    pos = TRUE,
+    tag = TRUE,
+    lemma = include_lemma,
+    entity = include_entity,
+    dependency = include_dependency
+  )
+
+  return(parsed)
+}
+
+
+#' Extract Named Entities from Tokens
+#'
+#' @description
+#' Uses spaCy to extract named entities (NER) from tokenized text.
+#' Returns a data frame with token-level entity annotations.
+#'
+#' @param tokens A quanteda tokens object or character vector of texts.
+#' @param include_pos Logical; include POS tags (default: TRUE).
+#' @param include_lemma Logical; include lemmatized forms (default: TRUE).
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with columns:
+#' \itemize{
+#'   \item \code{doc_id}: Document identifier
+#'   \item \code{token}: Original token
+#'   \item \code{entity}: Named entity type (e.g., PERSON, ORG, GPE)
+#'   \item \code{pos}: Universal POS tag (if include_pos = TRUE)
+#'   \item \code{lemma}: Lemmatized form (if include_lemma = TRUE)
+#' }
+#'
+#' @details
+#' This function requires the spacyr package and a working Python environment
+#' with spaCy installed. If spaCy is not initialized, this function will
+#' attempt to initialize it with the specified model.
+#'
+#' @family preprocessing
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' tokens <- quanteda::tokens("Apple Inc. was founded by Steve Jobs in California.")
+#' entity_data <- extract_named_entities(tokens)
+#' print(entity_data)
+#' }
+extract_named_entities <- function(tokens,
+                                   include_pos = TRUE,
+                                   include_lemma = TRUE,
+                                   model = "en_core_web_sm") {
+
+  if (!requireNamespace("spacyr", quietly = TRUE)) {
+    stop("Package 'spacyr' is required for NER. Please install it with: install.packages('spacyr')")
+  }
+
+  # Convert tokens to text if needed
+  if (inherits(tokens, "tokens")) {
+    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
+  } else if (is.character(tokens)) {
+    texts <- tokens
+  } else {
+    stop("tokens must be a quanteda tokens object or character vector")
+  }
+
+  # Try to initialize spaCy if not already done
+  tryCatch({
+    spacyr::spacy_parse("test", pos = FALSE, tag = FALSE, lemma = FALSE, entity = FALSE)
+  }, error = function(e) {
+    message("Initializing spaCy with model: ", model)
+    spacyr::spacy_initialize(model = model)
+  })
+
+  # Parse with entity enabled
+
+  parsed <- spacyr::spacy_parse(
+    texts,
+    pos = include_pos,
+    tag = include_pos,
+    lemma = include_lemma,
+    entity = TRUE,
+    dependency = FALSE
+  )
+
+  return(parsed)
 }
