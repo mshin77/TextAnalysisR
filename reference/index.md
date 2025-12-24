@@ -5,7 +5,7 @@
 Launch the app and import data
 
 - [`run_app()`](https://mshin77.github.io/TextAnalysisR/reference/run_app.md)
-  : Launch and browse the TextAnalysisR app
+  : Launch the TextAnalysisR app
 - [`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md)
   : Process Files
 
