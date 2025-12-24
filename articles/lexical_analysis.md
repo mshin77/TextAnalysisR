@@ -100,6 +100,34 @@ Tags](https://universaldependencies.org/u/pos/)
 
 ------------------------------------------------------------------------
 
+**Morphological Analysis**
+
+Morphological analysis extracts grammatical features from words. Uses
+Python spaCy via reticulate.
+
+**Features:**
+
+| Feature  | Description        | Values              |
+|----------|--------------------|---------------------|
+| Number   | Singular/Plural    | Sing, Plur          |
+| Tense    | Verb tense         | Past, Pres, Fut     |
+| VerbForm | Verb form          | Fin, Inf, Part, Ger |
+| Person   | Grammatical person | 1, 2, 3             |
+| Case     | Grammatical case   | Nom, Acc, Dat, Gen  |
+
+``` r
+parsed <- spacy_parse_full(texts, include_morphology = TRUE)
+# Returns columns: morph_Number, morph_Tense, morph_VerbForm, etc.
+```
+
+**Usage:** Analyze verb tenses for temporal patterns, number agreement,
+or grammatical complexity.
+
+**Learn More:** [spaCy
+Morphology](https://spacy.io/usage/linguistic-features#morphology)
+
+------------------------------------------------------------------------
+
 **Named Entity Recognition**
 
 Named Entity Recognition (NER) identifies and classifies named entities

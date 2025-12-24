@@ -15,6 +15,7 @@ Named list with feature availability
 ## Examples
 
 ``` r
+# \donttest{
 status <- get_feature_status()
 #> Downloading uv...
 #> Done!
@@ -43,4 +44,5 @@ print(status)
 #> $local
 #> [1] TRUE
 #> 
+# }
 ```
