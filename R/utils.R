@@ -1,3 +1,49 @@
+################################################################################
+# PIPE OPERATOR
+################################################################################
+
+#' Pipe operator
+#'
+#' See \code{magrittr::\link[magrittr:pipe]{\%>\%}} for details.
+#'
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @importFrom magrittr %>%
+#' @usage lhs \%>\% rhs
+#' @param lhs A value or the magrittr placeholder.
+#' @param rhs A function call using the magrittr semantics.
+#' @return The result of calling `rhs(lhs)`.
+NULL
+
+
+
+################################################################################
+# GLOBAL VARIABLES (for R CMD check)
+################################################################################
+
+globalVariables(names = c(
+  ".", ".max_idx", ".row_idx", "categorical_var", "centrality", "col_idx",
+  "community", "continuous_var", "cooccur_count", "correlation",
+  "correlation_rounded", "degree_log", "document", "eigenvector", "emotion",
+  "estimate", "feature", "frequency", "from", "generated_content", "group",
+  "interview_question", "item1", "item2", "label", "labeled_topic", "line_group",
+  "lower", "max_corr", "max_count", "max_similarity", "metric_value", "min_corr",
+  "min_count", "model_type", "n", "n_words", "name", "negative", "odds ratio",
+  "odds.ratio", "ord", "other_category", "other_id", "other_idx", "other_name",
+  "p.value", "percent", "policy_recommendation", "positive", "proportion",
+  "ref_id", "ref_idx", "ref_name", "research_question", "row_idx", "score",
+  "sentiment", "sentiment_score", "similarity", "statistic", "std.error",
+  "std.error (odds ratio)", "stopwords", "survey_item", "term", "term_proportion",
+  "terms", "text", "theme_description", "to", "tokens_remove", "tokens_select",
+  "topic", "topic_display", "topic_label", "total_count", "total_score", "tt",
+  "united_texts", "upper", "value", "word", "word_frequency", "x", "xend",
+  "y", "yend"
+))
+
+
+
 #' @importFrom utils modifyList
 #' @importFrom stats cor
 NULL
@@ -793,4 +839,1959 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
   }
 
   return(metrics)
+}
+
+
+################################################################################
+# PYTHON ENVIRONMENT SETUP AND UTILITIES
+################################################################################
+
+#' Setup Python Environment
+#'
+#' @description
+#' Intelligently sets up Python virtual environment with required packages.
+#' Detects existing Python installations and guides users if Python is missing.
+#'
+#' @param envname Character string name for the virtual environment
+#'   (default: "textanalysisr-env")
+#' @param force Logical, whether to recreate environment if it exists
+#'   (default: FALSE)
+#'
+#' @return Invisible TRUE if successful, stops with error message if failed
+#'
+#' @details
+#' This function:
+#' - Automatically detects if Python is already installed
+#' - Offers to install Miniconda if no Python found
+#' - Creates an isolated virtual environment (does NOT modify system Python)
+#' - Installs ONLY 6 core packages (minimal installation):
+#'   * langchain-core (core LangChain functionality)
+#'   * langchain-ollama (Ollama integration)
+#'   * langgraph (workflow graphs)
+#'   * langgraph-checkpoint (workflow state management)
+#'   * ollama (Ollama client)
+#'   * pdfplumber (PDF table extraction)
+#' - Dependencies installed automatically by pip
+#' - Avoids heavy packages (no marker-pdf, nougat-ocr, torch)
+#'
+#' The virtual environment approach means:
+#' - No conflicts with other Python projects
+#' - Easy to remove (just delete the environment)
+#' - System Python remains untouched
+#' - Much smaller download (~100MB vs 5GB+)
+#'
+#' After setup, restart R session to activate enhanced features.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # First time setup (auto-detects Python)
+#' setup_python_env()
+#'
+#' # Recreate environment
+#' setup_python_env(force = TRUE)
+#' }
+setup_python_env <- function(envname = "textanalysisr-env", force = FALSE) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required. Install it with: install.packages('reticulate')")
+  }
+
+  message("\nPython Environment Setup")
+
+
+  # Check if Python is available
+  python_available <- tryCatch({
+    py_config <- reticulate::py_discover_config()
+    !is.null(py_config$python)
+  }, error = function(e) FALSE)
+
+  if (!python_available) {
+    message("No Python found. Install Miniconda? (y/n): ")
+    response <- readline(prompt = "")
+
+    if (tolower(trimws(response)) == "y") {
+      message("Installing Miniconda...")
+      reticulate::install_miniconda()
+      message("Done.")
+    } else {
+      stop("Python required. Install from python.org and retry.")
+    }
+  } else {
+    py_info <- reticulate::py_discover_config()
+    message("Python: ", py_info$python, " (v", py_info$version, ")")
+  }
+
+  tryCatch({
+    env_exists <- envname %in% reticulate::virtualenv_list()
+
+    if (env_exists && !force) {
+      message("Environment '", envname, "' exists. Use force=TRUE to recreate.")
+      reticulate::use_virtualenv(envname, required = TRUE)
+      return(invisible(TRUE))
+    }
+
+    if (env_exists && force) {
+      message("Removing existing environment...")
+      reticulate::virtualenv_remove(envname, confirm = FALSE)
+    }
+
+    message("Creating environment '", envname, "'...")
+    reticulate::virtualenv_create(envname, python = NULL)
+    reticulate::use_virtualenv(envname, required = TRUE)
+
+    requirements_file <- system.file("python", "requirements.txt", package = "TextAnalysisR")
+
+    message("Installing packages...")
+    if (file.exists(requirements_file)) {
+      req_packages <- readLines(requirements_file)
+      req_packages <- req_packages[!grepl("^#|^\\s*$", req_packages)]
+      reticulate::virtualenv_install(envname = envname, packages = req_packages, ignore_installed = FALSE)
+    } else {
+      packages <- c(
+        "langchain-core>=0.3.0",
+        "langchain-ollama>=0.2.0",
+        "langgraph>=0.2.0",
+        "langgraph-checkpoint>=2.0.0",
+        "ollama>=0.3.0",
+        "pdfplumber>=0.10.0"
+      )
+      reticulate::virtualenv_install(envname = envname, packages = packages, ignore_installed = FALSE)
+    }
+
+    message("Testing imports...")
+    test_result <- tryCatch({
+      reticulate::py_run_string("import langgraph")
+      reticulate::py_run_string("from langchain_core import prompts")
+      reticulate::py_run_string("from langchain_ollama import ChatOllama")
+      reticulate::py_run_string("import ollama")
+      reticulate::py_run_string("import pdfplumber")
+      TRUE
+    }, error = function(e) {
+      message("Import failed: ", e$message)
+      FALSE
+    })
+
+    if (test_result) {
+      message("Setup complete. Restart R session to activate.")
+      return(invisible(TRUE))
+    } else {
+      stop("Package imports failed. Check Python logs.")
+    }
+
+  }, error = function(e) {
+    stop("Failed to set up Python environment: ", e$message)
+  })
+}
+
+
+#' Check Python Environment Status
+#'
+#' @description
+#' Checks if Python environment is available and properly configured.
+#'
+#' @param envname Character string name of the virtual environment
+#'   (default: "textanalysisr-env")
+#'
+#' @return List with status information:
+#'   - available: Logical, TRUE if environment exists
+#'   - active: Logical, TRUE if environment is currently active
+#'   - packages: List of installed package versions
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' status <- check_python_env()
+#' print(status)
+#' }
+check_python_env <- function(envname = "textanalysisr-env") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+
+  env_list <- reticulate::virtualenv_list()
+  available <- envname %in% env_list
+
+  if (!available) {
+    return(list(
+      available = FALSE,
+      active = FALSE,
+      packages = NULL,
+      message = paste("Environment", envname, "not found. Run setup_python_env() to create it.")
+    ))
+  }
+
+  tryCatch({
+    reticulate::use_virtualenv(envname, required = TRUE)
+
+    packages <- tryCatch({
+      langgraph_version <- reticulate::py_run_string("import langgraph; print(langgraph.__version__)")
+      langchain_version <- reticulate::py_run_string("import langchain; print(langchain.__version__)")
+      ollama_version <- reticulate::py_run_string("import ollama; print(ollama.__version__)")
+
+      list(
+        langgraph = langgraph_version,
+        langchain = langchain_version,
+        ollama = ollama_version
+      )
+    }, error = function(e) NULL)
+
+    ollama_check <- tryCatch({
+      reticulate::py_run_string("import ollama; ollama.list()")
+      TRUE
+    }, error = function(e) FALSE)
+
+    return(list(
+      available = TRUE,
+      active = TRUE,
+      packages = packages,
+      ollama_available = ollama_check,
+      message = "Python environment is ready"
+    ))
+
+  }, error = function(e) {
+    return(list(
+      available = TRUE,
+      active = FALSE,
+      packages = NULL,
+      ollama_available = FALSE,
+      message = paste("Failed to activate environment:", e$message)
+    ))
+  })
+}
+
+
+#' Initialize LangGraph for Current Session
+#'
+#' @description
+#' Initializes LangGraph/LangChain/Ollama modules for current R session.
+#' Use only for LangGraph workflows. PDF/embeddings load automatically.
+#'
+#' @param envname Character string name of the virtual environment
+#'   (default: "textanalysisr-env")
+#'
+#' @return Invisible list with LangGraph/LangChain/Ollama modules
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' lg <- init_langgraph()
+#' }
+init_langgraph <- function(envname = "textanalysisr-env") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+
+  status <- check_python_env(envname)
+
+  if (!status$available) {
+    stop("Python environment not found. Run setup_python_env() first.")
+  }
+
+  message("Initializing LangGraph modules...")
+  reticulate::use_virtualenv(envname, required = TRUE)
+
+  modules <- tryCatch({
+    list(
+      langgraph = reticulate::import("langgraph"),
+      langchain = reticulate::import("langchain"),
+      langchain_ollama = reticulate::import("langchain_ollama"),
+      ollama = reticulate::import("ollama")
+    )
+  }, error = function(e) {
+    stop("Failed to import LangGraph modules: ", e$message)
+  })
+
+  message("LangGraph initialized successfully")
+
+  if (!status$ollama_available) {
+    warning("Ollama connection not available. Make sure Ollama is running.")
+  }
+
+  return(invisible(modules))
+}
+
+
+################################################################################
+# OLLAMA LOCAL LLM UTILITIES
+################################################################################
+
+#' Check if Ollama is Available
+#'
+#' @description Checks if Ollama is installed and running on the local machine.
+#'
+#' @param verbose Logical, if TRUE, prints status messages.
+#'
+#' @return Logical indicating whether Ollama is available.
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' if (check_ollama()) {
+#'   message("Ollama is ready!")
+#' }
+#' }
+check_ollama <- function(verbose = FALSE) {
+  tryCatch({
+    response <- httr::GET(
+      "http://localhost:11434/api/tags",
+      httr::timeout(2)
+    )
+
+    is_available <- httr::status_code(response) == 200
+
+    if (verbose) {
+      if (is_available) {
+        message("Ollama is available and running")
+      } else {
+        message("Ollama server responded but returned error status")
+      }
+    }
+
+    return(is_available)
+
+  }, error = function(e) {
+    if (verbose) {
+      message("Ollama is not available: ", e$message)
+      message("To use Ollama, please install it from https://ollama.ai")
+    }
+    return(FALSE)
+  })
+}
+
+#' List Available Ollama Models
+#'
+#' @description Lists all models currently installed in Ollama.
+#'
+#' @param verbose Logical, if TRUE, prints status messages.
+#'
+#' @return Character vector of model names, or NULL if Ollama is unavailable.
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' models <- list_ollama_models()
+#' print(models)
+#' }
+list_ollama_models <- function(verbose = FALSE) {
+  if (!check_ollama(verbose = FALSE)) {
+    if (verbose) {
+      message("Ollama is not available")
+    }
+    return(NULL)
+  }
+
+  tryCatch({
+    response <- httr::GET(
+      "http://localhost:11434/api/tags",
+      httr::timeout(5)
+    )
+
+    if (httr::status_code(response) == 200) {
+      content <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+      if (!is.null(content$models) && length(content$models) > 0) {
+        model_names <- content$models$name
+        if (verbose) {
+          message("Found ", length(model_names), " Ollama models:")
+          for (model in model_names) {
+            message("  - ", model)
+          }
+        }
+        return(model_names)
+      } else {
+        if (verbose) {
+          message("No Ollama models found. Please pull a model:")
+          message("  ollama pull phi3:mini")
+        }
+        return(character(0))
+      }
+    }
+
+    return(NULL)
+
+  }, error = function(e) {
+    if (verbose) {
+      message("Error listing Ollama models: ", e$message)
+    }
+    return(NULL)
+  })
+}
+
+#' Call Ollama for Text Generation
+#'
+#' @description Sends a prompt to Ollama and returns the generated text.
+#'
+#' @param prompt Character string containing the prompt.
+#' @param model Character string specifying the Ollama model (default: "phi3:mini").
+#' @param temperature Numeric value controlling randomness (default: 0.3).
+#' @param max_tokens Maximum number of tokens to generate (default: 512).
+#' @param timeout Timeout in seconds for the request (default: 60).
+#' @param verbose Logical, if TRUE, prints progress messages.
+#'
+#' @return Character string with the generated text, or NULL if failed.
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' response <- call_ollama(
+#'   prompt = "Summarize these keywords: machine learning, neural networks, AI",
+#'   model = "phi3:mini"
+#' )
+#' print(response)
+#' }
+call_ollama <- function(prompt,
+                       model = "phi3:mini",
+                       temperature = 0.3,
+                       max_tokens = 512,
+                       timeout = 60,
+                       verbose = FALSE) {
+
+  if (!check_ollama(verbose = verbose)) {
+    stop("Ollama is not available. Please ensure Ollama is installed and running.")
+  }
+
+  if (verbose) {
+    message("Calling Ollama with model: ", model)
+  }
+
+  tryCatch({
+    body <- list(
+      model = model,
+      prompt = prompt,
+      stream = FALSE,
+      options = list(
+        temperature = temperature,
+        num_predict = max_tokens
+      )
+    )
+
+    response <- httr::POST(
+      "http://localhost:11434/api/generate",
+      body = jsonlite::toJSON(body, auto_unbox = TRUE),
+      httr::content_type_json(),
+      httr::timeout(timeout)
+    )
+
+    if (httr::status_code(response) == 200) {
+      content <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+      if (!is.null(content$response)) {
+        if (verbose) {
+          message("Ollama response received successfully")
+        }
+        return(trimws(content$response))
+      } else {
+        warning("Ollama response was empty")
+        return(NULL)
+      }
+    } else {
+      warning("Ollama API returned status code: ", httr::status_code(response))
+      return(NULL)
+    }
+
+  }, error = function(e) {
+    warning("Error calling Ollama: ", e$message)
+    return(NULL)
+  })
+}
+
+#' Get Recommended Ollama Model
+#'
+#' @description Returns a recommended Ollama model based on what's available.
+#'
+#' @param preferred_models Character vector of preferred models in priority order.
+#' @param verbose Logical, if TRUE, prints status messages.
+#'
+#' @return Character string of recommended model, or NULL if none available.
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' model <- get_recommended_ollama_model()
+#' print(model)
+#' }
+get_recommended_ollama_model <- function(preferred_models = c("phi3:mini", "llama3.1:8b", "mistral:7b", "tinyllama"),
+                                        verbose = FALSE) {
+
+  available_models <- list_ollama_models(verbose = FALSE)
+
+  if (is.null(available_models) || length(available_models) == 0) {
+    if (verbose) {
+      message("No Ollama models available. Recommended models:")
+      message("  1. phi3:mini (2.3GB, best balance)")
+      message("  2. llama3.1:8b (4.7GB, strong reasoning)")
+      message("  3. mistral:7b (4.1GB, high quality)")
+      message("\nTo install: ollama pull phi3:mini")
+    }
+    return(NULL)
+  }
+
+  for (preferred in preferred_models) {
+    if (preferred %in% available_models) {
+      if (verbose) {
+        message("Using model: ", preferred)
+      }
+      return(preferred)
+    }
+  }
+
+  if (verbose) {
+    message("Using first available model: ", available_models[1])
+  }
+  return(available_models[1])
+}
+
+
+################################################################################
+# SECURITY AND VALIDATION UTILITIES
+################################################################################
+
+#' Cybersecurity Utility Functions
+#'
+#' @description Functions for input validation, sanitization, and security logging
+#'
+#' @section NIST Compliance:
+#' This package follows NIST security standards (based on NIST SP 800-53):
+#' - SC-8: Transmission Confidentiality and Integrity (HTTPS encryption)
+#' - SC-28: Protection of Information at Rest (secure API key storage)
+#' - IA-5: Authenticator Management (API key validation and format checking)
+#' - AC-3: Access Enforcement (rate limiting, input validation, file type restrictions)
+#' - SI-10: Information Input Validation (malicious content detection)
+#' - AU-2: Audit Events (security logging and monitoring)
+
+#' Validate File Upload
+#'
+#' @param file_info File info object from Shiny fileInput
+#' @return TRUE if valid, stops with error message if invalid
+#' @keywords internal
+validate_file_upload <- function(file_info) {
+  if (is.null(file_info)) {
+    stop("No file provided")
+  }
+
+  allowed_extensions <- c(".csv", ".xlsx", ".txt", ".rds", ".pdf", ".docx")
+  ext <- tools::file_ext(file_info$name)
+
+  if (!paste0(".", tolower(ext)) %in% allowed_extensions) {
+    stop("Invalid file type. Allowed types: CSV, XLSX, TXT, RDS, PDF, DOCX")
+  }
+
+  max_size <- 50 * 1024 * 1024
+  if (file_info$size > max_size) {
+    stop("File size exceeds maximum limit of 50MB")
+  }
+
+  if (ext %in% c("csv", "txt")) {
+    content <- tryCatch({
+      suppressWarnings(readLines(file_info$datapath, n = 10, warn = FALSE))
+    }, error = function(e) {
+      stop("Unable to read file contents")
+    })
+
+    suspicious_patterns <- c("<script", "javascript:", "onerror=", "onclick=")
+    if (any(grepl(paste(suspicious_patterns, collapse = "|"), content, ignore.case = TRUE))) {
+      stop("File contains potentially malicious content")
+    }
+  }
+
+  return(TRUE)
+}
+
+#' Sanitize Text Input
+#'
+#' @param text Text input from user
+#' @return Sanitized text
+#' @keywords internal
+sanitize_text_input <- function(text) {
+  if (is.null(text) || nchar(text) == 0) {
+    return(text)
+  }
+
+  text <- gsub("<script.*?>.*?</script>", "", text, ignore.case = TRUE)
+  text <- gsub("javascript:", "", text, ignore.case = TRUE)
+  text <- gsub("on\\w+\\s*=", "", text, ignore.case = TRUE)
+
+  max_chars <- 1000000
+  if (nchar(text) > max_chars) {
+    stop("Text input exceeds maximum length of 1 million characters")
+  }
+
+  return(text)
+}
+
+#' Check Rate Limit
+#'
+#' @param session_token Shiny session token
+#' @param user_requests Reactive value storing request history
+#' @param max_requests Maximum requests allowed in time window
+#' @param window_seconds Time window in seconds (default: 3600 = 1 hour)
+#' @return TRUE if within limit, stops with error if exceeded
+#' @keywords internal
+check_rate_limit <- function(session_token, user_requests, max_requests = 100, window_seconds = 3600) {
+  current_time <- Sys.time()
+  requests <- user_requests()
+
+  if (is.null(requests[[session_token]])) {
+    requests[[session_token]] <- list()
+  }
+
+  requests[[session_token]] <- Filter(function(x) {
+    difftime(current_time, x, units = "secs") < window_seconds
+  }, requests[[session_token]])
+
+  if (length(requests[[session_token]]) >= max_requests) {
+    stop("Rate limit exceeded. You have made too many requests. Please wait before trying again.")
+  }
+
+  requests[[session_token]] <- c(requests[[session_token]], current_time)
+  user_requests(requests)
+
+  return(TRUE)
+}
+
+#' Log Security Event
+#'
+#' @param event_type Type of security event
+#' @param details Additional details about the event
+#' @param session_info Shiny session object
+#' @param level Log level (INFO, WARNING, ERROR)
+#' @keywords internal
+log_security_event <- function(event_type, details, session_info, level = "INFO") {
+  timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+  session_token <- if (!is.null(session_info$token)) {
+    substr(session_info$token, 1, 8)
+  } else {
+    "unknown"
+  }
+
+  log_message <- paste0(
+    "[", timestamp, "] ",
+    "[", level, "] ",
+    "SECURITY: ", event_type, " | ",
+    "Session: ", session_token, "... | ",
+    "Details: ", details
+  )
+
+  log_file <- "security.log"
+  tryCatch({
+    cat(log_message, "\n", file = log_file, append = TRUE)
+  }, error = function(e) {
+    warning("Failed to write security log: ", e$message)
+  })
+
+  if (Sys.getenv("ENVIRONMENT") != "production") {
+    message(log_message)
+  }
+
+  return(invisible(NULL))
+}
+
+#' Validate OpenAI API Key Format
+#'
+#' @description
+#' Validates OpenAI API key format according to NIST IA-5(1) authenticator management.
+#' Checks key prefix, length, and basic format requirements.
+#'
+#' @param api_key Character string containing the API key
+#' @param strict Logical, if TRUE performs additional validation checks
+#'
+#' @return Logical TRUE if valid, FALSE with warnings if invalid
+#' @keywords internal
+#'
+#' @section NIST Compliance:
+#' Implements NIST IA-5(1): Authenticator Management - Password-Based Authentication.
+#' Validates format, length, and character composition to prevent weak or malformed keys.
+#'
+#' @examples
+#' \dontrun{
+#' validate_api_key("sk-proj...")
+#' }
+validate_api_key <- function(api_key, strict = TRUE) {
+  if (is.null(api_key) || !is.character(api_key) || !nzchar(api_key)) {
+    warning("API key is NULL, empty, or not a character string")
+    return(FALSE)
+  }
+
+  if (!grepl("^sk-", api_key)) {
+    warning("API key format appears invalid: OpenAI keys should start with 'sk-'")
+    return(FALSE)
+  }
+
+  if (nchar(api_key) < 40) {
+    warning("API key appears too short: OpenAI keys are typically 48+ characters")
+    return(FALSE)
+  }
+
+  if (strict) {
+    if (grepl("\\s", api_key)) {
+      warning("API key contains whitespace characters")
+      return(FALSE)
+    }
+
+    if (grepl("[^A-Za-z0-9_-]", api_key)) {
+      warning("API key contains unexpected special characters")
+      return(FALSE)
+    }
+  }
+
+  return(TRUE)
+}
+
+#' Validate Column Name
+#'
+#' @description
+#' Validates column names to prevent code injection through formula construction.
+#' Ensures column names follow R naming conventions and contain no malicious patterns.
+#'
+#' @param col_name Character string containing the column name
+#'
+#' @return TRUE if valid, stops with error if invalid
+#' @keywords internal
+#'
+#' @section Security:
+#' Protects against formula injection attacks where malicious column names could
+#' execute arbitrary code when used in model formulas. Part of NIST SI-10 input validation.
+#'
+#' @examples
+#' \dontrun{
+#' validate_column_name("age")
+#' validate_column_name("my_variable")
+#' }
+validate_column_name <- function(col_name) {
+  if (is.null(col_name) || !is.character(col_name) || !nzchar(col_name)) {
+    stop("Column name is NULL, empty, or not a character string")
+  }
+
+  if (length(col_name) != 1) {
+    stop("Column name must be a single value, not a vector")
+  }
+
+  if (!grepl("^[A-Za-z][A-Za-z0-9_\\.]*$", col_name)) {
+    stop("Invalid column name format. Column names must start with a letter and contain only letters, numbers, underscores, or periods.")
+  }
+
+  if (nchar(col_name) > 255) {
+    stop("Column name exceeds maximum length of 255 characters")
+  }
+
+  backticks <- grepl("`", col_name, fixed = TRUE)
+  if (backticks) {
+    stop("Column name contains backticks which are not allowed")
+  }
+
+  return(TRUE)
+}
+
+
+################################################################################
+# WEB ACCESSIBILITY UTILITIES
+################################################################################
+
+#' Web Accessibility Utility Functions
+#'
+#' @description Functions for ensuring WCAG 2.1 Level AA compliance in the Shiny application
+#'
+#' @section WCAG 2.1 Level AA Compliance:
+#' This package follows Web Content Accessibility Guidelines (WCAG) 2.1 Level AA:
+#' - 1.1.1 Non-text Content (Level A): Alt text for images and visualizations
+#' - 1.4.3 Contrast Minimum (Level AA): 4.5:1 ratio for normal text, 3:1 for large text/UI
+#' - 2.1.1 Keyboard (Level A): Full keyboard navigation support
+#' - 2.4.1 Bypass Blocks (Level A): Skip navigation links
+#' - 3.1.1 Language of Page (Level A): Page language identification
+#' - 4.1.2 Name, Role, Value (Level A): ARIA labels and roles
+
+#' Calculate Color Contrast Ratio
+#'
+#' @description
+#' Calculates the contrast ratio between two colors according to WCAG 2.1 standards
+#' using the relative luminance formula from W3C guidelines.
+#' Used to verify text/background color combinations meet accessibility requirements.
+#'
+#' @param foreground Foreground color (hex format, e.g., "#111827")
+#' @param background Background color (hex format, e.g., "#ffffff")
+#'
+#' @return Numeric contrast ratio (1-21)
+#' @keywords internal
+#'
+#' @section WCAG Requirements:
+#' - Normal text: Minimum 4.5:1 (Level AA)
+#' - Large text (18pt+ or 14pt+ bold): Minimum 3:1 (Level AA)
+#' - UI components and graphics: Minimum 3:1 (Level AA)
+#'
+#' @examples
+#' \dontrun{
+#' calculate_contrast_ratio("#111827", "#ffffff")  # Returns ~16:1 (Pass)
+#' calculate_contrast_ratio("#6b7280", "#4a5568")  # Returns ~2.8:1 (Fail)
+#' }
+calculate_contrast_ratio <- function(foreground, background) {
+  hex_to_rgb <- function(hex) {
+    hex <- gsub("#", "", hex)
+    c(
+      strtoi(substr(hex, 1, 2), 16L),
+      strtoi(substr(hex, 3, 4), 16L),
+      strtoi(substr(hex, 5, 6), 16L)
+    ) / 255
+  }
+
+  relative_luminance <- function(rgb) {
+    rgb <- sapply(rgb, function(val) {
+      if (val <= 0.03928) {
+        val / 12.92
+      } else {
+        ((val + 0.055) / 1.055)^2.4
+      }
+    })
+    0.2126 * rgb[1] + 0.7152 * rgb[2] + 0.0722 * rgb[3]
+  }
+
+  fg_rgb <- hex_to_rgb(foreground)
+  bg_rgb <- hex_to_rgb(background)
+
+  l1 <- relative_luminance(fg_rgb)
+  l2 <- relative_luminance(bg_rgb)
+
+  if (l1 > l2) {
+    ratio <- (l1 + 0.05) / (l2 + 0.05)
+  } else {
+    ratio <- (l2 + 0.05) / (l1 + 0.05)
+  }
+
+  return(round(ratio, 2))
+}
+
+#' Check WCAG Contrast Compliance
+#'
+#' @description
+#' Validates if color combination meets WCAG 2.1 Level AA contrast requirements.
+#'
+#' @param foreground Foreground color (hex format)
+#' @param background Background color (hex format)
+#' @param large_text Logical, TRUE if text is large (18pt+ or 14pt+ bold)
+#'
+#' @return Logical TRUE if compliant, FALSE if not
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' check_wcag_contrast("#111827", "#ffffff")  # TRUE (16:1 ratio)
+#' check_wcag_contrast("#6b7280", "#4a5568")  # FALSE (2.8:1 ratio)
+#' }
+check_wcag_contrast <- function(foreground, background, large_text = FALSE) {
+  ratio <- calculate_contrast_ratio(foreground, background)
+  min_ratio <- if (large_text) 3.0 else 4.5
+
+  if (ratio >= min_ratio) {
+    return(TRUE)
+  } else {
+    warning(
+      "WCAG contrast failure: ", ratio, ":1 ratio (requires ", min_ratio, ":1)\n",
+      "  Foreground: ", foreground, "\n",
+      "  Background: ", background
+    )
+    return(FALSE)
+  }
+}
+
+#' Generate ARIA Label
+#'
+#' @description
+#' Creates accessible ARIA label for UI elements.
+#'
+#' @param element_type Type of element (e.g., "button", "input", "plot")
+#' @param action Action or purpose (e.g., "analyze", "download", "visualize")
+#' @param context Additional context (optional)
+#'
+#' @return Character string with ARIA label
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' generate_aria_label("button", "analyze", "readability")
+#' # Returns: "Analyze readability button"
+#' }
+generate_aria_label <- function(element_type, action, context = NULL) {
+  if (!is.null(context)) {
+    label <- paste(tools::toTitleCase(action), context, element_type)
+  } else {
+    label <- paste(tools::toTitleCase(action), element_type)
+  }
+  return(label)
+}
+
+#' Create Screen Reader Text
+#'
+#' @description
+#' Generates visually hidden text for screen readers (WCAG 4.1.2).
+#'
+#' @param text Text to be read by screen readers
+#'
+#' @return HTML span with sr-only class
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' create_sr_text("Loading results, please wait")
+#' }
+create_sr_text <- function(text) {
+  return(
+    paste0(
+      '<span class="sr-only" role="status" aria-live="polite">',
+      text,
+      '</span>'
+    )
+  )
+}
+
+#' Validate Keyboard Navigation
+#'
+#' @description
+#' Checks if interactive elements have proper tabindex and keyboard handlers.
+#' Used for WCAG 2.1.1 (Keyboard) compliance.
+#'
+#' @param tabindex Integer, tab order (-1 for no tab, 0 for natural order, 1+ for specific order)
+#'
+#' @return Logical TRUE if valid, FALSE with warning if invalid
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' validate_keyboard_navigation(0)   # TRUE
+#' validate_keyboard_navigation(999) # FALSE (too high)
+#' }
+validate_keyboard_navigation <- function(tabindex = 0) {
+  if (!is.numeric(tabindex)) {
+    warning("Tabindex must be numeric")
+    return(FALSE)
+  }
+
+  if (tabindex > 100) {
+    warning("Tabindex > 100 creates unpredictable tab order (WCAG 2.1.1)")
+    return(FALSE)
+  }
+
+  return(TRUE)
+}
+
+#' Check Alt Text Presence
+#'
+#' @description
+#' Validates that images and visualizations have alternative text descriptions.
+#' Required for WCAG 1.1.1 (Non-text Content).
+#'
+#' Note: Decorative images should use empty alt text (alt="") to indicate
+#' they should be ignored by assistive technology.
+#'
+#' @param alt_text Alternative text description
+#' @param element_type Type of element (e.g., "plot", "image", "icon")
+#' @param decorative Logical, TRUE if element is purely decorative
+#'
+#' @return Logical TRUE if valid, FALSE with warning if missing/inadequate
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' check_alt_text("Bar chart showing word frequency", "plot")  # TRUE
+#' check_alt_text("", "plot")  # FALSE (informative content needs alt text)
+#' check_alt_text("", "icon", decorative = TRUE)  # TRUE (decorative is OK)
+#' }
+check_alt_text <- function(alt_text, element_type = "image", decorative = FALSE) {
+  if (decorative) {
+    return(TRUE)
+  }
+
+  if (is.null(alt_text) || !nzchar(alt_text)) {
+    warning("Missing alt text for ", element_type, " (WCAG 1.1.1)")
+    return(FALSE)
+  }
+
+  if (nchar(alt_text) < 10) {
+    warning("Alt text too short for ", element_type, " (consider more descriptive text)")
+    return(FALSE)
+  }
+
+  return(TRUE)
+}
+
+
+################################################################################
+# PLOT HELPER FUNCTIONS
+################################################################################
+
+#' Apply Standard Plotly Layout
+#'
+#' @description
+#' Applies consistent layout styling to plotly plots following TextAnalysisR design standards.
+#' This ensures all plots have uniform fonts, colors, margins, and interactive features.
+#'
+#' @param plot A plotly plot object
+#' @param title Plot title text (optional)
+#' @param xaxis_title X-axis title (optional)
+#' @param yaxis_title Y-axis title (optional)
+#' @param margin List of margins: list(t, b, l, r) in pixels (default: list(t = 60, b = 80, l = 80, r = 40))
+#' @param show_legend Logical, whether to show legend (default: FALSE)
+#'
+#' @return A plotly plot object with standardized layout
+#'
+#' @details
+#' Design standards applied:
+#' - Title: 18px Roboto, #0c1f4a
+#' - Axis titles: 16px Roboto, #0c1f4a
+#' - Axis tick labels: 16px Roboto, #3B3B3B
+#' - Hover tooltips: 16px Roboto
+#' - WCAG AA compliant colors
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(plotly)
+#' p <- plot_ly(x = 1:10, y = rnorm(10), type = "scatter", mode = "markers")
+#' p %>% apply_standard_plotly_layout(
+#'   title = "My Plot",
+#'   xaxis_title = "X Values",
+#'   yaxis_title = "Y Values"
+#' )
+#' }
+apply_standard_plotly_layout <- function(plot,
+                                         title = NULL,
+                                         xaxis_title = NULL,
+                                         yaxis_title = NULL,
+                                         margin = list(t = 60, b = 80, l = 80, r = 40),
+                                         show_legend = FALSE) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  layout_config <- list(
+    font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
+    hoverlabel = list(
+      font = list(size = 16, family = "Roboto, sans-serif"),
+      align = "left"
+    ),
+    margin = margin,
+    showlegend = show_legend,
+    xaxis = list(
+      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+    ),
+    yaxis = list(
+      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+    )
+  )
+
+  if (!is.null(title)) {
+    layout_config$title <- list(
+      text = title,
+      font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+    )
+  }
+
+  if (!is.null(xaxis_title)) {
+    layout_config$xaxis$title <- list(
+      text = xaxis_title,
+      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+    )
+  }
+
+  if (!is.null(yaxis_title)) {
+    layout_config$yaxis$title <- list(
+      text = yaxis_title,
+      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+    )
+  }
+
+  do.call(plotly::layout, c(list(p = plot), layout_config)) %>%
+    plotly::config(displayModeBar = TRUE)
+}
+
+
+#' Get Standard Plotly Hover Label Configuration
+#'
+#' @description
+#' Returns standardized hover label styling for plotly plots.
+#'
+#' @param bgcolor Background color (default: "#ffffff")
+#' @param fontcolor Font color (default: "#0c1f4a")
+#'
+#' @return A list of hover label configuration parameters
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' hover_config <- get_plotly_hover_config()
+#' plot_ly(..., hoverlabel = hover_config)
+#' }
+get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") {
+  list(
+    bgcolor = bgcolor,
+    bordercolor = bgcolor,
+    font = list(
+      family = "Roboto, sans-serif",
+      size = 16,
+      color = fontcolor
+    ),
+    align = "left",
+    namelength = -1
+  )
+}
+
+
+#' Create Standard ggplot2 Theme
+#'
+#' @description
+#' Returns a standardized ggplot2 theme matching TextAnalysisR design standards.
+#'
+#' @param base_size Base font size (default: 14)
+#'
+#' @return A ggplot2 theme object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(ggplot2)
+#' ggplot(mtcars, aes(mpg, wt)) +
+#'   geom_point() +
+#'   create_standard_ggplot_theme()
+#' }
+create_standard_ggplot_theme <- function(base_size = 14) {
+
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("Package 'ggplot2' is required. Please install it.")
+  }
+
+  ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        size = 18,
+        color = "#0c1f4a",
+        hjust = 0.5,
+        family = "Roboto"
+      ),
+      axis.title = ggplot2::element_text(
+        size = 16,
+        color = "#0c1f4a",
+        family = "Roboto"
+      ),
+      axis.text = ggplot2::element_text(
+        size = 16,
+        color = "#3B3B3B",
+        family = "Roboto"
+      ),
+      strip.text = ggplot2::element_text(
+        size = 16,
+        color = "#0c1f4a",
+        family = "Roboto"
+      ),
+      legend.text = ggplot2::element_text(
+        size = 16,
+        color = "#3B3B3B",
+        family = "Roboto"
+      ),
+      legend.title = ggplot2::element_text(
+        size = 16,
+        color = "#0c1f4a",
+        family = "Roboto"
+      )
+    )
+}
+
+
+#' Get Sentiment Color Palette
+#'
+#' @description
+#' Returns standardized color mapping for sentiment analysis.
+#'
+#' @return Named vector of colors
+#'
+#' @family visualization
+#' @export
+get_sentiment_colors <- function() {
+  c(
+    "positive" = "#10B981",
+    "negative" = "#EF4444",
+    "neutral" = "#6B7280"
+  )
+}
+
+
+#' Generate Sentiment Color Gradient
+#'
+#' @description
+#' Generates a color based on sentiment score using a gradient from red (negative)
+#' through gray (neutral) to green (positive).
+#'
+#' @param score Numeric sentiment score (typically -1 to 1)
+#'
+#' @return Hex color string
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' get_sentiment_color(-0.8)  # Red
+#' get_sentiment_color(0)     # Gray
+#' get_sentiment_color(0.8)   # Green
+get_sentiment_color <- function(score) {
+  normalized_score <- (score + 1) / 2
+  normalized_score <- pmax(0, pmin(1, normalized_score))
+
+  if (normalized_score < 0.5) {
+    t <- normalized_score * 2
+    r <- round(185 * (1 - t) + 75 * t)
+    g <- round(67 * (1 - t) + 181 * t)
+    b <- round(68 * (1 - t) + 67 * t)
+  } else {
+    t <- (normalized_score - 0.5) * 2
+    r <- round(75 * (1 - t) + 16 * t)
+    g <- round(181 * (1 - t) + 185 * t)
+    b <- round(67 * (1 - t) + 129 * t)
+  }
+
+  sprintf("#%02X%02X%02X", r, g, b)
+}
+
+
+#' Create Message Data Table
+#'
+#' @description
+#' Creates a formatted DT::datatable displaying an informational message.
+#' Useful for showing status messages in place of empty tables.
+#'
+#' @param message Character string message to display
+#' @param font_size Font size (default: "16px")
+#' @param color Text color (default: "#6c757d")
+#'
+#' @return A DT::datatable object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' create_message_table("No data available. Please run analysis first.")
+#' }
+create_message_table <- function(message,
+                                 font_size = "16px",
+                                 color = "#6c757d") {
+
+  if (!requireNamespace("DT", quietly = TRUE)) {
+    stop("Package 'DT' is required. Please install it.")
+  }
+
+  DT::datatable(
+    data.frame(Message = message),
+    rownames = FALSE,
+    options = list(
+      dom = "t",
+      ordering = FALSE,
+      columnDefs = list(
+        list(className = 'dt-center', targets = "_all")
+      ),
+      initComplete = htmlwidgets::JS(
+        sprintf(
+          "function(settings, json) {
+            $(this.api().table().container()).find('td').css({
+              'font-size': '%s',
+              'color': '%s',
+              'padding': '40px',
+              'text-align': 'center'
+            });
+          }",
+          font_size,
+          color
+        )
+      )
+    ),
+    class = 'cell-border stripe'
+  )
+}
+
+
+#' Create Empty Plot with Message
+#'
+#' @description
+#' Creates an empty plotly plot displaying a centered message.
+#' Useful for showing status messages, error states, or empty data notifications.
+#'
+#' @param message Character string message to display
+#' @param color Text color (default: "#6B7280")
+#' @param font_size Font size in pixels (default: 16)
+#'
+#' @return A plotly object with centered message annotation
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' create_empty_plot_message("No data available")
+#' create_empty_plot_message("Click 'Run Analysis' to begin", color = "#337ab7")
+#' }
+create_empty_plot_message <- function(message,
+                                       color = "#6B7280",
+                                       font_size = 16) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  plotly::plot_ly(type = "scatter", mode = "markers") %>%
+    plotly::layout(
+      xaxis = list(
+        showgrid = FALSE,
+        zeroline = FALSE,
+        showticklabels = FALSE,
+        title = ""
+      ),
+      yaxis = list(
+        showgrid = FALSE,
+        zeroline = FALSE,
+        showticklabels = FALSE,
+        title = ""
+      ),
+      annotations = list(
+        list(
+          text = message,
+          x = 0.5,
+          y = 0.5,
+          xref = "paper",
+          yref = "paper",
+          showarrow = FALSE,
+          font = list(
+            size = font_size,
+            color = color,
+            family = "Roboto, sans-serif"
+          )
+        )
+      )
+    ) %>%
+    plotly::config(displayModeBar = FALSE)
+}
+
+
+#' Get Standard DataTable Options
+#'
+#' @description
+#' Returns standardized DT::datatable options for consistent table formatting
+#' across the TextAnalysisR application.
+#'
+#' @param scroll_y Vertical scroll height (default: "400px")
+#' @param page_length Number of rows per page (default: 25)
+#' @param show_buttons Whether to show export buttons (default: TRUE
+#'
+#' @return A list of DT options
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' DT::datatable(my_data, options = get_dt_options())
+#' DT::datatable(my_data, options = get_dt_options(scroll_y = "300px"))
+#' }
+get_dt_options <- function(scroll_y = "400px",
+                            page_length = 25,
+                            show_buttons = TRUE) {
+  opts <- list(
+    scrollX = TRUE,
+    scrollY = scroll_y,
+    pageLength = page_length
+  )
+
+  if (show_buttons) {
+    opts$dom <- "Bfrtip"
+    opts$buttons <- c("copy", "csv", "excel", "pdf", "print")
+  }
+
+  opts
+}
+
+
+################################################################################
+# SHINY UI HELPER FUNCTIONS
+################################################################################
+
+#' Show Loading/Progress Notification
+#'
+#' @description
+#' Displays a persistent loading notification with a specific ID that can be removed later.
+#'
+#' @param message The loading message to display
+#' @param id Notification ID for later removal (optional)
+#'
+#' @return Displays a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny showNotification
+show_loading_notification <- function(message, id = NULL) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::showNotification(
+    message,
+    type = "message",
+    duration = NULL,
+    id = id
+  )
+
+  invisible(NULL)
+}
+
+#' Show Completion Notification
+#'
+#' @description
+#' Displays a temporary success notification when a task completes.
+#'
+#' @param message The completion message to display
+#' @param duration Duration in seconds (default: 5)
+#'
+#' @return Displays a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny showNotification
+show_completion_notification <- function(message, duration = 5) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::showNotification(
+    message,
+    type = "message",
+    duration = duration
+  )
+
+  invisible(NULL)
+}
+
+#' Show Error Notification
+#'
+#' @description
+#' Displays an error notification to the user.
+#'
+#' @param message The error message to display
+#' @param duration Duration in seconds (default: 7)
+#'
+#' @return Displays a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny showNotification
+show_error_notification <- function(message, duration = 7) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::showNotification(
+    message,
+    type = "error",
+    duration = duration
+  )
+
+  invisible(NULL)
+}
+
+#' Show Warning Notification
+#'
+#' @description
+#' Displays a warning notification to the user.
+#'
+#' @param message The warning message to display
+#' @param duration Duration in seconds (default: 5)
+#'
+#' @return Displays a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny showNotification
+show_warning_notification <- function(message, duration = 5) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::showNotification(
+    message,
+    type = "warning",
+    duration = duration
+  )
+
+  invisible(NULL)
+}
+
+#' Remove Notification by ID
+#'
+#' @description
+#' Removes a notification with a specific ID.
+#'
+#' @param id The notification ID to remove
+#'
+#' @return Removes a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny removeNotification
+remove_notification_by_id <- function(id) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::removeNotification(id)
+
+  invisible(NULL)
+}
+
+#' Show No DFM Notification
+#'
+#' @description
+#' Displays a standardized error notification when DFM is required but not available.
+#' Shorter alternative to the modal dialog for simple error messages.
+#'
+#' @param feature_name Name of the feature requiring DFM (default: "this feature")
+#' @param duration Duration in seconds (default: 7)
+#'
+#' @return Displays a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny showNotification
+show_no_dfm_notification <- function(feature_name = "this feature", duration = 7) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  message <- paste0(
+    "No document-feature matrix available. ",
+    "Please complete preprocessing (at least Step 4: DFM) first."
+  )
+
+  shiny::showNotification(
+    message,
+    type = "error",
+    duration = duration
+  )
+
+  invisible(NULL)
+}
+
+#' Show Feature Matrix Notification
+#'
+#' @description
+#' Displays error notification when feature matrix is required but not available.
+#' Similar to show_no_dfm_notification but uses "feature matrix" terminology.
+#'
+#' @param duration Duration in seconds (default: 7)
+#'
+#' @return Displays a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny showNotification
+show_no_feature_matrix_notification <- function(duration = 7) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::showNotification(
+    "No feature matrix available. Please complete preprocessing (at least Step 4: DFM) first.",
+    type = "error",
+    duration = duration
+  )
+
+  invisible(NULL)
+}
+
+#' Show Unite Texts Required Notification
+#'
+#' @description
+#' Displays error notification when Step 1 (Unite Texts) is required.
+#'
+#' @param duration Duration in seconds (default: 5)
+#'
+#' @return Displays a Shiny notification. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @importFrom shiny showNotification
+show_unite_texts_required_notification <- function(duration = 5) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::showNotification(
+    "Please create united texts first in the preprocessing steps (Step 1: Unite texts).",
+    type = "error",
+    duration = duration
+  )
+
+  invisible(NULL)
+}
+
+#' Show Guide Modal Dialog from HTML File
+#'
+#' @description
+#' Loads and displays a modal dialog with guide content from an HTML file.
+#' This function is designed for Shiny applications to display help documentation
+#' stored in external HTML files, reducing server.R file size and improving
+#' maintainability.
+#'
+#' @param guide_name Name of the guide file (without .html extension).
+#'   Files should be located in inst/TextAnalysisR.app/markdown/guides/
+#' @param title Modal dialog title to display
+#' @param size Size of the modal dialog (default: "l" for large).
+#'   Options: "s" (small), "m" (medium), "l" (large)
+#'
+#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
+#'
+#' @details
+#' Guide HTML files should be placed in:
+#' \code{inst/TextAnalysisR.app/markdown/guides/<guide_name>.html}
+#'
+#' The function will look for the guide file in the installed package location.
+#' If the file is not found, it displays an error message in the modal.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' observeEvent(input$showDimRedInfo, {
+#'   show_guide_modal("dimensionality_reduction_guide", "Dimensionality Reduction Guide")
+#' })
+#'
+#' observeEvent(input$showClusteringInfo, {
+#'   show_guide_modal("clustering_guide", "Document Clustering Guide")
+#' })
+#' }
+#'
+#' @importFrom shiny showModal modalDialog modalButton
+show_guide_modal <- function(guide_name, title, size = "l") {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  if (!requireNamespace("htmltools", quietly = TRUE)) {
+    stop("The 'htmltools' package is required for this function.")
+  }
+
+  guide_path <- system.file(
+    "TextAnalysisR.app", "markdown", "guides",
+    paste0(guide_name, ".html"),
+    package = "TextAnalysisR"
+  )
+
+  if (!file.exists(guide_path) || guide_path == "") {
+    guide_path <- file.path(
+      "inst", "TextAnalysisR.app", "markdown", "guides",
+      paste0(guide_name, ".html")
+    )
+  }
+
+  if (!file.exists(guide_path)) {
+    guide_path <- file.path(
+      "markdown", "guides",
+      paste0(guide_name, ".html")
+    )
+  }
+
+  if (file.exists(guide_path)) {
+    content <- htmltools::HTML(paste(readLines(guide_path, warn = FALSE), collapse = "\n"))
+  } else {
+    content <- htmltools::tags$p(
+      paste0("Guide content not found: ", guide_name, ".html"),
+      style = "color: #DC2626;"
+    )
+  }
+
+  shiny::showModal(
+    shiny::modalDialog(
+      title = title,
+      size = size,
+      content,
+      footer = shiny::modalButton("Close"),
+      easyClose = TRUE
+    )
+  )
+
+  invisible(NULL)
+}
+
+#' Show DFM Requirement Modal
+#'
+#' @description
+#' Displays a standardized modal dialog informing users they need to complete
+#' preprocessing steps before using a feature that requires a document-feature matrix.
+#'
+#' @param feature_name Name of the feature requiring DFM (e.g., "topic modeling", "keyword extraction")
+#' @param additional_message Optional additional message to display (default: NULL)
+#'
+#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' if (is.null(dfm_init())) {
+#'   show_dfm_required_modal("topic modeling")
+#'   return(NULL)
+#' }
+#' }
+#'
+#' @importFrom shiny showModal modalDialog modalButton tags p
+show_dfm_required_modal <- function(feature_name = "this feature", additional_message = NULL) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  message_content <- list(
+    shiny::p("No document-feature matrix (DFM) found."),
+    shiny::p("Please complete the required preprocessing steps:")
+  )
+
+  if (!is.null(additional_message)) {
+    message_content <- c(message_content, list(shiny::p(additional_message)))
+  }
+
+  message_content <- c(
+    message_content,
+    list(
+      shiny::tags$div(
+        style = "margin-left: 20px; margin-top: 10px;",
+        shiny::tags$p(
+          shiny::tags$strong(style = "color: #DC2626;", "Required:"),
+          style = "margin-bottom: 5px;"
+        ),
+        shiny::tags$ul(
+          shiny::tags$li(shiny::tags$strong("Step 1:"), " Unite Texts"),
+          shiny::tags$li(shiny::tags$strong("Step 4:"), " Document-Feature Matrix (DFM)")
+        ),
+        shiny::tags$p(
+          shiny::tags$strong(style = "color: #6B7280;", "Optional:"),
+          " Steps 2, 3, 5, and 6",
+          style = "margin-top: 10px; font-size: 12px;"
+        )
+      )
+    )
+  )
+
+  shiny::showModal(
+    shiny::modalDialog(
+      title = "Preprocessing Required",
+      message_content,
+      easyClose = TRUE,
+      footer = shiny::modalButton("OK")
+    )
+  )
+
+  invisible(NULL)
+}
+
+#' Show Preprocessing Steps Modal
+#'
+#' @description
+#' Displays a modal dialog listing required preprocessing steps for a feature.
+#' Generic version that works for any feature requiring preprocessing.
+#'
+#' @param title Modal title (default: "Preprocessing Required")
+#' @param message Main message to display
+#' @param required_steps Character vector of required preprocessing steps
+#' @param optional_steps Character vector of optional preprocessing steps (default: NULL)
+#' @param additional_note Optional additional note to display (default: NULL)
+#'
+#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' show_preprocessing_steps_modal(
+#'   message = "Please complete preprocessing to generate tokens.",
+#'   required_steps = c("Step 1: Unite Texts", "Step 4: Document-Feature Matrix"),
+#'   optional_steps = c("Steps 2, 3, 5, and 6")
+#' )
+#' }
+#'
+#' @importFrom shiny showModal modalDialog modalButton tags p
+show_preprocessing_steps_modal <- function(title = "Preprocessing Required",
+                                          message,
+                                          required_steps,
+                                          optional_steps = NULL,
+                                          additional_note = NULL) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  content <- list(shiny::p(message))
+
+  steps_div <- shiny::tags$div(
+    style = "margin-left: 20px; margin-top: 10px;",
+    shiny::tags$p(
+      shiny::tags$strong(style = "color: #DC2626;", "Required:"),
+      style = "margin-bottom: 5px;"
+    ),
+    shiny::tags$ul(
+      lapply(required_steps, function(step) shiny::tags$li(step))
+    )
+  )
+
+  if (!is.null(optional_steps)) {
+    steps_div <- shiny::tagAppendChild(
+      steps_div,
+      shiny::tags$p(
+        shiny::tags$strong(style = "color: #6B7280;", "Optional:"),
+        paste(optional_steps, collapse = ", "),
+        style = "margin-top: 10px; font-size: 12px;"
+      )
+    )
+  }
+
+  content <- c(content, list(steps_div))
+
+  if (!is.null(additional_note)) {
+    content <- c(content, list(shiny::p(additional_note, style = "margin-top: 10px; font-size: 12px; color: #6B7280;")))
+  }
+
+  shiny::showModal(
+    shiny::modalDialog(
+      title = title,
+      content,
+      easyClose = TRUE,
+      footer = shiny::modalButton("OK")
+    )
+  )
+
+  invisible(NULL)
+}
+
+#' Generate DFM Setup Instructions Text
+#'
+#' @description
+#' Generates standardized text instructions for creating a DFM.
+#' Used in console output or verbatim text displays.
+#'
+#' @param feature_name Name of the feature requiring DFM (default: "this feature")
+#'
+#' @return Character vector of instruction lines
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' output$instructions <- renderPrint({
+#'   cat(get_dfm_setup_instructions("keyword extraction"), sep = "\n")
+#' })
+#' }
+get_dfm_setup_instructions <- function(feature_name = "this feature") {
+  c(
+    "Warning: DFM Processing Required\n",
+    "Please complete the following steps first:\n",
+    "1. Go to the 'Preprocess' tab",
+    "2. Navigate to Step 4: Document-Feature Matrix",
+    "3. Click the 'Process' button\n",
+    paste0("Once the DFM is created, you can return here to use ", feature_name, ".")
+  )
+}
+
+#' Show DFM Setup Instructions Modal
+#'
+#' @description
+#' Displays a modal dialog with console-style instructions for creating a DFM.
+#' Uses verbatimTextOutput for formatting.
+#'
+#' @param output_id Shiny output ID for the verbatimTextOutput
+#' @param feature_name Name of the feature requiring DFM (default: "this feature")
+#' @param session Shiny session object (default: getDefaultReactiveDomain())
+#'
+#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' output$dfm_instructions <- renderPrint({
+#'   cat(get_dfm_setup_instructions("keywords"), sep = "\n")
+#' })
+#'
+#' show_dfm_instructions_modal("dfm_instructions", "keywords")
+#' }
+#'
+#' @importFrom shiny showModal modalDialog modalButton verbatimTextOutput getDefaultReactiveDomain
+show_dfm_instructions_modal <- function(output_id, feature_name = "this feature", session = NULL) {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  if (is.null(session)) {
+    session <- shiny::getDefaultReactiveDomain()
+  }
+
+  shiny::showModal(
+    shiny::modalDialog(
+      title = "DFM Required",
+      shiny::verbatimTextOutput(output_id),
+      easyClose = TRUE,
+      footer = shiny::modalButton("Close")
+    )
+  )
+
+  invisible(NULL)
+}
+
+#' Show Generic Preprocessing Required Modal
+#'
+#' @description
+#' Displays a simple modal indicating preprocessing is required.
+#' Lightweight alternative when detailed steps aren't needed.
+#'
+#' @param message Custom message (default: "Please complete preprocessing steps first.")
+#' @param title Modal title (default: "Preprocessing Required")
+#'
+#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' if (!preprocessing_complete()) {
+#'   show_preprocessing_required_modal()
+#'   return()
+#' }
+#' }
+#'
+#' @importFrom shiny showModal modalDialog modalButton p
+show_preprocessing_required_modal <- function(message = "Please complete preprocessing steps first.",
+                                             title = "Preprocessing Required") {
+  if (!requireNamespace("shiny", quietly = TRUE)) {
+    stop("The 'shiny' package is required for this function.")
+  }
+
+  shiny::showModal(
+    shiny::modalDialog(
+      title = title,
+      shiny::p(message),
+      easyClose = TRUE,
+      footer = shiny::modalButton("OK")
+    )
+  )
+
+  invisible(NULL)
 }

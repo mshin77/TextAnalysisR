@@ -116,8 +116,8 @@ Python spaCy via reticulate.
 | Case     | Grammatical case   | Nom, Acc, Dat, Gen  |
 
 ``` r
-parsed <- spacy_parse_full(texts, include_morphology = TRUE)
-# Returns columns: morph_Number, morph_Tense, morph_VerbForm, etc.
+parsed <- extract_pos_tags(texts)  # Uses spacyr::spacy_parse
+# Returns columns: doc_id, token, lemma, pos, tag
 ```
 
 **Usage:** Analyze verb tenses for temporal patterns, number agreement,

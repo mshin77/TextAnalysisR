@@ -23,6 +23,7 @@ reference:
 - title: "Lexical Analysis"
   desc: "Word frequency, keywords, and readability"
   contents:
+  - lexical_analysis
   - calculate_word_frequency
   - starts_with("extract_keywords")
   - lexical_frequency_analysis
@@ -124,19 +125,12 @@ reference:
   - ai_content_generation
   - generate_survey_items
 
-- title: "Python & spaCy"
-  desc: "Python environment and spaCy NLP"
+- title: "Python Environment"
+  desc: "Python environment setup"
   contents:
   - setup_python_env
   - check_python_env
   - check_multimodal_prerequisites
-  - spacy_nlp
-  - init_spacy_nlp
-  - spacy_parse_full
-  - spacy_extract_entities
-  - spacy_extract_noun_chunks
-  - spacy_similarity
-  - spacy_model_info
 
 - title: "Validation"
   desc: "Quality metrics and cross-validation"

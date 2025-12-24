@@ -598,195 +598,936 @@ prep_texts <- function(united_tbl,
 }
 
 
-#' @title Detect Multi-Word Expressions
+################################################################################
+# PDF PROCESSING (R-based with pdftools)
+################################################################################
+
+#' Extract Text from PDF
 #'
 #' @description
-#' This function detects multi-word expressions (collocations) of specified
-#' sizes that appear at least a specified number of times in the provided tokens.
+#' Extracts text content from a PDF file using pdftools package.
 #'
-#' @param tokens A \code{tokens} object from the \code{quanteda} package.
-#' @param size A numeric vector specifying the sizes of the collocations to detect (default: 2:5).
-#' @param min_count The minimum number of occurrences for a collocation to be
-#'   considered (default: 2).
+#' @param file_path Character string path to PDF file
 #'
-#' @return A character vector of detected collocations.
-#'
-#' @family preprocessing
-#' @export
-#'
-#' @examples
-#' if (interactive()) {
-#'   mydata <- TextAnalysisR::SpecialEduTech
-#'
-#'   united_tbl <- TextAnalysisR::unite_cols(
-#'     mydata,
-#'     listed_vars = c("title", "keyword", "abstract")
-#'   )
-#'
-#'   tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
-#'
-#'   collocations <- TextAnalysisR::detect_multi_words(tokens, size = 2:5, min_count = 2)
-#'   print(collocations)
-#' }
-detect_multi_words <- function(tokens, size = 2:5, min_count = 2) {
-  tstat <- quanteda.textstats::textstat_collocations(tokens, size = size, min_count = min_count)
-  tstat_collocation <- tstat$collocation
-  return(tstat_collocation)
-}
-
-
-#' Extract Part-of-Speech Tags from Tokens
-#'
-#' @description
-#' Uses spaCy to extract part-of-speech (POS) tags from tokenized text.
-#' Returns a data frame with token-level POS annotations.
-#'
-#' @param tokens A quanteda tokens object or character vector of texts.
-#' @param include_lemma Logical; include lemmatized forms (default: TRUE).
-#' @param include_entity Logical; include named entity recognition (default: FALSE).
-#' @param include_dependency Logical; include dependency parsing (default: FALSE).
-#' @param model Character; spaCy model to use (default: "en_core_web_sm").
-#'
-#' @return A data frame with columns:
-#' \itemize{
-#'   \item \code{doc_id}: Document identifier
-#'   \item \code{sentence_id}: Sentence number within document
-#'   \item \code{token_id}: Token position within sentence
-#'   \item \code{token}: Original token
-#'   \item \code{pos}: Universal POS tag (e.g., NOUN, VERB, ADJ)
-#'   \item \code{tag}: Detailed POS tag (e.g., NN, VBD, JJ)
-#'   \item \code{lemma}: Lemmatized form (if include_lemma = TRUE)
-#'   \item \code{entity}: Named entity type (if include_entity = TRUE)
-#'   \item \code{head_token_id}: Head token in dependency tree (if include_dependency = TRUE)
-#'   \item \code{dep_rel}: Dependency relation type, e.g., nsubj, dobj (if include_dependency = TRUE)
-#' }
+#' @return Data frame with columns: page (integer), text (character)
+#'   Returns NULL if extraction fails or PDF is empty
 #'
 #' @details
-#' This function requires the spacyr package and a working Python environment
-#' with spaCy installed. If spaCy is not initialized, this function will
-#' attempt to initialize it with the specified model.
+#' Uses `pdftools::pdf_text()` to extract text from each page.
+#' Preserves page structure and cleans whitespace.
+#' Works best with text-based PDFs (not scanned images).
 #'
-#' @family preprocessing
+#' @family pdf
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' tokens <- quanteda::tokens("The quick brown fox jumps over the lazy dog.")
-#' pos_data <- extract_pos_tags(tokens)
-#' print(pos_data)
+#' pdf_path <- "path/to/document.pdf"
+#' text_data <- extract_text_from_pdf(pdf_path)
+#' head(text_data)
 #' }
-extract_pos_tags <- function(tokens,
-                             include_lemma = TRUE,
-                             include_entity = FALSE,
-                             include_dependency = FALSE,
-                             model = "en_core_web_sm") {
-
-  if (!requireNamespace("spacyr", quietly = TRUE)) {
-    stop("Package 'spacyr' is required for POS tagging. Please install it with: install.packages('spacyr')")
+extract_text_from_pdf <- function(file_path) {
+  if (!requireNamespace("pdftools", quietly = TRUE)) {
+    stop("Package 'pdftools' is required. Install it with: install.packages('pdftools')")
   }
 
-  # Convert tokens to text if needed
-  if (inherits(tokens, "tokens")) {
-    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
-  } else if (is.character(tokens)) {
-    texts <- tokens
-  } else {
-    stop("tokens must be a quanteda tokens object or character vector")
-  }
-
-  # Try to initialize spaCy if not already done
   tryCatch({
-    # Check if spaCy is initialized by trying a simple operation
-    spacyr::spacy_parse("test", pos = FALSE, tag = FALSE, lemma = FALSE, entity = FALSE)
+    text_pages <- pdftools::pdf_text(file_path)
+
+    if (length(text_pages) == 0) {
+      message("PDF file is empty or contains no extractable text")
+      return(NULL)
+    }
+
+    text_pages <- trimws(text_pages)
+    text_pages <- gsub("\\s+", " ", text_pages)
+
+    non_empty_pages <- which(nchar(text_pages) > 0)
+
+    if (length(non_empty_pages) == 0) {
+      message("PDF contains no readable text")
+      return(NULL)
+    }
+
+    df <- data.frame(
+      page = seq_along(text_pages),
+      text = text_pages,
+      stringsAsFactors = FALSE
+    )
+
+    df <- df[nchar(df$text) > 0, ]
+
+    attr(df, "pdf_type") <- "text"
+    attr(df, "total_pages") <- length(text_pages)
+    attr(df, "file_name") <- basename(file_path)
+
+    return(df)
   }, error = function(e) {
-    message("Initializing spaCy with model: ", model)
-    spacyr::spacy_initialize(model = model)
+    warning(paste("Error extracting text from PDF:", e$message))
+    return(NULL)
   })
-
-  # Parse with POS and tag enabled
-  parsed <- spacyr::spacy_parse(
-    texts,
-    pos = TRUE,
-    tag = TRUE,
-    lemma = include_lemma,
-    entity = include_entity,
-    dependency = include_dependency
-  )
-
-  return(parsed)
 }
 
 
-#' Extract Named Entities from Tokens
+#' Detect PDF Content Type
 #'
 #' @description
-#' Uses spaCy to extract named entities (NER) from tokenized text.
-#' Returns a data frame with token-level entity annotations.
+#' Analyzes PDF to determine if it contains readable text.
 #'
-#' @param tokens A quanteda tokens object or character vector of texts.
-#' @param include_pos Logical; include POS tags (default: TRUE).
-#' @param include_lemma Logical; include lemmatized forms (default: TRUE).
-#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#' @param file_path Character string path to PDF file
 #'
-#' @return A data frame with columns:
-#' \itemize{
-#'   \item \code{doc_id}: Document identifier
-#'   \item \code{token}: Original token
-#'   \item \code{entity}: Named entity type (e.g., PERSON, ORG, GPE)
-#'   \item \code{pos}: Universal POS tag (if include_pos = TRUE)
-#'   \item \code{lemma}: Lemmatized form (if include_lemma = TRUE)
-#' }
+#' @return Character string: "text" or "unknown"
 #'
 #' @details
-#' This function requires the spacyr package and a working Python environment
-#' with spaCy installed. If spaCy is not initialized, this function will
-#' attempt to initialize it with the specified model.
+#' Attempts text extraction using pdftools. Returns "text" if successful,
+#' or "unknown" if extraction fails or PDF is empty.
 #'
-#' @family preprocessing
+#' For table extraction from PDFs, use \code{\link{extract_tables_from_pdf_py}}.
+#'
+#' @family pdf
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' tokens <- quanteda::tokens("Apple Inc. was founded by Steve Jobs in California.")
-#' entity_data <- extract_named_entities(tokens)
-#' print(entity_data)
+#' pdf_path <- "path/to/document.pdf"
+#' content_type <- detect_pdf_content_type(pdf_path)
+#' print(content_type)
 #' }
-extract_named_entities <- function(tokens,
-                                   include_pos = TRUE,
-                                   include_lemma = TRUE,
-                                   model = "en_core_web_sm") {
+detect_pdf_content_type <- function(file_path) {
+  if (requireNamespace("pdftools", quietly = TRUE)) {
+    text <- tryCatch({
+      pdftools::pdf_text(file_path)
+    }, error = function(e) NULL)
 
-  if (!requireNamespace("spacyr", quietly = TRUE)) {
-    stop("Package 'spacyr' is required for NER. Please install it with: install.packages('spacyr')")
+    if (!is.null(text) && length(text) > 0) {
+      combined_text <- paste(text, collapse = " ")
+      if (nchar(trimws(combined_text)) > 50) {
+        return("text")
+      }
+    }
   }
 
-  # Convert tokens to text if needed
-  if (inherits(tokens, "tokens")) {
-    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
-  } else if (is.character(tokens)) {
-    texts <- tokens
-  } else {
-    stop("tokens must be a quanteda tokens object or character vector")
+  return("unknown")
+}
+
+
+#' Process PDF File
+#'
+#' @description
+#' Main function to process PDF files - extracts text content using pdftools.
+#' For table extraction, use \code{\link{process_pdf_file_py}}.
+#'
+#' @param file_path Character string path to PDF file
+#' @param content_type Character string: "auto" or "text" (default: "auto")
+#'
+#' @return List with:
+#'   - data: Data frame with extracted content
+#'   - type: Character string indicating content type ("text" or "error")
+#'   - success: Logical indicating success
+#'   - message: Character string with status message
+#'
+#' @details
+#' This function extracts text content from PDFs using pdftools package.
+#' Works best with text-based PDFs (not scanned images).
+#'
+#' For PDFs containing tables or complex layouts, use the Python-based
+#' \code{\link{process_pdf_file_py}} which provides better table extraction.
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' pdf_path <- "path/to/document.pdf"
+#' result <- process_pdf_file(pdf_path)
+#'
+#' if (result$success) {
+#'   print(head(result$data))
+#' } else {
+#'   print(result$message)
+#' }
+#' }
+process_pdf_file <- function(file_path, content_type = "auto") {
+  if (!file.exists(file_path)) {
+    return(list(
+      data = NULL,
+      type = "error",
+      success = FALSE,
+      message = "File not found"
+    ))
   }
 
-  # Try to initialize spaCy if not already done
+  data <- extract_text_from_pdf(file_path)
+
+  if (!is.null(data)) {
+    return(list(
+      data = data,
+      type = "text",
+      success = TRUE,
+      message = paste("Successfully extracted text from", nrow(data), "pages")
+    ))
+  }
+
+  return(list(
+    data = NULL,
+    type = "error",
+    success = FALSE,
+    message = "Could not extract content from PDF. File may be password-protected, corrupted, or scanned without OCR."
+  ))
+}
+
+
+
+################################################################################
+# PDF PROCESSING (Python-based with pdfplumber)
+################################################################################
+
+#' Extract Text from PDF using Python
+#'
+#' @description
+#' Extracts text content from a PDF file using pdfplumber (Python).
+#' No Java required - uses Python environment.
+#'
+#' @param file_path Character string path to PDF file
+#' @param envname Character string, name of Python virtual environment
+#'   (default: "langgraph-env")
+#'
+#' @return Data frame with columns: page (integer), text (character)
+#'   Returns NULL if extraction fails or PDF is empty
+#'
+#' @details
+#' Uses pdfplumber Python library through reticulate.
+#' Requires Python environment setup. See \code{setup_langgraph_env()}.
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' setup_langgraph_env()
+#'
+#' pdf_path <- "path/to/document.pdf"
+#' text_data <- extract_text_from_pdf_py(pdf_path)
+#' head(text_data)
+#' }
+extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+
+  status <- check_python_env(envname)
+  if (!status$available) {
+    stop("Python environment '", envname, "' not found. Run setup_langgraph_env() first.")
+  }
+
   tryCatch({
-    spacyr::spacy_parse("test", pos = FALSE, tag = FALSE, lemma = FALSE, entity = FALSE)
+    reticulate::use_virtualenv(envname, required = TRUE)
+
+    pdf_module <- reticulate::import_from_path(
+      "pdf_extraction",
+      path = system.file("python", package = "TextAnalysisR")
+    )
+
+    result <- pdf_module$extract_text_from_pdf(file_path)
+
+    if (!result$success) {
+      message(result$message)
+      return(NULL)
+    }
+
+    df <- do.call(rbind, lapply(result$data, as.data.frame))
+    df$page <- as.integer(df$page)
+    df$text <- as.character(df$text)
+
+    attr(df, "pdf_type") <- "text"
+    attr(df, "total_pages") <- result$total_pages
+    attr(df, "file_name") <- basename(file_path)
+
+    return(df)
+
   }, error = function(e) {
-    message("Initializing spaCy with model: ", model)
-    spacyr::spacy_initialize(model = model)
+    warning(paste("Error extracting text from PDF:", e$message))
+    return(NULL)
+  })
+}
+
+
+#' Extract Tables from PDF using Python
+#'
+#' @description
+#' Extracts tabular data from PDF using pdfplumber (Python).
+#' No Java required - pure Python solution.
+#'
+#' @param file_path Character string path to PDF file
+#' @param pages Integer vector of page numbers to process (NULL = all pages)
+#' @param envname Character string, name of Python virtual environment
+#'   (default: "langgraph-env")
+#'
+#' @return Data frame with extracted table data
+#'   Returns NULL if no tables found or extraction fails
+#'
+#' @details
+#' Uses pdfplumber Python library through reticulate.
+#' Works with complex table layouts without Java dependency.
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' setup_langgraph_env()
+#'
+#' pdf_path <- "path/to/table_document.pdf"
+#' table_data <- extract_tables_from_pdf_py(pdf_path)
+#' head(table_data)
+#' }
+extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "textanalysisr-env") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+
+  status <- check_python_env(envname)
+  if (!status$available) {
+    stop("Python environment '", envname, "' not found. Run setup_langgraph_env() first.")
+  }
+
+  tryCatch({
+    reticulate::use_virtualenv(envname, required = TRUE)
+
+    pdf_module <- reticulate::import_from_path(
+      "pdf_extraction",
+      path = system.file("python", package = "TextAnalysisR")
+    )
+
+    pages_list <- if (!is.null(pages)) as.list(as.integer(pages)) else NULL
+
+    result <- pdf_module$extract_tables_from_pdf(file_path, pages = pages_list)
+
+    if (!result$success) {
+      message(result$message)
+      return(NULL)
+    }
+
+    df <- as.data.frame(result$data, stringsAsFactors = FALSE)
+
+    if (nrow(df) == 0) {
+      message("Table extraction resulted in empty data frame")
+      return(NULL)
+    }
+
+    attr(df, "pdf_type") <- "tabular"
+    attr(df, "file_name") <- basename(file_path)
+    attr(df, "num_tables") <- result$num_tables
+
+    return(df)
+
+  }, error = function(e) {
+    warning(paste("Error extracting tables from PDF:", e$message))
+    return(NULL)
+  })
+}
+
+
+#' Detect PDF Content Type using Python
+#'
+#' @description
+#' Analyzes PDF to determine if it contains primarily tabular data or text.
+#'
+#' @param file_path Character string path to PDF file
+#' @param envname Character string, name of Python virtual environment
+#'   (default: "langgraph-env")
+#'
+#' @return Character string: "tabular", "text", or "unknown"
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' setup_langgraph_env()
+#'
+#' pdf_path <- "path/to/document.pdf"
+#' content_type <- detect_pdf_content_type_py(pdf_path)
+#' print(content_type)
+#' }
+detect_pdf_content_type_py <- function(file_path, envname = "textanalysisr-env") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+
+  status <- check_python_env(envname)
+  if (!status$available) {
+    return("unknown")
+  }
+
+  tryCatch({
+    reticulate::use_virtualenv(envname, required = TRUE)
+
+    pdf_module <- reticulate::import_from_path(
+      "pdf_extraction",
+      path = system.file("python", package = "TextAnalysisR")
+    )
+
+    result <- pdf_module$detect_pdf_content_type(file_path)
+
+    return(result$content_type)
+
+  }, error = function(e) {
+    return("unknown")
+  })
+}
+
+
+#' Process PDF File using Python
+#'
+#' @description
+#' Main function to process PDF files using pdfplumber (Python).
+#' Automatically detects content type and extracts data accordingly.
+#' No Java required.
+#'
+#' @param file_path Character string path to PDF file
+#' @param content_type Character string: "auto", "text", or "tabular"
+#'   If "auto", will detect content type automatically
+#' @param envname Character string, name of Python virtual environment
+#'   (default: "langgraph-env")
+#'
+#' @return List with:
+#'   - data: Data frame with extracted content
+#'   - type: Character string indicating content type
+#'   - success: Logical indicating success
+#'   - message: Character string with status message
+#'
+#' @details
+#' This function uses Python's pdfplumber library which:
+#' - Handles both text and tables
+#' - No Java dependency
+#' - Better accuracy than tabulizer for complex tables
+#' - Uses same Python environment as LangGraph
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' setup_langgraph_env()
+#'
+#' pdf_path <- "path/to/document.pdf"
+#' result <- process_pdf_file_py(pdf_path)
+#'
+#' if (result$success) {
+#'   print(head(result$data))
+#' } else {
+#'   print(result$message)
+#' }
+#' }
+process_pdf_file_py <- function(file_path, content_type = "auto", envname = "textanalysisr-env") {
+  if (!file.exists(file_path)) {
+    return(list(
+      data = NULL,
+      type = "error",
+      success = FALSE,
+      message = "File not found"
+    ))
+  }
+
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    return(list(
+      data = NULL,
+      type = "error",
+      success = FALSE,
+      message = "Package 'reticulate' is required"
+    ))
+  }
+
+  status <- check_python_env(envname)
+  if (!status$available) {
+    return(list(
+      data = NULL,
+      type = "error",
+      success = FALSE,
+      message = paste("Python environment", envname, "not found. Run setup_langgraph_env() first.")
+    ))
+  }
+
+  tryCatch({
+    reticulate::use_virtualenv(envname, required = TRUE)
+
+    pdf_module <- reticulate::import_from_path(
+      "pdf_extraction",
+      path = system.file("python", package = "TextAnalysisR")
+    )
+
+    result <- pdf_module$process_pdf_file(file_path, content_type = content_type)
+
+    if (!result$success) {
+      return(list(
+        data = NULL,
+        type = result$type,
+        success = FALSE,
+        message = result$message
+      ))
+    }
+
+    if (result$type == "tabular") {
+      df <- as.data.frame(result$data, stringsAsFactors = FALSE)
+    } else {
+      df <- do.call(rbind, lapply(result$data, as.data.frame))
+      df$page <- as.integer(df$page)
+      df$text <- as.character(df$text)
+
+      if (!"category" %in% names(df)) {
+        df$category <- "Uploaded"
+      }
+    }
+
+    return(list(
+      data = df,
+      type = result$type,
+      success = TRUE,
+      message = result$message
+    ))
+
+  }, error = function(e) {
+    return(list(
+      data = NULL,
+      type = "error",
+      success = FALSE,
+      message = paste("Error processing PDF:", e$message)
+    ))
+  })
+}
+
+
+
+################################################################################
+# MULTIMODAL PDF PROCESSING (Vision LLM Integration)
+################################################################################
+
+#' Check Multimodal Prerequisites
+#'
+#' @description
+#' Checks all prerequisites for multimodal PDF extraction and returns
+#' detailed status with setup instructions.
+#'
+#' @param vision_provider Character: "ollama" or "openai"
+#' @param vision_model Character: Model name (optional)
+#' @param api_key Character: API key for OpenAI (if using openai provider)
+#' @param envname Character: Python environment name
+#'
+#' @return List with:
+#'   - ready: Logical - TRUE if all prerequisites met
+#'   - missing: Character vector of missing components
+#'   - instructions: Character - Detailed setup instructions
+#'   - details: List with component-specific status
+#'
+#' @keywords internal
+check_multimodal_prerequisites <- function(
+  vision_provider = "ollama",
+  vision_model = NULL,
+  api_key = NULL,
+  envname = "langgraph-env"
+) {
+  missing <- character(0)
+  details <- list()
+  instructions <- character(0)
+
+  py_available <- FALSE
+  py_packages_ok <- FALSE
+
+  tryCatch({
+    if (requireNamespace("reticulate", quietly = TRUE)) {
+      reticulate::use_condaenv(envname, required = FALSE)
+      py_available <- reticulate::py_available(initialize = FALSE)
+
+      if (py_available) {
+        required_packages <- c("pdf2image", "PIL", "requests")
+        py_packages_ok <- all(sapply(required_packages, function(pkg) {
+          tryCatch({
+            reticulate::py_module_available(pkg)
+          }, error = function(e) FALSE)
+        }))
+      }
+    }
+  }, error = function(e) {
+    py_available <- FALSE
   })
 
-  # Parse with entity enabled
+  if (!py_available) {
+    missing <- c(missing, "Python environment")
+    instructions <- c(instructions, paste0(
+      "Python environment '", envname, "' not found.\n",
+      "Setup: library(TextAnalysisR); setup_python_env()"
+    ))
+  } else if (!py_packages_ok) {
+    missing <- c(missing, "Python packages")
+    instructions <- c(instructions, paste0(
+      "Required Python packages missing.\n",
+      "Setup: library(TextAnalysisR); setup_python_env()"
+    ))
+  }
 
-  parsed <- spacyr::spacy_parse(
-    texts,
-    pos = include_pos,
-    tag = include_pos,
-    lemma = include_lemma,
-    entity = TRUE,
-    dependency = FALSE
+  details$python <- list(
+    available = py_available,
+    packages_ok = py_packages_ok
   )
 
-  return(parsed)
+  if (vision_provider == "ollama") {
+    ollama_ok <- check_ollama(verbose = FALSE)
+
+    if (!ollama_ok) {
+      missing <- c(missing, "Ollama")
+      instructions <- c(instructions, paste0(
+        "Ollama not running.\n",
+        "1. Start Ollama application\n",
+        "2. Pull vision model: ollama pull llava"
+      ))
+    } else {
+      if (!is.null(vision_model)) {
+        models_available <- tryCatch({
+          list_ollama_models()
+        }, error = function(e) character(0))
+
+        if (!vision_model %in% models_available) {
+          missing <- c(missing, paste("Vision model:", vision_model))
+          instructions <- c(instructions, paste0(
+            "Vision model '", vision_model, "' not found.\n",
+            "Pull model: ollama pull ", vision_model
+          ))
+        }
+      }
+    }
+
+    details$ollama <- list(available = ollama_ok)
+
+  } else if (vision_provider == "openai") {
+    if (is.null(api_key) || nchar(api_key) == 0) {
+      missing <- c(missing, "OpenAI API key")
+      instructions <- c(instructions, paste0(
+        "OpenAI API key required.\n",
+        "Provide your API key in the 'OpenAI API Key' field"
+      ))
+    }
+
+    details$openai <- list(api_key_provided = !is.null(api_key))
+  }
+
+  ready <- length(missing) == 0
+
+  if (!ready) {
+    full_instructions <- paste0(
+      "Multimodal extraction requires:\n\n",
+      paste(paste0(seq_along(instructions), ". ", instructions), collapse = "\n\n"),
+      "\n\nNote: Pull the vision model using terminal/command prompt (not R code): ollama pull llava"
+    )
+  } else {
+    full_instructions <- "All prerequisites met"
+  }
+
+  return(list(
+    ready = ready,
+    missing = missing,
+    instructions = full_instructions,
+    details = details
+  ))
+}
+#' Extract PDF with Multimodal Analysis
+#'
+#' @description
+#' Extract both text and visual content from PDFs, converting everything
+#' to text for downstream analysis in your existing workflow.
+#'
+#' @param file_path Character string path to PDF file
+#' @param vision_provider Character: "ollama" (local, default) or "openai" (cloud)
+#' @param vision_model Character: Model name
+#'   - For Ollama: "llava", "llava:13b", "bakllava"
+#'   - For OpenAI: "gpt-4-vision-preview", "gpt-4o"
+#' @param api_key Character: OpenAI API key (required if vision_provider="openai")
+#' @param describe_images Logical: Convert images to text descriptions (default: TRUE)
+#' @param envname Character: Python environment name (default: "langgraph-env")
+#'
+#' @return List with:
+#'   - success: Logical
+#'   - combined_text: Character string with all content for text analysis
+#'   - text_content: List of text chunks
+#'   - image_descriptions: List of image descriptions
+#'   - num_images: Integer count of processed images
+#'   - vision_provider: Character indicating provider used
+#'   - message: Character status message
+#'
+#' @details
+#' **Workflow Integration:**
+#' 1. Extracts text using Marker (preserves equations, tables, structure)
+#' 2. Detects images/charts/diagrams in PDF
+#' 3. Uses vision LLM to describe visual content as text
+#' 4. Merges text + descriptions → single text corpus
+#' 5. Feed to existing text analysis pipeline
+#'
+#' **Vision Provider Options:**
+#'
+#' **Ollama (Default - Local & Free):**
+#' - Privacy: Everything runs locally
+#' - Cost: Free
+#' - Setup: Requires Ollama installed + vision model pulled
+#' - Models: llava, bakllava, llava-phi3
+#'
+#' **OpenAI (Optional - Cloud):**
+#' - Privacy: Data sent to OpenAI
+#' - Cost: Paid (user's API key)
+#' - Setup: Just provide API key
+#' - Models: gpt-4-vision-preview, gpt-4o
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Local analysis with Ollama (free, private)
+#' result <- extract_pdf_multimodal("research_paper.pdf")
+#'
+#' # Access combined text for analysis
+#' text_for_analysis <- result$combined_text
+#'
+#' # Use in existing workflow
+#' corpus <- prep_texts(text_for_analysis)
+#' topics <- fit_semantic_model(corpus, k = 5)
+#'
+#' # Optional: Use OpenAI for better accuracy
+#' result <- extract_pdf_multimodal(
+#'   "paper.pdf",
+#'   vision_provider = "openai",
+#'   vision_model = "gpt-4o",
+#'   api_key = Sys.getenv("OPENAI_API_KEY")
+#' )
+#' }
+extract_pdf_multimodal <- function(
+  file_path,
+  vision_provider = "ollama",
+  vision_model = NULL,
+  api_key = NULL,
+  describe_images = TRUE,
+  envname = "langgraph-env"
+) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+
+  if (!file.exists(file_path)) {
+    return(list(
+      success = FALSE,
+      message = "File not found"
+    ))
+  }
+
+  # Set default models
+  if (is.null(vision_model)) {
+    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4-vision-preview"
+  }
+
+  # Check prerequisites
+  if (vision_provider == "ollama") {
+    if (!check_ollama(verbose = FALSE)) {
+      return(list(
+        success = FALSE,
+        message = paste(
+          "Ollama not available. Please:",
+          "1. Install Ollama from https://ollama.ai",
+          "2. Pull a vision model: ollama pull llava",
+          sep = "\n"
+        )
+      ))
+    }
+  } else if (vision_provider == "openai") {
+    if (is.null(api_key)) {
+      return(list(
+        success = FALSE,
+        message = "OpenAI API key required for vision_provider='openai'"
+      ))
+    }
+  }
+
+  tryCatch({
+    reticulate::use_condaenv(envname, required = FALSE)
+
+    pdf_module <- reticulate::import_from_path(
+      "multimodal_extraction",
+      path = system.file("python", package = "TextAnalysisR")
+    )
+
+    result <- pdf_module$extract_pdf_with_images(
+      file_path = file_path,
+      vision_provider = vision_provider,
+      vision_model = vision_model,
+      api_key = api_key,
+      describe_images = describe_images
+    )
+
+    return(result)
+
+  }, error = function(e) {
+    return(list(
+      success = FALSE,
+      message = paste("Error:", e$message)
+    ))
+  })
+}
+
+
+#' Smart PDF Extraction with Auto-Detection
+#'
+#' @description
+#' Automatically detects document type and chooses best extraction method:
+#' - Academic papers → Nougat (equations)
+#' - Documents with visuals → Multimodal extraction
+#' - General documents → Marker
+#'
+#' @param file_path Character string path to PDF file
+#' @param doc_type Character: "auto" (default), "academic", or "general"
+#' @param vision_provider Character: "ollama" (default) or "openai"
+#' @param vision_model Character: Model name for vision analysis
+#' @param api_key Character: API key for cloud providers
+#' @param envname Character: Python environment name
+#'
+#' @return List with extracted content ready for text analysis
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Auto-detect and extract
+#' result <- extract_pdf_smart("document.pdf")
+#'
+#' # Feed to text analysis
+#' corpus <- prep_texts(result$combined_text)
+#' topics <- fit_semantic_model(corpus, k = 10)
+#'
+#' # Force academic extraction (with equations)
+#' result <- extract_pdf_smart("paper.pdf", doc_type = "academic")
+#' }
+extract_pdf_smart <- function(
+  file_path,
+  doc_type = "auto",
+  vision_provider = "ollama",
+  vision_model = NULL,
+  api_key = NULL,
+  envname = "langgraph-env"
+) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+
+  if (!file.exists(file_path)) {
+    return(list(
+      success = FALSE,
+      message = "File not found"
+    ))
+  }
+
+  if (is.null(vision_model)) {
+    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4-vision-preview"
+  }
+
+  tryCatch({
+    reticulate::use_condaenv(envname, required = FALSE)
+
+    pdf_module <- reticulate::import_from_path(
+      "multimodal_extraction",
+      path = system.file("python", package = "TextAnalysisR")
+    )
+
+    result <- pdf_module$extract_pdf_smart(
+      file_path = file_path,
+      doc_type = doc_type,
+      vision_provider = vision_provider,
+      vision_model = vision_model,
+      api_key = api_key
+    )
+
+    return(result)
+
+  }, error = function(e) {
+    return(list(
+      success = FALSE,
+      message = paste("Error:", e$message)
+    ))
+  })
+}
+
+
+#' Check Vision Model Availability
+#'
+#' @description
+#' Check if required vision models are available for multimodal processing.
+#'
+#' @param provider Character: "ollama" or "openai"
+#' @param api_key Character: API key (for OpenAI)
+#'
+#' @return List with availability status and recommendations
+#'
+#' @family pdf
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Check Ollama vision models
+#' status <- check_vision_models("ollama")
+#' print(status$message)
+#'
+#' # Check OpenAI access
+#' status <- check_vision_models("openai", api_key = Sys.getenv("OPENAI_API_KEY"))
+#' }
+check_vision_models <- function(provider = "ollama", api_key = NULL) {
+  if (provider == "ollama") {
+    if (!check_ollama(verbose = FALSE)) {
+      return(list(
+        available = FALSE,
+        models = character(0),
+        message = "Ollama not running. Install from https://ollama.ai"
+      ))
+    }
+
+    models <- list_ollama_models(verbose = FALSE)
+    vision_models <- grep("llava|bakllava|llava-phi3", models, value = TRUE)
+
+    if (length(vision_models) == 0) {
+      return(list(
+        available = FALSE,
+        models = character(0),
+        message = paste(
+          "No vision models found. Pull one with:",
+          "  ollama pull llava",
+          "  ollama pull bakllava",
+          "  ollama pull llava-phi3",
+          sep = "\n"
+        )
+      ))
+    }
+
+    return(list(
+      available = TRUE,
+      models = vision_models,
+      message = paste("Found", length(vision_models), "vision model(s)")
+    ))
+
+  } else if (provider == "openai") {
+    if (is.null(api_key)) {
+      return(list(
+        available = FALSE,
+        message = "OpenAI API key required"
+      ))
+    }
+
+    # Simple API key validation
+    valid <- nchar(api_key) > 20 && grepl("^sk-", api_key)
+
+    return(list(
+      available = valid,
+      message = if (valid) "API key format valid" else "Invalid API key format"
+    ))
+  }
+
+  return(list(
+    available = FALSE,
+    message = paste("Unknown provider:", provider)
+  ))
 }

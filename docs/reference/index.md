@@ -32,6 +32,8 @@ Text preparation and feature extraction
 
 Word frequency, keywords, and readability
 
+- [`lexical_analysis`](https://mshin77.github.io/TextAnalysisR/reference/lexical_analysis.md)
+  : Lexical Analysis Functions
 - [`calculate_word_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_word_frequency.md)
   : Analyze and Visualize Word Frequencies Across a Continuous Variable
 - [`extract_keywords_keyness()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_keyness.md)
@@ -242,9 +244,9 @@ LLM-powered analysis with Ollama and OpenAI
 - [`generate_survey_items()`](https://mshin77.github.io/TextAnalysisR/reference/generate_survey_items.md)
   : Generate Survey Items from Topic Terms
 
-## Python & spaCy
+## Python Environment
 
-Python environment and spaCy NLP
+Python environment setup
 
 - [`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md)
   : Setup Python Environment
@@ -252,20 +254,6 @@ Python environment and spaCy NLP
   : Check Python Environment Status
 - [`check_multimodal_prerequisites()`](https://mshin77.github.io/TextAnalysisR/reference/check_multimodal_prerequisites.md)
   : Check Multimodal Prerequisites
-- [`spacy_nlp`](https://mshin77.github.io/TextAnalysisR/reference/spacy_nlp.md)
-  : spaCy NLP Functions via Python
-- [`init_spacy_nlp()`](https://mshin77.github.io/TextAnalysisR/reference/init_spacy_nlp.md)
-  : Initialize spaCy NLP Module
-- [`spacy_parse_full()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_parse_full.md)
-  : Parse Texts with Full spaCy Features
-- [`spacy_extract_entities()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_entities.md)
-  : Extract Named Entities
-- [`spacy_extract_noun_chunks()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_noun_chunks.md)
-  : Extract Noun Chunks
-- [`spacy_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_similarity.md)
-  : Calculate Text Similarity
-- [`spacy_model_info()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_model_info.md)
-  : Get spaCy Model Information
 
 ## Validation
 

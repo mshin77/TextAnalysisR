@@ -202,8 +202,8 @@ Python spaCy via reticulate.</p>
 </tbody>
 </table>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spacy_parse_full.html">spacy_parse_full</a></span><span class="op">(</span><span class="va">texts</span>, include_morphology <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co"># Returns columns: morph_Number, morph_Tense, morph_VerbForm, etc.</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pos_tags.html">extract_pos_tags</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span>  <span class="co"># Uses spacyr::spacy_parse</span></span>
+<span><span class="co"># Returns columns: doc_id, token, lemma, pos, tag</span></span></code></pre></div>
 <p><strong>Usage:</strong> Analyze verb tenses for temporal patterns,
 number agreement, or grammatical complexity.</p>
 <p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#morphology" class="external-link">spaCy

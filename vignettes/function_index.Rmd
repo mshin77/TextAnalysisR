@@ -172,29 +172,14 @@ Quick reference guide organized by workflow stage.
 | `generate_topic_labels_langgraph()` | Multi-agent topic labeling |
 | `generate_survey_items()` | Generate survey items |
 
-## 9. NLP with spaCy (Python)
+## 9. NLP with spaCy
 
 | Function | Purpose |
 |----------|---------|
-| `init_spacy_nlp()` | Initialize spaCy with model selection |
-| `spacy_parse_full()` | Full parsing with POS, NER, morphology |
-| `spacy_extract_entities()` | Extract named entities (span-level) |
-| `spacy_extract_noun_chunks()` | Extract noun phrases |
-| `spacy_similarity()` | Semantic similarity between texts |
-| `spacy_model_info()` | Get loaded model information |
+| `extract_pos_tags()` | Extract POS tags using spacyr |
+| `extract_named_entities()` | Extract named entities using spacyr |
 
-<details>
-<summary><strong>Morphological Features</strong></summary>
-
-| Feature | Description | Example Values |
-|---------|-------------|----------------|
-| `morph_Number` | Grammatical number | Sing, Plur |
-| `morph_Tense` | Verb tense | Past, Pres, Fut |
-| `morph_VerbForm` | Verb form | Fin, Inf, Part, Ger |
-| `morph_Person` | Grammatical person | 1, 2, 3 |
-| `morph_Case` | Grammatical case | Nom, Acc, Dat, Gen |
-
-</details>
+Note: Uses the `spacyr` R package for spaCy integration.
 
 ## 10. Python Environment
 

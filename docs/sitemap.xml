@@ -112,7 +112,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_sentiment_color.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_sentiment_colors.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_spacy_nlp.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_topic_prevalence.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_topic_terms.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_topic_texts.html</loc></url>
@@ -120,7 +119,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/import_files.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/index.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/init_langgraph.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/init_spacy_nlp.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_frequency_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.html</loc></url>
@@ -190,12 +189,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/show_unite_texts_required_notification.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/show_warning_notification.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/show_web_banner.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_entities.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_noun_chunks.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_model_info.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_nlp.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_parse_full.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_similarity.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/SpecialEduTech.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stm_15.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stopwords_list.html</loc></url>
