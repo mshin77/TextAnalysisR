@@ -2,15 +2,20 @@
 % Please edit documentation in R/run_app.R
 \name{run_app}
 \alias{run_app}
-\title{Launch and browse the TextAnalysisR app}
+\title{Launch the TextAnalysisR app}
 \usage{
-run_app()
+run_app(launch.browser = interactive())
+}
+\arguments{
+\item{launch.browser}{Logical. Whether to open the app in a browser.
+Defaults to \code{interactive()}, which is FALSE in non-interactive sessions
+(e.g., Docker containers, servers).}
 }
 \value{
 No return value, called for side effects (launching Shiny app)
 }
 \description{
-Launch and browse the TextAnalysisR app.
+Launch the TextAnalysisR Shiny application.
 }
 \examples{
 if (interactive()) {
