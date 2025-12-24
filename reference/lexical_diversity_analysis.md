@@ -6,7 +6,7 @@ MTLD and MATTR are most stable and text-length independent.
 ## Usage
 
 ``` r
-lexical_diversity_analysis(x, measures = "all", texts = NULL)
+lexical_diversity_analysis(x, measures = "all", texts = NULL, cache_key = NULL)
 ```
 
 ## Arguments
@@ -29,6 +29,14 @@ lexical_diversity_analysis(x, measures = "all", texts = NULL)
   Optional character vector of original texts. Required for accurate
   MTLD when passing a DFM (since DFM loses token order). Also used for
   average sentence length.
+
+- cache_key:
+
+  Optional character string for caching expensive computations. When
+  provided, results are cached using this key and retrieved on
+  subsequent calls with the same key. Use
+  [`clear_lexdiv_cache()`](https://mshin77.github.io/TextAnalysisR/reference/clear_lexdiv_cache.md)
+  to clear the cache.
 
 ## Value
 
@@ -59,6 +67,9 @@ corp <- quanteda::corpus(texts)
 toks <- quanteda::tokens(corp)
 # Preferred: pass tokens object for accurate MTLD
 lex_div <- lexical_diversity_analysis(toks, texts = texts)
+# With caching for repeated analysis
+cache_key <- digest::digest(texts)
+lex_div <- lexical_diversity_analysis(toks, texts = texts, cache_key = cache_key)
 # Alternative: pass DFM with texts for MTLD accuracy
 dfm_obj <- quanteda::dfm(toks)
 lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)

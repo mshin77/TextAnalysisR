@@ -71,10 +71,36 @@ Quick reference guide organized by workflow stage.
 
 ## 5. Network Analysis
 
-| Function                                                                                                                | Purpose                  |
-|-------------------------------------------------------------------------------------------------------------------------|--------------------------|
-| [`semantic_cooccurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_cooccurrence_network.md) | Word co-occurrence graph |
-| [`semantic_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_correlation_network.md)   | Word correlation graph   |
+| Function                                                                                                                | Purpose                           |
+|-------------------------------------------------------------------------------------------------------------------------|-----------------------------------|
+| [`semantic_cooccurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_cooccurrence_network.md) | Word/document co-occurrence graph |
+| [`semantic_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_correlation_network.md)   | Word/document correlation graph   |
+
+**Network Parameters**
+
+| Parameter                 | Default  | Description                                                 |
+|---------------------------|----------|-------------------------------------------------------------|
+| `feature_type`            | “words”  | Feature space: “words”, “ngrams”, “embeddings”              |
+| `embedding_sim_threshold` | 0.5      | Similarity threshold for embedding networks (0.3-0.9)       |
+| `node_label_size`         | 22       | Font size for node labels (12-40)                           |
+| `community_method`        | “leiden” | Algorithm: “leiden”, “louvain”, “label_prop”, “fast_greedy” |
+| `top_node_n`              | 30       | Number of top nodes to display                              |
+| `co_occur_n`              | 10       | Minimum co-occurrence count (co-occurrence only)            |
+| `corr_n`                  | 0.4      | Minimum correlation threshold (correlation only)            |
+
+**Network Statistics (9 Metrics)**
+
+| Metric               | Description                      |
+|----------------------|----------------------------------|
+| Nodes                | Total unique terms/documents     |
+| Edges                | Total connections                |
+| Density              | Edge density (0-1)               |
+| Diameter             | Longest shortest path            |
+| Global Clustering    | Network clustering tendency      |
+| Avg Local Clustering | Average local clustering         |
+| Modularity           | Community structure quality      |
+| Assortativity        | Similar node connection tendency |
+| Avg Path Length      | Average node distance            |
 
 ## 6. Topic Modeling
 

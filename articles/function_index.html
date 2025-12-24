@@ -288,6 +288,10 @@
 <h2 id="network-analysis">5. Network Analysis<a class="anchor" aria-label="anchor" href="#network-analysis"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
@@ -295,14 +299,108 @@
 <tbody>
 <tr class="odd">
 <td><code><a href="../reference/semantic_cooccurrence_network.html">semantic_cooccurrence_network()</a></code></td>
-<td>Word co-occurrence graph</td>
+<td>Word/document co-occurrence graph</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/semantic_correlation_network.html">semantic_correlation_network()</a></code></td>
-<td>Word correlation graph</td>
+<td>Word/document correlation graph</td>
 </tr>
 </tbody>
 </table>
+<details><summary><strong>Network Parameters</strong>
+</summary><table style="width:100%;" class="table">
+<colgroup>
+<col width="33%">
+<col width="27%">
+<col width="39%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>feature_type</code></td>
+<td>“words”</td>
+<td>Feature space: “words”, “ngrams”, “embeddings”</td>
+</tr>
+<tr class="even">
+<td><code>embedding_sim_threshold</code></td>
+<td>0.5</td>
+<td>Similarity threshold for embedding networks (0.3-0.9)</td>
+</tr>
+<tr class="odd">
+<td><code>node_label_size</code></td>
+<td>22</td>
+<td>Font size for node labels (12-40)</td>
+</tr>
+<tr class="even">
+<td><code>community_method</code></td>
+<td>“leiden”</td>
+<td>Algorithm: “leiden”, “louvain”, “label_prop”, “fast_greedy”</td>
+</tr>
+<tr class="odd">
+<td><code>top_node_n</code></td>
+<td>30</td>
+<td>Number of top nodes to display</td>
+</tr>
+<tr class="even">
+<td><code>co_occur_n</code></td>
+<td>10</td>
+<td>Minimum co-occurrence count (co-occurrence only)</td>
+</tr>
+<tr class="odd">
+<td><code>corr_n</code></td>
+<td>0.4</td>
+<td>Minimum correlation threshold (correlation only)</td>
+</tr>
+</tbody>
+</table></details><details><summary><strong>Network Statistics (9 Metrics)</strong>
+</summary><table class="table">
+<thead><tr class="header">
+<th>Metric</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Nodes</td>
+<td>Total unique terms/documents</td>
+</tr>
+<tr class="even">
+<td>Edges</td>
+<td>Total connections</td>
+</tr>
+<tr class="odd">
+<td>Density</td>
+<td>Edge density (0-1)</td>
+</tr>
+<tr class="even">
+<td>Diameter</td>
+<td>Longest shortest path</td>
+</tr>
+<tr class="odd">
+<td>Global Clustering</td>
+<td>Network clustering tendency</td>
+</tr>
+<tr class="even">
+<td>Avg Local Clustering</td>
+<td>Average local clustering</td>
+</tr>
+<tr class="odd">
+<td>Modularity</td>
+<td>Community structure quality</td>
+</tr>
+<tr class="even">
+<td>Assortativity</td>
+<td>Similar node connection tendency</td>
+</tr>
+<tr class="odd">
+<td>Avg Path Length</td>
+<td>Average node distance</td>
+</tr>
+</tbody>
+</table></details>
 </div>
 <div class="section level2">
 <h2 id="topic-modeling">6. Topic Modeling<a class="anchor" aria-label="anchor" href="#topic-modeling"></a>

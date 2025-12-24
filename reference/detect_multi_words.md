@@ -33,7 +33,10 @@ A character vector of detected collocations.
 ## See also
 
 Other preprocessing:
+[`extract_named_entities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_named_entities.md),
+[`extract_pos_tags()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pos_tags.md),
 [`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
+[`get_available_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_tokens.md),
 [`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
 [`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
 [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),

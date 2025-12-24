@@ -65,14 +65,16 @@ Based on proven implementation for intuitive network visualization.</p>
 <span>  common_term_n <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  corr_n <span class="op">=</span> <span class="fl">0.4</span>,</span>
 <span>  top_node_n <span class="op">=</span> <span class="fl">30</span>,</span>
-<span>  node_label_size <span class="op">=</span> <span class="fl">14</span>,</span>
+<span>  node_label_size <span class="op">=</span> <span class="fl">22</span>,</span>
 <span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  showlegend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  feature_type <span class="op">=</span> <span class="st">"words"</span>,</span>
 <span>  ngram_range <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  texts <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  embeddings <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  embeddings <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  embedding_sim_threshold <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  community_method <span class="op">=</span> <span class="st">"leiden"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -130,6 +132,14 @@ Based on proven implementation for intuitive network visualization.</p>
 
 <dt id="arg-embeddings">embeddings<a class="anchor" aria-label="anchor" href="#arg-embeddings"></a></dt>
 <dd><p>Optional embedding matrix for embedding-based networks (default: NULL).</p></dd>
+
+
+<dt id="arg-embedding-sim-threshold">embedding_sim_threshold<a class="anchor" aria-label="anchor" href="#arg-embedding-sim-threshold"></a></dt>
+<dd><p>Similarity threshold for embedding-based networks (default: 0.5).</p></dd>
+
+
+<dt id="arg-community-method">community_method<a class="anchor" aria-label="anchor" href="#arg-community-method"></a></dt>
+<dd><p>Community detection method: "leiden" (default), "louvain", "label_prop", or "fast_greedy".</p></dd>
 
 </dl></div>
     <div class="section level2">
