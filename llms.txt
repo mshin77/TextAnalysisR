@@ -91,6 +91,14 @@ Text preparation and feature extraction
   : Extract Part-of-Speech Tags from Tokens
 - [`extract_named_entities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_named_entities.md)
   : Extract Named Entities from Tokens
+- [`extract_morphology()`](https://mshin77.github.io/TextAnalysisR/reference/extract_morphology.md)
+  : Extract Morphological Features
+- [`summarize_morphology()`](https://mshin77.github.io/TextAnalysisR/reference/summarize_morphology.md)
+  : Summarize Morphology Features
+- [`render_displacy_ent()`](https://mshin77.github.io/TextAnalysisR/reference/render_displacy_ent.md)
+  : Render displaCy Entity Visualization
+- [`render_displacy_dep()`](https://mshin77.github.io/TextAnalysisR/reference/render_displacy_dep.md)
+  : Render displaCy Dependency Visualization
 
 ## Lexical Analysis
 
@@ -128,6 +136,8 @@ Word frequency, keywords, and readability
   : Plot Part-of-Speech Tag Frequencies
 - [`plot_entity_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_entity_frequencies.md)
   : Plot Named Entity Frequencies
+- [`plot_morphology_feature()`](https://mshin77.github.io/TextAnalysisR/reference/plot_morphology_feature.md)
+  : Plot Morphology Feature Distribution
 - [`plot_readability_distribution()`](https://mshin77.github.io/TextAnalysisR/reference/plot_readability_distribution.md)
   : Plot Readability Distribution
 - [`plot_readability_by_group()`](https://mshin77.github.io/TextAnalysisR/reference/plot_readability_by_group.md)
