@@ -67,6 +67,7 @@ Quick reference guide organized by workflow stage.
 |----|----|
 | [`plot_semantic_viz()`](https://mshin77.github.io/TextAnalysisR/reference/plot_semantic_viz.md) | 2D/3D semantic visualization |
 | [`plot_similarity_heatmap()`](https://mshin77.github.io/TextAnalysisR/reference/plot_similarity_heatmap.md) | Similarity matrix heatmap |
+| [`plot_cross_category_heatmap()`](https://mshin77.github.io/TextAnalysisR/reference/plot_cross_category_heatmap.md) | Cross-category similarity comparison |
 | [`plot_cluster_terms()`](https://mshin77.github.io/TextAnalysisR/reference/plot_cluster_terms.md) | Cluster term visualization |
 
 ## 5. Network Analysis

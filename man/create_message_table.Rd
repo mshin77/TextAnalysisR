@@ -43,10 +43,6 @@ Other visualization:
 \code{\link{plot_semantic_viz}()},
 \code{\link{plot_similarity_heatmap}()},
 \code{\link{plot_term_trends_continuous}()},
-\code{\link{plot_topic_effects_categorical}()},
-\code{\link{plot_topic_effects_continuous}()},
-\code{\link{plot_topic_probability}()},
-\code{\link{plot_word_frequency}()},
-\code{\link{plot_word_probability}()}
+\code{\link{plot_word_frequency}()}
 }
 \concept{visualization}

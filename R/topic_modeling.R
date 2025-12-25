@@ -3594,3 +3594,519 @@ plot_model_comparison <- function(search_results,
     ) %>%
     plotly::config(displayModeBar = TRUE)
 }
+
+
+################################################################################
+# TOPIC MODELING VISUALIZATION FUNCTIONS
+################################################################################
+
+#' @title Plot Word Probabilities by Topic
+#'
+#' @description
+#' Creates a faceted bar plot showing the top terms and their probabilities (beta values)
+#' for each topic in a topic model.
+#'
+#' @param top_topic_terms A data frame containing topic terms with columns: topic, term, and beta.
+#' @param topic_label Optional topic labels. Can be either a named vector mapping topic numbers
+#'   to labels, or a character string specifying a column name in top_topic_terms (default: NULL).
+#' @param ncol Number of columns for facet wrap layout (default: 3).
+#' @param height The height of the resulting Plotly plot, in pixels (default: 1200).
+#' @param width The width of the resulting Plotly plot, in pixels (default: 800).
+#' @param ylab Y-axis label (default: "Word probability").
+#' @param title Plot title (default: NULL for auto-generated title).
+#' @param colors Color palette for topics (default: NULL for auto-generated colors).
+#' @param measure_label Label for the probability measure (default: "Beta").
+#' @param ... Additional arguments passed to plotly::ggplotly().
+#'
+#' @return A plotly object showing word probabilities faceted by topic.
+#'
+#' @family topic_modeling
+#' @export
+plot_word_probability <- function(top_topic_terms,
+                                   topic_label = NULL,
+                                   ncol = 3,
+                                   height = 1200,
+                                   width = 800,
+                                   ylab = "Word probability",
+                                   title = NULL,
+                                   colors = NULL,
+                                   measure_label = "Beta",
+                                   ...) {
+
+  if (!"topic" %in% colnames(top_topic_terms)) {
+    stop("The data frame must contain a 'topic' column.")
+  }
+
+  top_topic_terms <- top_topic_terms %>%
+    dplyr::mutate(topic = as.character(topic))
+
+  if (!is.null(topic_label)) {
+    if (is.vector(topic_label) && !is.null(names(topic_label))) {
+      manual_labels_df <- data.frame(
+        topic = names(topic_label),
+        label = unname(topic_label),
+        stringsAsFactors = FALSE
+      )
+      top_topic_terms <- top_topic_terms %>%
+        dplyr::left_join(manual_labels_df, by = "topic") %>%
+        dplyr::mutate(labeled_topic = ifelse(!is.na(label), label, paste("Topic", topic))) %>%
+        dplyr::select(-label)
+    } else if (is.character(topic_label) && length(topic_label) == 1) {
+      if (!topic_label %in% colnames(top_topic_terms)) {
+        stop(paste("Column", topic_label, "not found in top_topic_terms."))
+      }
+      top_topic_terms <- top_topic_terms %>%
+        dplyr::mutate(labeled_topic = as.character(.data[[topic_label]]))
+    } else {
+      top_topic_terms <- top_topic_terms %>%
+        dplyr::mutate(labeled_topic = paste("Topic", topic))
+    }
+  } else {
+    top_topic_terms <- top_topic_terms %>%
+      dplyr::mutate(labeled_topic = paste("Topic", topic))
+  }
+
+  top_topic_terms <- top_topic_terms %>%
+    dplyr::mutate(
+      ord = factor(topic, levels = sort(as.numeric(unique(topic)))),
+      term = tidytext::reorder_within(term, beta, labeled_topic)
+    ) %>%
+    dplyr::arrange(ord) %>%
+    dplyr::ungroup()
+
+  levelt <- top_topic_terms %>%
+    dplyr::arrange(as.numeric(topic)) %>%
+    dplyr::distinct(labeled_topic) %>%
+    dplyr::pull(labeled_topic)
+
+  top_topic_terms$labeled_topic <- factor(top_topic_terms$labeled_topic, levels = levelt)
+
+  ggplot_obj <- ggplot2::ggplot(
+    top_topic_terms,
+    ggplot2::aes(term, beta, fill = labeled_topic,
+                 text = paste("Topic:", labeled_topic, "<br>", measure_label, ":", sprintf("%.3f", beta)))
+  ) +
+    ggplot2::geom_col(show.legend = FALSE, alpha = 0.8) +
+    ggplot2::facet_wrap(~ labeled_topic, scales = "free", ncol = ncol, strip.position = "top") +
+    tidytext::scale_x_reordered() +
+    ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+    ggplot2::coord_flip() +
+    ggplot2::xlab("") +
+    ggplot2::ylab(ylab) +
+    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme(
+      legend.position = "none",
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      strip.text.x = ggplot2::element_text(
+        size = 16,
+        color = "#0c1f4a",
+        lineheight = ifelse(width > 1000, 1.1, 1.2),
+        margin = ggplot2::margin(l = 10, r = 10)
+      ),
+      panel.spacing.x = ggplot2::unit(ifelse(width > 1000, 2.2, 1.6), "lines"),
+      panel.spacing.y = ggplot2::unit(ifelse(width > 1000, 2.2, 1.6), "lines"),
+      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(r = 20)),
+      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(t = 20)),
+      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 25)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 25))
+    )
+
+  if (!is.null(colors)) {
+    ggplot_obj <- ggplot_obj + ggplot2::scale_fill_manual(values = colors)
+  }
+
+  p <- plotly::ggplotly(ggplot_obj, height = height, width = width, tooltip = "text", ...) %>%
+    plotly::layout(
+      xaxis = list(
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      hoverlabel = list(
+        bgcolor = "#0c1f4a",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bordercolor = "#0c1f4a",
+        align = "left"
+      )
+    )
+
+  p <- p %>% plotly::layout(margin = list(t = 40, b = 60, l = 80, r = 100))
+  p
+}
+
+
+#' @title Plot Per-Document Per-Topic Probabilities
+#'
+#' @description
+#' Generates a bar plot showing the prevalence of each topic across all documents.
+#'
+#' @param stm_model A fitted STM model object.
+#' @param gamma_data Optional pre-computed gamma data frame (default: NULL).
+#' @param top_n The number of topics to display (default: 10).
+#' @param height The height of the resulting Plotly plot, in pixels (default: 800).
+#' @param width The width of the resulting Plotly plot, in pixels (default: 1000).
+#' @param topic_labels Optional topic labels (default: NULL).
+#' @param colors Optional color palette for topics (default: NULL).
+#' @param verbose Logical, if TRUE, prints progress messages.
+#' @param ... Further arguments passed to tidytext::tidy.
+#'
+#' @return A plotly object showing a bar plot of topic prevalence.
+#'
+#' @family topic_modeling
+#' @export
+plot_topic_probability <- function(stm_model = NULL,
+                                   gamma_data = NULL,
+                                   top_n = 10,
+                                   height = 800,
+                                   width = 1000,
+                                   topic_labels = NULL,
+                                   colors = NULL,
+                                   verbose = TRUE,
+                                   ...) {
+
+    if (!is.null(gamma_data)) {
+      gamma_terms <- gamma_data
+      if (!is.null(top_n) && top_n < nrow(gamma_terms)) {
+        gamma_terms <- gamma_terms %>%
+          dplyr::top_n(top_n, gamma)
+      }
+    } else if (!is.null(stm_model)) {
+      gamma_td <- tidytext::tidy(stm_model, matrix = "gamma", ...)
+      gamma_terms <- gamma_td %>%
+        dplyr::group_by(topic) %>%
+        dplyr::summarise(gamma = mean(gamma)) %>%
+        dplyr::arrange(dplyr::desc(gamma)) %>%
+        dplyr::mutate(topic = stats::reorder(topic, gamma)) %>%
+        dplyr::top_n(top_n, gamma)
+    } else {
+      stop("Either stm_model or gamma_data must be provided")
+    }
+
+    if (!is.null(topic_labels)) {
+      if ("topic_label" %in% names(gamma_terms)) {
+        gamma_terms <- gamma_terms %>%
+          dplyr::mutate(topic_display = topic_label)
+      } else {
+        gamma_terms <- gamma_terms %>%
+          dplyr::mutate(topic_display = topic)
+      }
+    } else {
+      gamma_terms <- gamma_terms %>%
+        dplyr::mutate(topic_display = paste("Topic", topic))
+    }
+
+    if ("tt" %in% names(gamma_terms)) {
+      gamma_terms <- gamma_terms %>%
+        dplyr::arrange(tt) %>%
+        dplyr::mutate(topic_display = factor(topic_display, levels = unique(topic_display)))
+    } else {
+      gamma_terms <- gamma_terms %>%
+        dplyr::mutate(topic_display = factor(topic_display, levels = unique(topic_display)))
+    }
+
+    hover_text <- if ("terms" %in% names(gamma_terms)) {
+      paste0("Topic: ", gamma_terms$topic_display, "<br>Terms: ", gamma_terms$terms, "<br>Gamma: ", sprintf("%.3f", gamma_terms$gamma))
+    } else {
+      paste0("Topic: ", gamma_terms$topic_display, "<br>Gamma: ", sprintf("%.3f", gamma_terms$gamma))
+    }
+
+    ggplot_obj <- ggplot2::ggplot(gamma_terms, ggplot2::aes(x = topic_display, y = gamma, fill = topic_display,
+                                          text = hover_text)) +
+      ggplot2::geom_col(alpha = 0.8) +
+      ggplot2::coord_flip() +
+      ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
+      ggplot2::xlab("") +
+      ggplot2::ylab("Topic Proportion") +
+      ggplot2::theme_minimal(base_size = 14) +
+      ggplot2::theme(
+        legend.position = "none",
+        panel.grid.major = ggplot2::element_blank(),
+        panel.grid.minor = ggplot2::element_blank(),
+        axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+        axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+        strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+        axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B"),
+        axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B"),
+        axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+        axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 10)),
+        axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 10))
+      )
+
+    if (!is.null(colors)) {
+      ggplot_obj <- ggplot_obj + ggplot2::scale_fill_manual(values = colors)
+    }
+
+    plotly::ggplotly(ggplot_obj, tooltip = "text", height = height, width = width) %>%
+      plotly::layout(
+        xaxis = list(
+          tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+          titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+        ),
+        yaxis = list(
+          tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+          titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+        ),
+        margin = list(t = 50, b = 40, l = 80, r = 40),
+        hoverlabel = list(
+          font = list(size = 16, family = "Roboto, sans-serif")
+        )
+      )
+}
+
+
+#' @title Plot Topic Effects for Categorical Variables
+#'
+#' @description
+#' Creates a faceted plot showing how categorical variables affect topic proportions.
+#'
+#' @param effects_data Data frame with columns: topic, value, proportion, lower, upper
+#' @param ncol Number of columns for faceting (default: 2)
+#' @param height Plot height in pixels (default: 800)
+#' @param width Plot width in pixels (default: 1000)
+#' @param title Plot title (default: "Category Effects")
+#'
+#' @return A plotly object
+#'
+#' @family topic_modeling
+#' @export
+plot_topic_effects_categorical <- function(effects_data,
+                                           ncol = 2,
+                                           height = 800,
+                                           width = 1000,
+                                           title = "Category Effects") {
+
+  if (is.null(effects_data) || nrow(effects_data) == 0) {
+    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
+             plotly::add_annotations(
+               text = "No categorical effects available.<br>Please run the effect estimation first.",
+               x = 0.5, y = 0.5,
+               showarrow = FALSE,
+               font = list(size = 16, color = "#6c757d")
+             ))
+  }
+
+  effects_data <- effects_data %>%
+    dplyr::mutate(topic_label = paste("Topic", topic))
+
+  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion)) +
+    ggplot2::facet_wrap(~topic_label, ncol = ncol, scales = "free") +
+    ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+    ggplot2::xlab("") +
+    ggplot2::ylab("Topic proportion") +
+    ggplot2::geom_errorbar(
+      ggplot2::aes(ymin = lower, ymax = upper),
+      width = 0.1,
+      linewidth = 0.5,
+      color = "#337ab7"
+    ) +
+    ggplot2::geom_point(color = "#337ab7", size = 1.5) +
+    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme(
+      legend.position = "none",
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a", margin = ggplot2::margin(b = 30, t = 15)),
+      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(t = 20)),
+      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(r = 20)),
+      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 25)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 25)),
+      plot.margin = ggplot2::margin(t = 40, b = 40)
+    )
+
+  plotly::ggplotly(ggplot_obj, height = height, width = width) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        x = 0.5, xref = "paper", xanchor = "center",
+        y = 0.99, yref = "paper", yanchor = "top"
+      ),
+      xaxis = list(
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      margin = list(t = 100, b = 40, l = 80, r = 40),
+      hoverlabel = list(font = list(size = 16, family = "Roboto, sans-serif"))
+    )
+}
+
+
+#' @title Plot Topic Effects for Continuous Variables
+#'
+#' @description
+#' Creates a faceted plot showing how continuous variables affect topic proportions.
+#'
+#' @param effects_data Data frame with columns: topic, value, proportion, lower, upper
+#' @param ncol Number of columns for faceting (default: 2)
+#' @param height Plot height in pixels (default: 800)
+#' @param width Plot width in pixels (default: 1000)
+#' @param title Plot title (default: "Continuous Variable Effects")
+#'
+#' @return A plotly object
+#'
+#' @family topic_modeling
+#' @export
+plot_topic_effects_continuous <- function(effects_data,
+                                          ncol = 2,
+                                          height = 800,
+                                          width = 1000,
+                                          title = "Continuous Variable Effects") {
+
+  effects_data <- effects_data %>%
+    dplyr::mutate(topic_label = paste("Topic", topic))
+
+  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion)) +
+    ggplot2::facet_wrap(~topic_label, ncol = ncol, scales = "free") +
+    ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = "#337ab7", alpha = 0.2) +
+    ggplot2::geom_line(linewidth = 0.5, color = "#337ab7") +
+    ggplot2::xlab("") +
+    ggplot2::ylab("Topic proportion") +
+    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme(
+      legend.position = "none",
+      panel.grid.major = ggplot2::element_blank(),
+      panel.grid.minor = ggplot2::element_blank(),
+      axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a", margin = ggplot2::margin(b = 30, t = 15)),
+      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(t = 20)),
+      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(r = 20)),
+      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 25)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 25)),
+      plot.margin = ggplot2::margin(t = 40, b = 40)
+    )
+
+  plotly::ggplotly(ggplot_obj, height = height, width = width) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        x = 0.5, xref = "paper", xanchor = "center",
+        y = 0.99, yref = "paper", yanchor = "top"
+      ),
+      xaxis = list(
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      margin = list(t = 100, b = 40, l = 80, r = 40),
+      hoverlabel = list(font = list(size = 16, family = "Roboto, sans-serif"))
+    )
+}
+
+
+
+#' Plot Cluster Top Terms
+#'
+#' @description
+#' Creates a horizontal bar plot showing the top terms in a cluster or document group.
+#'
+#' @param terms Named numeric vector of term frequencies, or data frame with
+#'   'term' and 'frequency' columns
+#' @param cluster_id Cluster identifier for the title (default: NULL)
+#' @param title Custom title (default: NULL, auto-generated from cluster_id)
+#' @param n_terms Number of top terms to display (default: 10)
+#' @param color Bar color (default: "#337ab7")
+#' @param height Plot height in pixels (default: 500)
+#' @param width Plot width in pixels (default: NULL for auto)
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+plot_cluster_terms <- function(terms,
+                                cluster_id = NULL,
+                                title = NULL,
+                                n_terms = 10,
+                                color = "#337ab7",
+                                height = 500,
+                                width = NULL) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(terms) || length(terms) == 0) {
+    return(create_empty_plot_message("No terms available for this cluster"))
+  }
+
+  if (is.data.frame(terms)) {
+    if (!all(c("term", "frequency") %in% names(terms))) {
+      stop("Data frame must have 'term' and 'frequency' columns")
+    }
+    terms <- terms %>%
+      dplyr::arrange(dplyr::desc(frequency)) %>%
+      dplyr::slice_head(n = n_terms)
+    term_names <- terms$term
+    term_values <- terms$frequency
+  } else {
+    top_terms <- utils::head(sort(terms, decreasing = TRUE), n_terms)
+    term_names <- names(top_terms)
+    term_values <- as.numeric(top_terms)
+  }
+
+  if (is.null(title)) {
+    title <- if (!is.null(cluster_id)) {
+      paste("Top Terms in Cluster", cluster_id)
+    } else {
+      "Top Terms"
+    }
+  }
+
+  plotly::plot_ly(
+    x = term_values,
+    y = term_names,
+    type = "bar",
+    orientation = "h",
+    marker = list(color = color),
+    hovertemplate = "%{y}<br>Frequency: %{x:.4f}<extra></extra>",
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        x = 0.5,
+        xref = "paper",
+        xanchor = "center"
+      ),
+      xaxis = list(
+        title = list(text = "Frequency"),
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "",
+        categoryorder = "total ascending",
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      ),
+      margin = list(l = 120, r = 40, t = 80, b = 60)
+    ) %>%
+    plotly::config(displayModeBar = TRUE)
+}

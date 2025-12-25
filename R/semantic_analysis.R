@@ -3825,3 +3825,878 @@ semantic_correlation_network <- function(dfm_object,
     stats = stats_list
   )
 }
+#' @title Plot Semantic Analysis Visualization
+#'
+#' @description
+#' Creates interactive visualizations for semantic analysis results including
+#' similarity heatmaps, dimensionality reduction plots, and clustering visualizations.
+#'
+#' @param analysis_result A list containing semantic analysis results from functions like
+#'   semantic_similarity_analysis(), semantic_document_clustering(), or reduce_dimensions().
+#' @param plot_type Type of visualization: "similarity" for heatmap, "dimensionality_reduction"
+#'   for scatter plot, or "clustering" for cluster visualization (default: "similarity").
+#' @param data_labels Optional character vector of labels for data points (default: NULL).
+#' @param color_by Optional variable to color points by in scatter plots (default: NULL).
+#' @param coords Optional pre-computed coordinates for dimensionality reduction plots (default: NULL).
+#' @param clusters Optional cluster assignments vector (default: NULL).
+#' @param hover_text Optional custom hover text for points (default: NULL).
+#' @param hover_config Optional hover configuration list (default: NULL).
+#' @param cluster_colors Optional color palette for clusters (default: NULL).
+#' @param height The height of the resulting Plotly plot, in pixels (default: 600).
+#' @param width The width of the resulting Plotly plot, in pixels (default: 800).
+#' @param title Optional custom title for the plot (default: NULL).
+#'
+#' @return A plotly object showing the specified visualization.
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   texts <- c("machine learning", "deep learning", "artificial intelligence")
+#'   result <- semantic_similarity_analysis(texts)
+#'   plot <- plot_semantic_viz(result, plot_type = "similarity")
+#'   print(plot)
+#' }
+plot_semantic_viz <- function(analysis_result = NULL,
+                                       plot_type = "similarity",
+                                       data_labels = NULL,
+                                       color_by = NULL,
+                                       height = 600,
+                                       width = 800,
+                                       title = NULL,
+                                       coords = NULL,
+                                       clusters = NULL,
+                                       hover_text = NULL,
+                                       hover_config = NULL,
+                                       cluster_colors = NULL) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("plotly package is required for visualization. ",
+         "Please install it with: install.packages('plotly')")
+  }
+
+  tryCatch({
+    plot_obj <- switch(plot_type,
+      "similarity" = {
+        similarity_matrix <- analysis_result$similarity_matrix
+
+        if (is.null(data_labels)) {
+          data_labels <- paste0("Doc ", seq_len(nrow(similarity_matrix)))
+        }
+
+        plotly::plot_ly(
+          z = similarity_matrix,
+          x = data_labels,
+          y = data_labels,
+          type = "heatmap",
+          colorscale = "Viridis",
+          hovertemplate = "Doc %{x}<br>Doc %{y}<br>Similarity: %{z:.3f}<extra></extra>",
+          width = width,
+          height = height
+        ) %>%
+        plotly::layout(
+          title = if (!is.null(title)) {
+            list(
+              text = title,
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+              x = 0.5,
+              xref = "paper",
+              xanchor = "center",
+              y = 0.98,
+              yref = "paper",
+              yanchor = "top"
+            )
+          } else {
+            list(
+              text = paste("Similarity Heatmap -", analysis_result$method),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+              x = 0.5,
+              xref = "paper",
+              xanchor = "center",
+              y = 0.98,
+              yref = "paper",
+              yanchor = "top"
+            )
+          },
+          xaxis = list(
+            title = "Documents",
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
+          ),
+          yaxis = list(
+            title = "Documents",
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
+          )
+        )
+      },
+      "dimensionality_reduction" = {
+        reduced_data <- if (!is.null(coords)) {
+          coords
+        } else if (!is.null(analysis_result$reduced_data)) {
+          analysis_result$reduced_data
+        } else {
+          stop("No dimensionality reduction data available")
+        }
+
+        if (is.null(data_labels)) {
+          data_labels <- paste0("Doc ", seq_len(nrow(reduced_data)))
+        }
+
+        plot_clusters <- !is.null(clusters) || (!is.null(analysis_result) && !is.null(analysis_result$clusters))
+        cluster_data <- clusters %||% (if (!is.null(analysis_result)) analysis_result$clusters else NULL)
+
+        if (plot_clusters) {
+          color_var <- as.factor(cluster_data)
+          showlegend <- TRUE
+        } else if (!is.null(color_by)) {
+          color_var <- color_by
+          showlegend <- TRUE
+        } else {
+          color_var <- I("steelblue")
+          showlegend <- FALSE
+        }
+
+        hover_template <- if (!is.null(hover_text)) {
+          "%{text}<extra></extra>"
+        } else {
+          "%{text}<br>X: %{x:.3f}<br>Y: %{y:.3f}<extra></extra>"
+        }
+
+        plot_text <- if (!is.null(hover_text)) hover_text else data_labels
+
+        p <- plotly::plot_ly(
+          x = reduced_data[, 1],
+          y = if (ncol(reduced_data) > 1) reduced_data[, 2] else rep(0, nrow(reduced_data)),
+          text = plot_text,
+          color = color_var,
+          type = "scatter",
+          mode = "markers",
+          marker = list(size = 8, opacity = 0.7),
+          hovertemplate = hover_template,
+          width = width,
+          height = height,
+          showlegend = showlegend
+        )
+
+        if (!is.null(hover_config)) {
+          p <- p %>% plotly::layout(hoverlabel = hover_config)
+        }
+
+        p %>% plotly::layout(
+          title = if (!is.null(title)) {
+            list(
+              text = title,
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+              x = 0.5,
+              xref = "paper",
+              xanchor = "center",
+              y = 0.98,
+              yref = "paper",
+              yanchor = "top"
+            )
+          } else {
+            list(
+              text = paste("Dimensionality Reduction -",
+                           if (!is.null(analysis_result)) analysis_result$method else "Custom"),
+              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+              x = 0.5,
+              xref = "paper",
+              xanchor = "center",
+              y = 0.98,
+              yref = "paper",
+              yanchor = "top"
+            )
+          },
+          xaxis = list(
+            title = paste("Component 1",
+                          if (!is.null(analysis_result) && !is.null(analysis_result$variance_explained))
+                            paste0("(", round(analysis_result$variance_explained[1] * 100, 1), "%)")
+                          else ""),
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
+          ),
+          yaxis = list(
+            title = paste("Component 2",
+                          if (!is.null(analysis_result) && !is.null(analysis_result$variance_explained) &&
+                              length(analysis_result$variance_explained) > 1)
+                            paste0("(", round(analysis_result$variance_explained[2] * 100, 1), "%)")
+                          else ""),
+            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
+            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
+          )
+        )
+      },
+      "clustering" = {
+        plot_data <- if (!is.null(coords)) {
+          coords
+        } else if (!is.null(analysis_result)) {
+          analysis_result$umap_embedding %||% analysis_result$reduced_data
+        } else {
+          stop("No clustering visualization data available")
+        }
+
+        cluster_data <- clusters %||% (if (!is.null(analysis_result)) analysis_result$clusters else NULL)
+
+        if (is.null(plot_data)) {
+          if (is.null(data_labels)) {
+            data_labels <- paste0("Doc ", seq_len(length(cluster_data)))
+          }
+
+          plotly::plot_ly(
+            x = seq_along(cluster_data),
+            y = cluster_data,
+            color = as.factor(cluster_data),
+            text = data_labels,
+            type = "scatter",
+            mode = "markers",
+            marker = list(size = 8, opacity = 0.7),
+            hovertemplate = "%{text}<br>Cluster: %{y}<extra></extra>",
+            width = width,
+            height = height
+          ) %>%
+          plotly::layout(
+            title = if (!is.null(title)) {
+              list(
+                text = title,
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+                x = 0.5,
+                xref = "paper",
+                xanchor = "center",
+                y = 0.98,
+                yref = "paper",
+                yanchor = "top"
+              )
+            } else {
+              list(
+                text = paste("Clustering Results -",
+                             if (!is.null(analysis_result)) analysis_result$method else "Custom"),
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+                x = 0.5,
+                xref = "paper",
+                xanchor = "center",
+                y = 0.98,
+                yref = "paper",
+                yanchor = "top"
+              )
+            },
+            margin = list(l = 80, r = 40, t = 80, b = 60),
+            xaxis = list(
+              title = "Document Index",
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+            ),
+            yaxis = list(
+              title = "Cluster",
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+            )
+          )
+        } else {
+          if (is.null(data_labels)) {
+            data_labels <- paste0("Doc ", seq_len(nrow(plot_data)))
+          }
+
+          hover_template <- if (!is.null(hover_text)) {
+            "%{text}<extra></extra>"
+          } else {
+            paste0("%{text}<br>X: %{x:.3f}<br>Y: %{y:.3f}<br>",
+                   "Cluster: %{color}<extra></extra>")
+          }
+
+          plot_text <- if (!is.null(hover_text)) hover_text else data_labels
+
+          p <- plotly::plot_ly(
+            x = plot_data[, 1],
+            y = if (ncol(plot_data) > 1) plot_data[, 2] else rep(0, nrow(plot_data)),
+            color = as.factor(cluster_data),
+            text = plot_text,
+            type = "scatter",
+            mode = "markers",
+            marker = list(size = 8, opacity = 0.7),
+            hovertemplate = hover_template,
+            width = width,
+            height = height
+          )
+
+          if (!is.null(hover_config)) {
+            p <- p %>% plotly::layout(hoverlabel = hover_config)
+          }
+
+          p %>% plotly::layout(
+            title = if (!is.null(title)) {
+              list(
+                text = title,
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+                x = 0.5,
+                xref = "paper",
+                xanchor = "center",
+                y = 0.98,
+                yref = "paper",
+                yanchor = "top"
+              )
+            } else {
+              list(
+                text = paste("Clustering Results -",
+                             if (!is.null(analysis_result)) analysis_result$method else "Custom"),
+                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
+                x = 0.5,
+                xref = "paper",
+                xanchor = "center",
+                y = 0.98,
+                yref = "paper",
+                yanchor = "top"
+              )
+            },
+            margin = list(l = 80, r = 40, t = 80, b = 60),
+            xaxis = list(
+              title = "Component 1",
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+            ),
+            yaxis = list(
+              title = "Component 2",
+              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+            )
+          )
+        }
+      },
+      stop("Unsupported plot type: ", plot_type)
+    )
+
+    return(plot_obj)
+
+  }, error = function(e) {
+    stop("Error creating semantic visualization: ", e$message)
+  })
+}
+
+
+#' Plot Cross-Category Similarity Comparison
+#'
+#' @description
+#' Creates a faceted ggplot heatmap for cross-category document similarity
+#' comparison. Accepts either a pre-built long-format data frame or extracts
+#' from a similarity matrix.
+#'
+#' @param similarity_data Either a similarity matrix (square numeric matrix) or
+#'   a data frame in long format with columns for row labels, column labels,
+#'   similarity values, and category.
+#' @param docs_data Data frame with document metadata (required if similarity_data is a matrix)
+#' @param row_var Column name for row document labels (default: "ld_doc_name")
+#' @param col_var Column name for column document labels (default: "other_doc_name")
+#' @param value_var Column name for similarity values (default: "cosine_similarity")
+#' @param category_var Column name for category in long-format data or docs_data (default: "other_category")
+#' @param row_category Category for row documents (used with matrix input)
+#' @param col_categories Categories for column documents (used with matrix input)
+#' @param row_display_var Column name for row display labels in tooltip (default: NULL, uses row_var)
+#' @param col_display_var Column name for column display labels in tooltip (default: NULL, uses col_var)
+#' @param method_name Similarity method name for legend (default: "Cosine")
+#' @param title Plot title (default: NULL)
+#' @param show_values Logical; show similarity values as text on tiles (default: TRUE)
+#' @param row_label Label for y-axis (default: "Documents")
+#' @param label_max_chars Maximum characters for axis labels before truncation (default: 25)
+#' @param order_by_numeric Logical; order by numeric ID extracted from labels (default: TRUE)
+#' @param height Plot height (default: 600)
+#' @param width Plot width (default: NULL)
+#'
+#' @return A ggplot object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # With pre-built long-format data
+#' plot_cross_category_heatmap(
+#'   similarity_data = ld_similarities,
+#'   row_var = "ld_doc_name",
+#'   col_var = "other_doc_name",
+#'   value_var = "cosine_similarity",
+#'   category_var = "other_category",
+#'   row_label = "SLD Documents"
+#' )
+#' }
+plot_cross_category_heatmap <- function(similarity_data,
+                                         docs_data = NULL,
+                                         row_var = "ld_doc_name",
+                                         col_var = "other_doc_name",
+                                         value_var = "cosine_similarity",
+                                         category_var = "other_category",
+                                         row_category = NULL,
+                                         col_categories = NULL,
+                                         row_display_var = NULL,
+                                         col_display_var = NULL,
+                                         method_name = "Cosine",
+                                         title = NULL,
+                                         show_values = TRUE,
+                                         row_label = "Documents",
+                                         label_max_chars = 25,
+                                         order_by_numeric = TRUE,
+                                         height = 600,
+                                         width = NULL) {
+
+  # Detect input type: data frame (long format) or matrix
+  if (is.data.frame(similarity_data)) {
+    # Long-format data frame input
+    plot_data <- similarity_data
+
+    # Validate required columns
+    required_cols <- c(row_var, col_var, value_var, category_var)
+    missing_cols <- setdiff(required_cols, names(plot_data))
+    if (length(missing_cols) > 0) {
+      stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+    }
+
+    # Rename columns for internal use
+    plot_data <- plot_data %>%
+      dplyr::rename(
+        row_doc = !!rlang::sym(row_var),
+        col_doc = !!rlang::sym(col_var),
+        similarity = !!rlang::sym(value_var),
+        col_category = !!rlang::sym(category_var)
+      )
+
+    # Handle display variables for tooltips
+    if (!is.null(row_display_var) && row_display_var %in% names(similarity_data)) {
+      plot_data$row_display <- similarity_data[[row_display_var]]
+    } else {
+      plot_data$row_display <- plot_data$row_doc
+    }
+
+    if (!is.null(col_display_var) && col_display_var %in% names(similarity_data)) {
+      plot_data$col_display <- similarity_data[[col_display_var]]
+    } else {
+      plot_data$col_display <- plot_data$col_doc
+    }
+
+    # Create truncated labels
+    plot_data <- plot_data %>%
+      dplyr::mutate(
+        row_label_trunc = stringr::str_trunc(.data$row_doc, label_max_chars),
+        col_label_trunc = stringr::str_trunc(.data$col_doc, label_max_chars)
+      )
+
+    # Order by numeric ID if requested
+    if (order_by_numeric) {
+      plot_data <- plot_data %>%
+        dplyr::mutate(
+          row_numeric_id = as.numeric(stringr::str_extract(.data$row_doc, "\\d+")),
+          col_numeric_id = as.numeric(stringr::str_extract(.data$col_doc, "\\d+"))
+        )
+
+      row_order <- plot_data %>%
+        dplyr::arrange(.data$row_numeric_id) %>%
+        dplyr::pull(.data$row_label_trunc) %>%
+        unique()
+
+      col_order <- plot_data %>%
+        dplyr::arrange(.data$col_numeric_id) %>%
+        dplyr::pull(.data$col_label_trunc) %>%
+        unique()
+    } else {
+      row_order <- unique(plot_data$row_label_trunc)
+      col_order <- unique(plot_data$col_label_trunc)
+    }
+
+    # Get category levels
+    cat_levels <- unique(plot_data$col_category)
+
+    # Build final plot data
+    plot_data <- plot_data %>%
+      dplyr::mutate(
+        row_label_trunc = factor(.data$row_label_trunc, levels = rev(row_order)),
+        col_label_trunc = factor(.data$col_label_trunc, levels = col_order),
+        col_category = factor(.data$col_category, levels = cat_levels),
+        tooltip_text = paste0(
+          row_label, ": ", dplyr::coalesce(as.character(.data$row_display), as.character(.data$row_doc)),
+          "<br>", .data$col_category, ": ", dplyr::coalesce(as.character(.data$col_display), as.character(.data$col_doc)),
+          "<br>", method_name, " Similarity: ", round(.data$similarity, 3)
+        )
+      )
+
+  } else if (is.matrix(similarity_data)) {
+    # Matrix input - extract cross-category data
+    if (is.null(docs_data) || is.null(row_category) || is.null(col_categories)) {
+      stop("For matrix input, docs_data, row_category, and col_categories are required")
+    }
+
+    if (!category_var %in% names(docs_data)) {
+      stop("category_var '", category_var, "' not found in docs_data")
+    }
+
+    row_indices <- which(docs_data[[category_var]] == row_category)
+    if (length(row_indices) == 0) {
+      return(create_empty_plot_message(paste("No documents found for category:", row_category)))
+    }
+
+    row_docs <- docs_data[row_indices, ]
+    row_labels <- row_docs$document_id_display %||% row_docs$document_number %||% paste("Doc", row_indices)
+
+    plot_data_list <- list()
+
+    for (col_cat in col_categories) {
+      col_indices <- which(docs_data[[category_var]] == col_cat)
+      if (length(col_indices) == 0) next
+
+      col_docs <- docs_data[col_indices, ]
+      col_labels <- col_docs$document_id_display %||% col_docs$document_number %||% paste("Doc", col_indices)
+
+      sub_matrix <- similarity_data[row_indices, col_indices, drop = FALSE]
+
+      for (i in seq_along(row_indices)) {
+        for (j in seq_along(col_indices)) {
+          plot_data_list[[length(plot_data_list) + 1]] <- data.frame(
+            row_label_trunc = stringr::str_trunc(row_labels[i], label_max_chars),
+            col_label_trunc = stringr::str_trunc(col_labels[j], label_max_chars),
+            row_display = row_docs$document_id_display[i] %||% row_labels[i],
+            col_display = col_docs$document_id_display[j] %||% col_labels[j],
+            similarity = sub_matrix[i, j],
+            col_category = col_cat,
+            stringsAsFactors = FALSE
+          )
+        }
+      }
+    }
+
+    if (length(plot_data_list) == 0) {
+      return(create_empty_plot_message("No matching documents found for specified categories"))
+    }
+
+    plot_data <- do.call(rbind, plot_data_list)
+
+    row_order <- unique(plot_data$row_label_trunc)
+    col_order <- unique(plot_data$col_label_trunc)
+
+    plot_data <- plot_data %>%
+      dplyr::mutate(
+        row_label_trunc = factor(.data$row_label_trunc, levels = rev(row_order)),
+        col_label_trunc = factor(.data$col_label_trunc, levels = col_order),
+        col_category = factor(.data$col_category, levels = col_categories),
+        tooltip_text = paste0(
+          row_category, ": ", .data$row_display,
+          "<br>", .data$col_category, ": ", .data$col_display,
+          "<br>", method_name, " Similarity: ", round(.data$similarity, 3)
+        )
+      )
+
+    if (is.null(row_label) || row_label == "Documents") {
+      row_label <- paste(row_category, "Documents")
+    }
+
+  } else {
+    stop("similarity_data must be a data frame or matrix")
+  }
+
+  # Build the plot
+  p <- ggplot2::ggplot(
+    plot_data,
+    ggplot2::aes(x = .data$col_label_trunc, y = .data$row_label_trunc, fill = .data$similarity, text = .data$tooltip_text)
+  ) +
+    ggplot2::geom_tile(color = "white", linewidth = 0.1)
+
+  if (show_values) {
+    q75 <- stats::quantile(plot_data$similarity, 0.75, na.rm = TRUE)
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(
+        label = round(.data$similarity, 2),
+        color = ifelse(.data$similarity > q75, "black", "white")
+      ),
+      size = 3.5,
+      fontface = "bold",
+      show.legend = FALSE
+    ) +
+      ggplot2::scale_color_identity()
+  }
+
+  p <- p +
+    ggplot2::scale_fill_viridis_c(name = paste0(method_name, "\nSimilarity")) +
+    ggplot2::facet_wrap(~ col_category, scales = "free_x") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      strip.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 10),
+      axis.text.y = ggplot2::element_text(size = 10),
+      axis.title.x = ggplot2::element_blank(),
+      legend.title = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      legend.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      plot.title = ggplot2::element_text(size = 12, hjust = 0.5)
+    ) +
+    ggplot2::labs(y = row_label, title = title)
+
+  return(p)
+}
+
+
+#' Plot Document Similarity Heatmap
+#'
+#' @description
+#' Creates an interactive heatmap visualization of document similarity matrices
+#' with support for document metadata, feature-specific colorscales, and rich tooltips.
+#' Supports both symmetric (all-vs-all) and cross-category comparison modes.
+#'
+#' @param similarity_matrix A square numeric matrix of similarity scores
+#' @param docs_data Optional data frame with document metadata containing:
+#'   \itemize{
+#'     \item \code{document_number}: Document identifiers for axis labels
+#'     \item \code{document_id_display}: Document IDs for hover text
+#'     \item \code{category_display}: Category labels for hover text
+#'   }
+#' @param feature_type Feature space type: "words", "topics", "ngrams", or "embeddings"
+#'   (determines colorscale and display name)
+#' @param method_name Similarity method name for display (default: "Cosine")
+#' @param title Plot title (default: NULL, auto-generated from feature_type)
+#' @param category_filter Optional category filter label for title (default: NULL)
+#' @param doc_id_var Name of document ID variable (affects label text, default: NULL)
+#' @param colorscale Plotly colorscale override (default: NULL, uses feature_type default)
+#' @param height Plot height in pixels (default: 600)
+#' @param width Plot width in pixels (default: NULL for auto)
+#' @param row_category Category for row documents in cross-category mode (default: NULL)
+#' @param col_categories Character vector of categories for column documents (default: NULL)
+#' @param category_var Name of category variable in docs_data (default: "category_display")
+#' @param show_values Logical; show similarity values as text on tiles (default: FALSE)
+#' @param facet Logical; facet by column categories (default: TRUE when col_categories specified)
+#' @param row_label Label for row axis (default: NULL, uses row_category)
+#' @param output_type Output type: "plotly" or "ggplot" (default: "plotly", auto-switches to "ggplot" for faceting)
+#'
+#' @return A plotly or ggplot2 heatmap object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Simple usage with matrix only
+#' sim_matrix <- matrix(runif(25), nrow = 5)
+#' plot_similarity_heatmap(sim_matrix)
+#'
+#' # With document metadata
+#' docs <- data.frame(
+#'   document_number = paste("Doc", 1:5),
+#'   document_id_display = c("Paper A", "Paper B", "Paper C", "Paper D", "Paper E"),
+#'   category_display = c("Science", "Science", "Tech", "Tech", "Health")
+#' )
+#' plot_similarity_heatmap(sim_matrix, docs_data = docs, feature_type = "embeddings")
+#'
+#' # Cross-category comparison with faceting
+#' plot_similarity_heatmap(
+#'   sim_matrix,
+#'   docs_data = docs,
+#'   row_category = "Science",
+#'   col_categories = c("Tech", "Health"),
+#'   show_values = TRUE,
+#'   facet = TRUE
+#' )
+#' }
+plot_similarity_heatmap <- function(similarity_matrix,
+                                     docs_data = NULL,
+                                     feature_type = "words",
+                                     method_name = "Cosine",
+                                     title = NULL,
+                                     category_filter = NULL,
+                                     doc_id_var = NULL,
+                                     colorscale = NULL,
+                                     height = 600,
+                                     width = NULL,
+                                     row_category = NULL,
+                                     col_categories = NULL,
+                                     category_var = "category_display",
+                                     show_values = FALSE,
+                                     facet = NULL,
+                                     row_label = NULL,
+                                     output_type = "plotly") {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(similarity_matrix) || nrow(similarity_matrix) < 2) {
+    return(create_empty_plot_message("Need at least 2 documents for similarity analysis"))
+  }
+
+  # Cross-category mode: create faceted ggplot heatmap
+
+  if (!is.null(row_category) && !is.null(col_categories) && !is.null(docs_data)) {
+    if (is.null(facet)) facet <- TRUE
+    if (facet || output_type == "ggplot") {
+      return(plot_cross_category_heatmap(
+        similarity_data = similarity_matrix,
+        docs_data = docs_data,
+        row_category = row_category,
+        col_categories = col_categories,
+        category_var = category_var,
+        method_name = method_name,
+        title = title,
+        show_values = show_values,
+        row_label = row_label,
+        height = height,
+        width = width
+      ))
+    }
+  }
+
+  n_docs <- nrow(similarity_matrix)
+
+  feature_config <- switch(feature_type,
+    "words" = list(display_name = "Word Co-occurrence", colorscale = "Plasma"),
+    "topics" = list(display_name = "Topic Distribution", colorscale = "Inferno"),
+    "ngrams" = list(display_name = "N-gram Pattern", colorscale = "Viridis"),
+    "embeddings" = list(display_name = "Semantic Embedding", colorscale = "Magma"),
+    list(display_name = feature_type, colorscale = "Turbo")
+  )
+
+  if (!is.null(colorscale)) {
+    feature_config$colorscale <- colorscale
+  }
+
+  wrap_long_text <- function(text, max_chars = 40) {
+    text <- as.character(text)
+    if (nchar(text) <= max_chars) return(text)
+
+    words <- strsplit(text, " ")[[1]]
+    lines <- character()
+    current_line <- ""
+
+    for (word in words) {
+      if (nchar(paste(current_line, word)) > max_chars) {
+        if (nchar(current_line) > 0) {
+          lines <- c(lines, current_line)
+          current_line <- word
+        } else {
+          while (nchar(word) > max_chars) {
+            lines <- c(lines, substr(word, 1, max_chars))
+            word <- substr(word, max_chars + 1, nchar(word))
+          }
+          current_line <- word
+        }
+      } else {
+        current_line <- if (nchar(current_line) == 0) word else paste(current_line, word)
+      }
+    }
+    if (nchar(current_line) > 0) lines <- c(lines, current_line)
+
+    paste(lines, collapse = "<br>")
+  }
+
+  if (!is.null(docs_data) && nrow(docs_data) >= n_docs) {
+    docs_data <- docs_data[1:n_docs, ]
+    x_labels <- docs_data$document_number %||% paste("Doc", 1:n_docs)
+    y_labels <- x_labels
+
+    doc_ids_processed <- vapply(
+      docs_data$document_id_display %||% x_labels,
+      wrap_long_text,
+      character(1),
+      USE.NAMES = FALSE
+    )
+    cats_processed <- vapply(
+      docs_data$category_display %||% rep("", n_docs),
+      function(x) wrap_long_text(x, 35),
+      character(1),
+      USE.NAMES = FALSE
+    )
+
+    feature_method_text <- paste0(
+      "<b>Feature:</b> ", feature_type, "<br>",
+      "<b>Method:</b> ", method_name, "<br><b>Similarity:</b> "
+    )
+
+    doc_label <- if (!is.null(doc_id_var) && doc_id_var != "" && doc_id_var != "None") {
+      "ID"
+    } else {
+      "Document"
+    }
+
+    row_templates <- paste0(
+      "<b>", doc_label, ":</b> ", doc_ids_processed, "<br>",
+      "<b>Category:</b> ", cats_processed, "<br>"
+    )
+
+    col_templates <- paste0(
+      "<b>", doc_label, ":</b> ", doc_ids_processed, "<br>",
+      "<b>Category:</b> ", cats_processed, "<br>"
+    )
+
+    rounded_sim <- round(similarity_matrix, 3)
+
+    hover_text <- matrix(
+      paste0(
+        rep(row_templates, each = n_docs),
+        rep(col_templates, times = n_docs),
+        feature_method_text,
+        as.vector(t(rounded_sim))
+      ),
+      nrow = n_docs,
+      ncol = n_docs,
+      byrow = TRUE
+    )
+
+    hovertemplate <- "%{text}<extra></extra>"
+    text_matrix <- hover_text
+  } else {
+    x_labels <- paste("Doc", 1:n_docs)
+    y_labels <- x_labels
+    text_matrix <- round(similarity_matrix, 3)
+    hovertemplate <- paste0(
+      "Document: %{x}<br>Document: %{y}<br>",
+      "Feature: ", feature_type, "<br>",
+      "Method: ", method_name, "<br>",
+      "Similarity: %{text}<extra></extra>"
+    )
+  }
+
+  if (is.null(title)) {
+    title <- if (!is.null(category_filter) && category_filter != "all") {
+      paste("Document", feature_config$display_name, "Similarity:", category_filter)
+    } else {
+      paste("Document", feature_config$display_name, "Similarity Heatmap")
+    }
+  }
+
+  plotly::plot_ly(
+    z = similarity_matrix,
+    x = x_labels,
+    y = y_labels,
+    type = "heatmap",
+    colorscale = feature_config$colorscale,
+    showscale = TRUE,
+    colorbar = list(
+      title = list(
+        text = "Similarity<br>Score",
+        font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      titleside = "right",
+      len = 0.8,
+      thickness = 15
+    ),
+    text = text_matrix,
+    hovertemplate = hovertemplate,
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        x = 0.5,
+        xref = "paper",
+        xanchor = "center"
+      ),
+      xaxis = list(
+        title = "Documents",
+        tickangle = -45,
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Documents",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      plot_bgcolor = "#ffffff",
+      paper_bgcolor = "#ffffff",
+      margin = list(t = 80, b = 60, l = 100, r = 80)
+    )
+}

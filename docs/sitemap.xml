@@ -48,6 +48,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_ollama.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_alt_text.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_docker_deployment.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_feature.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_multimodal_prerequisites.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_ollama.html</loc></url>
@@ -77,6 +78,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_keyness.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_tfidf.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_morphology.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_named_entities.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_smart.html</loc></url>
@@ -124,6 +126,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_frequency_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/log_security_event.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/parse_morphology_string.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/pipe.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_cluster_terms.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_cross_category_heatmap.html</loc></url>
@@ -135,6 +138,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_keyword_comparison.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_lexical_diversity_distribution.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_model_comparison.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_morphology_feature.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_mwe_frequency.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_ngram_frequency.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_pos_frequencies.html</loc></url>
@@ -161,6 +165,8 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/reduce_dimensions.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/remove_notification_by_id.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/render_displacy_dep.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/render_displacy_ent.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/require_feature.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_app.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_contrastive_topics_internal.html</loc></url>
@@ -192,6 +198,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/SpecialEduTech.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stm_15.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stopwords_list.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/summarize_morphology.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/TextAnalysisR-package.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/unite_cols.html</loc></url>

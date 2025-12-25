@@ -129,7 +129,7 @@ structure. Use for visual exploration before clustering.
 
 ``` r
 reduced <- reduce_dimensions(embeddings, method = "umap", n_components = 2)
-plot_semantic_viz(reduced)
+plot_semantic_viz(reduced, plot_type = "dimensionality_reduction")
 ```
 
 **Learn More:** [scikit-learn Manifold

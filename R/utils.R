@@ -55,6 +55,23 @@ NULL
 # Deployment Detection Utilities
 #
 
+#' Check Docker Deployment
+#'
+#' @description
+#' Detects whether the app is running in a Docker container.
+#' Docker deployments have full Python/spaCy capability.
+#'
+#' @return Logical TRUE if running in Docker
+#'
+#' @keywords internal
+check_docker_deployment <- function() {
+  has_dockerenv <- file.exists("/.dockerenv")
+  has_docker_env_var <- nzchar(Sys.getenv("TEXTANALYSISR_DOCKER"))
+  has_docker_container <- nzchar(Sys.getenv("DOCKER_CONTAINER"))
+
+  return(has_dockerenv || has_docker_env_var || has_docker_container)
+}
+
 #' Check Deployment Environment
 #'
 #' @description
@@ -70,11 +87,17 @@ NULL
 #'   message("Running on web - some features disabled")
 #' }
 check_web_deployment <- function() {
- shinyapps <- nzchar(Sys.getenv("SHINY_PORT")) ||
-    Sys.getenv("R_CONFIG_ACTIVE") == "shinyapps"
+  # Docker has Python/spaCy available - not a restricted deployment
+  if (check_docker_deployment()) {
+    return(FALSE)
+  }
+
+  # Check for restricted web servers (no Python)
+  shinyapps <- Sys.getenv("R_CONFIG_ACTIVE") == "shinyapps"
+  shinyapps_io <- grepl("shinyapps", Sys.getenv("SHINY_SERVER_URL", ""), ignore.case = TRUE)
   connect <- nzchar(Sys.getenv("RSTUDIO_CONNECT_HASTE"))
-  server <- nzchar(Sys.getenv("SHINY_SERVER_VERSION"))
-  return(shinyapps || connect || server)
+
+  return(shinyapps || shinyapps_io || connect)
 }
 
 #' Check Feature Status

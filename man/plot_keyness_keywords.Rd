@@ -26,6 +26,7 @@ Other lexical:
 \code{\link{detect_multi_words}()},
 \code{\link{extract_keywords_keyness}()},
 \code{\link{extract_keywords_tfidf}()},
+\code{\link{extract_morphology}()},
 \code{\link{extract_named_entities}()},
 \code{\link{extract_pos_tags}()},
 \code{\link{lexical_analysis}},
@@ -33,9 +34,13 @@ Other lexical:
 \code{\link{lexical_frequency_analysis}()},
 \code{\link{plot_keyword_comparison}()},
 \code{\link{plot_lexical_diversity_distribution}()},
+\code{\link{plot_morphology_feature}()},
 \code{\link{plot_readability_by_group}()},
 \code{\link{plot_readability_distribution}()},
 \code{\link{plot_tfidf_keywords}()},
-\code{\link{plot_top_readability_documents}()}
+\code{\link{plot_top_readability_documents}()},
+\code{\link{render_displacy_dep}()},
+\code{\link{render_displacy_ent}()},
+\code{\link{summarize_morphology}()}
 }
 \concept{lexical}

@@ -129,7 +129,7 @@ Dimensionality reduction transforms high-dimensional data into 2D or 3D visualiz
 
 ```{r}
 reduced <- reduce_dimensions(embeddings, method = "umap", n_components = 2)
-plot_semantic_viz(reduced)
+plot_semantic_viz(reduced, plot_type = "dimensionality_reduction")
 ```
 
 **Learn More:** [scikit-learn Manifold Learning](https://scikit-learn.org/stable/modules/manifold.html)

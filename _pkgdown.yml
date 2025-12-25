@@ -19,6 +19,10 @@ reference:
   - get_available_tokens
   - extract_pos_tags
   - extract_named_entities
+  - extract_morphology
+  - summarize_morphology
+  - render_displacy_ent
+  - render_displacy_dep
 
 - title: "Lexical Analysis"
   desc: "Word frequency, keywords, and readability"
@@ -38,6 +42,7 @@ reference:
   - plot_mwe_frequency
   - plot_pos_frequencies
   - plot_entity_frequencies
+  - plot_morphology_feature
   - plot_readability_distribution
   - plot_readability_by_group
   - plot_top_readability_documents

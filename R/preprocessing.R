@@ -598,9 +598,6 @@ prep_texts <- function(united_tbl,
 }
 
 
-################################################################################
-# PDF PROCESSING (R-based with pdftools)
-################################################################################
 
 #' Extract Text from PDF
 #'
@@ -777,10 +774,6 @@ process_pdf_file <- function(file_path, content_type = "auto") {
 }
 
 
-
-################################################################################
-# PDF PROCESSING (Python-based with pdfplumber)
-################################################################################
 
 #' Extract Text from PDF using Python
 #'
@@ -1099,9 +1092,6 @@ process_pdf_file_py <- function(file_path, content_type = "auto", envname = "tex
 
 
 
-################################################################################
-# MULTIMODAL PDF PROCESSING (Vision LLM Integration)
-################################################################################
 
 #' Check Multimodal Prerequisites
 #'

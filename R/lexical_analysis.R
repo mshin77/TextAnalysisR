@@ -12,9 +12,6 @@
 #' @family lexical
 NULL
 
-################################################################################
-# LEXICAL DIVERSITY
-################################################################################
 
 .lexdiv_cache <- new.env(hash = TRUE, parent = emptyenv())
 
@@ -149,6 +146,307 @@ extract_pos_tags <- function(tokens,
   )
 
   return(parsed)
+}
+
+
+#' Extract Morphological Features
+#'
+#' @description
+#' Uses spaCy to extract comprehensive morphological features from text.
+#' Returns data with Number, Tense, VerbForm, Person, Case, Mood, Aspect, etc.
+#'
+#' @param tokens A quanteda tokens object or character vector of texts.
+#' @param features Character vector of morphological features to extract.
+#'   Default includes common Universal Dependencies features.
+#' @param include_pos Logical; include POS tags (default: TRUE).
+#' @param include_lemma Logical; include lemmatized forms (default: TRUE).
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with token-level morphological annotations including
+#'   morph_* columns for each requested feature.
+#'
+#' @details
+#' Morphological features follow Universal Dependencies annotation.
+#' Common features include:
+#' \itemize{
+#'   \item \code{Number}: Sing (singular), Plur (plural)
+#'   \item \code{Tense}: Past, Pres (present), Fut (future)
+#'   \item \code{VerbForm}: Fin (finite), Inf (infinitive), Part (participle), Ger (gerund)
+#'   \item \code{Person}: 1, 2, 3 (first, second, third person)
+#'   \item \code{Case}: Nom (nominative), Acc (accusative), Gen (genitive), Dat (dative)
+#'   \item \code{Mood}: Ind (indicative), Imp (imperative), Sub (subjunctive)
+#'   \item \code{Aspect}: Perf (perfective), Imp (imperfective), Prog (progressive)
+#' }
+#'
+#' @family lexical
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' tokens <- quanteda::tokens("The cats are running quickly.")
+#' morph_data <- extract_morphology(tokens)
+#' print(morph_data)
+#' }
+extract_morphology <- function(tokens,
+                               features = c("Number", "Tense", "VerbForm",
+                                            "Person", "Case", "Mood", "Aspect"),
+                               include_pos = TRUE,
+                               include_lemma = TRUE,
+                               model = "en_core_web_sm") {
+
+  if (!requireNamespace("spacyr", quietly = TRUE)) {
+    stop("Package 'spacyr' is required. Install with: install.packages('spacyr')")
+  }
+
+  # Convert tokens to text if needed
+  if (inherits(tokens, "tokens")) {
+    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
+  } else if (is.character(tokens)) {
+    texts <- tokens
+  } else {
+    stop("tokens must be a quanteda tokens object or character vector")
+  }
+
+  # Initialize spaCy if needed
+  tryCatch({
+    spacyr::spacy_parse("test", pos = FALSE, lemma = FALSE, entity = FALSE)
+  }, error = function(e) {
+    message("Initializing spaCy with model: ", model)
+    spacyr::spacy_initialize(model = model)
+  })
+
+  # Parse with morphology extraction via additional_attributes
+  parsed <- spacyr::spacy_parse(
+    texts,
+    pos = include_pos,
+    tag = include_pos,
+    lemma = include_lemma,
+    entity = FALSE,
+    dependency = FALSE,
+    additional_attributes = c("morph")
+  )
+
+  # Parse the morph string into individual feature columns
+  if ("morph" %in% names(parsed) && nrow(parsed) > 0) {
+    parsed <- parse_morphology_string(parsed, features)
+  }
+
+  return(parsed)
+}
+
+
+#' Parse Morphology String into Individual Columns
+#'
+#' @description
+#' Parse spaCy's morphology string format
+#' (e.g., "Number=Sing|Tense=Past|VerbForm=Fin") into individual columns.
+#'
+#' @param parsed Data frame with a 'morph' column from spaCy.
+#' @param features Character vector of feature names to extract.
+#'
+#' @return Data frame with additional morph_* columns for each feature.
+#'
+#' @keywords internal
+parse_morphology_string <- function(parsed, features) {
+  for (feat in features) {
+    col_name <- paste0("morph_", feat)
+    parsed[[col_name]] <- vapply(parsed$morph, function(m) {
+      # Robust check for empty/NA/NULL values
+      if (is.null(m) || length(m) == 0 || !is.atomic(m)) return(NA_character_)
+      m_str <- as.character(m)[1]
+      if (is.na(m_str) || m_str == "") return(NA_character_)
+      # Parse "Number=Sing|Tense=Past|..." format
+      parts <- strsplit(m_str, "\\|")[[1]]
+      for (part in parts) {
+        kv <- strsplit(part, "=")[[1]]
+        if (length(kv) == 2 && kv[1] == feat) {
+          return(kv[2])
+        }
+      }
+      return(NA_character_)
+    }, FUN.VALUE = character(1), USE.NAMES = FALSE)
+  }
+  return(parsed)
+}
+
+
+#' Plot Morphology Feature Distribution
+#'
+#' @description
+#' Creates a bar chart showing the distribution of a morphological feature
+#' using consistent package styling.
+#'
+#' @param data Data frame with morph_* columns from extract_morphology().
+#' @param feature Character; feature name (e.g., "Number", "Tense").
+#' @param title Character; plot title (auto-generated if NULL).
+#' @param colors Named character vector of custom colors for feature values.
+#'
+#' @return A plotly object.
+#'
+#' @family lexical
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' morph_data <- extract_morphology(tokens)
+#' plot_morphology_feature(morph_data, "Tense")
+#' }
+plot_morphology_feature <- function(data,
+                                    feature,
+                                    title = NULL,
+                                    colors = NULL) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required for visualization.")
+  }
+
+  col_name <- paste0("morph_", feature)
+
+  if (!col_name %in% names(data)) {
+    # Return empty plot with message
+    return(
+      plotly::plot_ly() %>%
+        plotly::layout(
+          title = list(text = paste("Feature", feature, "not available"),
+                       font = list(size = 14, color = "#6B7280")),
+          xaxis = list(visible = FALSE),
+          yaxis = list(visible = FALSE),
+          annotations = list(
+            list(text = "No data", showarrow = FALSE, font = list(size = 16))
+          )
+        )
+    )
+  }
+
+  values <- data[[col_name]]
+  values <- values[!is.na(values) & values != ""]
+
+  if (length(values) == 0) {
+    return(
+      plotly::plot_ly() %>%
+        plotly::layout(
+          title = list(text = paste("No", feature, "data found"),
+                       font = list(size = 14, color = "#6B7280"))
+        )
+    )
+  }
+
+  freq_df <- as.data.frame(table(values), stringsAsFactors = FALSE)
+  names(freq_df) <- c("Value", "Count")
+  freq_df <- freq_df[order(-freq_df$Count), ]
+  freq_df$Percentage <- round(freq_df$Count / sum(freq_df$Count) * 100, 1)
+
+  if (is.null(title)) {
+    title <- paste(feature, "Distribution")
+  }
+
+  # Feature-specific default colors
+  if (is.null(colors)) {
+    colors <- switch(feature,
+      "Number" = c("Sing" = "#3B82F6", "Plur" = "#10B981"),
+      "Tense" = c("Past" = "#EF4444", "Pres" = "#3B82F6", "Fut" = "#10B981"),
+      "VerbForm" = c("Fin" = "#3B82F6", "Inf" = "#8B5CF6",
+                     "Part" = "#F59E0B", "Ger" = "#10B981"),
+      "Person" = c("1" = "#3B82F6", "2" = "#10B981", "3" = "#F59E0B"),
+      "Case" = c("Nom" = "#3B82F6", "Acc" = "#10B981",
+                 "Gen" = "#F59E0B", "Dat" = "#8B5CF6"),
+      "Mood" = c("Ind" = "#3B82F6", "Imp" = "#EF4444", "Sub" = "#8B5CF6"),
+      "Aspect" = c("Perf" = "#3B82F6", "Imp" = "#10B981", "Prog" = "#F59E0B"),
+      NULL
+    )
+  }
+
+  bar_colors <- if (!is.null(colors) && length(colors) > 0) {
+    sapply(freq_df$Value, function(v) {
+      if (v %in% names(colors)) colors[[v]] else "#6B7280"
+    })
+  } else {
+    rep("#337ab7", nrow(freq_df))
+  }
+
+  plotly::plot_ly(
+    data = freq_df,
+    x = ~Value,
+    y = ~Count,
+    type = "bar",
+    marker = list(color = bar_colors),
+    hoverinfo = "text",
+    hovertext = ~paste0(Value, "\nCount: ", Count, "\n", Percentage, "%")
+  ) %>%
+    plotly::layout(
+      title = list(text = title, font = list(size = 14, color = "#0c1f4a")),
+      xaxis = list(title = "", tickfont = list(size = 12)),
+      yaxis = list(title = "Frequency", titlefont = list(size = 12)),
+      margin = list(t = 40, b = 40, l = 50, r = 20)
+    )
+}
+
+
+#' Summarize Morphology Features
+#'
+#' @description
+#' Creates a summary table of morphological feature distributions
+#' with counts and percentages for each feature value.
+#'
+#' @param data Data frame with morph_* columns from extract_morphology().
+#' @param features Character vector of features to summarize.
+#'   If NULL, all available morph_* columns are used.
+#'
+#' @return A data frame with Feature, Value, Count, and Percentage columns.
+#'
+#' @family lexical
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' morph_data <- extract_morphology(tokens)
+#' summary_df <- summarize_morphology(morph_data)
+#' print(summary_df)
+#' }
+summarize_morphology <- function(data, features = NULL) {
+  morph_cols <- grep("^morph_", names(data), value = TRUE)
+
+  if (length(morph_cols) == 0) {
+    return(data.frame(
+      Feature = character(0),
+      Value = character(0),
+      Count = integer(0),
+      Percentage = numeric(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  if (!is.null(features)) {
+    target_cols <- paste0("morph_", features)
+    morph_cols <- intersect(morph_cols, target_cols)
+  }
+
+  summary_list <- lapply(morph_cols, function(col) {
+    feat_name <- gsub("morph_", "", col)
+    values <- data[[col]]
+    values <- values[!is.na(values) & values != ""]
+
+    if (length(values) == 0) return(NULL)
+
+    counts <- as.data.frame(table(values), stringsAsFactors = FALSE)
+    names(counts) <- c("Value", "Count")
+    counts$Feature <- feat_name
+    counts$Percentage <- round(counts$Count / sum(counts$Count) * 100, 1)
+    counts[, c("Feature", "Value", "Count", "Percentage")]
+  })
+
+  result <- do.call(rbind, summary_list)
+  if (is.null(result)) {
+    return(data.frame(
+      Feature = character(0),
+      Value = character(0),
+      Count = integer(0),
+      Percentage = numeric(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  return(result)
 }
 
 
@@ -582,8 +880,7 @@ lexical_frequency_analysis <- function(...) {
   return(plot_word_frequency(...))
 }
 
-# FREQUENCY ANALYSIS
-################################################################################
+
 
 #' @title Plot Word Frequency
 #'
@@ -1632,11 +1929,169 @@ calculate_text_readability <- function(texts,
   return(readability_scores)
 }
 
-################################################################################
-# SPACY NLP FUNCTIONS (Python Integration via reticulate)
-################################################################################
-# LINGUISTIC VISUALIZATION (POS, NER)
-################################################################################
+
+
+
+#' Plot Term Frequency Trends by Continuous Variable
+#'
+#' @description
+#' Creates a faceted line plot showing how term frequencies vary across
+#' a continuous variable (e.g., year, time period).
+#'
+#' @param term_data Data frame containing term frequencies with columns:
+#'   continuous_var, term, and word_frequency
+#' @param continuous_var Name of the continuous variable column
+#' @param terms Character vector of terms to display (optional, filters if provided)
+#' @param title Plot title (default: NULL, auto-generated)
+#' @param height Plot height in pixels (default: 600)
+#' @param width Plot width in pixels (default: NULL, auto)
+#'
+#' @return A plotly object with faceted line plots
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' term_df <- data.frame(
+#'   year = rep(2010:2020, each = 3),
+#'   term = rep(c("learning", "education", "technology"), 11),
+#'   word_frequency = sample(10:100, 33, replace = TRUE)
+#' )
+#' plot_term_trends_continuous(term_df, "year", c("learning", "education"))
+#' }
+plot_term_trends_continuous <- function(term_data,
+                                         continuous_var,
+                                         terms = NULL,
+                                         title = NULL,
+                                         height = 600,
+                                         width = NULL) {
+
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("Package 'ggplot2' is required. Please install it.")
+  }
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+  if (!requireNamespace("scales", quietly = TRUE)) {
+    stop("Package 'scales' is required. Please install it.")
+  }
+
+  if (!continuous_var %in% names(term_data)) {
+    stop("Continuous variable '", continuous_var, "' not found in data")
+  }
+
+  if (!"term" %in% names(term_data) && !"word" %in% names(term_data)) {
+    stop("term or word column not found in data")
+  }
+
+  if ("word" %in% names(term_data) && !"term" %in% names(term_data)) {
+    term_data$term <- term_data$word
+  }
+
+  if (!"word_frequency" %in% names(term_data) && !"count" %in% names(term_data)) {
+    stop("word_frequency or count column not found in data")
+  }
+
+  if ("count" %in% names(term_data) && !"word_frequency" %in% names(term_data)) {
+    term_data$word_frequency <- term_data$count
+  }
+
+  if (!is.null(terms)) {
+    term_data <- term_data %>%
+      dplyr::filter(term %in% terms) %>%
+      dplyr::mutate(term = factor(term, levels = terms))
+  }
+
+  if (is.null(title)) {
+    title <- paste("Term Frequency by", continuous_var)
+  }
+
+  p <- ggplot2::ggplot(
+    term_data,
+    ggplot2::aes(
+      x = .data[[continuous_var]],
+      y = word_frequency,
+      group = term
+    )
+  ) +
+    ggplot2::geom_point(color = "#337ab7", alpha = 0.6, size = 2.5) +
+    ggplot2::geom_line(color = "#337ab7", alpha = 0.6, linewidth = 0.5) +
+    ggplot2::facet_wrap(~term, scales = "free") +
+    ggplot2::scale_y_continuous(labels = scales::number_format(accuracy = 1)) +
+    ggplot2::labs(y = "Word Frequency", x = continuous_var) +
+    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
+      strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a", family = "Roboto"),
+      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", family = "Roboto"),
+      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", family = "Roboto"),
+      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a", family = "Roboto"),
+      axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 15)),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 15)),
+      plot.margin = ggplot2::margin(t = 5, r = 10, b = 25, l = 15)
+    )
+
+  plot_args <- list(p)
+  if (!is.null(height)) plot_args$height <- height
+  if (!is.null(width)) plot_args$width <- width
+
+  p_plot <- do.call(plotly::ggplotly, plot_args)
+
+  for (i in seq_along(p_plot$x$layout$annotations)) {
+    p_plot$x$layout$annotations[[i]]$font <- list(
+      size = 16,
+      color = "#0c1f4a",
+      family = "Roboto, sans-serif"
+    )
+  }
+
+  axis_names <- names(p_plot$x$layout)
+  for (axis_name in axis_names) {
+    if (grepl("^xaxis", axis_name)) {
+      p_plot$x$layout[[axis_name]]$tickfont <- list(
+        size = 14,
+        color = "#3B3B3B",
+        family = "Roboto, sans-serif"
+      )
+      p_plot$x$layout[[axis_name]]$titlefont <- list(
+        size = 16,
+        color = "#0c1f4a",
+        family = "Roboto, sans-serif"
+      )
+    }
+    if (grepl("^yaxis", axis_name)) {
+      p_plot$x$layout[[axis_name]]$tickfont <- list(
+        size = 14,
+        color = "#3B3B3B",
+        family = "Roboto, sans-serif"
+      )
+      p_plot$x$layout[[axis_name]]$titlefont <- list(
+        size = 16,
+        color = "#0c1f4a",
+        family = "Roboto, sans-serif"
+      )
+    }
+  }
+
+  p_plot %>%
+    plotly::layout(
+      margin = list(l = 80, r = 150, t = 40, b = 100),
+      font = list(
+        family = "Roboto, sans-serif",
+        size = 14,
+        color = "#3B3B3B"
+      ),
+      hoverlabel = list(
+        font = list(size = 14, family = "Roboto, sans-serif")
+      )
+    ) %>%
+    plotly::config(displayModeBar = TRUE)
+}
+
+
 
 #' Plot Part-of-Speech Tag Frequencies
 #'
@@ -1843,4 +2298,79 @@ plot_entity_frequencies <- function(entity_data,
         bgcolor = "#0c1f4a"
       )
     )
+}
+
+#' Render displaCy Entity Visualization
+#'
+#' @description
+#' Renders spaCy's displaCy entity visualization as HTML.
+#' Highlights named entities with colored labels.
+#'
+#' @param text Character string to visualize.
+#' @param model spaCy model name (default: "en_core_web_sm").
+#'
+#' @return HTML string with entity highlighting.
+#'
+#' @family lexical
+#' @export
+render_displacy_ent <- function(text, model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for displaCy visualization.")
+  }
+
+  tryCatch({
+    spacy <- reticulate::import("spacy")
+    displacy_module <- reticulate::import("spacy.displacy")
+
+    # Load model
+    nlp <- spacy$load(model)
+    doc <- nlp(text)
+
+    # Render as HTML
+    html <- displacy_module$render(doc, style = "ent", page = FALSE)
+
+    return(as.character(html))
+  }, error = function(e) {
+    stop("displaCy rendering failed: ", e$message)
+  })
+}
+
+
+#' Render displaCy Dependency Visualization
+#'
+#' @description
+#' Renders spaCy's displaCy dependency visualization as SVG.
+#' Shows syntactic structure with arrows between words.
+#'
+#' @param text Character string to visualize.
+#' @param compact Logical; use compact mode for space (default: TRUE).
+#' @param model spaCy model name (default: "en_core_web_sm").
+#'
+#' @return SVG string with dependency tree.
+#'
+#' @family lexical
+#' @export
+render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for displaCy visualization.")
+  }
+
+  tryCatch({
+    spacy <- reticulate::import("spacy")
+    displacy_module <- reticulate::import("spacy.displacy")
+
+    # Load model
+    nlp <- spacy$load(model)
+    doc <- nlp(text)
+
+    # Render options
+    options <- list(compact = compact)
+
+    # Render as SVG
+    svg <- displacy_module$render(doc, style = "dep", options = options, page = FALSE)
+
+    return(as.character(svg))
+  }, error = function(e) {
+    stop("displaCy rendering failed: ", e$message)
+  })
 }

@@ -85,6 +85,7 @@ Quick reference guide organized by workflow stage.
 |----------|---------|
 | `plot_semantic_viz()` | 2D/3D semantic visualization |
 | `plot_similarity_heatmap()` | Similarity matrix heatmap |
+| `plot_cross_category_heatmap()` | Cross-category similarity comparison |
 | `plot_cluster_terms()` | Cluster term visualization |
 
 </details>
