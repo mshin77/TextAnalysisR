@@ -2946,7 +2946,11 @@ calculate_log_odds_ratio <- function(dfm_object,
   levels <- unique(groups[!is.na(groups)])
 
   if (length(levels) < 2) {
-    stop("Need at least 2 categories for comparison")
+    stop(
+      "Need at least 2 categories for comparison in '", group_var, "'. ",
+      "Found only: ", paste(levels, collapse = ", "),
+      call. = FALSE
+    )
   }
 
   # Helper function for pairwise comparison
@@ -2996,7 +3000,7 @@ calculate_log_odds_ratio <- function(dfm_object,
 
     # Get top terms by absolute log odds
     result <- result[order(abs(result$log_odds_ratio), decreasing = TRUE), ]
-    utils::head(result, top_n * 2)  # Get top for both directions
+    utils::head(result, top_n)  # Get top by absolute log odds
   }
 
   results <- list()
