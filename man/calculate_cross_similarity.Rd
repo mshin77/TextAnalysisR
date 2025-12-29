@@ -35,15 +35,16 @@ useful for comparing documents/topics across different categories or groups.
 }
 \examples{
 \dontrun{
+data(SpecialEduTech)
 # Generate embeddings for two groups
-emb1 <- TextAnalysisR::generate_embeddings(c("text a", "text b"), verbose = FALSE)
-emb2 <- TextAnalysisR::generate_embeddings(c("text c", "text d", "text e"), verbose = FALSE)
+emb1 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[1:3], verbose = FALSE)
+emb2 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[4:6], verbose = FALSE)
 
 # Calculate cross-similarity
 result <- calculate_cross_similarity(
   emb1, emb2,
-  labels1 = c("A", "B"),
-  labels2 = c("C", "D", "E")
+  labels1 = SpecialEduTech$title[1:3],
+  labels2 = SpecialEduTech$title[4:6]
 )
 print(result$similarity_matrix)
 print(result$similarity_df)
@@ -68,6 +69,8 @@ Other semantic:
 \code{\link{semantic_document_clustering}()},
 \code{\link{semantic_similarity_analysis}()},
 \code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()}
+\code{\link{validate_cross_models}()},
+\code{\link{word_co_occurrence_network}()},
+\code{\link{word_correlation_network}()}
 }
 \concept{semantic}

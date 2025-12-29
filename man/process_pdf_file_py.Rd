@@ -17,7 +17,7 @@ process_pdf_file_py(
 If "auto", will detect content type automatically}
 
 \item{envname}{Character string, name of Python virtual environment
-(default: "langgraph-env")}
+(default: "textanalysisr-env")}
 }
 \value{
 List with:
@@ -39,12 +39,12 @@ This function uses Python's pdfplumber library which:
 \item Handles both text and tables
 \item No Java dependency
 \item Better accuracy than tabulizer for complex tables
-\item Uses same Python environment as LangGraph
+\item Uses TextAnalysisR Python environment
 }
 }
 \examples{
 \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 result <- process_pdf_file_py(pdf_path)

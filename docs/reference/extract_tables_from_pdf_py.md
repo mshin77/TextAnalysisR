@@ -26,7 +26,7 @@ extract_tables_from_pdf_py(
 - envname:
 
   Character string, name of Python virtual environment (default:
-  "langgraph-env")
+  "textanalysisr-env")
 
 ## Value
 
@@ -55,7 +55,7 @@ Other pdf:
 
 ``` r
 if (FALSE) { # \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/table_document.pdf"
 table_data <- extract_tables_from_pdf_py(pdf_path)

@@ -10,7 +10,7 @@ detect_pdf_content_type_py(file_path, envname = "textanalysisr-env")
 \item{file_path}{Character string path to PDF file}
 
 \item{envname}{Character string, name of Python virtual environment
-(default: "langgraph-env")}
+(default: "textanalysisr-env")}
 }
 \value{
 Character string: "tabular", "text", or "unknown"
@@ -20,7 +20,7 @@ Analyzes PDF to determine if it contains primarily tabular data or text.
 }
 \examples{
 \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 content_type <- detect_pdf_content_type_py(pdf_path)

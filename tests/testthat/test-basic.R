@@ -12,22 +12,20 @@ test_that("example dataset is accessible", {
 test_that("unite_cols works", {
   skip_if_not_installed("quanteda")
 
-  test_data <- data.frame(
-    text1 = c("mathematics education", "learning technology"),
-    text2 = c("student support", "digital tools"),
-    stringsAsFactors = FALSE
-  )
+  data(SpecialEduTech, package = "TextAnalysisR")
+  test_data <- SpecialEduTech[1:3, c("title", "abstract")]
 
-  united <- unite_cols(test_data, c("text1", "text2"))
+  united <- unite_cols(test_data, c("title", "abstract"))
   expect_true("united_texts" %in% names(united))
-  expect_equal(nrow(united), 2)
+  expect_equal(nrow(united), 3)
 })
 
 test_that("prep_texts works", {
   skip_if_not_installed("quanteda")
 
+  data(SpecialEduTech, package = "TextAnalysisR")
   test_data <- data.frame(
-    united_texts = c("mathematics education research", "technology learning support"),
+    united_texts = SpecialEduTech$abstract[1:3],
     stringsAsFactors = FALSE
   )
 
@@ -39,7 +37,8 @@ test_that("plot_word_frequency works", {
   skip_if_not_installed("quanteda")
   skip_if_not_installed("plotly")
 
-  texts <- c("mathematics technology", "education technology", "learning support")
+  data(SpecialEduTech, package = "TextAnalysisR")
+  texts <- SpecialEduTech$abstract[1:5]
   corp <- quanteda::corpus(texts)
   toks <- quanteda::tokens(corp)
   dfm_obj <- quanteda::dfm(toks)
@@ -52,11 +51,8 @@ test_that("sentiment_lexicon_analysis works with basic texts", {
   skip_if_not_installed("quanteda")
   skip_if_not_installed("tidytext")
 
-  texts <- c(
-    "This is great and wonderful research",
-    "Poor results and bad outcomes",
-    "Neutral statement about methods"
-  )
+  data(SpecialEduTech, package = "TextAnalysisR")
+  texts <- SpecialEduTech$abstract[1:5]
 
   corp <- quanteda::corpus(texts)
   toks <- quanteda::tokens(corp)
@@ -78,11 +74,8 @@ test_that("calculate_text_readability works", {
   skip_if_not_installed("quanteda")
   skip_if_not_installed("quanteda.textstats")
 
-  texts <- c(
-    "This is a simple sentence.",
-    "Complex terminology and sophisticated language patterns.",
-    "Basic words for easy reading."
-  )
+  data(SpecialEduTech, package = "TextAnalysisR")
+  texts <- SpecialEduTech$abstract[1:5]
 
   result <- calculate_text_readability(
     texts = texts,
@@ -91,18 +84,15 @@ test_that("calculate_text_readability works", {
 
   expect_s3_class(result, "data.frame")
   expect_true("Document" %in% names(result))
-  expect_equal(nrow(result), 3)
+  expect_equal(nrow(result), 5)
 })
 
 test_that("lexical_frequency_analysis works", {
   skip_if_not_installed("quanteda")
   skip_if_not_installed("plotly")
 
-  texts <- c(
-    "The student studied mathematics and science.",
-    "Technology helps students learn better.",
-    "Research shows positive outcomes."
-  )
+  data(SpecialEduTech, package = "TextAnalysisR")
+  texts <- SpecialEduTech$abstract[1:5]
 
   corp <- quanteda::corpus(texts)
   toks <- quanteda::tokens(corp, remove_punct = TRUE)
@@ -116,11 +106,8 @@ test_that("lexical_frequency_analysis works", {
 test_that("extract_keywords_tfidf works", {
   skip_if_not_installed("quanteda")
 
-  texts <- c(
-    "machine learning artificial intelligence",
-    "deep learning neural networks",
-    "education technology student learning"
-  )
+  data(SpecialEduTech, package = "TextAnalysisR")
+  texts <- SpecialEduTech$abstract[1:5]
 
   corp <- quanteda::corpus(texts)
   toks <- quanteda::tokens(corp)

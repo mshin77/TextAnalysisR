@@ -116,7 +116,7 @@ Python spaCy via reticulate.
 | Case     | Grammatical case   | Nom, Acc, Dat, Gen  |
 
 ``` r
-parsed <- extract_pos_tags(texts)  # Uses spacyr::spacy_parse
+parsed <- extract_pos_tags(texts)  # Uses spacy_parse_full
 # Returns columns: doc_id, token, lemma, pos, tag
 ```
 
@@ -152,13 +152,42 @@ Recognition](https://spacy.io/usage/linguistic-features#named-entities)
 ### Co-occurrence
 
 ``` r
-semantic_cooccurrence_network(dfm_object, co_occur_n = 10)
+word_co_occurrence_network(dfm_object, co_occur_n = 10)
 ```
 
 ### Correlation
 
 ``` r
-semantic_correlation_network(dfm_object, min_cor = 0.3)
+word_correlation_network(dfm_object, corr_n = 0.3)
+```
+
+------------------------------------------------------------------------
+
+**Log Odds Ratio Analysis**
+
+Log odds ratio compares word frequencies between categories to identify
+distinctive vocabulary.
+
+``` r
+log_odds <- calculate_log_odds_ratio(
+  dfm_object,
+  group_var = "category",
+  comparison_mode = "binary",
+  top_n = 15
+)
+plot_log_odds_ratio(log_odds)
+```
+
+------------------------------------------------------------------------
+
+**Lexical Dispersion**
+
+Lexical dispersion (X-ray plot) shows where terms appear across
+documents.
+
+``` r
+dispersion <- calculate_lexical_dispersion(tokens, terms = c("education", "technology"))
+plot_lexical_dispersion(dispersion)
 ```
 
 ------------------------------------------------------------------------

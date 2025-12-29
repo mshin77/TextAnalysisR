@@ -46,11 +46,8 @@ without requiring sentiment lexicons. Particularly effective for handling:
 }
 \examples{
 \dontrun{
-texts <- c(
-  "The results significantly improved student outcomes.",
-  "The intervention showed no clear benefit.",
-  "Students reported difficulty with the material."
-)
+data(SpecialEduTech)
+texts <- SpecialEduTech$abstract[1:10]
 result <- sentiment_embedding_analysis(texts)
 print(result$document_sentiment)
 print(result$summary_stats)
@@ -59,6 +56,7 @@ print(result$summary_stats)
 \seealso{
 Other sentiment: 
 \code{\link{analyze_sentiment}()},
+\code{\link{analyze_sentiment_llm}()},
 \code{\link{plot_document_sentiment_trajectory}()},
 \code{\link{plot_emotion_radar}()},
 \code{\link{plot_sentiment_boxplot}()},

@@ -1,7 +1,7 @@
 # Python Environment
 
-Python enables advanced features: PDF tables, embeddings, and AI
-analysis.
+Python enables advanced features: NLP with spaCy, PDF tables,
+embeddings, and AI analysis.
 
 ## Quick Setup
 
@@ -10,7 +10,13 @@ library(TextAnalysisR)
 setup_python_env()
 ```
 
-Uses conda if available, otherwise virtualenv.
+This automatically:
+
+1.  Creates virtual environment `textanalysisr-env`
+2.  Installs **spacy** and **pdfplumber**
+3.  Downloads spaCy English model (`en_core_web_sm`)
+
+Uses virtualenv (or conda if available).
 
 ## Check Status
 
@@ -38,6 +44,16 @@ Avoid OneDrive paths. Use:
 setup_python_env(method = "virtualenv", envpath = "C:/Python/envs")
 ```
 
+## spaCy Models
+
+The default `en_core_web_sm` model is installed automatically. For word
+vectors (similarity):
+
+``` bash
+python -m spacy download en_core_web_md  # Medium (91 MB)
+python -m spacy download en_core_web_lg  # Large (560 MB)
+```
+
 ## Deep Learning (Optional)
 
 For embeddings and neural sentiment:
@@ -51,5 +67,5 @@ pip install sentence-transformers transformers torch
 ``` r
 library(reticulate)
 py_config()
-conda_list()
+virtualenv_list()
 ```

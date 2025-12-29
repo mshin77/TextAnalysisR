@@ -68,6 +68,7 @@ A list containing:
 
 Other sentiment:
 [`analyze_sentiment()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment.md),
+[`analyze_sentiment_llm()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.md),
 [`plot_document_sentiment_trajectory()`](https://mshin77.github.io/TextAnalysisR/reference/plot_document_sentiment_trajectory.md),
 [`plot_emotion_radar()`](https://mshin77.github.io/TextAnalysisR/reference/plot_emotion_radar.md),
 [`plot_sentiment_boxplot()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_boxplot.md),
@@ -80,18 +81,11 @@ Other sentiment:
 
 ``` r
 if (FALSE) { # \dontrun{
-corp <- quanteda::corpus(c("I love this!", "I hate that", "It's okay"))
+data(SpecialEduTech)
+texts <- SpecialEduTech$abstract[1:10]
+corp <- quanteda::corpus(texts)
 dfm_obj <- quanteda::dfm(quanteda::tokens(corp))
 results <- sentiment_lexicon_analysis(dfm_obj, lexicon = "afinn")
 print(results$document_sentiment)
-
-texts <- c("not good at all", "very happy indeed")
-results_ngram <- sentiment_lexicon_analysis(
-  dfm_obj,
-  lexicon = "bing",
-  feature_type = "ngrams",
-  ngram_range = 2,
-  texts = texts
-)
 } # }
 ```

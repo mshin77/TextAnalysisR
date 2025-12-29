@@ -26,17 +26,13 @@ This function:
 \item Automatically detects if Python is already installed
 \item Offers to install Miniconda if no Python found
 \item Creates an isolated virtual environment (does NOT modify system Python)
-\item Installs ONLY 6 core packages (minimal installation):
+\item Installs minimal core packages:
 \itemize{
-\item langchain-core (core LangChain functionality)
-\item langchain-ollama (Ollama integration)
-\item langgraph (workflow graphs)
-\item langgraph-checkpoint (workflow state management)
-\item ollama (Ollama client)
+\item spacy (NLP processing)
 \item pdfplumber (PDF table extraction)
 }
 \item Dependencies installed automatically by pip
-\item Avoids heavy packages (no marker-pdf, nougat-ocr, torch)
+\item Avoids heavy packages (no torch, transformers)
 }
 
 The virtual environment approach means:

@@ -1,8 +1,10 @@
-# Generate Cluster Labels with AI
+# Generate Cluster Label Suggestions (Human-in-the-Loop)
 
-Generates descriptive labels for clusters using either Ollama (local,
-default) or OpenAI's API. When running locally, Ollama is preferred for
-privacy and cost-free operation.
+Suggests descriptive labels for clusters using AI. Labels are
+suggestions for human review - users should edit and approve before
+using. Supports OpenAI, Gemini, or Ollama (local) for AI generation.
+When running locally, Ollama is preferred for privacy and cost-free
+operation.
 
 ## Usage
 
@@ -13,6 +15,7 @@ generate_cluster_labels(
   model = NULL,
   temperature = 0.3,
   max_tokens = 50,
+  api_key = NULL,
   verbose = TRUE
 )
 ```
@@ -25,13 +28,13 @@ generate_cluster_labels(
 
 - provider:
 
-  AI provider to use: "auto" (default), "ollama", or "openai". "auto"
-  will use Ollama if available, otherwise OpenAI.
+  AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
+  "auto" will try Ollama first, then check for OpenAI/Gemini keys.
 
 - model:
 
-  Model name. For Ollama (default: "phi3:mini"). For OpenAI (default:
-  "gpt-3.5-turbo").
+  Model name. If NULL, uses provider defaults: "gpt-4o-mini" (OpenAI),
+  "gemini-2.0-flash" (Gemini), or recommended Ollama model.
 
 - temperature:
 
@@ -40,6 +43,11 @@ generate_cluster_labels(
 - max_tokens:
 
   Maximum tokens for response (default: 50).
+
+- api_key:
+
+  API key for OpenAI or Gemini. If NULL, uses environment variable. Not
+  required for Ollama.
 
 - verbose:
 
@@ -69,7 +77,9 @@ Other semantic:
 [`semantic_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_document_clustering.md),
 [`semantic_similarity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_similarity_analysis.md),
 [`temporal_semantic_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.md),
-[`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md)
+[`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md),
+[`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md),
+[`word_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_correlation_network.md)
 
 ## Examples
 
@@ -78,5 +88,6 @@ if (FALSE) { # \dontrun{
 keywords <- list("1" = c("machine", "learning", "neural"), "2" = c("data", "analysis"))
 labels_ollama <- generate_cluster_labels(keywords, provider = "ollama")
 labels_openai <- generate_cluster_labels(keywords, provider = "openai")
+labels_gemini <- generate_cluster_labels(keywords, provider = "gemini")
 } # }
 ```

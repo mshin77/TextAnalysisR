@@ -35,11 +35,8 @@ Attempts embeddings first, falls back to Jaccard similarity if needed.
 }
 \examples{
 \dontrun{
-texts <- c(
-  "Assistive technology supports learning.",
-  "Technology helps students with disabilities.",
-  "Machine learning improves accuracy."
-)
+data(SpecialEduTech)
+texts <- SpecialEduTech$abstract[1:5]
 
 result <- calculate_similarity_robust(texts)
 print(result$similarity_matrix)
@@ -65,6 +62,8 @@ Other semantic:
 \code{\link{semantic_document_clustering}()},
 \code{\link{semantic_similarity_analysis}()},
 \code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()}
+\code{\link{validate_cross_models}()},
+\code{\link{word_co_occurrence_network}()},
+\code{\link{word_correlation_network}()}
 }
 \concept{semantic}

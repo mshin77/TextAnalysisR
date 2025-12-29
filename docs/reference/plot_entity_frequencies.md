@@ -10,9 +10,10 @@ plot_entity_frequencies(
   entity_data,
   top_n = 20,
   title = "Named Entity Type Frequency",
-  color = "#10B981",
+  color = NULL,
   height = 500,
-  width = NULL
+  width = NULL,
+  custom_colors = NULL
 )
 ```
 
@@ -48,6 +49,11 @@ plot_entity_frequencies(
 
   Plot width in pixels (default: NULL for auto)
 
+- custom_colors:
+
+  Named vector of custom entity type colors (e.g., c(CONCEPT =
+  "#00acc1", THEME = "#7c4dff")). Custom colors override defaults.
+
 ## Value
 
 A plotly object
@@ -65,6 +71,8 @@ Other visualization:
 [`get_sentiment_colors()`](https://mshin77.github.io/TextAnalysisR/reference/get_sentiment_colors.md),
 [`plot_cluster_terms()`](https://mshin77.github.io/TextAnalysisR/reference/plot_cluster_terms.md),
 [`plot_cross_category_heatmap()`](https://mshin77.github.io/TextAnalysisR/reference/plot_cross_category_heatmap.md),
+[`plot_lexical_dispersion()`](https://mshin77.github.io/TextAnalysisR/reference/plot_lexical_dispersion.md),
+[`plot_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/plot_log_odds_ratio.md),
 [`plot_mwe_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_mwe_frequency.md),
 [`plot_ngram_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_ngram_frequency.md),
 [`plot_pos_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_pos_frequencies.md),
@@ -82,5 +90,8 @@ if (interactive()) {
     n = c(300, 250, 200, 150, 100)
   )
   plot_entity_frequencies(entity_df)
+
+  # With custom colors
+  plot_entity_frequencies(entity_df, custom_colors = c(PERSON = "#ff0000"))
 }
 ```

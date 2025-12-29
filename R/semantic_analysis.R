@@ -35,11 +35,8 @@ NULL
 #'
 #' @examples
 #' if (interactive()) {
-#'   texts <- c(
-#'     "Assistive technology supports learning for students with disabilities.",
-#'     "Technology aids help disabled students with their education.",
-#'     "Machine learning algorithms improve predictive accuracy."
-#'   )
+#'   data(SpecialEduTech)
+#'   texts <- SpecialEduTech$abstract[1:5]
 #'
 #'   result <- calculate_document_similarity(
 #'     texts = texts,
@@ -255,11 +252,8 @@ calculate_document_similarity <- function(texts,
 #'
 #' @examples
 #' if (interactive()) {
-#'   texts <- c(
-#'     "Assistive technology supports learning.",
-#'     "Technology aids students with disabilities.",
-#'     "Machine learning improves predictions."
-#'   )
+#'   data(SpecialEduTech)
+#'   texts <- SpecialEduTech$abstract[1:10]
 #'
 #'   results <- fit_semantic_model(
 #'     texts = texts,
@@ -1033,18 +1027,23 @@ generate_cluster_labels_auto <- function(feature_matrix,
   return(labels)
 }
 
-#' @title Generate Cluster Labels with AI
+#' @title Generate Cluster Label Suggestions (Human-in-the-Loop)
 #'
 #' @description
-#' Generates descriptive labels for clusters using either Ollama (local, default) or OpenAI's API.
+#' Suggests descriptive labels for clusters using AI. Labels are suggestions
+#' for human review - users should edit and approve before using.
+#' Supports OpenAI, Gemini, or Ollama (local) for AI generation.
 #' When running locally, Ollama is preferred for privacy and cost-free operation.
 #'
 #' @param cluster_keywords List of keywords for each cluster.
-#' @param provider AI provider to use: "auto" (default), "ollama", or "openai".
-#'   "auto" will use Ollama if available, otherwise OpenAI.
-#' @param model Model name. For Ollama (default: "phi3:mini"). For OpenAI (default: "gpt-3.5-turbo").
+#' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
+#'   "auto" will try Ollama first, then check for OpenAI/Gemini keys.
+#' @param model Model name. If NULL, uses provider defaults: "gpt-4o-mini" (OpenAI),
+#'   "gemini-2.0-flash" (Gemini), or recommended Ollama model.
 #' @param temperature Temperature parameter (default: 0.3).
 #' @param max_tokens Maximum tokens for response (default: 50).
+#' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
+#'   Not required for Ollama.
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
 #' @return A list of generated labels.
@@ -1057,12 +1056,14 @@ generate_cluster_labels_auto <- function(feature_matrix,
 #' keywords <- list("1" = c("machine", "learning", "neural"), "2" = c("data", "analysis"))
 #' labels_ollama <- generate_cluster_labels(keywords, provider = "ollama")
 #' labels_openai <- generate_cluster_labels(keywords, provider = "openai")
+#' labels_gemini <- generate_cluster_labels(keywords, provider = "gemini")
 #' }
 generate_cluster_labels <- function(cluster_keywords,
                                    provider = "auto",
                                    model = NULL,
                                    temperature = 0.3,
                                    max_tokens = 50,
+                                   api_key = NULL,
                                    verbose = TRUE) {
 
   if (!requireNamespace("httr", quietly = TRUE) ||
@@ -1073,48 +1074,64 @@ generate_cluster_labels <- function(cluster_keywords,
     )
   }
 
+  # Load .env if exists
+  if (file.exists(".env") && requireNamespace("dotenv", quietly = TRUE)) {
+    dotenv::load_dot_env()
+  }
+
+  # Auto-detect provider
   if (provider == "auto") {
     if (check_ollama(verbose = FALSE)) {
       provider <- "ollama"
       if (verbose) message("Using Ollama (local AI) for label generation")
-    } else {
+    } else if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
       provider <- "openai"
-      if (verbose) message("Ollama not available, falling back to OpenAI")
-    }
-  }
-
-  if (is.null(model)) {
-    model <- if (provider == "ollama") {
-      recommended <- get_recommended_ollama_model(verbose = verbose)
-      if (is.null(recommended)) "phi3:mini" else recommended
+      if (verbose) message("Using OpenAI for label generation")
+    } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
+      provider <- "gemini"
+      if (verbose) message("Using Gemini for label generation")
     } else {
-      "gpt-3.5-turbo"
+      stop("No AI provider available. Install Ollama or set OPENAI_API_KEY/GEMINI_API_KEY.")
     }
   }
 
-  if (provider == "openai") {
-    if (!requireNamespace("dotenv", quietly = TRUE)) {
-      stop("The 'dotenv' package is required for OpenAI. Install with: install.packages('dotenv')")
-    }
+  # Set provider-based default model
+  if (is.null(model)) {
+    model <- switch(provider,
+      "ollama" = {
+        recommended <- get_recommended_ollama_model(verbose = verbose)
+        if (is.null(recommended)) "phi3:mini" else recommended
+      },
+      "openai" = "gpt-4o-mini",
+      "gemini" = "gemini-2.0-flash"
+    )
+  }
 
-    if (file.exists(".env")) {
-      dotenv::load_dot_env()
-    }
+  # Resolve API key for cloud providers
+  if (provider %in% c("openai", "gemini") && is.null(api_key)) {
+    api_key <- switch(provider,
+      "openai" = Sys.getenv("OPENAI_API_KEY"),
+      "gemini" = Sys.getenv("GEMINI_API_KEY")
+    )
+  }
 
-    openai_api_key <- Sys.getenv("OPENAI_API_KEY")
-    if (nzchar(openai_api_key) == FALSE) {
-      stop(
-        "No OpenAI API key found. Please add your API key using one of these methods:\n",
-        "  1. Create a .env file in your working directory with: OPENAI_API_KEY=your-key-here\n",
-        "  2. Set it in R: Sys.setenv(OPENAI_API_KEY = \"your-key-here\")\n",
-        "  3. If using the Shiny app, enter it via the secure API key input dialog\n\n",
-        "Alternatively, use Ollama for free local AI: https://ollama.ai\n",
-        "Security Note: Store .env with restricted permissions (chmod 600 .env on Unix/Linux/Mac)"
-      )
-    }
+  # Validate API key for cloud providers
+  if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
+    env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
+    stop(
+      sprintf("No %s API key found. Please add your API key using one of these methods:\n", provider),
+      sprintf("  1. Create a .env file in your working directory with: %s=your-key-here\n", env_var),
+      sprintf("  2. Set it in R: Sys.setenv(%s = \"your-key-here\")\n", env_var),
+      "  3. If using the Shiny app, enter it via the secure API key input dialog\n\n",
+      "Alternatively, use Ollama for free local AI: https://ollama.com\n",
+      "Security Note: Store .env with restricted permissions (chmod 600 .env on Unix/Linux/Mac)"
+    )
+  }
 
-    if (!validate_api_key(openai_api_key, strict = FALSE)) {
-      stop("Invalid API key format. Please check your OpenAI API key.")
+  if (provider %in% c("openai", "gemini")) {
+    validation <- validate_api_key(api_key, strict = FALSE)
+    if (!validation$valid) {
+      stop(sprintf("Invalid API key format: %s", validation$error))
     }
   }
 
@@ -1171,50 +1188,25 @@ Generated Topic Label:"
     )
 
     tryCatch({
-      if (provider == "ollama") {
-        response_text <- call_ollama(
-          prompt = prompt,
-          model = model,
-          temperature = temperature,
-          max_tokens = max_tokens,
-          verbose = FALSE
-        )
+      # Use unified call_llm_api wrapper for all providers
+      response_text <- call_llm_api(
+        provider = provider,
+        system_prompt = "You are a data scientist specializing in generating concise cluster labels.",
+        user_prompt = prompt,
+        model = model,
+        temperature = temperature,
+        max_tokens = max_tokens,
+        api_key = api_key
+      )
 
-        if (!is.null(response_text) && nzchar(response_text)) {
-          label <- trimws(response_text)
-          label <- gsub('^"(.*)"$', '\\1', label)
-          label <- gsub("^Generated Topic Label:\\s*", "", label, ignore.case = TRUE)
-          label <- trimws(label)
-          gen_names[[cluster_id]] <- label
-        } else {
-          gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
-        }
-
+      if (!is.null(response_text) && nzchar(response_text)) {
+        label <- trimws(response_text)
+        label <- gsub('^"(.*)"$', '\\1', label)
+        label <- gsub("^Generated Topic Label:\\s*", "", label, ignore.case = TRUE)
+        label <- trimws(label)
+        gen_names[[cluster_id]] <- label
       } else {
-        response <- httr::POST(
-          "https://api.openai.com/v1/chat/completions",
-          httr::add_headers(
-            "Authorization" = paste("Bearer", openai_api_key),
-            "Content-Type" = "application/json"
-          ),
-          body = jsonlite::toJSON(list(
-            model = model,
-            messages = list(
-              list(role = "system", content = "You are a data scientist specializing in generating concise cluster labels."),
-              list(role = "user", content = prompt)
-            ),
-            temperature = temperature,
-            max_tokens = max_tokens
-          ), auto_unbox = TRUE)
-        )
-
-        if (httr::status_code(response) == 200) {
-          result <- jsonlite::fromJSON(httr::content(response, "text"))
-          label <- trimws(result$choices$message$content[1])
-          gen_names[[cluster_id]] <- gsub('^"(.*)"$', '\\1', label)
-        } else {
-          gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
-        }
+        gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
       }
 
     }, error = function(e) {
@@ -1222,7 +1214,8 @@ Generated Topic Label:"
       gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
     })
 
-    if (provider == "openai") {
+    # Rate limiting: cloud APIs need more delay
+    if (provider %in% c("openai", "gemini")) {
       Sys.sleep(1)
     } else {
       Sys.sleep(0.5)
@@ -1405,11 +1398,8 @@ validate_cross_models <- function(semantic_results,
 #'
 #' @examples
 #' \dontrun{
-#' texts <- c(
-#'   "Assistive technology supports learning.",
-#'   "Technology helps students with disabilities.",
-#'   "Machine learning improves accuracy."
-#' )
+#' data(SpecialEduTech)
+#' texts <- SpecialEduTech$abstract[1:5]
 #'
 #' result <- calculate_similarity_robust(texts)
 #' print(result$similarity_matrix)
@@ -1736,15 +1726,16 @@ calculate_clustering_metrics <- function(clusters,
 #'
 #' @examples
 #' \dontrun{
+#' data(SpecialEduTech)
 #' # Generate embeddings for two groups
-#' emb1 <- TextAnalysisR::generate_embeddings(c("text a", "text b"), verbose = FALSE)
-#' emb2 <- TextAnalysisR::generate_embeddings(c("text c", "text d", "text e"), verbose = FALSE)
+#' emb1 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[1:3], verbose = FALSE)
+#' emb2 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[4:6], verbose = FALSE)
 #'
 #' # Calculate cross-similarity
 #' result <- calculate_cross_similarity(
 #'   emb1, emb2,
-#'   labels1 = c("A", "B"),
-#'   labels2 = c("C", "D", "E")
+#'   labels1 = SpecialEduTech$title[1:3],
+#'   labels2 = SpecialEduTech$title[4:6]
 #' )
 #' print(result$similarity_matrix)
 #' print(result$similarity_df)
@@ -1865,6 +1856,10 @@ extract_cross_category_similarities <- function(similarity_matrix,
                                                  category_var = "category",
                                                  id_var = "display_name",
                                                  name_var = NULL) {
+
+  if (!requireNamespace("purrr", quietly = TRUE)) {
+    stop("Package 'purrr' is required. Install with: install.packages('purrr')")
+  }
 
   if (!category_var %in% names(docs_data)) {
     stop("category_var '", category_var, "' not found in docs_data")
@@ -2116,11 +2111,8 @@ analyze_similarity_gaps <- function(similarity_data,
 #'
 #' @examples
 #' \dontrun{
-#' texts <- c(
-#'   "This research shows promising results for students.",
-#'   "The intervention had no significant effect.",
-#'   "Students struggled with the complex material."
-#' )
+#' data(SpecialEduTech)
+#' texts <- SpecialEduTech$abstract[1:10]
 #' results <- analyze_sentiment(texts)
 #' print(results)
 #' }
@@ -2168,7 +2160,8 @@ analyze_sentiment <- function(texts,
 #'
 #' @examples
 #' \dontrun{
-#' texts <- c("Great results!", "Poor performance", "Okay outcome")
+#' data(SpecialEduTech)
+#' texts <- SpecialEduTech$abstract[1:10]
 #' sentiment_data <- analyze_sentiment(texts)
 #' plot <- plot_sentiment_distribution(sentiment_data)
 #' print(plot)
@@ -2445,19 +2438,12 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #'
 #' @examples
 #' \dontrun{
-#' corp <- quanteda::corpus(c("I love this!", "I hate that", "It's okay"))
+#' data(SpecialEduTech)
+#' texts <- SpecialEduTech$abstract[1:10]
+#' corp <- quanteda::corpus(texts)
 #' dfm_obj <- quanteda::dfm(quanteda::tokens(corp))
 #' results <- sentiment_lexicon_analysis(dfm_obj, lexicon = "afinn")
 #' print(results$document_sentiment)
-#'
-#' texts <- c("not good at all", "very happy indeed")
-#' results_ngram <- sentiment_lexicon_analysis(
-#'   dfm_obj,
-#'   lexicon = "bing",
-#'   feature_type = "ngrams",
-#'   ngram_range = 2,
-#'   texts = texts
-#' )
 #' }
 sentiment_lexicon_analysis <- function(dfm_object,
                                        lexicon = "afinn",
@@ -2623,11 +2609,8 @@ sentiment_lexicon_analysis <- function(dfm_object,
 #'
 #' @examples
 #' \dontrun{
-#' texts <- c(
-#'   "The results significantly improved student outcomes.",
-#'   "The intervention showed no clear benefit.",
-#'   "Students reported difficulty with the material."
-#' )
+#' data(SpecialEduTech)
+#' texts <- SpecialEduTech$abstract[1:10]
 #' result <- sentiment_embedding_analysis(texts)
 #' print(result$document_sentiment)
 #' print(result$summary_stats)
@@ -2723,6 +2706,311 @@ sentiment_embedding_analysis <- function(texts,
 }
 
 
+#' LLM-based Sentiment Analysis
+#'
+#' @description
+#' Analyzes sentiment using Large Language Models (OpenAI, Gemini, or Ollama).
+#' Provides nuanced sentiment understanding including sarcasm detection,
+#' mixed emotions, and contextual interpretation that lexicon-based methods miss.
+#'
+#' @param texts Character vector of texts to analyze.
+#' @param doc_names Optional character vector of document names (default: text1, text2, ...).
+#' @param provider AI provider to use: "openai" (default), "gemini", or "ollama".
+#' @param model Model name. If NULL, uses provider defaults: "gpt-4o-mini" (OpenAI),
+#'   "gemini-2.0-flash" (Gemini), "phi3:mini" (Ollama).
+#' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
+#'   Not required for Ollama.
+#' @param batch_size Number of texts to process per API call (default: 5).
+#'   Larger batches are more efficient but may hit token limits.
+#' @param include_explanation Logical, if TRUE includes natural language explanation
+#'   for each sentiment classification (default: FALSE).
+#' @param verbose Logical, if TRUE prints progress messages (default: TRUE).
+#'
+#' @return A list containing:
+#' \describe{
+#'   \item{document_sentiment}{Data frame with document-level sentiment scores}
+#'   \item{summary_stats}{Summary statistics of the analysis}
+#'   \item{model_used}{Model name used for analysis}
+#'   \item{provider}{AI provider used}
+#' }
+#'
+#' @details
+#' LLM-based sentiment analysis offers several advantages over lexicon methods:
+#' \itemize{
+#'   \item Understands context and nuance
+#'   \item Detects sarcasm and irony
+#'   \item Handles mixed emotions
+#'   \item Works across domains without retraining
+#' }
+#'
+#' @family sentiment
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Using OpenAI
+#' result <- analyze_sentiment_llm(
+#'   texts = c("This product is amazing!", "Worst experience ever."),
+#'   provider = "openai"
+#' )
+#'
+#' # Using Gemini with explanations
+#' result <- analyze_sentiment_llm(
+#'   texts = my_texts,
+#'   provider = "gemini",
+#'   include_explanation = TRUE
+#' )
+#'
+#' # Using local Ollama (free, no API key)
+#' result <- analyze_sentiment_llm(
+#'   texts = my_texts,
+#'   provider = "ollama",
+#'   model = "llama3"
+#' )
+#' }
+analyze_sentiment_llm <- function(texts,
+                                  doc_names = NULL,
+                                  provider = c("openai", "gemini", "ollama"),
+                                  model = NULL,
+                                  api_key = NULL,
+                                  batch_size = 5,
+                                  include_explanation = FALSE,
+                                  verbose = TRUE) {
+
+  provider <- match.arg(provider)
+
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("Package 'jsonlite' is required. Install with: install.packages('jsonlite')")
+  }
+
+  # Set document names if not provided
+  if (is.null(doc_names)) {
+    doc_names <- paste0("text", seq_along(texts))
+  }
+
+  if (length(texts) != length(doc_names)) {
+    stop("Length of texts and doc_names must match")
+  }
+
+  # Load .env if exists
+  if (file.exists(".env") && requireNamespace("dotenv", quietly = TRUE)) {
+    dotenv::load_dot_env()
+  }
+
+  # Set provider-based default model
+  if (is.null(model)) {
+    model <- switch(provider,
+      "openai" = "gpt-4o-mini",
+      "gemini" = "gemini-2.0-flash",
+      "ollama" = "phi3:mini"
+    )
+  }
+
+  # Resolve API key for cloud providers
+  if (provider %in% c("openai", "gemini") && is.null(api_key)) {
+    api_key <- switch(provider,
+      "openai" = Sys.getenv("OPENAI_API_KEY"),
+      "gemini" = Sys.getenv("GEMINI_API_KEY")
+    )
+  }
+
+  # Validate API key for cloud providers
+  if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
+    env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
+    stop(
+      sprintf("No %s API key found. Please add your API key using one of these methods:\n", provider),
+      sprintf("  1. Create a .env file: %s=your-key-here\n", env_var),
+      sprintf("  2. Set in R: Sys.setenv(%s = \"your-key-here\")\n", env_var),
+      "  3. Pass directly: api_key = \"your-key-here\"\n\n",
+      "Or use Ollama for free local AI: https://ollama.com"
+    )
+  }
+
+  if (verbose) {
+    message(sprintf("Analyzing sentiment for %d texts using %s (%s)...",
+                    length(texts), provider, model))
+  }
+
+  # System prompt for sentiment analysis
+  system_prompt <- "You are an expert sentiment analyst. Analyze the sentiment of each text and respond in valid JSON format only.
+
+For each text, provide:
+- sentiment: 'positive', 'negative', or 'neutral'
+- score: a number from -1.0 (very negative) to 1.0 (very positive)
+- confidence: a number from 0.0 to 1.0 indicating your confidence
+"
+
+  if (include_explanation) {
+    system_prompt <- paste0(system_prompt, "- explanation: a brief explanation of why you classified it this way\n")
+  }
+
+  system_prompt <- paste0(system_prompt, "
+Respond with a JSON array. Example:
+[{\"sentiment\": \"positive\", \"score\": 0.8, \"confidence\": 0.95}]
+
+Important:
+- Detect sarcasm and irony (e.g., 'Oh great, another meeting' is likely negative)
+- Consider context and nuance
+- Respond ONLY with valid JSON, no additional text")
+
+  # Process texts in batches
+  results <- data.frame(
+    document = character(),
+    sentiment = character(),
+    sentiment_score = numeric(),
+    confidence = numeric(),
+    explanation = character(),
+    stringsAsFactors = FALSE
+  )
+
+  n_batches <- ceiling(length(texts) / batch_size)
+
+  for (i in seq_len(n_batches)) {
+    start_idx <- (i - 1) * batch_size + 1
+    end_idx <- min(i * batch_size, length(texts))
+    batch_texts <- texts[start_idx:end_idx]
+    batch_names <- doc_names[start_idx:end_idx]
+
+    if (verbose) {
+      message(sprintf("Processing batch %d/%d...", i, n_batches))
+    }
+
+    # Create user prompt with numbered texts
+    user_prompt <- "Analyze the sentiment of these texts:\n\n"
+    for (j in seq_along(batch_texts)) {
+      user_prompt <- paste0(user_prompt, sprintf("Text %d: %s\n\n", j, batch_texts[j]))
+    }
+
+    # Call LLM
+    response <- tryCatch({
+      call_llm_api(
+        provider = provider,
+        system_prompt = system_prompt,
+        user_prompt = user_prompt,
+        model = model,
+        temperature = 0,
+        max_tokens = 500,
+        api_key = api_key
+      )
+    }, error = function(e) {
+      warning(sprintf("Batch %d failed: %s", i, e$message))
+      return(NULL)
+    })
+
+    if (is.null(response)) {
+      # Add failed batch with NA values
+      for (j in seq_along(batch_texts)) {
+        results <- rbind(results, data.frame(
+          document = batch_names[j],
+          sentiment = NA_character_,
+          sentiment_score = NA_real_,
+          confidence = NA_real_,
+          explanation = NA_character_,
+          stringsAsFactors = FALSE
+        ))
+      }
+      next
+    }
+
+    # Parse JSON response
+    parsed <- tryCatch({
+      # Clean response - extract JSON array
+      json_str <- response
+      # Find JSON array boundaries
+      start_bracket <- regexpr("\\[", json_str)
+      end_bracket <- regexpr("\\](?=[^\\]]*$)", json_str, perl = TRUE)
+      if (start_bracket > 0 && end_bracket > 0) {
+        json_str <- substr(json_str, start_bracket, end_bracket + attr(end_bracket, "match.length") - 1)
+      }
+      jsonlite::fromJSON(json_str)
+    }, error = function(e) {
+      warning(sprintf("Failed to parse JSON response for batch %d: %s", i, e$message))
+      return(NULL)
+    })
+
+    if (is.null(parsed) || length(parsed) == 0) {
+      for (j in seq_along(batch_texts)) {
+        results <- rbind(results, data.frame(
+          document = batch_names[j],
+          sentiment = NA_character_,
+          sentiment_score = NA_real_,
+          confidence = NA_real_,
+          explanation = NA_character_,
+          stringsAsFactors = FALSE
+        ))
+      }
+      next
+    }
+
+    # Map parsed results to batch
+    for (j in seq_along(batch_texts)) {
+      if (j <= nrow(parsed)) {
+        row <- parsed[j, ]
+        results <- rbind(results, data.frame(
+          document = batch_names[j],
+          sentiment = as.character(row$sentiment),
+          sentiment_score = as.numeric(row$score),
+          confidence = as.numeric(row$confidence),
+          explanation = if (include_explanation && "explanation" %in% names(row)) as.character(row$explanation) else NA_character_,
+          stringsAsFactors = FALSE
+        ))
+      } else {
+        results <- rbind(results, data.frame(
+          document = batch_names[j],
+          sentiment = NA_character_,
+          sentiment_score = NA_real_,
+          confidence = NA_real_,
+          explanation = NA_character_,
+          stringsAsFactors = FALSE
+        ))
+      }
+    }
+
+    # Rate limiting
+    if (provider %in% c("openai", "gemini")) {
+      Sys.sleep(1)
+    } else {
+      Sys.sleep(0.5)
+    }
+  }
+
+  # Remove explanation column if not requested
+  if (!include_explanation) {
+    results$explanation <- NULL
+  }
+
+  # Calculate summary statistics
+  valid_results <- results[!is.na(results$sentiment), ]
+  summary_stats <- list(
+    total_documents = length(texts),
+    documents_analyzed = nrow(valid_results),
+    documents_without_sentiment = sum(is.na(results$sentiment)),
+    coverage_percentage = round(nrow(valid_results) / length(texts) * 100, 1),
+    positive_docs = sum(valid_results$sentiment == "positive", na.rm = TRUE),
+    negative_docs = sum(valid_results$sentiment == "negative", na.rm = TRUE),
+    neutral_docs = sum(valid_results$sentiment == "neutral", na.rm = TRUE),
+    avg_sentiment_score = mean(valid_results$sentiment_score, na.rm = TRUE),
+    avg_confidence = mean(valid_results$confidence, na.rm = TRUE)
+  )
+
+  if (verbose) {
+    message(sprintf("Sentiment analysis completed. Analyzed %d/%d documents.",
+                    summary_stats$documents_analyzed, summary_stats$total_documents))
+    message(sprintf("Distribution: %d positive, %d negative, %d neutral",
+                    summary_stats$positive_docs, summary_stats$negative_docs,
+                    summary_stats$neutral_docs))
+  }
+
+  return(list(
+    document_sentiment = results,
+    summary_stats = summary_stats,
+    model_used = model,
+    provider = provider,
+    feature_type = "llm"
+  ))
+}
+
+
 #' Plot Emotion Radar Chart
 #'
 #' @description
@@ -2760,6 +3048,22 @@ plot_emotion_radar <- function(emotion_data,
     }
 
     categories <- unique(plot_data[[group_var]])
+
+    # Return empty plot with proper type if no categories
+    if (length(categories) == 0) {
+      return(
+        plotly::plot_ly(type = "scatter", mode = "markers") %>%
+          plotly::layout(
+            xaxis = list(visible = FALSE),
+            yaxis = list(visible = FALSE),
+            annotations = list(
+              list(text = "No data available", showarrow = FALSE,
+                   font = list(size = 16), xref = "paper", yref = "paper",
+                   x = 0.5, y = 0.5)
+            )
+          )
+      )
+    }
 
     p <- plotly::plot_ly()
 
@@ -3015,816 +3319,9 @@ plot_sentiment_violin <- function(sentiment_data,
 NULL
 
 # Network Analysis Functions
-# Semantic network analysis functions for word co-occurrence and correlation
-# NOTE: plot_cooccurrence_network and plot_correlation_network were removed
-# as they were not used in the Shiny app. Use semantic_cooccurrence_network
-# and semantic_correlation_network instead.
+# NOTE: word_co_occurrence_network and word_correlation_network functions
+# are now in R/network_analysis.R using Plotly-based visualization.
 
-
-
-#' Compute Word Co-occurrence Network
-#'
-#' @description
-#' Computes word co-occurrence networks with community detection and network metrics.
-#' Supports multiple feature spaces: unigrams, n-grams, and embeddings.
-#' Based on proven implementation for intuitive network visualization.
-#'
-#' @param dfm_object A quanteda document-feature matrix (dfm).
-#' @param doc_var A document-level metadata variable for categories (default: NULL).
-#' @param co_occur_n Minimum co-occurrence count (default: 10).
-#' @param top_node_n Number of top nodes to display based on degree centrality (default: 30).
-#' @param node_label_size Font size for node labels (default: 14).
-#' @param pattern Regex pattern to filter specific words (default: NULL).
-#' @param showlegend Whether to show community legend (default: TRUE).
-#' @param seed Random seed for reproducible layout (default: NULL).
-#' @param feature_type Feature space: "words", "ngrams", or "embeddings" (default: "words").
-#' @param ngram_range N-gram size when feature_type = "ngrams" (default: 2).
-#' @param texts Optional character vector of texts for n-gram creation (default: NULL).
-#' @param embeddings Optional embedding matrix for embedding-based networks (default: NULL).
-#' @param embedding_sim_threshold Similarity threshold for embedding-based networks (default: 0.5).
-#' @param community_method Community detection method: "leiden" (default), "louvain", "label_prop", or "fast_greedy".
-#'
-#' @return A list containing plot, table, nodes, edges, and stats
-#' @family network
-#' @export
-#'
-semantic_cooccurrence_network <- function(dfm_object,
-                                        doc_var = NULL,
-                                        co_occur_n = 10,
-                                        top_node_n = 30,
-                                        node_label_size = 22,
-                                        pattern = NULL,
-                                        showlegend = TRUE,
-                                        seed = NULL,
-                                        feature_type = "words",
-                                        ngram_range = 2,
-                                        texts = NULL,
-                                        embeddings = NULL,
-                                        embedding_sim_threshold = 0.5,
-                                        community_method = "leiden") {
-
-  if (!is.null(seed)) set.seed(seed)
-
-  if (feature_type == "ngrams" && !is.null(texts)) {
-    if (!requireNamespace("quanteda", quietly = TRUE)) {
-      stop("Package 'quanteda' is required for n-gram analysis.")
-    }
-    message("Creating ", ngram_range, "-gram co-occurrence network")
-    corp <- quanteda::corpus(texts)
-    toks <- quanteda::tokens(corp, remove_punct = TRUE, remove_symbols = TRUE)
-    toks_ngrams <- quanteda::tokens_ngrams(toks, n = ngram_range)
-    dfm_object <- quanteda::dfm(toks_ngrams)
-
-    if (co_occur_n > 2) {
-      original_threshold <- co_occur_n
-      co_occur_n <- max(2, floor(co_occur_n * 0.3))
-      message("Automatically adjusting co-occurrence threshold for ngrams: ",
-              original_threshold, " -> ", co_occur_n)
-    }
-  } else if (feature_type == "embeddings" && !is.null(embeddings)) {
-    message("Creating embedding-based document similarity network")
-
-    # For embeddings, create document-document similarity network
-    # Nodes = Documents, Edges = Similarity > threshold
-
-    if (!is.matrix(embeddings) || nrow(embeddings) < 2) {
-      message("Invalid embeddings matrix. Falling back to word-based network.")
-    } else {
-      # Compute cosine similarity matrix
-      norm_embeddings <- embeddings / sqrt(rowSums(embeddings^2))
-      sim_matrix <- tcrossprod(norm_embeddings)
-      diag(sim_matrix) <- 0  # Remove self-similarity
-
-      # Get document names
-      doc_names <- if (!is.null(rownames(embeddings))) {
-        rownames(embeddings)
-      } else {
-        paste0("doc_", seq_len(nrow(embeddings)))
-      }
-      rownames(sim_matrix) <- doc_names
-      colnames(sim_matrix) <- doc_names
-
-      # Create edges from similarity threshold
-      edge_list <- which(sim_matrix > embedding_sim_threshold & upper.tri(sim_matrix), arr.ind = TRUE)
-
-      if (nrow(edge_list) == 0) {
-        message("No document pairs exceed similarity threshold. Try lowering the threshold.")
-        return(NULL)
-      }
-
-      edge_df <- data.frame(
-        from = doc_names[edge_list[, 1]],
-        to = doc_names[edge_list[, 2]],
-        weight = sim_matrix[edge_list],
-        stringsAsFactors = FALSE
-      )
-
-      # Create graph
-      graph <- igraph::graph_from_data_frame(edge_df, directed = FALSE)
-      if (igraph::vcount(graph) == 0) return(NULL)
-
-      # Compute centrality measures
-      igraph::V(graph)$degree <- igraph::degree(graph)
-      igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-
-      # Community detection
-      community_result <- switch(community_method,
-        "louvain" = igraph::cluster_louvain(graph),
-        "label_prop" = igraph::cluster_label_prop(graph),
-        "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
-        igraph::cluster_leiden(graph)
-      )
-      igraph::V(graph)$community <- community_result$membership
-
-      # Create layout table
-      layout_df <- data.frame(
-        Document = igraph::V(graph)$name,
-        Degree = igraph::V(graph)$degree,
-        Eigenvector = round(igraph::V(graph)$eigenvector, 3),
-        Community = igraph::V(graph)$community,
-        stringsAsFactors = FALSE
-      )
-
-      # Limit nodes by degree
-      node_degrees <- igraph::degree(graph)
-      sorted_indices <- order(node_degrees, decreasing = TRUE)
-      top_n <- min(top_node_n, length(sorted_indices))
-      top_indices <- sorted_indices[1:top_n]
-      top_nodes <- igraph::V(graph)$name[top_indices]
-      graph <- igraph::induced_subgraph(graph, top_nodes)
-
-      # Prepare visNetwork data
-      communities <- unique(igraph::V(graph)$community)
-      n_communities <- length(communities)
-      colors <- colorRampPalette(c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
-                                   "#9467bd", "#8c564b", "#e377c2"))(n_communities)
-      community_colors <- setNames(colors, communities)
-
-      nodes <- data.frame(
-        id = igraph::V(graph)$name,
-        label = igraph::V(graph)$name,
-        value = igraph::V(graph)$degree,
-        group = paste("Community", igraph::V(graph)$community),
-        color = community_colors[as.character(igraph::V(graph)$community)],
-        font.size = node_label_size,
-        title = paste0("<b>", igraph::V(graph)$name, "</b><br>",
-                       "Degree: ", igraph::V(graph)$degree, "<br>",
-                       "Community: ", igraph::V(graph)$community),
-        stringsAsFactors = FALSE
-      )
-
-      edge_data <- igraph::as_data_frame(graph, what = "edges")
-      edges <- data.frame(
-        from = edge_data$from,
-        to = edge_data$to,
-        value = if ("weight" %in% names(edge_data)) edge_data$weight else 1,
-        color = "#888888",
-        title = paste0("Similarity: ", round(edge_data$weight, 3)),
-        stringsAsFactors = FALSE
-      )
-
-      # Create legend
-      legend_labels <- lapply(seq_len(n_communities), function(i) {
-        list(
-          label = paste("Community", communities[i]),
-          shape = "dot",
-          color = colors[i],
-          size = 15
-        )
-      })
-
-      # Create plot
-      plot <- visNetwork::visNetwork(nodes, edges) %>%
-        visNetwork::visNodes(
-          shape = "dot",
-          scaling = list(min = 10, max = 40)
-        ) %>%
-        visNetwork::visEdges(
-          smooth = FALSE,
-          width = 1,
-          color = list(color = "#888888", opacity = 0.6)
-        ) %>%
-        visNetwork::visLayout(randomSeed = seed %||% 2025) %>%
-        visNetwork::visOptions(
-          highlightNearest = TRUE,
-          nodesIdSelection = TRUE,
-          manipulation = FALSE,
-          selectedBy = list(
-            variable = "group",
-            multiple = FALSE,
-            style = "width: 150px; height: 26px;"
-          )
-        ) %>%
-        visNetwork::visPhysics(enabled = FALSE) %>%
-        visNetwork::visInteraction(
-          hover = TRUE,
-          tooltipDelay = 0,
-          tooltipStay = 1000,
-          zoomView = TRUE,
-          dragView = TRUE
-        ) %>%
-        {if (showlegend) visNetwork::visLegend(.,
-                                                addNodes = do.call(rbind, lapply(legend_labels, as.data.frame)),
-                                                useGroups = FALSE,
-                                                position = "right",
-                                                width = 0.2,
-                                                zoom = FALSE
-        ) else .}
-
-      # Compute stats
-      safe_round <- function(x, digits = 4) {
-        if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
-        round(x, digits)
-      }
-
-      stats_list <- list(
-        nodes = igraph::vcount(graph),
-        edges = igraph::ecount(graph),
-        density = safe_round(igraph::edge_density(graph)),
-        diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
-        global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
-        avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
-        modularity = safe_round(igraph::modularity(community_result)),
-        assortativity = safe_round(igraph::assortativity_degree(graph)),
-        avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
-      )
-
-      return(list(
-        plot = plot,
-        table = layout_df,
-        nodes = nodes,
-        edges = edges,
-        stats = stats_list
-      ))
-    }
-  }
-
-  dfm_td <- tidytext::tidy(dfm_object)
-  docvars_df <- dfm_object@docvars
-  docvars_df$document <- docvars_df$docname_
-  dfm_td <- dplyr::left_join(dfm_td, docvars_df, by = "document")
-
-  if (!is.null(doc_var) && doc_var %in% colnames(dfm_td)) {
-    available_levels <- unique(dfm_td[[doc_var]])
-    available_levels <- available_levels[!is.na(available_levels)]
-    message("Analyzing network for ", doc_var, ": ", paste(available_levels, collapse = ", "))
-  }
-
-  term_co_occur <- dfm_td %>%
-    widyr::pairwise_count(term, document, sort = TRUE) %>%
-    dplyr::filter(n >= co_occur_n)
-
-  if (!is.null(pattern)) {
-    term_co_occur <- term_co_occur %>%
-      dplyr::filter(grepl(pattern, item1, ignore.case = TRUE) |
-                      grepl(pattern, item2, ignore.case = TRUE))
-  }
-
-  if (nrow(term_co_occur) == 0) {
-    message("No co-occurrence relationships meet the threshold.")
-    return(NULL)
-  }
-
-  graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
-  if (igraph::vcount(graph) == 0) return(NULL)
-
-  igraph::V(graph)$degree <- igraph::degree(graph)
-  igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-  # Apply selected community detection method
-  community_result <- switch(community_method,
-    "louvain" = igraph::cluster_louvain(graph),
-    "label_prop" = igraph::cluster_label_prop(graph),
-    "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
-    igraph::cluster_leiden(graph)  # default: leiden
-  )
-  igraph::V(graph)$community <- community_result$membership
-
-  layout_df <- data.frame(
-    Term = igraph::V(graph)$name,
-    Degree = igraph::V(graph)$degree,
-    Eigenvector = round(igraph::V(graph)$eigenvector, 3),
-    Community = igraph::V(graph)$community,
-    stringsAsFactors = FALSE
-  )
-
-  node_degrees <- igraph::degree(graph)
-  sorted_indices <- order(node_degrees, decreasing = TRUE)
-  top_n <- min(top_node_n, length(sorted_indices))
-  top_nodes <- names(node_degrees)[sorted_indices[1:top_n]]
-
-  nodes <- data.frame(
-    id = igraph::V(graph)$name,
-    label = ifelse(igraph::V(graph)$name %in% top_nodes, igraph::V(graph)$name, ""),
-    group = igraph::V(graph)$community,
-    value = igraph::V(graph)$degree,
-    title = paste0(
-      "<b style='color:black;'>", igraph::V(graph)$name, "</b><br>",
-      "<span style='color:black;'>Degree: ", igraph::V(graph)$degree, "<br>",
-      "Eigenvector: ", round(igraph::V(graph)$eigenvector, 2), "<br>",
-      "Community: ", igraph::V(graph)$community, "</span>"
-    ),
-    stringsAsFactors = FALSE
-  )
-
-  edges <- igraph::as_data_frame(graph, what = "edges")
-  edges$width <- scales::rescale(edges$n, to = c(1, 8))
-
-  edge_color_base <- "#5C5CFF"
-  edges$color <- mapply(function(n_val) {
-    alpha_val <- scales::rescale(n_val, to = c(0.3, 1))
-    scales::alpha(edge_color_base, alpha_val)
-  }, edges$n)
-
-  edges$title <- paste0(
-    "<span style='color:black;'>Co-occurrence: ", edges$n,
-    "<br>From: ", edges$from,
-    "<br>To: ", edges$to, "</span>"
-  )
-
-  unique_communities <- sort(unique(nodes$group))
-  community_map <- setNames(seq_along(unique_communities), unique_communities)
-  nodes$group <- community_map[as.character(nodes$group)]
-
-  n_communities <- length(unique(nodes$group))
-  if (n_communities <= 8) {
-    palette <- RColorBrewer::brewer.pal(max(3, n_communities), "Set2")
-  } else {
-    palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-  }
-  community_colors <- setNames(palette, as.character(seq_len(n_communities)))
-  nodes$color <- community_colors[as.character(nodes$group)]
-
-  legend_labels <- lapply(seq_len(n_communities), function(i) {
-    community_size <- sum(nodes$group == i)
-    list(
-      label = paste0("Community ", i, " (", community_size, ")"),
-      color = community_colors[as.character(i)],
-      shape = "dot"
-    )
-  })
-
-  plot <- visNetwork::visNetwork(nodes, edges) %>%
-    visNetwork::visNodes(font = list(color = "black", size = node_label_size, vadjust = 0)) %>%
-    visNetwork::visEdges(smooth = FALSE) %>%
-    visNetwork::visIgraphLayout(layout = "layout_with_fr", randomSeed = ifelse(is.null(seed), 2025, seed)) %>%
-    visNetwork::visOptions(
-      highlightNearest = list(
-        enabled = TRUE,
-        degree = 1,
-        hover = TRUE,
-        algorithm = "hierarchical"
-      ),
-      nodesIdSelection = TRUE,
-      manipulation = FALSE,
-      selectedBy = list(
-        variable = "group",
-        multiple = FALSE,
-        style = "width: 150px; height: 26px;"
-      )
-    ) %>%
-    visNetwork::visPhysics(enabled = FALSE) %>%
-    visNetwork::visInteraction(
-      hover = TRUE,
-      tooltipDelay = 0,
-      tooltipStay = 1000,
-      zoomView = TRUE,
-      dragView = TRUE
-    ) %>%
-    {if (showlegend) visNetwork::visLegend(.,
-                                            addNodes = do.call(rbind, lapply(legend_labels, as.data.frame)),
-                                            useGroups = FALSE,
-                                            position = "right",
-                                            width = 0.2,
-                                            zoom = FALSE
-    ) else .}
-
-  # Compute comprehensive network statistics
-  safe_round <- function(x, digits = 4) {
-    if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
-    round(x, digits)
-  }
-
-  stats_list <- list(
-    nodes = igraph::vcount(graph),
-    edges = igraph::ecount(graph),
-    density = safe_round(igraph::edge_density(graph)),
-    diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
-    global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
-    avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
-    modularity = safe_round(igraph::modularity(community_result)),
-    assortativity = safe_round(igraph::assortativity_degree(graph)),
-    avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
-  )
-
-  list(
-    plot = plot,
-    table = layout_df,
-    nodes = nodes,
-    edges = edges,
-    stats = stats_list
-  )
-}
-
-#' Compute Word Correlation Network
-#'
-#' @description
-#' Computes word correlation networks with community detection and network metrics.
-#' Supports multiple feature spaces: unigrams, n-grams, and embeddings.
-#' Based on proven implementation for intuitive network visualization.
-#'
-#' @param dfm_object A quanteda document-feature matrix (dfm).
-#' @param doc_var A document-level metadata variable for categories (default: NULL).
-#' @param common_term_n Minimum term frequency to include (default: 20).
-#' @param corr_n Minimum correlation threshold (default: 0.4).
-#' @param top_node_n Number of top nodes to display (default: 30).
-#' @param node_label_size Font size for node labels (default: 14).
-#' @param pattern Regex pattern to filter specific words (default: NULL).
-#' @param showlegend Whether to show community legend (default: TRUE).
-#' @param seed Random seed for reproducible layout (default: NULL).
-#' @param feature_type Feature space: "words", "ngrams", or "embeddings" (default: "words").
-#' @param ngram_range N-gram size when feature_type = "ngrams" (default: 2).
-#' @param texts Optional character vector of texts for n-gram creation (default: NULL).
-#' @param embeddings Optional embedding matrix for embedding-based networks (default: NULL).
-#' @param embedding_sim_threshold Similarity threshold for embedding-based networks (default: 0.5).
-#' @param community_method Community detection method: "leiden" (default), "louvain", "label_prop", or "fast_greedy".
-#'
-#' @return A list containing plot, table, nodes, edges, and stats
-#' @family network
-#' @export
-#'
-semantic_correlation_network <- function(dfm_object,
-                                       doc_var = NULL,
-                                       common_term_n = 20,
-                                       corr_n = 0.4,
-                                       top_node_n = 30,
-                                       node_label_size = 22,
-                                       pattern = NULL,
-                                       showlegend = TRUE,
-                                       seed = NULL,
-                                       feature_type = "words",
-                                       ngram_range = 2,
-                                       texts = NULL,
-                                       embeddings = NULL,
-                                       embedding_sim_threshold = 0.5,
-                                       community_method = "leiden") {
-
-  if (!is.null(seed)) set.seed(seed)
-
-  if (feature_type == "ngrams" && !is.null(texts)) {
-    if (!requireNamespace("quanteda", quietly = TRUE)) {
-      stop("Package 'quanteda' is required for n-gram analysis.")
-    }
-    message("Creating ", ngram_range, "-gram correlation network")
-    corp <- quanteda::corpus(texts)
-    toks <- quanteda::tokens(corp, remove_punct = TRUE, remove_symbols = TRUE)
-    toks_ngrams <- quanteda::tokens_ngrams(toks, n = ngram_range)
-    dfm_object <- quanteda::dfm(toks_ngrams)
-  } else if (feature_type == "embeddings" && !is.null(embeddings)) {
-    message("Creating embedding-based document similarity network")
-
-    # For embeddings, create document-document similarity network
-    # Nodes = Documents, Edges = Similarity > threshold
-
-    if (!is.matrix(embeddings) || nrow(embeddings) < 2) {
-      message("Invalid embeddings matrix. Falling back to word-based network.")
-    } else {
-      # Compute cosine similarity matrix
-      norm_embeddings <- embeddings / sqrt(rowSums(embeddings^2))
-      sim_matrix <- tcrossprod(norm_embeddings)
-      diag(sim_matrix) <- 0  # Remove self-similarity
-
-      # Get document names
-      doc_names <- if (!is.null(rownames(embeddings))) {
-        rownames(embeddings)
-      } else {
-        paste0("doc_", seq_len(nrow(embeddings)))
-      }
-      rownames(sim_matrix) <- doc_names
-      colnames(sim_matrix) <- doc_names
-
-      # Create edges from similarity threshold
-      edge_list <- which(sim_matrix > embedding_sim_threshold & upper.tri(sim_matrix), arr.ind = TRUE)
-
-      if (nrow(edge_list) == 0) {
-        message("No document pairs exceed similarity threshold. Try lowering the threshold.")
-        return(NULL)
-      }
-
-      edge_df <- data.frame(
-        from = doc_names[edge_list[, 1]],
-        to = doc_names[edge_list[, 2]],
-        weight = sim_matrix[edge_list],
-        stringsAsFactors = FALSE
-      )
-
-      # Create graph
-      graph <- igraph::graph_from_data_frame(edge_df, directed = FALSE)
-      if (igraph::vcount(graph) == 0) return(NULL)
-
-      # Compute centrality measures
-      igraph::V(graph)$degree <- igraph::degree(graph)
-      igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-
-      # Community detection
-      community_result <- switch(community_method,
-        "louvain" = igraph::cluster_louvain(graph),
-        "label_prop" = igraph::cluster_label_prop(graph),
-        "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
-        igraph::cluster_leiden(graph)
-      )
-      igraph::V(graph)$community <- community_result$membership
-
-      # Create layout table
-      layout_df <- data.frame(
-        Document = igraph::V(graph)$name,
-        Degree = igraph::V(graph)$degree,
-        Eigenvector = round(igraph::V(graph)$eigenvector, 3),
-        Community = igraph::V(graph)$community,
-        stringsAsFactors = FALSE
-      )
-
-      # Limit nodes by degree
-      node_degrees <- igraph::degree(graph)
-      sorted_indices <- order(node_degrees, decreasing = TRUE)
-      top_n <- min(top_node_n, length(sorted_indices))
-      top_indices <- sorted_indices[1:top_n]
-      top_nodes <- igraph::V(graph)$name[top_indices]
-      graph <- igraph::induced_subgraph(graph, top_nodes)
-
-      # Prepare visNetwork data
-      communities <- unique(igraph::V(graph)$community)
-      n_communities <- length(communities)
-      colors <- colorRampPalette(c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
-                                   "#9467bd", "#8c564b", "#e377c2"))(n_communities)
-      community_colors <- setNames(colors, communities)
-
-      nodes <- data.frame(
-        id = igraph::V(graph)$name,
-        label = igraph::V(graph)$name,
-        value = igraph::V(graph)$degree,
-        group = paste("Community", igraph::V(graph)$community),
-        color = community_colors[as.character(igraph::V(graph)$community)],
-        font.size = node_label_size,
-        title = paste0("<b>", igraph::V(graph)$name, "</b><br>",
-                       "Degree: ", igraph::V(graph)$degree, "<br>",
-                       "Community: ", igraph::V(graph)$community),
-        stringsAsFactors = FALSE
-      )
-
-      edge_data <- igraph::as_data_frame(graph, what = "edges")
-      edges <- data.frame(
-        from = edge_data$from,
-        to = edge_data$to,
-        value = if ("weight" %in% names(edge_data)) edge_data$weight else 1,
-        color = "#888888",
-        title = paste0("Similarity: ", round(edge_data$weight, 3)),
-        stringsAsFactors = FALSE
-      )
-
-      # Create legend
-      legend_labels <- lapply(seq_len(n_communities), function(i) {
-        list(
-          label = paste("Community", communities[i]),
-          shape = "dot",
-          color = colors[i],
-          size = 15
-        )
-      })
-
-      # Create plot
-      plot <- visNetwork::visNetwork(nodes, edges) %>%
-        visNetwork::visNodes(
-          shape = "dot",
-          scaling = list(min = 10, max = 40)
-        ) %>%
-        visNetwork::visEdges(
-          smooth = FALSE,
-          width = 1,
-          color = list(color = "#888888", opacity = 0.6)
-        ) %>%
-        visNetwork::visLayout(randomSeed = seed %||% 2025) %>%
-        visNetwork::visOptions(
-          highlightNearest = TRUE,
-          nodesIdSelection = TRUE,
-          manipulation = FALSE,
-          selectedBy = list(
-            variable = "group",
-            multiple = FALSE,
-            style = "width: 150px; height: 26px;"
-          )
-        ) %>%
-        visNetwork::visPhysics(enabled = FALSE) %>%
-        visNetwork::visInteraction(
-          hover = TRUE,
-          tooltipDelay = 0,
-          tooltipStay = 1000,
-          zoomView = TRUE,
-          dragView = TRUE
-        ) %>%
-        {if (showlegend) visNetwork::visLegend(.,
-                                                addNodes = do.call(rbind, lapply(legend_labels, as.data.frame)),
-                                                useGroups = FALSE,
-                                                position = "right",
-                                                width = 0.2,
-                                                zoom = FALSE
-        ) else .}
-
-      # Compute stats
-      safe_round <- function(x, digits = 4) {
-        if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
-        round(x, digits)
-      }
-
-      stats_list <- list(
-        nodes = igraph::vcount(graph),
-        edges = igraph::ecount(graph),
-        density = safe_round(igraph::edge_density(graph)),
-        diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
-        global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
-        avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
-        modularity = safe_round(igraph::modularity(community_result)),
-        assortativity = safe_round(igraph::assortativity_degree(graph)),
-        avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
-      )
-
-      return(list(
-        plot = plot,
-        table = layout_df,
-        nodes = nodes,
-        edges = edges,
-        stats = stats_list
-      ))
-    }
-  }
-
-  dfm_td <- tidytext::tidy(dfm_object)
-  docvars_df <- dfm_object@docvars
-  docvars_df$document <- docvars_df$docname_
-  dfm_td <- dplyr::left_join(dfm_td, docvars_df, by = "document")
-
-  if (!is.null(doc_var) && doc_var %in% colnames(dfm_td)) {
-    available_levels <- unique(dfm_td[[doc_var]])
-    available_levels <- available_levels[!is.na(available_levels)]
-    message("Analyzing network for ", doc_var, ": ", paste(available_levels, collapse = ", "))
-  }
-
-  term_cor <- dfm_td %>%
-    dplyr::group_by(term) %>%
-    dplyr::filter(dplyr::n() >= common_term_n) %>%
-    widyr::pairwise_cor(term, document, count, sort = TRUE) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(correlation > corr_n)
-
-  if (!is.null(pattern)) {
-    term_cor <- term_cor %>%
-      dplyr::filter(grepl(pattern, item1, ignore.case = TRUE) |
-                      grepl(pattern, item2, ignore.case = TRUE))
-  }
-
-  if (nrow(term_cor) == 0) {
-    message("No correlation relationships meet the threshold.")
-    return(NULL)
-  }
-
-  graph <- igraph::graph_from_data_frame(term_cor, directed = FALSE)
-  if (igraph::vcount(graph) == 0) return(NULL)
-
-  igraph::V(graph)$degree <- igraph::degree(graph)
-  igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-  # Apply selected community detection method
-  community_result <- switch(community_method,
-    "louvain" = igraph::cluster_louvain(graph),
-    "label_prop" = igraph::cluster_label_prop(graph),
-    "fast_greedy" = igraph::cluster_fast_greedy(igraph::as.undirected(graph)),
-    igraph::cluster_leiden(graph)  # default: leiden
-  )
-  igraph::V(graph)$community <- community_result$membership
-
-  layout_df <- data.frame(
-    Term = igraph::V(graph)$name,
-    Degree = igraph::V(graph)$degree,
-    Eigenvector = round(igraph::V(graph)$eigenvector, 3),
-    Community = igraph::V(graph)$community,
-    stringsAsFactors = FALSE
-  )
-
-  node_degrees <- igraph::degree(graph)
-  sorted_indices <- order(node_degrees, decreasing = TRUE)
-  top_n <- min(top_node_n, length(sorted_indices))
-  top_nodes <- names(node_degrees)[sorted_indices[1:top_n]]
-
-  nodes <- data.frame(
-    id = igraph::V(graph)$name,
-    label = ifelse(igraph::V(graph)$name %in% top_nodes, igraph::V(graph)$name, ""),
-    group = igraph::V(graph)$community,
-    value = igraph::V(graph)$degree,
-    title = paste0(
-      "<b style='color:black;'>", igraph::V(graph)$name, "</b><br>",
-      "<span style='color:black;'>Degree: ", igraph::V(graph)$degree, "<br>",
-      "Eigenvector: ", round(igraph::V(graph)$eigenvector, 2), "<br>",
-      "Community: ", igraph::V(graph)$community, "</span>"
-    ),
-    stringsAsFactors = FALSE
-  )
-
-  edges <- igraph::as_data_frame(graph, what = "edges")
-  edges$correlation <- term_cor$correlation[match(paste(edges$from, edges$to), paste(term_cor$item1, term_cor$item2))]
-  edges$width <- scales::rescale(abs(edges$correlation), to = c(1, 8))
-
-  edge_color_base <- "#5C5CFF"
-  edges$color <- mapply(function(corr) {
-    alpha_val <- scales::rescale(abs(corr), to = c(0.3, 1))
-    scales::alpha(edge_color_base, alpha_val)
-  }, edges$correlation)
-
-  edges$title <- paste0(
-    "<span style='color:black;'>Correlation: ", round(edges$correlation, 3),
-    "<br>From: ", edges$from,
-    "<br>To: ", edges$to, "</span>"
-  )
-
-  unique_communities <- sort(unique(nodes$group))
-  community_map <- setNames(seq_along(unique_communities), unique_communities)
-  nodes$group <- community_map[as.character(nodes$group)]
-
-  n_communities <- length(unique(nodes$group))
-  if (n_communities <= 8) {
-    palette <- RColorBrewer::brewer.pal(max(3, n_communities), "Set2")
-  } else {
-    palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-  }
-  community_colors <- setNames(palette, as.character(seq_len(n_communities)))
-  nodes$color <- community_colors[as.character(nodes$group)]
-
-  legend_labels <- lapply(seq_len(n_communities), function(i) {
-    community_size <- sum(nodes$group == i)
-    list(
-      label = paste0("Community ", i, " (", community_size, ")"),
-      color = community_colors[as.character(i)],
-      shape = "dot"
-    )
-  })
-
-  plot <- visNetwork::visNetwork(nodes, edges) %>%
-    visNetwork::visNodes(font = list(color = "black", size = node_label_size, vadjust = 0)) %>%
-    visNetwork::visEdges(smooth = FALSE) %>%
-    visNetwork::visIgraphLayout(layout = "layout_with_fr", randomSeed = ifelse(is.null(seed), 2025, seed)) %>%
-    visNetwork::visOptions(
-      highlightNearest = list(
-        enabled = TRUE,
-        degree = 1,
-        hover = TRUE,
-        algorithm = "hierarchical"
-      ),
-      nodesIdSelection = TRUE,
-      manipulation = FALSE,
-      selectedBy = list(
-        variable = "group",
-        multiple = FALSE,
-        style = "width: 150px; height: 26px;"
-      )
-    ) %>%
-    visNetwork::visPhysics(enabled = FALSE) %>%
-    visNetwork::visInteraction(
-      hover = TRUE,
-      tooltipDelay = 0,
-      tooltipStay = 1000,
-      zoomView = TRUE,
-      dragView = TRUE
-    ) %>%
-    {if (showlegend) visNetwork::visLegend(.,
-                                            addNodes = do.call(rbind, lapply(legend_labels, as.data.frame)),
-                                            useGroups = FALSE,
-                                            position = "right",
-                                            width = 0.2,
-                                            zoom = FALSE
-    ) else .}
-
-  # Compute comprehensive network statistics
-  safe_round <- function(x, digits = 4) {
-    if (is.null(x) || is.na(x) || is.nan(x) || !is.numeric(x)) return(NA_real_)
-    round(x, digits)
-  }
-
-  stats_list <- list(
-    nodes = igraph::vcount(graph),
-    edges = igraph::ecount(graph),
-    density = safe_round(igraph::edge_density(graph)),
-    diameter = tryCatch(igraph::diameter(graph), error = function(e) NA_integer_),
-    global_clustering = safe_round(igraph::transitivity(graph, type = "global")),
-    avg_local_clustering = safe_round(igraph::transitivity(graph, type = "average")),
-    modularity = safe_round(igraph::modularity(community_result)),
-    assortativity = safe_round(igraph::assortativity_degree(graph)),
-    avg_path_length = safe_round(igraph::mean_distance(graph, directed = FALSE))
-  )
-  list(
-    plot = plot,
-    table = layout_df,
-    nodes = nodes,
-    edges = edges,
-    stats = stats_list
-  )
-}
 #' @title Plot Semantic Analysis Visualization
 #'
 #' @description
@@ -3853,7 +3350,8 @@ semantic_correlation_network <- function(dfm_object,
 #'
 #' @examples
 #' if (interactive()) {
-#'   texts <- c("machine learning", "deep learning", "artificial intelligence")
+#'   data(SpecialEduTech)
+#'   texts <- SpecialEduTech$abstract[1:5]
 #'   result <- semantic_similarity_analysis(texts)
 #'   plot <- plot_semantic_viz(result, plot_type = "similarity")
 #'   print(plot)
@@ -4237,6 +3735,10 @@ plot_cross_category_heatmap <- function(similarity_data,
                                          order_by_numeric = TRUE,
                                          height = 600,
                                          width = NULL) {
+
+  if (!requireNamespace("stringr", quietly = TRUE)) {
+    stop("Package 'stringr' is required. Install with: install.packages('stringr')")
+  }
 
   # Detect input type: data frame (long format) or matrix
   if (is.data.frame(similarity_data)) {
@@ -4699,4 +4201,1157 @@ plot_similarity_heatmap <- function(similarity_matrix,
       paper_bgcolor = "#ffffff",
       margin = list(t = 80, b = 60, l = 100, r = 80)
     )
+}
+
+
+#' RAG-Enhanced Semantic Search
+#'
+#' @description
+#' Simple in-memory RAG (Retrieval Augmented Generation) for question-answering
+#' over document corpus with source attribution. Uses local (Ollama) or cloud
+#' (OpenAI/Gemini) embeddings for semantic search and LLM for answer generation.
+#'
+#' @param query Character string, user question
+#' @param documents Character vector, corpus to search
+#' @param provider Character string, provider: "ollama" (local), "openai", or "gemini"
+#' @param api_key Character string, API key for cloud providers (or from
+#'   OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.
+#' @param embedding_model Character string, embedding model. Defaults:
+#'   "nomic-embed-text" (ollama), "text-embedding-3-small" (openai),
+#'   "text-embedding-004" (gemini)
+#' @param chat_model Character string, chat model. Defaults: "phi3:mini" (ollama),
+#'   "gpt-4o-mini" (openai), "gemini-2.0-flash" (gemini)
+#' @param top_k Integer, number of documents to retrieve (default: 5)
+#'
+#' @return List with:
+#'   - success: Logical
+#'   - answer: Generated answer
+#'   - confidence: Confidence score (0-1)
+#'   - sources: Vector of source document indices
+#'   - retrieved_docs: Retrieved document chunks
+#'   - scores: Similarity scores
+#'
+#' @details
+#' Simple RAG workflow:
+#' 1. Generate embeddings for documents and query
+#' 2. Find top-k similar documents via cosine similarity
+#' 3. Generate answer using LLM with retrieved context
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' documents <- c(
+#'   "Assistive technology helps students with disabilities access curriculum.",
+#'   "Universal Design for Learning provides multiple means of engagement.",
+#'   "Response to Intervention uses tiered support systems."
+#' )
+#'
+#' # Using local Ollama (free, private)
+#' result <- run_rag_search(
+#'   query = "How does assistive technology support learning?",
+#'   documents = documents,
+#'   provider = "ollama"
+#' )
+#'
+#' # Using OpenAI (requires API key)
+#' result <- run_rag_search(
+#'   query = "How does assistive technology support learning?",
+#'   documents = documents,
+#'   provider = "openai"
+#' )
+#'
+#' if (result$success) {
+#'   cat("Answer:", result$answer, "\n")
+#'   cat("Sources:", paste(result$sources, collapse = ", "), "\n")
+#' }
+#' }
+run_rag_search <- function(
+  query,
+  documents,
+  provider = c("ollama", "openai", "gemini"),
+  api_key = NULL,
+  embedding_model = NULL,
+  chat_model = NULL,
+  top_k = 5
+) {
+  provider <- match.arg(provider)
+
+  # Get API key from environment if not provided (not needed for Ollama)
+  if (provider != "ollama") {
+    if (is.null(api_key)) {
+      api_key <- switch(provider,
+        "openai" = Sys.getenv("OPENAI_API_KEY"),
+        "gemini" = Sys.getenv("GEMINI_API_KEY")
+      )
+    }
+
+    if (!nzchar(api_key)) {
+      return(list(
+        success = FALSE,
+        error = paste0("API key not provided. Set ", toupper(provider), "_API_KEY environment variable."),
+        answer = "",
+        confidence = 0.0,
+        sources = c()
+      ))
+    }
+  } else {
+    # Check Ollama availability
+    if (!check_ollama(verbose = FALSE)) {
+      return(list(
+        success = FALSE,
+        error = "Ollama is not running. Please start Ollama and try again.",
+        answer = "",
+        confidence = 0.0,
+        sources = c()
+      ))
+    }
+  }
+
+  if (length(documents) < 1) {
+    return(list(
+      success = FALSE,
+      error = "No documents provided",
+      answer = "",
+      confidence = 0.0,
+      sources = c()
+    ))
+  }
+
+  # Set default models based on provider
+  if (is.null(embedding_model)) {
+    embedding_model <- switch(provider,
+      "ollama" = "nomic-embed-text",
+      "openai" = "text-embedding-3-small",
+      "gemini" = "text-embedding-004"
+    )
+  }
+
+  if (is.null(chat_model)) {
+    chat_model <- switch(provider,
+      "ollama" = "phi3:mini",
+      "openai" = "gpt-4o-mini",
+      "gemini" = "gemini-2.0-flash"
+    )
+  }
+
+  # Limit top_k to available documents
+  top_k <- min(top_k, length(documents))
+
+  # Step 1: Generate embeddings for all documents
+  doc_embeddings <- tryCatch({
+    get_api_embeddings(
+      texts = documents,
+      provider = provider,
+      model = embedding_model,
+      api_key = if (provider == "ollama") NULL else api_key
+    )
+  }, error = function(e) {
+    return(list(error = e$message))
+  })
+
+  if (is.list(doc_embeddings) && !is.null(doc_embeddings$error)) {
+    return(list(
+      success = FALSE,
+      error = paste("Failed to generate document embeddings:", doc_embeddings$error),
+      answer = "",
+      confidence = 0.0,
+      sources = c()
+    ))
+  }
+
+  # Step 2: Generate embedding for the query
+  query_embedding <- tryCatch({
+    get_api_embeddings(
+      texts = query,
+      provider = provider,
+      model = embedding_model,
+      api_key = if (provider == "ollama") NULL else api_key
+    )
+  }, error = function(e) {
+    return(list(error = e$message))
+  })
+
+  if (is.list(query_embedding) && !is.null(query_embedding$error)) {
+    return(list(
+      success = FALSE,
+      error = paste("Failed to generate query embedding:", query_embedding$error),
+      answer = "",
+      confidence = 0.0,
+      sources = c()
+    ))
+  }
+
+  # Step 3: Calculate cosine similarity between query and all documents
+  # get_api_embeddings returns a matrix directly
+  query_vec <- as.numeric(query_embedding[1, ])
+  doc_matrix <- as.matrix(doc_embeddings)
+
+  # Cosine similarity: dot(a, b) / (norm(a) * norm(b))
+  cosine_sim <- function(a, b) {
+    sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+  }
+
+  similarities <- apply(doc_matrix, 1, function(doc_vec) {
+    cosine_sim(query_vec, doc_vec)
+  })
+
+  # Step 4: Get top-k most similar documents
+  top_indices <- order(similarities, decreasing = TRUE)[1:top_k]
+  top_scores <- similarities[top_indices]
+  retrieved_docs <- documents[top_indices]
+
+  # Step 5: Generate answer using LLM with retrieved context
+  context <- paste(
+    sapply(seq_along(retrieved_docs), function(i) {
+      sprintf("[Document %d] %s", top_indices[i], retrieved_docs[i])
+    }),
+    collapse = "\n\n"
+  )
+
+  system_prompt <- "You are a helpful research assistant. Answer the user's question based on the provided context documents. Be concise and accurate. If the context doesn't contain relevant information, say so."
+
+  user_prompt <- sprintf(
+    "Context Documents:\n%s\n\nQuestion: %s\n\nPlease provide a concise answer based on the context above.",
+    context,
+    query
+  )
+
+  answer <- tryCatch({
+    call_llm_api(
+      provider = provider,
+      system_prompt = system_prompt,
+      user_prompt = user_prompt,
+      model = chat_model,
+      temperature = 0.3,
+      max_tokens = 500,
+      api_key = api_key
+    )
+  }, error = function(e) {
+    return(NULL)
+  })
+
+  if (is.null(answer)) {
+    return(list(
+      success = FALSE,
+      error = "Failed to generate answer from LLM",
+      answer = "",
+      confidence = 0.0,
+      sources = top_indices,
+      retrieved_docs = retrieved_docs,
+      scores = top_scores
+    ))
+  }
+
+  # Calculate confidence based on top similarity scores
+  avg_similarity <- mean(top_scores)
+  confidence <- min(1.0, max(0.0, avg_similarity))
+
+  return(list(
+    success = TRUE,
+    answer = answer,
+    confidence = round(confidence, 3),
+    sources = top_indices,
+    retrieved_docs = retrieved_docs,
+    scores = round(top_scores, 4),
+    models = list(
+      embedding = embedding_model,
+      chat = chat_model
+    ),
+    provider = provider
+  ))
+}
+
+
+# ============================================================================
+# Network Analysis Functions
+# Moved from network_analysis.R
+# ============================================================================
+
+#' @title Analyze and Visualize Word Co-occurrence Networks
+#'
+#' @description
+#' This function creates a word co-occurrence network based on a document-feature matrix (dfm).
+#'
+#' @param dfm_object A quanteda document-feature matrix (dfm).
+#' @param doc_var A document-level metadata variable (default: NULL).
+#' @param co_occur_n Minimum co-occurrence count (default: 50).
+#' @param top_node_n Number of top nodes to display (default: 30).
+#' @param nrows Number of rows to display in the table (default: 1).
+#' @param height The height of the resulting Plotly plot, in pixels (default: 800).
+#' @param width The width of the resulting Plotly plot, in pixels (default: 900).
+#' @param node_label_size Maximum font size for node labels in pixels (default: 22).
+#' @param community_method Community detection method: "leiden" (default) or "louvain".
+#' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
+#' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
+#'
+#' @return A list containing the Plotly plot, a table, and a summary.
+#'
+#' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
+#' @importFrom plotly plot_ly add_segments add_markers layout add_trace subplot
+#' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
+#' @importFrom tibble as_tibble
+#' @importFrom tidytext tidy
+#' @importFrom widyr pairwise_count
+#' @importFrom scales rescale
+#' @importFrom stats quantile setNames
+#' @importFrom DT datatable formatStyle
+#' @importFrom rlang sym
+#' @importFrom utils head
+#' @importFrom grDevices colorRampPalette
+#' @importFrom htmltools tagList tags browsable
+#' @importFrom RColorBrewer brewer.pal
+#'
+#' @family semantic
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   df <- TextAnalysisR::SpecialEduTech
+#'
+#'   united_tbl <- TextAnalysisR::unite_cols(df, listed_vars = c("title", "abstract"))
+#'
+#'   tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
+#'
+#'   dfm_object <- quanteda::dfm(tokens)
+#'
+#'   word_co_occurrence_network_results <- TextAnalysisR::word_co_occurrence_network(
+#'                                         dfm_object,
+#'                                         doc_var = NULL,
+#'                                         co_occur_n = 50,
+#'                                         top_node_n = 30,
+#'                                         nrows = 1,
+#'                                         height = 800,
+#'                                         width = 900,
+#'                                         community_method = "leiden")
+#'   print(word_co_occurrence_network_results$plot)
+#'   print(word_co_occurrence_network_results$table)
+#'   print(word_co_occurrence_network_results$summary)
+#' }
+word_co_occurrence_network <- function(dfm_object,
+                                       doc_var = NULL,
+                                       co_occur_n = 50,
+                                       top_node_n = 30,
+                                       nrows = 1,
+                                       height = 800,
+                                       width = 900,
+                                       node_label_size = 22,
+                                       community_method = "leiden",
+                                       node_size_by = "degree",
+                                       node_color_by = "community") {
+
+  if (!requireNamespace("htmltools", quietly = TRUE) ||
+      !requireNamespace("RColorBrewer", quietly = TRUE)) {
+    stop(
+      "The 'htmltools' and 'RColorBrewer' packages are required for this functionality. ",
+      "Please install them using install.packages(c('htmltools', 'RColorBrewer'))."
+    )
+  }
+
+  dfm_td <- tidytext::tidy(dfm_object)
+  docvars_df <- dfm_object@docvars
+  docvars_df$document <- docvars_df$docname_
+  dfm_td <- dplyr::left_join(dfm_td, docvars_df, by = "document")
+
+  if (!is.null(doc_var) && doc_var != "" && !doc_var %in% colnames(dfm_td)) {
+    message("Document-level metadata variable '", doc_var, "' was not selected or not found.")
+    doc_var <- NULL
+  }
+
+  if (!is.null(doc_var) && doc_var %in% colnames(dfm_td)) {
+    docvar_levels <- unique(dfm_td[[doc_var]])
+    message(paste("doc_var has", length(docvar_levels), "levels:", paste(docvar_levels, collapse = ", ")))
+  } else {
+    docvar_levels <- NULL
+  }
+
+  build_table <- function(net, group_label) {
+    layout_dff <- net$layout_df %>%
+      dplyr::select(-c("x", "y")) %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
+
+    table <- DT::datatable(layout_dff, rownames = FALSE,
+                           extensions = 'Buttons',
+                           options = list(scrollX = TRUE,
+                                          width = "80%",
+                                          dom = 'Bfrtip',
+                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
+      DT::formatStyle(columns = colnames(layout_dff), `font-size` = "16px")
+
+    htmltools::tagList(
+      htmltools::tags$div(
+        style = "margin-bottom: 20px;",
+        htmltools::tags$p(
+          group_label,
+          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+        )
+      ),
+      table
+    )
+  }
+
+  build_summary <- function(net, group_label) {
+    g <- net$graph
+    summary_df <- data.frame(
+      Metric = c("Nodes", "Edges", "Density", "Diameter",
+                 "Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
+                 "Modularity", "Assortativity", "Geodesic Distance (Mean)"),
+      Value = c(
+        igraph::vcount(g),
+        igraph::ecount(g),
+        igraph::edge_density(g),
+        igraph::diameter(g),
+        igraph::transitivity(g, type = "global"),
+        mean(igraph::transitivity(g, type = "local"), na.rm = TRUE),
+        igraph::modularity(g, membership = igraph::V(g)$community),
+        igraph::assortativity_degree(g),
+        mean(igraph::distances(g)[igraph::distances(g) != Inf], na.rm = TRUE)
+      )
+    ) %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
+
+    summary_table <- DT::datatable(summary_df, rownames = FALSE,
+                                   extensions = 'Buttons',
+                                   options = list(scrollX = TRUE,
+                                                  width = "80%",
+                                                  dom = 'Bfrtip',
+                                                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
+      DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
+
+    htmltools::tagList(
+      htmltools::tags$div(
+        style = "margin-bottom: 20px;",
+        htmltools::tags$p(
+          group_label,
+          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+        )
+      ),
+      summary_table
+    )
+  }
+
+  build_network_plot <- function(data, group_level = NULL) {
+    term_co_occur <- data %>%
+      widyr::pairwise_count(term, document, sort = TRUE) %>%
+      dplyr::filter(n >= co_occur_n)
+
+    graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
+    if (igraph::vcount(graph) == 0) {
+      message("No co-occurrence relationships meet the threshold.")
+      return(NULL)
+    }
+    igraph::V(graph)$degree      <- igraph::degree(graph)
+    igraph::V(graph)$betweenness <- igraph::betweenness(graph)
+    igraph::V(graph)$closeness   <- igraph::closeness(graph)
+    igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
+
+    # Community detection based on method
+    community_result <- if (community_method == "louvain") {
+      igraph::cluster_louvain(graph)
+    } else {
+      igraph::cluster_leiden(graph)
+    }
+    igraph::V(graph)$community <- community_result$membership
+
+    layout_mat <- igraph::layout_with_fr(graph)
+    layout_df <- as.data.frame(layout_mat) %>% stats::setNames(c("x", "y"))
+    layout_df <- layout_df %>%
+      dplyr::mutate(label       = igraph::V(graph)$name,
+                    degree      = igraph::V(graph)$degree,
+                    betweenness = igraph::V(graph)$betweenness,
+                    closeness   = igraph::V(graph)$closeness,
+                    eigenvector = igraph::V(graph)$eigenvector,
+                    community   = igraph::V(graph)$community)
+
+    # Calculate word frequency from the original data
+    word_freq <- data %>%
+      dplyr::group_by(term) %>%
+      dplyr::summarise(frequency = sum(count), .groups = "drop")
+    layout_df <- layout_df %>%
+      dplyr::left_join(word_freq, by = c("label" = "term")) %>%
+      dplyr::mutate(frequency = ifelse(is.na(frequency), 1, frequency))
+
+    edge_data <- igraph::as_data_frame(graph, what = "edges") %>%
+      dplyr::mutate(x    = layout_df$x[match(from, layout_df$label)],
+                    y    = layout_df$y[match(from, layout_df$label)],
+                    xend = layout_df$x[match(to, layout_df$label)],
+                    yend = layout_df$y[match(to, layout_df$label)],
+                    cooccur_count = n) %>%
+      dplyr::select(from, to, x, y, xend, yend, cooccur_count) %>%
+      dplyr::mutate(line_group = as.integer({
+        b <- unique(stats::quantile(cooccur_count, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
+        if (length(b) < 2) {
+          b <- c(b, b[length(b)] + 1e-6)
+        }
+        cut(cooccur_count, breaks = b, include.lowest = TRUE)
+      }),
+      line_width = scales::rescale(line_group, to = c(1, 5)),
+      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
+
+    edge_group_labels <- edge_data %>%
+      dplyr::group_by(line_group) %>%
+      dplyr::summarise(min_count = min(cooccur_count, na.rm = TRUE),
+                       max_count = max(cooccur_count, na.rm = TRUE)) %>%
+      dplyr::mutate(label = paste0("Count: ", min_count, " - ", max_count)) %>%
+      dplyr::pull(label)
+
+    # Determine size metric based on node_size_by parameter
+    size_metric <- switch(node_size_by,
+      "degree" = layout_df$degree,
+      "betweenness" = layout_df$betweenness,
+      "frequency" = layout_df$frequency,
+      "fixed" = rep(20, nrow(layout_df)),
+      layout_df$degree  # default
+    )
+
+    node_data <- layout_df %>%
+      dplyr::mutate(
+        size_metric_log = log1p(size_metric),
+        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
+        text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
+        alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
+        hover_text = paste("Word:", label,
+                           "<br>Degree:", degree,
+                           "<br>Betweenness:", round(betweenness, 2),
+                           "<br>Closeness:", round(closeness, 2),
+                           "<br>Eigenvector:", round(eigenvector, 2),
+                           "<br>Frequency:", frequency,
+                           "<br>Community:", community,
+                           if (!is.null(doc_var)) {
+                             if (length(docvar_levels) > 1) {
+                               paste0("<br>", doc_var, ": ", group_level)
+                             } else {
+                               paste0("<br>", doc_var)
+                             }
+                           } else ""
+        )
+      )
+
+    # Create community palette
+    n_communities <- length(unique(node_data$community))
+    if (n_communities >= 3 && n_communities <= 8) {
+      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
+    } else if (n_communities > 8) {
+      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
+    } else if (n_communities > 0 && n_communities < 3) {
+      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
+    } else {
+      palette <- rep("#000000", n_communities)
+    }
+
+    node_data$community <- factor(node_data$community, levels = unique(node_data$community))
+    community_levels <- levels(node_data$community)
+    names(palette) <- community_levels
+
+    # Determine node color based on node_color_by parameter
+    if (node_color_by == "frequency") {
+      # Color by frequency gradient using viridis
+      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
+    } else {
+      # Default: color by community
+      node_data$color <- palette[as.character(node_data$community)]
+    }
+
+    p <- plotly::plot_ly(type = 'scatter', mode = 'markers', width = width, height = height)
+    for (lg in unique(edge_data$line_group)) {
+      esub <- dplyr::filter(edge_data, line_group == lg) %>%
+        dplyr::mutate(mid_x = (x + xend) / 2,
+                      mid_y = (y + yend) / 2)
+      if (nrow(esub) > 0) {
+        p <- p %>%
+          plotly::add_segments(data = esub, x = ~x, y = ~y,
+                               xend = ~xend, yend = ~yend,
+                               line = list(color = '#5C5CFF', width = ~line_width),
+                               hoverinfo = 'none', opacity = ~alpha,
+                               showlegend = TRUE, name = edge_group_labels[lg],
+                               legendgroup = "Edges") %>%
+          plotly::add_trace(data = esub, x = ~mid_x, y = ~mid_y, type = 'scatter',
+                            mode = 'markers',
+                            marker = list(size = 0.1, color = '#e0f7ff', opacity = 0),
+                            text = ~paste("Co-occurrence:", cooccur_count,
+                                          "<br>Source:", from,
+                                          "<br>Target:", to),
+                            hoverinfo = 'text', showlegend = FALSE)
+      }
+    }
+    # Add nodes based on color mode
+    if (node_color_by == "frequency") {
+      # Color by frequency gradient - render all nodes at once
+      p <- p %>% plotly::add_markers(
+        data = node_data, x = ~x, y = ~y,
+        marker = list(
+          size = ~size,
+          color = ~frequency,
+          colorscale = "Viridis",
+          showscale = TRUE,
+          colorbar = list(title = "Frequency"),
+          line = list(width = 2, color = '#FFFFFF')
+        ),
+        hoverinfo = 'text', text = ~hover_text,
+        showlegend = FALSE
+      )
+    } else {
+      # Default: color by community - loop through communities
+      for (comm in community_levels) {
+        comm_data <- dplyr::filter(node_data, community == comm)
+        p <- p %>% plotly::add_markers(
+          data = comm_data, x = ~x, y = ~y,
+          marker = list(
+            size = ~size,
+            color = palette[comm],
+            showscale = FALSE,
+            line = list(width = 3, color = '#FFFFFF')
+          ),
+          hoverinfo = 'text', text = ~hover_text,
+          showlegend = TRUE, name = paste("Community", comm),
+          legendgroup = "Community"
+        )
+      }
+    }
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(top_node_n)
+    annotations <- lapply(1:nrow(top_nodes), function(i) {
+      list(x = top_nodes$x[i],
+           y = top_nodes$y[i],
+           text = top_nodes$label[i],
+           xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
+           yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
+           xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
+           yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
+           showarrow = FALSE,
+           font = list(size = top_nodes$text_size[i], color = 'black'))
+    })
+
+    p <- p %>% plotly::layout(dragmode = "pan",
+                              title = list(text = "Word Co-occurrence Network",
+                                           font = list(size = 19,
+                                                       color = "black",
+                                                       family = "Arial Black")),
+                              showlegend = TRUE,
+                              xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                              yaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                              margin = list(l = 40, r = 100, t = 60, b = 40),
+                              annotations = annotations,
+                              legend = list(title = list(text = "Co-occurrence"),
+                                            orientation = "v", x = 1.1, y = 1,
+                                            xanchor = "left", yanchor = "top"))
+    list(plot = p, layout_df = layout_df, graph = graph)
+  }
+
+  if (!is.null(doc_var) && length(docvar_levels) > 1) {
+    plots_list <- dfm_td %>%
+      dplyr::ungroup() %>%
+      dplyr::group_by(!!rlang::sym(doc_var)) %>%
+      dplyr::group_map(~ {
+        group_level <- .y[[doc_var]]
+        message(paste("Processing group level:", group_level))
+
+        if (is.null(group_level)) {
+          stop("doc_var is missing or not found in the current group")
+        }
+
+        net <- build_network_plot(.x, group_level)
+        if (!is.null(net)) {
+          net$plot %>% plotly::layout(
+            annotations = list(
+              list(
+                text = group_level,
+                x = 0.42,
+                xanchor = "center",
+                y = 0.98,
+                yanchor = "bottom",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 19, color = "black", family = "Arial Black")
+              )
+            )
+          )
+        } else {
+          NULL
+        }
+      })
+
+    combined_plot <- plotly::subplot(plots_list, nrows = nrows, shareX = TRUE, shareY = TRUE,
+                                     titleX = TRUE, titleY = TRUE)
+
+    table_list <- lapply(docvar_levels, function(level) {
+      message(paste("Generating table for level:", level))
+      group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
+      net <- build_network_plot(group_data)
+      if (!is.null(net)) build_table(net, level) else NULL
+    })
+
+    summary_list <- lapply(docvar_levels, function(level) {
+      message(paste("Generating summary for level:", level))
+      group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
+      net <- build_network_plot(group_data)
+      if (!is.null(net)) build_summary(net, level) else NULL
+    })
+
+    return(list(
+      plot = combined_plot,
+      table = table_list %>% htmltools::tagList() %>% htmltools::browsable(),
+      summary = summary_list %>% htmltools::tagList() %>% htmltools::browsable()
+    ))
+  } else {
+    net <- build_network_plot(dfm_td)
+    if (is.null(net)) {
+      message("No network generated.")
+      return(NULL)
+    }
+    return(list(
+      plot = net$plot,
+      table = build_table(net, if (!is.null(doc_var)) paste("Network Centrality Table for", doc_var) else "Network Centrality Table") %>% htmltools::browsable(),
+      summary = build_summary(net, if (!is.null(doc_var)) paste("Network Summary for", doc_var) else "Network Summary") %>% htmltools::browsable()
+    ))
+  }
+}
+
+
+#' @title Analyze and Visualize Word Correlation Networks
+#'
+#' @description
+#' This function creates a word correlation network based on a document-feature matrix (dfm).
+#'
+#' @param dfm_object A quanteda document-feature matrix (dfm).
+#' @param doc_var A document-level metadata variable (default: NULL).
+#' @param common_term_n Minimum number of common terms for filtering terms (default: 130).
+#' @param corr_n Minimum correlation value for filtering terms (default: 0.4).
+#' @param top_node_n Number of top nodes to display (default: 40).
+#' @param nrows Number of rows to display in the table (default: 1).
+#' @param height The height of the resulting Plotly plot, in pixels (default: 1000).
+#' @param width The width of the resulting Plotly plot, in pixels (default: 900).
+#' @param node_label_size Maximum font size for node labels in pixels (default: 22).
+#' @param community_method Community detection method: "leiden" (default) or "louvain".
+#' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
+#' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
+#'
+#' @return A list containing the Plotly plot, a table, and a summary.
+#'
+#' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
+#' @importFrom plotly plot_ly add_segments add_markers layout add_trace subplot
+#' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
+#' @importFrom tibble as_tibble
+#' @importFrom tidytext tidy
+#' @importFrom widyr pairwise_cor
+#' @importFrom scales rescale
+#' @importFrom stats quantile setNames
+#' @importFrom DT datatable formatStyle
+#' @importFrom rlang sym
+#' @importFrom utils head
+#' @importFrom grDevices colorRampPalette
+#' @importFrom htmltools tagList tags browsable
+#' @importFrom RColorBrewer brewer.pal
+#'
+#' @family semantic
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#'   df <- TextAnalysisR::SpecialEduTech
+#'
+#'   united_tbl <- TextAnalysisR::unite_cols(df, listed_vars = c("title", "abstract"))
+#'
+#'   tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
+#'
+#'   dfm_object <- quanteda::dfm(tokens)
+#'
+#'   word_correlation_network_results <- TextAnalysisR::word_correlation_network(
+#'                                       dfm_object,
+#'                                       doc_var = NULL,
+#'                                       common_term_n = 30,
+#'                                       corr_n = 0.4,
+#'                                       top_node_n = 40,
+#'                                       nrows = 1,
+#'                                       height = 1000,
+#'                                       width = 900,
+#'                                       community_method = "leiden")
+#'   print(word_correlation_network_results$plot)
+#'   print(word_correlation_network_results$table)
+#'   print(word_correlation_network_results$summary)
+#' }
+word_correlation_network <- function(dfm_object,
+                                     doc_var = NULL,
+                                     common_term_n = 130,
+                                     corr_n = 0.4,
+                                     top_node_n = 40,
+                                     nrows = 1,
+                                     height = 1000,
+                                     width = 900,
+                                     node_label_size = 22,
+                                     community_method = "leiden",
+                                     node_size_by = "degree",
+                                     node_color_by = "community") {
+
+  if (!requireNamespace("htmltools", quietly = TRUE) ||
+      !requireNamespace("RColorBrewer", quietly = TRUE)) {
+    stop(
+      "The 'htmltools' and 'RColorBrewer' packages are required for this functionality. ",
+      "Please install them using install.packages(c('htmltools', 'RColorBrewer'))."
+    )
+  }
+
+  dfm_td <- tidytext::tidy(dfm_object)
+  docvars_df <- dfm_object@docvars
+  docvars_df$document <- docvars_df$docname_
+  dfm_td <- dplyr::left_join(dfm_td, docvars_df, by = "document")
+
+  if (!is.null(doc_var) && doc_var != "" && !doc_var %in% colnames(dfm_td)) {
+    message("Document-level metadata variable '", doc_var, "' was not selected or not found.")
+    doc_var <- NULL
+  }
+
+  if (!is.null(doc_var) && doc_var %in% colnames(dfm_td)) {
+    docvar_levels <- unique(dfm_td[[doc_var]])
+    message(paste("doc_var has", length(docvar_levels), "levels:", paste(docvar_levels, collapse = ", ")))
+  } else {
+    docvar_levels <- NULL
+  }
+
+  build_table <- function(net, group_label) {
+    layout_dff <- net$layout_df %>%
+      dplyr::select(-c("x", "y")) %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
+
+    table <- DT::datatable(layout_dff, rownames = FALSE,
+                           extensions = 'Buttons',
+                           options = list(scrollX = TRUE,
+                                          width = "80%",
+                                          dom = 'Bfrtip',
+                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
+      DT::formatStyle(columns = colnames(layout_dff), `font-size` = "16px")
+
+    htmltools::tagList(
+      htmltools::tags$div(
+        style = "margin-bottom: 20px;",
+        htmltools::tags$p(
+          group_label,
+          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+        )
+      ),
+      table
+    )
+  }
+
+  build_summary <- function(net, group_label) {
+    g <- net$graph
+    summary_df <- data.frame(
+      Metric = c("Nodes", "Edges", "Density", "Diameter",
+                 "Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
+                 "Modularity", "Assortativity", "Geodesic Distance (Mean)"),
+      Value = c(
+        igraph::vcount(g),
+        igraph::ecount(g),
+        igraph::edge_density(g),
+        igraph::diameter(g),
+        igraph::transitivity(g, type = "global"),
+        mean(igraph::transitivity(g, type = "local"), na.rm = TRUE),
+        igraph::modularity(g, membership = igraph::V(g)$community),
+        igraph::assortativity_degree(g),
+        mean(igraph::distances(g)[igraph::distances(g) != Inf], na.rm = TRUE)
+      )
+    ) %>%
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
+
+    summary_table <- DT::datatable(summary_df, rownames = FALSE,
+                                   extensions = 'Buttons',
+                                   options = list(scrollX = TRUE,
+                                                  width = "80%",
+                                                  dom = 'Bfrtip',
+                                                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
+      DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
+
+    htmltools::tagList(
+      htmltools::tags$div(
+        style = "margin-bottom: 20px;",
+        htmltools::tags$p(
+          group_label,
+          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+        )
+      ),
+      summary_table
+    )
+  }
+
+  build_network_plot <- function(data, group_level = NULL) {
+    term_cor <- data %>%
+      dplyr::group_by(term) %>%
+      dplyr::filter(dplyr::n() >= common_term_n) %>%
+      widyr::pairwise_cor(term, document, sort = TRUE) %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(correlation > corr_n)
+
+    graph <- igraph::graph_from_data_frame(term_cor, directed = FALSE)
+    if(igraph::vcount(graph) == 0) {
+      message("No correlation relationships meet the threshold.")
+      return(NULL)
+    }
+    igraph::V(graph)$degree      <- igraph::degree(graph)
+    igraph::V(graph)$betweenness <- igraph::betweenness(graph)
+    igraph::V(graph)$closeness   <- igraph::closeness(graph)
+    igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
+
+    # Community detection based on method
+    community_result <- if (community_method == "louvain") {
+      igraph::cluster_louvain(graph)
+    } else {
+      igraph::cluster_leiden(graph)
+    }
+    igraph::V(graph)$community <- community_result$membership
+
+    layout_mat <- igraph::layout_with_fr(graph)
+    layout_df <- as.data.frame(layout_mat) %>% stats::setNames(c("x", "y"))
+    layout_df <- layout_df %>%
+      dplyr::mutate(label       = igraph::V(graph)$name,
+                    degree      = igraph::V(graph)$degree,
+                    betweenness = igraph::V(graph)$betweenness,
+                    closeness   = igraph::V(graph)$closeness,
+                    eigenvector = igraph::V(graph)$eigenvector,
+                    community   = igraph::V(graph)$community)
+
+    # Calculate word frequency from the original data
+    word_freq <- data %>%
+      dplyr::group_by(term) %>%
+      dplyr::summarise(frequency = sum(count), .groups = "drop")
+    layout_df <- layout_df %>%
+      dplyr::left_join(word_freq, by = c("label" = "term")) %>%
+      dplyr::mutate(frequency = ifelse(is.na(frequency), 1, frequency))
+
+    edge_data <- igraph::as_data_frame(graph, what = "edges") %>%
+      dplyr::mutate(x    = layout_df$x[match(from, layout_df$label)],
+                    y    = layout_df$y[match(from, layout_df$label)],
+                    xend = layout_df$x[match(to, layout_df$label)],
+                    yend = layout_df$y[match(to, layout_df$label)],
+                    correlation = correlation) %>%
+      dplyr::select(from, to, x, y, xend, yend, correlation) %>%
+      dplyr::mutate(line_group = as.integer({
+        b <- unique(stats::quantile(correlation, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
+        if (length(b) < 2) {
+          b <- c(b, b[length(b)] + 1e-6)
+        }
+        cut(correlation, breaks = b, include.lowest = TRUE)
+      }),
+      line_width = scales::rescale(line_group, to = c(1, 5)),
+      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
+
+    edge_group_labels <- edge_data %>%
+      dplyr::group_by(line_group) %>%
+      dplyr::summarise(
+        min_corr = min(correlation, na.rm = TRUE),
+        max_corr = max(correlation, na.rm = TRUE)
+      ) %>%
+      dplyr::mutate(label = paste0("Correlation: ", round(min_corr, 2), " - ", round(max_corr, 2))) %>%
+      dplyr::pull(label)
+
+    # Determine size metric based on node_size_by parameter
+    size_metric <- switch(node_size_by,
+      "degree" = layout_df$degree,
+      "betweenness" = layout_df$betweenness,
+      "frequency" = layout_df$frequency,
+      "fixed" = rep(20, nrow(layout_df)),
+      layout_df$degree  # default
+    )
+
+    node_data <- layout_df %>%
+      dplyr::mutate(
+        size_metric_log = log1p(size_metric),
+        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
+        text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
+        alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
+        hover_text = paste(
+          "Word:", label,
+          "<br>Degree:", degree,
+          "<br>Betweenness:", round(betweenness, 2),
+          "<br>Closeness:", round(closeness, 2),
+          "<br>Eigenvector:", round(eigenvector, 2),
+          "<br>Frequency:", frequency,
+          "<br>Community:", community,
+          if (!is.null(doc_var)) {
+            if (length(docvar_levels) > 1) {
+              paste0("<br>", doc_var, ": ", group_level)
+            } else {
+              paste0("<br>", doc_var)
+            }
+          } else ""
+        )
+      )
+
+    # Create community palette
+    n_communities <- length(unique(node_data$community))
+    if (n_communities >= 3 && n_communities <= 8) {
+      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
+    } else if (n_communities > 8) {
+      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
+    } else if (n_communities > 0 && n_communities < 3) {
+      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
+    } else {
+      palette <- rep("#000000", n_communities)
+    }
+
+    node_data$community <- factor(node_data$community, levels = unique(node_data$community))
+    community_levels <- levels(node_data$community)
+    names(palette) <- community_levels
+
+    # Determine node color based on node_color_by parameter
+    if (node_color_by == "frequency") {
+      # Color by frequency gradient using viridis
+      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
+    } else {
+      # Default: color by community
+      node_data$color <- palette[as.character(node_data$community)]
+    }
+
+    p <- plotly::plot_ly(type = 'scatter', mode = 'markers', width = width, height = height)
+    for (lg in unique(edge_data$line_group)) {
+      esub <- dplyr::filter(edge_data, line_group == lg) %>%
+        dplyr::mutate(mid_x = (x + xend) / 2,
+                      mid_y = (y + yend) / 2)
+      if (nrow(esub) > 0) {
+        p <- p %>%
+          plotly::add_segments(data = esub, x = ~x, y = ~y,
+                               xend = ~xend, yend = ~yend,
+                               line = list(color = '#5C5CFF', width = ~line_width),
+                               hoverinfo = 'none', opacity = ~alpha,
+                               showlegend = TRUE, name = edge_group_labels[lg],
+                               legendgroup = "Edges") %>%
+          plotly::add_trace(data = esub, x = ~mid_x, y = ~mid_y, type = 'scatter',
+                            mode = 'markers',
+                            marker = list(size = 0.1, color = '#e0f7ff', opacity = 0),
+                            text = ~paste("Correlation:", correlation,
+                                          "<br>Source:", from,
+                                          "<br>Target:", to),
+                            hoverinfo = 'text', showlegend = FALSE)
+      }
+    }
+    # Add nodes based on color mode
+    if (node_color_by == "frequency") {
+      # Color by frequency gradient - render all nodes at once
+      p <- p %>% plotly::add_markers(
+        data = node_data, x = ~x, y = ~y,
+        marker = list(
+          size = ~size,
+          color = ~frequency,
+          colorscale = "Viridis",
+          showscale = TRUE,
+          colorbar = list(title = "Frequency"),
+          line = list(width = 2, color = '#FFFFFF')
+        ),
+        hoverinfo = 'text', text = ~hover_text,
+        showlegend = FALSE
+      )
+    } else {
+      # Default: color by community - loop through communities
+      for (comm in community_levels) {
+        comm_data <- dplyr::filter(node_data, community == comm)
+        p <- p %>% plotly::add_markers(
+          data = comm_data, x = ~x, y = ~y,
+          marker = list(
+            size = ~size,
+            color = palette[comm],
+            showscale = FALSE,
+            line = list(width = 3, color = '#FFFFFF')
+          ),
+          hoverinfo = 'text', text = ~hover_text,
+          showlegend = TRUE, name = paste("Community", comm),
+          legendgroup = "Community"
+        )
+      }
+    }
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(top_node_n)
+    annotations <- lapply(1:nrow(top_nodes), function(i) {
+      list(x = top_nodes$x[i],
+           y = top_nodes$y[i],
+           text = top_nodes$label[i],
+           xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
+           yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
+           xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
+           yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
+           showarrow = FALSE,
+           font = list(size = top_nodes$text_size[i], color = 'black'))
+    })
+
+    p <- p %>% plotly::layout(dragmode = "pan",
+                              title = list(text = "Word Correlation Network", font = list(size = 19, color = "black", family = "Arial Black")),
+                              showlegend = TRUE,
+                              xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                              yaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+                              margin = list(l = 40, r = 100, t = 60, b = 40),
+                              annotations = annotations,
+                              legend = list(title = list(text = "Correlation"),
+                                            orientation = "v", x = 1.1, y = 1,
+                                            xanchor = "left", yanchor = "top"))
+    list(plot = p, layout_df = layout_df, graph = graph)
+  }
+
+  if (!is.null(doc_var) && length(docvar_levels) > 1) {
+    plots_list <- dfm_td %>%
+      dplyr::ungroup() %>%
+      dplyr::group_by(!!rlang::sym(doc_var)) %>%
+      dplyr::group_map(~ {
+        group_level <- .y[[doc_var]]
+        message(paste("Processing group level:", group_level))
+
+        if (is.null(group_level)) {
+          stop("doc_var is missing or not found in the current group")
+        }
+
+        net <- build_network_plot(.x, group_level)
+        if (!is.null(net)) {
+          net$plot %>% plotly::layout(
+            annotations = list(
+              list(
+                text = group_level,
+                x = 0.42,
+                xanchor = "center",
+                y = 0.98,
+                yanchor = "bottom",
+                yref = "paper",
+                showarrow = FALSE,
+                font = list(size = 19, color = "black", family = "Arial Black")
+              )
+            )
+          )
+        } else {
+          NULL
+        }
+      })
+
+    combined_plot <- plotly::subplot(plots_list, nrows = nrows, shareX = TRUE, shareY = TRUE,
+                                     titleX = TRUE, titleY = TRUE)
+
+    table_list <- lapply(docvar_levels, function(level) {
+      message(paste("Generating table for level:", level))
+      group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
+      net <- build_network_plot(group_data)
+      if (!is.null(net)) build_table(net, level) else NULL
+    })
+
+    summary_list <- lapply(docvar_levels, function(level) {
+      message(paste("Generating summary for level:", level))
+      group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
+      net <- build_network_plot(group_data)
+      if (!is.null(net)) build_summary(net, level) else NULL
+    })
+
+    return(list(
+      plot = combined_plot,
+      table = table_list %>% htmltools::tagList() %>% htmltools::browsable(),
+      summary = summary_list %>% htmltools::tagList() %>% htmltools::browsable()
+    ))
+  } else {
+    net <- build_network_plot(dfm_td)
+    if (is.null(net)) {
+      message("No network generated.")
+      return(NULL)
+    }
+    return(list(
+      plot = net$plot,
+      table = build_table(net,
+                          if (!is.null(doc_var)) paste("Network Centrality Table for", doc_var)
+                          else "Network Centrality Table") %>% htmltools::browsable(),
+      summary = build_summary(net,
+                              if (!is.null(doc_var)) paste("Network Summary for", doc_var)
+                              else "Network Summary") %>% htmltools::browsable()
+    ))
+  }
 }

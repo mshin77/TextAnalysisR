@@ -17,7 +17,7 @@ detect_pdf_content_type_py(file_path, envname = "textanalysisr-env")
 - envname:
 
   Character string, name of Python virtual environment (default:
-  "langgraph-env")
+  "textanalysisr-env")
 
 ## Value
 
@@ -40,7 +40,7 @@ Other pdf:
 
 ``` r
 if (FALSE) { # \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 content_type <- detect_pdf_content_type_py(pdf_path)

@@ -18,7 +18,7 @@ extract_text_from_pdf_py(file_path, envname = "textanalysisr-env")
 - envname:
 
   Character string, name of Python virtual environment (default:
-  "langgraph-env")
+  "textanalysisr-env")
 
 ## Value
 
@@ -28,7 +28,8 @@ if extraction fails or PDF is empty
 ## Details
 
 Uses pdfplumber Python library through reticulate. Requires Python
-environment setup. See `setup_langgraph_env()`.
+environment setup. See
+[`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md).
 
 ## See also
 
@@ -47,7 +48,7 @@ Other pdf:
 
 ``` r
 if (FALSE) { # \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 text_data <- extract_text_from_pdf_py(pdf_path)

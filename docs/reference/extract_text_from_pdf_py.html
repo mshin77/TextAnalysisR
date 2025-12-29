@@ -28,6 +28,7 @@ No Java required - uses Python environment."><meta property="og:image" content="
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -69,7 +70,7 @@ No Java required - uses Python environment.</p>
 
 <dt id="arg-envname">envname<a class="anchor" aria-label="anchor" href="#arg-envname"></a></dt>
 <dd><p>Character string, name of Python virtual environment
-(default: "langgraph-env")</p></dd>
+(default: "textanalysisr-env")</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -80,7 +81,7 @@ Returns NULL if extraction fails or PDF is empty</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Uses pdfplumber Python library through reticulate.
-Requires Python environment setup. See <code>setup_langgraph_env()</code>.</p>
+Requires Python environment setup. See <code><a href="setup_python_env.html">setup_python_env()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -99,7 +100,7 @@ Requires Python environment setup. See <code>setup_langgraph_env()</code>.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="fu">setup_langgraph_env</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">pdf_path</span> <span class="op">&lt;-</span> <span class="st">"path/to/document.pdf"</span></span></span>
 <span class="r-in"><span><span class="va">text_data</span> <span class="op">&lt;-</span> <span class="fu">extract_text_from_pdf_py</span><span class="op">(</span><span class="va">pdf_path</span><span class="op">)</span></span></span>

@@ -23,6 +23,7 @@ NULL
 #'
 #' @return Invisible NULL
 #' @family lexical
+#' @importFrom Matrix colSums
 #' @export
 clear_lexdiv_cache <- function() {
   rm(list = ls(.lexdiv_cache), envir = .lexdiv_cache)
@@ -94,7 +95,7 @@ detect_multi_words <- function(tokens, size = 2:5, min_count = 2) {
 #' }
 #'
 #' @details
-#' This function requires the spacyr package and a working Python environment
+#' This function requires the Python
 #' with spaCy installed. If spaCy is not initialized, this function will
 #' attempt to initialize it with the specified model.
 #'
@@ -113,36 +114,14 @@ extract_pos_tags <- function(tokens,
                              include_dependency = FALSE,
                              model = "en_core_web_sm") {
 
-  if (!requireNamespace("spacyr", quietly = TRUE)) {
-    stop("Package 'spacyr' is required for POS tagging. Please install it with: install.packages('spacyr')")
-  }
-
-  # Convert tokens to text if needed
-  if (inherits(tokens, "tokens")) {
-    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
-  } else if (is.character(tokens)) {
-    texts <- tokens
-  } else {
-    stop("tokens must be a quanteda tokens object or character vector")
-  }
-
-  # Try to initialize spaCy if not already done
-  tryCatch({
-    # Check if spaCy is initialized by trying a simple operation
-    spacyr::spacy_parse("test", pos = FALSE, tag = FALSE, lemma = FALSE, entity = FALSE)
-  }, error = function(e) {
-    message("Initializing spaCy with model: ", model)
-    spacyr::spacy_initialize(model = model)
-  })
-
-  # Parse with POS and tag enabled
-  parsed <- spacyr::spacy_parse(
-    texts,
+  parsed <- spacy_parse_full(
+    tokens,
     pos = TRUE,
     tag = TRUE,
     lemma = include_lemma,
     entity = include_entity,
-    dependency = include_dependency
+    dependency = include_dependency,
+    model = model
   )
 
   return(parsed)
@@ -194,36 +173,16 @@ extract_morphology <- function(tokens,
                                include_lemma = TRUE,
                                model = "en_core_web_sm") {
 
-  if (!requireNamespace("spacyr", quietly = TRUE)) {
-    stop("Package 'spacyr' is required. Install with: install.packages('spacyr')")
-  }
-
-  # Convert tokens to text if needed
-  if (inherits(tokens, "tokens")) {
-    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
-  } else if (is.character(tokens)) {
-    texts <- tokens
-  } else {
-    stop("tokens must be a quanteda tokens object or character vector")
-  }
-
-  # Initialize spaCy if needed
-  tryCatch({
-    spacyr::spacy_parse("test", pos = FALSE, lemma = FALSE, entity = FALSE)
-  }, error = function(e) {
-    message("Initializing spaCy with model: ", model)
-    spacyr::spacy_initialize(model = model)
-  })
-
-  # Parse with morphology extraction via additional_attributes
-  parsed <- spacyr::spacy_parse(
-    texts,
+  # Use spacy_parse_full with morphology enabled
+  parsed <- spacy_parse_full(
+    tokens,
     pos = include_pos,
     tag = include_pos,
     lemma = include_lemma,
     entity = FALSE,
     dependency = FALSE,
-    additional_attributes = c("morph")
+    morph = TRUE,
+    model = model
   )
 
   # Parse the morph string into individual feature columns
@@ -231,41 +190,6 @@ extract_morphology <- function(tokens,
     parsed <- parse_morphology_string(parsed, features)
   }
 
-  return(parsed)
-}
-
-
-#' Parse Morphology String into Individual Columns
-#'
-#' @description
-#' Parse spaCy's morphology string format
-#' (e.g., "Number=Sing|Tense=Past|VerbForm=Fin") into individual columns.
-#'
-#' @param parsed Data frame with a 'morph' column from spaCy.
-#' @param features Character vector of feature names to extract.
-#'
-#' @return Data frame with additional morph_* columns for each feature.
-#'
-#' @keywords internal
-parse_morphology_string <- function(parsed, features) {
-  for (feat in features) {
-    col_name <- paste0("morph_", feat)
-    parsed[[col_name]] <- vapply(parsed$morph, function(m) {
-      # Robust check for empty/NA/NULL values
-      if (is.null(m) || length(m) == 0 || !is.atomic(m)) return(NA_character_)
-      m_str <- as.character(m)[1]
-      if (is.na(m_str) || m_str == "") return(NA_character_)
-      # Parse "Number=Sing|Tense=Past|..." format
-      parts <- strsplit(m_str, "\\|")[[1]]
-      for (part in parts) {
-        kv <- strsplit(part, "=")[[1]]
-        if (length(kv) == 2 && kv[1] == feat) {
-          return(kv[2])
-        }
-      }
-      return(NA_character_)
-    }, FUN.VALUE = character(1), USE.NAMES = FALSE)
-  }
   return(parsed)
 }
 
@@ -305,7 +229,7 @@ plot_morphology_feature <- function(data,
   if (!col_name %in% names(data)) {
     # Return empty plot with message
     return(
-      plotly::plot_ly() %>%
+      plotly::plot_ly(type = "scatter", mode = "markers") %>%
         plotly::layout(
           title = list(text = paste("Feature", feature, "not available"),
                        font = list(size = 14, color = "#6B7280")),
@@ -323,7 +247,7 @@ plot_morphology_feature <- function(data,
 
   if (length(values) == 0) {
     return(
-      plotly::plot_ly() %>%
+      plotly::plot_ly(type = "scatter", mode = "markers") %>%
         plotly::layout(
           title = list(text = paste("No", feature, "data found"),
                        font = list(size = 14, color = "#6B7280"))
@@ -357,9 +281,9 @@ plot_morphology_feature <- function(data,
   }
 
   bar_colors <- if (!is.null(colors) && length(colors) > 0) {
-    sapply(freq_df$Value, function(v) {
+    vapply(freq_df$Value, function(v) {
       if (v %in% names(colors)) colors[[v]] else "#6B7280"
-    })
+    }, character(1))
   } else {
     rep("#337ab7", nrow(freq_df))
   }
@@ -374,10 +298,26 @@ plot_morphology_feature <- function(data,
     hovertext = ~paste0(Value, "\nCount: ", Count, "\n", Percentage, "%")
   ) %>%
     plotly::layout(
-      title = list(text = title, font = list(size = 14, color = "#0c1f4a")),
-      xaxis = list(title = "", tickfont = list(size = 12)),
-      yaxis = list(title = "Frequency", titlefont = list(size = 12)),
-      margin = list(t = 40, b = 40, l = 50, r = 20)
+      title = list(
+        text = title,
+        font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = "",
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Frequency",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      margin = list(t = 50, b = 50, l = 60, r = 20),
+      hoverlabel = list(
+        bgcolor = "#0c1f4a",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bordercolor = "#0c1f4a",
+        align = "left"
+      )
     )
 }
 
@@ -471,7 +411,7 @@ summarize_morphology <- function(data, features = NULL) {
 #' }
 #'
 #' @details
-#' This function requires the spacyr package and a working Python environment
+#' This function requires the Python
 #' with spaCy installed. If spaCy is not initialized, this function will
 #' attempt to initialize it with the specified model.
 #'
@@ -489,36 +429,15 @@ extract_named_entities <- function(tokens,
                                    include_lemma = TRUE,
                                    model = "en_core_web_sm") {
 
-  if (!requireNamespace("spacyr", quietly = TRUE)) {
-    stop("Package 'spacyr' is required for NER. Please install it with: install.packages('spacyr')")
-  }
-
-  # Convert tokens to text if needed
-  if (inherits(tokens, "tokens")) {
-    texts <- sapply(tokens, function(x) paste(x, collapse = " "))
-  } else if (is.character(tokens)) {
-    texts <- tokens
-  } else {
-    stop("tokens must be a quanteda tokens object or character vector")
-  }
-
-  # Try to initialize spaCy if not already done
-  tryCatch({
-    spacyr::spacy_parse("test", pos = FALSE, tag = FALSE, lemma = FALSE, entity = FALSE)
-  }, error = function(e) {
-    message("Initializing spaCy with model: ", model)
-    spacyr::spacy_initialize(model = model)
-  })
-
-  # Parse with entity enabled
-
-  parsed <- spacyr::spacy_parse(
-    texts,
+  # Use spacy_parse_full with entity enabled
+  parsed <- spacy_parse_full(
+    tokens,
     pos = include_pos,
     tag = include_pos,
     lemma = include_lemma,
     entity = TRUE,
-    dependency = FALSE
+    dependency = FALSE,
+    model = model
   )
 
   return(parsed)
@@ -728,11 +647,11 @@ lexical_diversity_analysis <- function(x,
         tokens_for_mtld <- if (is_tokens_input) x else mtld_tokens
 
         # Get tokens for each document
-        mtld_values <- sapply(seq_len(quanteda::ndoc(tokens_for_mtld)), function(i) {
+        mtld_values <- vapply(seq_len(quanteda::ndoc(tokens_for_mtld)), function(i) {
           doc_tokens <- as.character(tokens_for_mtld[[i]])
           if (length(doc_tokens) < 10) return(NA_real_)
           calculate_mtld(doc_tokens)
-        })
+        }, numeric(1))
 
         lexdiv_results$MTLD <- as.numeric(mtld_values)
       }, error = function(e) {
@@ -757,13 +676,13 @@ lexical_diversity_analysis <- function(x,
 
     # Add Average Sentence Length if texts provided
     if (!is.null(texts) && length(texts) == nrow(lexdiv_results)) {
-      avg_sentence_length <- sapply(texts, function(t) {
+      avg_sentence_length <- vapply(texts, function(t) {
         sents <- unlist(strsplit(t, "[.!?]+"))
         sents <- sents[nzchar(trimws(sents))]
         words <- unlist(strsplit(paste(sents, collapse = " "), "\\s+"))
-        if (length(sents) == 0) return(NA)
+        if (length(sents) == 0) return(NA_real_)
         length(words) / length(sents)
-      })
+      }, numeric(1))
       lexdiv_results$`Avg Sentence Length` <- avg_sentence_length
       actual_measures <- c(actual_measures, "Avg Sentence Length")
     }
@@ -900,9 +819,10 @@ lexical_frequency_analysis <- function(...) {
 #'
 #' @examples
 #' if (interactive()) {
-#'   texts <- c("mathematics technology", "education technology", "learning support")
+#'   data(SpecialEduTech, package = "TextAnalysisR")
+#'   texts <- SpecialEduTech$abstract[1:10]
 #'   dfm <- quanteda::dfm(quanteda::tokens(texts))
-#'   plot <- plot_word_frequency(dfm, n = 5)
+#'   plot <- plot_word_frequency(dfm, n = 10)
 #'   print(plot)
 #' }
 plot_word_frequency <- function(dfm_object,
@@ -1580,7 +1500,8 @@ plot_keyword_comparison <- function(tfidf_data,
 #'
 #' @examples
 #' \dontrun{
-#' texts <- c("Simple text.", "More complex sentence structure here.")
+#' data(SpecialEduTech, package = "TextAnalysisR")
+#' texts <- SpecialEduTech$abstract[1:20]
 #' readability <- calculate_text_readability(texts)
 #' plot <- plot_readability_distribution(readability, "flesch")
 #' print(plot)
@@ -1803,10 +1724,8 @@ plot_top_readability_documents <- function(readability_data,
 #'
 #' @examples
 #' \dontrun{
-#' texts <- c(
-#'   "This is simple text.",
-#'   "This sentence contains more complex vocabulary and structure."
-#' )
+#' data(SpecialEduTech, package = "TextAnalysisR")
+#' texts <- SpecialEduTech$abstract[1:10]
 #' readability <- calculate_text_readability(texts)
 #' print(readability)
 #' }
@@ -1916,13 +1835,13 @@ calculate_text_readability <- function(texts,
   }
 
   if (include_sentence_stats) {
-    avg_sentence_length <- sapply(texts, function(t) {
+    avg_sentence_length <- vapply(texts, function(t) {
       sents <- unlist(strsplit(t, "[.!?]+"))
       sents <- sents[nzchar(trimws(sents))]
       words <- unlist(strsplit(paste(sents, collapse = " "), "\\s+"))
-      if (length(sents) == 0) return(NA)
+      if (length(sents) == 0) return(NA_real_)
       length(words) / length(sents)
-    })
+    }, numeric(1))
     readability_scores$`Avg Sentence Length` <- avg_sentence_length
   }
 
@@ -2135,7 +2054,7 @@ plot_pos_frequencies <- function(pos_data,
   }
 
   if (is.null(pos_data) || nrow(pos_data) == 0) {
-    return(plotly::plot_ly() %>%
+    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
       plotly::layout(
         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
@@ -2213,6 +2132,8 @@ plot_pos_frequencies <- function(pos_data,
 #' @param color Bar color (default: "#10B981")
 #' @param height Plot height in pixels (default: 500)
 #' @param width Plot width in pixels (default: NULL for auto)
+#' @param custom_colors Named vector of custom entity type colors (e.g.,
+#'   c(CONCEPT = "#00acc1", THEME = "#7c4dff")). Custom colors override defaults.
 #'
 #' @return A plotly object
 #'
@@ -2226,13 +2147,17 @@ plot_pos_frequencies <- function(pos_data,
 #'     n = c(300, 250, 200, 150, 100)
 #'   )
 #'   plot_entity_frequencies(entity_df)
+#'
+#'   # With custom colors
+#'   plot_entity_frequencies(entity_df, custom_colors = c(PERSON = "#ff0000"))
 #' }
 plot_entity_frequencies <- function(entity_data,
                                      top_n = 20,
                                      title = "Named Entity Type Frequency",
-                                     color = "#10B981",
+                                     color = NULL,
                                      height = 500,
-                                     width = NULL) {
+                                     width = NULL,
+                                     custom_colors = NULL) {
 
   if (!requireNamespace("plotly", quietly = TRUE)) {
     stop("Package 'plotly' is required. Please install it.")
@@ -2265,12 +2190,38 @@ plot_entity_frequencies <- function(entity_data,
       dplyr::slice_head(n = top_n)
   }
 
+  # Define entity type colors (matching table badge colors)
+  entity_colors <- c(
+    "PERSON" = "#e91e63", "ORG" = "#2196f3", "GPE" = "#4caf50",
+    "DATE" = "#ff9800", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
+    "ORDINAL" = "#795548", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
+    "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
+    "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
+    "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e",
+    "CONCEPT" = "#00acc1", "THEME" = "#7c4dff", "CODE" = "#546e7a",
+    "CATEGORY" = "#26a69a", "CUSTOM" = "#d81b60"
+  )
+
+  # Merge custom colors (custom colors override defaults)
+  if (!is.null(custom_colors) && length(custom_colors) > 0) {
+    entity_colors[names(custom_colors)] <- custom_colors
+  }
+
+  # Map entity types to colors (use default gray for unknown types)
+  bar_colors <- sapply(entity_freq$entity, function(e) {
+    if (e %in% names(entity_colors)) {
+      entity_colors[[e]]
+    } else {
+      "#757575"  # Default gray for unknown entity types
+    }
+  })
+
   plotly::plot_ly(
     data = entity_freq,
     x = ~stats::reorder(entity, n),
     y = ~n,
     type = "bar",
-    marker = list(color = color),
+    marker = list(color = bar_colors),
     hoverinfo = "text",
     hovertext = ~paste0(entity, "\nFrequency: ", n),
     height = height,
@@ -2300,6 +2251,7 @@ plot_entity_frequencies <- function(entity_data,
     )
 }
 
+
 #' Render displaCy Entity Visualization
 #'
 #' @description
@@ -2308,12 +2260,14 @@ plot_entity_frequencies <- function(entity_data,
 #'
 #' @param text Character string to visualize.
 #' @param model spaCy model name (default: "en_core_web_sm").
+#' @param colors Named list of entity type to color mappings (e.g.,
+#'   list(PERSON = "#e91e63", ORG = "#2196f3")). If NULL, uses spaCy defaults.
 #'
 #' @return HTML string with entity highlighting.
 #'
 #' @family lexical
 #' @export
-render_displacy_ent <- function(text, model = "en_core_web_sm") {
+render_displacy_ent <- function(text, model = "en_core_web_sm", colors = NULL) {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     stop("Package 'reticulate' is required for displaCy visualization.")
   }
@@ -2326,8 +2280,18 @@ render_displacy_ent <- function(text, model = "en_core_web_sm") {
     nlp <- spacy$load(model)
     doc <- nlp(text)
 
+    # Build options with custom colors if provided
+    options <- list()
+    if (!is.null(colors) && length(colors) > 0) {
+      options$colors <- colors
+    }
+
     # Render as HTML
-    html <- displacy_module$render(doc, style = "ent", page = FALSE)
+    if (length(options) > 0) {
+      html <- displacy_module$render(doc, style = "ent", page = FALSE, options = options)
+    } else {
+      html <- displacy_module$render(doc, style = "ent", page = FALSE)
+    }
 
     return(as.character(html))
   }, error = function(e) {
@@ -2373,4 +2337,1171 @@ render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") 
   }, error = function(e) {
     stop("displaCy rendering failed: ", e$message)
   })
+}
+
+
+# =============================================================================
+# spaCy NLP Interface Functions
+# =============================================================================
+# R wrapper functions for spaCy NLP via reticulate.
+# Provides direct Python spaCy access for full control
+# over all spaCy features including morphology.
+
+# Package-level spaCy instance
+.spacy_env <- new.env(parent = emptyenv())
+
+#' Initialize spaCy NLP
+#'
+#' @description
+#' Initialize the spaCy NLP pipeline with the specified model.
+#' Uses a cached instance for efficiency.
+#'
+#' @param model Character; spaCy model name (default: "en_core_web_sm").
+#' @param force Logical; force reinitialization even if already initialized.
+#'
+#' @return Invisibly returns the SpacyNLP Python object.
+#'
+#' @details
+#' Available models:
+#' \itemize{
+#'   \item \code{en_core_web_sm}: Small English model (fast, no word vectors)
+#'   \item \code{en_core_web_md}: Medium English model (word vectors)
+#'   \item \code{en_core_web_lg}: Large English model (best accuracy)
+#' }
+#'
+#' @family lexical
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' init_spacy_nlp("en_core_web_sm")
+#' }
+init_spacy_nlp <- function(model = "en_core_web_sm", force = FALSE) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required. Install with: install.packages('reticulate')")
+  }
+
+  # Check if already initialized with same model
+  if (!force && !is.null(.spacy_env$nlp) && .spacy_env$model == model) {
+    return(invisible(.spacy_env$nlp))
+  }
+
+  # Import the Python module
+  python_path <- system.file("python", package = "TextAnalysisR")
+  if (python_path == "") {
+    stop("Cannot find Python module directory in TextAnalysisR package")
+  }
+
+  tryCatch({
+    spacy_module <- reticulate::import_from_path("spacy_nlp", path = python_path)
+    nlp <- spacy_module$SpacyNLP(model)
+    .spacy_env$nlp <- nlp
+    .spacy_env$model <- model
+    .spacy_env$module <- spacy_module
+    message("spaCy initialized with model: ", model)
+    invisible(nlp)
+  }, error = function(e) {
+    stop("Failed to initialize spaCy: ", e$message,
+         "\nMake sure spaCy is installed: pip install spacy",
+         "\nAnd download the model: python -m spacy download ", model)
+  })
+}
+
+#' Check if spaCy is Initialized
+#'
+#' @description
+#' Check whether spaCy has been initialized.
+#'
+#' @return Logical; TRUE if initialized, FALSE otherwise.
+#'
+#' @family lexical
+#' @export
+spacy_initialized <- function() {
+  !is.null(.spacy_env$nlp)
+}
+
+#' Check if Model Has Word Vectors
+#'
+#' @description
+#' Check if the loaded spaCy model has word vectors for similarity calculations.
+#'
+#' @return Logical; TRUE if model has vectors, FALSE otherwise.
+#'
+#' @family lexical
+#' @export
+spacy_has_vectors <- function() {
+  if (!spacy_initialized()) {
+    stop("spaCy not initialized. Call init_spacy_nlp() first.")
+  }
+  .spacy_env$nlp$has_vectors()
+}
+
+#' Get spaCy Model Information
+#'
+#' @description
+#' Get information about the currently loaded spaCy model.
+#'
+#' @return A list with model information including name, language,
+#'   pipeline components, and vector availability.
+#'
+#' @family lexical
+#' @export
+get_spacy_model_info <- function() {
+  if (!spacy_initialized()) {
+    stop("spaCy not initialized. Call init_spacy_nlp() first.")
+  }
+  info <- .spacy_env$nlp$get_model_info()
+  as.list(info)
+}
+
+#' Parse Texts with spaCy
+#'
+#' @description
+#' Parse texts using spaCy and return token-level annotations.
+#' This is the main parsing function for NLP analysis.
+#' Works with character vectors or quanteda tokens objects.
+#'
+#' @param x Character vector of texts OR a quanteda tokens object.
+#' @param pos Logical; include coarse POS tags (default: TRUE).
+#' @param tag Logical; include fine-grained tags (default: TRUE).
+#' @param lemma Logical; include lemmatized forms (default: TRUE).
+#' @param entity Logical; include named entity tags (default: FALSE).
+#' @param dependency Logical; include dependency relations (default: FALSE).
+#' @param morph Logical; include morphological features (default: FALSE).
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with token-level annotations including:
+#' \itemize{
+#'   \item \code{doc_id}: Document identifier
+#'   \item \code{sentence_id}: Sentence number within document
+#'   \item \code{token_id}: Token position within sentence
+#'   \item \code{token}: Original token text
+#'   \item \code{pos}: Coarse POS tag (if pos = TRUE)
+#'   \item \code{tag}: Fine-grained tag (if tag = TRUE)
+#'   \item \code{lemma}: Lemmatized form (if lemma = TRUE)
+#'   \item \code{entity}: Named entity tag (if entity = TRUE)
+#'   \item \code{head_token_id}: Head token ID (if dependency = TRUE)
+#'   \item \code{dep_rel}: Dependency relation (if dependency = TRUE)
+#'   \item \code{morph}: Morphological features string (if morph = TRUE)
+#' }
+#'
+#' @family lexical
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # From SpecialEduTech dataset
+#' texts <- TextAnalysisR::SpecialEduTech$abstract[1:5]
+#' parsed <- spacy_parse_full(texts, morph = TRUE)
+#'
+#' # From quanteda tokens
+#' united <- unite_cols(TextAnalysisR::SpecialEduTech, c("title", "abstract"))
+#' tokens <- prep_texts(united, text_field = "united_texts")
+#' parsed <- spacy_parse_full(tokens, morph = TRUE)
+#' }
+spacy_parse_full <- function(x,
+                             pos = TRUE,
+                             tag = TRUE,
+                             lemma = TRUE,
+                             entity = FALSE,
+                             dependency = FALSE,
+                             morph = FALSE,
+                             model = "en_core_web_sm") {
+
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+ # Handle quanteda tokens objects
+  if (inherits(x, "tokens")) {
+    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
+    doc_names <- quanteda::docnames(x)
+  } else if (is.character(x)) {
+    texts <- x
+    doc_names <- names(x)
+    if (is.null(doc_names)) {
+      doc_names <- paste0("text", seq_along(texts))
+    }
+  } else {
+    stop("x must be a character vector or quanteda tokens object")
+  }
+
+  # Convert to list for Python
+  texts_list <- as.list(unname(texts))
+
+  # Call Python method
+  result <- .spacy_env$nlp$parse_to_dataframe(
+    texts_list,
+    include_pos = pos,
+    include_tag = tag,
+    include_lemma = lemma,
+    include_entity = entity,
+    include_dependency = dependency,
+    include_morph = morph
+  )
+
+  # Convert pandas DataFrame to R data.frame
+  df <- reticulate::py_to_r(result)
+
+  # Map doc_id from text1, text2, ... to actual document names
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+    doc_id_map <- data.frame(
+      old_id = paste0("text", seq_along(doc_names)),
+      new_id = doc_names,
+      stringsAsFactors = FALSE
+    )
+    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+  }
+
+  return(df)
+}
+
+#' Extract Named Entities with spaCy
+#'
+#' @description
+#' Extract named entities from texts using spaCy NER.
+#'
+#' @param x Character vector of texts OR a quanteda tokens object.
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with entity information:
+#' \itemize{
+#'   \item \code{doc_id}: Document identifier
+#'   \item \code{text}: Entity text
+#'   \item \code{label}: Entity type (PERSON, ORG, GPE, etc.)
+#'   \item \code{start_char}: Start character position
+#'   \item \code{end_char}: End character position
+#' }
+#'
+#' @family lexical
+#' @export
+spacy_extract_entities <- function(x, model = "en_core_web_sm") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  # Handle quanteda tokens objects
+  if (inherits(x, "tokens")) {
+    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
+    doc_names <- quanteda::docnames(x)
+  } else if (is.character(x)) {
+    texts <- x
+    doc_names <- names(x)
+    if (is.null(doc_names)) {
+      doc_names <- paste0("text", seq_along(texts))
+    }
+  } else {
+    stop("x must be a character vector or quanteda tokens object")
+  }
+
+  texts_list <- as.list(unname(texts))
+  result <- .spacy_env$nlp$get_entities(texts_list)
+  df <- reticulate::py_to_r(result)
+
+  # Map doc_id
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+    doc_id_map <- data.frame(
+      old_id = paste0("text", seq_along(doc_names)),
+      new_id = doc_names,
+      stringsAsFactors = FALSE
+    )
+    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+  }
+
+  return(df)
+}
+
+#' Extract Noun Chunks
+#'
+#' @description
+#' Extract noun chunks (base noun phrases) from texts.
+#' Useful for keyphrase extraction.
+#'
+#' @param x Character vector of texts OR a quanteda tokens object.
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with noun chunk information.
+#'
+#' @family lexical
+#' @export
+extract_noun_chunks <- function(x, model = "en_core_web_sm") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  if (inherits(x, "tokens")) {
+    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
+    doc_names <- quanteda::docnames(x)
+  } else if (is.character(x)) {
+    texts <- x
+    doc_names <- names(x)
+    if (is.null(doc_names)) {
+      doc_names <- paste0("text", seq_along(texts))
+    }
+  } else {
+    stop("x must be a character vector or quanteda tokens object")
+  }
+
+  texts_list <- as.list(unname(texts))
+  result <- .spacy_env$nlp$get_noun_chunks(texts_list)
+  df <- reticulate::py_to_r(result)
+
+  # Map doc_id
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+    doc_id_map <- data.frame(
+      old_id = paste0("text", seq_along(doc_names)),
+      new_id = doc_names,
+      stringsAsFactors = FALSE
+    )
+    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+  }
+
+  return(df)
+}
+
+#' Extract Subjects and Objects
+#'
+#' @description
+#' Extract subject-verb-object (SVO) triples from texts using dependency parsing.
+#'
+#' @param x Character vector of texts OR a quanteda tokens object.
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with SVO information.
+#'
+#' @family lexical
+#' @export
+extract_subjects_objects <- function(x, model = "en_core_web_sm") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  if (inherits(x, "tokens")) {
+    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
+    doc_names <- quanteda::docnames(x)
+  } else if (is.character(x)) {
+    texts <- x
+    doc_names <- names(x)
+    if (is.null(doc_names)) {
+      doc_names <- paste0("text", seq_along(texts))
+    }
+  } else {
+    stop("x must be a character vector or quanteda tokens object")
+  }
+
+  texts_list <- as.list(unname(texts))
+  result <- .spacy_env$nlp$get_subjects_objects(texts_list)
+  df <- reticulate::py_to_r(result)
+
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+    doc_id_map <- data.frame(
+      old_id = paste0("text", seq_along(doc_names)),
+      new_id = doc_names,
+      stringsAsFactors = FALSE
+    )
+    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+  }
+
+  return(df)
+}
+
+#' Get Sentences
+#'
+#' @description
+#' Segment texts into sentences using spaCy's sentence boundary detection.
+#'
+#' @param x Character vector of texts OR a quanteda tokens object.
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with sentence information.
+#'
+#' @family lexical
+#' @export
+get_sentences <- function(x, model = "en_core_web_sm") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  if (inherits(x, "tokens")) {
+    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
+    doc_names <- quanteda::docnames(x)
+  } else if (is.character(x)) {
+    texts <- x
+    doc_names <- names(x)
+    if (is.null(doc_names)) {
+      doc_names <- paste0("text", seq_along(texts))
+    }
+  } else {
+    stop("x must be a character vector or quanteda tokens object")
+  }
+
+  texts_list <- as.list(unname(texts))
+  result <- .spacy_env$nlp$get_sentences(texts_list)
+  df <- reticulate::py_to_r(result)
+
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+    doc_id_map <- data.frame(
+      old_id = paste0("text", seq_along(doc_names)),
+      new_id = doc_names,
+      stringsAsFactors = FALSE
+    )
+    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+  }
+
+  return(df)
+}
+
+#' Calculate Word Similarity
+#'
+#' @description
+#' Calculate semantic similarity between two words using word vectors.
+#' Requires a spaCy model with word vectors (en_core_web_md or en_core_web_lg).
+#'
+#' @param word1 Character; first word.
+#' @param word2 Character; second word.
+#' @param model Character; spaCy model to use (default: "en_core_web_md").
+#'
+#' @return A list with similarity score and metadata.
+#'
+#' @family lexical
+#' @export
+get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  result <- .spacy_env$nlp$get_word_similarity(word1, word2)
+  as.list(result)
+}
+
+#' Find Similar Words
+#'
+#' @description
+#' Find words most similar to a given word using word vectors.
+#' Requires a spaCy model with word vectors (en_core_web_md or en_core_web_lg).
+#'
+#' @param word Character; target word.
+#' @param top_n Integer; number of similar words to return (default: 10).
+#' @param model Character; spaCy model to use (default: "en_core_web_md").
+#'
+#' @return A data frame with similar words and similarity scores.
+#'
+#' @family lexical
+#' @export
+find_similar_words <- function(word, top_n = 10L, model = "en_core_web_md") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  result <- .spacy_env$nlp$find_similar_words(word, as.integer(top_n))
+  df <- reticulate::py_to_r(result)
+
+  return(df)
+}
+
+#' Get spaCy Word Embeddings
+#'
+#' @description
+#' Get word vector embeddings for words or texts using spaCy.
+#' Requires a spaCy model with word vectors.
+#'
+#' @param texts Character vector of words or texts.
+#' @param model Character; spaCy model to use (default: "en_core_web_md").
+#'
+#' @return A matrix of word embeddings (rows = texts, cols = dimensions).
+#'
+#' @family lexical
+#' @export
+get_spacy_embeddings <- function(texts, model = "en_core_web_md") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  if (!spacy_has_vectors()) {
+    stop("Model '", model, "' has no word vectors. Use en_core_web_md or en_core_web_lg.")
+  }
+
+  # Get vectors via Python - access the underlying nlp object
+  nlp <- .spacy_env$nlp$nlp
+
+  vectors <- lapply(texts, function(text) {
+    doc <- nlp(text)
+    as.numeric(doc$vector)
+  })
+
+  # Convert to matrix
+  mat <- do.call(rbind, vectors)
+  rownames(mat) <- texts
+
+  return(mat)
+}
+
+#' Parse Morphology String
+#'
+#' @description
+#' Parse spaCy's morphology string format into individual columns.
+#' Used internally by morphology analysis functions.
+#' Always extracts all common morphology features (Number, Tense, VerbForm,
+#' Person, Case, Mood, Aspect) regardless of the features parameter.
+#'
+#' @param data Data frame with a 'morph' column from spaCy parsing.
+#' @param features Character vector of feature names (ignored, kept for
+#'   backwards compatibility). All features are always extracted.
+#'
+#' @return Data frame with additional morph_* columns for each feature.
+#'
+#' @family lexical
+#' @export
+parse_morphology_string <- function(data, features = NULL) {
+  # Always extract all common morphology features
+  all_features <- c("Number", "Tense", "VerbForm", "Person", "Case", "Mood", "Aspect")
+
+  for (feat in all_features) {
+    col_name <- paste0("morph_", feat)
+    data[[col_name]] <- vapply(data$morph, function(m) {
+      if (is.null(m) || length(m) == 0 || !is.atomic(m)) return(NA_character_)
+      m_str <- as.character(m)[1]
+      if (is.na(m_str) || m_str == "") return(NA_character_)
+      parts <- strsplit(m_str, "\\|")[[1]]
+      for (part in parts) {
+        kv <- strsplit(part, "=")[[1]]
+        if (length(kv) == 2 && kv[1] == feat) {
+          return(kv[2])
+        }
+      }
+      return(NA_character_)
+    }, FUN.VALUE = character(1), USE.NAMES = FALSE)
+  }
+  return(data)
+}
+
+
+################################################################################
+# LOG ODDS RATIO ANALYSIS
+################################################################################
+
+#' Calculate Log Odds Ratio Between Categories
+#'
+#' @description
+#' Computes log odds ratio to compare word frequencies between categories.
+#' Identifies words that are distinctively used in one category vs another.
+#' Uses Laplace smoothing to handle zero counts.
+#'
+#' @param dfm_object A quanteda dfm object
+#' @param group_var Character, name of the grouping variable in docvars
+#' @param comparison_mode Character, one of "binary", "one_vs_rest", or "pairwise"
+#'   \itemize{
+#'     \item binary: Compare two categories directly
+#'     \item one_vs_rest: Compare each category against all others combined
+#'     \item pairwise: Compare all pairs of categories
+#'   }
+#' @param reference_level Character, reference category for binary comparison (default: first level)
+#' @param top_n Number of top terms per comparison (default: 10)
+#' @param min_count Minimum word count to include (default: 5)
+#'
+#' @return Data frame with columns:
+#'   \itemize{
+#'     \item term: The word/feature
+#'     \item category1: First category in comparison
+#'     \item category2: Second category in comparison
+#'     \item count1: Count in category 1
+#'     \item count2: Count in category 2
+#'     \item odds1: Odds in category 1
+#'     \item odds2: Odds in category 2
+#'     \item odds_ratio: Ratio of odds
+
+#'     \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
+#'   }
+#'
+#' @family lexical
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(quanteda)
+#' corp <- corpus(c("The cat runs fast", "Dogs are loyal pets",
+#'                  "Cats sleep all day", "My dog loves walks"),
+#'                docvars = data.frame(animal = c("cat", "dog", "cat", "dog")))
+#' dfm <- tokens(corp) %>% dfm()
+#' log_odds <- calculate_log_odds_ratio(dfm, "animal")
+#' }
+calculate_log_odds_ratio <- function(dfm_object,
+                                      group_var,
+                                      comparison_mode = c("binary", "one_vs_rest", "pairwise"),
+                                      reference_level = NULL,
+                                      top_n = 10,
+                                      min_count = 5) {
+
+  comparison_mode <- match.arg(comparison_mode)
+
+  if (!inherits(dfm_object, "dfm")) {
+    stop("dfm_object must be a quanteda dfm object")
+  }
+
+  if (!group_var %in% names(quanteda::docvars(dfm_object))) {
+    stop("group_var '", group_var, "' not found in document variables")
+  }
+
+  groups <- quanteda::docvars(dfm_object)[[group_var]]
+  levels <- unique(groups[!is.na(groups)])
+
+  if (length(levels) < 2) {
+    stop("Need at least 2 categories for comparison")
+  }
+
+  # Helper function for pairwise comparison
+  compare_two <- function(dfm_obj, level1, level2, groups) {
+    idx1 <- which(groups == level1)
+    idx2 <- which(groups == level2)
+
+    if (length(idx1) == 0 || length(idx2) == 0) {
+      return(NULL)
+    }
+
+    # Sum counts per group
+    counts1 <- Matrix::colSums(dfm_obj[idx1, , drop = FALSE])
+    counts2 <- Matrix::colSums(dfm_obj[idx2, , drop = FALSE])
+
+    # Filter by minimum count
+    keep <- (counts1 + counts2) >= min_count
+    counts1 <- counts1[keep]
+    counts2 <- counts2[keep]
+
+    if (length(counts1) == 0) {
+      return(NULL)
+    }
+
+    # Laplace smoothing (+1)
+    total1 <- sum(counts1) + length(counts1)
+    total2 <- sum(counts2) + length(counts2)
+
+    odds1 <- (counts1 + 1) / total1
+    odds2 <- (counts2 + 1) / total2
+
+    odds_ratio <- odds1 / odds2
+    log_odds <- log(odds_ratio)
+
+    result <- data.frame(
+      term = names(counts1),
+      category1 = level1,
+      category2 = level2,
+      count1 = as.numeric(counts1),
+      count2 = as.numeric(counts2),
+      odds1 = odds1,
+      odds2 = odds2,
+      odds_ratio = odds_ratio,
+      log_odds_ratio = log_odds,
+      stringsAsFactors = FALSE
+    )
+
+    # Get top terms by absolute log odds
+    result <- result[order(abs(result$log_odds_ratio), decreasing = TRUE), ]
+    utils::head(result, top_n * 2)  # Get top for both directions
+  }
+
+  results <- list()
+
+
+  if (comparison_mode == "binary") {
+    if (length(levels) != 2 && is.null(reference_level)) {
+      message("More than 2 categories. Using first two: ", levels[1], " vs ", levels[2])
+    }
+
+    if (is.null(reference_level)) {
+      # Default: second level compared to first (first as reference)
+      level1 <- levels[2]  # Compared (numerator)
+      level2 <- levels[1]  # Reference (denominator)
+    } else {
+      # User-specified reference: compare the other level to reference
+      level1 <- setdiff(levels, reference_level)[1]  # Compared (numerator)
+      level2 <- reference_level  # Reference (denominator)
+    }
+
+    results[[1]] <- compare_two(dfm_object, level1, level2, groups)
+
+  } else if (comparison_mode == "one_vs_rest") {
+    for (level in levels) {
+      other_levels <- setdiff(levels, level)
+      # Combine all other categories
+      groups_binary <- ifelse(groups == level, level, "Other")
+      result <- compare_two(dfm_object, level, "Other", groups_binary)
+      if (!is.null(result)) {
+        results[[length(results) + 1]] <- result
+      }
+    }
+
+  } else if (comparison_mode == "pairwise") {
+    pairs <- utils::combn(levels, 2, simplify = FALSE)
+    for (pair in pairs) {
+      result <- compare_two(dfm_object, pair[1], pair[2], groups)
+      if (!is.null(result)) {
+        results[[length(results) + 1]] <- result
+      }
+    }
+  }
+
+  if (length(results) == 0) {
+    return(data.frame(
+      term = character(),
+      category1 = character(),
+      category2 = character(),
+      count1 = numeric(),
+      count2 = numeric(),
+      odds1 = numeric(),
+      odds2 = numeric(),
+      odds_ratio = numeric(),
+      log_odds_ratio = numeric()
+    ))
+  }
+
+  do.call(rbind, results)
+}
+
+
+#' Plot Log Odds Ratio
+#'
+#' @description
+#' Creates a horizontal bar plot showing log odds ratios for comparing
+#' word usage between categories. Positive values indicate higher usage
+#' in the first category, negative in the second.
+#'
+#' @param log_odds_data Data frame from calculate_log_odds_ratio()
+#' @param top_n Number of top terms to show per direction (default: 10)
+#' @param facet_by Character, column name to facet by (e.g., "category1" for
+#'   one_vs_rest comparisons). NULL for no faceting.
+#' @param color_positive Color for positive log odds (default: "#10B981" green)
+#' @param color_negative Color for negative log odds (default: "#EF4444" red)
+#' @param height Plot height in pixels (default: 600)
+#' @param width Plot width in pixels (default: NULL for auto)
+#' @param title Plot title (default: "Log Odds Ratio Comparison")
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' log_odds <- calculate_log_odds_ratio(dfm, "category", comparison_mode = "binary")
+#' plot_log_odds_ratio(log_odds, top_n = 15)
+#' }
+plot_log_odds_ratio <- function(log_odds_data,
+                                 top_n = 10,
+                                 facet_by = NULL,
+                                 color_positive = "#10B981",
+                                 color_negative = "#EF4444",
+                                 height = 600,
+                                 width = NULL,
+                                 title = "Log Odds Ratio Comparison") {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(log_odds_data) || nrow(log_odds_data) == 0) {
+    return(create_empty_plot_message("No log odds data available"))
+  }
+
+  # Get top positive and negative terms
+  positive <- log_odds_data[log_odds_data$log_odds_ratio > 0, ]
+  negative <- log_odds_data[log_odds_data$log_odds_ratio < 0, ]
+
+  positive <- positive[order(positive$log_odds_ratio, decreasing = TRUE), ]
+  negative <- negative[order(negative$log_odds_ratio, decreasing = FALSE), ]
+
+  plot_data <- rbind(
+    utils::head(positive, top_n),
+    utils::head(negative, top_n)
+  )
+
+  if (nrow(plot_data) == 0) {
+    return(create_empty_plot_message("No significant differences found"))
+  }
+
+  # Order by log odds ratio
+  plot_data <- plot_data[order(plot_data$log_odds_ratio), ]
+  plot_data$term_ordered <- factor(plot_data$term, levels = plot_data$term)
+
+  # Assign colors
+  plot_data$color <- ifelse(plot_data$log_odds_ratio > 0, color_positive, color_negative)
+
+  # Create hover text
+  plot_data$hover_text <- paste0(
+    "<b>", plot_data$term, "</b><br>",
+    "Log Odds: ", round(plot_data$log_odds_ratio, 3), "<br>",
+    plot_data$category1, ": ", plot_data$count1, "<br>",
+    plot_data$category2, ": ", plot_data$count2
+  )
+
+  # Get category labels for subtitle
+  cat1 <- unique(plot_data$category1)[1]
+  cat2 <- unique(plot_data$category2)[1]
+  subtitle <- paste0(
+    "<span style='color:", color_negative, ";'>", cat2, " (-)</span> vs ",
+    "<span style='color:", color_positive, ";'>", cat1, " (+)</span>"
+  )
+
+  p <- plotly::plot_ly(
+    data = plot_data,
+    x = ~log_odds_ratio,
+    y = ~term_ordered,
+    type = "bar",
+    orientation = "h",
+    marker = list(color = ~color),
+    hoverinfo = "text",
+    hovertext = ~hover_text,
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = paste0(title, "<br><sub>", subtitle, "</sub>"),
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = "Log Odds Ratio",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        zeroline = TRUE,
+        zerolinecolor = "#CBD5E1",
+        zerolinewidth = 2
+      ),
+      yaxis = list(
+        title = "",
+        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      margin = list(l = 120, r = 40, t = 80, b = 60),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      ),
+      shapes = list(
+        list(
+          type = "line",
+          x0 = 0, x1 = 0,
+          y0 = 0, y1 = 1,
+          yref = "paper",
+          line = list(color = "#94A3B8", width = 1, dash = "dot")
+        )
+      )
+    )
+
+  return(p)
+}
+
+
+################################################################################
+# LEXICAL DISPERSION ANALYSIS
+################################################################################
+
+#' Calculate Lexical Dispersion
+#'
+#' @description
+#' Computes lexical dispersion data for specified terms across a corpus.
+#' Shows where terms appear within each document, useful for understanding
+#' term distribution patterns.
+#'
+#' @param tokens_object A quanteda tokens object
+#' @param terms Character vector of terms to analyze
+#' @param scale Character, "relative" (0-1 normalized) or "absolute" (token position)
+#'
+#' @return Data frame with columns:
+#'   \itemize{
+#'     \item doc_id: Document identifier
+#'     \item term: The search term
+#'     \item position: Position in document (relative or absolute)
+#'     \item doc_length: Total tokens in document
+#'   }
+#'
+#' @family lexical
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(quanteda)
+#' toks <- tokens(c("The cat sat on the mat", "The dog ran in the park"))
+#' dispersion <- calculate_lexical_dispersion(toks, c("the", "cat", "dog"))
+#' }
+calculate_lexical_dispersion <- function(tokens_object,
+                                          terms,
+                                          scale = c("relative", "absolute")) {
+
+  scale <- match.arg(scale)
+
+
+  if (!inherits(tokens_object, "tokens")) {
+    stop("tokens_object must be a quanteda tokens object")
+  }
+
+  if (is.null(terms) || length(terms) == 0) {
+    return(data.frame(
+      doc_id = character(),
+      term = character(),
+      position = numeric(),
+      doc_length = integer(),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  # Convert terms to lowercase for matching
+
+  terms_lower <- tolower(terms)
+
+  results <- list()
+
+  for (i in seq_along(tokens_object)) {
+    doc_tokens <- as.character(tokens_object[[i]])
+    doc_tokens_lower <- tolower(doc_tokens)
+    doc_length <- length(doc_tokens)
+    doc_name <- names(tokens_object)[i]
+
+    if (is.null(doc_name) || doc_name == "") {
+      doc_name <- paste0("Doc ", i)
+    }
+
+    for (term in terms) {
+      term_lower <- tolower(term)
+      positions <- which(doc_tokens_lower == term_lower)
+
+      if (length(positions) > 0) {
+        if (scale == "relative") {
+          positions <- positions / doc_length
+        }
+
+        results[[length(results) + 1]] <- data.frame(
+          doc_id = rep(doc_name, length(positions)),
+          term = rep(term, length(positions)),
+          position = positions,
+          doc_length = rep(doc_length, length(positions)),
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+
+  if (length(results) == 0) {
+    return(data.frame(
+      doc_id = character(),
+      term = character(),
+      position = numeric(),
+      doc_length = integer(),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  do.call(rbind, results)
+}
+
+
+#' Plot Lexical Dispersion
+#'
+#' @description
+#' Creates an X-ray plot showing where terms appear across documents.
+#' Each row represents a term, and marks indicate occurrences.
+#'
+#' @param dispersion_data Data frame from calculate_lexical_dispersion()
+#' @param scale Character, "relative" or "absolute" (must match calculation)
+#' @param title Plot title (default: "Lexical Dispersion")
+#' @param colors Named vector of colors for each term, or NULL for auto
+#' @param height Plot height in pixels (default: 400)
+#' @param width Plot width in pixels (default: NULL for auto)
+#' @param marker_size Size of position markers (default: 8)
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' dispersion <- calculate_lexical_dispersion(tokens, c("education", "technology"))
+#' plot_lexical_dispersion(dispersion)
+#' }
+plot_lexical_dispersion <- function(dispersion_data,
+                                     scale = "relative",
+                                     title = "Lexical Dispersion",
+                                     colors = NULL,
+                                     height = 400,
+                                     width = NULL,
+                                     marker_size = 8) {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(dispersion_data) || nrow(dispersion_data) == 0) {
+    return(create_empty_plot_message("No term occurrences found in the corpus"))
+  }
+
+  # Get unique terms and assign colors
+  unique_terms <- unique(dispersion_data$term)
+
+  if (is.null(colors)) {
+    # Default color palette
+    default_colors <- c("#3B82F6", "#10B981", "#F59E0B", "#EF4444",
+                        "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16")
+    colors <- stats::setNames(
+      rep(default_colors, length.out = length(unique_terms)),
+      unique_terms
+    )
+  }
+
+  # Create y-axis positions for terms
+  dispersion_data$y_pos <- match(dispersion_data$term, unique_terms)
+
+  # Create hover text
+  dispersion_data$hover_text <- paste0(
+    "<b>", dispersion_data$term, "</b><br>",
+    "Document: ", dispersion_data$doc_id, "<br>",
+    "Position: ", round(dispersion_data$position, 3),
+    if (scale == "relative") " (relative)" else ""
+  )
+
+  # Build plot
+  p <- plotly::plot_ly(height = height, width = width)
+
+  for (term in unique_terms) {
+    term_data <- dispersion_data[dispersion_data$term == term, ]
+    term_y <- match(term, unique_terms)
+
+    p <- p %>%
+      plotly::add_trace(
+        data = term_data,
+        x = ~position,
+        y = rep(term_y, nrow(term_data)),
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          symbol = "line-ns",
+          size = marker_size,
+          color = colors[term],
+          line = list(width = 2, color = colors[term])
+        ),
+        name = term,
+        hoverinfo = "text",
+        hovertext = ~hover_text
+      )
+  }
+
+  # X-axis label based on scale
+  x_label <- if (scale == "relative") {
+    "Relative Position (0 = start, 1 = end)"
+  } else {
+    "Token Position"
+  }
+
+  p <- p %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = x_label,
+        titlefont = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        range = if (scale == "relative") c(0, 1) else NULL,
+        zeroline = FALSE
+      ),
+      yaxis = list(
+        title = "",
+        tickmode = "array",
+        tickvals = seq_along(unique_terms),
+        ticktext = unique_terms,
+        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        zeroline = FALSE
+      ),
+      margin = list(l = 120, r = 40, t = 60, b = 100),
+      showlegend = TRUE,
+      legend = list(
+        orientation = "h",
+        x = 0.5,
+        xanchor = "center",
+        y = -0.25
+      ),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      )
+    )
+
+  return(p)
+}
+
+
+#' Calculate Dispersion Metrics
+#'
+#' @description
+#' Computes quantitative dispersion metrics for terms, measuring how
+#' evenly distributed they are across the corpus.
+#'
+#' @param tokens_object A quanteda tokens object
+#' @param terms Character vector of terms to analyze
+#'
+#' @return Data frame with columns:
+#'   \itemize{
+#'     \item term: The search term
+#'     \item frequency: Total occurrences
+#'     \item doc_count: Number of documents containing term
+#'     \item doc_ratio: Proportion of documents containing term
+#'     \item juilland_d: Juilland's D dispersion (0-1, higher = more even)
+#'     \item rosengren_s: Rosengren's S dispersion
+#'   }
+#'
+#' @family lexical
+#' @export
+calculate_dispersion_metrics <- function(tokens_object, terms) {
+
+  if (!inherits(tokens_object, "tokens")) {
+    stop("tokens_object must be a quanteda tokens object")
+  }
+
+  n_docs <- length(tokens_object)
+  terms_lower <- tolower(terms)
+
+  results <- lapply(terms, function(term) {
+    term_lower <- tolower(term)
+
+    # Count occurrences in each document
+    doc_counts <- vapply(tokens_object, function(doc_tokens) {
+      sum(tolower(as.character(doc_tokens)) == term_lower)
+    }, integer(1))
+
+    total_freq <- sum(doc_counts)
+    doc_count <- sum(doc_counts > 0)
+    doc_ratio <- doc_count / n_docs
+
+    # Calculate Juilland's D
+    if (total_freq > 0 && n_docs > 1) {
+      expected <- total_freq / n_docs
+      cv <- stats::sd(doc_counts) / mean(doc_counts)  # Coefficient of variation
+      juilland_d <- 1 - (cv / sqrt(n_docs - 1))
+      juilland_d <- max(0, min(1, juilland_d))  # Clamp to 0-1
+    } else {
+      juilland_d <- NA_real_
+    }
+
+    # Calculate Rosengren's S
+    if (total_freq > 0 && n_docs > 1) {
+      props <- doc_counts / total_freq
+      props <- props[props > 0]  # Only non-zero
+      rosengren_s <- exp(sum(props * log(props)) / (-log(n_docs)))
+    } else {
+      rosengren_s <- NA_real_
+    }
+
+    data.frame(
+      term = term,
+      frequency = total_freq,
+      doc_count = doc_count,
+      doc_ratio = round(doc_ratio, 3),
+      juilland_d = round(juilland_d, 3),
+      rosengren_s = round(rosengren_s, 3),
+      stringsAsFactors = FALSE
+    )
+  })
+
+  do.call(rbind, results)
 }

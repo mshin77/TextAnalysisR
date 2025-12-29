@@ -28,18 +28,17 @@ print(model)
 }
 \seealso{
 Other ai: 
-\code{\link{analyze_contrastive_similarity}()},
+\code{\link{call_gemini_chat}()},
+\code{\link{call_llm_api}()},
 \code{\link{call_ollama}()},
+\code{\link{call_openai_chat}()},
 \code{\link{check_ollama}()},
-\code{\link{create_label_selection_data}()},
-\code{\link{format_label_candidates}()},
-\code{\link{generate_survey_items}()},
 \code{\link{generate_topic_content}()},
-\code{\link{generate_topic_labels_langgraph}()},
+\code{\link{get_api_embeddings}()},
+\code{\link{get_best_embeddings}()},
 \code{\link{get_content_type_prompt}()},
 \code{\link{get_content_type_user_template}()},
 \code{\link{list_ollama_models}()},
-\code{\link{run_rag_search}()},
-\code{\link{validate_topic_labels_langgraph}()}
+\code{\link{run_rag_search}()}
 }
 \concept{ai}

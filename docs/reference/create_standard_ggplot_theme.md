@@ -32,6 +32,8 @@ Other visualization:
 [`plot_cluster_terms()`](https://mshin77.github.io/TextAnalysisR/reference/plot_cluster_terms.md),
 [`plot_cross_category_heatmap()`](https://mshin77.github.io/TextAnalysisR/reference/plot_cross_category_heatmap.md),
 [`plot_entity_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_entity_frequencies.md),
+[`plot_lexical_dispersion()`](https://mshin77.github.io/TextAnalysisR/reference/plot_lexical_dispersion.md),
+[`plot_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/plot_log_odds_ratio.md),
 [`plot_mwe_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_mwe_frequency.md),
 [`plot_ngram_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_ngram_frequency.md),
 [`plot_pos_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_pos_frequencies.md),
@@ -45,7 +47,13 @@ Other visualization:
 ``` r
 if (FALSE) { # \dontrun{
 library(ggplot2)
-ggplot(mtcars, aes(mpg, wt)) +
+data(SpecialEduTech, package = "TextAnalysisR")
+# Create a simple plot using text lengths
+df <- data.frame(
+  title_length = nchar(SpecialEduTech$title),
+  abstract_length = nchar(SpecialEduTech$abstract)
+)
+ggplot(df, aes(title_length, abstract_length)) +
   geom_point() +
   create_standard_ggplot_theme()
 } # }

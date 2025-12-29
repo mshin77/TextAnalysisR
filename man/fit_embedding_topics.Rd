@@ -2,7 +2,7 @@
 % Please edit documentation in R/topic_modeling.R
 \name{fit_embedding_topics}
 \alias{fit_embedding_topics}
-\title{Embedding-based Topic Modeling}
+\title{Embedding-based Topic Modeling (Deprecated)}
 \usage{
 fit_embedding_topics(
   texts,
@@ -62,57 +62,6 @@ the same number of rows as the length of texts.}
 A list containing topic assignments, topic keywords, and quality metrics.
 }
 \description{
-This function performs embedding-based topic modeling using transformer embeddings
-and specialized clustering techniques. The primary method uses the BERTopic library,
-which combines transformer embeddings with UMAP dimensionality reduction and HDBSCAN
-clustering for optimal topic discovery. This approach creates more semantically coherent
-topics compared to traditional methods by leveraging deep learning embeddings.
+This function is deprecated. Please use \code{\link[=fit_embedding_model]{fit_embedding_model()}} instead.
 }
-\examples{
-if (interactive()) {
-  mydata <- TextAnalysisR::SpecialEduTech
-  united_tbl <- TextAnalysisR::unite_cols(
-    mydata,
-    listed_vars = c("title", "keyword", "abstract")
-  )
-  texts <- united_tbl$united_texts
-
-  # Embedding-based topic modeling (powered by BERTopic)
-  result <- TextAnalysisR::fit_embedding_topics(
-    texts = texts,
-    method = "umap_hdbscan",
-    n_topics = 8,
-    min_topic_size = 3
-  )
-
-  print(result$topic_assignments)
-  print(result$topic_keywords)
-}
-}
-\seealso{
-Other topic-modeling: 
-\code{\link{analyze_semantic_evolution}()},
-\code{\link{assess_hybrid_stability}()},
-\code{\link{calculate_assignment_consistency}()},
-\code{\link{calculate_eval_metrics_internal}()},
-\code{\link{calculate_keyword_stability}()},
-\code{\link{calculate_semantic_drift}()},
-\code{\link{calculate_topic_probability}()},
-\code{\link{calculate_topic_stability}()},
-\code{\link{find_optimal_k}()},
-\code{\link{find_topic_matches}()},
-\code{\link{fit_hybrid_model}()},
-\code{\link{fit_temporal_model}()},
-\code{\link{generate_topic_labels}()},
-\code{\link{get_topic_prevalence}()},
-\code{\link{get_topic_terms}()},
-\code{\link{get_topic_texts}()},
-\code{\link{identify_topic_trends}()},
-\code{\link{plot_model_comparison}()},
-\code{\link{plot_quality_metrics}()},
-\code{\link{run_contrastive_topics_internal}()},
-\code{\link{run_neural_topics_internal}()},
-\code{\link{run_temporal_topics_internal}()},
-\code{\link{validate_semantic_coherence}()}
-}
-\concept{topic-modeling}
+\keyword{internal}

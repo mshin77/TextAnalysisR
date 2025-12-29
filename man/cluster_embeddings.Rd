@@ -110,6 +110,8 @@ Other semantic:
 \code{\link{semantic_document_clustering}()},
 \code{\link{semantic_similarity_analysis}()},
 \code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()}
+\code{\link{validate_cross_models}()},
+\code{\link{word_co_occurrence_network}()},
+\code{\link{word_correlation_network}()}
 }
 \concept{semantic}

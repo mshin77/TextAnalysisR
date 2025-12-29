@@ -28,17 +28,15 @@ Returns sentiment scores and classifications.
 }
 \examples{
 \dontrun{
-texts <- c(
-  "This research shows promising results for students.",
-  "The intervention had no significant effect.",
-  "Students struggled with the complex material."
-)
+data(SpecialEduTech)
+texts <- SpecialEduTech$abstract[1:10]
 results <- analyze_sentiment(texts)
 print(results)
 }
 }
 \seealso{
 Other sentiment: 
+\code{\link{analyze_sentiment_llm}()},
 \code{\link{plot_document_sentiment_trajectory}()},
 \code{\link{plot_emotion_radar}()},
 \code{\link{plot_sentiment_boxplot}()},

@@ -437,12 +437,16 @@ process_pdf_unified <- function(file_path,
 #'   print(united_tbl)
 #' }
 unite_cols <- function(df, listed_vars) {
+  # Create united text column from selected columns
   united_texts_tbl <- df %>%
     dplyr::select(all_of(unname(listed_vars))) %>%
     tidyr::unite(col = "united_texts", sep = " ", remove = TRUE)
 
-  docvar_tbl <- df
+  # Keep only non-text columns as document variables (FIX: exclude united columns)
+  docvar_tbl <- df %>%
+    dplyr::select(-all_of(unname(listed_vars)))
 
+  # Combine without column duplication
   united_tbl <- dplyr::bind_cols(united_texts_tbl, docvar_tbl)
 
   return(united_tbl)
@@ -571,6 +575,9 @@ prep_texts <- function(united_tbl,
                                       verbose = FALSE)
 
     if (remove_stopwords) {
+      if (!requireNamespace("stopwords", quietly = TRUE)) {
+        stop("Package 'stopwords' is required for stopword removal. Install with: install.packages('stopwords')")
+      }
       if (verbose) message("Removing stopwords (", stopwords_language, ", ", stopwords_source, ")...")
       sw <- stopwords::stopwords(stopwords_language, source = stopwords_source)
       tokens <- quanteda::tokens_remove(tokens, pattern = sw, verbose = FALSE)
@@ -783,21 +790,21 @@ process_pdf_file <- function(file_path, content_type = "auto") {
 #'
 #' @param file_path Character string path to PDF file
 #' @param envname Character string, name of Python virtual environment
-#'   (default: "langgraph-env")
+#'   (default: "textanalysisr-env")
 #'
 #' @return Data frame with columns: page (integer), text (character)
 #'   Returns NULL if extraction fails or PDF is empty
 #'
 #' @details
 #' Uses pdfplumber Python library through reticulate.
-#' Requires Python environment setup. See \code{setup_langgraph_env()}.
+#' Requires Python environment setup. See \code{setup_python_env()}.
 #'
 #' @family pdf
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' setup_langgraph_env()
+#' setup_python_env()
 #'
 #' pdf_path <- "path/to/document.pdf"
 #' text_data <- extract_text_from_pdf_py(pdf_path)
@@ -810,7 +817,7 @@ extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
 
   status <- check_python_env(envname)
   if (!status$available) {
-    stop("Python environment '", envname, "' not found. Run setup_langgraph_env() first.")
+    stop("Python environment '", envname, "' not found. Run setup_python_env() first.")
   }
 
   tryCatch({
@@ -854,7 +861,7 @@ extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
 #' @param file_path Character string path to PDF file
 #' @param pages Integer vector of page numbers to process (NULL = all pages)
 #' @param envname Character string, name of Python virtual environment
-#'   (default: "langgraph-env")
+#'   (default: "textanalysisr-env")
 #'
 #' @return Data frame with extracted table data
 #'   Returns NULL if no tables found or extraction fails
@@ -868,7 +875,7 @@ extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
 #'
 #' @examples
 #' \dontrun{
-#' setup_langgraph_env()
+#' setup_python_env()
 #'
 #' pdf_path <- "path/to/table_document.pdf"
 #' table_data <- extract_tables_from_pdf_py(pdf_path)
@@ -881,7 +888,7 @@ extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "texta
 
   status <- check_python_env(envname)
   if (!status$available) {
-    stop("Python environment '", envname, "' not found. Run setup_langgraph_env() first.")
+    stop("Python environment '", envname, "' not found. Run setup_python_env() first.")
   }
 
   tryCatch({
@@ -928,7 +935,7 @@ extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "texta
 #'
 #' @param file_path Character string path to PDF file
 #' @param envname Character string, name of Python virtual environment
-#'   (default: "langgraph-env")
+#'   (default: "textanalysisr-env")
 #'
 #' @return Character string: "tabular", "text", or "unknown"
 #'
@@ -937,7 +944,7 @@ extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "texta
 #'
 #' @examples
 #' \dontrun{
-#' setup_langgraph_env()
+#' setup_python_env()
 #'
 #' pdf_path <- "path/to/document.pdf"
 #' content_type <- detect_pdf_content_type_py(pdf_path)
@@ -982,7 +989,7 @@ detect_pdf_content_type_py <- function(file_path, envname = "textanalysisr-env")
 #' @param content_type Character string: "auto", "text", or "tabular"
 #'   If "auto", will detect content type automatically
 #' @param envname Character string, name of Python virtual environment
-#'   (default: "langgraph-env")
+#'   (default: "textanalysisr-env")
 #'
 #' @return List with:
 #'   - data: Data frame with extracted content
@@ -995,14 +1002,14 @@ detect_pdf_content_type_py <- function(file_path, envname = "textanalysisr-env")
 #' - Handles both text and tables
 #' - No Java dependency
 #' - Better accuracy than tabulizer for complex tables
-#' - Uses same Python environment as LangGraph
+#' - Uses TextAnalysisR Python environment
 #'
 #' @family pdf
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' setup_langgraph_env()
+#' setup_python_env()
 #'
 #' pdf_path <- "path/to/document.pdf"
 #' result <- process_pdf_file_py(pdf_path)
@@ -1038,7 +1045,7 @@ process_pdf_file_py <- function(file_path, content_type = "auto", envname = "tex
       data = NULL,
       type = "error",
       success = FALSE,
-      message = paste("Python environment", envname, "not found. Run setup_langgraph_env() first.")
+      message = paste("Python environment", envname, "not found. Run setup_python_env() first.")
     ))
   }
 
@@ -1115,7 +1122,7 @@ check_multimodal_prerequisites <- function(
   vision_provider = "ollama",
   vision_model = NULL,
   api_key = NULL,
-  envname = "langgraph-env"
+  envname = "textanalysisr-env"
 ) {
   missing <- character(0)
   details <- list()
@@ -1233,7 +1240,7 @@ check_multimodal_prerequisites <- function(
 #'   - For OpenAI: "gpt-4-vision-preview", "gpt-4o"
 #' @param api_key Character: OpenAI API key (required if vision_provider="openai")
 #' @param describe_images Logical: Convert images to text descriptions (default: TRUE)
-#' @param envname Character: Python environment name (default: "langgraph-env")
+#' @param envname Character: Python environment name (default: "textanalysisr-env")
 #'
 #' @return List with:
 #'   - success: Logical
@@ -1295,7 +1302,7 @@ extract_pdf_multimodal <- function(
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE,
-  envname = "langgraph-env"
+  envname = "textanalysisr-env"
 ) {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     stop("Package 'reticulate' is required.")
@@ -1320,7 +1327,7 @@ extract_pdf_multimodal <- function(
         success = FALSE,
         message = paste(
           "Ollama not available. Please:",
-          "1. Install Ollama from https://ollama.ai",
+          "1. Install Ollama from https://ollama.com",
           "2. Pull a vision model: ollama pull llava",
           sep = "\n"
         )
@@ -1400,7 +1407,7 @@ extract_pdf_smart <- function(
   vision_provider = "ollama",
   vision_model = NULL,
   api_key = NULL,
-  envname = "langgraph-env"
+  envname = "textanalysisr-env"
 ) {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     stop("Package 'reticulate' is required.")
@@ -1472,7 +1479,7 @@ check_vision_models <- function(provider = "ollama", api_key = NULL) {
       return(list(
         available = FALSE,
         models = character(0),
-        message = "Ollama not running. Install from https://ollama.ai"
+        message = "Ollama not running. Install from https://ollama.com"
       ))
     }
 

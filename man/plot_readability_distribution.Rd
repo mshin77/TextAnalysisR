@@ -21,7 +21,8 @@ Creates a boxplot showing the overall distribution of a readability metric.
 }
 \examples{
 \dontrun{
-texts <- c("Simple text.", "More complex sentence structure here.")
+data(SpecialEduTech, package = "TextAnalysisR")
+texts <- SpecialEduTech$abstract[1:20]
 readability <- calculate_text_readability(texts)
 plot <- plot_readability_distribution(readability, "flesch")
 print(plot)
@@ -29,6 +30,9 @@ print(plot)
 }
 \seealso{
 Other lexical: 
+\code{\link{calculate_dispersion_metrics}()},
+\code{\link{calculate_lexical_dispersion}()},
+\code{\link{calculate_log_odds_ratio}()},
 \code{\link{calculate_text_readability}()},
 \code{\link{clear_lexdiv_cache}()},
 \code{\link{detect_multi_words}()},
@@ -36,10 +40,19 @@ Other lexical:
 \code{\link{extract_keywords_tfidf}()},
 \code{\link{extract_morphology}()},
 \code{\link{extract_named_entities}()},
+\code{\link{extract_noun_chunks}()},
 \code{\link{extract_pos_tags}()},
+\code{\link{extract_subjects_objects}()},
+\code{\link{find_similar_words}()},
+\code{\link{get_sentences}()},
+\code{\link{get_spacy_embeddings}()},
+\code{\link{get_spacy_model_info}()},
+\code{\link{get_word_similarity}()},
+\code{\link{init_spacy_nlp}()},
 \code{\link{lexical_analysis}},
 \code{\link{lexical_diversity_analysis}()},
 \code{\link{lexical_frequency_analysis}()},
+\code{\link{parse_morphology_string}()},
 \code{\link{plot_keyness_keywords}()},
 \code{\link{plot_keyword_comparison}()},
 \code{\link{plot_lexical_diversity_distribution}()},
@@ -49,6 +62,10 @@ Other lexical:
 \code{\link{plot_top_readability_documents}()},
 \code{\link{render_displacy_dep}()},
 \code{\link{render_displacy_ent}()},
+\code{\link{spacy_extract_entities}()},
+\code{\link{spacy_has_vectors}()},
+\code{\link{spacy_initialized}()},
+\code{\link{spacy_parse_full}()},
 \code{\link{summarize_morphology}()}
 }
 \concept{lexical}

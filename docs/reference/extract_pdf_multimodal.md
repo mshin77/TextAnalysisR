@@ -12,7 +12,7 @@ extract_pdf_multimodal(
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE,
-  envname = "langgraph-env"
+  envname = "textanalysisr-env"
 )
 ```
 
@@ -44,7 +44,7 @@ extract_pdf_multimodal(
 
 - envname:
 
-  Character: Python environment name (default: "langgraph-env")
+  Character: Python environment name (default: "textanalysisr-env")
 
 ## Value
 

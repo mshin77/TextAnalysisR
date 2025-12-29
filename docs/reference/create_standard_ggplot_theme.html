@@ -26,6 +26,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -81,6 +82,8 @@
 <code><a href="plot_cluster_terms.html">plot_cluster_terms()</a></code>,
 <code><a href="plot_cross_category_heatmap.html">plot_cross_category_heatmap()</a></code>,
 <code><a href="plot_entity_frequencies.html">plot_entity_frequencies()</a></code>,
+<code><a href="plot_lexical_dispersion.html">plot_lexical_dispersion()</a></code>,
+<code><a href="plot_log_odds_ratio.html">plot_log_odds_ratio()</a></code>,
 <code><a href="plot_mwe_frequency.html">plot_mwe_frequency()</a></code>,
 <code><a href="plot_ngram_frequency.html">plot_ngram_frequency()</a></code>,
 <code><a href="plot_pos_frequencies.html">plot_pos_frequencies()</a></code>,
@@ -94,7 +97,13 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">SpecialEduTech</span>, package <span class="op">=</span> <span class="st">"TextAnalysisR"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Create a simple plot using text lengths</span></span></span>
+<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  title_length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">title</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  abstract_length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nchar</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">abstract</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">title_length</span>, <span class="va">abstract_length</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">create_standard_ggplot_theme</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

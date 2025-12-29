@@ -30,6 +30,7 @@ No Java required."><meta property="og:image" content="https://mshin77.github.io/
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -81,7 +82,7 @@ If "auto", will detect content type automatically</p></dd>
 
 <dt id="arg-envname">envname<a class="anchor" aria-label="anchor" href="#arg-envname"></a></dt>
 <dd><p>Character string, name of Python virtual environment
-(default: "langgraph-env")</p></dd>
+(default: "textanalysisr-env")</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -96,7 +97,7 @@ If "auto", will detect content type automatically</p></dd>
     <p>This function uses Python's pdfplumber library which:</p><ul><li><p>Handles both text and tables</p></li>
 <li><p>No Java dependency</p></li>
 <li><p>Better accuracy than tabulizer for complex tables</p></li>
-<li><p>Uses same Python environment as LangGraph</p></li>
+<li><p>Uses TextAnalysisR Python environment</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -115,7 +116,7 @@ If "auto", will detect content type automatically</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="fu">setup_langgraph_env</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">pdf_path</span> <span class="op">&lt;-</span> <span class="st">"path/to/document.pdf"</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">process_pdf_file_py</span><span class="op">(</span><span class="va">pdf_path</span><span class="op">)</span></span></span>

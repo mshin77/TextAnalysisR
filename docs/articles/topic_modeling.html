@@ -46,6 +46,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -163,7 +164,7 @@ discovery</li>
 extraction</li>
 </ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_topics.html">fit_embedding_topics</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  n_topics <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -214,12 +215,145 @@ for chance</li>
 <div class="section level2">
 <h2 id="ai-topic-labels">AI Topic Labels<a class="anchor" aria-label="anchor" href="#ai-topic-labels"></a>
 </h2>
+<p>AI generates label suggestions based on topic terms. You review and
+edit:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Generate</strong>: AI creates draft labels from top
+terms</li>
+<li>
+<strong>Review</strong>: Examine suggestions in the output
+table</li>
+<li>
+<strong>Edit</strong>: Modify any labels that need refinement</li>
+<li>
+<strong>Override</strong>: Use manual labels field to replace AI
+suggestions</li>
+</ol>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># AI suggests, human decides</span></span>
+<span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span></span>
 <span>  <span class="va">terms</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"ollama"</span>  <span class="co"># or "openai"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co"># Review and edit labels before final use</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="topic-grounded-content-generation">Topic-Grounded Content Generation<a class="anchor" aria-label="anchor" href="#topic-grounded-content-generation"></a>
+</h2>
+<p>Generate draft content grounded in your topic model results rather
+than AI parametric knowledge. The LLM receives topic labels and term
+probabilities (beta scores), ensuring outputs are anchored to your
+data.</p>
+<div class="section level3">
+<h3 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
+</h3>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Run topic modeling</strong> and optionally generate/edit
+topic labels</li>
+<li>
+<strong>Select content type</strong>: survey items, research
+questions, theme descriptions, policy recommendations, or interview
+questions</li>
+<li>
+<strong>Generate drafts</strong>: AI creates content using your top
+terms ordered by beta scores</li>
+<li>
+<strong>Review and edit</strong>: Examine all outputs before
+use</li>
+<li>
+<strong>Export</strong>: Download as CSV or Excel</li>
+</ol>
+</div>
+<div class="section level3">
+<h3 id="content-types">Content Types<a class="anchor" aria-label="anchor" href="#content-types"></a>
+</h3>
+<table class="table">
+<thead><tr class="header">
+<th>Type</th>
+<th>Output</th>
+<th>Use Case</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Survey Item</td>
+<td>Likert-scale statement</td>
+<td>Scale development</td>
+</tr>
+<tr class="even">
+<td>Research Question</td>
+<td>RQ for literature review</td>
+<td>Systematic reviews</td>
+</tr>
+<tr class="odd">
+<td>Theme Description</td>
+<td>Qualitative theme summary</td>
+<td>Thematic analysis</td>
+</tr>
+<tr class="even">
+<td>Policy Recommendation</td>
+<td>Action-oriented statement</td>
+<td>Policy analysis</td>
+</tr>
+<tr class="odd">
+<td>Interview Question</td>
+<td>Open-ended question</td>
+<td>Qualitative research</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
+</h3>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Get topic terms with beta scores</span></span>
+<span><span class="va">top_terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_topic_terms.html">get_topic_terms</a></span><span class="op">(</span><span class="va">model</span>, top_term_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Optional: Add topic labels</span></span>
+<span><span class="va">topic_labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span> <span class="op">=</span> <span class="st">"Digital Learning Tools"</span>, <span class="st">"2"</span> <span class="op">=</span> <span class="st">"Family Engagement"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Generate content grounded in topic terms</span></span>
+<span><span class="va">content</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_content.html">generate_topic_content</a></span><span class="op">(</span></span>
+<span>  topic_terms_df <span class="op">=</span> <span class="va">top_terms</span>,</span>
+<span>  content_type <span class="op">=</span> <span class="st">"survey_item"</span>,</span>
+<span>  topic_labels <span class="op">=</span> <span class="va">topic_labels</span>,  <span class="co"># Optional</span></span>
+<span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"llama3"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Review before use</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">content</span><span class="op">)</span></span></code></pre></div>
 <hr>
+<details><summary><strong>Prompt Format</strong>
+</summary><p>The LLM receives structured prompts with your topic data:</p>
+<pre><code>Topic: Digital Learning Tools
+
+Top Terms (highest to lowest beta score):
+virtual (.035)
+manipulatives (.022)
+mathematical (.014)
+solving (.013)
+learning (.012)</code></pre>
+<p>This “topic-grounded” approach ensures content reflects your actual
+topic model results, not generic AI knowledge. Prompts include
+guidelines for person-first language and content-specific best
+practices.</p>
+<p><strong>Customizing Prompts:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Get default prompts</span></span>
+<span><span class="va">system_prompt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_content_type_prompt.html">get_content_type_prompt</a></span><span class="op">(</span><span class="st">"survey_item"</span><span class="op">)</span></span>
+<span><span class="va">user_template</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_content_type_user_template.html">get_content_type_user_template</a></span><span class="op">(</span><span class="st">"survey_item"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Use custom prompts</span></span>
+<span><span class="va">content</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_content.html">generate_topic_content</a></span><span class="op">(</span></span>
+<span>  topic_terms_df <span class="op">=</span> <span class="va">top_terms</span>,</span>
+<span>  content_type <span class="op">=</span> <span class="st">"custom"</span>,</span>
+<span>  system_prompt <span class="op">=</span> <span class="st">"You are a survey methodology expert..."</span>,</span>
+<span>  user_prompt_template <span class="op">=</span> <span class="st">"Create an item for: {topic_label}\nTerms: {terms}"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</details><hr>
 <details><summary><strong>Methods Comparison</strong>
 </summary><table class="table">
 <thead><tr class="header">
@@ -285,6 +419,56 @@ similarity over frequency</li>
 <strong>Hybrid:</strong> High-stakes research, methodological
 validation, comprehensive analysis</li>
 </ul></details><hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p><strong>Structural Topic Model (STM):</strong></p>
+<ul>
+<li>Roberts, M. E., Stewart, B. M., &amp; Tingley, D. (2019). stm: An R
+package for structural topic models. <em>Journal of Statistical
+Software</em>, <em>91</em>(2), 1–40. <a href="https://doi.org/10.18637/jss.v091.i02" class="external-link uri">https://doi.org/10.18637/jss.v091.i02</a>
+</li>
+</ul>
+<p><strong>Embedding-based Topic Modeling:</strong></p>
+<ul>
+<li>Grootendorst, M. (2022). BERTopic: Neural topic modeling with a
+class-based TF-IDF procedure. <em>arXiv preprint arXiv:2203.05794</em>.
+<a href="https://arxiv.org/abs/2203.05794" class="external-link uri">https://arxiv.org/abs/2203.05794</a>
+</li>
+<li>Reimers, N., &amp; Gurevych, I. (2019). Sentence-BERT: Sentence
+embeddings using Siamese BERT-networks. In <em>Proceedings of the 2019
+Conference on Empirical Methods in Natural Language Processing</em>
+(pp. 3982–3992). Association for Computational Linguistics. <a href="https://arxiv.org/abs/1908.10084" class="external-link uri">https://arxiv.org/abs/1908.10084</a>
+</li>
+<li>McInnes, L., Healy, J., &amp; Melville, J. (2018). UMAP: Uniform
+manifold approximation and projection for dimension reduction. <em>arXiv
+preprint arXiv:1802.03426</em>. <a href="https://arxiv.org/abs/1802.03426" class="external-link uri">https://arxiv.org/abs/1802.03426</a>
+</li>
+<li>Campello, R. J. G. B., Moulavi, D., &amp; Sander, J. (2013).
+Density-based clustering based on hierarchical density estimates. In
+<em>Advances in Knowledge Discovery and Data Mining. PAKDD 2013. Lecture
+Notes in Computer Science</em> (Vol. 7819, pp. 160–172). Springer. <a href="https://doi.org/10.1007/978-3-642-37456-2_14" class="external-link uri">https://doi.org/10.1007/978-3-642-37456-2_14</a>
+</li>
+</ul>
+<p><strong>Quality Metrics:</strong></p>
+<ul>
+<li>Mimno, D., Wallach, H., Talley, E., Leenders, M., &amp; McCallum, A.
+(2011). Optimizing semantic coherence in topic models. In
+<em>Proceedings of the 2011 Conference on Empirical Methods in Natural
+Language Processing</em> (pp. 262–272). Association for Computational
+Linguistics. <a href="https://aclanthology.org/D11-1024/" class="external-link uri">https://aclanthology.org/D11-1024/</a>
+</li>
+<li>Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+interpretation and validation of cluster analysis. <em>Journal of
+Computational and Applied Mathematics</em>, <em>20</em>, 53–65. <a href="https://doi.org/10.1016/0377-0427(87)90125-7" class="external-link uri">https://doi.org/10.1016/0377-0427(87)90125-7</a>
+</li>
+<li>Hubert, L., &amp; Arabie, P. (1985). Comparing partitions.
+<em>Journal of Classification</em>, <em>2</em>(1), 193–218. <a href="https://doi.org/10.1007/BF01908075" class="external-link uri">https://doi.org/10.1007/BF01908075</a>
+</li>
+</ul>
+<hr>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

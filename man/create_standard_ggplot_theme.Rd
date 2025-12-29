@@ -18,7 +18,13 @@ Returns a standardized ggplot2 theme matching TextAnalysisR design standards.
 \examples{
 \dontrun{
 library(ggplot2)
-ggplot(mtcars, aes(mpg, wt)) +
+data(SpecialEduTech, package = "TextAnalysisR")
+# Create a simple plot using text lengths
+df <- data.frame(
+  title_length = nchar(SpecialEduTech$title),
+  abstract_length = nchar(SpecialEduTech$abstract)
+)
+ggplot(df, aes(title_length, abstract_length)) +
   geom_point() +
   create_standard_ggplot_theme()
 }
@@ -35,6 +41,8 @@ Other visualization:
 \code{\link{plot_cluster_terms}()},
 \code{\link{plot_cross_category_heatmap}()},
 \code{\link{plot_entity_frequencies}()},
+\code{\link{plot_lexical_dispersion}()},
+\code{\link{plot_log_odds_ratio}()},
 \code{\link{plot_mwe_frequency}()},
 \code{\link{plot_ngram_frequency}()},
 \code{\link{plot_pos_frequencies}()},

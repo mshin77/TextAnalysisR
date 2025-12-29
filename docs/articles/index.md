@@ -18,6 +18,8 @@
 
 ### Advanced Topics
 
+- [AI
+  Integration](https://mshin77.github.io/TextAnalysisR/articles/ai_integration.md):
 - [Python
   Environment](https://mshin77.github.io/TextAnalysisR/articles/python_environment.md):
 - [Multimodal

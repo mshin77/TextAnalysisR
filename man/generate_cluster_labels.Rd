@@ -2,7 +2,7 @@
 % Please edit documentation in R/semantic_analysis.R
 \name{generate_cluster_labels}
 \alias{generate_cluster_labels}
-\title{Generate Cluster Labels with AI}
+\title{Generate Cluster Label Suggestions (Human-in-the-Loop)}
 \usage{
 generate_cluster_labels(
   cluster_keywords,
@@ -10,20 +10,25 @@ generate_cluster_labels(
   model = NULL,
   temperature = 0.3,
   max_tokens = 50,
+  api_key = NULL,
   verbose = TRUE
 )
 }
 \arguments{
 \item{cluster_keywords}{List of keywords for each cluster.}
 
-\item{provider}{AI provider to use: "auto" (default), "ollama", or "openai".
-"auto" will use Ollama if available, otherwise OpenAI.}
+\item{provider}{AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
+"auto" will try Ollama first, then check for OpenAI/Gemini keys.}
 
-\item{model}{Model name. For Ollama (default: "phi3:mini"). For OpenAI (default: "gpt-3.5-turbo").}
+\item{model}{Model name. If NULL, uses provider defaults: "gpt-4o-mini" (OpenAI),
+"gemini-2.0-flash" (Gemini), or recommended Ollama model.}
 
 \item{temperature}{Temperature parameter (default: 0.3).}
 
 \item{max_tokens}{Maximum tokens for response (default: 50).}
+
+\item{api_key}{API key for OpenAI or Gemini. If NULL, uses environment variable.
+Not required for Ollama.}
 
 \item{verbose}{Logical, if TRUE, prints progress messages.}
 }
@@ -31,7 +36,9 @@ generate_cluster_labels(
 A list of generated labels.
 }
 \description{
-Generates descriptive labels for clusters using either Ollama (local, default) or OpenAI's API.
+Suggests descriptive labels for clusters using AI. Labels are suggestions
+for human review - users should edit and approve before using.
+Supports OpenAI, Gemini, or Ollama (local) for AI generation.
 When running locally, Ollama is preferred for privacy and cost-free operation.
 }
 \examples{
@@ -39,6 +46,7 @@ When running locally, Ollama is preferred for privacy and cost-free operation.
 keywords <- list("1" = c("machine", "learning", "neural"), "2" = c("data", "analysis"))
 labels_ollama <- generate_cluster_labels(keywords, provider = "ollama")
 labels_openai <- generate_cluster_labels(keywords, provider = "openai")
+labels_gemini <- generate_cluster_labels(keywords, provider = "gemini")
 }
 }
 \seealso{
@@ -60,6 +68,8 @@ Other semantic:
 \code{\link{semantic_document_clustering}()},
 \code{\link{semantic_similarity_analysis}()},
 \code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()}
+\code{\link{validate_cross_models}()},
+\code{\link{word_co_occurrence_network}()},
+\code{\link{word_correlation_network}()}
 }
 \concept{semantic}

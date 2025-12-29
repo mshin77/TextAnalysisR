@@ -24,9 +24,6 @@ print(status)
 #> $ollama
 #> [1] TRUE
 #> 
-#> $langgraph
-#> [1] FALSE
-#> 
 #> $pdf_tables
 #> [1] FALSE
 #> 

@@ -10,7 +10,7 @@ extract_text_from_pdf_py(file_path, envname = "textanalysisr-env")
 \item{file_path}{Character string path to PDF file}
 
 \item{envname}{Character string, name of Python virtual environment
-(default: "langgraph-env")}
+(default: "textanalysisr-env")}
 }
 \value{
 Data frame with columns: page (integer), text (character)
@@ -22,11 +22,11 @@ No Java required - uses Python environment.
 }
 \details{
 Uses pdfplumber Python library through reticulate.
-Requires Python environment setup. See \code{setup_langgraph_env()}.
+Requires Python environment setup. See \code{setup_python_env()}.
 }
 \examples{
 \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 text_data <- extract_text_from_pdf_py(pdf_path)

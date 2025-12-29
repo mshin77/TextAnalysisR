@@ -10,7 +10,7 @@ extract_pdf_smart(
   vision_provider = "ollama",
   vision_model = NULL,
   api_key = NULL,
-  envname = "langgraph-env"
+  envname = "textanalysisr-env"
 )
 }
 \arguments{

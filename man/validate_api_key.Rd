@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{validate_api_key}
 \alias{validate_api_key}
-\title{Validate OpenAI API Key Format}
+\title{Validate API Key Format}
 \usage{
 validate_api_key(api_key, strict = TRUE)
 }
@@ -12,11 +12,11 @@ validate_api_key(api_key, strict = TRUE)
 \item{strict}{Logical, if TRUE performs additional validation checks}
 }
 \value{
-Logical TRUE if valid, FALSE with warnings if invalid
+List with valid (logical), provider (character), and error (character if invalid)
 }
 \description{
-Validates OpenAI API key format according to NIST IA-5(1) authenticator management.
-Checks key prefix, length, and basic format requirements.
+Validates API key format for OpenAI or Gemini according to NIST IA-5(1).
+Auto-detects provider from key prefix and validates format requirements.
 }
 \section{NIST Compliance}{
 
@@ -26,7 +26,8 @@ Validates format, length, and character composition to prevent weak or malformed
 
 \examples{
 \dontrun{
-validate_api_key("sk-proj...")
+result <- validate_api_key("sk-proj...")
+if (result$valid) cat("Provider:", result$provider)
 }
 }
 \keyword{internal}

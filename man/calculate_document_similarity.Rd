@@ -49,11 +49,8 @@ computed unless disabled.
 }
 \examples{
 if (interactive()) {
-  texts <- c(
-    "Assistive technology supports learning for students with disabilities.",
-    "Technology aids help disabled students with their education.",
-    "Machine learning algorithms improve predictive accuracy."
-  )
+  data(SpecialEduTech)
+  texts <- SpecialEduTech$abstract[1:5]
 
   result <- calculate_document_similarity(
     texts = texts,
@@ -84,6 +81,8 @@ Other semantic:
 \code{\link{semantic_document_clustering}()},
 \code{\link{semantic_similarity_analysis}()},
 \code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()}
+\code{\link{validate_cross_models}()},
+\code{\link{word_co_occurrence_network}()},
+\code{\link{word_correlation_network}()}
 }
 \concept{semantic}

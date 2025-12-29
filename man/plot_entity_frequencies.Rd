@@ -8,9 +8,10 @@ plot_entity_frequencies(
   entity_data,
   top_n = 20,
   title = "Named Entity Type Frequency",
-  color = "#10B981",
+  color = NULL,
   height = 500,
-  width = NULL
+  width = NULL,
+  custom_colors = NULL
 )
 }
 \arguments{
@@ -30,6 +31,9 @@ If \code{n} is not present, frequencies will be computed from the data.}
 \item{height}{Plot height in pixels (default: 500)}
 
 \item{width}{Plot width in pixels (default: NULL for auto)}
+
+\item{custom_colors}{Named vector of custom entity type colors (e.g.,
+c(CONCEPT = "#00acc1", THEME = "#7c4dff")). Custom colors override defaults.}
 }
 \value{
 A plotly object
@@ -44,6 +48,9 @@ if (interactive()) {
     n = c(300, 250, 200, 150, 100)
   )
   plot_entity_frequencies(entity_df)
+
+  # With custom colors
+  plot_entity_frequencies(entity_df, custom_colors = c(PERSON = "#ff0000"))
 }
 }
 \seealso{
@@ -58,6 +65,8 @@ Other visualization:
 \code{\link{get_sentiment_colors}()},
 \code{\link{plot_cluster_terms}()},
 \code{\link{plot_cross_category_heatmap}()},
+\code{\link{plot_lexical_dispersion}()},
+\code{\link{plot_log_odds_ratio}()},
 \code{\link{plot_mwe_frequency}()},
 \code{\link{plot_ngram_frequency}()},
 \code{\link{plot_pos_frequencies}()},

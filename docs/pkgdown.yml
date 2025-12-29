@@ -2,6 +2,7 @@ pandoc: 3.6.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
+  ai_integration: ai_integration.html
   cybersecurity: cybersecurity.html
   function_index: function_index.html
   installation: installation.html
@@ -13,7 +14,7 @@ articles:
   semantic_analysis: semantic_analysis.html
   topic_modeling: topic_modeling.html
   web_accessibility: web_accessibility.html
-last_built: 2025-12-25T01:02Z
+last_built: 2025-12-29T06:31Z
 urls:
   reference: https://mshin77.github.io/TextAnalysisR/reference
   article: https://mshin77.github.io/TextAnalysisR/articles

@@ -19,7 +19,8 @@ Creates a bar plot showing the distribution of sentiment classifications.
 }
 \examples{
 \dontrun{
-texts <- c("Great results!", "Poor performance", "Okay outcome")
+data(SpecialEduTech)
+texts <- SpecialEduTech$abstract[1:10]
 sentiment_data <- analyze_sentiment(texts)
 plot <- plot_sentiment_distribution(sentiment_data)
 print(plot)
@@ -28,6 +29,7 @@ print(plot)
 \seealso{
 Other sentiment: 
 \code{\link{analyze_sentiment}()},
+\code{\link{analyze_sentiment_llm}()},
 \code{\link{plot_document_sentiment_trajectory}()},
 \code{\link{plot_emotion_radar}()},
 \code{\link{plot_sentiment_boxplot}()},

@@ -28,6 +28,7 @@ Returns sentiment scores and classifications."><meta property="og:image" content
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -94,6 +95,7 @@ Returns sentiment scores and classifications.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other sentiment:
+<code><a href="analyze_sentiment_llm.html">analyze_sentiment_llm()</a></code>,
 <code><a href="plot_document_sentiment_trajectory.html">plot_document_sentiment_trajectory()</a></code>,
 <code><a href="plot_emotion_radar.html">plot_emotion_radar()</a></code>,
 <code><a href="plot_sentiment_boxplot.html">plot_sentiment_boxplot()</a></code>,
@@ -107,11 +109,8 @@ Returns sentiment scores and classifications.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">texts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="st">"This research shows promising results for students."</span>,</span></span>
-<span class="r-in"><span>  <span class="st">"The intervention had no significant effect."</span>,</span></span>
-<span class="r-in"><span>  <span class="st">"Students struggled with the complex material."</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">texts</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">abstract</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">analyze_sentiment</span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

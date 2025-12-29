@@ -53,11 +53,8 @@ and clustering. This is a high-level wrapper function.
 }
 \examples{
 if (interactive()) {
-  texts <- c(
-    "Assistive technology supports learning.",
-    "Technology aids students with disabilities.",
-    "Machine learning improves predictions."
-  )
+  data(SpecialEduTech)
+  texts <- SpecialEduTech$abstract[1:10]
 
   results <- fit_semantic_model(
     texts = texts,
@@ -86,6 +83,8 @@ Other semantic:
 \code{\link{semantic_document_clustering}()},
 \code{\link{semantic_similarity_analysis}()},
 \code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()}
+\code{\link{validate_cross_models}()},
+\code{\link{word_co_occurrence_network}()},
+\code{\link{word_correlation_network}()}
 }
 \concept{semantic}

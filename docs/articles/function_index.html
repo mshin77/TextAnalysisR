@@ -46,6 +46,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -81,6 +82,58 @@
     
     
 <p>Quick reference guide organized by workflow stage.</p>
+<div class="section level2">
+<h2 id="quick-start-examples">Quick Start Examples<a class="anchor" aria-label="anchor" href="#quick-start-examples"></a>
+</h2>
+<div class="section level3">
+<h3 id="complete-workflow-5-steps">Complete Workflow (5 steps)<a class="anchor" aria-label="anchor" href="#complete-workflow-5-steps"></a>
+</h3>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR">TextAnalysisR</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 1. Load data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">)</span></span>
+<span><span class="va">texts</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">abstract</span></span>
+<span></span>
+<span><span class="co"># 2. Preprocess</span></span>
+<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">texts</span>, remove_punct <span class="op">=</span> <span class="cn">TRUE</span>, remove_numbers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 3. Analyze keywords</span></span>
+<span><span class="va">keywords</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_tfidf.html">extract_keywords_tfidf</a></span><span class="op">(</span><span class="va">dfm</span>, top_n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_tfidf_keywords.html">plot_tfidf_keywords</a></span><span class="op">(</span><span class="va">keywords</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 4. Topic modeling</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span><span class="va">texts</span>, n_topics <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/get_topic_terms.html">get_topic_terms</a></span><span class="op">(</span><span class="va">model</span>, n_terms <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 5. Sentiment analysis</span></span>
+<span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sentiment_lexicon_analysis.html">sentiment_lexicon_analysis</a></span><span class="op">(</span><span class="va">texts</span>, lexicon <span class="op">=</span> <span class="st">"bing"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_sentiment_distribution.html">plot_sentiment_distribution</a></span><span class="op">(</span><span class="va">sentiment</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="generate-embeddings">Generate Embeddings<a class="anchor" aria-label="anchor" href="#generate-embeddings"></a>
+</h3>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Auto-detect best available provider</span></span>
+<span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_best_embeddings.html">get_best_embeddings</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Reduce dimensions for visualization</span></span>
+<span><span class="va">reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reduce_dimensions.html">reduce_dimensions</a></span><span class="op">(</span><span class="va">embeddings</span>, method <span class="op">=</span> <span class="st">"umap"</span>, n_components <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_semantic_viz.html">plot_semantic_viz</a></span><span class="op">(</span><span class="va">reduced</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="network-analysis">Network Analysis<a class="anchor" aria-label="anchor" href="#network-analysis"></a>
+</h3>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Co-occurrence network</span></span>
+<span><span class="fu"><a href="../reference/word_co_occurrence_network.html">word_co_occurrence_network</a></span><span class="op">(</span><span class="va">dfm</span>, top_node_n <span class="op">=</span> <span class="fl">30</span>, co_occur_n <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Correlation network</span></span>
+<span><span class="fu"><a href="../reference/word_correlation_network.html">word_correlation_network</a></span><span class="op">(</span><span class="va">dfm</span>, top_node_n <span class="op">=</span> <span class="fl">30</span>, corr_n <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+</div>
 <div class="section level2">
 <h2 id="data-import-preprocessing">1. Data Import &amp; Preprocessing<a class="anchor" aria-label="anchor" href="#data-import-preprocessing"></a>
 </h2>
@@ -182,6 +235,10 @@
 <h2 id="sentiment-analysis">3. Sentiment Analysis<a class="anchor" aria-label="anchor" href="#sentiment-analysis"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
@@ -198,6 +255,10 @@
 <tr class="odd">
 <td><code><a href="../reference/sentiment_embedding_analysis.html">sentiment_embedding_analysis()</a></code></td>
 <td>Neural sentiment (Python)</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/analyze_sentiment_llm.html">analyze_sentiment_llm()</a></code></td>
+<td>LLM-based with explanations (Ollama/OpenAI/Gemini)</td>
 </tr>
 </tbody>
 </table>
@@ -231,32 +292,40 @@
 <h2 id="semantic-analysis">4. Semantic Analysis<a class="anchor" aria-label="anchor" href="#semantic-analysis"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code><a href="../reference/generate_embeddings.html">generate_embeddings()</a></code></td>
-<td>Create document embeddings</td>
+<td><code><a href="../reference/get_best_embeddings.html">get_best_embeddings()</a></code></td>
+<td>Auto-detect and use best embedding provider</td>
 </tr>
 <tr class="even">
+<td><code><a href="../reference/generate_embeddings.html">generate_embeddings()</a></code></td>
+<td>Create document embeddings (local)</td>
+</tr>
+<tr class="odd">
 <td><code><a href="../reference/reduce_dimensions.html">reduce_dimensions()</a></code></td>
 <td>PCA, t-SNE, UMAP reduction</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/calculate_document_similarity.html">calculate_document_similarity()</a></code></td>
 <td>Compute similarity matrix</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/semantic_similarity_analysis.html">semantic_similarity_analysis()</a></code></td>
 <td>Full similarity workflow</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/semantic_document_clustering.html">semantic_document_clustering()</a></code></td>
 <td>Cluster similar documents</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/generate_cluster_labels.html">generate_cluster_labels()</a></code></td>
 <td>AI-generated cluster names</td>
 </tr>
@@ -293,51 +362,32 @@
 </table></details>
 </div>
 <div class="section level2">
-<h2 id="network-analysis">5. Network Analysis<a class="anchor" aria-label="anchor" href="#network-analysis"></a>
+<h2 id="network-analysis-1">5. Network Analysis<a class="anchor" aria-label="anchor" href="#network-analysis-1"></a>
 </h2>
 <table class="table">
-<colgroup>
-<col width="52%">
-<col width="47%">
-</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code><a href="../reference/semantic_cooccurrence_network.html">semantic_cooccurrence_network()</a></code></td>
-<td>Word/document co-occurrence graph</td>
+<td><code><a href="../reference/word_co_occurrence_network.html">word_co_occurrence_network()</a></code></td>
+<td>Word co-occurrence graph</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/semantic_correlation_network.html">semantic_correlation_network()</a></code></td>
-<td>Word/document correlation graph</td>
+<td><code><a href="../reference/word_correlation_network.html">word_correlation_network()</a></code></td>
+<td>Word correlation graph</td>
 </tr>
 </tbody>
 </table>
 <details><summary><strong>Network Parameters</strong>
-</summary><table style="width:100%;" class="table">
-<colgroup>
-<col width="33%">
-<col width="27%">
-<col width="39%">
-</colgroup>
+</summary><table class="table">
 <thead><tr class="header">
 <th>Parameter</th>
 <th>Default</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
-<td><code>feature_type</code></td>
-<td>“words”</td>
-<td>Feature space: “words”, “ngrams”, “embeddings”</td>
-</tr>
-<tr class="even">
-<td><code>embedding_sim_threshold</code></td>
-<td>0.5</td>
-<td>Similarity threshold for embedding networks (0.3-0.9)</td>
-</tr>
 <tr class="odd">
 <td><code>node_label_size</code></td>
 <td>22</td>
@@ -346,7 +396,7 @@
 <tr class="even">
 <td><code>community_method</code></td>
 <td>“leiden”</td>
-<td>Algorithm: “leiden”, “louvain”, “label_prop”, “fast_greedy”</td>
+<td>Algorithm: “leiden”, “louvain”</td>
 </tr>
 <tr class="odd">
 <td><code>top_node_n</code></td>
@@ -373,7 +423,7 @@
 <tbody>
 <tr class="odd">
 <td>Nodes</td>
-<td>Total unique terms/documents</td>
+<td>Total unique words</td>
 </tr>
 <tr class="even">
 <td>Edges</td>
@@ -428,7 +478,7 @@
 <td>STM (Structural Topic Model)</td>
 </tr>
 <tr class="odd">
-<td><code><a href="../reference/fit_embedding_topics.html">fit_embedding_topics()</a></code></td>
+<td><code><a href="../reference/fit_embedding_model.html">fit_embedding_model()</a></code></td>
 <td>Embedding-based topics (BERTopic)</td>
 </tr>
 <tr class="even">
@@ -514,7 +564,62 @@
 <div class="section level2">
 <h2 id="ai-integration">8. AI Integration<a class="anchor" aria-label="anchor" href="#ai-integration"></a>
 </h2>
+<p>TextAnalysisR uses a human-in-the-loop approach where AI provides
+suggestions that you review, edit, and approve before use. Content
+generation is <strong>topic-grounded</strong>: drafts are based on
+validated topic terms and beta scores, not parametric AI knowledge.</p>
+<p>Supports local (<a href="https://ollama.com" class="external-link">Ollama</a>) and
+web-based (<a href="https://platform.openai.com/" class="external-link">OpenAI</a>, <a href="https://ai.google.dev/" class="external-link">Gemini</a>) providers.</p>
 <table class="table">
+<thead><tr class="header">
+<th>Function</th>
+<th>Purpose</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="../reference/call_llm_api.html">call_llm_api()</a></code></td>
+<td>Unified LLM API (all providers)</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/call_ollama.html">call_ollama()</a></code></td>
+<td>Local Ollama API</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/call_gemini_chat.html">call_gemini_chat()</a></code></td>
+<td>Gemini API</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/generate_topic_labels.html">generate_topic_labels()</a></code></td>
+<td>AI-suggested topic labels</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/generate_topic_content.html">generate_topic_content()</a></code></td>
+<td>Topic-grounded content drafts</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/generate_cluster_labels.html">generate_cluster_labels()</a></code></td>
+<td>AI-suggested cluster names</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/analyze_sentiment_llm.html">analyze_sentiment_llm()</a></code></td>
+<td>LLM-based sentiment analysis</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/run_rag_search.html">run_rag_search()</a></code></td>
+<td>RAG search over documents</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/get_api_embeddings.html">get_api_embeddings()</a></code></td>
+<td>Web-based embeddings (OpenAI, Gemini)</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/get_spacy_embeddings.html">get_spacy_embeddings()</a></code></td>
+<td>Local spaCy word embeddings</td>
+</tr>
+</tbody>
+</table>
+<details><summary><strong>Ollama Utilities</strong>
+</summary><table class="table">
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
@@ -525,28 +630,24 @@
 <td>Verify Ollama availability</td>
 </tr>
 <tr class="even">
-<td><code><a href="../reference/call_ollama.html">call_ollama()</a></code></td>
-<td>Direct Ollama API call</td>
+<td><code><a href="../reference/list_ollama_models.html">list_ollama_models()</a></code></td>
+<td>List installed models</td>
 </tr>
 <tr class="odd">
-<td><code><a href="../reference/call_openai_chat.html">call_openai_chat()</a></code></td>
-<td>OpenAI API call</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/generate_topic_labels_langgraph.html">generate_topic_labels_langgraph()</a></code></td>
-<td>Multi-agent topic labeling</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/generate_survey_items.html">generate_survey_items()</a></code></td>
-<td>Generate survey items</td>
+<td><code><a href="../reference/get_recommended_ollama_model.html">get_recommended_ollama_model()</a></code></td>
+<td>Auto-select best model</td>
 </tr>
 </tbody>
-</table>
+</table></details>
 </div>
 <div class="section level2">
-<h2 id="nlp-with-spacy">9. NLP with spaCy<a class="anchor" aria-label="anchor" href="#nlp-with-spacy"></a>
+<h2 id="linguistic-analysis">9. Linguistic Analysis<a class="anchor" aria-label="anchor" href="#linguistic-analysis"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
@@ -554,16 +655,19 @@
 <tbody>
 <tr class="odd">
 <td><code><a href="../reference/extract_pos_tags.html">extract_pos_tags()</a></code></td>
-<td>Extract POS tags using spacyr</td>
+<td>Identify word types (nouns, verbs, adjectives)</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/extract_named_entities.html">extract_named_entities()</a></code></td>
-<td>Extract named entities using spacyr</td>
+<td>Find people, places, organizations in text</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/extract_morphology.html">extract_morphology()</a></code></td>
+<td>Analyze verb tenses, plural forms</td>
 </tr>
 </tbody>
 </table>
-<p>Note: Uses the <code>spacyr</code> R package for spaCy
-integration.</p>
+<p>Requires Python. Run <code><a href="../reference/setup_python_env.html">setup_python_env()</a></code> first.</p>
 </div>
 <div class="section level2">
 <h2 id="python-environment">10. Python Environment<a class="anchor" aria-label="anchor" href="#python-environment"></a>
@@ -615,7 +719,7 @@ integration.</p>
 </h2>
 <p>The Shiny app provides an interactive interface for all
 functions:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

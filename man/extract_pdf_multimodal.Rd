@@ -10,7 +10,7 @@ extract_pdf_multimodal(
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE,
-  envname = "langgraph-env"
+  envname = "textanalysisr-env"
 )
 }
 \arguments{
@@ -28,7 +28,7 @@ extract_pdf_multimodal(
 
 \item{describe_images}{Logical: Convert images to text descriptions (default: TRUE)}
 
-\item{envname}{Character: Python environment name (default: "langgraph-env")}
+\item{envname}{Character: Python environment name (default: "textanalysisr-env")}
 }
 \value{
 List with:

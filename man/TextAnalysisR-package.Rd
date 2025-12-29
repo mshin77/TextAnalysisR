@@ -4,11 +4,11 @@
 \name{TextAnalysisR-package}
 \alias{TextAnalysisR}
 \alias{TextAnalysisR-package}
-\title{TextAnalysisR: Text Mining Workflow Tool}
+\title{TextAnalysisR: Text Mining and Natural Language Processing Toolkit}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Comprehensive toolkit for text mining and natural language processing with interactive 'Shiny' interface. Import documents from multiple formats (PDF, DOCX, XLSX, CSV, TXT), preprocess with 'quanteda', and perform topic modeling ('stm'), semantic analysis, sentiment analysis, and network visualization. Features AI-assisted workflows via 'LangGraph', WCAG 2.1 AA accessibility, multi-language support, and enterprise security for production deployment.
+Comprehensive toolkit for text mining and natural language processing with an interactive 'Shiny' interface. Import documents from multiple formats (PDF, DOCX, XLSX, CSV, TXT) using 'Marker' for PDF extraction, preprocess with 'quanteda', and perform linguistic analysis via 'spaCy', topic modeling ('stm', 'BERTopic'), semantic analysis, sentiment analysis, and network visualization with 'plotly'. Features topic-grounded content generation and AI-suggested labeling via local ('Ollama', 'spaCy', transformers) and web-based ('OpenAI', 'Gemini') APIs, WCAG 2.1 AA accessibility, multi-language support, and enterprise security for production deployment.
 }
 \seealso{
 Useful links:

@@ -1,8 +1,9 @@
 # RAG-Enhanced Semantic Search
 
-Uses LangGraph multi-agent workflow for Retrieval Augmented Generation.
-Provides question-answering over document corpus with source
-attribution.
+Simple in-memory RAG (Retrieval Augmented Generation) for
+question-answering over document corpus with source attribution. Uses
+local (Ollama) or cloud (OpenAI/Gemini) embeddings for semantic search
+and LLM for answer generation.
 
 ## Usage
 
@@ -10,11 +11,11 @@ attribution.
 run_rag_search(
   query,
   documents,
-  ollama_model = "llama3",
-  ollama_base_url = "http://localhost:11434",
-  embedding_model = "nomic-embed-text",
-  top_k = 5,
-  envname = "textanalysisr-env"
+  provider = c("ollama", "openai", "gemini"),
+  api_key = NULL,
+  embedding_model = NULL,
+  chat_model = NULL,
+  top_k = 5
 )
 ```
 
@@ -28,25 +29,29 @@ run_rag_search(
 
   Character vector, corpus to search
 
-- ollama_model:
+- provider:
 
-  Character string, LLM model (default: "llama3")
+  Character string, provider: "ollama" (local), "openai", or "gemini"
 
-- ollama_base_url:
+- api_key:
 
-  Character string, Ollama API endpoint
+  Character string, API key for cloud providers (or from
+  OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.
 
 - embedding_model:
 
-  Character string, embedding model (default: "nomic-embed-text")
+  Character string, embedding model. Defaults: "nomic-embed-text"
+  (ollama), "text-embedding-3-small" (openai), "text-embedding-004"
+  (gemini)
+
+- chat_model:
+
+  Character string, chat model. Defaults: "phi3:mini" (ollama),
+  "gpt-4o-mini" (openai), "gemini-2.0-flash" (gemini)
 
 - top_k:
 
   Integer, number of documents to retrieve (default: 5)
-
-- envname:
-
-  Character string, Python environment name
 
 ## Value
 
@@ -58,7 +63,7 @@ List with:
 
 - confidence: Confidence score (0-1)
 
-- sources: Vector of source document IDs
+- sources: Vector of source document indices
 
 - retrieved_docs: Retrieved document chunks
 
@@ -66,37 +71,29 @@ List with:
 
 ## Details
 
-Multi-agent workflow:
+Simple RAG workflow:
 
-1.  Retrieval Agent: Find relevant documents via embeddings
+1.  Generate embeddings for documents and query
 
-2.  Generation Agent: Create answer from context
+2.  Find top-k similar documents via cosine similarity
 
-3.  Validation Agent: Assess answer quality
-
-4.  Conditional retry if confidence \< 0.4
-
-Requires Ollama with embedding model:
-
-    ollama pull llama3
-    ollama pull nomic-embed-text
+3.  Generate answer using LLM with retrieved context
 
 ## See also
 
 Other ai:
-[`analyze_contrastive_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_contrastive_similarity.md),
+[`call_gemini_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.md),
+[`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md),
 [`call_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/call_ollama.md),
+[`call_openai_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.md),
 [`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md),
-[`create_label_selection_data()`](https://mshin77.github.io/TextAnalysisR/reference/create_label_selection_data.md),
-[`format_label_candidates()`](https://mshin77.github.io/TextAnalysisR/reference/format_label_candidates.md),
-[`generate_survey_items()`](https://mshin77.github.io/TextAnalysisR/reference/generate_survey_items.md),
 [`generate_topic_content()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_content.md),
-[`generate_topic_labels_langgraph()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels_langgraph.md),
+[`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md),
+[`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md),
 [`get_content_type_prompt()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_prompt.md),
 [`get_content_type_user_template()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_user_template.md),
 [`get_recommended_ollama_model()`](https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.md),
-[`list_ollama_models()`](https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.md),
-[`validate_topic_labels_langgraph()`](https://mshin77.github.io/TextAnalysisR/reference/validate_topic_labels_langgraph.md)
+[`list_ollama_models()`](https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.md)
 
 ## Examples
 
@@ -108,14 +105,22 @@ documents <- c(
   "Response to Intervention uses tiered support systems."
 )
 
+# Using local Ollama (free, private)
 result <- run_rag_search(
   query = "How does assistive technology support learning?",
-  documents = documents
+  documents = documents,
+  provider = "ollama"
+)
+
+# Using OpenAI (requires API key)
+result <- run_rag_search(
+  query = "How does assistive technology support learning?",
+  documents = documents,
+  provider = "openai"
 )
 
 if (result$success) {
   cat("Answer:", result$answer, "\n")
-  cat("Confidence:", result$confidence, "\n")
   cat("Sources:", paste(result$sources, collapse = ", "), "\n")
 }
 } # }

@@ -29,6 +29,7 @@ Creates a polar/radar chart for NRC emotion analysis with optional grouping.
 \seealso{
 Other sentiment: 
 \code{\link{analyze_sentiment}()},
+\code{\link{analyze_sentiment_llm}()},
 \code{\link{plot_document_sentiment_trajectory}()},
 \code{\link{plot_sentiment_boxplot}()},
 \code{\link{plot_sentiment_by_category}()},

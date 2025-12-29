@@ -1,11 +1,8 @@
-# Embedding-based Topic Modeling
+# Embedding-based Topic Modeling (Deprecated)
 
-This function performs embedding-based topic modeling using transformer
-embeddings and specialized clustering techniques. The primary method
-uses the BERTopic library, which combines transformer embeddings with
-UMAP dimensionality reduction and HDBSCAN clustering for optimal topic
-discovery. This approach creates more semantically coherent topics
-compared to traditional methods by leveraging deep learning embeddings.
+This function is deprecated. Please use
+[`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md)
+instead.
 
 ## Usage
 
@@ -110,54 +107,3 @@ fit_embedding_topics(
 
 A list containing topic assignments, topic keywords, and quality
 metrics.
-
-## See also
-
-Other topic-modeling:
-[`analyze_semantic_evolution()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_semantic_evolution.md),
-[`assess_hybrid_stability()`](https://mshin77.github.io/TextAnalysisR/reference/assess_hybrid_stability.md),
-[`calculate_assignment_consistency()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_assignment_consistency.md),
-[`calculate_eval_metrics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_eval_metrics_internal.md),
-[`calculate_keyword_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_keyword_stability.md),
-[`calculate_semantic_drift()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_semantic_drift.md),
-[`calculate_topic_probability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_probability.md),
-[`calculate_topic_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_stability.md),
-[`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md),
-[`find_topic_matches()`](https://mshin77.github.io/TextAnalysisR/reference/find_topic_matches.md),
-[`fit_hybrid_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_hybrid_model.md),
-[`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md),
-[`generate_topic_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.md),
-[`get_topic_prevalence()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_prevalence.md),
-[`get_topic_terms()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_terms.md),
-[`get_topic_texts()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_texts.md),
-[`identify_topic_trends()`](https://mshin77.github.io/TextAnalysisR/reference/identify_topic_trends.md),
-[`plot_model_comparison()`](https://mshin77.github.io/TextAnalysisR/reference/plot_model_comparison.md),
-[`plot_quality_metrics()`](https://mshin77.github.io/TextAnalysisR/reference/plot_quality_metrics.md),
-[`run_contrastive_topics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/run_contrastive_topics_internal.md),
-[`run_neural_topics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/run_neural_topics_internal.md),
-[`run_temporal_topics_internal()`](https://mshin77.github.io/TextAnalysisR/reference/run_temporal_topics_internal.md),
-[`validate_semantic_coherence()`](https://mshin77.github.io/TextAnalysisR/reference/validate_semantic_coherence.md)
-
-## Examples
-
-``` r
-if (interactive()) {
-  mydata <- TextAnalysisR::SpecialEduTech
-  united_tbl <- TextAnalysisR::unite_cols(
-    mydata,
-    listed_vars = c("title", "keyword", "abstract")
-  )
-  texts <- united_tbl$united_texts
-
-  # Embedding-based topic modeling (powered by BERTopic)
-  result <- TextAnalysisR::fit_embedding_topics(
-    texts = texts,
-    method = "umap_hdbscan",
-    n_topics = 8,
-    min_topic_size = 3
-  )
-
-  print(result$topic_assignments)
-  print(result$topic_keywords)
-}
-```

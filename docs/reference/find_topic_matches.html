@@ -30,6 +30,7 @@ using transformer embeddings and calculating cosine similarity scores."><meta pr
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -105,7 +106,9 @@ using transformer embeddings and calculating cosine similarity scores.</p>
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p>Other topic-modeling:
 <code><a href="analyze_semantic_evolution.html">analyze_semantic_evolution()</a></code>,
+<code><a href="assess_embedding_stability.html">assess_embedding_stability()</a></code>,
 <code><a href="assess_hybrid_stability.html">assess_hybrid_stability()</a></code>,
+<code><a href="auto_tune_embedding_topics.html">auto_tune_embedding_topics()</a></code>,
 <code><a href="calculate_assignment_consistency.html">calculate_assignment_consistency()</a></code>,
 <code><a href="calculate_eval_metrics_internal.html">calculate_eval_metrics_internal()</a></code>,
 <code><a href="calculate_keyword_stability.html">calculate_keyword_stability()</a></code>,
@@ -113,7 +116,7 @@ using transformer embeddings and calculating cosine similarity scores.</p>
 <code><a href="calculate_topic_probability.html">calculate_topic_probability()</a></code>,
 <code><a href="calculate_topic_stability.html">calculate_topic_stability()</a></code>,
 <code><a href="find_optimal_k.html">find_optimal_k()</a></code>,
-<code><a href="fit_embedding_topics.html">fit_embedding_topics()</a></code>,
+<code><a href="fit_embedding_model.html">fit_embedding_model()</a></code>,
 <code><a href="fit_hybrid_model.html">fit_hybrid_model()</a></code>,
 <code><a href="fit_temporal_model.html">fit_temporal_model()</a></code>,
 <code><a href="generate_topic_labels.html">generate_topic_labels()</a></code>,
@@ -139,7 +142,7 @@ using transformer embeddings and calculating cosine similarity scores.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">texts</span> <span class="op">&lt;-</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">topic_model</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="fit_embedding_topics.html">fit_embedding_topics</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">topic_model</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    texts <span class="op">=</span> <span class="va">texts</span>,</span></span>
 <span class="r-in"><span>    method <span class="op">=</span> <span class="st">"semantic_style"</span>,</span></span>
 <span class="r-in"><span>    n_topics <span class="op">=</span> <span class="fl">8</span></span></span>

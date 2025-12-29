@@ -8,11 +8,11 @@ AI.
 ### Local (Ollama)
 
 ``` bash
-# Install from https://ollama.ai
+# Install from https://ollama.com
 ollama pull llava
 ```
 
-### Cloud (OpenAI)
+### Web-based (OpenAI)
 
 ``` r
 Sys.setenv(OPENAI_API_KEY = "sk-...")
@@ -43,7 +43,7 @@ result <- extract_pdf_smart("paper.pdf", doc_type = "auto")
 
 ## Provider Comparison
 
-| Provider | Cost    | Privacy | Accuracy |
-|----------|---------|---------|----------|
-| Ollama   | Free    | Local   | Good     |
-| OpenAI   | Per use | Cloud   | Best     |
+| Provider | Cost    | Privacy   | Accuracy |
+|----------|---------|-----------|----------|
+| Ollama   | Free    | Local     | Good     |
+| OpenAI   | Per use | Web-based | Best     |

@@ -42,24 +42,18 @@ Now supports n-grams for improved negation and intensifier handling.
 }
 \examples{
 \dontrun{
-corp <- quanteda::corpus(c("I love this!", "I hate that", "It's okay"))
+data(SpecialEduTech)
+texts <- SpecialEduTech$abstract[1:10]
+corp <- quanteda::corpus(texts)
 dfm_obj <- quanteda::dfm(quanteda::tokens(corp))
 results <- sentiment_lexicon_analysis(dfm_obj, lexicon = "afinn")
 print(results$document_sentiment)
-
-texts <- c("not good at all", "very happy indeed")
-results_ngram <- sentiment_lexicon_analysis(
-  dfm_obj,
-  lexicon = "bing",
-  feature_type = "ngrams",
-  ngram_range = 2,
-  texts = texts
-)
 }
 }
 \seealso{
 Other sentiment: 
 \code{\link{analyze_sentiment}()},
+\code{\link{analyze_sentiment_llm}()},
 \code{\link{plot_document_sentiment_trajectory}()},
 \code{\link{plot_emotion_radar}()},
 \code{\link{plot_sentiment_boxplot}()},

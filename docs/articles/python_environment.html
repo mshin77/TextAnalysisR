@@ -46,6 +46,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -80,15 +81,23 @@
 
     
     
-<p>Python enables advanced features: PDF tables, embeddings, and AI
-analysis.</p>
+<p>Python enables advanced features: NLP with spaCy, PDF tables,
+embeddings, and AI analysis.</p>
 <div class="section level2">
 <h2 id="quick-setup">Quick Setup<a class="anchor" aria-label="anchor" href="#quick-setup"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR">TextAnalysisR</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Uses conda if available, otherwise virtualenv.</p>
+<p>This automatically:</p>
+<ol style="list-style-type: decimal">
+<li>Creates virtual environment <code>textanalysisr-env</code>
+</li>
+<li>Installs <strong>spacy</strong> and <strong>pdfplumber</strong>
+</li>
+<li>Downloads spaCy English model (<code>en_core_web_sm</code>)</li>
+</ol>
+<p>Uses virtualenv (or conda if available).</p>
 </div>
 <div class="section level2">
 <h2 id="check-status">Check Status<a class="anchor" aria-label="anchor" href="#check-status"></a>
@@ -116,18 +125,26 @@ analysis.</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="spacy-models">spaCy Models<a class="anchor" aria-label="anchor" href="#spacy-models"></a>
+</h2>
+<p>The default <code>en_core_web_sm</code> model is installed
+automatically. For word vectors (similarity):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> spacy download en_core_web_md  <span class="co"># Medium (91 MB)</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> spacy download en_core_web_lg  <span class="co"># Large (560 MB)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="deep-learning-optional">Deep Learning (Optional)<a class="anchor" aria-label="anchor" href="#deep-learning-optional"></a>
 </h2>
 <p>For embeddings and neural sentiment:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">pip</span> install sentence-transformers transformers torch</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="ex">pip</span> install sentence-transformers transformers torch</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="diagnostics">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rstudio.github.io/reticulate/" class="external-link">reticulate</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rstudio.github.io/reticulate/reference/py_config.html" class="external-link">py_config</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rstudio.github.io/reticulate/reference/conda-tools.html" class="external-link">conda_list</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rstudio.github.io/reticulate/reference/virtualenv-tools.html" class="external-link">virtualenv_list</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

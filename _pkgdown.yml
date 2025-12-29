@@ -17,36 +17,44 @@ reference:
   - detect_multi_words
   - get_available_dfm
   - get_available_tokens
+
+- title: "Linguistic Analysis"
+  desc: "POS tagging, NER, and morphology (requires Python)"
+  contents:
   - extract_pos_tags
   - extract_named_entities
   - extract_morphology
   - summarize_morphology
+  - plot_pos_frequencies
+  - plot_entity_frequencies
+  - plot_morphology_feature
   - render_displacy_ent
-  - render_displacy_dep
 
 - title: "Lexical Analysis"
-  desc: "Word frequency, keywords, and readability"
+  desc: "Word frequency, keywords, readability, and dispersion"
   contents:
-  - lexical_analysis
   - calculate_word_frequency
+  - lexical_analysis
   - starts_with("extract_keywords")
   - lexical_frequency_analysis
   - lexical_diversity_analysis
   - clear_lexdiv_cache
   - calculate_text_readability
+  - calculate_log_odds_ratio
+  - calculate_lexical_dispersion
+  - calculate_dispersion_metrics
   - plot_word_frequency
   - plot_tfidf_keywords
   - plot_keyness_keywords
   - plot_keyword_comparison
   - plot_ngram_frequency
   - plot_mwe_frequency
-  - plot_pos_frequencies
-  - plot_entity_frequencies
-  - plot_morphology_feature
   - plot_readability_distribution
   - plot_readability_by_group
   - plot_top_readability_documents
   - plot_lexical_diversity_distribution
+  - plot_log_odds_ratio
+  - plot_lexical_dispersion
 
 - title: "Sentiment Analysis"
   desc: "Lexicon and embedding-based sentiment"
@@ -76,8 +84,8 @@ reference:
   - starts_with("generate_cluster")
   - temporal_semantic_analysis
   - analyze_semantic_evolution
-  - semantic_cooccurrence_network
-  - semantic_correlation_network
+  - word_co_occurrence_network
+  - word_correlation_network
   - plot_semantic_viz
   - plot_similarity_heatmap
   - plot_cross_category_heatmap
@@ -88,6 +96,8 @@ reference:
   contents:
   - find_optimal_k
   - starts_with("fit_")
+  - auto_tune_embedding_topics
+  - assess_embedding_stability
   - get_topic_terms
   - get_topic_prevalence
   - get_topic_texts
@@ -115,27 +125,29 @@ reference:
   - starts_with("detect_pdf")
 
 - title: "AI Integration"
-  desc: "LLM-powered analysis with Ollama and OpenAI"
+  desc: "Topic-grounded content generation via local and web-based APIs"
   contents:
   - check_ollama
   - list_ollama_models
   - call_ollama
   - call_openai_chat
+  - call_gemini_chat
+  - call_llm_api
   - check_vision_models
   - get_recommended_ollama_model
-  - init_langgraph
-  - generate_topic_labels_langgraph
-  - validate_topic_labels_langgraph
+  - get_best_embeddings
+  - get_api_embeddings
+  - get_spacy_embeddings
   - run_rag_search
-  - ai_content_generation
-  - generate_survey_items
+  - analyze_sentiment_llm
+  - get_content_type_prompt
+  - get_content_type_user_template
 
 - title: "Python Environment"
   desc: "Python environment setup"
   contents:
   - setup_python_env
   - check_python_env
-  - check_multimodal_prerequisites
 
 - title: "Validation"
   desc: "Quality metrics and cross-validation"
@@ -145,7 +157,6 @@ reference:
   - validate_semantic_coherence
   - calculate_clustering_metrics
   - calculate_cross_similarity
-  - analyze_contrastive_similarity
   - analyze_similarity_gaps
   - extract_cross_category_similarities
 
@@ -165,21 +176,30 @@ reference:
   - "`%>%`"
   - run_text_workflow
   - starts_with("run_")
+  - init_spacy_nlp
+  - spacy_extract_entities
+  - spacy_parse_full
+  - spacy_initialized
+  - spacy_has_vectors
+  - get_spacy_model_info
+  - parse_morphology_string
+  - extract_noun_chunks
+  - extract_subjects_objects
+  - get_sentences
+  - render_displacy_dep
+  - get_word_similarity
+  - find_similar_words
   - find_topic_matches
   - analyze_topic_evolution
   - generate_semantic_topic_keywords
   - calculate_eval_metrics_internal
   - calculate_semantic_drift
   - assess_hybrid_stability
-  - compute_topic_alignment
-  - compute_hybrid_quality_metrics
+  - calculate_topic_alignment
+  - calculate_hybrid_quality_metrics
   - combine_keywords_weighted
   - calculate_assignment_consistency
   - calculate_keyword_stability
-  - get_content_type_prompt
-  - get_content_type_user_template
-  - format_label_candidates
-  - create_label_selection_data
   - starts_with("show_")
   - remove_notification_by_id
   - get_dfm_setup_instructions
@@ -202,10 +222,16 @@ reference:
   - validate_api_key
   - calculate_contrast_ratio
   - check_wcag_contrast
-  - generate_aria_label
+  - create_aria_label
   - create_sr_text
   - validate_keyboard_navigation
   - check_alt_text
+  - clean_similarity_matrix
+  - renumber_clusters_sequentially
+  - truncate_text_to_words
+  - truncate_text_with_ellipsis
+  - wrap_long_text
+  - wrap_text_for_tooltip
 
 articles:
 - title: "Getting Started"
@@ -223,6 +249,7 @@ articles:
 
 - title: "Advanced Topics"
   contents:
+  - ai_integration
   - python_environment
   - multimodal_analysis
   - cybersecurity
@@ -257,6 +284,8 @@ navbar:
       - text: Topic Modeling
         href: articles/topic_modeling.html
       - text: "---"
+      - text: AI Integration
+        href: articles/ai_integration.html
       - text: Python Environment
         href: articles/python_environment.html
       - text: Multimodal Analysis

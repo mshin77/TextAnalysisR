@@ -28,6 +28,7 @@ Detects existing Python installations and guides users if Python is missing."><m
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -82,15 +83,11 @@ Detects existing Python installations and guides users if Python is missing.</p>
     <p>This function:</p><ul><li><p>Automatically detects if Python is already installed</p></li>
 <li><p>Offers to install Miniconda if no Python found</p></li>
 <li><p>Creates an isolated virtual environment (does NOT modify system Python)</p></li>
-<li><p>Installs ONLY 6 core packages (minimal installation):</p><ul><li><p>langchain-core (core LangChain functionality)</p></li>
-<li><p>langchain-ollama (Ollama integration)</p></li>
-<li><p>langgraph (workflow graphs)</p></li>
-<li><p>langgraph-checkpoint (workflow state management)</p></li>
-<li><p>ollama (Ollama client)</p></li>
+<li><p>Installs minimal core packages:</p><ul><li><p>spacy (NLP processing)</p></li>
 <li><p>pdfplumber (PDF table extraction)</p></li>
 </ul></li>
 <li><p>Dependencies installed automatically by pip</p></li>
-<li><p>Avoids heavy packages (no marker-pdf, nougat-ocr, torch)</p></li>
+<li><p>Avoids heavy packages (no torch, transformers)</p></li>
 </ul><p>The virtual environment approach means:</p><ul><li><p>No conflicts with other Python projects</p></li>
 <li><p>Easy to remove (just delete the environment)</p></li>
 <li><p>System Python remains untouched</p></li>

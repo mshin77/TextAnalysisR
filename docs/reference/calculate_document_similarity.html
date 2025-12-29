@@ -30,6 +30,7 @@ computed unless disabled."><meta property="og:image" content="https://mshin77.gi
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -146,17 +147,16 @@ computed unless disabled.</p>
 <code><a href="semantic_document_clustering.html">semantic_document_clustering()</a></code>,
 <code><a href="semantic_similarity_analysis.html">semantic_similarity_analysis()</a></code>,
 <code><a href="temporal_semantic_analysis.html">temporal_semantic_analysis()</a></code>,
-<code><a href="validate_cross_models.html">validate_cross_models()</a></code></p></div>
+<code><a href="validate_cross_models.html">validate_cross_models()</a></code>,
+<code><a href="word_co_occurrence_network.html">word_co_occurrence_network()</a></code>,
+<code><a href="word_correlation_network.html">word_correlation_network()</a></code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">texts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="st">"Assistive technology supports learning for students with disabilities."</span>,</span></span>
-<span class="r-in"><span>    <span class="st">"Technology aids help disabled students with their education."</span>,</span></span>
-<span class="r-in"><span>    <span class="st">"Machine learning algorithms improve predictive accuracy."</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">texts</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">abstract</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">calculate_document_similarity</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    texts <span class="op">=</span> <span class="va">texts</span>,</span></span>

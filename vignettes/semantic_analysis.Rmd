@@ -80,14 +80,24 @@ clusters <- semantic_document_clustering(
   texts = united_tbl$united_texts,
   n_clusters = 5
 )
+```
 
-# AI-generated labels (optional)
+### AI-Suggested Cluster Labels
+
+The AI generates suggested names for each cluster. You maintain full control:
+
+- Review generated labels before applying
+- Edit labels directly in the interface
+- Regenerate with different parameters if needed
+
+```{r}
+# AI suggests, human reviews and decides
 labels <- generate_cluster_labels(
   clusters$cluster_keywords,
   provider = "ollama"  # or "openai"
 )
+# Review and edit before final use
 ```
-
 ---
 
 <details>
@@ -140,28 +150,16 @@ plot_semantic_viz(reduced, plot_type = "dimensionality_reduction")
 
 ## Network Analysis
 
-Visualize semantic relationships as interactive networks with community detection.
-
-### Feature Spaces
-
-Networks support three feature spaces based on distributional semantics:
-
-| Feature Space | Network Type | Nodes | Edges |
-|---------------|--------------|-------|-------|
-| **Words** | Word co-occurrence/correlation | Words | Frequency or correlation |
-| **N-grams** | Phrase relationships | N-gram phrases | Frequency or correlation |
-| **Embeddings** | Document similarity | Documents | Cosine similarity > threshold |
+Visualize word relationships as interactive networks with community detection.
 
 ### Word Co-occurrence Network
 
 ```{r}
-network <- semantic_cooccurrence_network(
+network <- word_co_occurrence_network(
   dfm_object,
   co_occur_n = 10,                    # Minimum co-occurrence count
   top_node_n = 30,                    # Top nodes to display
   node_label_size = 22,               # Font size (12-40)
-  feature_type = "words",             # "words", "ngrams", or "embeddings"
-  embedding_sim_threshold = 0.5,      # For embeddings: similarity cutoff
   community_method = "leiden"         # Community detection algorithm
 )
 
@@ -173,11 +171,10 @@ network$stats  # 9 network statistics
 ### Word Correlation Network
 
 ```{r}
-corr_network <- semantic_correlation_network(
+corr_network <- word_correlation_network(
   dfm_object,
   common_term_n = 20,                 # Minimum term frequency
   corr_n = 0.4,                       # Minimum correlation threshold
-  feature_type = "words",
   community_method = "leiden"
 )
 ```
@@ -195,7 +192,7 @@ Each network returns comprehensive statistics:
 
 | Metric | Description |
 |--------|-------------|
-| Nodes | Total unique terms/documents in network |
+| Nodes | Total unique words in network |
 | Edges | Total connections between nodes |
 | Density | Proportion of possible edges present (0-1) |
 | Diameter | Longest shortest path in network |
@@ -204,33 +201,6 @@ Each network returns comprehensive statistics:
 | Modularity | Quality of community structure (higher = better separation) |
 | Assortativity | Tendency of similar nodes to connect |
 | Avg Path Length | Average distance between nodes |
-
-</details>
-
----
-
-<details>
-<summary><strong>Embedding-Based Document Networks</strong></summary>
-
-When `feature_type = "embeddings"`, networks show document-to-document relationships:
-
-- **Nodes** = Documents (not words)
-- **Edges** = Document pairs with cosine similarity above threshold
-- **Edge weight** = Similarity score
-
-Adjust `embedding_sim_threshold` (0.3-0.9) to control network density:
-- Higher threshold → fewer, stronger connections
-- Lower threshold → more connections, may be noisy
-
-```{r}
-doc_network <- semantic_cooccurrence_network(
-  dfm_object,
-  feature_type = "embeddings",
-  embeddings = my_embeddings,         # Pre-computed embedding matrix
-  embedding_sim_threshold = 0.6,      # Only connect highly similar docs
-  top_node_n = 50
-)
-```
 
 </details>
 

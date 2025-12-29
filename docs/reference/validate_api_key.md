@@ -1,7 +1,7 @@
-# Validate OpenAI API Key Format
+# Validate API Key Format
 
-Validates OpenAI API key format according to NIST IA-5(1) authenticator
-management. Checks key prefix, length, and basic format requirements.
+Validates API key format for OpenAI or Gemini according to NIST IA-5(1).
+Auto-detects provider from key prefix and validates format requirements.
 
 ## Usage
 
@@ -21,7 +21,8 @@ validate_api_key(api_key, strict = TRUE)
 
 ## Value
 
-Logical TRUE if valid, FALSE with warnings if invalid
+List with valid (logical), provider (character), and error (character if
+invalid)
 
 ## NIST Compliance
 
@@ -33,6 +34,7 @@ prevent weak or malformed keys.
 
 ``` r
 if (FALSE) { # \dontrun{
-validate_api_key("sk-proj...")
+result <- validate_api_key("sk-proj...")
+if (result$valid) cat("Provider:", result$provider)
 } # }
 ```

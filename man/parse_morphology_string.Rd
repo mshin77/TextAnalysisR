@@ -2,20 +2,63 @@
 % Please edit documentation in R/lexical_analysis.R
 \name{parse_morphology_string}
 \alias{parse_morphology_string}
-\title{Parse Morphology String into Individual Columns}
+\title{Parse Morphology String}
 \usage{
-parse_morphology_string(parsed, features)
+parse_morphology_string(data, features = NULL)
 }
 \arguments{
-\item{parsed}{Data frame with a 'morph' column from spaCy.}
+\item{data}{Data frame with a 'morph' column from spaCy parsing.}
 
-\item{features}{Character vector of feature names to extract.}
+\item{features}{Character vector of feature names (ignored, kept for
+backwards compatibility). All features are always extracted.}
 }
 \value{
 Data frame with additional morph_* columns for each feature.
 }
 \description{
-Parse spaCy's morphology string format
-(e.g., "Number=Sing|Tense=Past|VerbForm=Fin") into individual columns.
+Parse spaCy's morphology string format into individual columns.
+Used internally by morphology analysis functions.
+Always extracts all common morphology features (Number, Tense, VerbForm,
+Person, Case, Mood, Aspect) regardless of the features parameter.
 }
-\keyword{internal}
+\seealso{
+Other lexical: 
+\code{\link{calculate_dispersion_metrics}()},
+\code{\link{calculate_lexical_dispersion}()},
+\code{\link{calculate_log_odds_ratio}()},
+\code{\link{calculate_text_readability}()},
+\code{\link{clear_lexdiv_cache}()},
+\code{\link{detect_multi_words}()},
+\code{\link{extract_keywords_keyness}()},
+\code{\link{extract_keywords_tfidf}()},
+\code{\link{extract_morphology}()},
+\code{\link{extract_named_entities}()},
+\code{\link{extract_noun_chunks}()},
+\code{\link{extract_pos_tags}()},
+\code{\link{extract_subjects_objects}()},
+\code{\link{find_similar_words}()},
+\code{\link{get_sentences}()},
+\code{\link{get_spacy_embeddings}()},
+\code{\link{get_spacy_model_info}()},
+\code{\link{get_word_similarity}()},
+\code{\link{init_spacy_nlp}()},
+\code{\link{lexical_analysis}},
+\code{\link{lexical_diversity_analysis}()},
+\code{\link{lexical_frequency_analysis}()},
+\code{\link{plot_keyness_keywords}()},
+\code{\link{plot_keyword_comparison}()},
+\code{\link{plot_lexical_diversity_distribution}()},
+\code{\link{plot_morphology_feature}()},
+\code{\link{plot_readability_by_group}()},
+\code{\link{plot_readability_distribution}()},
+\code{\link{plot_tfidf_keywords}()},
+\code{\link{plot_top_readability_documents}()},
+\code{\link{render_displacy_dep}()},
+\code{\link{render_displacy_ent}()},
+\code{\link{spacy_extract_entities}()},
+\code{\link{spacy_has_vectors}()},
+\code{\link{spacy_initialized}()},
+\code{\link{spacy_parse_full}()},
+\code{\link{summarize_morphology}()}
+}
+\concept{lexical}

@@ -55,7 +55,8 @@ similarity heatmaps, dimensionality reduction plots, and clustering visualizatio
 }
 \examples{
 if (interactive()) {
-  texts <- c("machine learning", "deep learning", "artificial intelligence")
+  data(SpecialEduTech)
+  texts <- SpecialEduTech$abstract[1:5]
   result <- semantic_similarity_analysis(texts)
   plot <- plot_semantic_viz(result, plot_type = "similarity")
   print(plot)
@@ -74,6 +75,8 @@ Other visualization:
 \code{\link{plot_cluster_terms}()},
 \code{\link{plot_cross_category_heatmap}()},
 \code{\link{plot_entity_frequencies}()},
+\code{\link{plot_lexical_dispersion}()},
+\code{\link{plot_log_odds_ratio}()},
 \code{\link{plot_mwe_frequency}()},
 \code{\link{plot_ngram_frequency}()},
 \code{\link{plot_pos_frequencies}()},

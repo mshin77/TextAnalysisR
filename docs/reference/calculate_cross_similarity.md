@@ -74,21 +74,24 @@ Other semantic:
 [`semantic_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_document_clustering.md),
 [`semantic_similarity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_similarity_analysis.md),
 [`temporal_semantic_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.md),
-[`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md)
+[`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md),
+[`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md),
+[`word_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_correlation_network.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
+data(SpecialEduTech)
 # Generate embeddings for two groups
-emb1 <- TextAnalysisR::generate_embeddings(c("text a", "text b"), verbose = FALSE)
-emb2 <- TextAnalysisR::generate_embeddings(c("text c", "text d", "text e"), verbose = FALSE)
+emb1 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[1:3], verbose = FALSE)
+emb2 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[4:6], verbose = FALSE)
 
 # Calculate cross-similarity
 result <- calculate_cross_similarity(
   emb1, emb2,
-  labels1 = c("A", "B"),
-  labels2 = c("C", "D", "E")
+  labels1 = SpecialEduTech$title[1:3],
+  labels2 = SpecialEduTech$title[4:6]
 )
 print(result$similarity_matrix)
 print(result$similarity_df)

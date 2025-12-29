@@ -28,7 +28,7 @@ process_pdf_file_py(
 - envname:
 
   Character string, name of Python virtual environment (default:
-  "langgraph-env")
+  "textanalysisr-env")
 
 ## Value
 
@@ -52,7 +52,7 @@ This function uses Python's pdfplumber library which:
 
 - Better accuracy than tabulizer for complex tables
 
-- Uses same Python environment as LangGraph
+- Uses TextAnalysisR Python environment
 
 ## See also
 
@@ -71,7 +71,7 @@ Other pdf:
 
 ``` r
 if (FALSE) { # \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 result <- process_pdf_file_py(pdf_path)

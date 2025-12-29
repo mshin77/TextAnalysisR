@@ -46,6 +46,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -169,13 +170,24 @@ Documentation</a></p>
 <code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/semantic_document_clustering.html">semantic_document_clustering</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  n_clusters <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># AI-generated labels (optional)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="ai-suggested-cluster-labels">AI-Suggested Cluster Labels<a class="anchor" aria-label="anchor" href="#ai-suggested-cluster-labels"></a>
+</h3>
+<p>The AI generates suggested names for each cluster. You maintain full
+control:</p>
+<ul>
+<li>Review generated labels before applying</li>
+<li>Edit labels directly in the interface</li>
+<li>Regenerate with different parameters if needed</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># AI suggests, human reviews and decides</span></span>
 <span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_cluster_labels.html">generate_cluster_labels</a></span><span class="op">(</span></span>
 <span>  <span class="va">clusters</span><span class="op">$</span><span class="va">cluster_keywords</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"ollama"</span>  <span class="co"># or "openai"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co"># Review and edit before final use</span></span></code></pre></div>
 <hr>
 <details><summary><strong>Clustering Algorithms</strong>
 </summary><p>Clustering groups documents with similar semantic content into
@@ -261,69 +273,28 @@ between documents.</p>
 n-grams, or embeddings), then choose a reduction method. Adjust
 parameters (perplexity, neighbors, dimensions) based on your data size
 and structure. Use for visual exploration before clustering.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reduce_dimensions.html">reduce_dimensions</a></span><span class="op">(</span><span class="va">embeddings</span>, method <span class="op">=</span> <span class="st">"umap"</span>, n_components <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_semantic_viz.html">plot_semantic_viz</a></span><span class="op">(</span><span class="va">reduced</span>, plot_type <span class="op">=</span> <span class="st">"dimensionality_reduction"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://scikit-learn.org/stable/modules/manifold.html" class="external-link">scikit-learn
 Manifold Learning</a></p>
 </details><hr>
 </div>
+</div>
 <div class="section level2">
 <h2 id="network-analysis">Network Analysis<a class="anchor" aria-label="anchor" href="#network-analysis"></a>
 </h2>
-<p>Visualize semantic relationships as interactive networks with
-community detection.</p>
-<div class="section level3">
-<h3 id="feature-spaces">Feature Spaces<a class="anchor" aria-label="anchor" href="#feature-spaces"></a>
-</h3>
-<p>Networks support three feature spaces based on distributional
-semantics:</p>
-<table style="width:100%;" class="table">
-<colgroup>
-<col width="34%">
-<col width="32%">
-<col width="16%">
-<col width="16%">
-</colgroup>
-<thead><tr class="header">
-<th>Feature Space</th>
-<th>Network Type</th>
-<th>Nodes</th>
-<th>Edges</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><strong>Words</strong></td>
-<td>Word co-occurrence/correlation</td>
-<td>Words</td>
-<td>Frequency or correlation</td>
-</tr>
-<tr class="even">
-<td><strong>N-grams</strong></td>
-<td>Phrase relationships</td>
-<td>N-gram phrases</td>
-<td>Frequency or correlation</td>
-</tr>
-<tr class="odd">
-<td><strong>Embeddings</strong></td>
-<td>Document similarity</td>
-<td>Documents</td>
-<td>Cosine similarity &gt; threshold</td>
-</tr>
-</tbody>
-</table>
-</div>
+<p>Visualize word relationships as interactive networks with community
+detection.</p>
 <div class="section level3">
 <h3 id="word-co-occurrence-network">Word Co-occurrence Network<a class="anchor" aria-label="anchor" href="#word-co-occurrence-network"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/semantic_cooccurrence_network.html">semantic_cooccurrence_network</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/word_co_occurrence_network.html">word_co_occurrence_network</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
 <span>  co_occur_n <span class="op">=</span> <span class="fl">10</span>,                    <span class="co"># Minimum co-occurrence count</span></span>
 <span>  top_node_n <span class="op">=</span> <span class="fl">30</span>,                    <span class="co"># Top nodes to display</span></span>
 <span>  node_label_size <span class="op">=</span> <span class="fl">22</span>,               <span class="co"># Font size (12-40)</span></span>
-<span>  feature_type <span class="op">=</span> <span class="st">"words"</span>,             <span class="co"># "words", "ngrams", or "embeddings"</span></span>
-<span>  embedding_sim_threshold <span class="op">=</span> <span class="fl">0.5</span>,      <span class="co"># For embeddings: similarity cutoff</span></span>
 <span>  community_method <span class="op">=</span> <span class="st">"leiden"</span>         <span class="co"># Community detection algorithm</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -334,12 +305,11 @@ semantics:</p>
 <div class="section level3">
 <h3 id="word-correlation-network">Word Correlation Network<a class="anchor" aria-label="anchor" href="#word-correlation-network"></a>
 </h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">corr_network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/semantic_correlation_network.html">semantic_correlation_network</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">corr_network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/word_correlation_network.html">word_correlation_network</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
 <span>  common_term_n <span class="op">=</span> <span class="fl">20</span>,                 <span class="co"># Minimum term frequency</span></span>
 <span>  corr_n <span class="op">=</span> <span class="fl">0.4</span>,                       <span class="co"># Minimum correlation threshold</span></span>
-<span>  feature_type <span class="op">=</span> <span class="st">"words"</span>,</span>
 <span>  community_method <span class="op">=</span> <span class="st">"leiden"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -363,7 +333,7 @@ networks for each category, displayed in a tabbed interface.</p>
 <tbody>
 <tr class="odd">
 <td>Nodes</td>
-<td>Total unique terms/documents in network</td>
+<td>Total unique words in network</td>
 </tr>
 <tr class="even">
 <td>Edges</td>
@@ -399,30 +369,6 @@ networks for each category, displayed in a tabbed interface.</p>
 </tr>
 </tbody>
 </table></details><hr>
-<details><summary><strong>Embedding-Based Document Networks</strong>
-</summary><p>When <code>feature_type = "embeddings"</code>, networks show
-document-to-document relationships:</p>
-<ul>
-<li>
-<strong>Nodes</strong> = Documents (not words)</li>
-<li>
-<strong>Edges</strong> = Document pairs with cosine similarity above
-threshold</li>
-<li>
-<strong>Edge weight</strong> = Similarity score</li>
-</ul>
-<p>Adjust <code>embedding_sim_threshold</code> (0.3-0.9) to control
-network density: - Higher threshold → fewer, stronger connections -
-Lower threshold → more connections, may be noisy</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">doc_network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/semantic_cooccurrence_network.html">semantic_cooccurrence_network</a></span><span class="op">(</span></span>
-<span>  <span class="va">dfm_object</span>,</span>
-<span>  feature_type <span class="op">=</span> <span class="st">"embeddings"</span>,</span>
-<span>  embeddings <span class="op">=</span> <span class="va">my_embeddings</span>,         <span class="co"># Pre-computed embedding matrix</span></span>
-<span>  embedding_sim_threshold <span class="op">=</span> <span class="fl">0.6</span>,      <span class="co"># Only connect highly similar docs</span></span>
-<span>  top_node_n <span class="op">=</span> <span class="fl">50</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</details><hr>
 <details><summary><strong>Community Detection Methods</strong>
 </summary><p>Community detection identifies clusters of semantically related
 nodes.</p>

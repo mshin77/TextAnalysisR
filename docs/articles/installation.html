@@ -46,6 +46,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -106,16 +107,16 @@ files).</p>
 </h3>
 <p>For lemmatization, POS tagging, and named entity recognition:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"spacyr"</span><span class="op">)</span></span>
-<span><span class="fu">spacyr</span><span class="fu">::</span><span class="fu"><a href="http://spacyr.quanteda.io/reference/spacy_install.html" class="external-link">spacy_install</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Python spaCy required - see setup_python_env()</span></span>
+<span><span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="../reference/setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="python-features">Python Features<a class="anchor" aria-label="anchor" href="#python-features"></a>
 </h3>
-<p>For PDF tables, embeddings, and AI-assisted analysis:</p>
+<p>For PDF tables, embeddings, and topic-grounded analysis:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Requires Python 3.9+ and optionally <a href="https://ollama.ai" class="external-link">Ollama</a> for local AI.</p>
+<p>Requires Python 3.9+ and optionally <a href="https://ollama.com" class="external-link">Ollama</a> for local AI.</p>
 </div>
 </div>
 <div class="section level2">
@@ -146,6 +147,29 @@ files).</p>
 </tr>
 </tbody>
 </table>
+</div>
+<div class="section level2">
+<h2 id="responsible-ai-design">Responsible AI Design<a class="anchor" aria-label="anchor" href="#responsible-ai-design"></a>
+</h2>
+<p>TextAnalysisR follows responsible AI principles with human
+oversight:</p>
+<ul>
+<li>
+<strong>AI Suggests</strong>: LLMs generate draft labels, content,
+and recommendations</li>
+<li>
+<strong>Human Reviews</strong>: You examine all AI outputs before
+use</li>
+<li>
+<strong>Human Decides</strong>: Edit, approve, or regenerate as
+needed</li>
+<li>
+<strong>Human Controls</strong>: Override any AI suggestion with
+manual input</li>
+</ul>
+<p>This approach aligns with <a href="https://www.nist.gov/itl/ai-risk-management-framework" class="external-link">NIST AI
+Risk Management Framework</a> and EU AI Act requirements for meaningful
+human control.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

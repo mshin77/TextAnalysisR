@@ -47,6 +47,7 @@ A data frame with columns:
 ## See also
 
 Other sentiment:
+[`analyze_sentiment_llm()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.md),
 [`plot_document_sentiment_trajectory()`](https://mshin77.github.io/TextAnalysisR/reference/plot_document_sentiment_trajectory.md),
 [`plot_emotion_radar()`](https://mshin77.github.io/TextAnalysisR/reference/plot_emotion_radar.md),
 [`plot_sentiment_boxplot()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_boxplot.md),
@@ -60,11 +61,8 @@ Other sentiment:
 
 ``` r
 if (FALSE) { # \dontrun{
-texts <- c(
-  "This research shows promising results for students.",
-  "The intervention had no significant effect.",
-  "Students struggled with the complex material."
-)
+data(SpecialEduTech)
+texts <- SpecialEduTech$abstract[1:10]
 results <- analyze_sentiment(texts)
 print(results)
 } # }

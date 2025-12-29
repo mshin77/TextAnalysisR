@@ -13,7 +13,8 @@ check_feature(feature)
 
 - feature:
 
-  Character: "python", "ollama", "langgraph", "pdf_tables", "embeddings"
+  Character: "python", "ollama", "pdf_tables", "embeddings",
+  "sentiment_deep"
 
 ## Value
 

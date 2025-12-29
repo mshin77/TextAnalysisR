@@ -36,23 +36,15 @@ This function:
 - Creates an isolated virtual environment (does NOT modify system
   Python)
 
-- Installs ONLY 6 core packages (minimal installation):
+- Installs minimal core packages:
 
-  - langchain-core (core LangChain functionality)
-
-  - langchain-ollama (Ollama integration)
-
-  - langgraph (workflow graphs)
-
-  - langgraph-checkpoint (workflow state management)
-
-  - ollama (Ollama client)
+  - spacy (NLP processing)
 
   - pdfplumber (PDF table extraction)
 
 - Dependencies installed automatically by pip
 
-- Avoids heavy packages (no marker-pdf, nougat-ocr, torch)
+- Avoids heavy packages (no torch, transformers)
 
 The virtual environment approach means:
 

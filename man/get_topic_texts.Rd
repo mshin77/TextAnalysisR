@@ -51,7 +51,9 @@ topic_embeddings <- TextAnalysisR::generate_embeddings(topic_texts)
 \seealso{
 Other topic-modeling: 
 \code{\link{analyze_semantic_evolution}()},
+\code{\link{assess_embedding_stability}()},
 \code{\link{assess_hybrid_stability}()},
+\code{\link{auto_tune_embedding_topics}()},
 \code{\link{calculate_assignment_consistency}()},
 \code{\link{calculate_eval_metrics_internal}()},
 \code{\link{calculate_keyword_stability}()},
@@ -60,7 +62,7 @@ Other topic-modeling:
 \code{\link{calculate_topic_stability}()},
 \code{\link{find_optimal_k}()},
 \code{\link{find_topic_matches}()},
-\code{\link{fit_embedding_topics}()},
+\code{\link{fit_embedding_model}()},
 \code{\link{fit_hybrid_model}()},
 \code{\link{fit_temporal_model}()},
 \code{\link{generate_topic_labels}()},

@@ -24,6 +24,8 @@ Other visualization:
 \code{\link{plot_cluster_terms}()},
 \code{\link{plot_cross_category_heatmap}()},
 \code{\link{plot_entity_frequencies}()},
+\code{\link{plot_lexical_dispersion}()},
+\code{\link{plot_log_odds_ratio}()},
 \code{\link{plot_mwe_frequency}()},
 \code{\link{plot_ngram_frequency}()},
 \code{\link{plot_pos_frequencies}()},

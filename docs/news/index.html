@@ -26,6 +26,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -47,28 +48,69 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.3" id="textanalysisr-003-2025-11-29">TextAnalysisR 0.0.3 (2025-11-29)<a class="anchor" aria-label="anchor" href="#textanalysisr-003-2025-11-29"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.0.3" id="textanalysisr-003-2025-12-27">TextAnalysisR 0.0.3 (2025-12-27)<a class="anchor" aria-label="anchor" href="#textanalysisr-003-2025-12-27"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-0-3">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-0-3"></a></h3>
+<ul><li>
+<code><a href="../reference/fit_embedding_topics.html">fit_embedding_topics()</a></code> renamed to <code><a href="../reference/fit_embedding_model.html">fit_embedding_model()</a></code> for consistency with other topic modeling functions (<code><a href="../reference/fit_hybrid_model.html">fit_hybrid_model()</a></code>, <code><a href="../reference/fit_temporal_model.html">fit_temporal_model()</a></code>). The old name still works but is deprecated.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="new-features-0-0-3">New Features<a class="anchor" aria-label="anchor" href="#new-features-0-0-3"></a></h3>
-<ul><li>Interactive Shiny web app with point-and-click interface</li>
-<li>Multi-format file import (PDF, DOCX, XLSX, CSV, TXT)</li>
-<li>Semantic analysis with neural network embeddings</li>
+<ul><li>Multi-format file import (PDF, DOCX, XLSX, CSV, TXT)</li>
 <li>Hybrid topic modeling (STM + BERTopic)</li>
-<li>OpenAI integration for AI-generated topic labels</li>
+<li>Semantic similarity and document clustering</li>
+<li>Lexical diversity metrics</li>
+</ul></div>
+<div class="section level3">
+<h3 id="embedding-enhancements-0-0-3">Embedding Enhancements<a class="anchor" aria-label="anchor" href="#embedding-enhancements-0-0-3"></a></h3>
+<ul><li>
+<code><a href="../reference/get_best_embeddings.html">get_best_embeddings()</a></code>: Auto-detects and uses best available provider
+<ul><li>Priority: Ollama (local) &gt; sentence-transformers (Python) &gt; OpenAI/Gemini (API)</li>
+</ul></li>
+<li>Shared embeddings cache between Document Clustering and Topic Modeling</li>
+<li>Precomputed embeddings support for <code><a href="../reference/fit_hybrid_model.html">fit_hybrid_model()</a></code> and <code><a href="../reference/fit_embedding_model.html">fit_embedding_model()</a></code>
+</li>
+</ul></div>
+<div class="section level3">
+<h3 id="uiux-improvements-0-0-3">UI/UX Improvements<a class="anchor" aria-label="anchor" href="#uiux-improvements-0-0-3"></a></h3>
+<ul><li>Removed GPU checkbox from Sentiment Analysis for consistency</li>
+<li>Streamlined provider selection for AI features</li>
+<li>Improved error messages for missing prerequisites</li>
+</ul></div>
+<div class="section level3">
+<h3 id="lexical-analysis-enhancements-0-0-3">Lexical Analysis Enhancements<a class="anchor" aria-label="anchor" href="#lexical-analysis-enhancements-0-0-3"></a></h3>
+<ul><li>Log odds ratio analysis for categorical word frequency comparisons</li>
+<li>Lexical dispersion plots showing term distribution across corpus</li>
+<li>Dispersion metrics quantifying how evenly terms spread across documents</li>
+</ul></div>
+<div class="section level3">
+<h3 id="semantic-analysis-enhancements-0-0-3">Semantic Analysis Enhancements<a class="anchor" aria-label="anchor" href="#semantic-analysis-enhancements-0-0-3"></a></h3>
+<ul><li>Neural sentiment analysis via transformers (DistilBERT, RoBERTa)</li>
+<li>Network node attribute controls (size by degree/betweenness/frequency)</li>
+<li>Node color options (community detection/frequency gradient)</li>
+</ul></div>
+<div class="section level3">
+<h3 id="nlp-integration-0-0-3">NLP Integration<a class="anchor" aria-label="anchor" href="#nlp-integration-0-0-3"></a></h3>
+<ul><li>spaCy: POS tagging, NER, lemmatization, dependency parsing</li>
+<li>Morphological analysis</li>
+<li>Sentence transformers for document embeddings</li>
+</ul></div>
+<div class="section level3">
+<h3 id="ai-integration-0-0-3">AI Integration<a class="anchor" aria-label="anchor" href="#ai-integration-0-0-3"></a></h3>
+<ul><li>Multi-provider: OpenAI, Gemini, Ollama (local)</li>
+<li>Topic-grounded content generation</li>
+<li>RAG search over document corpus</li>
+<li>Responsible AI design</li>
 </ul></div>
 <div class="section level3">
 <h3 id="accessibility-0-0-3">Accessibility<a class="anchor" aria-label="anchor" href="#accessibility-0-0-3"></a></h3>
 <ul><li>WCAG 2.1 Level AA compliant</li>
-<li>Dark mode with high contrast</li>
-<li>Keyboard navigation and screen reader support</li>
-<li>Multi-language support (100+ languages)</li>
+<li>Dark mode, keyboard navigation, screen reader support</li>
+<li>Multi-language support</li>
 </ul></div>
 <div class="section level3">
 <h3 id="security-0-0-3">Security<a class="anchor" aria-label="anchor" href="#security-0-0-3"></a></h3>
-<ul><li>Session-based rate limiting</li>
-<li>Input validation and sanitization</li>
-<li>API key protection</li>
-<li>Security event logging</li>
+<ul><li>Rate limiting, input validation, API key protection</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -83,7 +125,6 @@
 <li>Core text mining functionality</li>
 <li>STM topic modeling</li>
 <li>Text preprocessing capabilities</li>
-<li>Basic Shiny application</li>
 </ul></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -16,7 +16,7 @@ extract_tables_from_pdf_py(
 \item{pages}{Integer vector of page numbers to process (NULL = all pages)}
 
 \item{envname}{Character string, name of Python virtual environment
-(default: "langgraph-env")}
+(default: "textanalysisr-env")}
 }
 \value{
 Data frame with extracted table data
@@ -32,7 +32,7 @@ Works with complex table layouts without Java dependency.
 }
 \examples{
 \dontrun{
-setup_langgraph_env()
+setup_python_env()
 
 pdf_path <- "path/to/table_document.pdf"
 table_data <- extract_tables_from_pdf_py(pdf_path)

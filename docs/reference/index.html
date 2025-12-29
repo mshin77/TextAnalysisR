@@ -26,6 +26,7 @@
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -112,8 +113,17 @@
 
         </dt>
         <dd>Get Available Tokens with Fallback</dd>
+      </dl></div><div class="section level2">
+      <h2 id="linguistic-analysis">Linguistic Analysis<a class="anchor" aria-label="anchor" href="#linguistic-analysis"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>POS tagging, NER, and morphology (requires Python)</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="extract_pos_tags.html">extract_pos_tags()</a></code>
 
@@ -143,21 +153,35 @@
 
         <dt>
 
+          <code><a href="plot_pos_frequencies.html">plot_pos_frequencies()</a></code>
+
+        </dt>
+        <dd>Plot Part-of-Speech Tag Frequencies</dd>
+
+        <dt>
+
+          <code><a href="plot_entity_frequencies.html">plot_entity_frequencies()</a></code>
+
+        </dt>
+        <dd>Plot Named Entity Frequencies</dd>
+
+        <dt>
+
+          <code><a href="plot_morphology_feature.html">plot_morphology_feature()</a></code>
+
+        </dt>
+        <dd>Plot Morphology Feature Distribution</dd>
+
+        <dt>
+
           <code><a href="render_displacy_ent.html">render_displacy_ent()</a></code>
 
         </dt>
         <dd>Render displaCy Entity Visualization</dd>
-
-        <dt>
-
-          <code><a href="render_displacy_dep.html">render_displacy_dep()</a></code>
-
-        </dt>
-        <dd>Render displaCy Dependency Visualization</dd>
       </dl></div><div class="section level2">
       <h2 id="lexical-analysis">Lexical Analysis<a class="anchor" aria-label="anchor" href="#lexical-analysis"></a></h2>
 
-      <div class="section-desc"><p>Word frequency, keywords, and readability</p></div>
+      <div class="section-desc"><p>Word frequency, keywords, readability, and dispersion</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -166,17 +190,17 @@
 
       <dl><dt>
 
-          <code><a href="lexical_analysis.html">lexical_analysis</a></code>
-
-        </dt>
-        <dd>Lexical Analysis Functions</dd>
-
-        <dt>
-
           <code><a href="calculate_word_frequency.html">calculate_word_frequency()</a></code>
 
         </dt>
         <dd>Analyze and Visualize Word Frequencies Across a Continuous Variable</dd>
+
+        <dt>
+
+          <code><a href="lexical_analysis.html">lexical_analysis</a></code>
+
+        </dt>
+        <dd>Lexical Analysis Functions</dd>
 
         <dt>
 
@@ -222,6 +246,27 @@
 
         <dt>
 
+          <code><a href="calculate_log_odds_ratio.html">calculate_log_odds_ratio()</a></code>
+
+        </dt>
+        <dd>Calculate Log Odds Ratio Between Categories</dd>
+
+        <dt>
+
+          <code><a href="calculate_lexical_dispersion.html">calculate_lexical_dispersion()</a></code>
+
+        </dt>
+        <dd>Calculate Lexical Dispersion</dd>
+
+        <dt>
+
+          <code><a href="calculate_dispersion_metrics.html">calculate_dispersion_metrics()</a></code>
+
+        </dt>
+        <dd>Calculate Dispersion Metrics</dd>
+
+        <dt>
+
           <code><a href="plot_word_frequency.html">plot_word_frequency()</a></code>
 
         </dt>
@@ -264,27 +309,6 @@
 
         <dt>
 
-          <code><a href="plot_pos_frequencies.html">plot_pos_frequencies()</a></code>
-
-        </dt>
-        <dd>Plot Part-of-Speech Tag Frequencies</dd>
-
-        <dt>
-
-          <code><a href="plot_entity_frequencies.html">plot_entity_frequencies()</a></code>
-
-        </dt>
-        <dd>Plot Named Entity Frequencies</dd>
-
-        <dt>
-
-          <code><a href="plot_morphology_feature.html">plot_morphology_feature()</a></code>
-
-        </dt>
-        <dd>Plot Morphology Feature Distribution</dd>
-
-        <dt>
-
           <code><a href="plot_readability_distribution.html">plot_readability_distribution()</a></code>
 
         </dt>
@@ -310,6 +334,20 @@
 
         </dt>
         <dd>Plot Lexical Diversity Distribution</dd>
+
+        <dt>
+
+          <code><a href="plot_log_odds_ratio.html">plot_log_odds_ratio()</a></code>
+
+        </dt>
+        <dd>Plot Log Odds Ratio</dd>
+
+        <dt>
+
+          <code><a href="plot_lexical_dispersion.html">plot_lexical_dispersion()</a></code>
+
+        </dt>
+        <dd>Plot Lexical Dispersion</dd>
       </dl></div><div class="section level2">
       <h2 id="sentiment-analysis">Sentiment Analysis<a class="anchor" aria-label="anchor" href="#sentiment-analysis"></a></h2>
 
@@ -481,7 +519,7 @@
           <code><a href="generate_cluster_labels.html">generate_cluster_labels()</a></code>
 
         </dt>
-        <dd>Generate Cluster Labels with AI</dd>
+        <dd>Generate Cluster Label Suggestions (Human-in-the-Loop)</dd>
 
         <dt>
 
@@ -506,17 +544,17 @@
 
         <dt>
 
-          <code><a href="semantic_cooccurrence_network.html">semantic_cooccurrence_network()</a></code>
+          <code><a href="word_co_occurrence_network.html">word_co_occurrence_network()</a></code>
 
         </dt>
-        <dd>Compute Word Co-occurrence Network</dd>
+        <dd>Analyze and Visualize Word Co-occurrence Networks</dd>
 
         <dt>
 
-          <code><a href="semantic_correlation_network.html">semantic_correlation_network()</a></code>
+          <code><a href="word_correlation_network.html">word_correlation_network()</a></code>
 
         </dt>
-        <dd>Compute Word Correlation Network</dd>
+        <dd>Analyze and Visualize Word Correlation Networks</dd>
 
         <dt>
 
@@ -564,10 +602,10 @@
 
         <dt>
 
-          <code><a href="fit_embedding_topics.html">fit_embedding_topics()</a></code>
+          <code><a href="fit_embedding_model.html">fit_embedding_model()</a></code>
 
         </dt>
-        <dd>Embedding-based Topic Modeling</dd>
+        <dd>Fit Embedding-based Topic Model</dd>
 
         <dt>
 
@@ -589,6 +627,20 @@
 
         </dt>
         <dd>Fit Temporal Topic Model</dd>
+
+        <dt>
+
+          <code><a href="auto_tune_embedding_topics.html">auto_tune_embedding_topics()</a></code>
+
+        </dt>
+        <dd>Auto-tune BERTopic Hyperparameters</dd>
+
+        <dt>
+
+          <code><a href="assess_embedding_stability.html">assess_embedding_stability()</a></code>
+
+        </dt>
+        <dd>Assess Embedding Topic Model Stability</dd>
 
         <dt>
 
@@ -776,7 +828,7 @@
       </dl></div><div class="section level2">
       <h2 id="ai-integration">AI Integration<a class="anchor" aria-label="anchor" href="#ai-integration"></a></h2>
 
-      <div class="section-desc"><p>LLM-powered analysis with Ollama and OpenAI</p></div>
+      <div class="section-desc"><p>Topic-grounded content generation via local and web-based APIs</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -813,6 +865,20 @@
 
         <dt>
 
+          <code><a href="call_gemini_chat.html">call_gemini_chat()</a></code>
+
+        </dt>
+        <dd>Call Gemini Chat API</dd>
+
+        <dt>
+
+          <code><a href="call_llm_api.html">call_llm_api()</a></code>
+
+        </dt>
+        <dd>Call LLM API (Unified Wrapper)</dd>
+
+        <dt>
+
           <code><a href="check_vision_models.html">check_vision_models()</a></code>
 
         </dt>
@@ -827,24 +893,24 @@
 
         <dt>
 
-          <code><a href="init_langgraph.html">init_langgraph()</a></code>
+          <code><a href="get_best_embeddings.html">get_best_embeddings()</a></code>
 
         </dt>
-        <dd>Initialize LangGraph for Current Session</dd>
+        <dd>Get Best Available Embeddings</dd>
 
         <dt>
 
-          <code><a href="generate_topic_labels_langgraph.html">generate_topic_labels_langgraph()</a></code>
+          <code><a href="get_api_embeddings.html">get_api_embeddings()</a></code>
 
         </dt>
-        <dd>Generate Topic Labels with LLM Assistance</dd>
+        <dd>Get Embeddings from API</dd>
 
         <dt>
 
-          <code><a href="validate_topic_labels_langgraph.html">validate_topic_labels_langgraph()</a></code>
+          <code><a href="get_spacy_embeddings.html">get_spacy_embeddings()</a></code>
 
         </dt>
-        <dd>Validate User-Selected Topic Labels</dd>
+        <dd>Get spaCy Word Embeddings</dd>
 
         <dt>
 
@@ -855,17 +921,24 @@
 
         <dt>
 
-          <code><a href="ai_content_generation.html">ai_content_generation</a></code>
+          <code><a href="analyze_sentiment_llm.html">analyze_sentiment_llm()</a></code>
 
         </dt>
-        <dd>AI-Assisted Content Generation from Topics</dd>
+        <dd>LLM-based Sentiment Analysis</dd>
 
         <dt>
 
-          <code><a href="generate_survey_items.html">generate_survey_items()</a></code>
+          <code><a href="get_content_type_prompt.html">get_content_type_prompt()</a></code>
 
         </dt>
-        <dd>Generate Survey Items from Topic Terms</dd>
+        <dd>Get Default System Prompt for Content Type</dd>
+
+        <dt>
+
+          <code><a href="get_content_type_user_template.html">get_content_type_user_template()</a></code>
+
+        </dt>
+        <dd>Get Default User Prompt Template for Content Type</dd>
       </dl></div><div class="section level2">
       <h2 id="python-environment">Python Environment<a class="anchor" aria-label="anchor" href="#python-environment"></a></h2>
 
@@ -889,13 +962,6 @@
 
         </dt>
         <dd>Check Python Environment Status</dd>
-
-        <dt>
-
-          <code><a href="check_multimodal_prerequisites.html">check_multimodal_prerequisites()</a></code>
-
-        </dt>
-        <dd>Check Multimodal Prerequisites</dd>
       </dl></div><div class="section level2">
       <h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a></h2>
 
@@ -940,13 +1006,6 @@
 
         </dt>
         <dd>Calculate Cross-Matrix Cosine Similarity</dd>
-
-        <dt>
-
-          <code><a href="analyze_contrastive_similarity.html">analyze_contrastive_similarity()</a></code>
-
-        </dt>
-        <dd>Analyze Contrastive Similarity (Alias)</dd>
 
         <dt>
 

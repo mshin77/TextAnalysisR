@@ -697,7 +697,7 @@ run_llm_topics_internal <- function(texts, n_topics = 10,
                                                     seed = 123) {
 
   tryCatch({
-    base_result <- fit_embedding_topics(
+    base_result <- fit_embedding_model(
       texts = texts,
       method = "semantic_style",
       n_topics = n_topics,
@@ -758,7 +758,7 @@ run_llm_topics_internal <- function(texts, n_topics = 10,
 
   }, error = function(e) {
     warning("LLM-enhanced topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_topics(texts = texts, method = "umap_hdbscan", n_topics = n_topics,
+    return(fit_embedding_model(texts = texts, method = "umap_hdbscan", n_topics = n_topics,
                                  embedding_model = embedding_model, seed = seed))
   })
 }
@@ -785,7 +785,7 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
                                            embedding_model = "all-MiniLM-L6-v2", seed = 123) {
 
   tryCatch({
-    base_result <- fit_embedding_topics(
+    base_result <- fit_embedding_model(
       texts = texts,
       method = "embedding_clustering",
       n_topics = n_topics,
@@ -822,7 +822,7 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 
   }, error = function(e) {
     warning("Neural topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_topics(texts = texts, method = "embedding_clustering",
+    return(fit_embedding_model(texts = texts, method = "embedding_clustering",
                                    n_topics = n_topics,
                                  embedding_model = embedding_model, seed = seed))
   })
@@ -855,7 +855,7 @@ run_temporal_topics_internal <- function(texts, metadata = NULL,
                                                         seed = 123) {
 
   tryCatch({
-    base_result <- fit_embedding_topics(
+    base_result <- fit_embedding_model(
       texts = texts,
       method = "semantic_style",
       n_topics = n_topics,
@@ -903,7 +903,7 @@ run_temporal_topics_internal <- function(texts, metadata = NULL,
 
   }, error = function(e) {
     warning("Temporal dynamic topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_topics(texts = texts, method = "umap_hdbscan", n_topics = n_topics,
+    return(fit_embedding_model(texts = texts, method = "umap_hdbscan", n_topics = n_topics,
                                  embedding_model = embedding_model, seed = seed))
   })
 }
@@ -931,7 +931,7 @@ run_contrastive_topics_internal <- function(texts, n_topics = 10, temperature = 
                                                    seed = 123) {
 
   tryCatch({
-    base_result <- fit_embedding_topics(
+    base_result <- fit_embedding_model(
       texts = texts,
       method = "embedding_clustering",
       n_topics = n_topics,
@@ -959,7 +959,7 @@ run_contrastive_topics_internal <- function(texts, n_topics = 10, temperature = 
 
   }, error = function(e) {
     warning("Contrastive learning topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_topics(texts = texts, method = "embedding_clustering",
+    return(fit_embedding_model(texts = texts, method = "embedding_clustering",
                                    n_topics = n_topics,
                                  embedding_model = embedding_model, seed = seed))
   })
@@ -1023,7 +1023,7 @@ calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
   })
 }
 
-#' @title Embedding-based Topic Modeling
+#' @title Fit Embedding-based Topic Model
 #'
 #' @description
 #' This function performs embedding-based topic modeling using transformer embeddings
@@ -1039,6 +1039,7 @@ calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 #' @param clustering_method The clustering method for embedding-based approach: "kmeans", "hierarchical", "dbscan", "hdbscan".
 #' @param similarity_threshold The similarity threshold for topic assignment (default: 0.7).
 #' @param min_topic_size The minimum number of documents per topic (default: 3).
+#' @param cluster_selection_method HDBSCAN cluster selection method: "eom" (Excess of Mass, default) or "leaf" (finer-grained topics).
 #' @param umap_neighbors The number of neighbors for UMAP dimensionality reduction (default: 15).
 #' @param umap_min_dist The minimum distance for UMAP (default: 0.0). Use 0.0 for tight, well-separated clusters. Use 0.1+ for visualization purposes. Range: 0.0-0.99.
 #' @param umap_n_components The number of UMAP components (default: 5).
@@ -1066,7 +1067,7 @@ calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 #'   texts <- united_tbl$united_texts
 #'
 #'   # Embedding-based topic modeling (powered by BERTopic)
-#'   result <- TextAnalysisR::fit_embedding_topics(
+#'   result <- TextAnalysisR::fit_embedding_model(
 #'     texts = texts,
 #'     method = "umap_hdbscan",
 #'     n_topics = 8,
@@ -1076,13 +1077,14 @@ calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 #'   print(result$topic_assignments)
 #'   print(result$topic_keywords)
 #' }
-fit_embedding_topics <- function(texts,
+fit_embedding_model <- function(texts,
                                    method = "umap_hdbscan",
                                    n_topics = 10,
                                    embedding_model = "all-MiniLM-L6-v2",
                                    clustering_method = "kmeans",
                                    similarity_threshold = 0.7,
                                    min_topic_size = 3,
+                                   cluster_selection_method = "eom",
                                    umap_neighbors = 15,
                                    umap_min_dist = 0.0,
                                    umap_n_components = 5,
@@ -1193,6 +1195,7 @@ fit_embedding_topics <- function(texts,
           ),
           hdbscan_model = reticulate::import("hdbscan")$HDBSCAN(
             min_cluster_size = as.integer(min_topic_size),
+            cluster_selection_method = cluster_selection_method,
             metric = "euclidean",
             prediction_data = TRUE
           ),
@@ -1381,6 +1384,50 @@ fit_embedding_topics <- function(texts,
   })
 }
 
+#' @title Embedding-based Topic Modeling (Deprecated)
+#' @description
+#' This function is deprecated. Please use [fit_embedding_model()] instead.
+#' @inheritParams fit_embedding_model
+#' @return A list containing topic assignments, topic keywords, and quality metrics.
+#' @keywords internal
+#' @export
+fit_embedding_topics <- function(texts,
+                                   method = "umap_hdbscan",
+                                   n_topics = 10,
+                                   embedding_model = "all-MiniLM-L6-v2",
+                                   clustering_method = "kmeans",
+                                   similarity_threshold = 0.7,
+                                   min_topic_size = 3,
+                                   umap_neighbors = 15,
+                                   umap_min_dist = 0.0,
+                                   umap_n_components = 5,
+                                   representation_method = "c-tfidf",
+                                   diversity = 0.5,
+                                   reduce_outliers = TRUE,
+                                   seed = 123,
+                                   verbose = TRUE,
+                                   precomputed_embeddings = NULL) {
+  .Deprecated("fit_embedding_model")
+  fit_embedding_model(
+    texts = texts,
+    method = method,
+    n_topics = n_topics,
+    embedding_model = embedding_model,
+    clustering_method = clustering_method,
+    similarity_threshold = similarity_threshold,
+    min_topic_size = min_topic_size,
+    umap_neighbors = umap_neighbors,
+    umap_min_dist = umap_min_dist,
+    umap_n_components = umap_n_components,
+    representation_method = representation_method,
+    diversity = diversity,
+    reduce_outliers = reduce_outliers,
+    seed = seed,
+    verbose = verbose,
+    precomputed_embeddings = precomputed_embeddings
+  )
+}
+
 #' @title Find Similar Topics
 #'
 #' @description
@@ -1409,7 +1456,7 @@ fit_embedding_topics <- function(texts,
 #'   )
 #'   texts <- united_tbl$united_texts
 #'
-#'   topic_model <- TextAnalysisR::fit_embedding_topics(
+#'   topic_model <- TextAnalysisR::fit_embedding_model(
 #'     texts = texts,
 #'     method = "semantic_style",
 #'     n_topics = 8
@@ -1553,7 +1600,7 @@ find_topic_matches <- function(topic_model,
 #' research best practices for cross-model topic alignment.
 #'
 #' @param stm_model A fitted STM model object.
-#' @param embedding_result Result from fit_embedding_topics().
+#' @param embedding_result Result from fit_embedding_model().
 #' @param stm_vocab Vocabulary from STM conversion.
 #' @param texts Original texts for computing embedding topic centroids.
 #'
@@ -1566,7 +1613,7 @@ find_topic_matches <- function(topic_model,
 #'   - correlation: Correlation between assignment vectors
 #'
 #' @keywords internal
-compute_topic_alignment <- function(stm_model, embedding_result, stm_vocab, texts) {
+calculate_topic_alignment <- function(stm_model, embedding_result, stm_vocab, texts) {
   tryCatch({
     n_stm_topics <- ncol(stm_model$theta)
 
@@ -1702,7 +1749,7 @@ compute_topic_alignment <- function(stm_model, embedding_result, stm_vocab, text
 #'
 #' @param stm_model A fitted STM model object.
 #' @param stm_documents STM-formatted documents.
-#' @param embedding_result Result from fit_embedding_topics().
+#' @param embedding_result Result from fit_embedding_model().
 #' @param embeddings Document embeddings matrix (optional, for silhouette).
 #'
 #' @return A list containing quality metrics:
@@ -1715,7 +1762,7 @@ compute_topic_alignment <- function(stm_model, embedding_result, stm_vocab, text
 #'   - combined_quality: Overall quality score
 #'
 #' @keywords internal
-compute_hybrid_quality_metrics <- function(stm_model, stm_documents,
+calculate_hybrid_quality_metrics <- function(stm_model, stm_documents,
                                             embedding_result, embeddings = NULL) {
   metrics <- list()
 
@@ -1913,6 +1960,392 @@ combine_keywords_weighted <- function(stm_words, stm_probs = NULL,
 }
 
 
+#' @title Auto-tune BERTopic Hyperparameters
+#'
+#' @description
+#' Automatically searches for optimal hyperparameters for embedding-based topic modeling.
+#' Evaluates multiple configurations of UMAP and HDBSCAN parameters and returns the best
+#' model based on the specified metric. Embeddings are generated once and reused across
+#' all configurations for efficiency.
+#'
+#' @param texts Character vector of documents to analyze.
+#' @param embeddings Precomputed embeddings matrix (optional). If NULL, embeddings are generated.
+#' @param embedding_model Embedding model name (default: "all-MiniLM-L6-v2").
+#' @param n_trials Maximum number of configurations to try (default: 12).
+#' @param metric Optimization metric: "silhouette", "coherence", or "combined" (default: "silhouette").
+#' @param seed Random seed for reproducibility.
+#' @param verbose Logical, if TRUE, prints progress messages.
+#'
+#' @return A list containing:
+#'   - best_config: Data frame with the optimal hyperparameter configuration
+#'   - best_model: The topic model fitted with optimal parameters
+#'   - all_results: List of all evaluated configurations with metrics
+#'   - n_trials_completed: Number of configurations successfully evaluated
+#'
+#' @details
+#' The function searches over these parameters:
+#' - n_neighbors: UMAP neighborhood size (5, 10, 15, 25)
+#' - min_cluster_size: HDBSCAN minimum cluster size (3, 5, 10)
+#' - cluster_selection_method: "eom" (broader) or "leaf" (finer-grained)
+#'
+#' @family topic-modeling
+#' @export
+#' @examples
+#' \dontrun{
+#'   texts <- c("Machine learning for image recognition",
+#'              "Deep learning neural networks",
+#'              "Natural language processing models",
+#'              "Computer vision applications")
+#'
+#'   tuning_result <- auto_tune_embedding_topics(
+#'     texts = texts,
+#'     n_trials = 6,
+#'     metric = "silhouette",
+#'     verbose = TRUE
+#'   )
+#'
+#'   # View best configuration
+#'   tuning_result$best_config
+#'
+#'   # Use the best model
+#'   best_model <- tuning_result$best_model
+#' }
+auto_tune_embedding_topics <- function(
+    texts,
+    embeddings = NULL,
+    embedding_model = "all-MiniLM-L6-v2",
+    n_trials = 12,
+    metric = "silhouette",
+    seed = 123,
+    verbose = TRUE
+) {
+
+  if (verbose) message("Starting hyperparameter auto-tuning for embedding topics...")
+
+  # Validate inputs
+  if (is.null(texts) || length(texts) == 0) {
+    stop("No texts provided for analysis")
+  }
+
+  valid_metrics <- c("silhouette", "coherence", "combined")
+  if (!metric %in% valid_metrics) {
+    stop("metric must be one of: ", paste(valid_metrics, collapse = ", "))
+  }
+
+  # Define parameter grid
+  param_grid <- expand.grid(
+    n_neighbors = c(5, 10, 15, 25),
+    min_cluster_size = c(3, 5, 10),
+    cluster_selection_method = c("eom", "leaf"),
+    stringsAsFactors = FALSE
+  )
+
+  # Sample configurations if grid is larger than n_trials
+  if (nrow(param_grid) > n_trials) {
+    set.seed(seed)
+    sampled_rows <- sample(nrow(param_grid), n_trials)
+    param_grid <- param_grid[sampled_rows, ]
+  }
+
+  if (verbose) {
+    message("  Testing ", nrow(param_grid), " hyperparameter configurations")
+  }
+
+  # Generate embeddings once if not provided
+  if (is.null(embeddings)) {
+    if (verbose) message("  Generating embeddings (one-time cost)...")
+
+    embeddings <- tryCatch({
+      generate_embeddings(texts, model = embedding_model, verbose = FALSE)
+    }, error = function(e) {
+      stop("Failed to generate embeddings: ", e$message)
+    })
+  }
+
+  # Evaluate each configuration
+  results <- list()
+  successful <- 0
+
+  for (i in seq_len(nrow(param_grid))) {
+    config <- param_grid[i, ]
+
+    if (verbose) {
+      message("  [", i, "/", nrow(param_grid), "] Testing: ",
+              "n_neighbors=", config$n_neighbors,
+              ", min_cluster_size=", config$min_cluster_size,
+              ", method=", config$cluster_selection_method)
+    }
+
+    model_result <- tryCatch({
+      fit_embedding_model(
+        texts = texts,
+        method = "umap_hdbscan",
+        embedding_model = embedding_model,
+        precomputed_embeddings = embeddings,
+        umap_neighbors = config$n_neighbors,
+        min_topic_size = config$min_cluster_size,
+        cluster_selection_method = config$cluster_selection_method,
+        seed = seed,
+        verbose = FALSE
+      )
+    }, error = function(e) {
+      if (verbose) message("    Configuration failed: ", e$message)
+      NULL
+    })
+
+    if (!is.null(model_result)) {
+      silhouette_score <- model_result$quality_metrics$silhouette_mean %||% 0
+      coherence_score <- model_result$quality_metrics$coherence_mean %||% 0
+      combined_score <- (silhouette_score + coherence_score) / 2
+
+      results[[length(results) + 1]] <- list(
+        config = config,
+        silhouette = silhouette_score,
+        coherence = coherence_score,
+        combined = combined_score,
+        n_topics = model_result$n_topics,
+        model = model_result
+      )
+
+      successful <- successful + 1
+
+      if (verbose) {
+        message("    -> Topics: ", model_result$n_topics,
+                ", Silhouette: ", round(silhouette_score, 3),
+                ", Coherence: ", round(coherence_score, 3))
+      }
+    }
+  }
+
+  if (successful == 0) {
+    stop("All configurations failed. Check your data and Python dependencies.")
+  }
+
+  # Select best configuration by metric
+  scores <- sapply(results, function(r) r[[metric]])
+  best_idx <- which.max(scores)
+
+  if (verbose) {
+    message("\nBest configuration (by ", metric, "):")
+    message("  n_neighbors: ", results[[best_idx]]$config$n_neighbors)
+    message("  min_cluster_size: ", results[[best_idx]]$config$min_cluster_size)
+    message("  cluster_selection_method: ", results[[best_idx]]$config$cluster_selection_method)
+    message("  ", metric, " score: ", round(results[[best_idx]][[metric]], 3))
+    message("  Number of topics: ", results[[best_idx]]$n_topics)
+  }
+
+  list(
+    best_config = results[[best_idx]]$config,
+    best_model = results[[best_idx]]$model,
+    all_results = results,
+    n_trials_completed = successful
+  )
+}
+
+
+#' @title Assess Embedding Topic Model Stability
+#'
+#' @description
+#' Evaluates the stability of embedding-based topic modeling by running multiple models
+#' with different random seeds and comparing their results. High stability (high ARI,
+#' consistent keywords) indicates robust topic structure in the data.
+#'
+#' @param texts Character vector of documents to analyze.
+#' @param n_runs Number of model runs with different seeds (default: 5).
+#' @param embedding_model Embedding model name (default: "all-MiniLM-L6-v2").
+#' @param select_best Logical, if TRUE, returns the best model by quality (default: TRUE).
+#' @param base_seed Base random seed; each run uses base_seed + (run - 1).
+#' @param verbose Logical, if TRUE, prints progress messages.
+#' @param ... Additional arguments passed to fit_embedding_model().
+#'
+#' @return A list containing:
+#'   - stability_metrics: List with mean_ari, sd_ari, mean_jaccard, quality_variance
+#'   - best_model: Best model by silhouette score (if select_best = TRUE)
+#'   - all_models: List of all fitted models
+#'   - is_stable: Logical, TRUE if mean ARI >= 0.6 (considered stable)
+#'   - recommendation: Text recommendation based on stability
+#'
+#' @details
+#' Stability is assessed via:
+#' - Adjusted Rand Index (ARI): Measures agreement in topic assignments across runs
+#' - Keyword Jaccard similarity: Measures overlap in top keywords per topic
+#' - Quality variance: Variance in silhouette scores across runs
+#'
+#' @family topic-modeling
+#' @export
+#' @examples
+#' \dontrun{
+#'   texts <- c("Machine learning for image recognition",
+#'              "Deep learning neural networks",
+#'              "Natural language processing models")
+#'
+#'   stability <- assess_embedding_stability(
+#'     texts = texts,
+#'     n_runs = 3,
+#'     verbose = TRUE
+#'   )
+#'
+#'   # Check if results are stable
+#'   stability$is_stable
+#'   stability$stability_metrics$mean_ari
+#'
+#'   # Use the best model
+#'   best_model <- stability$best_model
+#' }
+assess_embedding_stability <- function(
+    texts,
+    n_runs = 5,
+    embedding_model = "all-MiniLM-L6-v2",
+    select_best = TRUE,
+    base_seed = 123,
+    verbose = TRUE,
+    ...
+) {
+
+  if (verbose) message("Assessing embedding topic model stability across ", n_runs, " runs...")
+
+  # Validate inputs
+  if (is.null(texts) || length(texts) == 0) {
+    stop("No texts provided for analysis")
+  }
+
+  if (n_runs < 2) {
+    stop("n_runs must be at least 2 to assess stability")
+  }
+
+  # Generate embeddings once for efficiency
+  if (verbose) message("  Generating embeddings (one-time cost)...")
+  embeddings <- tryCatch({
+    generate_embeddings(texts, model = embedding_model, verbose = FALSE)
+  }, error = function(e) {
+    stop("Failed to generate embeddings: ", e$message)
+  })
+
+  # Run models with different seeds
+  models <- list()
+  for (i in seq_len(n_runs)) {
+    seed_i <- base_seed + i - 1
+
+    if (verbose) message("  Running model ", i, "/", n_runs, " (seed=", seed_i, ")...")
+
+    model <- tryCatch({
+      fit_embedding_model(
+        texts = texts,
+        embedding_model = embedding_model,
+        precomputed_embeddings = embeddings,
+        seed = seed_i,
+        verbose = FALSE,
+        ...
+      )
+    }, error = function(e) {
+      if (verbose) message("    Run ", i, " failed: ", e$message)
+      NULL
+    })
+
+    if (!is.null(model)) {
+      models[[length(models) + 1]] <- model
+    }
+  }
+
+  if (length(models) < 2) {
+    stop("Need at least 2 successful runs to assess stability. Only ", length(models), " succeeded.")
+  }
+
+  if (verbose) message("  Computing stability metrics...")
+
+  # Calculate pairwise Adjusted Rand Index
+  n_successful <- length(models)
+  ari_values <- c()
+
+  for (i in 1:(n_successful - 1)) {
+    for (j in (i + 1):n_successful) {
+      assignments_i <- models[[i]]$topic_assignments
+      assignments_j <- models[[j]]$topic_assignments
+
+      # Calculate ARI using contingency table approach
+      ari <- tryCatch({
+        if (requireNamespace("aricode", quietly = TRUE)) {
+          aricode::ARI(assignments_i, assignments_j)
+        } else {
+          # Fallback: simple agreement rate
+          mean(assignments_i == assignments_j)
+        }
+      }, error = function(e) NA)
+
+      if (!is.na(ari)) {
+        ari_values <- c(ari_values, ari)
+      }
+    }
+  }
+
+  # Calculate keyword stability (Jaccard similarity)
+  jaccard_values <- c()
+
+  for (i in 1:(n_successful - 1)) {
+    for (j in (i + 1):n_successful) {
+      keywords_i <- unlist(models[[i]]$topic_keywords)
+      keywords_j <- unlist(models[[j]]$topic_keywords)
+
+      if (length(keywords_i) > 0 && length(keywords_j) > 0) {
+        intersection <- length(intersect(keywords_i, keywords_j))
+        union_size <- length(union(keywords_i, keywords_j))
+        jaccard <- if (union_size > 0) intersection / union_size else 0
+        jaccard_values <- c(jaccard_values, jaccard)
+      }
+    }
+  }
+
+  # Calculate quality metric variance
+  silhouette_scores <- sapply(models, function(m) m$quality_metrics$silhouette_mean %||% 0)
+
+  # Compile stability metrics
+  stability_metrics <- list(
+    mean_ari = if (length(ari_values) > 0) mean(ari_values) else NA,
+    sd_ari = if (length(ari_values) > 1) sd(ari_values) else NA,
+    mean_jaccard = if (length(jaccard_values) > 0) mean(jaccard_values) else NA,
+    sd_jaccard = if (length(jaccard_values) > 1) sd(jaccard_values) else NA,
+    quality_variance = var(silhouette_scores),
+    n_successful_runs = n_successful
+  )
+
+  # Select best model by silhouette
+  best_idx <- which.max(silhouette_scores)
+  best_model <- if (select_best) models[[best_idx]] else NULL
+
+  # Determine stability status and recommendation
+  is_stable <- !is.na(stability_metrics$mean_ari) && stability_metrics$mean_ari >= 0.6
+
+  recommendation <- if (is.na(stability_metrics$mean_ari)) {
+    "Could not compute stability metrics."
+  } else if (stability_metrics$mean_ari >= 0.8) {
+    "Highly stable: Results are very consistent across runs."
+  } else if (stability_metrics$mean_ari >= 0.6) {
+    "Moderately stable: Results are reasonably consistent."
+  } else if (stability_metrics$mean_ari >= 0.4) {
+    "Low stability: Consider adjusting parameters or checking data quality."
+  } else {
+    "Unstable: Topic structure may not be well-defined. Try different parameters."
+  }
+
+  if (verbose) {
+    message("\nStability Results:")
+    message("  Mean ARI: ", round(stability_metrics$mean_ari, 3))
+    message("  Mean Keyword Jaccard: ", round(stability_metrics$mean_jaccard, 3))
+    message("  Quality Variance: ", round(stability_metrics$quality_variance, 4))
+    message("  Status: ", if (is_stable) "STABLE" else "UNSTABLE")
+    message("  ", recommendation)
+  }
+
+  list(
+    stability_metrics = stability_metrics,
+    best_model = best_model,
+    all_models = models,
+    is_stable = is_stable,
+    recommendation = recommendation
+  )
+}
+
+
 #' @title Fit Hybrid Topic Model
 #'
 #' @description
@@ -2048,7 +2481,7 @@ fit_hybrid_model <- function(texts,
   if (verbose) message("\nStep 2/5: Fitting embedding-based topic model...")
 
   embedding_result <- tryCatch({
-    fit_embedding_topics(
+    fit_embedding_model(
       texts = texts,
       method = "umap_hdbscan",
       n_topics = n_topics_stm,
@@ -2059,7 +2492,7 @@ fit_hybrid_model <- function(texts,
   }, error = function(e) {
     if (verbose) message("  BERTopic failed, trying k-means clustering...")
     tryCatch({
-      fit_embedding_topics(
+      fit_embedding_model(
         texts = texts,
         method = "embedding_clustering",
         n_topics = n_topics_stm,
@@ -2094,7 +2527,7 @@ fit_hybrid_model <- function(texts,
   )
 
   if (!is.null(stm_model) && !is.null(embedding_result$topic_assignments)) {
-    alignment <- compute_topic_alignment(
+    alignment <- calculate_topic_alignment(
       stm_model = stm_model,
       embedding_result = embedding_result,
       stm_vocab = stm_data$vocab,
@@ -2120,7 +2553,7 @@ fit_hybrid_model <- function(texts,
   if (compute_quality) {
     if (verbose) message("\nStep 4/5: Computing quality metrics...")
 
-    quality_metrics <- compute_hybrid_quality_metrics(
+    quality_metrics <- calculate_hybrid_quality_metrics(
       stm_model = stm_model,
       stm_documents = stm_data$documents,
       embedding_result = embedding_result,
@@ -2753,7 +3186,7 @@ fit_llm_semantic_model <- function(texts,
 
   if ("clustering" %in% analysis_types) {
     if (verbose) message("Step 2: Running clustering analysis...")
-    clustering_results <- fit_embedding_topics(
+    clustering_results <- fit_embedding_model(
       texts = texts,
       method = "umap_hdbscan",
       n_topics = 10,
@@ -2861,7 +3294,7 @@ fit_temporal_model <- function(texts,
       generate_embeddings(period_texts, verbose = FALSE)
     }
 
-    period_results <- fit_embedding_topics(
+    period_results <- fit_embedding_model(
       texts = period_texts,
       method = "umap_hdbscan",
       n_topics = 10,
@@ -2951,37 +3384,6 @@ calculate_coherence <- function(embeddings, topic_assignments) {
     coherence_scores = coherence_scores,
     mean_coherence = mean(coherence_scores, na.rm = TRUE),
     topic_coherence = setNames(coherence_scores, unique_topics)
-  ))
-}
-
-#' @title Calculate Assignment Consistency
-#'
-#' @description
-#' Calculates consistency between different assignment methods.
-#'
-#' @param semantic_assignments Semantic topic assignments.
-#' @param stm_assignments STM topic assignments.
-#'
-#' @return Consistency metrics.
-#'
-#' @keywords internal
-calculate_consistency <- function(semantic_assignments, stm_assignments) {
-
-  if (length(semantic_assignments) != length(stm_assignments)) {
-    stop("Assignment vectors must have the same length")
-  }
-
-  agreement <- sum(semantic_assignments == stm_assignments) / length(semantic_assignments)
-
-  if (requireNamespace("mclust", quietly = TRUE)) {
-    adjusted_rand <- mclust::adjustedRandIndex(semantic_assignments, stm_assignments)
-  } else {
-    adjusted_rand <- NA
-  }
-
-  return(list(
-    agreement = agreement,
-    adjusted_rand_index = adjusted_rand
   ))
 }
 
@@ -3077,7 +3479,22 @@ calculate_keyword_stability <- function(keywords1, keywords2) {
   return(if (union > 0) intersection / union else 0)
 }
 
+#' @title Calculate Topic-Cluster Correspondence (Placeholder)
+#' @description
+#' Placeholder function that returns simulated correspondence metrics.
+#' Use \code{calculate_topic_correspondence()} for real metrics.
+#'
+#' @param topic_keywords Topic keywords list.
+#' @param cluster_keywords Cluster keywords list.
+#' @param ... Additional parameters (ignored).
+#'
+#' @return List with placeholder correspondence metrics.
+#'
+#' @keywords internal
 calculate_topic_cluster_correspondence <- function(topic_keywords, cluster_keywords, ...) {
+  warning("This function returns placeholder data. Use calculate_topic_correspondence() for real metrics.",
+          call. = FALSE)
+
   correspondence <- list(
     match_score = runif(1, 0.6, 0.9),
     n_topics = length(topic_keywords),
@@ -4110,3 +4527,401 @@ plot_cluster_terms <- function(terms,
     ) %>%
     plotly::config(displayModeBar = TRUE)
 }
+
+
+################################################################################
+# TOPIC-BASED CONTENT GENERATION
+################################################################################
+
+#' Get Default System Prompt for Content Type
+#'
+#' Returns the default system prompt for a given content type.
+#'
+#' @param content_type Type of content to generate.
+#'
+#' @return Character string with the system prompt.
+#'
+#' @family ai
+#' @export
+get_content_type_prompt <- function(content_type) {
+  prompts <- list(
+    survey_item = "
+You are a survey design expert specializing in creating Likert-scale items for research.
+Your task is to generate clear, concise survey statements that can be rated on a 5-point scale (1=Strongly Disagree to 5=Strongly Agree).
+
+Guidelines:
+1. Create statements focused on a single concept
+2. Use active voice and present tense
+3. Avoid double-barreled questions
+4. Use simple, direct language
+5. Ensure items work well on an agree-disagree scale
+6. Frame items to capture the essence of the provided keywords
+
+Return ONLY the survey item text, without numbering, quotes, or explanations.",
+
+    research_question = "
+You are a research methodology expert specializing in formulating research questions.
+Your task is to generate clear, focused research questions based on topic keywords.
+
+Guidelines:
+1. Create questions that are specific and answerable
+2. Use appropriate question words (How, What, Why, To what extent)
+3. Ensure questions are neither too broad nor too narrow
+4. Frame questions to guide empirical investigation
+5. Avoid yes/no questions - aim for open-ended inquiry
+
+Return ONLY the research question, without numbering, quotes, or explanations.",
+
+    theme_description = "
+You are a qualitative research expert specializing in thematic analysis.
+Your task is to generate descriptive summaries of themes based on topic keywords.
+
+Guidelines:
+1. Write in third person, academic style
+2. Describe what the theme encompasses
+3. Use language like 'This theme captures...', 'Participants discussed...'
+4. Be concise but comprehensive
+5. Avoid interpretation - focus on description
+
+Return ONLY the theme description, without numbering, quotes, or explanations.",
+
+    policy_recommendation = "
+You are a policy analysis expert specializing in evidence-based recommendations.
+Your task is to generate actionable policy recommendations based on topic keywords.
+
+Guidelines:
+1. Begin with action verbs (Implement, Establish, Develop, Ensure)
+2. Be specific and actionable
+3. Consider feasibility and impact
+4. Use clear, professional language
+5. Focus on one recommendation per topic
+
+Return ONLY the policy recommendation, without numbering, quotes, or explanations.",
+
+    interview_question = "
+You are a qualitative research expert specializing in interview methodology.
+Your task is to generate open-ended interview questions based on topic keywords.
+
+Guidelines:
+1. Create questions that encourage detailed responses
+2. Use open-ended phrasing (Can you describe..., Tell me about..., How do you...)
+3. Avoid leading or biased questions
+4. Make questions conversational yet focused
+5. Ensure questions are appropriate for semi-structured interviews
+
+Return ONLY the interview question, without numbering, quotes, or explanations.",
+
+    custom = "
+You are an expert content generator.
+Your task is to generate content based on the provided keywords.
+
+Return ONLY the requested content, without numbering, quotes, or explanations."
+  )
+
+  prompts[[content_type]] %||% prompts[["custom"]]
+}
+
+
+#' Get Default User Prompt Template for Content Type
+#'
+#' Returns the default user prompt template for a given content type.
+#'
+#' @param content_type Type of content to generate.
+#'
+#' @return Character string with the user prompt template containing \code{\{terms\}} placeholder.
+#'
+#' @family ai
+#' @export
+get_content_type_user_template <- function(content_type) {
+  templates <- list(
+    survey_item = "Generate a single survey item based on these keywords (ordered by importance): {terms}
+
+The survey item should:
+- Capture the main concept from these keywords
+- Be rateable on a 5-point Likert scale
+- Be clear and concise
+
+Survey item:",
+
+    research_question = "Generate a research question based on these keywords (ordered by importance): {terms}
+
+The research question should:
+- Be specific and empirically answerable
+- Capture the key concepts from these keywords
+- Guide meaningful investigation
+
+Research question:",
+
+    theme_description = "Generate a theme description based on these keywords (ordered by importance): {terms}
+
+The theme description should:
+- Summarize what this theme encompasses
+- Be written in academic style
+- Capture the essence of the keywords
+
+Theme description:",
+
+    policy_recommendation = "Generate a policy recommendation based on these keywords (ordered by importance): {terms}
+
+The recommendation should:
+- Be specific and actionable
+- Address the key concepts from these keywords
+- Be feasible to implement
+
+Policy recommendation:",
+
+    interview_question = "Generate an interview question based on these keywords (ordered by importance): {terms}
+
+The interview question should:
+- Be open-ended and encourage detailed responses
+- Explore the concepts represented by these keywords
+- Be appropriate for a semi-structured interview
+
+Interview question:",
+
+    custom = "Generate content based on these keywords (ordered by importance): {terms}
+
+Content:"
+  )
+
+  templates[[content_type]] %||% templates[["custom"]]
+}
+
+
+#' Generate Content from Topic Terms
+#'
+#' Uses Large Language Models (LLMs) to generate various types of content
+#' based on topic model terms. Supports multiple content types with optimized
+#' default prompts, or fully custom prompts.
+#'
+#' @param topic_terms_df A data frame with topic terms, containing columns for
+#'   topic identifier, term, and optionally term weight (beta).
+#' @param content_type Type of content to generate. One of:
+#'   \describe{
+#'     \item{"survey_item"}{Likert-scale survey items for scale development}
+#'     \item{"research_question"}{Research questions for literature review}
+#'     \item{"theme_description"}{Theme descriptions for qualitative analysis}
+#'     \item{"policy_recommendation"}{Policy recommendations for policy analysis}
+#'     \item{"interview_question"}{Interview questions for qualitative research}
+#'     \item{"custom"}{Custom content using user-provided prompts}
+#'   }
+#' @param topic_var Name of the column containing topic identifiers (default: "topic").
+#' @param term_var Name of the column containing terms (default: "term").
+#' @param weight_var Name of the column containing term weights (default: "beta").
+#' @param provider LLM provider: "openai" or "ollama" (default: "openai").
+#' @param model Model name. For OpenAI: "gpt-3.5-turbo", "gpt-4", etc.
+#'   For Ollama: "llama3", "mistral", etc.
+#' @param temperature Sampling temperature (0-2). Lower = more deterministic (default: 0).
+#' @param system_prompt Custom system prompt. If NULL, uses default for content_type.
+#' @param user_prompt_template Custom user prompt template with \{terms\} placeholder.
+#'   If NULL, uses default for content_type.
+#' @param max_tokens Maximum tokens for response (default: 150).
+#' @param api_key OpenAI API key. If NULL, reads from OPENAI_API_KEY environment variable.
+#' @param output_var Name of the output column (default: based on content_type).
+#' @param verbose Logical, if TRUE, prints progress messages.
+#'
+#' @return A data frame with generated content joined to original topic terms.
+#'
+#' @details
+#' The function generates one piece of content per unique topic. Each content type
+#' has optimized default prompts, but these can be overridden with custom prompts.
+#'
+#' For OpenAI, requires an API key set via the \code{api_key} parameter or
+#' OPENAI_API_KEY environment variable (can be loaded from .env file).
+#'
+#' For Ollama, requires a local Ollama installation with the specified model.
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Generate survey items
+#' survey_items <- generate_topic_content(
+#'   topic_terms_df = top_terms,
+#'   content_type = "survey_item",
+#'   provider = "openai",
+#'   model = "gpt-3.5-turbo"
+#' )
+#'
+#' # Generate research questions
+#' research_qs <- generate_topic_content(
+#'   topic_terms_df = top_terms,
+#'   content_type = "research_question",
+#'   provider = "ollama",
+#'   model = "llama3"
+#' )
+#'
+#' # Generate with custom prompt
+#' custom_content <- generate_topic_content(
+#'   topic_terms_df = top_terms,
+#'   content_type = "custom",
+#'   system_prompt = "You are an expert in educational policy...",
+#'   user_prompt_template = "Based on {terms}, generate a learning objective:"
+#' )
+#' }
+generate_topic_content <- function(topic_terms_df,
+                                    content_type = c("survey_item", "research_question",
+                                                     "theme_description", "policy_recommendation",
+                                                     "interview_question", "custom"),
+                                    topic_var = "topic",
+                                    term_var = "term",
+                                    weight_var = "beta",
+                                    provider = c("openai", "ollama"),
+                                    model = "gpt-3.5-turbo",
+                                    temperature = 0,
+                                    system_prompt = NULL,
+                                    user_prompt_template = NULL,
+                                    max_tokens = 150,
+                                    api_key = NULL,
+                                    output_var = NULL,
+                                    verbose = TRUE) {
+
+  content_type <- match.arg(content_type)
+  provider <- match.arg(provider)
+
+  if (!topic_var %in% names(topic_terms_df)) {
+    stop("topic_var '", topic_var, "' not found in topic_terms_df")
+  }
+  if (!term_var %in% names(topic_terms_df)) {
+    stop("term_var '", term_var, "' not found in topic_terms_df")
+  }
+
+  # Set default output variable name based on content type
+  if (is.null(output_var)) {
+    output_var <- switch(content_type,
+      "survey_item" = "survey_item",
+      "research_question" = "research_question",
+      "theme_description" = "theme_description",
+      "policy_recommendation" = "policy_recommendation",
+      "interview_question" = "interview_question",
+      "custom" = "generated_content"
+    )
+  }
+
+  # Get default prompts if not provided
+  if (is.null(system_prompt)) {
+    system_prompt <- get_content_type_prompt(content_type)
+  }
+  if (is.null(user_prompt_template)) {
+    user_prompt_template <- get_content_type_user_template(content_type)
+  }
+
+  # Prepare topic data
+  has_weights <- weight_var %in% names(topic_terms_df)
+
+  if (has_weights) {
+    top_terms <- topic_terms_df %>%
+      dplyr::group_by(.data[[topic_var]]) %>%
+      dplyr::arrange(dplyr::desc(.data[[weight_var]])) %>%
+      dplyr::ungroup()
+  } else {
+    top_terms <- topic_terms_df %>%
+      dplyr::group_by(.data[[topic_var]]) %>%
+      dplyr::ungroup()
+  }
+
+  unique_topics <- top_terms %>%
+    dplyr::distinct(.data[[topic_var]]) %>%
+    dplyr::arrange(.data[[topic_var]])
+
+  unique_topics[[output_var]] <- NA_character_
+
+  # Setup for provider
+  if (provider == "openai") {
+    if (is.null(api_key)) {
+      if (file.exists(".env")) {
+        if (requireNamespace("dotenv", quietly = TRUE)) {
+          dotenv::load_dot_env()
+        }
+      }
+      api_key <- Sys.getenv("OPENAI_API_KEY")
+      if (api_key == "") {
+        stop("OpenAI API key not found. Set OPENAI_API_KEY environment variable or pass api_key parameter.")
+      }
+    }
+  } else if (provider == "ollama") {
+    if (!check_ollama(verbose = FALSE)) {
+      stop("Ollama is not available. Please install and start Ollama from https://ollama.ai")
+    }
+  }
+
+  # Progress bar
+  if (verbose && requireNamespace("progress", quietly = TRUE)) {
+    pb <- progress::progress_bar$new(
+      format = paste0(" Generating ", content_type, "s [:bar] :percent (:current/:total) ETA: :eta"),
+      total = nrow(unique_topics),
+      clear = FALSE, width = 60
+    )
+  }
+
+  for (i in seq_len(nrow(unique_topics))) {
+    if (verbose && exists("pb")) {
+      pb$tick()
+    }
+
+    current_topic <- unique_topics[[topic_var]][i]
+
+    # Get terms for this topic
+    topic_data <- top_terms %>%
+      dplyr::filter(.data[[topic_var]] == current_topic)
+
+    terms_text <- paste(topic_data[[term_var]], collapse = ", ")
+
+    # Create user prompt
+    user_prompt <- gsub("\\{terms\\}", terms_text, user_prompt_template)
+
+    # Call LLM
+    generated_content <- tryCatch({
+      if (provider == "openai") {
+        call_openai_chat(
+          system_prompt = system_prompt,
+          user_prompt = user_prompt,
+          model = model,
+          temperature = temperature,
+          max_tokens = max_tokens,
+          api_key = api_key
+        )
+      } else {
+        call_ollama(
+          prompt = paste(system_prompt, "\n\n", user_prompt),
+          model = model,
+          temperature = temperature
+        )
+      }
+    }, error = function(e) {
+      if (verbose) {
+        warning(sprintf("Error generating content for topic %s: %s", current_topic, e$message))
+      }
+      NA_character_
+    })
+
+    # Clean up response
+    if (!is.na(generated_content)) {
+      generated_content <- trimws(generated_content)
+      generated_content <- gsub('^["\'](.*)["\']$', '\\1', generated_content)
+    }
+
+    unique_topics[[output_var]][i] <- generated_content
+
+    # Rate limiting
+    if (provider == "openai") {
+      Sys.sleep(0.5)
+    }
+  }
+
+  # Join generated content back to original data
+  result <- top_terms %>%
+    dplyr::left_join(
+      unique_topics %>% dplyr::select(dplyr::all_of(c(topic_var, output_var))),
+      by = topic_var
+    )
+
+  if (verbose) {
+    n_generated <- sum(!is.na(unique_topics[[output_var]]))
+    message(sprintf("Generated %d/%d %ss", n_generated, nrow(unique_topics), content_type))
+  }
+
+  result
+}
+

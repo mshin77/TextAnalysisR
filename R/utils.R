@@ -25,14 +25,14 @@ NULL
 
 globalVariables(names = c(
   ".", ".max_idx", ".row_idx", "categorical_var", "centrality", "col_idx",
-  "community", "continuous_var", "cooccur_count", "correlation",
+  "collocation", "community", "continuous_var", "cooccur_count", "correlation",
   "correlation_rounded", "degree_log", "document", "eigenvector", "emotion",
-  "estimate", "feature", "frequency", "from", "generated_content", "group",
+  "entity", "estimate", "feature", "frequency", "from", "generated_content", "group", "size_metric_log",
   "interview_question", "item1", "item2", "label", "labeled_topic", "line_group",
   "lower", "max_corr", "max_count", "max_similarity", "metric_value", "min_corr",
   "min_count", "model_type", "n", "n_words", "name", "negative", "odds ratio",
   "odds.ratio", "ord", "other_category", "other_id", "other_idx", "other_name",
-  "p.value", "percent", "policy_recommendation", "positive", "proportion",
+  "p.value", "percent", "policy_recommendation", "pos", "positive", "proportion",
   "ref_id", "ref_idx", "ref_name", "research_question", "row_idx", "score",
   "sentiment", "sentiment_score", "similarity", "statistic", "std.error",
   "std.error (odds ratio)", "stopwords", "survey_item", "term", "term_proportion",
@@ -105,7 +105,7 @@ check_web_deployment <- function() {
 #' @description
 #' Checks if a specific optional feature is available in the current environment.
 #'
-#' @param feature Character: "python", "ollama", "langgraph", "pdf_tables", "embeddings"
+#' @param feature Character: "python", "ollama", "pdf_tables", "embeddings", "sentiment_deep"
 #'
 #' @return Logical TRUE if feature is available
 #'
@@ -129,10 +129,6 @@ check_feature <- function(feature) {
     }, error = function(e) FALSE),
     "ollama" = tryCatch({
       check_ollama(verbose = FALSE)
-    }, error = function(e) FALSE),
-    "langgraph" = tryCatch({
-      status <- check_python_env()
-      isTRUE(status$available) && isTRUE(status$packages$langgraph)
     }, error = function(e) FALSE),
     "pdf_tables" = tryCatch({
       status <- check_python_env()
@@ -165,7 +161,7 @@ check_feature <- function(feature) {
 #' print(status)
 #' }
 get_feature_status <- function() {
-  features <- c("python", "ollama", "langgraph", "pdf_tables", "embeddings", "sentiment_deep")
+  features <- c("python", "ollama", "pdf_tables", "embeddings", "sentiment_deep")
   result <- lapply(features, function(f) {
     tryCatch(check_feature(f), error = function(e) FALSE)
   })
@@ -194,7 +190,7 @@ show_web_banner <- function(disabled = NULL) {
   if (!check_web_deployment()) return(NULL)
 
   if (is.null(disabled)) {
-    disabled <- c("Python PDF processing", "Ollama/LangGraph AI",
+    disabled <- c("Python PDF processing", "Local Ollama AI",
                   "Embedding analysis", "Large files (>10MB)")
   }
 
@@ -247,7 +243,6 @@ require_feature <- function(feature, session = NULL) {
   msg <- switch(feature,
     "python" = "Python not configured. Run setup_python_env().",
     "ollama" = "Ollama not available. Install from ollama.com.",
-    "langgraph" = "LangGraph not available. Run setup_python_env().",
     "pdf_tables" = "PDF tables require Python. Run setup_python_env().",
     "embeddings" = "Embeddings require sentence-transformers. Run: pip install sentence-transformers torch",
     "sentiment_deep" = "Neural sentiment requires transformers. Run: pip install transformers torch",
@@ -887,15 +882,11 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
 #' - Automatically detects if Python is already installed
 #' - Offers to install Miniconda if no Python found
 #' - Creates an isolated virtual environment (does NOT modify system Python)
-#' - Installs ONLY 6 core packages (minimal installation):
-#'   * langchain-core (core LangChain functionality)
-#'   * langchain-ollama (Ollama integration)
-#'   * langgraph (workflow graphs)
-#'   * langgraph-checkpoint (workflow state management)
-#'   * ollama (Ollama client)
+#' - Installs minimal core packages:
+#'   * spacy (NLP processing)
 #'   * pdfplumber (PDF table extraction)
 #' - Dependencies installed automatically by pip
-#' - Avoids heavy packages (no marker-pdf, nougat-ocr, torch)
+#' - Avoids heavy packages (no torch, transformers)
 #'
 #' The virtual environment approach means:
 #' - No conflicts with other Python projects
@@ -972,11 +963,7 @@ setup_python_env <- function(envname = "textanalysisr-env", force = FALSE) {
       reticulate::virtualenv_install(envname = envname, packages = req_packages, ignore_installed = FALSE)
     } else {
       packages <- c(
-        "langchain-core>=0.3.0",
-        "langchain-ollama>=0.2.0",
-        "langgraph>=0.2.0",
-        "langgraph-checkpoint>=2.0.0",
-        "ollama>=0.3.0",
+        "spacy>=3.5.0",
         "pdfplumber>=0.10.0"
       )
       reticulate::virtualenv_install(envname = envname, packages = packages, ignore_installed = FALSE)
@@ -984,10 +971,7 @@ setup_python_env <- function(envname = "textanalysisr-env", force = FALSE) {
 
     message("Testing imports...")
     test_result <- tryCatch({
-      reticulate::py_run_string("import langgraph")
-      reticulate::py_run_string("from langchain_core import prompts")
-      reticulate::py_run_string("from langchain_ollama import ChatOllama")
-      reticulate::py_run_string("import ollama")
+      reticulate::py_run_string("import spacy")
       reticulate::py_run_string("import pdfplumber")
       TRUE
     }, error = function(e) {
@@ -995,12 +979,36 @@ setup_python_env <- function(envname = "textanalysisr-env", force = FALSE) {
       FALSE
     })
 
-    if (test_result) {
-      message("Setup complete. Restart R session to activate.")
-      return(invisible(TRUE))
-    } else {
+    if (!test_result) {
       stop("Package imports failed. Check Python logs.")
     }
+
+    # Download spaCy English model
+    message("Downloading spaCy English model (en_core_web_sm)...")
+    spacy_model_result <- tryCatch({
+      reticulate::py_run_string("
+import spacy
+try:
+    nlp = spacy.load('en_core_web_sm')
+    print('Model already installed')
+except OSError:
+    print('Downloading model...')
+    spacy.cli.download('en_core_web_sm')
+    print('Model downloaded')
+")
+      TRUE
+    }, error = function(e) {
+      message("Note: spaCy model download failed: ", e$message)
+      message("You can install manually: python -m spacy download en_core_web_sm")
+      FALSE
+    })
+
+    message("\nSetup complete!")
+    if (spacy_model_result) {
+      message("- spaCy model: en_core_web_sm installed")
+    }
+    message("Restart R session to activate.")
+    return(invisible(TRUE))
 
   }, error = function(e) {
     stop("Failed to set up Python environment: ", e$message)
@@ -1049,27 +1057,19 @@ check_python_env <- function(envname = "textanalysisr-env") {
     reticulate::use_virtualenv(envname, required = TRUE)
 
     packages <- tryCatch({
-      langgraph_version <- reticulate::py_run_string("import langgraph; print(langgraph.__version__)")
-      langchain_version <- reticulate::py_run_string("import langchain; print(langchain.__version__)")
-      ollama_version <- reticulate::py_run_string("import ollama; print(ollama.__version__)")
+      spacy_version <- reticulate::py_run_string("import spacy; print(spacy.__version__)")
+      pdfplumber_check <- reticulate::py_run_string("import pdfplumber; print(pdfplumber.__version__)")
 
       list(
-        langgraph = langgraph_version,
-        langchain = langchain_version,
-        ollama = ollama_version
+        spacy = spacy_version,
+        pdfplumber = pdfplumber_check
       )
     }, error = function(e) NULL)
-
-    ollama_check <- tryCatch({
-      reticulate::py_run_string("import ollama; ollama.list()")
-      TRUE
-    }, error = function(e) FALSE)
 
     return(list(
       available = TRUE,
       active = TRUE,
       packages = packages,
-      ollama_available = ollama_check,
       message = "Python environment is ready"
     ))
 
@@ -1078,63 +1078,12 @@ check_python_env <- function(envname = "textanalysisr-env") {
       available = TRUE,
       active = FALSE,
       packages = NULL,
-      ollama_available = FALSE,
       message = paste("Failed to activate environment:", e$message)
     ))
   })
 }
 
 
-#' Initialize LangGraph for Current Session
-#'
-#' @description
-#' Initializes LangGraph/LangChain/Ollama modules for current R session.
-#' Use only for LangGraph workflows. PDF/embeddings load automatically.
-#'
-#' @param envname Character string name of the virtual environment
-#'   (default: "textanalysisr-env")
-#'
-#' @return Invisible list with LangGraph/LangChain/Ollama modules
-#'
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' lg <- init_langgraph()
-#' }
-init_langgraph <- function(envname = "textanalysisr-env") {
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required.")
-  }
-
-  status <- check_python_env(envname)
-
-  if (!status$available) {
-    stop("Python environment not found. Run setup_python_env() first.")
-  }
-
-  message("Initializing LangGraph modules...")
-  reticulate::use_virtualenv(envname, required = TRUE)
-
-  modules <- tryCatch({
-    list(
-      langgraph = reticulate::import("langgraph"),
-      langchain = reticulate::import("langchain"),
-      langchain_ollama = reticulate::import("langchain_ollama"),
-      ollama = reticulate::import("ollama")
-    )
-  }, error = function(e) {
-    stop("Failed to import LangGraph modules: ", e$message)
-  })
-
-  message("LangGraph initialized successfully")
-
-  if (!status$ollama_available) {
-    warning("Ollama connection not available. Make sure Ollama is running.")
-  }
-
-  return(invisible(modules))
-}
 
 
 ################################################################################
@@ -1180,7 +1129,7 @@ check_ollama <- function(verbose = FALSE) {
   }, error = function(e) {
     if (verbose) {
       message("Ollama is not available: ", e$message)
-      message("To use Ollama, please install it from https://ollama.ai")
+      message("To use Ollama, please install it from https://ollama.com")
     }
     return(FALSE)
   })
@@ -1377,6 +1326,597 @@ get_recommended_ollama_model <- function(preferred_models = c("phi3:mini", "llam
 
 
 ################################################################################
+# CLOUD LLM API UTILITIES (OpenAI, Gemini)
+################################################################################
+
+#' Call OpenAI Chat Completion API
+#'
+#' @description
+#' Makes a chat completion request to OpenAI's API.
+#'
+#' @param system_prompt Character string with system instructions
+#' @param user_prompt Character string with user message
+#' @param model Character string specifying the model (default: "gpt-3.5-turbo")
+#' @param temperature Numeric temperature for response randomness (default: 0)
+#' @param max_tokens Maximum number of tokens to generate (default: 150)
+#' @param api_key Character string with OpenAI API key
+#'
+#' @return Character string with the model's response
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' response <- call_openai_chat(
+#'   system_prompt = "You are a helpful assistant.",
+#'   user_prompt = "Generate a topic label for: education, student, learning",
+#'   api_key = Sys.getenv("OPENAI_API_KEY")
+#' )
+#' }
+call_openai_chat <- function(system_prompt,
+                              user_prompt,
+                              model = "gpt-3.5-turbo",
+                              temperature = 0,
+                              max_tokens = 150,
+                              api_key) {
+
+  if (!requireNamespace("httr", quietly = TRUE)) {
+    stop("httr package is required for OpenAI API calls")
+  }
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("jsonlite package is required for OpenAI API calls")
+  }
+
+  body_list <- list(
+    model = model,
+    messages = list(
+      list(role = "system", content = system_prompt),
+      list(role = "user", content = user_prompt)
+    ),
+    temperature = temperature,
+    max_tokens = max_tokens
+  )
+
+  response <- httr::POST(
+    url = "https://api.openai.com/v1/chat/completions",
+    httr::add_headers(
+      `Content-Type` = "application/json",
+      `Authorization` = paste("Bearer", api_key)
+    ),
+    body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
+    encode = "json"
+  )
+
+  if (httr::status_code(response) != 200) {
+    error_content <- httr::content(response, "text", encoding = "UTF-8")
+    stop(sprintf("OpenAI API error (status %d): %s",
+                 httr::status_code(response), error_content))
+  }
+
+  res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+  if (!is.null(res_json$choices) && length(res_json$choices) > 0) {
+    return(res_json$choices$message$content[1])
+  }
+
+  stop("Unexpected response structure from OpenAI API")
+}
+
+
+#' Call Gemini Chat API
+#'
+#' @description
+#' Makes a chat completion request to Google's Gemini API.
+#'
+#' @param system_prompt Character string with system instructions
+#' @param user_prompt Character string with user message
+#' @param model Character string specifying the Gemini model (default: "gemini-2.0-flash")
+#' @param temperature Numeric temperature for response randomness (default: 0)
+#' @param max_tokens Maximum number of tokens to generate (default: 150)
+#' @param api_key Character string with Gemini API key
+#'
+#' @return Character string with the model's response
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' response <- call_gemini_chat(
+#'   system_prompt = "You are a helpful assistant.",
+#'   user_prompt = "Generate a topic label for: education, student, learning",
+#'   api_key = Sys.getenv("GEMINI_API_KEY")
+#' )
+#' }
+call_gemini_chat <- function(system_prompt,
+                              user_prompt,
+                              model = "gemini-2.0-flash",
+                              temperature = 0,
+                              max_tokens = 150,
+                              api_key) {
+
+  if (!requireNamespace("httr", quietly = TRUE)) {
+    stop("httr package is required for Gemini API calls")
+  }
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("jsonlite package is required for Gemini API calls")
+  }
+
+  # Gemini uses a different message format
+  body_list <- list(
+    contents = list(
+      list(
+        role = "user",
+        parts = list(
+          list(text = paste0(system_prompt, "\n\n", user_prompt))
+        )
+      )
+    ),
+    generationConfig = list(
+      temperature = temperature,
+      maxOutputTokens = max_tokens
+    )
+  )
+
+  url <- paste0(
+    "https://generativelanguage.googleapis.com/v1beta/models/",
+    model, ":generateContent?key=", api_key
+  )
+
+  response <- httr::POST(
+    url = url,
+    httr::add_headers(`Content-Type` = "application/json"),
+    body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
+    encode = "json"
+  )
+
+  if (httr::status_code(response) != 200) {
+    error_content <- httr::content(response, "text", encoding = "UTF-8")
+    stop(sprintf("Gemini API error (status %d): %s",
+                 httr::status_code(response), error_content))
+  }
+
+  res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+  if (!is.null(res_json$candidates) && length(res_json$candidates) > 0) {
+    # Extract text from Gemini response structure
+    parts <- res_json$candidates[[1]]$content$parts
+    if (!is.null(parts) && length(parts) > 0) {
+      return(parts[[1]]$text)
+    }
+  }
+
+  stop("Unexpected response structure from Gemini API")
+}
+
+
+#' Call LLM API (Unified Wrapper)
+#'
+#' @description
+#' Unified wrapper for calling different LLM providers (OpenAI, Gemini, Ollama).
+#' Automatically routes to the appropriate provider-specific function.
+#'
+#' @param provider Character string: "openai", "gemini", or "ollama"
+#' @param system_prompt Character string with system instructions
+#' @param user_prompt Character string with user message
+#' @param model Character string specifying the model (provider-specific defaults apply)
+#' @param temperature Numeric temperature for response randomness (default: 0)
+#' @param max_tokens Maximum number of tokens to generate (default: 150)
+#' @param api_key Character string with API key (required for openai/gemini)
+#'
+#' @return Character string with the model's response
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Using OpenAI
+#' response <- call_llm_api(
+#'   provider = "openai",
+#'   system_prompt = "You are a helpful assistant.",
+#'   user_prompt = "Generate a topic label",
+#'   api_key = Sys.getenv("OPENAI_API_KEY")
+#' )
+#'
+#' # Using Gemini
+#' response <- call_llm_api(
+#'   provider = "gemini",
+#'   system_prompt = "You are a helpful assistant.",
+#'   user_prompt = "Generate a topic label",
+#'   api_key = Sys.getenv("GEMINI_API_KEY")
+#' )
+#' }
+call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
+                         system_prompt,
+                         user_prompt,
+                         model = NULL,
+                         temperature = 0,
+                         max_tokens = 150,
+                         api_key = NULL) {
+
+  provider <- match.arg(provider)
+
+  # Set default models based on provider
+  if (is.null(model)) {
+    model <- switch(provider,
+      "openai" = "gpt-4o-mini",
+      "gemini" = "gemini-2.0-flash",
+      "ollama" = "phi3:mini"
+    )
+  }
+
+  # Validate API key for cloud providers
+  if (provider %in% c("openai", "gemini")) {
+    if (is.null(api_key) || !nzchar(api_key)) {
+      # Try to get from environment
+      api_key <- switch(provider,
+        "openai" = Sys.getenv("OPENAI_API_KEY"),
+        "gemini" = Sys.getenv("GEMINI_API_KEY")
+      )
+    }
+
+    if (!nzchar(api_key)) {
+      stop(paste0("API key required for ", provider, ". Set ", toupper(provider), "_API_KEY environment variable."))
+    }
+  }
+
+  # Route to appropriate provider
+  result <- switch(provider,
+    "openai" = call_openai_chat(
+      system_prompt = system_prompt,
+      user_prompt = user_prompt,
+      model = model,
+      temperature = temperature,
+      max_tokens = max_tokens,
+      api_key = api_key
+    ),
+    "gemini" = call_gemini_chat(
+      system_prompt = system_prompt,
+      user_prompt = user_prompt,
+      model = model,
+      temperature = temperature,
+      max_tokens = max_tokens,
+      api_key = api_key
+    ),
+    "ollama" = call_ollama(
+      prompt = paste0(system_prompt, "\n\n", user_prompt),
+      model = model,
+      temperature = temperature,
+      max_tokens = max_tokens
+    )
+  )
+
+  return(result)
+}
+
+
+#' Get Embeddings from API
+#'
+#' @description
+#' Generates text embeddings using Ollama (local), OpenAI, or Gemini embedding APIs.
+#'
+#' @param texts Character vector of texts to embed
+#' @param provider Character string: "ollama" (local API, free), "openai", or "gemini"
+#' @param model Character string specifying the embedding model. Defaults:
+#'   - ollama: "nomic-embed-text"
+#'   - openai: "text-embedding-3-small"
+#'   - gemini: "text-embedding-004"
+#' @param api_key Character string with API key (not required for Ollama)
+#' @param batch_size Integer, number of texts to embed per API call (default: 100)
+#'
+#' @return Matrix with embeddings (rows = texts, columns = dimensions)
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' data(SpecialEduTech)
+#' texts <- SpecialEduTech$abstract[1:5]
+#'
+#' # Using local Ollama API (free, no API key required)
+#' embeddings <- get_api_embeddings(texts, provider = "ollama")
+#'
+#' # Using OpenAI API
+#' embeddings <- get_api_embeddings(texts, provider = "openai")
+#'
+#' dim(embeddings)
+#' }
+get_api_embeddings <- function(texts,
+                           provider = c("ollama", "openai", "gemini"),
+                           model = NULL,
+                           api_key = NULL,
+                           batch_size = 100) {
+
+  provider <- match.arg(provider)
+
+  # Set default models
+  if (is.null(model)) {
+    model <- switch(provider,
+      "ollama" = "nomic-embed-text",
+      "openai" = "text-embedding-3-small",
+      "gemini" = "text-embedding-004"
+    )
+  }
+
+  # Get API key from environment if not provided (not needed for Ollama)
+  if (provider != "ollama") {
+    if (is.null(api_key) || !nzchar(api_key)) {
+      api_key <- switch(provider,
+        "openai" = Sys.getenv("OPENAI_API_KEY"),
+        "gemini" = Sys.getenv("GEMINI_API_KEY")
+      )
+    }
+
+    if (!nzchar(api_key)) {
+      stop(paste0("API key required. Set ", toupper(provider), "_API_KEY environment variable."))
+    }
+  }
+
+  if (!requireNamespace("httr", quietly = TRUE)) {
+    stop("httr package is required for embedding API calls")
+  }
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("jsonlite package is required for embedding API calls")
+  }
+
+  # Process in batches
+  n_texts <- length(texts)
+  all_embeddings <- list()
+
+  for (start in seq(1, n_texts, by = batch_size)) {
+    end <- min(start + batch_size - 1, n_texts)
+    batch_texts <- texts[start:end]
+
+    embeddings <- switch(provider,
+      "ollama" = get_ollama_embeddings(batch_texts, model),
+      "openai" = get_openai_embeddings(batch_texts, model, api_key),
+      "gemini" = get_gemini_embeddings(batch_texts, model, api_key)
+    )
+
+    all_embeddings[[length(all_embeddings) + 1]] <- embeddings
+  }
+
+  # Combine all batches
+  do.call(rbind, all_embeddings)
+}
+
+
+#' Get OpenAI Embeddings (Internal)
+#' @keywords internal
+get_openai_embeddings <- function(texts, model, api_key) {
+  body_list <- list(
+    input = texts,
+    model = model
+  )
+
+  response <- httr::POST(
+    url = "https://api.openai.com/v1/embeddings",
+    httr::add_headers(
+      `Content-Type` = "application/json",
+      `Authorization` = paste("Bearer", api_key)
+    ),
+    body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
+    encode = "json"
+  )
+
+  if (httr::status_code(response) != 200) {
+    error_content <- httr::content(response, "text", encoding = "UTF-8")
+    stop(sprintf("OpenAI Embeddings API error (status %d): %s",
+                 httr::status_code(response), error_content))
+  }
+
+  res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+  if (!is.null(res_json$data)) {
+    # Sort by index to ensure correct order
+    embeddings <- res_json$data[order(res_json$data$index), ]
+    do.call(rbind, embeddings$embedding)
+  } else {
+    stop("Unexpected response structure from OpenAI Embeddings API")
+  }
+}
+
+
+#' Get Gemini Embeddings (Internal)
+#' @keywords internal
+get_gemini_embeddings <- function(texts, model, api_key) {
+  # Gemini requires individual requests per text
+  embeddings_list <- lapply(texts, function(text) {
+    body_list <- list(
+      model = paste0("models/", model),
+      content = list(
+        parts = list(
+          list(text = text)
+        )
+      )
+    )
+
+    url <- paste0(
+      "https://generativelanguage.googleapis.com/v1beta/models/",
+      model, ":embedContent?key=", api_key
+    )
+
+    response <- httr::POST(
+      url = url,
+      httr::add_headers(`Content-Type` = "application/json"),
+      body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
+      encode = "json"
+    )
+
+    if (httr::status_code(response) != 200) {
+      error_content <- httr::content(response, "text", encoding = "UTF-8")
+      stop(sprintf("Gemini Embeddings API error (status %d): %s",
+                   httr::status_code(response), error_content))
+    }
+
+    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+    if (!is.null(res_json$embedding$values)) {
+      return(res_json$embedding$values)
+    } else {
+      stop("Unexpected response structure from Gemini Embeddings API")
+    }
+  })
+
+  do.call(rbind, embeddings_list)
+}
+
+
+#' Get Ollama Embeddings (Internal)
+#'
+#' Generate embeddings using local Ollama models.
+#'
+#' @param texts Character vector of texts to embed.
+#' @param model Ollama embedding model (default: "nomic-embed-text").
+#' @return Numeric matrix of embeddings (one row per text).
+#' @keywords internal
+get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
+  if (!check_ollama(verbose = FALSE)) {
+    stop("Ollama is not running. Start Ollama and try again.")
+  }
+
+  embeddings_list <- lapply(texts, function(text) {
+    body <- list(
+      model = model,
+      prompt = text
+    )
+
+    response <- tryCatch({
+      httr::POST(
+        url = "http://localhost:11434/api/embeddings",
+        body = jsonlite::toJSON(body, auto_unbox = TRUE),
+        httr::content_type_json(),
+        httr::timeout(60)
+      )
+    }, error = function(e) {
+      stop(paste("Ollama embeddings request failed:", e$message))
+    })
+
+    if (httr::status_code(response) != 200) {
+      error_content <- httr::content(response, "text", encoding = "UTF-8")
+      stop(sprintf("Ollama embeddings error (status %d): %s",
+                   httr::status_code(response), error_content))
+    }
+
+    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+    if (!is.null(res_json$embedding)) {
+      return(res_json$embedding)
+    } else {
+      stop("Unexpected response structure from Ollama embeddings API")
+    }
+  })
+
+  do.call(rbind, embeddings_list)
+}
+
+
+#' Get Best Available Embeddings
+#'
+#' @description
+#' Auto-detects and uses the best available embedding provider with the following priority:
+#' 1. Ollama (free, local, fast) - if running
+#' 2. sentence-transformers (local Python) - if Python environment is set up
+#' 3. OpenAI API - if OPENAI_API_KEY is set
+#' 4. Gemini API - if GEMINI_API_KEY is set
+#'
+#' @param texts Character vector of texts to embed
+#' @param provider Character string: "auto" (default), "ollama", "sentence-transformers",
+#'   "openai", or "gemini". Use "auto" for automatic detection.
+#' @param model Character string specifying the embedding model. If NULL, uses default
+#'   model for the selected provider.
+#' @param verbose Logical, whether to print progress messages (default: TRUE)
+#'
+#' @return Matrix with embeddings (rows = texts, columns = dimensions)
+#'
+#' @family ai
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' data(SpecialEduTech)
+#' texts <- SpecialEduTech$abstract[1:5]
+#'
+#' # Auto-detect best available provider
+#' embeddings <- get_best_embeddings(texts)
+#'
+#' # Force specific provider
+#' embeddings <- get_best_embeddings(texts, provider = "ollama")
+#'
+#' dim(embeddings)
+#' }
+get_best_embeddings <- function(texts,
+                                 provider = "auto",
+                                 model = NULL,
+                                 verbose = TRUE) {
+
+  if (!is.character(texts) || length(texts) == 0) {
+    stop("texts must be a non-empty character vector")
+  }
+
+  # Determine provider
+  if (provider == "auto") {
+    # Priority: Ollama > sentence-transformers > OpenAI > Gemini
+    if (check_ollama(verbose = FALSE)) {
+      provider <- "ollama"
+      if (verbose) message("Using Ollama embeddings (local)")
+    } else if (check_feature("python")) {
+      provider <- "sentence-transformers"
+      if (verbose) message("Using sentence-transformers embeddings (local Python)")
+    } else if (nzchar(Sys.getenv("OPENAI_API_KEY"))) {
+      provider <- "openai"
+      if (verbose) message("Using OpenAI embeddings (API)")
+    } else if (nzchar(Sys.getenv("GEMINI_API_KEY"))) {
+      provider <- "gemini"
+      if (verbose) message("Using Gemini embeddings (API)")
+    } else {
+      stop(paste0(
+        "No embedding provider available. Options:\n",
+        "  1. Install and start Ollama (https://ollama.com)\n",
+        "  2. Set up Python with: TextAnalysisR::setup_python_env()\n",
+        "  3. Set OPENAI_API_KEY or GEMINI_API_KEY environment variable"
+      ))
+    }
+  }
+
+  # Generate embeddings using selected provider
+  embeddings <- switch(provider,
+    "ollama" = {
+      if (!check_ollama(verbose = FALSE)) {
+        stop("Ollama is not running. Start Ollama and try again.")
+      }
+      model <- model %||% "nomic-embed-text"
+      get_api_embeddings(texts, provider = "ollama", model = model)
+    },
+    "sentence-transformers" = {
+      if (!check_feature("python")) {
+        stop("Python not available. Run TextAnalysisR::setup_python_env() first.")
+      }
+      model <- model %||% "all-MiniLM-L6-v2"
+      generate_embeddings(texts, model = model, verbose = verbose)
+    },
+    "openai" = {
+      model <- model %||% "text-embedding-3-small"
+      get_api_embeddings(texts, provider = "openai", model = model)
+    },
+    "gemini" = {
+      model <- model %||% "text-embedding-004"
+      get_api_embeddings(texts, provider = "gemini", model = model)
+    },
+    stop(paste0(
+      "Unknown provider: ", provider, ". ",
+      "Valid options: auto, ollama, sentence-transformers, openai, gemini"
+    ))
+  )
+
+  embeddings
+}
+
+
+################################################################################
 # SECURITY AND VALIDATION UTILITIES
 ################################################################################
 
@@ -1521,16 +2061,16 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
   return(invisible(NULL))
 }
 
-#' Validate OpenAI API Key Format
+#' Validate API Key Format
 #'
 #' @description
-#' Validates OpenAI API key format according to NIST IA-5(1) authenticator management.
-#' Checks key prefix, length, and basic format requirements.
+#' Validates API key format for OpenAI or Gemini according to NIST IA-5(1).
+#' Auto-detects provider from key prefix and validates format requirements.
 #'
 #' @param api_key Character string containing the API key
 #' @param strict Logical, if TRUE performs additional validation checks
 #'
-#' @return Logical TRUE if valid, FALSE with warnings if invalid
+#' @return List with valid (logical), provider (character), and error (character if invalid)
 #' @keywords internal
 #'
 #' @section NIST Compliance:
@@ -1539,37 +2079,46 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
 #'
 #' @examples
 #' \dontrun{
-#' validate_api_key("sk-proj...")
+#' result <- validate_api_key("sk-proj...")
+#' if (result$valid) cat("Provider:", result$provider)
 #' }
 validate_api_key <- function(api_key, strict = TRUE) {
   if (is.null(api_key) || !is.character(api_key) || !nzchar(api_key)) {
-    warning("API key is NULL, empty, or not a character string")
-    return(FALSE)
+    return(list(valid = FALSE, provider = NULL, error = "API key is NULL, empty, or not a character string"))
   }
 
-  if (!grepl("^sk-", api_key)) {
-    warning("API key format appears invalid: OpenAI keys should start with 'sk-'")
-    return(FALSE)
+  # Detect provider from prefix
+  if (grepl("^sk-", api_key)) {
+    provider <- "openai"
+    min_length <- 40
+    length_msg <- "OpenAI keys are typically 48+ characters"
+  } else if (grepl("^AIza", api_key)) {
+    provider <- "gemini"
+    min_length <- 39
+    length_msg <- "Gemini keys are typically 39 characters"
+  } else {
+    return(list(
+      valid = FALSE,
+      provider = NULL,
+      error = "Unknown API key format. OpenAI keys start with 'sk-', Gemini keys start with 'AIza'"
+    ))
   }
 
-  if (nchar(api_key) < 40) {
-    warning("API key appears too short: OpenAI keys are typically 48+ characters")
-    return(FALSE)
+  if (nchar(api_key) < min_length) {
+    return(list(valid = FALSE, provider = provider, error = paste("API key appears too short:", length_msg)))
   }
 
   if (strict) {
     if (grepl("\\s", api_key)) {
-      warning("API key contains whitespace characters")
-      return(FALSE)
+      return(list(valid = FALSE, provider = provider, error = "API key contains whitespace characters"))
     }
 
     if (grepl("[^A-Za-z0-9_-]", api_key)) {
-      warning("API key contains unexpected special characters")
-      return(FALSE)
+      return(list(valid = FALSE, provider = provider, error = "API key contains unexpected special characters"))
     }
   }
 
-  return(TRUE)
+  return(list(valid = TRUE, provider = provider, error = NULL))
 }
 
 #' Validate Column Name
@@ -1741,10 +2290,10 @@ check_wcag_contrast <- function(foreground, background, large_text = FALSE) {
 #'
 #' @examples
 #' \dontrun{
-#' generate_aria_label("button", "analyze", "readability")
+#' create_aria_label("button", "analyze", "readability")
 #' # Returns: "Analyze readability button"
 #' }
-generate_aria_label <- function(element_type, action, context = NULL) {
+create_aria_label <- function(element_type, action, context = NULL) {
   if (!is.null(context)) {
     label <- paste(tools::toTitleCase(action), context, element_type)
   } else {
@@ -1991,7 +2540,13 @@ get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") 
 #' @examples
 #' \dontrun{
 #' library(ggplot2)
-#' ggplot(mtcars, aes(mpg, wt)) +
+#' data(SpecialEduTech, package = "TextAnalysisR")
+#' # Create a simple plot using text lengths
+#' df <- data.frame(
+#'   title_length = nchar(SpecialEduTech$title),
+#'   abstract_length = nchar(SpecialEduTech$abstract)
+#' )
+#' ggplot(df, aes(title_length, abstract_length)) +
 #'   geom_point() +
 #'   create_standard_ggplot_theme()
 #' }
@@ -2817,4 +3372,243 @@ show_preprocessing_required_modal <- function(message = "Please complete preproc
   )
 
   invisible(NULL)
+}
+
+
+# Text Formatting Utilities ----
+
+#' Truncate Text with Ellipsis
+#'
+#' @description Truncates text to a maximum number of characters and adds
+#'   ellipsis if truncated.
+#'
+#' @param text Character string to truncate.
+#' @param max_chars Maximum number of characters (default: 50).
+#'
+#' @return Truncated text with "..." appended if truncated.
+#'
+#' @family text-utilities
+#' @export
+truncate_text_with_ellipsis <- function(text, max_chars = 50) {
+  text <- as.character(text)
+  if (nchar(text) <= max_chars) {
+    return(text)
+  }
+  paste0(substr(text, 1, max_chars), "...")
+}
+
+#' Truncate Text to Word Count
+#'
+#' @description Truncates text to a maximum number of words and adds
+#'   ellipsis if truncated.
+#'
+#' @param text Character string to truncate.
+#' @param max_words Maximum number of words (default: 150).
+#'
+#' @return Truncated text with "..." appended if truncated.
+#'
+#' @family text-utilities
+#' @export
+truncate_text_to_words <- function(text, max_words = 150) {
+  text <- as.character(text)
+  words <- strsplit(text, "\\s+")[[1]]
+
+  if (length(words) > max_words) {
+    truncated_text <- paste(words[1:max_words], collapse = " ")
+    return(paste0(truncated_text, "..."))
+  } else {
+    return(text)
+  }
+}
+
+#' Wrap Long Text with Line Breaks
+#'
+#' @description Wraps long text by inserting line breaks at word boundaries.
+#'   Handles both spaced text and continuous text (like URLs).
+#'
+#' @param text Character string to wrap.
+#' @param chars_per_line Maximum characters per line (default: 50).
+#' @param max_lines Maximum number of lines (default: 3).
+#'
+#' @return Text with line breaks inserted.
+#'
+#' @family text-utilities
+#' @export
+wrap_long_text <- function(text, chars_per_line = 50, max_lines = 3) {
+  text <- as.character(text)
+
+  if (nchar(text) <= chars_per_line) return(text)
+
+  # Handle text without spaces (like URLs)
+  if (!grepl(" ", text) && nchar(text) > chars_per_line) {
+    lines <- character()
+    remaining_text <- text
+    while (nchar(remaining_text) > chars_per_line && length(lines) < max_lines - 1) {
+      lines <- c(lines, substr(remaining_text, 1, chars_per_line))
+      remaining_text <- substr(remaining_text, chars_per_line + 1, nchar(remaining_text))
+    }
+    if (nchar(remaining_text) > 0) {
+      if (nchar(remaining_text) > chars_per_line) {
+        lines <- c(lines, paste0(substr(remaining_text, 1, chars_per_line - 3), "..."))
+      } else {
+        lines <- c(lines, remaining_text)
+      }
+    }
+    return(paste(lines, collapse = "\n"))
+  }
+
+  # Handle normal text with spaces
+  words <- strsplit(text, " ")[[1]]
+  lines <- character()
+  current_line <- ""
+
+  for (word in words) {
+    if (length(lines) >= max_lines - 1 && current_line != "") {
+      lines <- c(lines, paste0(current_line, "..."))
+      break
+    }
+
+    if (current_line == "") {
+      test_line <- word
+    } else {
+      test_line <- paste(current_line, word)
+    }
+
+    if (nchar(test_line) <= chars_per_line) {
+      current_line <- test_line
+    } else {
+      if (current_line != "") {
+        lines <- c(lines, current_line)
+        current_line <- word
+      } else {
+        if (length(lines) < max_lines - 1) {
+          lines <- c(lines, paste0(substr(word, 1, chars_per_line - 3), "..."))
+          current_line <- ""
+        }
+      }
+    }
+  }
+
+  if (nchar(current_line) > 0) {
+    if (length(lines) < max_lines) {
+      lines <- c(lines, current_line)
+    }
+  }
+
+  paste(lines[1:min(length(lines), max_lines)], collapse = "\n")
+}
+
+#' Wrap Text for Tooltip Display
+#'
+#' @description Formats text for tooltip display with size limits
+#'   and line wrapping.
+#'
+#' @param text Character string to format.
+#' @param max_words Maximum words (not currently used, kept for compatibility).
+#' @param chars_per_line Maximum characters per line (default: 50).
+#' @param max_lines Maximum number of lines (default: 3).
+#'
+#' @return Formatted text suitable for tooltip display.
+#'
+#' @family text-utilities
+#' @export
+wrap_text_for_tooltip <- function(text, max_words = 150, chars_per_line = 50, max_lines = 3) {
+  text <- as.character(text)
+
+  # Limit to 150 characters first
+  if (nchar(text) > 150) {
+    text_to_use <- substr(text, 1, 150)
+    needs_ellipsis <- TRUE
+  } else {
+    text_to_use <- text
+    needs_ellipsis <- FALSE
+  }
+
+  if (nchar(text_to_use) <= chars_per_line) {
+    return(text_to_use)
+  }
+
+  result <- ""
+  lines_created <- 0
+  current_pos <- 1
+
+  while (current_pos <= nchar(text_to_use) && lines_created < max_lines) {
+    end_pos <- min(current_pos + chars_per_line - 1, nchar(text_to_use))
+    line_text <- substr(text_to_use, current_pos, end_pos)
+
+    if (end_pos < nchar(text_to_use) && lines_created < max_lines - 1) {
+      last_space <- regexpr(" [^ ]*$", line_text)
+      if (last_space > 0) {
+        line_text <- substr(line_text, 1, last_space - 1)
+        end_pos <- current_pos + last_space - 2
+      }
+    }
+
+    if (result == "") {
+      result <- line_text
+    } else {
+      result <- paste0(result, "\n", line_text)
+    }
+
+    lines_created <- lines_created + 1
+    current_pos <- end_pos + 2
+  }
+
+  if (needs_ellipsis || current_pos <= nchar(text_to_use)) {
+    result <- paste0(result, "...")
+  }
+
+  return(result)
+}
+
+
+# Matrix Utilities ----
+
+#' Clean Similarity Matrix
+#'
+#' @description Cleans a similarity matrix by handling NA/Inf values,
+#'   ensuring symmetry, and setting diagonal to 1.
+#'
+#' @param similarity_matrix A numeric matrix of similarity values.
+#'
+#' @return Cleaned similarity matrix.
+#'
+#' @family matrix-utilities
+#' @export
+clean_similarity_matrix <- function(similarity_matrix) {
+  # Replace non-finite values with 0
+  similarity_matrix[!is.finite(similarity_matrix)] <- 0
+
+  # Ensure symmetry
+  if (nrow(similarity_matrix) == ncol(similarity_matrix)) {
+    similarity_matrix <- (similarity_matrix + t(similarity_matrix)) / 2
+  }
+
+  # Set diagonal to 1
+  if (nrow(similarity_matrix) == ncol(similarity_matrix)) {
+    diag(similarity_matrix) <- 1
+  }
+
+  return(similarity_matrix)
+}
+
+#' Renumber Clusters Sequentially
+#'
+#' @description Renumbers cluster assignments to sequential integers
+#'   starting from 1.
+#'
+#' @param clusters A vector of cluster assignments.
+#'
+#' @return Vector with clusters renumbered sequentially (1, 2, 3, ...).
+#'
+#' @family matrix-utilities
+#' @export
+renumber_clusters_sequentially <- function(clusters) {
+  if (is.null(clusters) || length(clusters) == 0) {
+    return(clusters)
+  }
+
+  unique_clusters <- sort(unique(clusters))
+  cluster_mapping <- stats::setNames(seq_along(unique_clusters), unique_clusters)
+  return(cluster_mapping[as.character(clusters)])
 }

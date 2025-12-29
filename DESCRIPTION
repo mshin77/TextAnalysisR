@@ -1,16 +1,19 @@
 Package: TextAnalysisR
-Title: Text Mining Workflow Tool
+Title: Text Mining and Natural Language Processing Toolkit
 Version: 0.0.3
-Date: 2025-11-29
+Date: 2025-12-25
 Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7907-9193", affiliation = "Illinois State University"))
 Description: Comprehensive toolkit for text mining and natural language processing with
-    interactive 'Shiny' interface. Import documents from multiple formats (PDF, DOCX,
-    XLSX, CSV, TXT), preprocess with 'quanteda', and perform topic modeling ('stm'),
-    semantic analysis, sentiment analysis, and network visualization. Features
-    AI-assisted workflows via 'LangGraph', WCAG 2.1 AA accessibility, multi-language
-    support, and enterprise security for production deployment.
+    an interactive 'Shiny' interface. Import documents from multiple formats (PDF, DOCX,
+    XLSX, CSV, TXT) using 'Marker' for PDF extraction, preprocess with 'quanteda', and
+    perform linguistic analysis via 'spaCy', topic modeling ('stm', 'BERTopic'),
+    semantic analysis, sentiment analysis, and network visualization with 'plotly'.
+    Features topic-grounded content generation and AI-suggested labeling via local
+    ('Ollama', 'spaCy', transformers) and web-based ('OpenAI', 'Gemini') APIs,
+    WCAG 2.1 AA accessibility, multi-language support, and enterprise security for
+    production deployment.
 License: GPL (>= 3) + file LICENSE
 Language: en-US
 Encoding: UTF-8
@@ -19,61 +22,61 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
     dplyr,
+    DT,
     ggplot2,
     ggraph,
+    htmltools,
+    igraph,
     magrittr,
-    purrr,
+    Matrix,
+    plotly,
     quanteda,
     quanteda.textstats,
-    reticulate (>= 1.28),
+    RColorBrewer,
     rlang,
+    scales,
     shiny,
     stm,
-    stopwords,
-    stringr,
     tibble,
     tidyr,
     tidytext,
-    widyr,
-    igraph
+    widyr
 Suggests:
-    digest,
-    spacyr,
     aricode,
-    plotly,
-    visNetwork,
-    DT,
     broom,
-    numform,
-    scales,
-    shinybusy,
     cluster,
-    moments,
-    Rtsne,
     clusterCrit,
+    colourpicker,
+    covr,
     dbscan,
-    mclust,
-    umap,
-    pdftools,
-    readxl,
-    officer,
+    digest,
     dotenv,
     httr,
-    jsonlite,
-    progress,
-    RColorBrewer,
-    MASS,
-    pscl,
-    htmltools,
     htmlwidgets,
-    textdata,
-    syuzhet,
-    covr,
+    jsonlite,
     knitr,
+    MASS,
+    mclust,
+    moments,
+    numform,
+    officer,
+    pdftools,
+    progress,
+    pscl,
+    purrr,
+    readxl,
+    reticulate (>= 1.28),
     rmarkdown,
     roxygen2,
+    Rtsne,
+    shinybusy,
     spelling,
-    testthat (>= 3.0.0)
+    stopwords,
+    stringr,
+    syuzhet,
+    testthat (>= 3.0.0),
+    textdata,
+    umap
 Depends: R (>= 2.10)
 URL: https://mshin77.github.io/TextAnalysisR
 BugReports: https://github.com/mshin77/TextAnalysisR/issues

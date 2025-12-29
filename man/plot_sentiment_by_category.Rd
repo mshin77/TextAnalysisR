@@ -40,6 +40,7 @@ print(plot)
 \seealso{
 Other sentiment: 
 \code{\link{analyze_sentiment}()},
+\code{\link{analyze_sentiment_llm}()},
 \code{\link{plot_document_sentiment_trajectory}()},
 \code{\link{plot_emotion_radar}()},
 \code{\link{plot_sentiment_boxplot}()},

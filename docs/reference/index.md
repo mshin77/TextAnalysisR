@@ -23,6 +23,11 @@ Text preparation and feature extraction
   : Get Available Document-Feature Matrix with Fallback
 - [`get_available_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_tokens.md)
   : Get Available Tokens with Fallback
+
+## Linguistic Analysis
+
+POS tagging, NER, and morphology (requires Python)
+
 - [`extract_pos_tags()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pos_tags.md)
   : Extract Part-of-Speech Tags from Tokens
 - [`extract_named_entities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_named_entities.md)
@@ -31,19 +36,23 @@ Text preparation and feature extraction
   : Extract Morphological Features
 - [`summarize_morphology()`](https://mshin77.github.io/TextAnalysisR/reference/summarize_morphology.md)
   : Summarize Morphology Features
+- [`plot_pos_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_pos_frequencies.md)
+  : Plot Part-of-Speech Tag Frequencies
+- [`plot_entity_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_entity_frequencies.md)
+  : Plot Named Entity Frequencies
+- [`plot_morphology_feature()`](https://mshin77.github.io/TextAnalysisR/reference/plot_morphology_feature.md)
+  : Plot Morphology Feature Distribution
 - [`render_displacy_ent()`](https://mshin77.github.io/TextAnalysisR/reference/render_displacy_ent.md)
   : Render displaCy Entity Visualization
-- [`render_displacy_dep()`](https://mshin77.github.io/TextAnalysisR/reference/render_displacy_dep.md)
-  : Render displaCy Dependency Visualization
 
 ## Lexical Analysis
 
-Word frequency, keywords, and readability
+Word frequency, keywords, readability, and dispersion
 
-- [`lexical_analysis`](https://mshin77.github.io/TextAnalysisR/reference/lexical_analysis.md)
-  : Lexical Analysis Functions
 - [`calculate_word_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_word_frequency.md)
   : Analyze and Visualize Word Frequencies Across a Continuous Variable
+- [`lexical_analysis`](https://mshin77.github.io/TextAnalysisR/reference/lexical_analysis.md)
+  : Lexical Analysis Functions
 - [`extract_keywords_keyness()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_keyness.md)
   : Extract Keywords Using Statistical Keyness
 - [`extract_keywords_tfidf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_tfidf.md)
@@ -56,6 +65,12 @@ Word frequency, keywords, and readability
   : Clear Lexical Diversity Cache
 - [`calculate_text_readability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_text_readability.md)
   : Calculate Text Readability
+- [`calculate_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_log_odds_ratio.md)
+  : Calculate Log Odds Ratio Between Categories
+- [`calculate_lexical_dispersion()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_lexical_dispersion.md)
+  : Calculate Lexical Dispersion
+- [`calculate_dispersion_metrics()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_dispersion_metrics.md)
+  : Calculate Dispersion Metrics
 - [`plot_word_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_word_frequency.md)
   : Plot Word Frequency
 - [`plot_tfidf_keywords()`](https://mshin77.github.io/TextAnalysisR/reference/plot_tfidf_keywords.md)
@@ -68,12 +83,6 @@ Word frequency, keywords, and readability
   : Plot N-gram Frequency
 - [`plot_mwe_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_mwe_frequency.md)
   : Plot Multi-Word Expression Frequency
-- [`plot_pos_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_pos_frequencies.md)
-  : Plot Part-of-Speech Tag Frequencies
-- [`plot_entity_frequencies()`](https://mshin77.github.io/TextAnalysisR/reference/plot_entity_frequencies.md)
-  : Plot Named Entity Frequencies
-- [`plot_morphology_feature()`](https://mshin77.github.io/TextAnalysisR/reference/plot_morphology_feature.md)
-  : Plot Morphology Feature Distribution
 - [`plot_readability_distribution()`](https://mshin77.github.io/TextAnalysisR/reference/plot_readability_distribution.md)
   : Plot Readability Distribution
 - [`plot_readability_by_group()`](https://mshin77.github.io/TextAnalysisR/reference/plot_readability_by_group.md)
@@ -82,6 +91,10 @@ Word frequency, keywords, and readability
   : Plot Top Documents by Readability
 - [`plot_lexical_diversity_distribution()`](https://mshin77.github.io/TextAnalysisR/reference/plot_lexical_diversity_distribution.md)
   : Plot Lexical Diversity Distribution
+- [`plot_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/plot_log_odds_ratio.md)
+  : Plot Log Odds Ratio
+- [`plot_lexical_dispersion()`](https://mshin77.github.io/TextAnalysisR/reference/plot_lexical_dispersion.md)
+  : Plot Lexical Dispersion
 
 ## Sentiment Analysis
 
@@ -135,17 +148,17 @@ Similarity, clustering, and networks
 - [`export_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/export_document_clustering.md)
   : Export Document Clustering Analysis
 - [`generate_cluster_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels.md)
-  : Generate Cluster Labels with AI
+  : Generate Cluster Label Suggestions (Human-in-the-Loop)
 - [`generate_cluster_labels_auto()`](https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels_auto.md)
   : Generate Cluster Labels
 - [`temporal_semantic_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.md)
   : Temporal Semantic Analysis
 - [`analyze_semantic_evolution()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_semantic_evolution.md)
   : Analyze Semantic Evolution
-- [`semantic_cooccurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_cooccurrence_network.md)
-  : Compute Word Co-occurrence Network
-- [`semantic_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_correlation_network.md)
-  : Compute Word Correlation Network
+- [`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md)
+  : Analyze and Visualize Word Co-occurrence Networks
+- [`word_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_correlation_network.md)
+  : Analyze and Visualize Word Correlation Networks
 - [`plot_semantic_viz()`](https://mshin77.github.io/TextAnalysisR/reference/plot_semantic_viz.md)
   : Plot Semantic Analysis Visualization
 - [`plot_similarity_heatmap()`](https://mshin77.github.io/TextAnalysisR/reference/plot_similarity_heatmap.md)
@@ -161,14 +174,18 @@ STM, embedding-based, and hybrid models
 
 - [`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md)
   : Find Optimal Number of Topics
-- [`fit_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_topics.md)
-  : Embedding-based Topic Modeling
+- [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md)
+  : Fit Embedding-based Topic Model
 - [`fit_hybrid_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_hybrid_model.md)
   : Fit Hybrid Topic Model
 - [`fit_semantic_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.md)
   : Fit Semantic Model
 - [`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md)
   : Fit Temporal Topic Model
+- [`auto_tune_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/auto_tune_embedding_topics.md)
+  : Auto-tune BERTopic Hyperparameters
+- [`assess_embedding_stability()`](https://mshin77.github.io/TextAnalysisR/reference/assess_embedding_stability.md)
+  : Assess Embedding Topic Model Stability
 - [`get_topic_terms()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_terms.md)
   : Select Top Terms for Each Topic
 - [`get_topic_prevalence()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_prevalence.md)
@@ -227,7 +244,7 @@ Text extraction from PDFs with optional vision AI
 
 ## AI Integration
 
-LLM-powered analysis with Ollama and OpenAI
+Topic-grounded content generation via local and web-based APIs
 
 - [`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md)
   : Check if Ollama is Available
@@ -237,22 +254,28 @@ LLM-powered analysis with Ollama and OpenAI
   : Call Ollama for Text Generation
 - [`call_openai_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.md)
   : Call OpenAI Chat Completion API
+- [`call_gemini_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.md)
+  : Call Gemini Chat API
+- [`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md)
+  : Call LLM API (Unified Wrapper)
 - [`check_vision_models()`](https://mshin77.github.io/TextAnalysisR/reference/check_vision_models.md)
   : Check Vision Model Availability
 - [`get_recommended_ollama_model()`](https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.md)
   : Get Recommended Ollama Model
-- [`init_langgraph()`](https://mshin77.github.io/TextAnalysisR/reference/init_langgraph.md)
-  : Initialize LangGraph for Current Session
-- [`generate_topic_labels_langgraph()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels_langgraph.md)
-  : Generate Topic Labels with LLM Assistance
-- [`validate_topic_labels_langgraph()`](https://mshin77.github.io/TextAnalysisR/reference/validate_topic_labels_langgraph.md)
-  : Validate User-Selected Topic Labels
+- [`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md)
+  : Get Best Available Embeddings
+- [`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md)
+  : Get Embeddings from API
+- [`get_spacy_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_spacy_embeddings.md)
+  : Get spaCy Word Embeddings
 - [`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md)
   : RAG-Enhanced Semantic Search
-- [`ai_content_generation`](https://mshin77.github.io/TextAnalysisR/reference/ai_content_generation.md)
-  : AI-Assisted Content Generation from Topics
-- [`generate_survey_items()`](https://mshin77.github.io/TextAnalysisR/reference/generate_survey_items.md)
-  : Generate Survey Items from Topic Terms
+- [`analyze_sentiment_llm()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.md)
+  : LLM-based Sentiment Analysis
+- [`get_content_type_prompt()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_prompt.md)
+  : Get Default System Prompt for Content Type
+- [`get_content_type_user_template()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_user_template.md)
+  : Get Default User Prompt Template for Content Type
 
 ## Python Environment
 
@@ -262,8 +285,6 @@ Python environment setup
   : Setup Python Environment
 - [`check_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/check_python_env.md)
   : Check Python Environment Status
-- [`check_multimodal_prerequisites()`](https://mshin77.github.io/TextAnalysisR/reference/check_multimodal_prerequisites.md)
-  : Check Multimodal Prerequisites
 
 ## Validation
 
@@ -279,8 +300,6 @@ Quality metrics and cross-validation
   : Calculate Clustering Quality Metrics
 - [`calculate_cross_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_cross_similarity.md)
   : Calculate Cross-Matrix Cosine Similarity
-- [`analyze_contrastive_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_contrastive_similarity.md)
-  : Analyze Contrastive Similarity (Alias)
 - [`analyze_similarity_gaps()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_similarity_gaps.md)
   : Analyze Similarity Gaps Between Categories
 - [`extract_cross_category_similarities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.md)

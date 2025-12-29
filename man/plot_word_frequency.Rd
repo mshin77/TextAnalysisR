@@ -25,9 +25,10 @@ Creates a bar plot showing the most frequent words in a document-feature matrix 
 }
 \examples{
 if (interactive()) {
-  texts <- c("mathematics technology", "education technology", "learning support")
+  data(SpecialEduTech, package = "TextAnalysisR")
+  texts <- SpecialEduTech$abstract[1:10]
   dfm <- quanteda::dfm(quanteda::tokens(texts))
-  plot <- plot_word_frequency(dfm, n = 5)
+  plot <- plot_word_frequency(dfm, n = 10)
   print(plot)
 }
 }
@@ -44,6 +45,8 @@ Other visualization:
 \code{\link{plot_cluster_terms}()},
 \code{\link{plot_cross_category_heatmap}()},
 \code{\link{plot_entity_frequencies}()},
+\code{\link{plot_lexical_dispersion}()},
+\code{\link{plot_log_odds_ratio}()},
 \code{\link{plot_mwe_frequency}()},
 \code{\link{plot_ngram_frequency}()},
 \code{\link{plot_pos_frequencies}()},
