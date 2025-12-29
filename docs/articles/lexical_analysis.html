@@ -247,6 +247,7 @@ Named Entity Recognition</a></p>
 <details><summary><strong>Log Odds Ratio Analysis</strong>
 </summary><p>Log odds ratio compares word frequencies between categories to
 identify distinctive vocabulary.</p>
+<p><strong>Simple Log Odds Ratio:</strong></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">log_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
@@ -255,11 +256,25 @@ identify distinctive vocabulary.</p>
 <span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_log_odds_ratio.html">plot_log_odds_ratio</a></span><span class="op">(</span><span class="va">log_odds</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Weighted Log Odds Ratio:</strong></p>
+<p>For publication-quality analysis, use the weighted log odds method
+which accounts for sampling variability by weighting results with
+z-scores. This method identifies words that reliably distinguish between
+groups, not just rare words with extreme ratios.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Requires tidylo package: install.packages("tidylo")</span></span>
+<span><span class="va">weighted_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_weighted_log_odds.html">calculate_weighted_log_odds</a></span><span class="op">(</span></span>
+<span>  <span class="va">dfm_object</span>,</span>
+<span>  group_var <span class="op">=</span> <span class="st">"category"</span>,</span>
+<span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Learn More:</strong> <a href="https://juliasilge.github.io/tidylo/" class="external-link">tidylo: Weighted Log
+Odds</a></p>
 </details><hr>
 <details><summary><strong>Lexical Dispersion</strong>
 </summary><p>Lexical dispersion (X-ray plot) shows where terms appear across
 documents.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dispersion</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_lexical_dispersion.html">calculate_lexical_dispersion</a></span><span class="op">(</span><span class="va">tokens</span>, terms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"education"</span>, <span class="st">"technology"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_lexical_dispersion.html">plot_lexical_dispersion</a></span><span class="op">(</span><span class="va">dispersion</span><span class="op">)</span></span></code></pre></div>
 </details><hr>
@@ -319,7 +334,7 @@ estimates</li>
 sentence length)</li>
 <li>Short texts may produce less reliable scores</li>
 </ul>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">readability</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_text_readability.html">calculate_text_readability</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_readability_distribution.html">plot_readability_distribution</a></span><span class="op">(</span><span class="va">readability</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_readability.html" class="external-link">quanteda
@@ -376,7 +391,7 @@ texts</li>
 <li>Maas, Yule K, and Simpson D use inverse scales (lower = more
 diverse)</li>
 </ul>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diversity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lexical_diversity_analysis.html">lexical_diversity_analysis</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_lexical_diversity_distribution.html">plot_lexical_diversity_distribution</a></span><span class="op">(</span><span class="va">diversity</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_lexdiv.html" class="external-link">quanteda

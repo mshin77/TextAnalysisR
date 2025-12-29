@@ -41,6 +41,7 @@ reference:
   - clear_lexdiv_cache
   - calculate_text_readability
   - calculate_log_odds_ratio
+  - calculate_weighted_log_odds
   - calculate_lexical_dispersion
   - calculate_dispersion_metrics
   - plot_word_frequency
@@ -54,6 +55,7 @@ reference:
   - plot_top_readability_documents
   - plot_lexical_diversity_distribution
   - plot_log_odds_ratio
+  - plot_weighted_log_odds
   - plot_lexical_dispersion
 
 - title: "Sentiment Analysis"

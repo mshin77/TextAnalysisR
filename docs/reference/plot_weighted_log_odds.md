@@ -1,36 +1,63 @@
-# Create Empty Plot with Message
+# Plot Weighted Log Odds
 
-Creates an empty plotly plot displaying a centered message. Useful for
-showing status messages, error states, or empty data notifications.
+Creates a faceted horizontal bar plot showing weighted log odds for
+comparing word usage across categories using the Fightin' Words method
+(Monroe et al. 2008). Each group is displayed in a separate facet
+showing its most distinctive terms.
 
 ## Usage
 
 ``` r
-create_empty_plot_message(message, color = "#6B7280", font_size = 16)
+plot_weighted_log_odds(
+  weighted_data,
+  top_n = 10,
+  color_positive = "#10B981",
+  color_negative = "#EF4444",
+  height = 600,
+  width = NULL,
+  title = "Weighted Log Odds by Group"
+)
 ```
 
 ## Arguments
 
-- message:
+- weighted_data:
 
-  Character string message to display
+  Data frame from calculate_weighted_log_odds()
 
-- color:
+- top_n:
 
-  Text color (default: "#6B7280")
+  Number of top terms to show per group (default: 10)
 
-- font_size:
+- color_positive:
 
-  Font size in pixels (default: 16)
+  Color for positive log odds (default: "#10B981" green)
+
+- color_negative:
+
+  Color for negative log odds (default: "#EF4444" red)
+
+- height:
+
+  Plot height in pixels (default: 600)
+
+- width:
+
+  Plot width in pixels (default: NULL for auto)
+
+- title:
+
+  Plot title (default: "Weighted Log Odds by Group")
 
 ## Value
 
-A plotly object with centered message annotation
+A plotly object
 
 ## See also
 
 Other visualization:
 [`apply_standard_plotly_layout()`](https://mshin77.github.io/TextAnalysisR/reference/apply_standard_plotly_layout.md),
+[`create_empty_plot_message()`](https://mshin77.github.io/TextAnalysisR/reference/create_empty_plot_message.md),
 [`create_message_table()`](https://mshin77.github.io/TextAnalysisR/reference/create_message_table.md),
 [`create_standard_ggplot_theme()`](https://mshin77.github.io/TextAnalysisR/reference/create_standard_ggplot_theme.md),
 [`get_dt_options()`](https://mshin77.github.io/TextAnalysisR/reference/get_dt_options.md),
@@ -48,14 +75,13 @@ Other visualization:
 [`plot_semantic_viz()`](https://mshin77.github.io/TextAnalysisR/reference/plot_semantic_viz.md),
 [`plot_similarity_heatmap()`](https://mshin77.github.io/TextAnalysisR/reference/plot_similarity_heatmap.md),
 [`plot_term_trends_continuous()`](https://mshin77.github.io/TextAnalysisR/reference/plot_term_trends_continuous.md),
-[`plot_weighted_log_odds()`](https://mshin77.github.io/TextAnalysisR/reference/plot_weighted_log_odds.md),
 [`plot_word_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_word_frequency.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-create_empty_plot_message("No data available")
-create_empty_plot_message("Click 'Run Analysis' to begin", color = "#337ab7")
+weighted_odds <- calculate_weighted_log_odds(dfm, "party", top_n = 15)
+plot_weighted_log_odds(weighted_odds)
 } # }
 ```

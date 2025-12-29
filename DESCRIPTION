@@ -43,6 +43,7 @@ Imports:
     widyr
 Suggests:
     aricode,
+    tidylo,
     broom,
     cluster,
     clusterCrit,

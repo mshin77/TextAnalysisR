@@ -67,6 +67,8 @@ Word frequency, keywords, readability, and dispersion
   : Calculate Text Readability
 - [`calculate_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_log_odds_ratio.md)
   : Calculate Log Odds Ratio Between Categories
+- [`calculate_weighted_log_odds()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_weighted_log_odds.md)
+  : Calculate Weighted Log Odds Ratio
 - [`calculate_lexical_dispersion()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_lexical_dispersion.md)
   : Calculate Lexical Dispersion
 - [`calculate_dispersion_metrics()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_dispersion_metrics.md)
@@ -93,6 +95,8 @@ Word frequency, keywords, readability, and dispersion
   : Plot Lexical Diversity Distribution
 - [`plot_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/plot_log_odds_ratio.md)
   : Plot Log Odds Ratio
+- [`plot_weighted_log_odds()`](https://mshin77.github.io/TextAnalysisR/reference/plot_weighted_log_odds.md)
+  : Plot Weighted Log Odds
 - [`plot_lexical_dispersion()`](https://mshin77.github.io/TextAnalysisR/reference/plot_lexical_dispersion.md)
   : Plot Lexical Dispersion
 

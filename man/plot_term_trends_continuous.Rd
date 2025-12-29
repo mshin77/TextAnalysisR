@@ -64,6 +64,7 @@ Other visualization:
 \code{\link{plot_pos_frequencies}()},
 \code{\link{plot_semantic_viz}()},
 \code{\link{plot_similarity_heatmap}()},
+\code{\link{plot_weighted_log_odds}()},
 \code{\link{plot_word_frequency}()}
 }
 \concept{visualization}

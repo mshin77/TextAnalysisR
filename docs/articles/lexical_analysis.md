@@ -168,6 +168,8 @@ word_correlation_network(dfm_object, corr_n = 0.3)
 Log odds ratio compares word frequencies between categories to identify
 distinctive vocabulary.
 
+**Simple Log Odds Ratio:**
+
 ``` r
 log_odds <- calculate_log_odds_ratio(
   dfm_object,
@@ -177,6 +179,25 @@ log_odds <- calculate_log_odds_ratio(
 )
 plot_log_odds_ratio(log_odds)
 ```
+
+**Weighted Log Odds Ratio:**
+
+For publication-quality analysis, use the weighted log odds method which
+accounts for sampling variability by weighting results with z-scores.
+This method identifies words that reliably distinguish between groups,
+not just rare words with extreme ratios.
+
+``` r
+# Requires tidylo package: install.packages("tidylo")
+weighted_odds <- calculate_weighted_log_odds(
+  dfm_object,
+  group_var = "category",
+  top_n = 15
+)
+```
+
+**Learn More:** [tidylo: Weighted Log
+Odds](https://juliasilge.github.io/tidylo/)
 
 ------------------------------------------------------------------------
 

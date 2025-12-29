@@ -51,6 +51,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_probability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_quality.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_stability.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_weighted_log_odds.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_word_frequency.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.html</loc></url>
@@ -176,6 +177,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_topic_effects_continuous.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_topic_probability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_top_readability_documents.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_weighted_log_odds.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_word_frequency.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_word_probability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/prep_texts.html</loc></url>

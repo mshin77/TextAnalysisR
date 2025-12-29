@@ -3062,6 +3062,101 @@ calculate_log_odds_ratio <- function(dfm_object,
 }
 
 
+#' Calculate Weighted Log Odds Ratio
+#'
+#' @description
+#' Computes weighted log odds ratios using the method from Monroe, Colaresi,
+#' and Quinn (2008) "Fightin' Words" via the tidylo package. This method
+#' weights log odds by variance (z-score) to identify words that reliably
+#' distinguish between groups, accounting for sampling variability.
+#'
+#' @param dfm_object A quanteda dfm object
+#' @param group_var Character, name of the document variable to group by
+#' @param top_n Number of top terms to return per group (default: 10)
+#' @param min_count Minimum total count for a term to be included (default: 5)
+#'
+#' @return A data frame with columns: group, feature, n, log_odds_weighted,
+#'   and log_odds (from tidylo::bind_log_odds)
+#'
+#' @references
+#' Monroe, B. L., Colaresi, M. P., & Quinn, K. M. (2008). Fightin' words:
+#' Lexical feature selection and evaluation for identifying the content of
+#' political conflict. Political Analysis, 16(4), 372-403.
+#'
+#' Silge, J., & Robinson, D. (2017). Text mining with R: A tidy approach.
+#' O'Reilly Media. https://www.tidytextmining.com/
+#'
+#' @family lexical analysis
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' weighted_odds <- calculate_weighted_log_odds(dfm, "party", top_n = 15)
+#' }
+calculate_weighted_log_odds <- function(dfm_object,
+                                        group_var,
+                                        top_n = 10,
+                                        min_count = 5) {
+
+  if (!requireNamespace("tidylo", quietly = TRUE)) {
+    stop("Package 'tidylo' is required. Please install it with: install.packages('tidylo')")
+  }
+
+  if (!inherits(dfm_object, "dfm")) {
+    stop("dfm_object must be a quanteda dfm object")
+  }
+
+  if (!group_var %in% names(quanteda::docvars(dfm_object))) {
+    stop("group_var '", group_var, "' not found in document variables")
+  }
+
+  # Get document variables
+  doc_vars <- quanteda::docvars(dfm_object)
+  doc_vars$doc_id <- quanteda::docnames(dfm_object)
+
+  # Convert DFM to tidy format
+  tidy_data <- quanteda::convert(dfm_object, to = "data.frame")
+  names(tidy_data)[1] <- "doc_id"
+
+  tidy_long <- tidyr::pivot_longer(
+    tidy_data,
+    cols = -"doc_id",
+    names_to = "feature",
+    values_to = "count"
+  )
+
+  # Join with document variables
+  tidy_long <- dplyr::left_join(
+    tidy_long,
+    doc_vars[, c("doc_id", group_var)],
+    by = "doc_id"
+  )
+
+  # Aggregate by group and feature
+  grouped_counts <- tidy_long %>%
+    dplyr::group_by(.data[[group_var]], feature) %>%
+    dplyr::summarise(n = sum(count), .groups = "drop") %>%
+    dplyr::filter(n >= min_count)
+
+  # Apply tidylo weighted log odds
+  result <- tidylo::bind_log_odds(
+    grouped_counts,
+    set = !!rlang::sym(group_var),
+    feature = feature,
+    n = n
+  )
+
+  # Get top terms per group by absolute weighted log odds
+  result <- result %>%
+    dplyr::group_by(.data[[group_var]]) %>%
+    dplyr::slice_max(abs(.data$log_odds_weighted), n = top_n, with_ties = FALSE) %>%
+    dplyr::ungroup() %>%
+    dplyr::arrange(.data[[group_var]], dplyr::desc(abs(.data$log_odds_weighted)))
+
+  as.data.frame(result)
+}
+
+
 #' Plot Log Odds Ratio
 #'
 #' @description
@@ -3188,6 +3283,146 @@ plot_log_odds_ratio <- function(log_odds_data,
           yref = "paper",
           line = list(color = "#94A3B8", width = 1, dash = "dot")
         )
+      )
+    )
+
+  return(p)
+}
+
+
+#' Plot Weighted Log Odds
+#'
+#' @description
+#' Creates a faceted horizontal bar plot showing weighted log odds for comparing
+#' word usage across categories using the Fightin' Words method (Monroe et al. 2008).
+#' Each group is displayed in a separate facet showing its most distinctive terms.
+#'
+#' @param weighted_data Data frame from calculate_weighted_log_odds()
+#' @param top_n Number of top terms to show per group (default: 10)
+#' @param color_positive Color for positive log odds (default: "#10B981" green)
+#' @param color_negative Color for negative log odds (default: "#EF4444" red)
+#' @param height Plot height in pixels (default: 600)
+#' @param width Plot width in pixels (default: NULL for auto)
+#' @param title Plot title (default: "Weighted Log Odds by Group")
+#'
+#' @return A plotly object
+#'
+#' @family visualization
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' weighted_odds <- calculate_weighted_log_odds(dfm, "party", top_n = 15)
+#' plot_weighted_log_odds(weighted_odds)
+#' }
+plot_weighted_log_odds <- function(weighted_data,
+                                   top_n = 10,
+                                   color_positive = "#10B981",
+                                   color_negative = "#EF4444",
+                                   height = 600,
+                                   width = NULL,
+                                   title = "Weighted Log Odds by Group") {
+
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
+  if (is.null(weighted_data) || nrow(weighted_data) == 0) {
+    return(create_empty_plot_message("No weighted log odds data available"))
+  }
+
+  # Get group variable name (first column that's not feature/n/log_odds)
+  group_col <- setdiff(names(weighted_data), c("feature", "n", "log_odds_weighted", "log_odds"))[1]
+
+  if (is.null(group_col)) {
+    return(create_empty_plot_message("Could not identify group column"))
+  }
+
+  # Get unique groups
+  groups <- unique(weighted_data[[group_col]])
+
+  # Create subplot for each group
+  plots <- lapply(groups, function(grp) {
+    grp_data <- weighted_data[weighted_data[[group_col]] == grp, ]
+
+    # Get top N by absolute weighted log odds
+    grp_data <- grp_data[order(abs(grp_data$log_odds_weighted), decreasing = TRUE), ]
+    grp_data <- utils::head(grp_data, top_n)
+
+    # Order by weighted log odds for display
+    grp_data <- grp_data[order(grp_data$log_odds_weighted), ]
+    grp_data$feature_ordered <- factor(grp_data$feature, levels = grp_data$feature)
+
+    # Assign colors
+    grp_data$color <- ifelse(grp_data$log_odds_weighted > 0, color_positive, color_negative)
+
+    # Create hover text
+    grp_data$hover_text <- paste0(
+      "<b>", grp_data$feature, "</b><br>",
+      "Weighted Log Odds: ", round(grp_data$log_odds_weighted, 3), "<br>",
+      "Count: ", grp_data$n
+    )
+
+    plotly::plot_ly(
+      data = grp_data,
+      x = ~log_odds_weighted,
+      y = ~feature_ordered,
+      type = "bar",
+      orientation = "h",
+      marker = list(color = ~color),
+      text = ~hover_text,
+      hoverinfo = "text",
+      showlegend = FALSE
+    ) %>%
+      plotly::layout(
+        annotations = list(
+          list(
+            text = as.character(grp),
+            x = 0.5,
+            y = 1.05,
+            xref = "paper",
+            yref = "paper",
+            showarrow = FALSE,
+            font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif")
+          )
+        ),
+        xaxis = list(title = ""),
+        yaxis = list(title = ""),
+        shapes = list(
+          list(
+            type = "line",
+            x0 = 0, x1 = 0,
+            y0 = 0, y1 = 1,
+            yref = "paper",
+            line = list(color = "#94A3B8", width = 1, dash = "dot")
+          )
+        )
+      )
+  })
+
+  # Combine subplots
+  n_groups <- length(groups)
+  n_rows <- ceiling(n_groups / 2)
+
+  p <- plotly::subplot(
+    plots,
+    nrows = n_rows,
+    shareX = FALSE,
+    shareY = FALSE,
+    margin = 0.08
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 20, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        x = 0.5, xanchor = "center"
+      ),
+      height = max(height, n_rows * 300),
+      margin = list(l = 100, r = 40, t = 80, b = 60),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
       )
     )
 
