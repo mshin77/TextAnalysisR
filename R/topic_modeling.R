@@ -441,7 +441,7 @@ generate_topic_labels <- function(top_topic_terms,
     )
   }
 
-  if (!validate_api_key(openai_api_key, strict = FALSE)) {
+  if (!validate_api_key(openai_api_key, strict = FALSE)$valid) {
     stop("Invalid API key format. Please check your OpenAI API key.")
   }
 
