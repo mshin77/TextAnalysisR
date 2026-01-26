@@ -3876,47 +3876,272 @@ server <- shinyServer(function(input, output, session) {
 
   user_custom_entities <- reactiveVal(list())
 
-  domain_defaults <- list(
-    disability = c("dyscalculia", "dyslexia", "dysgraphia", "dyspraxia", "ADHD", "ADD", "ASD",
-                   "autism", "asperger syndrome", "learning disability", "learning disorder",
-                   "intellectual disability", "developmental disability", "cognitive disability",
-                   "math anxiety", "processing disorder", "SLD"),
-    program = c("IEP", "individualized education program", "504", "504 plan", "RTI",
-                "response to intervention", "MTSS", "UDL", "universal design for learning",
-                "IDEA", "FAPE", "LRE", "ESL", "ELL", "SPED", "special education", "STEM", "STEAM"),
-    test = c("WISC", "WAIS", "WJ", "woodcock johnson", "KeyMath", "TEMA", "CBM",
-             "curriculum based measurement", "DIBELS", "AIMSweb", "MAP", "NWEA", "NAEP", "PISA", "TIMSS"),
-    concept = c("number sense", "place value", "subitizing", "cardinality", "ordinality",
-                "fact fluency", "math facts", "mental math", "number line", "base ten",
-                "manipulatives", "CRA", "concrete representational abstract"),
-    tool = c("assistive technology", "AT", "text to speech", "TTS", "speech to text",
-             "screen reader", "EdTech", "educational technology", "LMS",
-             "learning management system", "CAI", "computer assisted instruction",
-             "ITS", "intelligent tutoring system", "adaptive learning", "virtual manipulatives"),
-    method = c("explicit instruction", "direct instruction", "DI", "scaffolding",
-               "differentiated instruction", "evidence based practice", "EBP",
-               "research based intervention", "multisensory instruction",
-               "orton gillingham", "structured literacy", "touch math", "TouchMath")
+  builtin_domain_presets <- list(
+    none = list(
+      name = "None (Custom)",
+      defaults = list(
+        disability = character(0), program = character(0), test = character(0),
+        concept = character(0), tool = character(0), method = character(0)
+      ),
+      selected = list(
+        disability = character(0), program = character(0), test = character(0),
+        concept = character(0), tool = character(0), method = character(0)
+      )
+    ),
+    special_education = list(
+      name = "Special Education",
+      defaults = list(
+        disability = c("dyscalculia", "dyslexia", "dysgraphia", "dyspraxia", "ADHD", "ADD", "ASD",
+                       "autism", "asperger syndrome", "learning disability", "learning disorder",
+                       "intellectual disability", "developmental disability", "cognitive disability",
+                       "math anxiety", "processing disorder", "SLD"),
+        program = c("IEP", "individualized education program", "504", "504 plan", "RTI",
+                    "response to intervention", "MTSS", "UDL", "universal design for learning",
+                    "IDEA", "FAPE", "LRE", "ESL", "ELL", "SPED", "special education", "STEM", "STEAM"),
+        test = c("WISC", "WAIS", "WJ", "woodcock johnson", "KeyMath", "TEMA", "CBM",
+                 "curriculum based measurement", "DIBELS", "AIMSweb", "MAP", "NWEA", "NAEP", "PISA", "TIMSS"),
+        concept = c("number sense", "place value", "subitizing", "cardinality", "ordinality",
+                    "fact fluency", "math facts", "mental math", "number line", "base ten",
+                    "manipulatives", "CRA", "concrete representational abstract"),
+        tool = c("assistive technology", "AT", "text to speech", "TTS", "speech to text",
+                 "screen reader", "EdTech", "educational technology", "LMS",
+                 "learning management system", "CAI", "computer assisted instruction",
+                 "ITS", "intelligent tutoring system", "adaptive learning", "virtual manipulatives"),
+        method = c("explicit instruction", "direct instruction", "DI", "scaffolding",
+                   "differentiated instruction", "evidence based practice", "EBP",
+                   "research based intervention", "multisensory instruction",
+                   "orton gillingham", "structured literacy", "touch math", "TouchMath")
+      ),
+      selected = list(
+        disability = c("dyscalculia", "dyslexia", "dysgraphia", "ADHD", "ASD", "autism", "learning disability", "math anxiety"),
+        program = c("IEP", "504", "RTI", "MTSS", "UDL", "IDEA", "special education", "STEM"),
+        test = c("WISC", "DIBELS", "CBM", "NAEP", "PISA", "TIMSS"),
+        concept = c("number sense", "place value", "fact fluency", "manipulatives", "CRA"),
+        tool = c("assistive technology", "text to speech", "educational technology", "adaptive learning", "virtual manipulatives"),
+        method = c("explicit instruction", "direct instruction", "scaffolding", "differentiated instruction", "evidence based practice")
+      )
+    )
   )
 
-  domain_selected <- list(
-    disability = c("dyscalculia", "dyslexia", "dysgraphia", "ADHD", "ASD", "autism", "learning disability", "math anxiety"),
-    program = c("IEP", "504", "RTI", "MTSS", "UDL", "IDEA", "special education", "STEM"),
-    test = c("WISC", "DIBELS", "CBM", "NAEP", "PISA", "TIMSS"),
-    concept = c("number sense", "place value", "fact fluency", "manipulatives", "CRA"),
-    tool = c("assistive technology", "text to speech", "educational technology", "adaptive learning", "virtual manipulatives"),
-    method = c("explicit instruction", "direct instruction", "scaffolding", "differentiated instruction", "evidence based practice")
+  imported_domain_preset <- reactiveVal(NULL)
+
+  domain_presets <- reactive({
+    presets <- builtin_domain_presets
+    imported <- imported_domain_preset()
+    if (!is.null(imported)) {
+      presets[["imported"]] <- imported
+    }
+    presets
+  })
+
+  preset_to_dataframe <- function(preset) {
+    rows <- list()
+    domain_name <- preset$name
+    for (category in names(preset$defaults)) {
+      all_terms <- preset$defaults[[category]]
+      selected_terms <- preset$selected[[category]]
+      for (term in all_terms) {
+        rows <- c(rows, list(data.frame(
+          domain = domain_name,
+          category = category,
+          term = term,
+          selected = term %in% selected_terms,
+          stringsAsFactors = FALSE
+        )))
+      }
+    }
+    if (length(rows) > 0) {
+      do.call(rbind, rows)
+    } else {
+      data.frame(domain = character(0), category = character(0), term = character(0), selected = logical(0))
+    }
+  }
+
+  dataframe_to_preset <- function(df) {
+    domain_name <- "Imported"
+    if ("domain" %in% names(df) && nrow(df) > 0) {
+      unique_domains <- unique(trimws(df$domain))
+      unique_domains <- unique_domains[!is.na(unique_domains) & unique_domains != ""]
+      if (length(unique_domains) > 0) {
+        domain_name <- unique_domains[1]
+      }
+    }
+
+    defaults <- list()
+    selected <- list()
+
+    if (nrow(df) > 0 && all(c("category", "term") %in% names(df))) {
+      df$category <- tolower(trimws(df$category))
+      df$term <- trimws(df$term)
+      if (!"selected" %in% names(df)) {
+        df$selected <- TRUE
+      }
+      df$selected <- as.logical(df$selected)
+      df$selected[is.na(df$selected)] <- FALSE
+
+      categories <- unique(df$category)
+      categories <- categories[!is.na(categories) & categories != ""]
+
+      for (cat in categories) {
+        cat_rows <- df[df$category == cat, ]
+        if (nrow(cat_rows) > 0) {
+          defaults[[cat]] <- unique(cat_rows$term)
+          selected[[cat]] <- unique(cat_rows$term[cat_rows$selected == TRUE])
+        }
+      }
+    }
+
+    list(name = domain_name, defaults = defaults, selected = selected, categories = names(defaults))
+  }
+
+  output$export_domain_preset <- downloadHandler(
+    filename = function() {
+      preset_name <- current_domain_preset()
+      paste0("ner_preset_", preset_name, "_", format(Sys.time(), "%Y%m%d"), ".xlsx")
+    },
+    content = function(file) {
+      preset_name <- current_domain_preset()
+      presets <- domain_presets()
+      if (preset_name %in% names(presets)) {
+        df <- preset_to_dataframe(presets[[preset_name]])
+        writexl::write_xlsx(df, file)
+      }
+    }
   )
 
-  # Domain entity colors mapping
-  domain_entity_colors <- list(
+  observeEvent(input$import_domain_preset, {
+    req(input$import_domain_preset)
+    file_path <- input$import_domain_preset$datapath
+    file_name <- input$import_domain_preset$name
+
+    tryCatch({
+      if (grepl("\\.xlsx$", file_name, ignore.case = TRUE)) {
+        df <- readxl::read_excel(file_path)
+      } else if (grepl("\\.csv$", file_name, ignore.case = TRUE)) {
+        df <- utils::read.csv(file_path, stringsAsFactors = FALSE)
+      } else {
+        showNotification("Please upload an Excel (.xlsx) or CSV (.csv) file", type = "error")
+        return()
+      }
+
+      preset <- dataframe_to_preset(df)
+      imported_domain_preset(preset)
+
+      new_categories <- preset$categories
+      if (length(new_categories) > 0) {
+        current_categories(new_categories)
+
+        current_colors <- domain_entity_colors()
+        for (i in seq_along(new_categories)) {
+          cat <- new_categories[i]
+          if (is.null(current_colors[[cat]])) {
+            color_idx <- ((i - 1) %% length(default_category_colors)) + 1
+            current_colors[[cat]] <- default_category_colors[color_idx]
+          }
+        }
+        domain_entity_colors(current_colors)
+      }
+
+      current_domain_preset("imported")
+
+      choices <- c(
+        "None (Custom)" = "none",
+        "Special Education" = "special_education"
+      )
+      choices <- c(choices, setNames("imported", preset$name))
+
+      updateSelectizeInput(session, "ner_domain_preset",
+        choices = choices,
+        selected = "imported"
+      )
+
+      showNotification(paste0("Domain preset '", preset$name, "' imported successfully"), type = "message")
+    }, error = function(e) {
+      showNotification(paste("Error importing file:", e$message), type = "error")
+    })
+  })
+
+  current_domain_preset <- reactiveVal("special_education")
+
+  get_domain_config <- function(config_type = c("defaults", "selected")) {
+    config_type <- match.arg(config_type)
+    preset_name <- current_domain_preset()
+    presets <- domain_presets()
+
+    if (preset_name %in% names(presets)) {
+      return(presets[[preset_name]][[config_type]])
+    }
+
+    return(presets[["none"]][[config_type]])
+  }
+
+  domain_defaults <- reactive({
+    get_domain_config("defaults")
+  })
+
+  domain_selected <- reactive({
+    get_domain_config("selected")
+  })
+
+  observe({
+    imported <- imported_domain_preset()
+    choices <- c(
+      "None (Custom)" = "none",
+      "Special Education" = "special_education"
+    )
+    if (!is.null(imported)) {
+      choices <- c(choices, setNames("imported", imported$name))
+    }
+    updateSelectizeInput(session, "ner_domain_preset",
+      choices = choices,
+      selected = current_domain_preset()
+    )
+  })
+
+
+  default_category_colors <- c("#E91E63", "#2196F3", "#4CAF50", "#9C27B0", "#FF9800", "#00BCD4",
+                                "#795548", "#607D8B", "#FF5722", "#3F51B5", "#009688", "#CDDC39")
+
+  domain_entity_colors <- reactiveVal(list(
     disability = "#E91E63",
     program = "#2196F3",
     test = "#4CAF50",
     concept = "#9C27B0",
     tool = "#FF9800",
     method = "#00BCD4"
-  )
+  ))
+
+  current_categories <- reactiveVal(c("disability", "program", "test", "concept", "tool", "method"))
+
+  output$domain_entity_categories <- renderUI({
+    categories <- current_categories()
+    colors <- domain_entity_colors()
+    defaults <- domain_defaults()
+    selected <- domain_selected()
+
+    category_ui_list <- lapply(categories, function(cat) {
+      color <- colors[[cat]] %||% "#607D8B"
+      input_id <- paste0("domain_", cat)
+      cat_label <- toupper(cat)
+      cat_choices <- defaults[[cat]] %||% character(0)
+      cat_selected <- selected[[cat]] %||% character(0)
+
+      tags$details(
+        style = "margin-bottom: 8px;", open = NA,
+        tags$summary(
+          style = paste0("cursor: pointer; font-weight: 600; color: ", color, "; font-size: 14px;"),
+          HTML(paste0("<span style='display: inline-block; width: 12px; height: 12px; background: ", color, "; border-radius: 2px; margin-right: 6px;'></span>", cat_label))
+        ),
+        div(
+          style = "padding: 8px 0 0 0;",
+          selectizeInput(input_id, NULL, choices = cat_choices, selected = cat_selected, multiple = TRUE,
+            options = list(create = TRUE, maxItems = NULL))
+        )
+      )
+    })
+
+    do.call(tagList, category_ui_list)
+  })
 
   # Helper to get all uncategorized tokens from parsed data
   get_uncategorized_tokens <- function(parsed) {
@@ -3943,33 +4168,81 @@ server <- shinyServer(function(input, output, session) {
     token_freq
   }
 
-  # Initialize domain entities when spacy_parsed becomes available
+  # Update domain preset when dropdown changes
+  observeEvent(input$ner_domain_preset, {
+    preset_id <- input$ner_domain_preset
+    current_domain_preset(preset_id)
+
+    presets <- domain_presets()
+    if (preset_id %in% names(presets)) {
+      preset <- presets[[preset_id]]
+      new_categories <- names(preset$defaults)
+      if (length(new_categories) > 0) {
+        current_categories(new_categories)
+
+        current_colors <- domain_entity_colors()
+        for (i in seq_along(new_categories)) {
+          cat <- new_categories[i]
+          if (is.null(current_colors[[cat]])) {
+            color_idx <- ((i - 1) %% length(default_category_colors)) + 1
+            current_colors[[cat]] <- default_category_colors[color_idx]
+          }
+        }
+        domain_entity_colors(current_colors)
+      }
+    }
+  }, ignoreInit = FALSE, priority = 10)
+
+  # Track last populated categories and preset to detect changes
+  last_populated_categories <- reactiveVal(character(0))
+  last_populated_preset <- reactiveVal("")
+
   observe({
+    categories <- current_categories()
+    preset_id <- current_domain_preset()
+    req(length(categories) > 0)
+
+    prev_categories <- isolate(last_populated_categories())
+    prev_preset <- isolate(last_populated_preset())
+
+    # Check if categories or preset changed - if so, wait for UI to render
+    categories_changed <- !identical(sort(categories), sort(prev_categories))
+    preset_changed <- !identical(preset_id, prev_preset)
+
+    if (categories_changed || preset_changed) {
+      last_populated_categories(categories)
+      last_populated_preset(preset_id)
+      # Wait for UI to render the new category inputs
+      invalidateLater(150)
+      return()
+    }
+
     parsed <- spacy_parsed()
-    if (is.null(parsed)) return()
-
-    all_tokens <- get_uncategorized_tokens(parsed)
+    all_tokens <- if (!is.null(parsed)) get_uncategorized_tokens(parsed) else character(0)
     top_tokens <- head(all_tokens, 10)
+    defaults <- domain_defaults()
+    selected <- domain_selected()
 
-    for (domain in names(domain_defaults)) {
-      input_id <- paste0("domain_", domain)
-      choices <- unique(c(domain_defaults[[domain]], top_tokens))
+    for (cat in categories) {
+      input_id <- paste0("domain_", cat)
+      cat_defaults <- defaults[[cat]] %||% character(0)
+      cat_selected <- selected[[cat]] %||% character(0)
+      choices <- unique(c(cat_defaults, top_tokens))
       updateSelectizeInput(session, input_id,
         choices = choices,
-        selected = domain_selected[[domain]],
+        selected = cat_selected,
         server = TRUE
       )
     }
 
-    # Initialize uncategorized tokens for custom entity
-    all_defaults <- unlist(domain_selected, use.names = FALSE)
-    uncategorized <- all_tokens[!all_tokens %in% all_defaults]
+    all_selected <- unlist(selected, use.names = FALSE)
+    uncategorized <- all_tokens[!all_tokens %in% all_selected]
     updateSelectizeInput(session, "uncategorized_tokens",
       choices = uncategorized,
       selected = NULL,
       server = TRUE
     )
-  }) %>% bindEvent(spacy_parsed(), once = TRUE)
+  })
 
   # Track the apply button click count to know when to re-apply domain entities
   last_apply_count <- reactiveVal(0)
@@ -3996,14 +4269,13 @@ server <- shinyServer(function(input, output, session) {
       parsed$entity <- NA_character_
     }
 
-    # Get all domain selections
-    domain_selections <- list(
-      DISABILITY = isolate(input$domain_disability),
-      PROGRAM = isolate(input$domain_program),
-      TEST = isolate(input$domain_test),
-      CONCEPT = isolate(input$domain_concept),
-      TOOL = isolate(input$domain_tool),
-      METHOD = isolate(input$domain_method)
+    # Get all domain selections dynamically
+    categories <- isolate(current_categories())
+    domain_selections <- setNames(
+      lapply(categories, function(cat) {
+        isolate(input[[paste0("domain_", cat)]])
+      }),
+      toupper(categories)
     )
 
     # Check if any domain has selections
@@ -4024,6 +4296,52 @@ server <- shinyServer(function(input, output, session) {
 
     # Update data with domain entity labels
     spacy_parsed(parsed)
+  })
+
+  # Update entity labels when domain category inputs change
+  observe({
+    categories <- current_categories()
+
+    # Build domain_selections dynamically - this creates reactive dependencies
+    domain_selections <- setNames(
+      lapply(categories, function(cat) {
+        input[[paste0("domain_", cat)]]
+      }),
+      toupper(categories)
+    )
+
+    if (is.null(input$apply_ner_filter) || input$apply_ner_filter == 0) return()
+
+    parsed <- isolate(spacy_parsed())
+    if (is.null(parsed)) return()
+    if (!"entity" %in% names(parsed)) return()
+
+    domain_types <- toupper(categories)
+    all_selected_terms_lower <- tolower(unlist(domain_selections, use.names = FALSE))
+
+    updated_parsed <- parsed %>%
+      dplyr::mutate(
+        entity = dplyr::if_else(
+          entity %in% domain_types & !tolower(token) %in% all_selected_terms_lower,
+          "",
+          entity
+        )
+      )
+
+    for (entity_name in names(domain_selections)) {
+      terms <- domain_selections[[entity_name]]
+      if (length(terms) > 0) {
+        updated_parsed <- updated_parsed %>%
+          dplyr::mutate(entity = dplyr::case_when(
+            tolower(token) %in% tolower(terms) ~ entity_name,
+            TRUE ~ entity
+          ))
+      }
+    }
+
+    if (!identical(parsed$entity, updated_parsed$entity)) {
+      spacy_parsed(updated_parsed)
+    }
   })
 
   output$custom_entities_ui <- renderUI({
@@ -4115,15 +4433,12 @@ server <- shinyServer(function(input, output, session) {
     input$ner_named
     input$ner_objects
     input$ner_numeric
-    input$domain_disability
-    input$domain_program
-    input$domain_test
-    input$domain_concept
-    input$domain_tool
-    input$domain_method
+    # Dynamic dependency on all domain category inputs
+    for (cat in current_categories()) {
+      input[[paste0("domain_", cat)]]
+    }
 
     parsed <- spacy_parsed()
-
 
     # Check if entity column exists
     if (!"entity" %in% names(parsed)) {
@@ -4286,12 +4601,10 @@ server <- shinyServer(function(input, output, session) {
     input$ner_named
     input$ner_objects
     input$ner_numeric
-    input$domain_disability
-    input$domain_program
-    input$domain_test
-    input$domain_concept
-    input$domain_tool
-    input$domain_method
+    # Dynamic dependency on all domain category inputs
+    for (cat in current_categories()) {
+      input[[paste0("domain_", cat)]]
+    }
 
     if (!has_ner && has_custom) {
       custom_df <- custom_entities()
@@ -4595,12 +4908,10 @@ server <- shinyServer(function(input, output, session) {
     input$ner_named
     input$ner_objects
     input$ner_numeric
-    input$domain_disability
-    input$domain_program
-    input$domain_test
-    input$domain_concept
-    input$domain_tool
-    input$domain_method
+    # Dynamic dependency on all domain category inputs
+    for (cat in current_categories()) {
+      input[[paste0("domain_", cat)]]
+    }
 
     parsed <- spacy_parsed()
 
@@ -5549,14 +5860,51 @@ server <- shinyServer(function(input, output, session) {
                 )
               )
 
-            # Store the modification
             current_mods <- entity_type_modifications()
             mod_key <- paste0(target_doc_id, "_", target_sentence_id, "_", target_token_id)
             current_mods[[mod_key]] <- new_value
             entity_type_modifications(current_mods)
 
-            # Update the reactive value to trigger plot and table refresh
             spacy_parsed(parsed)
+
+            domain_types <- c("DISABILITY", "PROGRAM", "TEST", "CONCEPT", "TOOL", "METHOD")
+            token_text <- target_row$token
+            old_entity <- gsub("_[BI]$", "", target_row$entity_clean)
+
+            if (nzchar(token_text)) {
+              all_tokens <- get_uncategorized_tokens(parsed)
+
+              if (toupper(old_entity) %in% domain_types) {
+                old_domain_input_id <- paste0("domain_", tolower(old_entity))
+                old_selection <- input[[old_domain_input_id]]
+                new_old_selection <- old_selection[!tolower(old_selection) %in% tolower(token_text)]
+                if (length(new_old_selection) != length(old_selection)) {
+                  old_domain_key <- tolower(old_entity)
+                  choices <- unique(c(domain_defaults()[[old_domain_key]], all_tokens))
+                  updateSelectizeInput(session, old_domain_input_id,
+                    choices = choices,
+                    selected = new_old_selection,
+                    server = TRUE
+                  )
+                }
+              }
+
+              if (toupper(new_value) %in% domain_types) {
+                domain_input_id <- paste0("domain_", tolower(new_value))
+                current_selection <- input[[domain_input_id]]
+
+                if (!tolower(token_text) %in% tolower(current_selection)) {
+                  new_selection <- c(current_selection, token_text)
+                  domain_key <- tolower(new_value)
+                  choices <- unique(c(domain_defaults()[[domain_key]], all_tokens, new_selection))
+                  updateSelectizeInput(session, domain_input_id,
+                    choices = choices,
+                    selected = new_selection,
+                    server = TRUE
+                  )
+                }
+              }
+            }
 
             showNotification(
               paste0("Entity changed to '", new_value, "'"),
@@ -5575,38 +5923,29 @@ server <- shinyServer(function(input, output, session) {
     })
   })
 
-  # Handle entity type dropdown changes - persist the modification and update plot data
   observeEvent(input$entity_type_changed, {
     info <- input$entity_type_changed
     if (is.null(info)) return()
 
-    row_idx <- info$row + 1  # JavaScript is 0-indexed, R is 1-indexed
+    row_idx <- info$row + 1
     new_value <- info$value
 
-    # Store the modification for persistence
     current_mods <- entity_type_modifications()
     mod_key <- paste0("row_", row_idx)
     current_mods[[mod_key]] <- new_value
     entity_type_modifications(current_mods)
 
-    # Update spacy_parsed() to reflect the change in the plot
-    # Identify which token was changed and update its entity type
     tryCatch({
       parsed <- spacy_parsed()
       if (!is.null(parsed) && "entity" %in% names(parsed)) {
-        # Rebuild the table data structure to find the token at the given row
         entity_detail <- parsed %>%
           dplyr::filter(!is.na(entity), entity != "") %>%
           dplyr::mutate(entity_clean = gsub("_[BI]$", "", entity)) %>%
           dplyr::group_by(doc_id, entity_clean, token) %>%
-          dplyr::summarise(
-            Frequency = dplyr::n(),
-            .groups = "drop"
-          ) %>%
+          dplyr::summarise(Frequency = dplyr::n(), .groups = "drop") %>%
           dplyr::rename(entity = entity_clean) %>%
           dplyr::arrange(doc_id, entity, dplyr::desc(Frequency))
 
-        # Prepend custom entities if they exist (to match table structure)
         if (nrow(custom_entities()) > 0) {
           custom_df <- custom_entities() %>%
             dplyr::mutate(doc_num = as.numeric(gsub("Doc ", "", Document))) %>%
@@ -5626,7 +5965,6 @@ server <- shinyServer(function(input, output, session) {
           old_entity <- target_row$entity
           target_token <- target_row$token
 
-          # Update the entity column in spacy_parsed for matching tokens
           parsed <- parsed %>%
             dplyr::mutate(
               entity = dplyr::if_else(
@@ -5636,12 +5974,47 @@ server <- shinyServer(function(input, output, session) {
               )
             )
 
-          # Update the reactive value to trigger plot refresh
           spacy_parsed(parsed)
+
+          domain_types <- c("DISABILITY", "PROGRAM", "TEST", "CONCEPT", "TOOL", "METHOD")
+
+          if (nzchar(target_token)) {
+            all_tokens <- get_uncategorized_tokens(parsed)
+
+            if (toupper(old_entity) %in% domain_types) {
+              old_domain_input_id <- paste0("domain_", tolower(old_entity))
+              old_selection <- input[[old_domain_input_id]]
+              new_old_selection <- old_selection[!tolower(old_selection) %in% tolower(target_token)]
+              if (length(new_old_selection) != length(old_selection)) {
+                old_domain_key <- tolower(old_entity)
+                choices <- unique(c(domain_defaults()[[old_domain_key]], all_tokens))
+                updateSelectizeInput(session, old_domain_input_id,
+                  choices = choices,
+                  selected = new_old_selection,
+                  server = TRUE
+                )
+              }
+            }
+
+            if (toupper(new_value) %in% domain_types) {
+              domain_input_id <- paste0("domain_", tolower(new_value))
+              current_selection <- input[[domain_input_id]]
+
+              if (!tolower(target_token) %in% tolower(current_selection)) {
+                new_selection <- c(current_selection, target_token)
+                domain_key <- tolower(new_value)
+                choices <- unique(c(domain_defaults()[[domain_key]], all_tokens, new_selection))
+                updateSelectizeInput(session, domain_input_id,
+                  choices = choices,
+                  selected = new_selection,
+                  server = TRUE
+                )
+              }
+            }
+          }
         }
       }
     }, error = function(e) {
-      # Silently handle errors - the visual update via JavaScript still works
     })
 
     showNotification(
@@ -5722,11 +6095,13 @@ server <- shinyServer(function(input, output, session) {
   )
 
   output$spacy_full_table <- DT::renderDataTable({
-    req(spacy_parsed())
-
     parsed <- spacy_parsed()
+    req(parsed)
+    req(nrow(parsed) > 0)
 
-    # Try to get token object for document mapping
+    required_cols <- c("doc_id", "sentence_id", "token_id", "token")
+    req(all(required_cols %in% names(parsed)))
+
     tokens_obj <- if (!is.null(final_tokens())) {
       final_tokens()
     } else if (!is.null(lemmatized_tokens())) {
@@ -5833,19 +6208,19 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observe({
-    req(colnames_for_doc_var())
+    req(colnames_cat())
     updateSelectizeInput(session,
                          "doc_var_co_occurrence",
-                         choices = c("None" = "None", colnames_for_doc_var()),
+                         choices = c("None" = "None", colnames_cat()),
                          selected = "None"
     )
   })
 
   observe({
-    req(colnames_for_doc_var())
+    req(colnames_cat())
     updateSelectizeInput(session,
                          "doc_var_correlation",
-                         choices = c("None" = "None", colnames_for_doc_var()),
+                         choices = c("None" = "None", colnames_cat()),
                          selected = "None"
     )
   })
@@ -8421,12 +8796,9 @@ server <- shinyServer(function(input, output, session) {
 
   # Update group variable choices
   observe({
-    req(mydata())
-    char_vars <- names(mydata())[sapply(mydata(), function(x) {
-      is.character(x) || is.factor(x)
-    })]
+    req(colnames_cat())
     updateSelectizeInput(session, "log_odds_group_var",
-                         choices = c("Select variable" = "", char_vars),
+                         choices = c("Select variable" = "", colnames_cat()),
                          selected = "")
   })
 
@@ -10817,26 +11189,26 @@ server <- shinyServer(function(input, output, session) {
 
     # Update categorical covariates for K Search
     updateSelectizeInput(session, "stm_categorical_var",
-                         choices = c("None" = "", colnames_cat()),
-                         selected = "",
+                         choices = colnames_cat(),
+                         selected = NULL,
                          server = TRUE)
 
     # Update continuous covariates for K Search
     updateSelectizeInput(session, "stm_continuous_var",
-                         choices = c("None" = "", colnames_con()),
-                         selected = "",
+                         choices = colnames_con(),
+                         selected = NULL,
                          server = TRUE)
 
     # Update categorical covariates for STM Model (conditioned3 == 5)
     updateSelectizeInput(session, "stm_categorical_var_2",
-                         choices = c("None" = "", colnames_cat()),
-                         selected = "",
+                         choices = colnames_cat(),
+                         selected = NULL,
                          server = TRUE)
 
     # Update continuous covariates for STM Model (conditioned3 == 5)
     updateSelectizeInput(session, "stm_continuous_var_2",
-                         choices = c("None" = "", colnames_con()),
-                         selected = "",
+                         choices = colnames_con(),
+                         selected = NULL,
                          server = TRUE)
   }, ignoreInit = FALSE)
 
@@ -16758,22 +17130,6 @@ server <- shinyServer(function(input, output, session) {
 
   # Step 1. Search K.
 
-  observe({
-    updateSelectizeInput(session,
-                         "categorical_var",
-                         choices = colnames_cat(),
-                         selected = ""
-    )
-  })
-
-  observe({
-    updateSelectInput(session,
-                      "continuous_var",
-                      choices = colnames_con(),
-                      selected = ""
-    )
-  })
-
   K_range <- eventReactive(input$stm_K_range, {
     seq(input$stm_K_range[1], input$stm_K_range[2])
   })
@@ -17669,8 +18025,8 @@ server <- shinyServer(function(input, output, session) {
     req(colnames_cat())
     updateSelectizeInput(session,
                          "stm_categorical_var_2",
-                         choices = c("None" = "", colnames_cat()),
-                         selected = "",
+                         choices = colnames_cat(),
+                         selected = NULL,
                          server = TRUE
     )
   })
@@ -17678,8 +18034,8 @@ server <- shinyServer(function(input, output, session) {
   observe({
     updateSelectizeInput(session,
                          "stm_continuous_var_2",
-                         choices = c("None" = "", colnames_con()),
-                         selected = "",
+                         choices = colnames_con(),
+                         selected = NULL,
                          server = TRUE
     )
   })
@@ -19052,16 +19408,16 @@ server <- shinyServer(function(input, output, session) {
     req(colnames_cat())
     updateSelectizeInput(session,
                          "hybrid_categorical_var_2",
-                         choices = c("None" = "", colnames_cat()),
-                         selected = "",
+                         choices = colnames_cat(),
+                         selected = NULL,
                          server = TRUE)
   })
 
   observe({
     updateSelectizeInput(session,
                          "hybrid_continuous_var_2",
-                         choices = c("None" = "", colnames_con()),
-                         selected = "",
+                         choices = colnames_con(),
+                         selected = NULL,
                          server = TRUE)
   })
 
@@ -21026,13 +21382,13 @@ server <- shinyServer(function(input, output, session) {
     req(united_tbl())
     updateSelectizeInput(session,
                          "doc_category_var",
-                         choices = c("None" = "", colnames_cat_doc()),
-                         selected = ""
+                         choices = c("None" = "None", colnames_cat_doc()),
+                         selected = "None"
     )
   })
 
   observe({
-    req(input$doc_category_var, input$doc_category_var != "")
+    req(input$doc_category_var, input$doc_category_var != "", input$doc_category_var != "None")
     req(united_tbl())
 
     if (input$doc_category_var %in% names(united_tbl())) {

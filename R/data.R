@@ -26,26 +26,6 @@
 #' @keywords datasets
 NULL
 
-#' Dictionary List 1
-#'
-#' A dataset containing dictionary terms for text analysis
-#'
-#' @format A character vector of dictionary terms
-#' @name dictionary_list_1
-#' @docType data
-#' @keywords datasets
-NULL
-
-#' Dictionary List 2
-#'
-#' A dataset containing additional dictionary terms for text analysis
-#'
-#' @format A character vector of dictionary terms
-#' @name dictionary_list_2
-#' @docType data
-#' @keywords datasets
-NULL
-
 #' Stopwords List
 #'
 #' A dataset containing stopwords for text preprocessing

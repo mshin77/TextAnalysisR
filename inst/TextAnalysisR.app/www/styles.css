@@ -2748,24 +2748,15 @@ a.action-link[title*="Info"]:hover {
    ============================================ */
 
 /* Domain entity selectize inputs - standard height with scroll when needed */
-#domain_disability + .selectize-control .selectize-input,
-#domain_program + .selectize-control .selectize-input,
-#domain_test + .selectize-control .selectize-input,
-#domain_concept + .selectize-control .selectize-input,
-#domain_tool + .selectize-control .selectize-input,
-#domain_method + .selectize-control .selectize-input,
+/* Uses attribute selector to match any domain category input (dynamic) */
+[id^="domain_"] + .selectize-control .selectize-input,
 #uncategorized_tokens + .selectize-control .selectize-input {
   max-height: 100px !important;
   overflow-y: auto !important;
 }
 
 /* Dark mode domain selectize */
-[data-theme="dark"] #domain_disability + .selectize-control .selectize-input,
-[data-theme="dark"] #domain_program + .selectize-control .selectize-input,
-[data-theme="dark"] #domain_test + .selectize-control .selectize-input,
-[data-theme="dark"] #domain_concept + .selectize-control .selectize-input,
-[data-theme="dark"] #domain_tool + .selectize-control .selectize-input,
-[data-theme="dark"] #domain_method + .selectize-control .selectize-input,
+[data-theme="dark"] [id^="domain_"] + .selectize-control .selectize-input,
 [data-theme="dark"] #uncategorized_tokens + .selectize-control .selectize-input {
   background-color: #1e293b !important;
   border-color: #475569 !important;

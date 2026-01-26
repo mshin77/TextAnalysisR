@@ -1009,7 +1009,7 @@ Supports:
             ),
             selectizeInput(
               "log_odds_group_var",
-              "Grouping variable",
+              "Categorical variable",
               choices = NULL,
               multiple = FALSE,
               options = list(placeholder = "Select category variable")
@@ -1194,78 +1194,39 @@ Supports:
                 HTML("<strong>Domain Entities</strong>"),
                 style = "color: #0c1f4a; margin-bottom: 10px;"
               ),
-              tags$details(
-                style = "margin-bottom: 8px;", open = NA,
-                tags$summary(
-                  style = "cursor: pointer; font-weight: 600; color: #E91E63; font-size: 14px;",
-                  HTML("<span style='display: inline-block; width: 12px; height: 12px; background: #E91E63; border-radius: 2px; margin-right: 6px;'></span>DISABILITY")
+              selectizeInput(
+                "ner_domain_preset",
+                NULL,
+                choices = c(
+                  "None (Custom)" = "none",
+                  "Special Education" = "special_education"
                 ),
-                div(
-                  style = "padding: 8px 0 0 0;",
-                  selectizeInput("domain_disability", NULL, choices = NULL, multiple = TRUE,
-                    options = list(create = TRUE, maxItems = NULL))
+                selected = "special_education",
+                multiple = FALSE,
+                options = list(
+                  placeholder = "Select a domain"
                 )
               ),
-              tags$details(
-                style = "margin-bottom: 8px;", open = NA,
-                tags$summary(
-                  style = "cursor: pointer; font-weight: 600; color: #2196F3; font-size: 14px;",
-                  HTML("<span style='display: inline-block; width: 12px; height: 12px; background: #2196F3; border-radius: 2px; margin-right: 6px;'></span>PROGRAM")
-                ),
-                div(
-                  style = "padding: 8px 0 0 0;",
-                  selectizeInput("domain_program", NULL, choices = NULL, multiple = TRUE,
-                    options = list(create = TRUE, maxItems = NULL))
-                )
+              tags$div(
+                style = "display: flex; gap: 8px;",
+                downloadButton("export_domain_preset", "Export",
+                  class = "btn-secondary", style = "flex: 1;"),
+                fileInput("import_domain_preset", NULL, accept = c(".xlsx", ".csv"),
+                  buttonLabel = "Import", placeholder = NULL, width = "50%")
               ),
-              tags$details(
-                style = "margin-bottom: 8px;", open = NA,
-                tags$summary(
-                  style = "cursor: pointer; font-weight: 600; color: #4CAF50; font-size: 14px;",
-                  HTML("<span style='display: inline-block; width: 12px; height: 12px; background: #4CAF50; border-radius: 2px; margin-right: 6px;'></span>TEST")
-                ),
-                div(
-                  style = "padding: 8px 0 0 0;",
-                  selectizeInput("domain_test", NULL, choices = NULL, multiple = TRUE,
-                    options = list(create = TRUE, maxItems = NULL))
-                )
-              ),
-              tags$details(
-                style = "margin-bottom: 8px;", open = NA,
-                tags$summary(
-                  style = "cursor: pointer; font-weight: 600; color: #9C27B0; font-size: 14px;",
-                  HTML("<span style='display: inline-block; width: 12px; height: 12px; background: #9C27B0; border-radius: 2px; margin-right: 6px;'></span>CONCEPT")
-                ),
-                div(
-                  style = "padding: 8px 0 0 0;",
-                  selectizeInput("domain_concept", NULL, choices = NULL, multiple = TRUE,
-                    options = list(create = TRUE, maxItems = NULL))
-                )
-              ),
-              tags$details(
-                style = "margin-bottom: 8px;", open = NA,
-                tags$summary(
-                  style = "cursor: pointer; font-weight: 600; color: #FF9800; font-size: 14px;",
-                  HTML("<span style='display: inline-block; width: 12px; height: 12px; background: #FF9800; border-radius: 2px; margin-right: 6px;'></span>TOOL")
-                ),
-                div(
-                  style = "padding: 8px 0 0 0;",
-                  selectizeInput("domain_tool", NULL, choices = NULL, multiple = TRUE,
-                    options = list(create = TRUE, maxItems = NULL))
-                )
-              ),
-              tags$details(
-                style = "margin-bottom: 8px;", open = NA,
-                tags$summary(
-                  style = "cursor: pointer; font-weight: 600; color: #00BCD4; font-size: 14px;",
-                  HTML("<span style='display: inline-block; width: 12px; height: 12px; background: #00BCD4; border-radius: 2px; margin-right: 6px;'></span>METHOD")
-                ),
-                div(
-                  style = "padding: 8px 0 0 0;",
-                  selectizeInput("domain_method", NULL, choices = NULL, multiple = TRUE,
-                    options = list(create = TRUE, maxItems = NULL))
-                )
-              )
+              tags$style(HTML("
+                #import_domain_preset { margin: 0 !important; padding: 0 !important; flex: 1; height: 34px !important; max-height: 34px !important; overflow: hidden; }
+                #import_domain_preset .input-group { width: 100%; height: 34px; }
+                #import_domain_preset .form-control { display: none !important; }
+                #import_domain_preset .input-group-btn,
+                #import_domain_preset .input-group-prepend { width: 100%; height: 34px; }
+                #import_domain_preset .btn-file { width: 100%; height: 34px; border-radius: 4px; padding: 6px 12px; }
+                #import_domain_preset .progress { display: none !important; height: 0 !important; margin: 0 !important; }
+                #import_domain_preset > span { display: none !important; }
+                #import_domain_preset .shiny-input-container { margin-bottom: 0 !important; }
+                #export_domain_preset { height: 34px; }
+              ")),
+              uiOutput("domain_entity_categories")
             ),
             uiOutput("custom_entities_ui"),
             tags$hr(style = "margin: 15px 0; border-color: #dee2e6;"),
@@ -2263,7 +2224,7 @@ Supports:
                   "LLM-based (Explanations)" = "llm"
                 ),
                 selected = "lexicon",
-                inline = TRUE
+                inline = FALSE
               ),
               # Lexicon-based options
               conditionalPanel(
