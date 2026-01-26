@@ -75,83 +75,39 @@ sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
 
 ## Document Clustering
 
+> **Shiny App:** Document clustering is now in **Topic Modeling → Embedding-based Topics**, which combines clustering with automatic keyword extraction.
+
 ```{r}
-clusters <- semantic_document_clustering(
+results <- fit_embedding_model(
   texts = united_tbl$united_texts,
-  n_clusters = 5,
-  reduce_outliers = TRUE
+  method = "umap_dbscan",
+  backend = "r",
+  n_topics = 5
 )
+
+results$topic_assignments
+results$topic_keywords
 ```
 
-### AI-Suggested Cluster Labels
+For standalone clustering without keywords, use `cluster_embeddings()`. See [Topic Modeling](topic_modeling.html) for details.
 
-The AI generates suggested names for each cluster. You maintain full control:
-
-- Review generated labels before applying
-- Edit labels directly in the interface
-- Regenerate with different parameters if needed
+### AI Cluster Labels
 
 ```{r}
-# AI suggests, human reviews and decides
 labels <- generate_cluster_labels(
-  clusters$cluster_keywords,
-  provider = "ollama"  # or "openai"
+  results$topic_keywords,
+  provider = "ollama"
 )
-# Review and edit before final use
 ```
----
-
-<details>
-<summary><strong>Clustering Algorithms</strong></summary>
-
-Clustering groups documents with similar semantic content into categories. Documents within a cluster are more similar to each other than to documents in other clusters.
-
-**Algorithms:**
-
-| Algorithm | Description | Use Case |
-|-----------|-------------|----------|
-| K-means | Creates K spherical clusters | Fast, simple, requires specifying K |
-| Hierarchical | Builds tree of clusters | Exploring nested structures |
-| DBSCAN | Density-based, finds outliers | Arbitrarily shaped clusters |
-| HDBSCAN | Hierarchical density-based | Auto-determines cluster count |
-
-**Outlier Reduction:** DBSCAN assigns noise points to cluster 0. Two strategies
-available via `outlier_strategy` (follows BERTopic methodology):
-
-- `"centroid"` (default): Euclidean distance to nearest centroid in UMAP space
-- `"embeddings"`: Cosine similarity in original high-dimensional embedding space
-
-Set `reduce_outliers = TRUE` (default) to enable outlier reassignment.
-
-**Usage:** Choose discovery mode (Automatic, Manual, Advanced). Select semantic feature space and algorithm. Automatic mode finds optimal cluster count. Use visualizations and quality metrics to evaluate results.
-
-**Learn More:** [scikit-learn Clustering Guide](https://scikit-learn.org/stable/modules/clustering.html)
-
-</details>
 
 ---
 
 <details>
-<summary><strong>Dimensionality Reduction</strong></summary>
+<summary><strong>Algorithms Reference</strong></summary>
 
-Dimensionality reduction transforms high-dimensional data into 2D or 3D visualizations while preserving the structure and relationships between documents.
+**Clustering:** K-means (spherical), Hierarchical (nested), DBSCAN (density-based), HDBSCAN (auto-detect K)
 
-**Algorithms:**
-
-| Algorithm | Description | Trade-offs |
-|-----------|-------------|------------|
-| PCA | Principal Component Analysis, finds linear patterns | Fast, interpretable |
-| t-SNE | Preserves local structure, reveals clusters | Slow, good for visualization |
-| UMAP | Balances local and global structure | Faster than t-SNE, better topology |
-
-**Usage:** Select a semantic feature space (words, n-grams, or embeddings), then choose a reduction method. Adjust parameters (perplexity, neighbors, dimensions) based on your data size and structure. Use for visual exploration before clustering.
-
-```{r}
-reduced <- reduce_dimensions(embeddings, method = "umap", n_components = 2)
-plot_semantic_viz(reduced, plot_type = "dimensionality_reduction")
-```
-
-**Learn More:** [scikit-learn Manifold Learning](https://scikit-learn.org/stable/modules/manifold.html)
+**Dimensionality Reduction:** PCA (fast, linear), t-SNE (local structure), UMAP (balanced)
 
 </details>
 

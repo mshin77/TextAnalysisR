@@ -186,7 +186,7 @@ word_correlation_network(dfm, top_node_n = 30, corr_n = 0.3)
 |----------|---------|
 | `find_optimal_k()` | Search for optimal topic count |
 | `fit_semantic_model()` | STM (Structural Topic Model) |
-| `fit_embedding_model()` | Embedding-based topics (BERTopic) |
+| `fit_embedding_model()` | Embedding-based topics (Python or R backend) |
 | `fit_hybrid_model()` | STM + embeddings hybrid |
 | `get_topic_terms()` | Extract top words per topic |
 | `get_topic_prevalence()` | Calculate topic prevalence |

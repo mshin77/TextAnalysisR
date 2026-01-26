@@ -86,7 +86,11 @@
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
-<dd><p>The topic modeling method: "umap_hdbscan" (uses BERTopic), "embedding_clustering", "hierarchical_semantic".</p></dd>
+<dd><p>The topic modeling method:</p><ul><li><p>For Python backend: "umap_hdbscan" (uses BERTopic)</p></li>
+<li><p>For R backend: "umap_dbscan", "umap_kmeans", "umap_hierarchical",
+"tsne_dbscan", "tsne_kmeans", "pca_kmeans", "pca_hierarchical"</p></li>
+<li><p>For both: "embedding_clustering", "hierarchical_semantic"</p></li>
+</ul></dd>
 
 
 <dt id="arg-n-topics">n_topics<a class="anchor" aria-label="anchor" href="#arg-n-topics"></a></dt>

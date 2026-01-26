@@ -38,8 +38,14 @@ fit_embedding_topics(
 
 - method:
 
-  The topic modeling method: "umap_hdbscan" (uses BERTopic),
-  "embedding_clustering", "hierarchical_semantic".
+  The topic modeling method:
+
+  - For Python backend: "umap_hdbscan" (uses BERTopic)
+
+  - For R backend: "umap_dbscan", "umap_kmeans", "umap_hierarchical",
+    "tsne_dbscan", "tsne_kmeans", "pca_kmeans", "pca_hierarchical"
+
+  - For both: "embedding_clustering", "hierarchical_semantic"
 
 - n_topics:
 

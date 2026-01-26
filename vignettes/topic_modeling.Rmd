@@ -45,7 +45,7 @@ STM discovers latent topics using probabilistic modeling while incorporating doc
 
 **Quality Metrics:**
 
-- **Semantic Coherence:** Measures word co-occurrence within topics (Mimno et al., 2011)
+- **Semantic Coherence:** Measures word co-occurrence within topics
 - **Exclusivity:** Measures how unique words are to each topic
 - **Held-out Likelihood:** Predictive performance on unseen documents
 
@@ -70,41 +70,36 @@ terms <- get_topic_terms(model, top_term_n = 10)
 ---
 
 <details>
-<summary><strong>Embedding-based Topics (BERTopic)</strong></summary>
+<summary><strong>Embedding-based Topics</strong></summary>
 
-Uses transformer embeddings to capture semantic meaning, then applies UMAP dimensionality reduction and HDBSCAN clustering to discover topics. Creates semantically coherent topics based on deep contextual understanding.
+Uses transformer embeddings with dimensionality reduction and clustering. Best for short texts, multilingual content, and semantic similarity.
 
-**Best For:**
+**Backend Options:**
 
-- Semantic coherence: Capture meaning beyond word co-occurrence
-- Short texts: Tweets, reviews, survey responses
-- Multilingual: Handles multiple languages
-
-**Key Components:**
-
-- **Sentence Transformers:** Generate contextual embeddings (e.g., all-MiniLM-L6-v2)
-- **UMAP:** Dimensionality reduction preserving local structure
-- **HDBSCAN:** Density-based clustering for topic discovery
-- **c-TF-IDF:** Class-based TF-IDF for topic keyword extraction
+| Backend | When to Use |
+|---------|-------------|
+| `"python"` | Full BERTopic features (default) |
+| `"r"` | No BERTopic installed |
+| `"auto"` | Auto-detect available backend |
 
 ```{r}
+# Python backend (BERTopic)
 results <- fit_embedding_model(
   texts = united_tbl$united_texts,
+  method = "umap_hdbscan",
   n_topics = 15
+)
+
+# R backend (no BERTopic needed)
+results <- fit_embedding_model(
+  texts = united_tbl$united_texts,
+  method = "umap_dbscan",
+  backend = "r",
+  n_topics = 10
 )
 ```
 
-**Outlier Reduction Strategies:** HDBSCAN may assign some documents as outliers (-1).
-Use `outlier_strategy` to control reassignment (follows BERTopic methodology):
-
-| Strategy | Description |
-|----------|-------------|
-| `"probabilities"` (default) | Reassign based on topic probability scores |
-| `"c-tf-idf"` | Reassign based on c-TF-IDF similarity to topic representations |
-| `"embeddings"` | Reassign based on cosine similarity in embedding space |
-| `"distributions"` | Reassign based on topic distributions |
-
-Set `outlier_threshold` to control minimum confidence for reassignment (default: 0.0).
+**R Backend Methods:** Format is `{dimred}_{clustering}` (e.g., `"umap_dbscan"`, `"tsne_kmeans"`, `"pca_hierarchical"`).
 
 **Learn More:** [BERTopic](https://maartengr.github.io/BERTopic/) | [Sentence-BERT](https://www.sbert.net/)
 
@@ -254,40 +249,16 @@ content <- generate_topic_content(
 |---------|-----|-----------|--------|
 | Speed | Fast | Medium | Slow |
 | Metadata Support | Yes | No | Yes |
-| Semantic Meaning | Word patterns | Deep semantic | Both |
-| Interpretability | High | Medium | High |
 | Short Texts | Poor | Good | Good |
 | Multilingual | No | Yes | Yes |
-| Requires Python | No | Yes | Yes |
 
-**When to Use Each:**
+**When to Use:**
 
-- **STM:** Academic research with metadata, covariate effects, interpretability priority
-- **Embedding:** Short texts, multilingual, semantic similarity over frequency
-- **Hybrid:** High-stakes research, methodological validation, comprehensive analysis
+- **STM:** Metadata analysis, covariate effects
+- **Embedding:** Short texts, semantic similarity (use `backend = "r"` if no BERTopic)
+- **Hybrid:** Combine both approaches
 
 </details>
-
----
-
-## References
-
-**Structural Topic Model (STM):**
-
-- Roberts, M. E., Stewart, B. M., & Tingley, D. (2019). stm: An R package for structural topic models. *Journal of Statistical Software*, *91*(2), 1–40. https://doi.org/10.18637/jss.v091.i02
-
-**Embedding-based Topic Modeling:**
-
-- Grootendorst, M. (2022). BERTopic: Neural topic modeling with a class-based TF-IDF procedure. *arXiv preprint arXiv:2203.05794*. https://arxiv.org/abs/2203.05794
-- Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. In *Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing* (pp. 3982–3992). Association for Computational Linguistics. https://arxiv.org/abs/1908.10084
-- McInnes, L., Healy, J., & Melville, J. (2018). UMAP: Uniform manifold approximation and projection for dimension reduction. *arXiv preprint arXiv:1802.03426*. https://arxiv.org/abs/1802.03426
-- Campello, R. J. G. B., Moulavi, D., & Sander, J. (2013). Density-based clustering based on hierarchical density estimates. In *Advances in Knowledge Discovery and Data Mining. PAKDD 2013. Lecture Notes in Computer Science* (Vol. 7819, pp. 160–172). Springer. https://doi.org/10.1007/978-3-642-37456-2_14
-
-**Quality Metrics:**
-
-- Mimno, D., Wallach, H., Talley, E., Leenders, M., & McCallum, A. (2011). Optimizing semantic coherence in topic models. In *Proceedings of the 2011 Conference on Empirical Methods in Natural Language Processing* (pp. 262–272). Association for Computational Linguistics. https://aclanthology.org/D11-1024/
-- Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the interpretation and validation of cluster analysis. *Journal of Computational and Applied Mathematics*, *20*, 53–65. https://doi.org/10.1016/0377-0427(87)90125-7
-- Hubert, L., & Arabie, P. (1985). Comparing partitions. *Journal of Classification*, *2*(1), 193–218. https://doi.org/10.1007/BF01908075
 
 ---
 

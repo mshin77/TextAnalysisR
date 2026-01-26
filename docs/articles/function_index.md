@@ -160,7 +160,7 @@ word_correlation_network(dfm, top_node_n = 30, corr_n = 0.3)
 |----|----|
 | [`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md) | Search for optimal topic count |
 | [`fit_semantic_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.md) | STM (Structural Topic Model) |
-| [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md) | Embedding-based topics (BERTopic) |
+| [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md) | Embedding-based topics (Python or R backend) |
 | [`fit_hybrid_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_hybrid_model.md) | STM + embeddings hybrid |
 | [`get_topic_terms()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_terms.md) | Extract top words per topic |
 | [`get_topic_prevalence()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_prevalence.md) | Calculate topic prevalence |

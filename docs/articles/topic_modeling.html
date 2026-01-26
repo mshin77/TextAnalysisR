@@ -113,7 +113,7 @@ across documents based on metadata like time, author, or category.</p>
 <ul>
 <li>
 <strong>Semantic Coherence:</strong> Measures word co-occurrence
-within topics (Mimno et al., 2011)</li>
+within topics</li>
 <li>
 <strong>Exclusivity:</strong> Measures how unique words are to each
 topic</li>
@@ -137,71 +137,49 @@ unseen documents</li>
 | <a href="https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf" class="external-link">STM
 Vignette</a></p>
 </details><hr>
-<details><summary><strong>Embedding-based Topics (BERTopic)</strong>
-</summary><p>Uses transformer embeddings to capture semantic meaning, then applies
-UMAP dimensionality reduction and HDBSCAN clustering to discover topics.
-Creates semantically coherent topics based on deep contextual
-understanding.</p>
-<p><strong>Best For:</strong></p>
-<ul>
-<li>Semantic coherence: Capture meaning beyond word co-occurrence</li>
-<li>Short texts: Tweets, reviews, survey responses</li>
-<li>Multilingual: Handles multiple languages</li>
-</ul>
-<p><strong>Key Components:</strong></p>
-<ul>
-<li>
-<strong>Sentence Transformers:</strong> Generate contextual
-embeddings (e.g., all-MiniLM-L6-v2)</li>
-<li>
-<strong>UMAP:</strong> Dimensionality reduction preserving local
-structure</li>
-<li>
-<strong>HDBSCAN:</strong> Density-based clustering for topic
-discovery</li>
-<li>
-<strong>c-TF-IDF:</strong> Class-based TF-IDF for topic keyword
-extraction</li>
-</ul>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span></span>
-<span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
-<span>  n_topics <span class="op">=</span> <span class="fl">15</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><strong>Outlier Reduction Strategies:</strong> HDBSCAN may assign
-some documents as outliers (-1). Use <code>outlier_strategy</code> to
-control reassignment (follows BERTopic methodology):</p>
+<details><summary><strong>Embedding-based Topics</strong>
+</summary><p>Uses transformer embeddings with dimensionality reduction and
+clustering. Best for short texts, multilingual content, and semantic
+similarity.</p>
+<p><strong>Backend Options:</strong></p>
 <table class="table">
-<colgroup>
-<col width="43%">
-<col width="56%">
-</colgroup>
 <thead><tr class="header">
-<th>Strategy</th>
-<th>Description</th>
+<th>Backend</th>
+<th>When to Use</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>
-<code>"probabilities"</code> (default)</td>
-<td>Reassign based on topic probability scores</td>
+<td><code>"python"</code></td>
+<td>Full BERTopic features (default)</td>
 </tr>
 <tr class="even">
-<td><code>"c-tf-idf"</code></td>
-<td>Reassign based on c-TF-IDF similarity to topic representations</td>
+<td><code>"r"</code></td>
+<td>No BERTopic installed</td>
 </tr>
 <tr class="odd">
-<td><code>"embeddings"</code></td>
-<td>Reassign based on cosine similarity in embedding space</td>
-</tr>
-<tr class="even">
-<td><code>"distributions"</code></td>
-<td>Reassign based on topic distributions</td>
+<td><code>"auto"</code></td>
+<td>Auto-detect available backend</td>
 </tr>
 </tbody>
 </table>
-<p>Set <code>outlier_threshold</code> to control minimum confidence for
-reassignment (default: 0.0).</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Python backend (BERTopic)</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span></span>
+<span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"umap_hdbscan"</span>,</span>
+<span>  n_topics <span class="op">=</span> <span class="fl">15</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># R backend (no BERTopic needed)</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span></span>
+<span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"umap_dbscan"</span>,</span>
+<span>  backend <span class="op">=</span> <span class="st">"r"</span>,</span>
+<span>  n_topics <span class="op">=</span> <span class="fl">10</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>R Backend Methods:</strong> Format is
+<code>{dimred}_{clustering}</code> (e.g., <code>"umap_dbscan"</code>,
+<code>"tsne_kmeans"</code>, <code>"pca_hierarchical"</code>).</p>
 <p><strong>Learn More:</strong> <a href="https://maartengr.github.io/BERTopic/" class="external-link">BERTopic</a> | <a href="https://www.sbert.net/" class="external-link">Sentence-BERT</a></p>
 </details><hr>
 <details><summary><strong>Hybrid Topic Modeling</strong>
@@ -410,18 +388,6 @@ practices.</p>
 <td>Yes</td>
 </tr>
 <tr class="odd">
-<td>Semantic Meaning</td>
-<td>Word patterns</td>
-<td>Deep semantic</td>
-<td>Both</td>
-</tr>
-<tr class="even">
-<td>Interpretability</td>
-<td>High</td>
-<td>Medium</td>
-<td>High</td>
-</tr>
-<tr class="odd">
 <td>Short Texts</td>
 <td>Poor</td>
 <td>Good</td>
@@ -433,76 +399,19 @@ practices.</p>
 <td>Yes</td>
 <td>Yes</td>
 </tr>
-<tr class="odd">
-<td>Requires Python</td>
-<td>No</td>
-<td>Yes</td>
-<td>Yes</td>
-</tr>
 </tbody>
 </table>
-<p><strong>When to Use Each:</strong></p>
+<p><strong>When to Use:</strong></p>
 <ul>
 <li>
-<strong>STM:</strong> Academic research with metadata, covariate
-effects, interpretability priority</li>
+<strong>STM:</strong> Metadata analysis, covariate effects</li>
 <li>
-<strong>Embedding:</strong> Short texts, multilingual, semantic
-similarity over frequency</li>
+<strong>Embedding:</strong> Short texts, semantic similarity (use
+<code>backend = "r"</code> if no BERTopic)</li>
 <li>
-<strong>Hybrid:</strong> High-stakes research, methodological
-validation, comprehensive analysis</li>
+<strong>Hybrid:</strong> Combine both approaches</li>
 </ul></details><hr>
 </div>
-</div>
-<div class="section level2">
-<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
-</h2>
-<p><strong>Structural Topic Model (STM):</strong></p>
-<ul>
-<li>Roberts, M. E., Stewart, B. M., &amp; Tingley, D. (2019). stm: An R
-package for structural topic models. <em>Journal of Statistical
-Software</em>, <em>91</em>(2), 1–40. <a href="https://doi.org/10.18637/jss.v091.i02" class="external-link uri">https://doi.org/10.18637/jss.v091.i02</a>
-</li>
-</ul>
-<p><strong>Embedding-based Topic Modeling:</strong></p>
-<ul>
-<li>Grootendorst, M. (2022). BERTopic: Neural topic modeling with a
-class-based TF-IDF procedure. <em>arXiv preprint arXiv:2203.05794</em>.
-<a href="https://arxiv.org/abs/2203.05794" class="external-link uri">https://arxiv.org/abs/2203.05794</a>
-</li>
-<li>Reimers, N., &amp; Gurevych, I. (2019). Sentence-BERT: Sentence
-embeddings using Siamese BERT-networks. In <em>Proceedings of the 2019
-Conference on Empirical Methods in Natural Language Processing</em>
-(pp. 3982–3992). Association for Computational Linguistics. <a href="https://arxiv.org/abs/1908.10084" class="external-link uri">https://arxiv.org/abs/1908.10084</a>
-</li>
-<li>McInnes, L., Healy, J., &amp; Melville, J. (2018). UMAP: Uniform
-manifold approximation and projection for dimension reduction. <em>arXiv
-preprint arXiv:1802.03426</em>. <a href="https://arxiv.org/abs/1802.03426" class="external-link uri">https://arxiv.org/abs/1802.03426</a>
-</li>
-<li>Campello, R. J. G. B., Moulavi, D., &amp; Sander, J. (2013).
-Density-based clustering based on hierarchical density estimates. In
-<em>Advances in Knowledge Discovery and Data Mining. PAKDD 2013. Lecture
-Notes in Computer Science</em> (Vol. 7819, pp. 160–172). Springer. <a href="https://doi.org/10.1007/978-3-642-37456-2_14" class="external-link uri">https://doi.org/10.1007/978-3-642-37456-2_14</a>
-</li>
-</ul>
-<p><strong>Quality Metrics:</strong></p>
-<ul>
-<li>Mimno, D., Wallach, H., Talley, E., Leenders, M., &amp; McCallum, A.
-(2011). Optimizing semantic coherence in topic models. In
-<em>Proceedings of the 2011 Conference on Empirical Methods in Natural
-Language Processing</em> (pp. 262–272). Association for Computational
-Linguistics. <a href="https://aclanthology.org/D11-1024/" class="external-link uri">https://aclanthology.org/D11-1024/</a>
-</li>
-<li>Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
-interpretation and validation of cluster analysis. <em>Journal of
-Computational and Applied Mathematics</em>, <em>20</em>, 53–65. <a href="https://doi.org/10.1016/0377-0427(87)90125-7" class="external-link uri">https://doi.org/10.1016/0377-0427(87)90125-7</a>
-</li>
-<li>Hubert, L., &amp; Arabie, P. (1985). Comparing partitions.
-<em>Journal of Classification</em>, <em>2</em>(1), 193–218. <a href="https://doi.org/10.1007/BF01908075" class="external-link uri">https://doi.org/10.1007/BF01908075</a>
-</li>
-</ul>
-<hr>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
