@@ -9,6 +9,7 @@ fit_embedding_model(
   method = "umap_hdbscan",
   n_topics = 10,
   embedding_model = "all-MiniLM-L6-v2",
+  backend = "auto",
   clustering_method = "kmeans",
   similarity_threshold = 0.7,
   min_topic_size = 3,
@@ -16,6 +17,10 @@ fit_embedding_model(
   umap_neighbors = 15,
   umap_min_dist = 0,
   umap_n_components = 5,
+  tsne_perplexity = 30,
+  pca_dims = 50,
+  dbscan_eps = 0.5,
+  dbscan_minpts = 5,
   representation_method = "c-tfidf",
   diversity = 0.5,
   reduce_outliers = TRUE,
@@ -29,11 +34,20 @@ fit_embedding_model(
 \arguments{
 \item{texts}{A character vector of texts to analyze.}
 
-\item{method}{The topic modeling method: "umap_hdbscan" (uses BERTopic), "embedding_clustering", "hierarchical_semantic".}
+\item{method}{The topic modeling method:
+\itemize{
+\item For Python backend: "umap_hdbscan" (uses BERTopic)
+\item For R backend: "umap_dbscan", "umap_kmeans", "umap_hierarchical",
+"tsne_dbscan", "tsne_kmeans", "pca_kmeans", "pca_hierarchical"
+\item For both: "embedding_clustering", "hierarchical_semantic"
+}}
 
 \item{n_topics}{The number of topics to identify. For UMAP+HDBSCAN, use NULL or "auto" for automatic determination, or specify an integer.}
 
 \item{embedding_model}{The embedding model to use (default: "all-MiniLM-L6-v2").}
+
+\item{backend}{The backend to use: "auto" (default, tries Python then R),
+"python" (requires BERTopic), or "r" (R-native packages only).}
 
 \item{clustering_method}{The clustering method for embedding-based approach: "kmeans", "hierarchical", "dbscan", "hdbscan".}
 
@@ -48,6 +62,14 @@ fit_embedding_model(
 \item{umap_min_dist}{The minimum distance for UMAP (default: 0.0). Use 0.0 for tight, well-separated clusters. Use 0.1+ for visualization purposes. Range: 0.0-0.99.}
 
 \item{umap_n_components}{The number of UMAP components (default: 5).}
+
+\item{tsne_perplexity}{Perplexity parameter for t-SNE (default: 30). Only used when method includes "tsne".}
+
+\item{pca_dims}{Number of PCA components for dimensionality reduction (default: 50). Only used when method includes "pca".}
+
+\item{dbscan_eps}{Epsilon parameter for DBSCAN (default: 0.5). Neighborhood size for density-based clustering.}
+
+\item{dbscan_minpts}{Minimum points for DBSCAN core points (default: 5).}
 
 \item{representation_method}{The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").}
 
@@ -77,10 +99,15 @@ A list containing topic assignments, topic keywords, and quality metrics.
 }
 \description{
 This function performs embedding-based topic modeling using transformer embeddings
-and specialized clustering techniques. The primary method uses the BERTopic library,
-which combines transformer embeddings with UMAP dimensionality reduction and HDBSCAN
-clustering for optimal topic discovery. This approach creates more semantically coherent
-topics compared to traditional methods by leveraging deep learning embeddings.
+and specialized clustering techniques. Supports two backends:
+\itemize{
+\item \strong{Python backend} (default): Uses BERTopic library which combines transformer
+embeddings with UMAP dimensionality reduction and HDBSCAN clustering for optimal
+topic discovery.
+\item \strong{R backend}: Uses R-native packages (umap, dbscan, Rtsne) for users without
+Python/BERTopic installed. Provides similar functionality with c-TF-IDF keyword
+extraction.
+}
 }
 \examples{
 if (interactive()) {

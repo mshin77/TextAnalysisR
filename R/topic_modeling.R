@@ -1027,15 +1027,25 @@ calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 #'
 #' @description
 #' This function performs embedding-based topic modeling using transformer embeddings
-#' and specialized clustering techniques. The primary method uses the BERTopic library,
-#' which combines transformer embeddings with UMAP dimensionality reduction and HDBSCAN
-#' clustering for optimal topic discovery. This approach creates more semantically coherent
-#' topics compared to traditional methods by leveraging deep learning embeddings.
+#' and specialized clustering techniques. Supports two backends:
+#'
+#' - **Python backend** (default): Uses BERTopic library which combines transformer
+#'   embeddings with UMAP dimensionality reduction and HDBSCAN clustering for optimal
+#'   topic discovery.
+#' - **R backend**: Uses R-native packages (umap, dbscan, Rtsne) for users without
+#'   Python/BERTopic installed. Provides similar functionality with c-TF-IDF keyword
+#'   extraction.
 #'
 #' @param texts A character vector of texts to analyze.
-#' @param method The topic modeling method: "umap_hdbscan" (uses BERTopic), "embedding_clustering", "hierarchical_semantic".
+#' @param method The topic modeling method:
+#'   - For Python backend: "umap_hdbscan" (uses BERTopic)
+#'   - For R backend: "umap_dbscan", "umap_kmeans", "umap_hierarchical",
+#'     "tsne_dbscan", "tsne_kmeans", "pca_kmeans", "pca_hierarchical"
+#'   - For both: "embedding_clustering", "hierarchical_semantic"
 #' @param n_topics The number of topics to identify. For UMAP+HDBSCAN, use NULL or "auto" for automatic determination, or specify an integer.
 #' @param embedding_model The embedding model to use (default: "all-MiniLM-L6-v2").
+#' @param backend The backend to use: "auto" (default, tries Python then R),
+#'   "python" (requires BERTopic), or "r" (R-native packages only).
 #' @param clustering_method The clustering method for embedding-based approach: "kmeans", "hierarchical", "dbscan", "hdbscan".
 #' @param similarity_threshold The similarity threshold for topic assignment (default: 0.7).
 #' @param min_topic_size The minimum number of documents per topic (default: 3).
@@ -1043,6 +1053,10 @@ calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 #' @param umap_neighbors The number of neighbors for UMAP dimensionality reduction (default: 15).
 #' @param umap_min_dist The minimum distance for UMAP (default: 0.0). Use 0.0 for tight, well-separated clusters. Use 0.1+ for visualization purposes. Range: 0.0-0.99.
 #' @param umap_n_components The number of UMAP components (default: 5).
+#' @param tsne_perplexity Perplexity parameter for t-SNE (default: 30). Only used when method includes "tsne".
+#' @param pca_dims Number of PCA components for dimensionality reduction (default: 50). Only used when method includes "pca".
+#' @param dbscan_eps Epsilon parameter for DBSCAN (default: 0.5). Neighborhood size for density-based clustering.
+#' @param dbscan_minpts Minimum points for DBSCAN core points (default: 5).
 #' @param representation_method The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").
 #' @param diversity Topic diversity parameter between 0 and 1 (default: 0.5).
 #' @param reduce_outliers Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).
@@ -1088,6 +1102,7 @@ fit_embedding_model <- function(texts,
                                    method = "umap_hdbscan",
                                    n_topics = 10,
                                    embedding_model = "all-MiniLM-L6-v2",
+                                   backend = "auto",
                                    clustering_method = "kmeans",
                                    similarity_threshold = 0.7,
                                    min_topic_size = 3,
@@ -1095,6 +1110,10 @@ fit_embedding_model <- function(texts,
                                    umap_neighbors = 15,
                                    umap_min_dist = 0.0,
                                    umap_n_components = 5,
+                                   tsne_perplexity = 30,
+                                   pca_dims = 50,
+                                   dbscan_eps = 0.5,
+                                   dbscan_minpts = 5,
                                    representation_method = "c-tfidf",
                                    diversity = 0.5,
                                    reduce_outliers = TRUE,
@@ -1104,10 +1123,51 @@ fit_embedding_model <- function(texts,
                                    verbose = TRUE,
                                    precomputed_embeddings = NULL) {
 
+  if (is.null(texts) || length(texts) == 0) {
+    stop("No texts provided for analysis")
+  }
+
+  backend <- match.arg(backend, c("auto", "python", "r"))
+
+  if (backend == "auto") {
+    python_available <- tryCatch({
+      requireNamespace("reticulate", quietly = TRUE) &&
+        reticulate::py_module_available("bertopic")
+    }, error = function(e) FALSE)
+
+    backend <- if (python_available) "python" else "r"
+    if (verbose) {
+      message("Auto-detected backend: ", backend)
+    }
+  }
+
+  if (backend == "r") {
+    return(.fit_embedding_model_r(
+      texts = texts,
+      method = method,
+      n_topics = n_topics,
+      embedding_model = embedding_model,
+      umap_neighbors = umap_neighbors,
+      umap_min_dist = umap_min_dist,
+      umap_n_components = umap_n_components,
+      tsne_perplexity = tsne_perplexity,
+      pca_dims = pca_dims,
+      dbscan_eps = dbscan_eps,
+      dbscan_minpts = dbscan_minpts,
+      min_topic_size = min_topic_size,
+      representation_method = representation_method,
+      reduce_outliers = reduce_outliers,
+      seed = seed,
+      verbose = verbose,
+      precomputed_embeddings = precomputed_embeddings
+    ))
+  }
+
   if (verbose) {
     message("Starting semantic-based topic modeling...")
     message("Method: ", method)
     message("Number of topics: ", n_topics)
+    message("Backend: Python (BERTopic)")
   }
 
   if (is.null(texts) || length(texts) == 0) {
@@ -1413,6 +1473,261 @@ fit_embedding_model <- function(texts,
     stop("Error in semantic topic modeling: ", e$message)
   })
 }
+
+
+.fit_embedding_model_r <- function(texts,
+                                   method = "umap_dbscan",
+                                   n_topics = 10,
+                                   embedding_model = "all-MiniLM-L6-v2",
+                                   umap_neighbors = 15,
+                                   umap_min_dist = 0.1,
+                                   umap_n_components = 5,
+                                   tsne_perplexity = 30,
+                                   pca_dims = 50,
+                                   dbscan_eps = 0.5,
+                                   dbscan_minpts = 5,
+                                   min_topic_size = 3,
+                                   representation_method = "c-tfidf",
+                                   reduce_outliers = TRUE,
+                                   seed = 123,
+                                   verbose = TRUE,
+                                   precomputed_embeddings = NULL) {
+
+  if (verbose) {
+    message("Starting R-native embedding-based topic modeling...")
+    message("Method: ", method)
+    message("Number of topics: ", n_topics)
+    message("Backend: R (no Python required)")
+  }
+
+  valid_texts <- texts[nchar(trimws(texts)) > 0]
+  if (length(valid_texts) < min_topic_size) {
+    stop("Need at least ", min_topic_size, " non-empty texts for analysis")
+  }
+
+  set.seed(seed)
+  start_time <- Sys.time()
+
+  tryCatch({
+    if (!is.null(precomputed_embeddings)) {
+      if (verbose) message("Step 1: Using precomputed embeddings...")
+      if (!is.matrix(precomputed_embeddings)) {
+        precomputed_embeddings <- as.matrix(precomputed_embeddings)
+      }
+      if (nrow(precomputed_embeddings) != length(valid_texts)) {
+        stop("Precomputed embeddings dimension mismatch: ",
+             nrow(precomputed_embeddings), " embeddings vs ",
+             length(valid_texts), " texts")
+      }
+      embeddings <- precomputed_embeddings
+    } else {
+      if (verbose) message("Step 1: Generating document embeddings...")
+
+      if (!requireNamespace("reticulate", quietly = TRUE)) {
+        stop("reticulate package is required for embedding generation. ",
+             "Install with: install.packages('reticulate')")
+      }
+
+      python_available <- tryCatch({
+        reticulate::py_config()
+        TRUE
+      }, error = function(e) FALSE)
+
+      if (!python_available) {
+        stop("Python not available. Please install Python and sentence-transformers: pip install sentence-transformers")
+      }
+
+      sentence_transformers <- reticulate::import("sentence_transformers")
+      model <- sentence_transformers$SentenceTransformer(embedding_model)
+
+      n_docs <- length(valid_texts)
+      batch_size <- if (n_docs > 100) 25 else if (n_docs > 50) 50 else n_docs
+
+      if (verbose) message("Processing ", n_docs, " documents with embeddings...")
+
+      embeddings_list <- list()
+      for (i in seq(1, n_docs, by = batch_size)) {
+        end_idx <- min(i + batch_size - 1, n_docs)
+        batch_texts <- valid_texts[i:end_idx]
+        batch_embeddings <- model$encode(batch_texts, show_progress_bar = FALSE)
+        embeddings_list[[length(embeddings_list) + 1]] <- batch_embeddings
+      }
+
+      embeddings <- do.call(rbind, embeddings_list)
+    }
+
+    dimred_method <- gsub("_.*", "", method)
+    cluster_method <- gsub(".*_", "", method)
+
+    if (verbose) message("Step 2: Applying dimensionality reduction (", toupper(dimred_method), ")...")
+
+    reduced_embeddings <- switch(dimred_method,
+      "umap" = {
+        if (!requireNamespace("umap", quietly = TRUE)) {
+          stop("umap package required. Install with: install.packages('umap')")
+        }
+        umap_result <- umap::umap(embeddings,
+                                  n_neighbors = umap_neighbors,
+                                  min_dist = umap_min_dist,
+                                  n_components = min(umap_n_components, ncol(embeddings)))
+        umap_result$layout
+      },
+      "tsne" = {
+        if (!requireNamespace("Rtsne", quietly = TRUE)) {
+          stop("Rtsne package required. Install with: install.packages('Rtsne')")
+        }
+        tsne_result <- Rtsne::Rtsne(embeddings,
+                                    dims = 2,
+                                    perplexity = min(tsne_perplexity, floor((nrow(embeddings) - 1) / 3)),
+                                    check_duplicates = FALSE)
+        tsne_result$Y
+      },
+      "pca" = {
+        pca_result <- stats::prcomp(embeddings, center = TRUE, scale. = TRUE,
+                                    rank. = min(pca_dims, ncol(embeddings)))
+        pca_result$x[, 1:min(2, ncol(pca_result$x))]
+      },
+      {
+        if (!requireNamespace("umap", quietly = TRUE)) {
+          stop("umap package required. Install with: install.packages('umap')")
+        }
+        umap_result <- umap::umap(embeddings,
+                                  n_neighbors = umap_neighbors,
+                                  min_dist = umap_min_dist,
+                                  n_components = min(umap_n_components, ncol(embeddings)))
+        umap_result$layout
+      }
+    )
+
+    if (verbose) message("Step 3: Clustering documents (", cluster_method, ")...")
+
+    clusters <- switch(cluster_method,
+      "dbscan" = {
+        if (!requireNamespace("dbscan", quietly = TRUE)) {
+          stop("dbscan package required. Install with: install.packages('dbscan')")
+        }
+        db_result <- dbscan::dbscan(reduced_embeddings, eps = dbscan_eps, minPts = dbscan_minpts)
+        clusters <- db_result$cluster
+
+        if (reduce_outliers && any(clusters == 0) && length(unique(clusters[clusters > 0])) > 0) {
+          if (verbose) message("Reassigning ", sum(clusters == 0), " outlier documents...")
+          noise_idx <- which(clusters == 0)
+          valid_clusters <- unique(clusters[clusters > 0])
+
+          centroids <- sapply(valid_clusters, function(cl) {
+            colMeans(reduced_embeddings[clusters == cl, , drop = FALSE])
+          })
+          if (is.vector(centroids)) centroids <- matrix(centroids, nrow = 1)
+          centroids <- t(centroids)
+
+          for (idx in noise_idx) {
+            point <- reduced_embeddings[idx, ]
+            distances <- apply(centroids, 1, function(c) sqrt(sum((point - c)^2)))
+            clusters[idx] <- valid_clusters[which.min(distances)]
+          }
+        }
+        clusters
+      },
+      "kmeans" = {
+        k <- if (is.null(n_topics) || n_topics == "auto") {
+          min(10, nrow(reduced_embeddings) - 1)
+        } else {
+          as.integer(n_topics)
+        }
+        km_result <- stats::kmeans(reduced_embeddings, centers = k, nstart = 25)
+        km_result$cluster
+      },
+      "hierarchical" = {
+        k <- if (is.null(n_topics) || n_topics == "auto") {
+          min(10, nrow(reduced_embeddings) - 1)
+        } else {
+          as.integer(n_topics)
+        }
+        dist_matrix <- stats::dist(reduced_embeddings)
+        hc_result <- stats::hclust(dist_matrix, method = "ward.D2")
+        stats::cutree(hc_result, k = k)
+      },
+      "hdbscan" = {
+        if (!requireNamespace("dbscan", quietly = TRUE)) {
+          stop("dbscan package required. Install with: install.packages('dbscan')")
+        }
+        hdb_result <- dbscan::hdbscan(reduced_embeddings, minPts = min_topic_size)
+        clusters <- hdb_result$cluster
+
+        if (reduce_outliers && any(clusters == 0) && length(unique(clusters[clusters > 0])) > 0) {
+          if (verbose) message("Reassigning ", sum(clusters == 0), " outlier documents...")
+          noise_idx <- which(clusters == 0)
+          valid_clusters <- unique(clusters[clusters > 0])
+
+          centroids <- sapply(valid_clusters, function(cl) {
+            colMeans(reduced_embeddings[clusters == cl, , drop = FALSE])
+          })
+          if (is.vector(centroids)) centroids <- matrix(centroids, nrow = 1)
+          centroids <- t(centroids)
+
+          for (idx in noise_idx) {
+            point <- reduced_embeddings[idx, ]
+            distances <- apply(centroids, 1, function(c) sqrt(sum((point - c)^2)))
+            clusters[idx] <- valid_clusters[which.min(distances)]
+          }
+        }
+        clusters
+      },
+      {
+        if (!requireNamespace("dbscan", quietly = TRUE)) {
+          stop("dbscan package required. Install with: install.packages('dbscan')")
+        }
+        db_result <- dbscan::dbscan(reduced_embeddings, eps = dbscan_eps, minPts = dbscan_minpts)
+        db_result$cluster
+      }
+    )
+
+    if (verbose) message("Step 4: Generating topic keywords via ", representation_method, "...")
+    topic_keywords <- generate_semantic_topic_keywords(
+      texts = valid_texts,
+      topic_assignments = clusters,
+      n_keywords = 10,
+      method = representation_method
+    )
+
+    if (verbose) message("Step 5: Calculating quality metrics...")
+    quality_metrics <- tryCatch({
+      calculate_topic_quality(
+        embeddings = embeddings,
+        topic_assignments = clusters,
+        similarity_matrix = NULL
+      )
+    }, error = function(e) list(overall_quality = NA))
+
+    execution_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+
+    if (verbose) {
+      message("R-native topic modeling completed in ", round(execution_time, 2), " seconds")
+      message("Topics identified: ", length(unique(clusters[clusters > 0])))
+    }
+
+    list(
+      topic_assignments = clusters,
+      topic_keywords = topic_keywords,
+      embeddings = embeddings,
+      reduced_embeddings = reduced_embeddings,
+      method = method,
+      backend = "r",
+      dimred_method = dimred_method,
+      cluster_method = cluster_method,
+      quality_metrics = quality_metrics,
+      execution_time = execution_time,
+      n_documents = length(valid_texts),
+      n_topics = length(unique(clusters[clusters > 0])),
+      embedding_model = embedding_model,
+      timestamp = Sys.time()
+    )
+
+  }, error = function(e) {
+    stop("Error in R-native topic modeling: ", e$message)
+  })
+}
+
 
 #' @title Embedding-based Topic Modeling (Deprecated)
 #' @description

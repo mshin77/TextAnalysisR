@@ -29,7 +29,13 @@ fit_embedding_topics(
 \arguments{
 \item{texts}{A character vector of texts to analyze.}
 
-\item{method}{The topic modeling method: "umap_hdbscan" (uses BERTopic), "embedding_clustering", "hierarchical_semantic".}
+\item{method}{The topic modeling method:
+\itemize{
+\item For Python backend: "umap_hdbscan" (uses BERTopic)
+\item For R backend: "umap_dbscan", "umap_kmeans", "umap_hierarchical",
+"tsne_dbscan", "tsne_kmeans", "pca_kmeans", "pca_hierarchical"
+\item For both: "embedding_clustering", "hierarchical_semantic"
+}}
 
 \item{n_topics}{The number of topics to identify. For UMAP+HDBSCAN, use NULL or "auto" for automatic determination, or specify an integer.}
 

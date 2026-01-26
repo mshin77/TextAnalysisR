@@ -1276,7 +1276,7 @@ Supports:
                 style = "color: #0c1f4a; margin-bottom: 10px;"
               ),
               div(
-                style = "display: flex; gap: 8px; align-items: center;",
+                style = "display: flex; gap: 8px; align-items: flex-end;",
                 div(
                   style = "flex: 0 0 36px;",
                   if (requireNamespace("colourpicker", quietly = TRUE)) {
@@ -1291,7 +1291,7 @@ Supports:
                   textInput("custom_entity_name", NULL, placeholder = "Type a New Entity")
                 ),
                 div(
-                  style = "flex: 0 0 auto;",
+                  style = "flex: 0 0 auto; margin-bottom: 15px;",
                   actionButton("apply_custom_entity", icon("plus"),
                     class = "btn-primary btn-sm",
                     style = "height: 34px; width: 34px; padding: 0;",
@@ -2004,149 +2004,6 @@ Supports:
               div(
                 style = "margin-bottom: 15px;",
                 actionButton("run_semantic_search", "Search", class = "btn-primary btn-block", icon = icon("search"))
-              )
-            )
-          ),
-          conditionalPanel(
-            condition = "input.semantic_analysis_tabs == 'document_clustering'",
-            tags$h5(HTML("<strong>Document Clustering</strong> <a href='https://scikit-learn.org/stable/modules/clustering.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
-            uiOutput("document_clustering_status"),
-
-            wellPanel(
-              style = "padding: 12px; margin-bottom: 15px;",
-              selectInput(
-                "semantic_dimred_method",
-                "Step 1: Dimensionality reduction",
-                choices = c(
-                  "PCA" = "PCA",
-                  "t-SNE" = "t-SNE",
-                  "UMAP" = "UMAP"
-                ),
-                selected = "UMAP"
-              ),
-              conditionalPanel(
-                condition = "input.semantic_dimred_method == 'PCA'",
-                sliderInput(
-                  "semantic_pca_dims",
-                  "Components",
-                  value = 50,
-                  min = 10,
-                  max = 200,
-                  step = 10
-                )
-              ),
-              conditionalPanel(
-                condition = "input.semantic_dimred_method == 't-SNE'",
-                sliderInput(
-                  "semantic_tsne_perplexity",
-                  "Perplexity",
-                  value = 30,
-                  min = 5,
-                  max = 100,
-                  step = 5
-                ),
-                sliderInput(
-                  "semantic_tsne_max_iter",
-                  "Max iterations",
-                  value = 1000,
-                  min = 250,
-                  max = 5000,
-                  step = 250
-                )
-              ),
-              conditionalPanel(
-                condition = "input.semantic_dimred_method == 'UMAP'",
-                sliderInput(
-                  "semantic_umap_neighbors",
-                  "Neighbors",
-                  value = 15,
-                  min = 5,
-                  max = 50,
-                  step = 1
-                ),
-                sliderInput(
-                  "semantic_umap_min_dist",
-                  "Min distance",
-                  value = 0.1,
-                  min = 0.01,
-                  max = 0.5,
-                  step = 0.01
-                )
-              ),
-              div(
-                style = "margin-top: 15px;",
-                actionButton("run_dimensionality_reduction", "Reduce Dimensionality", class = "btn-primary btn-block", icon = icon("compress-arrows-alt"))
-              )
-            ),
-
-            wellPanel(
-              style = "padding: 12px; margin-bottom: 15px;",
-              selectInput(
-                "document_clustering_method",
-                "Step 2: Clustering (optional)",
-                choices = c(
-                  "None" = "none",
-                  "K-means" = "kmeans",
-                  "Hierarchical" = "hierarchical",
-                  "DBSCAN" = "dbscan",
-                  "HDBSCAN" = "hdbscan"
-                ),
-                selected = "none"
-              ),
-              conditionalPanel(
-                condition = "input.document_clustering_method == 'kmeans'",
-                numericInput(
-                  "kmeans_k",
-                  "Number of clusters",
-                  value = 5,
-                  min = 2,
-                  max = 20
-                )
-              ),
-              conditionalPanel(
-                condition = "input.document_clustering_method == 'hierarchical'",
-                numericInput(
-                  "hclust_k",
-                  "Number of clusters",
-                  value = 5,
-                  min = 2,
-                  max = 20
-                )
-              ),
-              conditionalPanel(
-                condition = "input.document_clustering_method == 'dbscan'",
-                numericInput(
-                  "dbscan_eps",
-                  "Epsilon (neighborhood size)",
-                  value = 0.5,
-                  min = 0.1,
-                  max = 2,
-                  step = 0.1
-                ),
-                numericInput(
-                  "dbscan_minPts",
-                  "Min points",
-                  value = 5,
-                  min = 2,
-                  max = 20
-                )
-              ),
-              conditionalPanel(
-                condition = "input.document_clustering_method == 'hdbscan'",
-                numericInput(
-                  "hdbscan_min_cluster_size",
-                  "Min cluster size",
-                  value = 5,
-                  min = 2,
-                  max = 50
-                )
-              ),
-              conditionalPanel(
-                condition = "input.document_clustering_method != 'none'",
-                div(
-                  style = "margin-top: 15px;",
-                  actionButton("apply_clustering", "Apply Clustering", class = "btn-primary btn-block", icon = icon("project-diagram"))
-                )
               )
             )
           ),
@@ -3100,171 +2957,6 @@ Supports:
                   uiOutput("sentiment_emotion_uiOutput")
                 )
               )
-            ),
-            tabPanel(
-              "8. Document Clustering",
-              value = "document_clustering",
-              br(),
-              tabsetPanel(
-                id = "document_clustering_tabs",
-                tabPanel(
-                  "Visualization",
-                  value = "viz",
-                  conditionalPanel(
-                    condition = "output.analysis_run == true",
-                    plotly::plotlyOutput("semantic_space_plot", height = "600px", width = "100%"),
-                    br(),
-                    div(
-                      style = "border: 1px solid #dee2e6; padding: 12px; margin-bottom: 15px; border-radius: 4px; background: white;",
-                      fluidRow(
-                        column(6,
-                          uiOutput("space_feature_info")
-                        ),
-                        column(6,
-                          uiOutput("space_quality_metrics")
-                        )
-                      )
-                    )
-                  ),
-                  conditionalPanel(
-                    condition = "output.analysis_run == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 400px; margin: 0 auto;",
-                        tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "Click ",
-                          tags$strong("'Reduce Dimensionality'", style = "color: #0c1f4a;"),
-                          " to generate visualization",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
-                        )
-                      )
-                    )
-                  )
-                ),
-                tabPanel(
-                  "Group Analysis",
-                  value = "groups",
-                  br(),
-                  conditionalPanel(
-                    condition = "output.has_clusters == true",
-                    DT::dataTableOutput("document_groups_table"),
-                    tags$h5("Explore Groups", style = "color: #0c1f4a; margin-top: 15px;"),
-                    fluidRow(
-                      column(4,
-                        selectInput(
-                          "selected_document_group",
-                          "Group",
-                          choices = NULL,
-                          width = "100%"
-                        )
-                      ),
-                      column(8,
-                        uiOutput("document_group_summary")
-                      )
-                    ),
-                    br(),
-                    fluidRow(
-                      column(6,
-                        tags$h5("Top Terms", style = "color: #0c1f4a; margin-bottom: 10px;"),
-                        plotly::plotlyOutput("group_terms_plot", height = "300px")
-                      ),
-                      column(6,
-                        tags$h5("Sample Documents", style = "color: #0c1f4a; margin-bottom: 10px;"),
-                        DT::dataTableOutput("group_sample_docs")
-                      )
-                    )
-                  ),
-                  conditionalPanel(
-                    condition = "output.has_clusters == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 400px; margin: 0 auto;",
-                        tags$i(class = "fa fa-layer-group", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "Click ",
-                          tags$strong("'Reduce Dimensionality'", style = "color: #0c1f4a;"),
-                          " then optionally ",
-                          tags$strong("'Apply Clustering'", style = "color: #0c1f4a;"),
-                          " to create document groups",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
-                        )
-                      )
-                    )
-                  )
-                ),
-                tabPanel(
-                  "Labels",
-                  value = "labels",
-                  br(),
-                  conditionalPanel(
-                    condition = "output.has_clusters == true",
-                    fluidRow(
-                      column(12,
-                        wellPanel(
-                          style = "padding: 15px; margin-bottom: 20px;",
-                          tags$h5(strong("Label Generation"), style = "color: #0c1f4a; margin-bottom: 15px;"),
-                          fluidRow(
-                            column(4,
-                              selectInput(
-                                "label_method",
-                                "Method:",
-                                choices = c(
-                                  "Top Terms (TF-IDF)" = "tfidf",
-                                  "Representative Terms" = "representative",
-                                  "Most Frequent Terms" = "frequent"
-                                ),
-                                selected = "tfidf"
-                              )
-                            ),
-                            column(4,
-                              numericInput(
-                                "n_label_terms",
-                                "Terms per label:",
-                                value = 3,
-                                min = 1,
-                                max = 5
-                              )
-                            ),
-                            column(4,
-                              actionButton(
-                                "generate_labels",
-                                "Generate Labels",
-                                class = "btn-primary",
-                                icon = icon("tag"),
-                                style = "margin-top: 25px;"
-                              )
-                            )
-                          )
-                        )
-                      )
-                    ),
-                    plotly::plotlyOutput("labeled_space_plot", height = "500px"),
-                    br(),
-                    DT::dataTableOutput("labeled_groups_table")
-                  ),
-                  conditionalPanel(
-                    condition = "output.has_clusters == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 400px; margin: 0 auto;",
-                        tags$i(class = "fa fa-tags", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "Click ",
-                          tags$strong("'Reduce Dimensionality'", style = "color: #0c1f4a;"),
-                          " then ",
-                          tags$strong("'Apply Clustering'", style = "color: #0c1f4a;"),
-                          " to create groups for labeling",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
-                        )
-                      )
-                    )
-                  )
-                )
-              )
             )
           )
         )
@@ -3935,8 +3627,20 @@ Focus on incorporating the most significant keywords while following the guideli
           ),
           conditionalPanel(
             condition = "input.topic_modeling_path == 'embedding' && input.conditioned3 == 4",
-            tags$h5(HTML("<strong>Configure Embedding-based Topic Modeling</strong> <a href='https://maartengr.github.io/BERTopic/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Configure Embedding-based Topic Modeling</strong>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+
+            selectInput(
+              "embedding_backend",
+              "Backend:",
+              choices = c(
+                "Python (BERTopic, recommended)" = "python",
+                "R (no Python required)" = "r"
+              ),
+              selected = "python"
+            ),
+
             uiOutput("embedding_topic_python_status"),
+
             selectInput(
               "embedding_model_name",
               "Embedding model:",
@@ -3949,65 +3653,182 @@ Focus on incorporating the most significant keywords while following the guideli
               selected = "all-MiniLM-L6-v2"
             ),
 
-            selectInput(
-              "embedding_method",
-              "Topic discovery method:",
-              choices = c(
-                "UMAP + HDBSCAN" = "umap_hdbscan",
-                "Embedding Clustering" = "embedding_clustering",
-                "Hierarchical Semantic" = "hierarchical_semantic"
-              ),
-              selected = "umap_hdbscan"
-            ),
-
             conditionalPanel(
-              condition = "input.embedding_method == 'umap_hdbscan'",
-              sliderInput(
-                "embedding_umap_neighbors",
-                "Neighbors:",
-                value = 15,
-                min = 5,
-                max = 50
-              ),
-              sliderInput(
-                "embedding_umap_min_dist",
-                "Min distance (0.0 = tight clusters for topic modeling):",
-                value = 0.0,
-                min = 0.0,
-                max = 0.99,
-                step = 0.01
-              ),
-              sliderInput(
-                "embedding_min_topic_size",
-                "Min cluster size:",
-                value = 10,
-                min = 2,
-                max = 50
-              ),
+              condition = "input.embedding_backend == 'python'",
               selectInput(
-                "embedding_cluster_selection",
-                "Cluster selection method:",
+                "embedding_method",
+                "Topic discovery method:",
                 choices = c(
-                  "EOM (default, broader topics)" = "eom",
-                  "Leaf (finer-grained topics)" = "leaf"
+                  "UMAP + HDBSCAN" = "umap_hdbscan",
+                  "Embedding Clustering" = "embedding_clustering",
+                  "Hierarchical Semantic" = "hierarchical_semantic"
                 ),
-                selected = "eom"
+                selected = "umap_hdbscan"
               ),
-              checkboxInput(
-                "embedding_reduce_outliers",
-                "Reduce outliers",
-                value = FALSE
+
+              conditionalPanel(
+                condition = "input.embedding_method == 'umap_hdbscan'",
+                sliderInput(
+                  "embedding_umap_neighbors",
+                  "Neighbors:",
+                  value = 15,
+                  min = 5,
+                  max = 50
+                ),
+                sliderInput(
+                  "embedding_umap_min_dist",
+                  "Min distance (0.0 = tight clusters for topic modeling):",
+                  value = 0.0,
+                  min = 0.0,
+                  max = 0.99,
+                  step = 0.01
+                ),
+                sliderInput(
+                  "embedding_min_topic_size",
+                  "Min cluster size:",
+                  value = 10,
+                  min = 2,
+                  max = 50
+                ),
+                selectInput(
+                  "embedding_cluster_selection",
+                  "Cluster selection method:",
+                  choices = c(
+                    "EOM (default, broader topics)" = "eom",
+                    "Leaf (finer-grained topics)" = "leaf"
+                  ),
+                  selected = "eom"
+                ),
+                checkboxInput(
+                  "embedding_reduce_outliers",
+                  "Reduce outliers",
+                  value = FALSE
+                )
+              ),
+
+              conditionalPanel(
+                condition = "input.embedding_method != 'umap_hdbscan'",
+                numericInput(
+                  "embedding_n_topics",
+                  "Number of topics",
+                  value = 10,
+                  min = 2,
+                  max = 50
+                )
               )
             ),
 
             conditionalPanel(
-              condition = "input.embedding_method != 'umap_hdbscan'",
-              numericInput(
-                "embedding_n_topics",
-                "Number of topics",
-                value = 10,
-                min = 2,
-                max = 50
+              condition = "input.embedding_backend == 'r'",
+              selectInput(
+                "embedding_dimred_method",
+                "Dimensionality reduction:",
+                choices = c(
+                  "UMAP" = "umap",
+                  "t-SNE" = "tsne",
+                  "PCA" = "pca"
+                ),
+                selected = "umap"
+              ),
+
+              conditionalPanel(
+                condition = "input.embedding_dimred_method == 'umap'",
+                sliderInput(
+                  "embedding_r_umap_neighbors",
+                  "Neighbors:",
+                  value = 15,
+                  min = 5,
+                  max = 50
+                ),
+                sliderInput(
+                  "embedding_r_umap_min_dist",
+                  "Min distance:",
+                  value = 0.1,
+                  min = 0.0,
+                  max = 0.5,
+                  step = 0.01
+                )
+              ),
+
+              conditionalPanel(
+                condition = "input.embedding_dimred_method == 'tsne'",
+                sliderInput(
+                  "embedding_tsne_perplexity",
+                  "Perplexity:",
+                  value = 30,
+                  min = 5,
+                  max = 100
+                )
+              ),
+
+              conditionalPanel(
+                condition = "input.embedding_dimred_method == 'pca'",
+                sliderInput(
+                  "embedding_pca_dims",
+                  "Components:",
+                  value = 50,
+                  min = 10,
+                  max = 200
+                )
+              ),
+
+              selectInput(
+                "embedding_method_r",
+                "Clustering method:",
+                choices = c(
+                  "DBSCAN (density-based)" = "dbscan",
+                  "K-means" = "kmeans",
+                  "Hierarchical" = "hierarchical",
+                  "HDBSCAN" = "hdbscan"
+                ),
+                selected = "dbscan"
+              ),
+
+              conditionalPanel(
+                condition = "input.embedding_method_r == 'kmeans' || input.embedding_method_r == 'hierarchical'",
+                numericInput(
+                  "embedding_r_n_topics",
+                  "Number of clusters:",
+                  value = 5,
+                  min = 2,
+                  max = 50
+                )
+              ),
+
+              conditionalPanel(
+                condition = "input.embedding_method_r == 'dbscan'",
+                sliderInput(
+                  "embedding_dbscan_eps",
+                  "Epsilon:",
+                  value = 0.5,
+                  min = 0.1,
+                  max = 2.0,
+                  step = 0.1
+                ),
+                sliderInput(
+                  "embedding_dbscan_minpts",
+                  "Min points:",
+                  value = 5,
+                  min = 2,
+                  max = 20
+                )
+              ),
+
+              conditionalPanel(
+                condition = "input.embedding_method_r == 'hdbscan'",
+                sliderInput(
+                  "embedding_r_min_cluster_size",
+                  "Min cluster size:",
+                  value = 5,
+                  min = 2,
+                  max = 50
+                )
+              ),
+
+              checkboxInput(
+                "embedding_r_reduce_outliers",
+                "Reduce outliers (for DBSCAN/HDBSCAN)",
+                value = TRUE
               )
             ),
 
@@ -4023,13 +3844,16 @@ Focus on incorporating the most significant keywords while following the guideli
               selected = "c-tfidf"
             ),
 
-            sliderInput(
-              "embedding_topic_diversity",
-              "Topic diversity",
-              value = 0.5,
-              min = 0,
-              max = 1,
-              step = 0.1
+            conditionalPanel(
+              condition = "input.embedding_backend == 'python'",
+              sliderInput(
+                "embedding_topic_diversity",
+                "Topic diversity",
+                value = 0.5,
+                min = 0,
+                max = 1,
+                step = 0.1
+              )
             ),
 
             actionButton("embedding_run", "Run Model", class = "btn-primary btn-block")

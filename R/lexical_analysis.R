@@ -2197,8 +2197,8 @@ plot_entity_frequencies <- function(entity_data,
     "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
     "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
     "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
-    "DISABILITY" = "#ad1457", "PROGRAM" = "#1976d2", "TEST" = "#7b1fa2",
-    "CONCEPT" = "#00897b", "TOOL" = "#6d4c41", "METHOD" = "#c2185b",
+    "DISABILITY" = "#E91E63", "PROGRAM" = "#2196F3", "TEST" = "#4CAF50",
+    "CONCEPT" = "#9C27B0", "TOOL" = "#FF9800", "METHOD" = "#00BCD4",
     "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#26a69a",
     "CUSTOM" = "#d81b60"
   )

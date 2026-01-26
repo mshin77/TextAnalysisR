@@ -4111,6 +4111,17 @@ server <- shinyServer(function(input, output, session) {
     entity_type_modifications()
     custom_entities()
 
+    # Trigger reactivity on sidebar entity selections
+    input$ner_named
+    input$ner_objects
+    input$ner_numeric
+    input$domain_disability
+    input$domain_program
+    input$domain_test
+    input$domain_concept
+    input$domain_tool
+    input$domain_method
+
     parsed <- spacy_parsed()
 
 
@@ -4271,6 +4282,17 @@ server <- shinyServer(function(input, output, session) {
 
     custom_entities()
 
+    # Trigger reactivity on sidebar entity selections
+    input$ner_named
+    input$ner_objects
+    input$ner_numeric
+    input$domain_disability
+    input$domain_program
+    input$domain_test
+    input$domain_concept
+    input$domain_tool
+    input$domain_method
+
     if (!has_ner && has_custom) {
       custom_df <- custom_entities()
 
@@ -4303,8 +4325,8 @@ server <- shinyServer(function(input, output, session) {
                 "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
                 "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
                 "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-                "    'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2',",
-                "    'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b',",
+                "    'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50',",
+                "    'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4',",
                 "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
                 "  };",
                 "  if (window.customEntityColors) {",
@@ -4357,8 +4379,8 @@ server <- shinyServer(function(input, output, session) {
                   "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
                   "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
                   "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-                  "    'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2',",
-                  "    'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b',",
+                  "    'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50',",
+                  "    'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4',",
                   "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
                   "  };",
                   "  if (window.customEntityColors) {",
@@ -4493,8 +4515,8 @@ server <- shinyServer(function(input, output, session) {
       "'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c', ",
       "'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24', ",
       "'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c', ",
-      "'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2', ",
-      "'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b', ",
+      "'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50', ",
+      "'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4', ",
       "'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
       if (nzchar(custom_color_js)) paste0(", ", custom_color_js) else ""
     )
@@ -4530,8 +4552,8 @@ server <- shinyServer(function(input, output, session) {
               "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
               "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
               "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-              "    'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2',",
-              "    'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b',",
+              "    'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50',",
+              "    'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4',",
               "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
               "  };",
               "  if (window.customEntityColors) {",
@@ -4569,6 +4591,17 @@ server <- shinyServer(function(input, output, session) {
   output$ner_displacy_html <- renderUI({
     req(spacy_parsed(), input$ner_viz_doc)
 
+    # Trigger reactivity on sidebar entity selections
+    input$ner_named
+    input$ner_objects
+    input$ner_numeric
+    input$domain_disability
+    input$domain_program
+    input$domain_test
+    input$domain_concept
+    input$domain_tool
+    input$domain_method
+
     parsed <- spacy_parsed()
 
     # Check if entity column exists
@@ -4599,8 +4632,8 @@ server <- shinyServer(function(input, output, session) {
       "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
       "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
       "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
-      "DISABILITY" = "#ad1457", "PROGRAM" = "#1976d2", "TEST" = "#7b1fa2",
-      "CONCEPT" = "#00897b", "TOOL" = "#6d4c41", "METHOD" = "#c2185b",
+      "DISABILITY" = "#E91E63", "PROGRAM" = "#2196F3", "TEST" = "#4CAF50",
+      "CONCEPT" = "#9C27B0", "TOOL" = "#FF9800", "METHOD" = "#00BCD4",
       "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#26a69a",
       "CUSTOM" = "#d81b60"
     )
@@ -18015,17 +18048,50 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    n_topics_msg <- if (input$embedding_method == "umap_hdbscan") "automatic" else input$embedding_n_topics
-    show_loading_notification(HTML(paste("Running embedding-based topic modeling with", n_topics_msg, "topics...<br>This may take several minutes.")),
-                              id = "embedding_model_notification")
+    backend <- input$embedding_backend %||% "python"
+
+    if (backend == "r") {
+      dimred <- input$embedding_dimred_method %||% "umap"
+      cluster <- input$embedding_method_r %||% "dbscan"
+      method <- paste0(dimred, "_", cluster)
+      n_topics <- input$embedding_r_n_topics %||% 5
+      n_topics_msg <- if (cluster %in% c("dbscan", "hdbscan")) "automatic" else n_topics
+    } else {
+      method <- input$embedding_method %||% "umap_hdbscan"
+      n_topics_msg <- if (method == "umap_hdbscan") "automatic" else input$embedding_n_topics
+    }
+
+    show_loading_notification(HTML(paste0(
+      "Running embedding-based topic modeling (", backend, " backend) with ", n_topics_msg, " topics...<br>This may take several minutes."
+    )), id = "embedding_model_notification")
 
     tryCatch({
       texts <- united_tbl()$united_texts
 
-      if (input$embedding_method == "umap_hdbscan") {
+      if (backend == "r") {
+        embedding_result <- TextAnalysisR::fit_embedding_model(
+          texts = texts,
+          method = method,
+          backend = "r",
+          n_topics = input$embedding_r_n_topics %||% 5,
+          embedding_model = input$embedding_model_name,
+          umap_neighbors = input$embedding_r_umap_neighbors %||% 15,
+          umap_min_dist = input$embedding_r_umap_min_dist %||% 0.1,
+          tsne_perplexity = input$embedding_tsne_perplexity %||% 30,
+          pca_dims = input$embedding_pca_dims %||% 50,
+          dbscan_eps = input$embedding_dbscan_eps %||% 0.5,
+          dbscan_minpts = input$embedding_dbscan_minpts %||% 5,
+          min_topic_size = input$embedding_r_min_cluster_size %||% 5,
+          representation_method = input$embedding_topic_representation,
+          reduce_outliers = input$embedding_r_reduce_outliers %||% TRUE,
+          seed = 123,
+          verbose = TRUE
+        )
+      } else if (input$embedding_method == "umap_hdbscan") {
         embedding_result <- TextAnalysisR::fit_embedding_model(
           texts = texts,
           method = input$embedding_method,
+          backend = "python",
           embedding_model = input$embedding_model_name,
           umap_neighbors = input$embedding_umap_neighbors,
           umap_min_dist = input$embedding_umap_min_dist,
@@ -18041,6 +18107,7 @@ server <- shinyServer(function(input, output, session) {
         embedding_result <- TextAnalysisR::fit_embedding_model(
           texts = texts,
           method = input$embedding_method,
+          backend = "python",
           n_topics = input$embedding_n_topics,
           embedding_model = input$embedding_model_name,
           representation_method = input$embedding_topic_representation,
@@ -18052,7 +18119,7 @@ server <- shinyServer(function(input, output, session) {
       stm_K_number(embedding_result)
 
       tryCatch(removeNotification(id = "embedding_model_notification"), error = function(e) {})
-      show_completion_notification("Embedding-based model completed successfully!", duration = 3)
+      show_completion_notification(paste0("Embedding-based model (", backend, " backend) completed successfully!"), duration = 3)
 
     }, error = function(e) {
       tryCatch(removeNotification(id = "embedding_model_notification"), error = function(e) {})
