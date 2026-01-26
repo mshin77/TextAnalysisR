@@ -2507,7 +2507,7 @@ spacy_parse_full <- function(x,
                              morph = FALSE,
                              model = "en_core_web_sm") {
 
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2574,7 +2574,7 @@ spacy_parse_full <- function(x,
 #' @family lexical
 #' @export
 spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2637,7 +2637,7 @@ spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 spacy_extract_entities <- function(x, model = "en_core_web_sm") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2686,7 +2686,7 @@ spacy_extract_entities <- function(x, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 extract_noun_chunks <- function(x, model = "en_core_web_sm") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2733,7 +2733,7 @@ extract_noun_chunks <- function(x, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 extract_subjects_objects <- function(x, model = "en_core_web_sm") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2779,7 +2779,7 @@ extract_subjects_objects <- function(x, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 get_sentences <- function(x, model = "en_core_web_sm") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2827,7 +2827,7 @@ get_sentences <- function(x, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2850,7 +2850,7 @@ get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
 #' @family lexical
 #' @export
 find_similar_words <- function(word, top_n = 10L, model = "en_core_web_md") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
@@ -2874,7 +2874,7 @@ find_similar_words <- function(word, top_n = 10L, model = "en_core_web_md") {
 #' @family lexical
 #' @export
 get_spacy_embeddings <- function(texts, model = "en_core_web_md") {
-  if (!spacy_initialized() || .spacy_env$model != model) {
+  if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
 
