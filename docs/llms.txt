@@ -82,6 +82,10 @@ Text preparation and feature extraction
   : Unite Text Columns
 - [`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md)
   : Preprocess Text Data
+- [`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md)
+  : Lemmatize Tokens with Batch Processing
+- [`spacy_lemmatize()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_lemmatize.md)
+  : Lemmatize Texts with spaCy
 - [`detect_multi_words()`](https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.md)
   : Detect Multi-Word Expressions
 - [`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md)

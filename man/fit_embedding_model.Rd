@@ -19,6 +19,8 @@ fit_embedding_model(
   representation_method = "c-tfidf",
   diversity = 0.5,
   reduce_outliers = TRUE,
+  outlier_strategy = "probabilities",
+  outlier_threshold = 0,
   seed = 123,
   verbose = TRUE,
   precomputed_embeddings = NULL
@@ -52,6 +54,15 @@ fit_embedding_model(
 \item{diversity}{Topic diversity parameter between 0 and 1 (default: 0.5).}
 
 \item{reduce_outliers}{Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).}
+
+\item{outlier_strategy}{Strategy for outlier reduction using BERTopic:
+"probabilities" (default, uses topic probabilities), "c-tf-idf" (uses
+c-TF-IDF similarity), "embeddings" (uses cosine similarity in embedding
+space), or "distributions" (uses topic distributions). Ignored if
+reduce_outliers = FALSE.}
+
+\item{outlier_threshold}{Minimum threshold for outlier reassignment (default: 0.0).
+Higher values require stronger evidence for reassignment.}
 
 \item{seed}{Random seed for reproducibility (default: 123).}
 

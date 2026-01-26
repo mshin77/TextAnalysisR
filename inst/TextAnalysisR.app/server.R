@@ -2411,7 +2411,7 @@ server <- shinyServer(function(input, output, session) {
     # Create cache key based on token content
     current_cache_key <- digest::digest(as.list(tokens_to_use), algo = "md5")
 
-    # Check if we already have cached results for these tokens
+    # Check for cached results for these tokens
     if (!is.null(lemma_cache_key()) && !is.null(lemmatized_tokens()) &&
         lemma_cache_key() == current_cache_key) {
       showNotification("Using cached lemmatization results", type = "message", duration = 2)
@@ -2463,14 +2463,10 @@ server <- shinyServer(function(input, output, session) {
         })
       }
 
-      # Use spacy_parse_full for lemmatization
-      parsed <- TextAnalysisR::spacy_parse_full(
+      # Use optimized lemmatization (disables NER/parser for speed)
+      parsed <- TextAnalysisR::spacy_lemmatize(
         tokens_to_use,
-        pos = FALSE,
-        tag = FALSE,
-        lemma = TRUE,
-        entity = FALSE,
-        dependency = FALSE
+        batch_size = 100
       )
 
       spacy_parsed(parsed)
@@ -2902,6 +2898,11 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
+  observe({
+    selected_entities <- c(input$ner_named, input$ner_objects, input$ner_numeric)
+    updateSelectizeInput(session, "entity_type_filter", selected = selected_entities)
+  })
+
   output$lemma_ready <- reactive({
     lemma_applied()
   })
@@ -3067,118 +3068,58 @@ server <- shinyServer(function(input, output, session) {
     )
     req(tokens_to_use)
 
-    # Check if parsed data already has pos and tag columns
+    # Check if parsed data already has all required columns
     current_parsed <- spacy_parsed()
-    if (!is.null(current_parsed) && all(c("pos", "tag") %in% names(current_parsed))) {
+    if (!is.null(current_parsed) && all(c("pos", "tag", "entity", "dep_rel", "morph") %in% names(current_parsed))) {
       pos_applied(pos_applied() + 1)
       return()
     }
 
-    include_dep <- isTRUE(input$include_dependency)
+    # Always use Python spaCy with all features enabled
+    showNotification("Parsing with Python spaCy (POS, NER, Dependencies, Morphology)...", type = "message", duration = 3)
 
-    # Use Python spaCy
-    use_python <- !is_web
+    tryCatch({
+      # Use spacy_parse_full with ALL features enabled for consistency
+      parsed <- TextAnalysisR::spacy_parse_full(
+        tokens_to_use,
+        pos = TRUE,
+        tag = TRUE,
+        lemma = TRUE,
+        entity = TRUE,
+        dependency = TRUE,
+        morph = TRUE
+      )
 
-    if (use_python) {
-      # Use spacy_parse_full
-      showNotification("Extracting POS tags with morphology (Python/spaCy)...", type = "message", duration = 3)
+      spacy_parsed(parsed)
+      pos_applied(pos_applied() + 1)
 
-      tryCatch({
-        # Convert tokens to text for Python spaCy
-        if (inherits(tokens_to_use, "tokens")) {
-          texts <- sapply(tokens_to_use, function(x) paste(x, collapse = " "))
-          doc_names <- quanteda::docnames(tokens_to_use)
-
-        } else {
-          texts <- as.character(tokens_to_use)
-          doc_names <- paste0("text", seq_along(texts))
-
-        }
-
-        # Use spacy_parse_full for POS tagging
-        parsed <- TextAnalysisR::spacy_parse_full(
-          tokens_to_use,
-          pos = TRUE,
-          tag = TRUE,
-          lemma = TRUE,
-          entity = FALSE,
-          dependency = TRUE
-        )
-
-        spacy_parsed(parsed)
-        pos_applied(pos_applied() + 1)
-
-        msg <- if (include_dep) "POS tagging with morphology and dependency parsing completed!" else "POS tagging with morphology completed!"
-        showNotification(msg, type = "message", duration = 3)
-      }, error = function(e) {
-        # Show helpful error modal
-        showModal(modalDialog(
-          title = tags$div(style = "color: #DC2626;", icon("exclamation-triangle"), " Python spaCy Error"),
-          tags$div(
-            tags$p(tags$strong("Error: "), e$message),
-            tags$hr(),
-            tags$p(tags$strong("How to fix:")),
-            tags$ol(
-              tags$li("Check your Python/spaCy installation"),
-              tags$li("Or setup Python: Run ", tags$code("TextAnalysisR::setup_python_env()"), " in R console"),
-              tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
-            ),
-            tags$hr(),
-            tags$p(style = "color: #92400E; font-size: 14px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
-              "Note: spaCy provides POS, NER, and morphology features.")
+      showNotification("Linguistic annotation completed (POS, NER, Dependencies, Morphology)!", type = "message", duration = 3)
+    }, error = function(e) {
+      # Show helpful error modal
+      showModal(modalDialog(
+        title = tags$div(style = "color: #DC2626;", icon("exclamation-triangle"), " Python spaCy Error"),
+        tags$div(
+          tags$p(tags$strong("Error: "), e$message),
+          tags$hr(),
+          tags$p(tags$strong("How to fix:")),
+          tags$ol(
+            tags$li("Check your Python/spaCy installation"),
+            tags$li("Or setup Python: Run ", tags$code("TextAnalysisR::setup_python_env()"), " in R console"),
+            tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
           ),
-          easyClose = TRUE,
-          footer = modalButton("Close")
-        ))
-      })
-    } else {
-      # Use spaCy via Python
-      showNotification("Extracting POS tags with spaCy...", type = "message", duration = 3)
-
-      tryCatch({
-        # Get document names for alignment
-        if (inherits(tokens_to_use, "tokens")) {
-          doc_names <- quanteda::docnames(tokens_to_use)
-        } else {
-          doc_names <- paste0("text", seq_along(tokens_to_use))
-        }
-
-        parsed <- TextAnalysisR::extract_pos_tags(tokens_to_use, include_dependency = TRUE)
-
-        # Align doc_id with quanteda document names for batch entity matching
-
-        
-        if ("doc_id" %in% names(parsed) && length(doc_names) > 0) {
-          doc_id_map <- data.frame(
-            old_id = paste0("text", seq_along(doc_names)),
-            new_id = doc_names,
-            stringsAsFactors = FALSE
-          )
-
-          parsed$doc_id <- doc_id_map$new_id[match(parsed$doc_id, doc_id_map$old_id)]
-
-        } else {
-        }
-
-        spacy_parsed(parsed)
-        pos_applied(pos_applied() + 1)
-
-        msg <- if (include_dep) "POS tagging with dependency parsing completed!" else "POS tagging completed!"
-        showNotification(msg, type = "message", duration = 3)
-      }, error = function(e) {
-        showNotification(paste("Error:", e$message), type = "error", duration = 5)
-      })
-    }
+          tags$hr(),
+          tags$p(style = "color: #92400E; font-size: 14px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
+            "Note: spaCy provides POS, NER, and morphology features.")
+        ),
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
+    })
   })
 
   # Morphology Analysis Observer
   observeEvent(input$analyze_morphology, {
     req(!is_web)  # Morphology requires Python (local or Docker)
-
-    # Get parsed data
-    parsed <- spacy_parsed()
-    req(parsed)
-    req(nrow(parsed) > 0)
 
     selected_features <- input$morph_features
     if (is.null(selected_features) || length(selected_features) == 0) {
@@ -3189,9 +3130,11 @@ server <- shinyServer(function(input, output, session) {
     showNotification("Analyzing morphological features...", type = "message", duration = 3)
 
     tryCatch({
-      # Check if morph column already exists; if not, re-parse with morphology
-      if (!"morph" %in% names(parsed)) {
-        # Need to re-parse with additional_attributes for morphology
+      # Get parsed data or parse with all features if not available
+      parsed <- spacy_parsed()
+
+      if (is.null(parsed) || !"morph" %in% names(parsed)) {
+        # Need to parse with all features using Python spaCy
         tokens_to_use <- TextAnalysisR::get_available_tokens(
           final_tokens = final_tokens(),
           processed_tokens = processed_tokens(),
@@ -3200,25 +3143,22 @@ server <- shinyServer(function(input, output, session) {
         )
         req(tokens_to_use)
 
-        if (inherits(tokens_to_use, "tokens")) {
-          texts <- sapply(tokens_to_use, function(x) paste(x, collapse = " "))
-          doc_names <- quanteda::docnames(tokens_to_use)
-        } else {
-          texts <- as.character(tokens_to_use)
-          doc_names <- paste0("text", seq_along(texts))
-        }
-
-        # Use spacy_parse_full for morphology
+        # Use spacy_parse_full with ALL features enabled
         parsed <- TextAnalysisR::spacy_parse_full(
           tokens_to_use,
           pos = TRUE,
           tag = TRUE,
           lemma = TRUE,
-          entity = FALSE,
-          dependency = FALSE,
+          entity = TRUE,
+          dependency = TRUE,
           morph = TRUE
         )
+
+        spacy_parsed(parsed)
+        pos_applied(pos_applied() + 1)
       }
+
+      req(nrow(parsed) > 0)
 
       # Parse morphology string into individual columns
       if ("morph" %in% names(parsed)) {
@@ -3226,7 +3166,6 @@ server <- shinyServer(function(input, output, session) {
       }
 
       morph_data(parsed)
-      spacy_parsed(parsed)  # Update with morphology data
 
       showNotification(
         paste0("Morphology analysis complete! (", nrow(parsed), " tokens analyzed)"),
@@ -3879,6 +3818,12 @@ server <- shinyServer(function(input, output, session) {
 
   # Extract entities when NER filter is applied
   observeEvent(input$apply_ner_filter, {
+    # Check if parsed data already has all required columns
+    current_parsed <- spacy_parsed()
+    if (!is.null(current_parsed) && all(c("pos", "tag", "entity", "dep_rel", "morph") %in% names(current_parsed))) {
+      return()
+    }
+
     tokens_to_use <- TextAnalysisR::get_available_tokens(
       final_tokens = final_tokens(),
       processed_tokens = processed_tokens(),
@@ -3887,94 +3832,269 @@ server <- shinyServer(function(input, output, session) {
     )
     req(tokens_to_use)
 
-    # Check if parsed data already has entity column
-    current_parsed <- spacy_parsed()
-    if (!is.null(current_parsed) && "entity" %in% names(current_parsed)) {
-      return()
-    }
+    # Always use Python spaCy with all features enabled
+    showNotification("Parsing with Python spaCy (POS, NER, Dependencies, Morphology)...", type = "message", duration = 3)
 
-    # Check user's mode selection (default to "r" for web or if not set)
-    use_python <- !is_web && isTRUE(input$spacy_mode == "python")
+    tryCatch({
+      # Use spacy_parse_full with ALL features enabled for consistency
+      parsed <- TextAnalysisR::spacy_parse_full(
+        tokens_to_use,
+        pos = TRUE,
+        tag = TRUE,
+        lemma = TRUE,
+        entity = TRUE,
+        dependency = TRUE,
+        morph = TRUE
+      )
 
-    if (use_python) {
-      # Use spacy_parse_full
-      showNotification("Extracting named entities (spaCy)...", type = "message", duration = 3)
+      spacy_parsed(parsed)
+      pos_applied(pos_applied() + 1)
 
-      tryCatch({
-        # Convert tokens to text for Python spaCy
-        if (inherits(tokens_to_use, "tokens")) {
-          texts <- sapply(tokens_to_use, function(x) paste(x, collapse = " "))
-          doc_names <- quanteda::docnames(tokens_to_use)
-
-        } else {
-          texts <- as.character(tokens_to_use)
-          doc_names <- paste0("text", seq_along(texts))
-
-        }
-
-        # Use spacy_parse_full for NER
-        parsed <- TextAnalysisR::spacy_parse_full(
-          tokens_to_use,
-          pos = TRUE,
-          tag = TRUE,
-          lemma = TRUE,
-          entity = TRUE,
-          dependency = FALSE
-        )
-
-        spacy_parsed(parsed)
-        showNotification("Named entity extraction completed!", type = "message", duration = 3)
-      }, error = function(e) {
-        # Show helpful error modal
-        showModal(modalDialog(
-          title = tags$div(style = "color: #DC2626;", icon("exclamation-triangle"), " Python spaCy Error"),
-          tags$div(
-            tags$p(tags$strong("Error: "), e$message),
-            tags$hr(),
-            tags$p(tags$strong("How to fix:")),
-            tags$ol(
-              tags$li("Check that Python and spaCy are properly installed"),
-              tags$li("Or setup Python: Run ", tags$code("TextAnalysisR::setup_python_env()"), " in R console"),
-              tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
-            ),
-            tags$hr(),
-            tags$p(style = "color: #92400E; font-size: 14px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
-              "Check your spaCy installation.")
+      showNotification("Linguistic annotation completed (POS, NER, Dependencies, Morphology)!", type = "message", duration = 3)
+    }, error = function(e) {
+      # Show helpful error modal
+      showModal(modalDialog(
+        title = tags$div(style = "color: #DC2626;", icon("exclamation-triangle"), " Python spaCy Error"),
+        tags$div(
+          tags$p(tags$strong("Error: "), e$message),
+          tags$hr(),
+          tags$p(tags$strong("How to fix:")),
+          tags$ol(
+            tags$li("Check that Python and spaCy are properly installed"),
+            tags$li("Or setup Python: Run ", tags$code("TextAnalysisR::setup_python_env()"), " in R console"),
+            tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
           ),
-          easyClose = TRUE,
-          footer = modalButton("Close")
-        ))
-      })
+          tags$hr(),
+          tags$p(style = "color: #92400E; font-size: 14px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
+            "Note: spaCy provides POS, NER, and morphology features.")
+        ),
+        easyClose = TRUE,
+        footer = modalButton("Close")
+      ))
+    })
+  })
+
+  user_custom_entities <- reactiveVal(list())
+
+  domain_defaults <- list(
+    disability = c("dyscalculia", "dyslexia", "dysgraphia", "dyspraxia", "ADHD", "ADD", "ASD",
+                   "autism", "asperger syndrome", "learning disability", "learning disorder",
+                   "intellectual disability", "developmental disability", "cognitive disability",
+                   "math anxiety", "processing disorder", "SLD"),
+    program = c("IEP", "individualized education program", "504", "504 plan", "RTI",
+                "response to intervention", "MTSS", "UDL", "universal design for learning",
+                "IDEA", "FAPE", "LRE", "ESL", "ELL", "SPED", "special education", "STEM", "STEAM"),
+    test = c("WISC", "WAIS", "WJ", "woodcock johnson", "KeyMath", "TEMA", "CBM",
+             "curriculum based measurement", "DIBELS", "AIMSweb", "MAP", "NWEA", "NAEP", "PISA", "TIMSS"),
+    concept = c("number sense", "place value", "subitizing", "cardinality", "ordinality",
+                "fact fluency", "math facts", "mental math", "number line", "base ten",
+                "manipulatives", "CRA", "concrete representational abstract"),
+    tool = c("assistive technology", "AT", "text to speech", "TTS", "speech to text",
+             "screen reader", "EdTech", "educational technology", "LMS",
+             "learning management system", "CAI", "computer assisted instruction",
+             "ITS", "intelligent tutoring system", "adaptive learning", "virtual manipulatives"),
+    method = c("explicit instruction", "direct instruction", "DI", "scaffolding",
+               "differentiated instruction", "evidence based practice", "EBP",
+               "research based intervention", "multisensory instruction",
+               "orton gillingham", "structured literacy", "touch math", "TouchMath")
+  )
+
+  domain_selected <- list(
+    disability = c("dyscalculia", "dyslexia", "dysgraphia", "ADHD", "ASD", "autism", "learning disability", "math anxiety"),
+    program = c("IEP", "504", "RTI", "MTSS", "UDL", "IDEA", "special education", "STEM"),
+    test = c("WISC", "DIBELS", "CBM", "NAEP", "PISA", "TIMSS"),
+    concept = c("number sense", "place value", "fact fluency", "manipulatives", "CRA"),
+    tool = c("assistive technology", "text to speech", "educational technology", "adaptive learning", "virtual manipulatives"),
+    method = c("explicit instruction", "direct instruction", "scaffolding", "differentiated instruction", "evidence based practice")
+  )
+
+  # Domain entity colors mapping
+  domain_entity_colors <- list(
+    disability = "#E91E63",
+    program = "#2196F3",
+    test = "#4CAF50",
+    concept = "#9C27B0",
+    tool = "#FF9800",
+    method = "#00BCD4"
+  )
+
+  # Helper to get all uncategorized tokens from parsed data
+  get_uncategorized_tokens <- function(parsed) {
+    if (is.null(parsed) || !"token" %in% names(parsed)) return(character(0))
+
+    # Get tokens - if entity column exists, filter uncategorized; otherwise use all
+    if ("entity" %in% names(parsed)) {
+      token_freq <- parsed %>%
+        dplyr::filter(is.na(.data$entity) | .data$entity == "") %>%
+        dplyr::count(.data$token, sort = TRUE) %>%
+        dplyr::pull(.data$token)
     } else {
-      # Use spaCy via Python
-      showNotification("Extracting named entities with spaCy...", type = "message", duration = 3)
-
-      tryCatch({
-        # Get document names for alignment
-        if (inherits(tokens_to_use, "tokens")) {
-          doc_names <- quanteda::docnames(tokens_to_use)
-        } else {
-          doc_names <- paste0("text", seq_along(tokens_to_use))
-        }
-
-        parsed <- TextAnalysisR::extract_named_entities(tokens_to_use)
-
-        # Align doc_id with quanteda document names for batch entity matching
-        if ("doc_id" %in% names(parsed) && length(doc_names) > 0) {
-          doc_id_map <- data.frame(
-            old_id = paste0("text", seq_along(doc_names)),
-            new_id = doc_names,
-            stringsAsFactors = FALSE
-          )
-          parsed$doc_id <- doc_id_map$new_id[match(parsed$doc_id, doc_id_map$old_id)]
-        }
-
-        spacy_parsed(parsed)
-        showNotification("Named entity extraction completed!", type = "message", duration = 3)
-      }, error = function(e) {
-        showNotification(paste("Error:", e$message), type = "error", duration = 5)
-      })
+      token_freq <- parsed %>%
+        dplyr::count(.data$token, sort = TRUE) %>%
+        dplyr::pull(.data$token)
     }
+
+    # Filter out punctuation and numbers
+    token_freq <- token_freq[!grepl("^[[:punct:]]+$", token_freq)]
+    token_freq <- token_freq[!grepl("^[0-9]+$", token_freq)]
+    token_freq <- token_freq[nchar(token_freq) > 1]
+    token_freq <- token_freq[!token_freq %in% c("'s", "'ve", "'re", "'ll", "'d", "'m", "n't", "--", "...", "``", "''")]
+
+    token_freq
+  }
+
+  # Initialize domain entities when spacy_parsed becomes available
+  observe({
+    parsed <- spacy_parsed()
+    if (is.null(parsed)) return()
+
+    all_tokens <- get_uncategorized_tokens(parsed)
+    top_tokens <- head(all_tokens, 10)
+
+    for (domain in names(domain_defaults)) {
+      input_id <- paste0("domain_", domain)
+      choices <- unique(c(domain_defaults[[domain]], top_tokens))
+      updateSelectizeInput(session, input_id,
+        choices = choices,
+        selected = domain_selected[[domain]],
+        server = TRUE
+      )
+    }
+
+    # Initialize uncategorized tokens for custom entity
+    all_defaults <- unlist(domain_selected, use.names = FALSE)
+    uncategorized <- all_tokens[!all_tokens %in% all_defaults]
+    updateSelectizeInput(session, "uncategorized_tokens",
+      choices = uncategorized,
+      selected = NULL,
+      server = TRUE
+    )
+  }) %>% bindEvent(spacy_parsed(), once = TRUE)
+
+  # Track the apply button click count to know when to re-apply domain entities
+  last_apply_count <- reactiveVal(0)
+
+  # Apply domain entity labels after spacy parsing completes
+  observe({
+    # Only react when apply button is clicked
+    apply_count <- input$apply_ner_filter
+    if (is.null(apply_count) || apply_count == 0) return()
+    if (apply_count == isolate(last_apply_count())) return()
+
+    # Wait a bit for spacy parsing to complete
+    invalidateLater(500)
+
+    parsed <- isolate(spacy_parsed())
+    if (is.null(parsed)) return()
+
+    # Check if this apply has already been processed
+    if (apply_count == isolate(last_apply_count())) return()
+    last_apply_count(apply_count)
+
+    # Ensure entity column exists
+    if (!"entity" %in% names(parsed)) {
+      parsed$entity <- NA_character_
+    }
+
+    # Get all domain selections
+    domain_selections <- list(
+      DISABILITY = isolate(input$domain_disability),
+      PROGRAM = isolate(input$domain_program),
+      TEST = isolate(input$domain_test),
+      CONCEPT = isolate(input$domain_concept),
+      TOOL = isolate(input$domain_tool),
+      METHOD = isolate(input$domain_method)
+    )
+
+    # Check if any domain has selections
+    has_selections <- any(sapply(domain_selections, function(x) length(x) > 0))
+    if (!has_selections) return()
+
+    # Apply domain entity labels
+    for (entity_name in names(domain_selections)) {
+      terms <- domain_selections[[entity_name]]
+      if (length(terms) > 0) {
+        parsed <- parsed %>%
+          dplyr::mutate(entity = dplyr::case_when(
+            tolower(.data$token) %in% tolower(terms) & (is.na(.data$entity) | .data$entity == "") ~ entity_name,
+            TRUE ~ .data$entity
+          ))
+      }
+    }
+
+    # Update data with domain entity labels
+    spacy_parsed(parsed)
+  })
+
+  output$custom_entities_ui <- renderUI({
+    entities <- user_custom_entities()
+    if (length(entities) == 0) return(NULL)
+
+    entity_sections <- lapply(names(entities), function(name) {
+      ent <- entities[[name]]
+      tags$details(
+        style = "margin-bottom: 8px;",
+        open = NA,
+        tags$summary(
+          style = paste0("cursor: pointer; font-weight: 600; color: ", ent$color, "; font-size: 14px;"),
+          HTML(paste0("<span style='display: inline-block; width: 12px; height: 12px; background: ", ent$color, "; border-radius: 2px; margin-right: 6px;'></span>", name))
+        ),
+        div(
+          style = "padding: 8px 0 0 0;",
+          selectizeInput(
+            paste0("custom_ent_", gsub("[^a-zA-Z0-9]", "_", name)),
+            NULL,
+            choices = ent$terms,
+            selected = ent$terms,
+            multiple = TRUE,
+            options = list(create = TRUE, placeholder = "Add or remove terms")
+          )
+        )
+      )
+    })
+
+    tagList(
+      tags$hr(style = "margin: 15px 0; border-color: #dee2e6;"),
+      do.call(tagList, entity_sections)
+    )
+  })
+
+  observeEvent(input$apply_custom_entity, {
+    req(input$custom_entity_name)
+    req(input$uncategorized_tokens)
+    req(length(input$uncategorized_tokens) > 0)
+
+    entity_name <- toupper(trimws(input$custom_entity_name))
+    selected_tokens <- input$uncategorized_tokens
+    color <- input$custom_entity_color
+
+    parsed <- spacy_parsed()
+    req(parsed)
+
+    parsed <- parsed %>%
+      dplyr::mutate(entity = ifelse(
+        token %in% selected_tokens & (is.na(entity) | entity == ""),
+        entity_name,
+        entity
+      ))
+    spacy_parsed(parsed)
+
+    current_colors <- custom_entity_colors()
+    current_colors[[entity_name]] <- color
+    custom_entity_colors(current_colors)
+
+    entities <- user_custom_entities()
+    entities[[entity_name]] <- list(terms = selected_tokens, color = color)
+    user_custom_entities(entities)
+
+    updateTextInput(session, "custom_entity_name", value = "")
+    updateSelectizeInput(session, "uncategorized_tokens", selected = character(0))
+
+    showNotification(
+      paste0("Created '", entity_name, "' with ", length(selected_tokens), " terms"),
+      type = "message",
+      duration = 3
+    )
   })
 
   output$entity_plot <- plotly::renderPlotly({
@@ -4050,7 +4170,8 @@ server <- shinyServer(function(input, output, session) {
 
     TextAnalysisR::plot_entity_frequencies(
       entity_data = entity_data,
-      title = "Named Entity Type Frequency"
+      title = "Named Entity Type Frequency",
+      custom_colors = custom_entity_colors()
     )
   })
 
@@ -4148,31 +4269,115 @@ server <- shinyServer(function(input, output, session) {
 
     req(has_ner || has_custom)
 
-    # Trigger reactivity on custom_entities changes
     custom_entities()
 
-    # If no NER data, return custom entities directly
     if (!has_ner && has_custom) {
       custom_df <- custom_entities()
 
-      return(custom_df %>%
-        dplyr::select(Document, `Variable`, `Token`, Frequency, `First Sentence`, Notes, Keep))
+      display_df <- custom_df %>%
+        dplyr::select(Document, `Variable`, `Token`, Frequency, `First Sentence`, Notes, Keep)
+
+      return(DT::datatable(
+        display_df,
+        rownames = FALSE,
+        extensions = 'Buttons',
+        filter = 'top',
+        options = list(
+          scrollX = TRUE,
+          scrollY = "400px",
+          dom = 'Bfrtip',
+          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+          pageLength = 50,
+          columnDefs = list(
+            list(targets = "_all", className = 'dt-center'),
+            list(
+              targets = 1,
+              render = DT::JS(
+                "function(data, type, row, meta) {",
+                "  if (type !== 'display') return data;",
+                "  if (!data || data === '') return '';",
+                "  var colors = {",
+                "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
+                "    'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a',",
+                "    'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593',",
+                "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
+                "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
+                "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
+                "    'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2',",
+                "    'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b',",
+                "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
+                "  };",
+                "  if (window.customEntityColors) {",
+                "    Object.assign(colors, window.customEntityColors);",
+                "  }",
+                "  var color = colors[data] || '#757575';",
+                "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 12px;\">' + data + '</span>';",
+                "}"
+              )
+            )
+          )
+        ),
+        selection = 'none',
+        class = 'cell-border stripe hover compact'
+      ))
     }
 
     parsed <- spacy_parsed()
 
-    # Check if entity column exists
     if (!"entity" %in% names(parsed)) {
-      # No NER entities, but might have custom entities
       if (has_custom) {
         custom_df <- custom_entities()
-        return(custom_df %>%
-          dplyr::select(Document, `Variable`, `Token`, Frequency, `First Sentence`, Notes, Keep))
+
+        display_df <- custom_df %>%
+          dplyr::select(Document, `Variable`, `Token`, Frequency, `First Sentence`, Notes, Keep)
+
+        return(DT::datatable(
+          display_df,
+          rownames = FALSE,
+          extensions = 'Buttons',
+          filter = 'top',
+          options = list(
+            scrollX = TRUE,
+            scrollY = "400px",
+            dom = 'Bfrtip',
+            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+            pageLength = 50,
+            columnDefs = list(
+              list(targets = "_all", className = 'dt-center'),
+              list(
+                targets = 1,
+                render = DT::JS(
+                  "function(data, type, row, meta) {",
+                  "  if (type !== 'display') return data;",
+                  "  if (!data || data === '') return '';",
+                  "  var colors = {",
+                  "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
+                  "    'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a',",
+                  "    'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593',",
+                  "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
+                  "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
+                  "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
+                  "    'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2',",
+                  "    'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b',",
+                  "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
+                  "  };",
+                  "  if (window.customEntityColors) {",
+                  "    Object.assign(colors, window.customEntityColors);",
+                  "  }",
+                  "  var color = colors[data] || '#757575';",
+                  "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 12px;\">' + data + '</span>';",
+                  "}"
+                )
+              )
+            )
+          ),
+          selection = 'none',
+          class = 'cell-border stripe hover compact'
+        ))
       }
       return(NULL)
     }
 
-    # Show ALL tokens in original word order with entity column (blank for non-entities)
     entity_detail <- parsed %>%
       dplyr::mutate(
         entity_clean = dplyr::if_else(
@@ -4280,14 +4485,17 @@ server <- shinyServer(function(input, output, session) {
       ""
     }
 
-    # Full color map with standard + custom colors
+    # Full color map with standard + domain-specific + custom colors
     color_map_js <- paste0(
-      "'PERSON': '#e91e63', 'ORG': '#2196f3', 'GPE': '#4caf50', ",
-      "'DATE': '#ff9800', 'MONEY': '#9c27b0', 'CARDINAL': '#607d8b', ",
-      "'ORDINAL': '#795548', 'PERCENT': '#00bcd4', 'PRODUCT': '#3f51b5', ",
-      "'EVENT': '#f44336', 'WORK_OF_ART': '#673ab7', 'LAW': '#009688', ",
-      "'LANGUAGE': '#8bc34a', 'LOC': '#03a9f4', 'FAC': '#cddc39', ",
-      "'NORP': '#ffc107', 'TIME': '#ff5722', 'QUANTITY': '#9e9e9e'",
+      "'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32', ",
+      "'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a', ",
+      "'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593', ",
+      "'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c', ",
+      "'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24', ",
+      "'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c', ",
+      "'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2', ",
+      "'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b', ",
+      "'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
       if (nzchar(custom_color_js)) paste0(", ", custom_color_js) else ""
     )
 
@@ -4309,22 +4517,23 @@ server <- shinyServer(function(input, output, session) {
         pageLength = 50,
         columnDefs = list(
           list(targets = "_all", className = 'dt-center'),
-          # Entity column with color-coded badge
           list(
-            targets = -1,  # Last column (Entity)
+            targets = -1,
             render = DT::JS(
               "function(data, type, row, meta) {",
               "  if (type !== 'display') return data;",
               "  if (!data || data === '') return '';",
               "  var colors = {",
-              "    'PERSON': '#e91e63', 'ORG': '#2196f3', 'GPE': '#4caf50',",
-              "    'DATE': '#ff9800', 'MONEY': '#9c27b0', 'CARDINAL': '#607d8b',",
-              "    'ORDINAL': '#795548', 'PERCENT': '#00bcd4', 'PRODUCT': '#3f51b5',",
-              "    'EVENT': '#f44336', 'WORK_OF_ART': '#673ab7', 'LAW': '#009688',",
-              "    'LANGUAGE': '#8bc34a', 'LOC': '#03a9f4', 'FAC': '#cddc39',",
-              "    'NORP': '#ffc107', 'TIME': '#ff5722', 'QUANTITY': '#9e9e9e'",
+              "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
+              "    'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a',",
+              "    'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593',",
+              "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
+              "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
+              "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
+              "    'DISABILITY': '#ad1457', 'PROGRAM': '#1976d2', 'TEST': '#7b1fa2',",
+              "    'CONCEPT': '#00897b', 'TOOL': '#6d4c41', 'METHOD': '#c2185b',",
+              "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
               "  };",
-              "  // Check window for custom colors added dynamically",
               "  if (window.customEntityColors) {",
               "    Object.assign(colors, window.customEntityColors);",
               "  }",
@@ -4383,17 +4592,18 @@ server <- shinyServer(function(input, output, session) {
       return(HTML('<div style="color: #64748B; text-align: center; padding: 20px;">No data for selected document</div>'))
     }
 
-    # Standard spaCy entity colors + custom colors
     entity_colors <- c(
-      "PERSON" = "#e91e63", "ORG" = "#2196f3", "GPE" = "#4caf50",
-      "DATE" = "#ff9800", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
-      "ORDINAL" = "#795548", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
-      "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
-      "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
-      "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e"
+      "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
+      "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
+      "ORDINAL" = "#5d4037", "PERCENT" = "#00838f", "PRODUCT" = "#283593",
+      "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
+      "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
+      "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
+      "DISABILITY" = "#ad1457", "PROGRAM" = "#1976d2", "TEST" = "#7b1fa2",
+      "CONCEPT" = "#00897b", "TOOL" = "#6d4c41", "METHOD" = "#c2185b",
+      "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#26a69a",
+      "CUSTOM" = "#d81b60"
     )
-
-    # Add custom entity colors
     custom_colors <- custom_entity_colors()
     if (length(custom_colors) > 0) {
       for (name in names(custom_colors)) {
@@ -4411,7 +4621,7 @@ server <- shinyServer(function(input, output, session) {
         color <- if (entity %in% names(entity_colors)) entity_colors[entity] else "#757575"
         # Styled entity span like displaCy
         html_parts[i] <- sprintf(
-          '<mark class="entity" style="background: %s; padding: 0.25em 0.35em; margin: 0 0.1em; line-height: 1.5; border-radius: 0.35em; box-decoration-break: clone; -webkit-box-decoration-break: clone;">%s<span style="font-size: 0.7em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5em; background: rgba(0,0,0,0.2); padding: 0.15em 0.35em; color: white;">%s</span></mark>',
+          '<mark class="entity" style="background: %s; color: white; padding: 0.25em 0.35em; margin: 0 0.1em; line-height: 1.5; border-radius: 0.35em; box-decoration-break: clone; -webkit-box-decoration-break: clone;">%s<span style="font-size: 0.7em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5em; background: rgba(0,0,0,0.2); padding: 0.15em 0.35em; color: white;">%s</span></mark>',
           color, token, htmltools::htmlEscape(entity)
         )
       } else {
@@ -5347,7 +5557,7 @@ server <- shinyServer(function(input, output, session) {
     entity_type_modifications(current_mods)
 
     # Update spacy_parsed() to reflect the change in the plot
-    # We need to identify which token was changed and update its entity type
+    # Identify which token was changed and update its entity type
     tryCatch({
       parsed <- spacy_parsed()
       if (!is.null(parsed) && "entity" %in% names(parsed)) {
@@ -5579,11 +5789,30 @@ server <- shinyServer(function(input, output, session) {
     names(categorical)
   })
 
+  colnames_for_doc_var <- reactive({
+    data_source <- if (!is.null(united_tbl())) united_tbl() else mydata()
+    req(data_source)
+    names(data_source)
+  })
+
+  semantic_data_source <- reactive({
+    if (!is.null(united_tbl())) united_tbl() else mydata()
+  })
+
   observe({
-    req(colnames_cat())
+    req(colnames_for_doc_var())
     updateSelectizeInput(session,
                          "doc_var_co_occurrence",
-                         choices = c("None" = "None", colnames_cat()),
+                         choices = c("None" = "None", colnames_for_doc_var()),
+                         selected = "None"
+    )
+  })
+
+  observe({
+    req(colnames_for_doc_var())
+    updateSelectizeInput(session,
+                         "doc_var_correlation",
+                         choices = c("None" = "None", colnames_for_doc_var()),
                          selected = "None"
     )
   })
@@ -5615,7 +5844,7 @@ server <- shinyServer(function(input, output, session) {
   output$top_n_selector_cooccur <- renderUI({
     req(input$doc_var_co_occurrence, input$doc_var_co_occurrence != "None")
 
-    cat_levels <- unique(mydata()[[input$doc_var_co_occurrence]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_co_occurrence]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
     n_cats <- length(cat_levels)
 
@@ -5635,11 +5864,11 @@ server <- shinyServer(function(input, output, session) {
     req(input$doc_var_co_occurrence, input$doc_var_co_occurrence != "None")
     req(input$top_n_cooccur)
 
-    cat_levels <- unique(mydata()[[input$doc_var_co_occurrence]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_co_occurrence]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
 
     doc_counts <- sapply(cat_levels, function(level) {
-      sum(mydata()[[input$doc_var_co_occurrence]] == level, na.rm = TRUE)
+      sum(semantic_data_source()[[input$doc_var_co_occurrence]] == level, na.rm = TRUE)
     })
 
     sorted_cats <- names(sort(doc_counts, decreasing = TRUE))
@@ -5657,13 +5886,13 @@ server <- shinyServer(function(input, output, session) {
 
     tags$div(
       tags$div(
-        style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;",
-        tags$label("Selected categories (ranked by document count):", style = "font-weight: bold; font-size: 16px;"),
+        style = "margin-bottom: 8px;",
+        tags$label("Selected categories (ranked by document count):", style = "font-weight: bold; font-size: 16px; display: block; margin-bottom: 5px;"),
         tags$div(
-          style = "font-size: 16px;",
-          actionLink("select_all_cooccur", "Select All", style = "margin-right: 10px; color: #337ab7;"),
-          "|",
-          actionLink("select_none_cooccur", "Clear All", style = "margin-left: 10px; color: #337ab7;")
+          style = "display: flex; gap: 8px;",
+          actionLink("select_all_cooccur", "Select All", style = "color: #337ab7; font-size: 14px;"),
+          tags$span("|", style = "color: #9CA3AF;"),
+          actionLink("select_none_cooccur", "Clear All", style = "color: #337ab7; font-size: 14px;")
         )
       ),
       tags$div(
@@ -5695,10 +5924,10 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$select_all_cooccur, {
     req(input$doc_var_co_occurrence, input$doc_var_co_occurrence != "None")
-    cat_levels <- unique(mydata()[[input$doc_var_co_occurrence]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_co_occurrence]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
     doc_counts <- sapply(cat_levels, function(level) {
-      sum(mydata()[[input$doc_var_co_occurrence]] == level, na.rm = TRUE)
+      sum(semantic_data_source()[[input$doc_var_co_occurrence]] == level, na.rm = TRUE)
     })
     sorted_cats <- names(sort(doc_counts, decreasing = TRUE))
     updateCheckboxGroupInput(session, "selected_categories_cooccur", selected = sorted_cats)
@@ -5711,7 +5940,7 @@ server <- shinyServer(function(input, output, session) {
   output$category_cooccur_controls <- renderUI({
     req(input$doc_var_co_occurrence, input$doc_var_co_occurrence != "None")
 
-    cat_levels <- unique(mydata()[[input$doc_var_co_occurrence]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_co_occurrence]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
 
     if (length(cat_levels) == 0) {
@@ -5764,7 +5993,7 @@ server <- shinyServer(function(input, output, session) {
                {
                  req(input$doc_var_co_occurrence != "None")
 
-                 cat_levels <- unique(mydata()[[input$doc_var_co_occurrence]])
+                 cat_levels <- unique(semantic_data_source()[[input$doc_var_co_occurrence]])
                  cat_levels <- cat_levels[!is.na(cat_levels)]
 
                  for (level in cat_levels) {
@@ -5841,8 +6070,14 @@ server <- shinyServer(function(input, output, session) {
     doc_var <- if (doc_var_input == "None") NULL else doc_var_input
 
     if (isTRUE(input$use_category_corr) && !is.null(doc_var)) {
-      cat_levels <- unique(mydata()[[doc_var]])
-      cat_levels <- cat_levels[!is.na(cat_levels)]
+      selected_cats <- input$selected_categories_corr
+
+      if (is.null(selected_cats) || length(selected_cats) == 0) {
+        cat_levels <- unique(mydata()[[doc_var]])
+        cat_levels <- cat_levels[!is.na(cat_levels)]
+      } else {
+        cat_levels <- selected_cats
+      }
 
       params_list <- list()
       for (level in cat_levels) {
@@ -5857,7 +6092,8 @@ server <- shinyServer(function(input, output, session) {
         doc_var = doc_var,
         use_category_specific = TRUE,
         category_params = params_list,
-        nrows = input$nrows_correlation
+        nrows = input$nrows_correlation,
+        selected_categories = cat_levels
       ))
     } else {
       return(list(
@@ -5872,29 +6108,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   # Co-occurrence network using v2 Plotly-based visualization
-  # Track if the co-occurrence plot has been initialized
-  cooccur_plot_initialized <- reactiveVal(FALSE)
-
-  # Set initialized flag when button is clicked
-  observeEvent(input$plot_word_co_occurrence_network, {
-    cooccur_plot_initialized(TRUE)
-  })
-
+  # Direct button watch pattern (like working v0.0.2)
   word_co_occurrence_network_results <- reactive({
-    # Only run if initialized (button was clicked at least once)
-    req(cooccur_plot_initialized())
-
-    # Depend on all relevant inputs for auto-update
-    input$doc_var_co_occurrence
-    input$co_occurence_number_global
-    input$top_node_n_co_occurrence_global
-    input$nrows_co_occurrence
-    input$width_word_co_occurrence_network_plot
-    input$height_word_co_occurrence_network_plot
-    input$node_label_size_cooccur
-    input$community_method_cooccur
-    input$node_size_cooccur
-    input$node_color_cooccur
+    req(input$plot_word_co_occurrence_network)  # Direct button dependency
 
     dfm_to_use <- try(dfm_final(), silent = TRUE)
     if (is.null(dfm_to_use) || inherits(dfm_to_use, "try-error")) {
@@ -5902,11 +6118,21 @@ server <- shinyServer(function(input, output, session) {
     }
     req(dfm_to_use)
 
-    doc_var_input <- as.character(input$doc_var_co_occurrence %||% "None")
-    doc_var <- if (doc_var_input == "None" || doc_var_input == "") NULL else doc_var_input
-    co_occur_n <- floor(as.numeric(input$co_occurence_number_global %||% 50))
-    top_node_n <- as.numeric(input$top_node_n_co_occurrence_global %||% 30)
-    nrows <- as.numeric(input$nrows_co_occurrence %||% 1)
+    # Get category-specific or global parameters
+    params <- get_cooccur_params()
+    doc_var <- params$doc_var
+
+    # Use global sliders if not using category-specific
+    co_occur_n <- floor(as.numeric(input$co_occurence_number_global))
+    top_node_n <- as.numeric(input$top_node_n_co_occurrence_global)
+    nrows <- as.numeric(input$nrows_co_occurrence)
+
+    # Get category_params if category-specific sliders are enabled
+    category_params <- NULL
+    if (isTRUE(params$use_category_specific) && !is.null(params$category_params)) {
+      category_params <- params$category_params
+      message("Using category-specific params for co-occurrence: ", paste(names(category_params), collapse = ", "))
+    }
 
     shinybusy::show_spinner()
     show_loading_notification("Computing co-occurrence network...", id = "cooccur_network_loading")
@@ -5918,6 +6144,7 @@ server <- shinyServer(function(input, output, session) {
         co_occur_n = co_occur_n,
         top_node_n = top_node_n,
         nrows = nrows,
+        category_params = category_params,
         width = input$width_word_co_occurrence_network_plot %||% 900,
         height = input$height_word_co_occurrence_network_plot %||% 800,
         node_label_size = input$node_label_size_cooccur %||% 22,
@@ -5983,7 +6210,7 @@ server <- shinyServer(function(input, output, session) {
   output$top_n_selector_corr <- renderUI({
     req(input$doc_var_correlation, input$doc_var_correlation != "None")
 
-    cat_levels <- unique(mydata()[[input$doc_var_correlation]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_correlation]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
     n_cats <- length(cat_levels)
 
@@ -6004,11 +6231,11 @@ server <- shinyServer(function(input, output, session) {
     req(input$doc_var_correlation, input$doc_var_correlation != "None")
     req(input$top_n_corr)
 
-    cat_levels <- unique(mydata()[[input$doc_var_correlation]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_correlation]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
 
     doc_counts <- sapply(cat_levels, function(level) {
-      sum(mydata()[[input$doc_var_correlation]] == level, na.rm = TRUE)
+      sum(semantic_data_source()[[input$doc_var_correlation]] == level, na.rm = TRUE)
     })
 
     sorted_cats <- names(sort(doc_counts, decreasing = TRUE))
@@ -6026,13 +6253,13 @@ server <- shinyServer(function(input, output, session) {
 
     tags$div(
       tags$div(
-        style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;",
-        tags$label("Selected categories (ranked by document count):", style = "font-weight: bold; font-size: 16px;"),
+        style = "margin-bottom: 8px;",
+        tags$label("Selected categories (ranked by document count):", style = "font-weight: bold; font-size: 16px; display: block; margin-bottom: 5px;"),
         tags$div(
-          style = "font-size: 16px;",
-          actionLink("select_all_corr", "Select All", style = "margin-right: 10px; color: #337ab7;"),
-          "|",
-          actionLink("select_none_corr", "Clear All", style = "margin-left: 10px; color: #337ab7;")
+          style = "display: flex; gap: 8px;",
+          actionLink("select_all_corr", "Select All", style = "color: #337ab7; font-size: 14px;"),
+          tags$span("|", style = "color: #9CA3AF;"),
+          actionLink("select_none_corr", "Clear All", style = "color: #337ab7; font-size: 14px;")
         )
       ),
       tags$div(
@@ -6066,10 +6293,10 @@ server <- shinyServer(function(input, output, session) {
   # Word Correlation Network - Select All handler
   observeEvent(input$select_all_corr, {
     req(input$doc_var_correlation, input$doc_var_correlation != "None")
-    cat_levels <- unique(mydata()[[input$doc_var_correlation]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_correlation]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
     doc_counts <- sapply(cat_levels, function(level) {
-      sum(mydata()[[input$doc_var_correlation]] == level, na.rm = TRUE)
+      sum(semantic_data_source()[[input$doc_var_correlation]] == level, na.rm = TRUE)
     })
     sorted_cats <- names(sort(doc_counts, decreasing = TRUE))
     updateCheckboxGroupInput(session, "selected_categories_corr", selected = sorted_cats)
@@ -6083,7 +6310,7 @@ server <- shinyServer(function(input, output, session) {
   output$category_corr_controls <- renderUI({
     req(input$doc_var_correlation, input$doc_var_correlation != "None")
 
-    cat_levels <- unique(mydata()[[input$doc_var_correlation]])
+    cat_levels <- unique(semantic_data_source()[[input$doc_var_correlation]])
     cat_levels <- cat_levels[!is.na(cat_levels)]
 
     if (length(cat_levels) == 0) {
@@ -6145,7 +6372,7 @@ server <- shinyServer(function(input, output, session) {
                {
                  req(input$doc_var_correlation != "None")
 
-                 cat_levels <- unique(mydata()[[input$doc_var_correlation]])
+                 cat_levels <- unique(semantic_data_source()[[input$doc_var_correlation]])
                  cat_levels <- cat_levels[!is.na(cat_levels)]
 
                  for (level in cat_levels) {
@@ -6177,30 +6404,9 @@ server <- shinyServer(function(input, output, session) {
   )
 
   # Correlation network using v2 Plotly-based visualization
-  # Track if the correlation plot has been initialized
-  corr_plot_initialized <- reactiveVal(FALSE)
-
-  # Set initialized flag when button is clicked
-  observeEvent(input$plot_word_correlation_network, {
-    corr_plot_initialized(TRUE)
-  })
-
+  # Direct button watch pattern (like working v0.0.2)
   word_correlation_network_results <- reactive({
-    # Only run if initialized (button was clicked at least once)
-    req(corr_plot_initialized())
-
-    # Depend on all relevant inputs for auto-update
-    input$doc_var_correlation
-    input$common_term_n_global
-    input$corr_n_global
-    input$top_node_n_correlation_global
-    input$nrows_correlation
-    input$width_word_correlation_network_plot
-    input$height_word_correlation_network_plot
-    input$node_label_size_corr
-    input$community_method_corr
-    input$node_size_corr
-    input$node_color_corr
+    req(input$plot_word_correlation_network)  # Direct button dependency
 
     dfm_to_use <- try(dfm_outcome(), silent = TRUE)
     if (is.null(dfm_to_use) || inherits(dfm_to_use, "try-error")) {
@@ -6211,12 +6417,22 @@ server <- shinyServer(function(input, output, session) {
     }
     req(dfm_to_use)
 
-    doc_var_input <- as.character(input$doc_var_correlation %||% "None")
-    doc_var <- if (doc_var_input == "None" || doc_var_input == "") NULL else doc_var_input
-    common_term_n <- as.numeric(input$common_term_n_global %||% 130)
-    corr_n <- as.numeric(input$corr_n_global %||% 0.4)
-    top_node_n <- as.numeric(input$top_node_n_correlation_global %||% 40)
-    nrows <- as.numeric(input$nrows_correlation %||% 1)
+    # Get category-specific or global parameters
+    params <- get_corr_params()
+    doc_var <- params$doc_var
+
+    # Use global sliders if not using category-specific
+    common_term_n <- as.numeric(input$common_term_n_global)
+    corr_n <- as.numeric(input$corr_n_global)
+    top_node_n <- as.numeric(input$top_node_n_correlation_global)
+    nrows <- as.numeric(input$nrows_correlation)
+
+    # Get category_params if category-specific sliders are enabled
+    category_params <- NULL
+    if (isTRUE(params$use_category_specific) && !is.null(params$category_params)) {
+      category_params <- params$category_params
+      message("Using category-specific params for correlation: ", paste(names(category_params), collapse = ", "))
+    }
 
     shinybusy::show_spinner()
     show_loading_notification("Computing correlation network...", id = "corr_network_loading")
@@ -6229,6 +6445,7 @@ server <- shinyServer(function(input, output, session) {
         corr_n = corr_n,
         top_node_n = top_node_n,
         nrows = nrows,
+        category_params = category_params,
         width = input$width_word_correlation_network_plot %||% 900,
         height = input$height_word_correlation_network_plot %||% 1000,
         node_label_size = input$node_label_size_corr %||% 22,
@@ -10659,33 +10876,21 @@ server <- shinyServer(function(input, output, session) {
   output$embedding_status_ui <- renderUI({
     if (!is.null(embeddings_cache$embeddings)) {
       tags$div(
-        style = "background: #d1fae5; border: 1px solid #10b981; padding: 12px; border-radius: 4px;",
-        tags$div(
-          style = "display: flex; align-items: center; gap: 8px; margin-bottom: 8px;",
-          tags$i(class = "fa fa-check-circle", style = "color: #10b981; font-size: 18px;"),
-          tags$strong("Embeddings Ready", style = "color: #065f46;")
-        ),
-        tags$div(
-          style = "color: #047857; font-size: 16px;",
-          paste(
-            nrow(embeddings_cache$embeddings), "documents |",
-            embeddings_cache$model %||% "Unknown model", "|",
-            format(embeddings_cache$timestamp %||% Sys.time(), "%Y-%m-%d %H:%M:%S")
-          )
-        )
+        class = "status-sidebar-success",
+        tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
+        tags$strong("Embeddings Ready: "),
+        tags$span(paste(
+          nrow(embeddings_cache$embeddings), "documents |",
+          embeddings_cache$model %||% "Unknown model", "|",
+          format(embeddings_cache$timestamp %||% Sys.time(), "%Y-%m-%d %H:%M:%S")
+        ))
       )
     } else {
       tags$div(
-        style = "background: #fef3c7; border: 1px solid #f59e0b; padding: 12px; border-radius: 4px;",
-        tags$div(
-          style = "display: flex; align-items: center; gap: 8px; margin-bottom: 8px;",
-          tags$i(class = "fa fa-info-circle", style = "color: #d97706; font-size: 18px;"),
-          tags$strong("No Embeddings Generated", style = "color: #92400e;")
-        ),
-        tags$p(
-          "Generate embeddings to enable advanced semantic analyses.",
-          style = "color: #78350f; margin: 0; font-size: 16px;"
-        )
+        class = "status-sidebar-warning",
+        tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
+        tags$strong("No Embeddings Generated: "),
+        tags$span("Generate embeddings to enable advanced semantic analyses.")
       )
     }
   })

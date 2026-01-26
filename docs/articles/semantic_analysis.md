@@ -71,7 +71,8 @@ sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
 ``` r
 clusters <- semantic_document_clustering(
   texts = united_tbl$united_texts,
-  n_clusters = 5
+  n_clusters = 5,
+  reduce_outliers = TRUE
 )
 ```
 
@@ -109,6 +110,17 @@ than to documents in other clusters.
 | Hierarchical | Builds tree of clusters | Exploring nested structures |
 | DBSCAN | Density-based, finds outliers | Arbitrarily shaped clusters |
 | HDBSCAN | Hierarchical density-based | Auto-determines cluster count |
+
+**Outlier Reduction:** DBSCAN assigns noise points to cluster 0. Two
+strategies available via `outlier_strategy` (follows BERTopic
+methodology):
+
+- `"centroid"` (default): Euclidean distance to nearest centroid in UMAP
+  space
+- `"embeddings"`: Cosine similarity in original high-dimensional
+  embedding space
+
+Set `reduce_outliers = TRUE` (default) to enable outlier reassignment.
 
 **Usage:** Choose discovery mode (Automatic, Manual, Advanced). Select
 semantic feature space and algorithm. Automatic mode finds optimal

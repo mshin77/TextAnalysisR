@@ -15,12 +15,15 @@ fit_embedding_topics(
   clustering_method = "kmeans",
   similarity_threshold = 0.7,
   min_topic_size = 3,
+  cluster_selection_method = "eom",
   umap_neighbors = 15,
   umap_min_dist = 0,
   umap_n_components = 5,
   representation_method = "c-tfidf",
   diversity = 0.5,
   reduce_outliers = TRUE,
+  outlier_strategy = "probabilities",
+  outlier_threshold = 0,
   seed = 123,
   verbose = TRUE,
   precomputed_embeddings = NULL
@@ -60,6 +63,11 @@ fit_embedding_topics(
 
   The minimum number of documents per topic (default: 3).
 
+- cluster_selection_method:
+
+  HDBSCAN cluster selection method: "eom" (Excess of Mass, default) or
+  "leaf" (finer-grained topics).
+
 - umap_neighbors:
 
   The number of neighbors for UMAP dimensionality reduction (default:
@@ -88,6 +96,19 @@ fit_embedding_topics(
 
   Logical, if TRUE, reduces outliers in HDBSCAN clustering (default:
   TRUE).
+
+- outlier_strategy:
+
+  Strategy for outlier reduction using BERTopic: "probabilities"
+  (default, uses topic probabilities), "c-tf-idf" (uses c-TF-IDF
+  similarity), "embeddings" (uses cosine similarity in embedding space),
+  or "distributions" (uses topic distributions). Ignored if
+  reduce_outliers = FALSE.
+
+- outlier_threshold:
+
+  Minimum threshold for outlier reassignment (default: 0.0). Higher
+  values require stronger evidence for reassignment.
 
 - seed:
 

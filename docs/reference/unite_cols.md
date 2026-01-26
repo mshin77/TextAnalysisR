@@ -30,6 +30,7 @@ Other preprocessing:
 [`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
 [`get_available_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_tokens.md),
 [`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
+[`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md),
 [`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
 [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md)
 

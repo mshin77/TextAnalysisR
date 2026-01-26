@@ -14,6 +14,7 @@ plot_word_probability(
   title = NULL,
   colors = NULL,
   measure_label = "Beta",
+  base_font_size = 14,
   ...
 )
 }
@@ -25,9 +26,9 @@ to labels, or a character string specifying a column name in top_topic_terms (de
 
 \item{ncol}{Number of columns for facet wrap layout (default: 3).}
 
-\item{height}{The height of the resulting Plotly plot, in pixels (default: 1200).}
+\item{height}{Plot height for responsive spacing adjustments (default: 1200).}
 
-\item{width}{The width of the resulting Plotly plot, in pixels (default: 800).}
+\item{width}{Plot width for responsive spacing adjustments (default: 800).}
 
 \item{ylab}{Y-axis label (default: "Word probability").}
 
@@ -37,10 +38,12 @@ to labels, or a character string specifying a column name in top_topic_terms (de
 
 \item{measure_label}{Label for the probability measure (default: "Beta").}
 
-\item{...}{Additional arguments passed to plotly::ggplotly().}
+\item{base_font_size}{Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.}
+
+\item{...}{Additional arguments (currently unused, kept for compatibility).}
 }
 \value{
-A plotly object showing word probabilities faceted by topic.
+A ggplot2 object showing word probabilities faceted by topic.
 }
 \description{
 Creates a faceted bar plot showing the top terms and their probabilities (beta values)

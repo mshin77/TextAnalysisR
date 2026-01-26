@@ -549,7 +549,7 @@ lexical_diversity_analysis <- function(x,
   # Determine input type and prepare tokens for MTLD if needed
   is_tokens_input <- inherits(x, "tokens")
 
-  # For MTLD with DFM input, we need proper token sequences
+  # For MTLD with DFM input, proper token sequences are needed
   # Create tokens from texts if available, otherwise warn
   mtld_tokens <- NULL
   if (mtld_requested && !is_tokens_input) {
@@ -2190,29 +2190,28 @@ plot_entity_frequencies <- function(entity_data,
       dplyr::slice_head(n = top_n)
   }
 
-  # Define entity type colors (matching table badge colors)
   entity_colors <- c(
-    "PERSON" = "#e91e63", "ORG" = "#2196f3", "GPE" = "#4caf50",
-    "DATE" = "#ff9800", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
-    "ORDINAL" = "#795548", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
-    "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
-    "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
-    "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e",
-    "CONCEPT" = "#00acc1", "THEME" = "#7c4dff", "CODE" = "#546e7a",
-    "CATEGORY" = "#26a69a", "CUSTOM" = "#d81b60"
+    "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
+    "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
+    "ORDINAL" = "#5d4037", "PERCENT" = "#00838f", "PRODUCT" = "#283593",
+    "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
+    "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
+    "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
+    "DISABILITY" = "#ad1457", "PROGRAM" = "#1976d2", "TEST" = "#7b1fa2",
+    "CONCEPT" = "#00897b", "TOOL" = "#6d4c41", "METHOD" = "#c2185b",
+    "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#26a69a",
+    "CUSTOM" = "#d81b60"
   )
 
-  # Merge custom colors (custom colors override defaults)
   if (!is.null(custom_colors) && length(custom_colors) > 0) {
     entity_colors[names(custom_colors)] <- custom_colors
   }
 
-  # Map entity types to colors (use default gray for unknown types)
   bar_colors <- sapply(entity_freq$entity, function(e) {
     if (e %in% names(entity_colors)) {
       entity_colors[[e]]
     } else {
-      "#757575"  # Default gray for unknown entity types
+      "#757575"
     }
   })
 
@@ -2538,6 +2537,68 @@ spacy_parse_full <- function(x,
     include_entity = entity,
     include_dependency = dependency,
     include_morph = morph
+  )
+
+  # Convert pandas DataFrame to R data.frame
+  df <- reticulate::py_to_r(result)
+
+  # Map doc_id from text1, text2, ... to actual document names
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+    doc_id_map <- data.frame(
+      old_id = paste0("text", seq_along(doc_names)),
+      new_id = doc_names,
+      stringsAsFactors = FALSE
+    )
+    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+  }
+
+  return(df)
+}
+
+#' Lemmatize Texts with spaCy
+#'
+#' @description
+#' Perform lemmatization using spaCy with optimized pipeline settings.
+#' Disables unnecessary components (NER, parser) for faster processing.
+#'
+#' @param x Character vector of texts OR a quanteda tokens object.
+#' @param batch_size Integer; batch size for processing (default: 100).
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#'
+#' @return A data frame with columns: doc_id, token_id, token, lemma.
+#'
+#' @details
+#' This function disables NER, entity_ruler, and parser components to speed up
+#' lemmatization. Use this when you need lemmas without other annotations.
+#'
+#' @family lexical
+#' @export
+spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
+  if (!spacy_initialized() || .spacy_env$model != model) {
+    init_spacy_nlp(model)
+  }
+
+  # Handle quanteda tokens objects
+  if (inherits(x, "tokens")) {
+    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
+    doc_names <- quanteda::docnames(x)
+  } else if (is.character(x)) {
+    texts <- x
+    doc_names <- names(x)
+    if (is.null(doc_names)) {
+      doc_names <- paste0("text", seq_along(texts))
+    }
+  } else {
+    stop("x must be a character vector or quanteda tokens object")
+  }
+
+  # Convert to list for Python
+  texts_list <- as.list(unname(texts))
+
+  # Call fast Python method
+  result <- .spacy_env$nlp$lemmatize(
+    texts_list,
+    batch_size = as.integer(batch_size)
   )
 
   # Convert pandas DataFrame to R data.frame

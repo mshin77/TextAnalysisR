@@ -81,6 +81,8 @@ topics compared to traditional methods by leveraging deep learning embeddings.</
 <span>  representation_method <span class="op">=</span> <span class="st">"c-tfidf"</span>,</span>
 <span>  diversity <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  reduce_outliers <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  outlier_strategy <span class="op">=</span> <span class="st">"probabilities"</span>,</span>
+<span>  outlier_threshold <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">123</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  precomputed_embeddings <span class="op">=</span> <span class="cn">NULL</span></span>
@@ -145,6 +147,19 @@ topics compared to traditional methods by leveraging deep learning embeddings.</
 
 <dt id="arg-reduce-outliers">reduce_outliers<a class="anchor" aria-label="anchor" href="#arg-reduce-outliers"></a></dt>
 <dd><p>Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).</p></dd>
+
+
+<dt id="arg-outlier-strategy">outlier_strategy<a class="anchor" aria-label="anchor" href="#arg-outlier-strategy"></a></dt>
+<dd><p>Strategy for outlier reduction using BERTopic:
+"probabilities" (default, uses topic probabilities), "c-tf-idf" (uses
+c-TF-IDF similarity), "embeddings" (uses cosine similarity in embedding
+space), or "distributions" (uses topic distributions). Ignored if
+reduce_outliers = FALSE.</p></dd>
+
+
+<dt id="arg-outlier-threshold">outlier_threshold<a class="anchor" aria-label="anchor" href="#arg-outlier-threshold"></a></dt>
+<dd><p>Minimum threshold for outlier reassignment (default: 0.0).
+Higher values require stronger evidence for reassignment.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>

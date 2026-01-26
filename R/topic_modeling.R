@@ -1046,6 +1046,13 @@ calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 #' @param representation_method The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").
 #' @param diversity Topic diversity parameter between 0 and 1 (default: 0.5).
 #' @param reduce_outliers Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).
+#' @param outlier_strategy Strategy for outlier reduction using BERTopic:
+#'   "probabilities" (default, uses topic probabilities), "c-tf-idf" (uses
+#'   c-TF-IDF similarity), "embeddings" (uses cosine similarity in embedding
+#'   space), or "distributions" (uses topic distributions). Ignored if
+#'   reduce_outliers = FALSE.
+#' @param outlier_threshold Minimum threshold for outlier reassignment (default: 0.0).
+#'   Higher values require stronger evidence for reassignment.
 #' @param seed Random seed for reproducibility (default: 123).
 #' @param verbose Logical, if TRUE, prints progress messages.
 #' @param precomputed_embeddings Optional matrix of pre-computed document embeddings.
@@ -1091,6 +1098,8 @@ fit_embedding_model <- function(texts,
                                    representation_method = "c-tfidf",
                                    diversity = 0.5,
                                    reduce_outliers = TRUE,
+                                   outlier_strategy = "probabilities",
+                                   outlier_threshold = 0.0,
                                    seed = 123,
                                    verbose = TRUE,
                                    precomputed_embeddings = NULL) {
@@ -1212,16 +1221,30 @@ fit_embedding_model <- function(texts,
         topic_assignments <- as.vector(topic_assignments_raw) + 1
 
         outlier_docs <- which(topic_assignments == 0)
+        outliers_reassigned <- 0
+        outlier_strategy_used <- outlier_strategy
         if (length(outlier_docs) > 0 && reduce_outliers) {
-          if (verbose) message("Reassigning ", length(outlier_docs), " outlier documents...")
+          if (verbose) message("Reassigning ", length(outlier_docs), " outlier documents using '", outlier_strategy, "' strategy...")
 
-          for (idx in outlier_docs) {
-            if (!is.null(topic_probs) && nrow(topic_probs) >= idx) {
-              probs <- topic_probs[idx, ]
-              if (max(probs) > 0) {
-                topic_assignments[idx] <- which.max(probs)
+          if (outlier_strategy == "probabilities") {
+            for (idx in outlier_docs) {
+              if (!is.null(topic_probs) && nrow(topic_probs) >= idx) {
+                probs <- topic_probs[idx, ]
+                if (max(probs) > outlier_threshold) {
+                  topic_assignments[idx] <- which.max(probs)
+                  outliers_reassigned <- outliers_reassigned + 1
+                }
               }
             }
+          } else if (outlier_strategy %in% c("c-tf-idf", "embeddings", "distributions")) {
+            new_topics <- topic_model$reduce_outliers(
+              valid_texts,
+              as.integer(topic_assignments_raw),
+              strategy = outlier_strategy,
+              threshold = outlier_threshold
+            )
+            topic_assignments <- as.vector(new_topics) + 1
+            outliers_reassigned <- length(outlier_docs) - sum(topic_assignments == 0)
           }
         }
 
@@ -1264,7 +1287,14 @@ fit_embedding_model <- function(texts,
           bertopic_model = topic_model,
           topic_info = topic_info,
           probabilities = topic_probs,
-          method = "umap_hdbscan"
+          method = "umap_hdbscan",
+          outlier_reduction = list(
+            enabled = reduce_outliers,
+            strategy = if (reduce_outliers) outlier_strategy_used else NA_character_,
+            threshold = if (reduce_outliers) outlier_threshold else NA_real_,
+            outliers_found = length(outlier_docs),
+            outliers_reassigned = outliers_reassigned
+          )
         )
       },
       "embedding_clustering" = {
@@ -1398,12 +1428,15 @@ fit_embedding_topics <- function(texts,
                                    clustering_method = "kmeans",
                                    similarity_threshold = 0.7,
                                    min_topic_size = 3,
+                                   cluster_selection_method = "eom",
                                    umap_neighbors = 15,
                                    umap_min_dist = 0.0,
                                    umap_n_components = 5,
                                    representation_method = "c-tfidf",
                                    diversity = 0.5,
                                    reduce_outliers = TRUE,
+                                   outlier_strategy = "probabilities",
+                                   outlier_threshold = 0.0,
                                    seed = 123,
                                    verbose = TRUE,
                                    precomputed_embeddings = NULL) {
@@ -1416,12 +1449,15 @@ fit_embedding_topics <- function(texts,
     clustering_method = clustering_method,
     similarity_threshold = similarity_threshold,
     min_topic_size = min_topic_size,
+    cluster_selection_method = cluster_selection_method,
     umap_neighbors = umap_neighbors,
     umap_min_dist = umap_min_dist,
     umap_n_components = umap_n_components,
     representation_method = representation_method,
     diversity = diversity,
     reduce_outliers = reduce_outliers,
+    outlier_strategy = outlier_strategy,
+    outlier_threshold = outlier_threshold,
     seed = seed,
     verbose = verbose,
     precomputed_embeddings = precomputed_embeddings
@@ -4027,15 +4063,16 @@ plot_model_comparison <- function(search_results,
 #' @param topic_label Optional topic labels. Can be either a named vector mapping topic numbers
 #'   to labels, or a character string specifying a column name in top_topic_terms (default: NULL).
 #' @param ncol Number of columns for facet wrap layout (default: 3).
-#' @param height The height of the resulting Plotly plot, in pixels (default: 1200).
-#' @param width The width of the resulting Plotly plot, in pixels (default: 800).
+#' @param height Plot height for responsive spacing adjustments (default: 1200).
+#' @param width Plot width for responsive spacing adjustments (default: 800).
 #' @param ylab Y-axis label (default: "Word probability").
 #' @param title Plot title (default: NULL for auto-generated title).
 #' @param colors Color palette for topics (default: NULL for auto-generated colors).
 #' @param measure_label Label for the probability measure (default: "Beta").
-#' @param ... Additional arguments passed to plotly::ggplotly().
+#' @param base_font_size Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.
+#' @param ... Additional arguments (currently unused, kept for compatibility).
 #'
-#' @return A plotly object showing word probabilities faceted by topic.
+#' @return A ggplot2 object showing word probabilities faceted by topic.
 #'
 #' @family topic_modeling
 #' @export
@@ -4048,6 +4085,7 @@ plot_word_probability <- function(top_topic_terms,
                                    title = NULL,
                                    colors = NULL,
                                    measure_label = "Beta",
+                                   base_font_size = 14,
                                    ...) {
 
   if (!"topic" %in% colnames(top_topic_terms)) {
@@ -4110,7 +4148,7 @@ plot_word_probability <- function(top_topic_terms,
     ggplot2::coord_flip() +
     ggplot2::xlab("") +
     ggplot2::ylab(ylab) +
-    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme_minimal(base_size = base_font_size) +
     ggplot2::theme(
       legend.position = "none",
       panel.grid.major = ggplot2::element_blank(),
@@ -4118,16 +4156,16 @@ plot_word_probability <- function(top_topic_terms,
       axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
       axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
       strip.text.x = ggplot2::element_text(
-        size = 16,
+        size = base_font_size + 2,
         color = "#0c1f4a",
         lineheight = ifelse(width > 1000, 1.1, 1.2),
         margin = ggplot2::margin(l = 10, r = 10)
       ),
       panel.spacing.x = ggplot2::unit(ifelse(width > 1000, 2.2, 1.6), "lines"),
       panel.spacing.y = ggplot2::unit(ifelse(width > 1000, 2.2, 1.6), "lines"),
-      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(r = 20)),
-      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(t = 20)),
-      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(r = 20)),
+      axis.text.y = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B", margin = ggplot2::margin(t = 20)),
+      axis.title = ggplot2::element_text(size = base_font_size + 2, color = "#0c1f4a"),
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 25)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 25))
     )
@@ -4136,26 +4174,7 @@ plot_word_probability <- function(top_topic_terms,
     ggplot_obj <- ggplot_obj + ggplot2::scale_fill_manual(values = colors)
   }
 
-  p <- plotly::ggplotly(ggplot_obj, height = height, width = width, tooltip = "text", ...) %>%
-    plotly::layout(
-      xaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      hoverlabel = list(
-        bgcolor = "#0c1f4a",
-        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
-        bordercolor = "#0c1f4a",
-        align = "left"
-      )
-    )
-
-  p <- p %>% plotly::layout(margin = list(t = 40, b = 60, l = 80, r = 100))
-  p
+  ggplot_obj
 }
 
 
@@ -4172,6 +4191,7 @@ plot_word_probability <- function(top_topic_terms,
 #' @param topic_labels Optional topic labels (default: NULL).
 #' @param colors Optional color palette for topics (default: NULL).
 #' @param verbose Logical, if TRUE, prints progress messages.
+#' @param base_font_size Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.
 #' @param ... Further arguments passed to tidytext::tidy.
 #'
 #' @return A plotly object showing a bar plot of topic prevalence.
@@ -4186,6 +4206,7 @@ plot_topic_probability <- function(stm_model = NULL,
                                    topic_labels = NULL,
                                    colors = NULL,
                                    verbose = TRUE,
+                                   base_font_size = 14,
                                    ...) {
 
     if (!is.null(gamma_data)) {
@@ -4241,17 +4262,17 @@ plot_topic_probability <- function(stm_model = NULL,
       ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
       ggplot2::xlab("") +
       ggplot2::ylab("Topic Proportion") +
-      ggplot2::theme_minimal(base_size = 14) +
+      ggplot2::theme_minimal(base_size = base_font_size) +
       ggplot2::theme(
         legend.position = "none",
         panel.grid.major = ggplot2::element_blank(),
         panel.grid.minor = ggplot2::element_blank(),
         axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
         axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
-        strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a"),
-        axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B"),
-        axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B"),
-        axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+        strip.text.x = ggplot2::element_text(size = base_font_size + 2, color = "#0c1f4a"),
+        axis.text.x = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B"),
+        axis.text.y = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B"),
+        axis.title = ggplot2::element_text(size = base_font_size + 2, color = "#0c1f4a"),
         axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 10)),
         axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 10))
       )
@@ -4263,16 +4284,16 @@ plot_topic_probability <- function(stm_model = NULL,
     plotly::ggplotly(ggplot_obj, tooltip = "text", height = height, width = width) %>%
       plotly::layout(
         xaxis = list(
-          tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+          tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
+          titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
         ),
         yaxis = list(
-          tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+          tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
+          titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
         ),
         margin = list(t = 50, b = 40, l = 80, r = 40),
         hoverlabel = list(
-          font = list(size = 16, family = "Roboto, sans-serif")
+          font = list(size = base_font_size + 2, family = "Roboto, sans-serif")
         )
       )
 }
@@ -4288,6 +4309,7 @@ plot_topic_probability <- function(stm_model = NULL,
 #' @param height Plot height in pixels (default: 800)
 #' @param width Plot width in pixels (default: 1000)
 #' @param title Plot title (default: "Category Effects")
+#' @param base_font_size Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.
 #'
 #' @return A plotly object
 #'
@@ -4297,7 +4319,8 @@ plot_topic_effects_categorical <- function(effects_data,
                                            ncol = 2,
                                            height = 800,
                                            width = 1000,
-                                           title = "Category Effects") {
+                                           title = "Category Effects",
+                                           base_font_size = 14) {
 
   if (is.null(effects_data) || nrow(effects_data) == 0) {
     return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
@@ -4324,17 +4347,17 @@ plot_topic_effects_categorical <- function(effects_data,
       color = "#337ab7"
     ) +
     ggplot2::geom_point(color = "#337ab7", size = 1.5) +
-    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme_minimal(base_size = base_font_size) +
     ggplot2::theme(
       legend.position = "none",
       panel.grid.major = ggplot2::element_blank(),
       panel.grid.minor = ggplot2::element_blank(),
       axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
       axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
-      strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a", margin = ggplot2::margin(b = 30, t = 15)),
-      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(t = 20)),
-      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(r = 20)),
-      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+      strip.text.x = ggplot2::element_text(size = base_font_size + 2, color = "#0c1f4a", margin = ggplot2::margin(b = 30, t = 15)),
+      axis.text.x = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(t = 20)),
+      axis.text.y = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B", margin = ggplot2::margin(r = 20)),
+      axis.title = ggplot2::element_text(size = base_font_size + 2, color = "#0c1f4a"),
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 25)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 25)),
       plot.margin = ggplot2::margin(t = 40, b = 40)
@@ -4344,20 +4367,20 @@ plot_topic_effects_categorical <- function(effects_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        font = list(size = base_font_size + 4, color = "#0c1f4a", family = "Roboto, sans-serif"),
         x = 0.5, xref = "paper", xanchor = "center",
         y = 0.99, yref = "paper", yanchor = "top"
       ),
       xaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+        tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+        tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       margin = list(t = 100, b = 40, l = 80, r = 40),
-      hoverlabel = list(font = list(size = 16, family = "Roboto, sans-serif"))
+      hoverlabel = list(font = list(size = base_font_size + 2, family = "Roboto, sans-serif"))
     )
 }
 
@@ -4372,6 +4395,7 @@ plot_topic_effects_categorical <- function(effects_data,
 #' @param height Plot height in pixels (default: 800)
 #' @param width Plot width in pixels (default: 1000)
 #' @param title Plot title (default: "Continuous Variable Effects")
+#' @param base_font_size Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.
 #'
 #' @return A plotly object
 #'
@@ -4381,7 +4405,8 @@ plot_topic_effects_continuous <- function(effects_data,
                                           ncol = 2,
                                           height = 800,
                                           width = 1000,
-                                          title = "Continuous Variable Effects") {
+                                          title = "Continuous Variable Effects",
+                                          base_font_size = 14) {
 
   effects_data <- effects_data %>%
     dplyr::mutate(topic_label = paste("Topic", topic))
@@ -4393,17 +4418,17 @@ plot_topic_effects_continuous <- function(effects_data,
     ggplot2::geom_line(linewidth = 0.5, color = "#337ab7") +
     ggplot2::xlab("") +
     ggplot2::ylab("Topic proportion") +
-    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme_minimal(base_size = base_font_size) +
     ggplot2::theme(
       legend.position = "none",
       panel.grid.major = ggplot2::element_blank(),
       panel.grid.minor = ggplot2::element_blank(),
       axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
       axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
-      strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a", margin = ggplot2::margin(b = 30, t = 15)),
-      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(t = 20)),
-      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(r = 20)),
-      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+      strip.text.x = ggplot2::element_text(size = base_font_size + 2, color = "#0c1f4a", margin = ggplot2::margin(b = 30, t = 15)),
+      axis.text.x = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B", hjust = 1, margin = ggplot2::margin(t = 20)),
+      axis.text.y = ggplot2::element_text(size = base_font_size + 2, color = "#3B3B3B", margin = ggplot2::margin(r = 20)),
+      axis.title = ggplot2::element_text(size = base_font_size + 2, color = "#0c1f4a"),
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 25)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 25)),
       plot.margin = ggplot2::margin(t = 40, b = 40)
@@ -4413,20 +4438,20 @@ plot_topic_effects_continuous <- function(effects_data,
     plotly::layout(
       title = list(
         text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        font = list(size = base_font_size + 4, color = "#0c1f4a", family = "Roboto, sans-serif"),
         x = 0.5, xref = "paper", xanchor = "center",
         y = 0.99, yref = "paper", yanchor = "top"
       ),
       xaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+        tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       yaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+        tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
+        titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
       ),
       margin = list(t = 100, b = 40, l = 80, r = 40),
-      hoverlabel = list(font = list(size = 16, family = "Roboto, sans-serif"))
+      hoverlabel = list(font = list(size = base_font_size + 2, family = "Roboto, sans-serif"))
     )
 }
 

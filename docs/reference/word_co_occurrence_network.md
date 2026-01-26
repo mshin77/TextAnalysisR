@@ -17,7 +17,8 @@ word_co_occurrence_network(
   node_label_size = 22,
   community_method = "leiden",
   node_size_by = "degree",
-  node_color_by = "community"
+  node_color_by = "community",
+  category_params = NULL
 )
 ```
 
@@ -68,6 +69,12 @@ word_co_occurrence_network(
 
   Node coloring method: "community" or "centrality" (default:
   "community").
+
+- category_params:
+
+  Optional named list of category-specific parameters. Each element
+  should be a list with `co_occur_n` and `top_node_n` values for that
+  category (default: NULL).
 
 ## Value
 

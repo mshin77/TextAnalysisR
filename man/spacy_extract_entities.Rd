@@ -61,6 +61,7 @@ Other lexical:
 \code{\link{render_displacy_ent}()},
 \code{\link{spacy_has_vectors}()},
 \code{\link{spacy_initialized}()},
+\code{\link{spacy_lemmatize}()},
 \code{\link{spacy_parse_full}()},
 \code{\link{summarize_morphology}()}
 }

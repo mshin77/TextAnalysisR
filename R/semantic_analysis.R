@@ -612,6 +612,10 @@ reduce_dimensions <- function(data_matrix,
 #' @param umap_metric The metric for UMAP (default: "cosine").
 #' @param dbscan_eps The eps parameter for DBSCAN. If 0, optimal value is determined automatically.
 #' @param dbscan_min_samples The minimum samples for DBSCAN (default: 5).
+#' @param reduce_outliers Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).
+#' @param outlier_strategy Strategy for outlier reduction: "centroid" (default,
+#'   Euclidean distance in UMAP space) or "embeddings" (cosine similarity in
+#'   original space). Follows BERTopic methodology.
 #' @param seed Random seed for reproducibility (default: 123).
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
@@ -666,6 +670,8 @@ cluster_embeddings <- function(data_matrix,
                                        umap_metric = "cosine",
                                        dbscan_eps = 0,
                                        dbscan_min_samples = 5,
+                                       reduce_outliers = TRUE,
+                                       outlier_strategy = "centroid",
                                        seed = 123,
                                        verbose = TRUE) {
 
@@ -714,6 +720,46 @@ cluster_embeddings <- function(data_matrix,
         n_clusters_found <- length(unique(clusters)) - (0 %in% clusters)
         noise_ratio <- sum(clusters == 0) / length(clusters)
 
+        outliers_reassigned <- 0
+        outlier_strategy_used <- outlier_strategy
+        if (reduce_outliers && any(clusters == 0) && n_clusters_found > 0) {
+          if (verbose) message("Reassigning ", sum(clusters == 0), " noise points using '", outlier_strategy, "' strategy...")
+
+          noise_idx <- which(clusters == 0)
+          valid_clusters <- unique(clusters[clusters > 0])
+
+          if (outlier_strategy == "embeddings") {
+            embedding_centroids <- sapply(valid_clusters, function(cl) {
+              colMeans(data_matrix[clusters == cl, , drop = FALSE])
+            })
+            if (is.vector(embedding_centroids)) embedding_centroids <- matrix(embedding_centroids, nrow = 1)
+            embedding_centroids <- t(embedding_centroids)
+
+            cosine_sim <- function(a, b) {
+              sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+            }
+
+            for (idx in noise_idx) {
+              point <- data_matrix[idx, ]
+              similarities <- apply(embedding_centroids, 1, function(c) cosine_sim(point, c))
+              clusters[idx] <- valid_clusters[which.max(similarities)]
+            }
+          } else {
+            centroids <- sapply(valid_clusters, function(cl) {
+              colMeans(umap_result$reduced_data[clusters == cl, , drop = FALSE])
+            })
+            if (is.vector(centroids)) centroids <- matrix(centroids, nrow = 1)
+            centroids <- t(centroids)
+
+            for (idx in noise_idx) {
+              point <- umap_result$reduced_data[idx, ]
+              distances <- apply(centroids, 1, function(c) sqrt(sum((point - c)^2)))
+              clusters[idx] <- valid_clusters[which.min(distances)]
+            }
+          }
+          outliers_reassigned <- length(noise_idx)
+        }
+
         list(
           clusters = clusters,
           method = "umap_dbscan",
@@ -723,6 +769,9 @@ cluster_embeddings <- function(data_matrix,
           auto_detected = auto_eps,
           detection_method = if (auto_eps) "Knee Point Detection" else "Manual",
           noise_ratio = noise_ratio,
+          reduce_outliers = reduce_outliers,
+          outlier_strategy = if (reduce_outliers) outlier_strategy_used else NA_character_,
+          outliers_reassigned = outliers_reassigned,
           parameters = list(
             eps = dbscan_eps,
             min_samples = dbscan_min_samples,
@@ -4485,6 +4534,7 @@ run_rag_search <- function(
 #' @param community_method Community detection method: "leiden" (default) or "louvain".
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
+#' @param category_params Optional named list of category-specific parameters. Each element should be a list with `co_occur_n` and `top_node_n` values for that category (default: NULL).
 #'
 #' @return A list containing the Plotly plot, a table, and a summary.
 #'
@@ -4539,7 +4589,8 @@ word_co_occurrence_network <- function(dfm_object,
                                        node_label_size = 22,
                                        community_method = "leiden",
                                        node_size_by = "degree",
-                                       node_color_by = "community") {
+                                       node_color_by = "community",
+                                       category_params = NULL) {
 
   if (!requireNamespace("htmltools", quietly = TRUE) ||
       !requireNamespace("RColorBrewer", quietly = TRUE)) {
@@ -4584,7 +4635,7 @@ word_co_occurrence_network <- function(dfm_object,
         style = "margin-bottom: 20px;",
         htmltools::tags$p(
           group_label,
-          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+          style = "font-weight: bold; text-align: center; font-size: 16px;"
         )
       ),
       table
@@ -4624,17 +4675,21 @@ word_co_occurrence_network <- function(dfm_object,
         style = "margin-bottom: 20px;",
         htmltools::tags$p(
           group_label,
-          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+          style = "font-weight: bold; text-align: center; font-size: 16px;"
         )
       ),
       summary_table
     )
   }
 
-  build_network_plot <- function(data, group_level = NULL) {
+  build_network_plot <- function(data, group_level = NULL, local_co_occur_n = NULL, local_top_node_n = NULL) {
+    # Use category-specific params if provided, otherwise fall back to global params
+    effective_co_occur_n <- if (!is.null(local_co_occur_n)) local_co_occur_n else co_occur_n
+    effective_top_node_n <- if (!is.null(local_top_node_n)) local_top_node_n else top_node_n
+
     term_co_occur <- data %>%
       widyr::pairwise_count(term, document, sort = TRUE) %>%
-      dplyr::filter(n >= co_occur_n)
+      dplyr::filter(n >= effective_co_occur_n)
 
     graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
     if (igraph::vcount(graph) == 0) {
@@ -4809,18 +4864,22 @@ word_co_occurrence_network <- function(dfm_object,
         )
       }
     }
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(top_node_n)
-    annotations <- lapply(1:nrow(top_nodes), function(i) {
-      list(x = top_nodes$x[i],
-           y = top_nodes$y[i],
-           text = top_nodes$label[i],
-           xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
-           yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
-           xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
-           yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
-           showarrow = FALSE,
-           font = list(size = top_nodes$text_size[i], color = 'black'))
-    })
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+    annotations <- if (nrow(top_nodes) > 0) {
+      lapply(seq_len(nrow(top_nodes)), function(i) {
+        list(x = top_nodes$x[i],
+             y = top_nodes$y[i],
+             text = top_nodes$label[i],
+             xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
+             yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
+             xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
+             yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
+             showarrow = FALSE,
+             font = list(size = top_nodes$text_size[i], color = 'black'))
+      })
+    } else {
+      list()
+    }
 
     p <- p %>% plotly::layout(dragmode = "pan",
                               title = list(text = "Word Co-occurrence Network",
@@ -4850,7 +4909,17 @@ word_co_occurrence_network <- function(dfm_object,
           stop("doc_var is missing or not found in the current group")
         }
 
-        net <- build_network_plot(.x, group_level)
+        # Look up category-specific parameters if available
+        local_co_occur_n <- NULL
+        local_top_node_n <- NULL
+        if (!is.null(category_params) && group_level %in% names(category_params)) {
+          cat_params <- category_params[[group_level]]
+          if (!is.null(cat_params$co_occur_n)) local_co_occur_n <- cat_params$co_occur_n
+          if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
+          message(paste("  Using category-specific params - co_occur_n:", local_co_occur_n, ", top_node_n:", local_top_node_n))
+        }
+
+        net <- build_network_plot(.x, group_level, local_co_occur_n, local_top_node_n)
         if (!is.null(net)) {
           net$plot %>% plotly::layout(
             annotations = list(
@@ -4877,14 +4946,30 @@ word_co_occurrence_network <- function(dfm_object,
     table_list <- lapply(docvar_levels, function(level) {
       message(paste("Generating table for level:", level))
       group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      net <- build_network_plot(group_data)
+      # Look up category-specific parameters
+      local_co_occur_n <- NULL
+      local_top_node_n <- NULL
+      if (!is.null(category_params) && level %in% names(category_params)) {
+        cat_params <- category_params[[level]]
+        if (!is.null(cat_params$co_occur_n)) local_co_occur_n <- cat_params$co_occur_n
+        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
+      }
+      net <- build_network_plot(group_data, level, local_co_occur_n, local_top_node_n)
       if (!is.null(net)) build_table(net, level) else NULL
     })
 
     summary_list <- lapply(docvar_levels, function(level) {
       message(paste("Generating summary for level:", level))
       group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      net <- build_network_plot(group_data)
+      # Look up category-specific parameters
+      local_co_occur_n <- NULL
+      local_top_node_n <- NULL
+      if (!is.null(category_params) && level %in% names(category_params)) {
+        cat_params <- category_params[[level]]
+        if (!is.null(cat_params$co_occur_n)) local_co_occur_n <- cat_params$co_occur_n
+        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
+      }
+      net <- build_network_plot(group_data, level, local_co_occur_n, local_top_node_n)
       if (!is.null(net)) build_summary(net, level) else NULL
     })
 
@@ -4925,6 +5010,7 @@ word_co_occurrence_network <- function(dfm_object,
 #' @param community_method Community detection method: "leiden" (default) or "louvain".
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
+#' @param category_params Optional named list of category-specific parameters. Each element should be a list with `common_term_n`, `corr_n`, and `top_node_n` values for that category (default: NULL).
 #'
 #' @return A list containing the Plotly plot, a table, and a summary.
 #'
@@ -4981,7 +5067,8 @@ word_correlation_network <- function(dfm_object,
                                      node_label_size = 22,
                                      community_method = "leiden",
                                      node_size_by = "degree",
-                                     node_color_by = "community") {
+                                     node_color_by = "community",
+                                     category_params = NULL) {
 
   if (!requireNamespace("htmltools", quietly = TRUE) ||
       !requireNamespace("RColorBrewer", quietly = TRUE)) {
@@ -5026,7 +5113,7 @@ word_correlation_network <- function(dfm_object,
         style = "margin-bottom: 20px;",
         htmltools::tags$p(
           group_label,
-          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+          style = "font-weight: bold; text-align: center; font-size: 16px;"
         )
       ),
       table
@@ -5066,20 +5153,25 @@ word_correlation_network <- function(dfm_object,
         style = "margin-bottom: 20px;",
         htmltools::tags$p(
           group_label,
-          style = "font-weight: bold; text-align: center; font-size: 14pt;"
+          style = "font-weight: bold; text-align: center; font-size: 16px;"
         )
       ),
       summary_table
     )
   }
 
-  build_network_plot <- function(data, group_level = NULL) {
+  build_network_plot <- function(data, group_level = NULL, local_common_term_n = NULL, local_corr_n = NULL, local_top_node_n = NULL) {
+    # Use category-specific params if provided, otherwise fall back to global params
+    effective_common_term_n <- if (!is.null(local_common_term_n)) local_common_term_n else common_term_n
+    effective_corr_n <- if (!is.null(local_corr_n)) local_corr_n else corr_n
+    effective_top_node_n <- if (!is.null(local_top_node_n)) local_top_node_n else top_node_n
+
     term_cor <- data %>%
       dplyr::group_by(term) %>%
-      dplyr::filter(dplyr::n() >= common_term_n) %>%
+      dplyr::filter(dplyr::n() >= effective_common_term_n) %>%
       widyr::pairwise_cor(term, document, sort = TRUE) %>%
       dplyr::ungroup() %>%
-      dplyr::filter(correlation > corr_n)
+      dplyr::filter(correlation > effective_corr_n)
 
     graph <- igraph::graph_from_data_frame(term_cor, directed = FALSE)
     if(igraph::vcount(graph) == 0) {
@@ -5257,18 +5349,22 @@ word_correlation_network <- function(dfm_object,
         )
       }
     }
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(top_node_n)
-    annotations <- lapply(1:nrow(top_nodes), function(i) {
-      list(x = top_nodes$x[i],
-           y = top_nodes$y[i],
-           text = top_nodes$label[i],
-           xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
-           yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
-           xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
-           yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
-           showarrow = FALSE,
-           font = list(size = top_nodes$text_size[i], color = 'black'))
-    })
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+    annotations <- if (nrow(top_nodes) > 0) {
+      lapply(seq_len(nrow(top_nodes)), function(i) {
+        list(x = top_nodes$x[i],
+             y = top_nodes$y[i],
+             text = top_nodes$label[i],
+             xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
+             yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
+             xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
+             yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
+             showarrow = FALSE,
+             font = list(size = top_nodes$text_size[i], color = 'black'))
+      })
+    } else {
+      list()
+    }
 
     p <- p %>% plotly::layout(dragmode = "pan",
                               title = list(text = "Word Correlation Network", font = list(size = 19, color = "black", family = "Arial Black")),
@@ -5295,7 +5391,20 @@ word_correlation_network <- function(dfm_object,
           stop("doc_var is missing or not found in the current group")
         }
 
-        net <- build_network_plot(.x, group_level)
+        # Look up category-specific parameters if available
+        local_common_term_n <- NULL
+        local_corr_n <- NULL
+        local_top_node_n <- NULL
+        if (!is.null(category_params) && group_level %in% names(category_params)) {
+          cat_params <- category_params[[group_level]]
+          if (!is.null(cat_params$common_term_n)) local_common_term_n <- cat_params$common_term_n
+          if (!is.null(cat_params$corr_n)) local_corr_n <- cat_params$corr_n
+          if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
+          message(paste("  Using category-specific params - common_term_n:", local_common_term_n,
+                        ", corr_n:", local_corr_n, ", top_node_n:", local_top_node_n))
+        }
+
+        net <- build_network_plot(.x, group_level, local_common_term_n, local_corr_n, local_top_node_n)
         if (!is.null(net)) {
           net$plot %>% plotly::layout(
             annotations = list(
@@ -5322,14 +5431,34 @@ word_correlation_network <- function(dfm_object,
     table_list <- lapply(docvar_levels, function(level) {
       message(paste("Generating table for level:", level))
       group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      net <- build_network_plot(group_data)
+      # Look up category-specific parameters
+      local_common_term_n <- NULL
+      local_corr_n <- NULL
+      local_top_node_n <- NULL
+      if (!is.null(category_params) && level %in% names(category_params)) {
+        cat_params <- category_params[[level]]
+        if (!is.null(cat_params$common_term_n)) local_common_term_n <- cat_params$common_term_n
+        if (!is.null(cat_params$corr_n)) local_corr_n <- cat_params$corr_n
+        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
+      }
+      net <- build_network_plot(group_data, level, local_common_term_n, local_corr_n, local_top_node_n)
       if (!is.null(net)) build_table(net, level) else NULL
     })
 
     summary_list <- lapply(docvar_levels, function(level) {
       message(paste("Generating summary for level:", level))
       group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      net <- build_network_plot(group_data)
+      # Look up category-specific parameters
+      local_common_term_n <- NULL
+      local_corr_n <- NULL
+      local_top_node_n <- NULL
+      if (!is.null(category_params) && level %in% names(category_params)) {
+        cat_params <- category_params[[level]]
+        if (!is.null(cat_params$common_term_n)) local_common_term_n <- cat_params$common_term_n
+        if (!is.null(cat_params$corr_n)) local_corr_n <- cat_params$corr_n
+        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
+      }
+      net <- build_network_plot(group_data, level, local_common_term_n, local_corr_n, local_top_node_n)
       if (!is.null(net)) build_summary(net, level) else NULL
     })
 

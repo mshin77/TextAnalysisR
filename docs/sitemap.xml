@@ -139,6 +139,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/import_files.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/index.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/init_spacy_nlp.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_frequency_analysis.html</loc></url>
@@ -218,6 +219,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_extract_entities.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_has_vectors.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_initialized.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_lemmatize.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/spacy_parse_full.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/SpecialEduTech.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stm_15.html</loc></url>

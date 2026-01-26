@@ -15,7 +15,8 @@ word_co_occurrence_network(
   node_label_size = 22,
   community_method = "leiden",
   node_size_by = "degree",
-  node_color_by = "community"
+  node_color_by = "community",
+  category_params = NULL
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ word_co_occurrence_network(
 \item{node_size_by}{Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").}
 
 \item{node_color_by}{Node coloring method: "community" or "centrality" (default: "community").}
+
+\item{category_params}{Optional named list of category-specific parameters. Each element should be a list with \code{co_occur_n} and \code{top_node_n} values for that category (default: NULL).}
 }
 \value{
 A list containing the Plotly plot, a table, and a summary.

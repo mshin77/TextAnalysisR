@@ -15,6 +15,7 @@ plot_topic_probability(
   topic_labels = NULL,
   colors = NULL,
   verbose = TRUE,
+  base_font_size = 14,
   ...
 )
 ```
@@ -52,6 +53,11 @@ plot_topic_probability(
 - verbose:
 
   Logical, if TRUE, prints progress messages.
+
+- base_font_size:
+
+  Base font size in pixels for the plot theme (default: 14). Axis text
+  and strip text will be base_font_size + 2.
 
 - ...:
 

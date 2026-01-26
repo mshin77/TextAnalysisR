@@ -437,16 +437,13 @@ process_pdf_unified <- function(file_path,
 #'   print(united_tbl)
 #' }
 unite_cols <- function(df, listed_vars) {
-  # Create united text column from selected columns
   united_texts_tbl <- df %>%
     dplyr::select(all_of(unname(listed_vars))) %>%
-    tidyr::unite(col = "united_texts", sep = " ", remove = TRUE)
+    tidyr::unite(col = "united_texts", sep = " ", remove = FALSE)
 
-  # Keep only non-text columns as document variables (FIX: exclude united columns)
   docvar_tbl <- df %>%
     dplyr::select(-all_of(unname(listed_vars)))
 
-  # Combine without column duplication
   united_tbl <- dplyr::bind_cols(united_texts_tbl, docvar_tbl)
 
   return(united_tbl)
@@ -604,6 +601,95 @@ prep_texts <- function(united_tbl,
   })
 }
 
+
+#' Lemmatize Tokens with Batch Processing
+#'
+#' @description
+#' Converts tokens to their lemmatized forms using spaCy, with batch processing
+#' to handle large document collections without timeout issues.
+#'
+#' @param tokens A quanteda tokens object to lemmatize.
+#' @param batch_size Integer; number of documents to process per batch (default: 50).
+#' @param model Character; spaCy model to use (default: "en_core_web_sm").
+#' @param verbose Logical; print progress messages (default: TRUE).
+#'
+#' @return A quanteda tokens object containing lemmatized tokens.
+#'
+#' @details
+#' Uses spaCy for linguistic lemmatization producing proper dictionary forms
+#' (e.g., "studies" -> "study", "better" -> "good").
+#' Batch processing prevents timeout errors with large document collections.
+#'
+#' @family preprocessing
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' tokens <- quanteda::tokens(c("The studies showed better results"))
+#' lemmatized <- lemmatize_tokens(tokens, batch_size = 50)
+#' }
+lemmatize_tokens <- function(tokens,
+                             batch_size = 50,
+                             model = "en_core_web_sm",
+                             verbose = TRUE) {
+
+  if (!inherits(tokens, "tokens")) {
+    stop("Input must be a quanteda tokens object")
+  }
+
+  texts <- sapply(tokens, paste, collapse = " ")
+  doc_names <- names(texts)
+  n_docs <- length(texts)
+
+  if (n_docs == 0) {
+    if (verbose) message("No documents to process")
+    return(tokens)
+  }
+
+  start_time <- Sys.time()
+  all_lemmas <- list()
+  n_batches <- ceiling(n_docs / batch_size)
+
+  for (i in seq_len(n_batches)) {
+    start_idx <- (i - 1) * batch_size + 1
+    end_idx <- min(i * batch_size, n_docs)
+
+    if (verbose) {
+      message(sprintf("Lemmatizing batch %d/%d (documents %d-%d)...",
+                      i, n_batches, start_idx, end_idx))
+    }
+
+    batch_texts <- texts[start_idx:end_idx]
+    batch_names <- doc_names[start_idx:end_idx]
+
+    tryCatch({
+      parsed <- spacy_parse_full(batch_texts, pos = FALSE, tag = FALSE,
+                                 lemma = TRUE, entity = FALSE, model = model)
+
+      for (j in seq_along(batch_names)) {
+        doc_id <- batch_names[j]
+        doc_lemmas <- parsed$lemma[parsed$doc_id == doc_id]
+        all_lemmas[[doc_id]] <- doc_lemmas
+      }
+    }, error = function(e) {
+      warning(sprintf("Error in batch %d: %s", i, e$message))
+    })
+  }
+
+  if (length(all_lemmas) == 0) {
+    stop("All batches failed. Check spaCy installation.")
+  }
+
+  lemmatized_tokens <- quanteda::as.tokens(all_lemmas)
+
+  if (verbose) {
+    processing_time <- difftime(Sys.time(), start_time, units = "secs")
+    message(sprintf("Lemmatization completed in %.2f seconds (%d documents)",
+                    as.numeric(processing_time), n_docs))
+  }
+
+  return(lemmatized_tokens)
+}
 
 
 #' Extract Text from PDF

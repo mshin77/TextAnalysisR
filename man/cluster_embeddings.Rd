@@ -14,6 +14,8 @@ cluster_embeddings(
   umap_metric = "cosine",
   dbscan_eps = 0,
   dbscan_min_samples = 5,
+  reduce_outliers = TRUE,
+  outlier_strategy = "centroid",
   seed = 123,
   verbose = TRUE
 )
@@ -39,6 +41,12 @@ If 0, optimal number is determined automatically.}
 \item{dbscan_eps}{The eps parameter for DBSCAN. If 0, optimal value is determined automatically.}
 
 \item{dbscan_min_samples}{The minimum samples for DBSCAN (default: 5).}
+
+\item{reduce_outliers}{Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).}
+
+\item{outlier_strategy}{Strategy for outlier reduction: "centroid" (default,
+Euclidean distance in UMAP space) or "embeddings" (cosine similarity in
+original space). Follows BERTopic methodology.}
 
 \item{seed}{Random seed for reproducibility (default: 123).}
 

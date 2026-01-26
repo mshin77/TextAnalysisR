@@ -11,6 +11,7 @@ Author: TextAnalysisR package
 import spacy
 from spacy import displacy
 from typing import List, Dict, Optional, Any, Tuple
+from contextlib import nullcontext
 import warnings
 import pandas as pd
 
@@ -21,7 +22,7 @@ class SpacyNLP:
 
     Provides:
     - Token-level parsing (POS, lemma, morph, dependency)
-    - Named entity recognition
+    - Named entity recognition with domain-specific EntityRuler
     - Noun chunk extraction (keyphrase extraction)
     - Subject/object extraction (SVO analysis)
     - Word similarity (with graceful fallback for models without vectors)
@@ -31,9 +32,166 @@ class SpacyNLP:
     # Class-level model cache
     _model_cache: Dict[str, Any] = {}
 
+    # Domain-specific entity patterns for education, disability, math, and technology
+    DOMAIN_PATTERNS = [
+        # === LEARNING DISABILITIES ===
+        # These are often misclassified as GPE (due to -ia suffix) or other types
+        {"label": "DISABILITY", "pattern": "Dyscalculia"},
+        {"label": "DISABILITY", "pattern": "dyscalculia"},
+        {"label": "DISABILITY", "pattern": "Dyslexia"},
+        {"label": "DISABILITY", "pattern": "dyslexia"},
+        {"label": "DISABILITY", "pattern": "Dysgraphia"},
+        {"label": "DISABILITY", "pattern": "dysgraphia"},
+        {"label": "DISABILITY", "pattern": "Dyspraxia"},
+        {"label": "DISABILITY", "pattern": "dyspraxia"},
+        {"label": "DISABILITY", "pattern": "Dyscalculic"},
+        {"label": "DISABILITY", "pattern": "dyscalculic"},
+        {"label": "DISABILITY", "pattern": "Dyslexic"},
+        {"label": "DISABILITY", "pattern": "dyslexic"},
+        {"label": "DISABILITY", "pattern": "ADHD"},
+        {"label": "DISABILITY", "pattern": "ADD"},
+        {"label": "DISABILITY", "pattern": "ASD"},
+        {"label": "DISABILITY", "pattern": "Autism"},
+        {"label": "DISABILITY", "pattern": "autism"},
+        {"label": "DISABILITY", "pattern": "Asperger"},
+        {"label": "DISABILITY", "pattern": "Aspergers"},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "asperger"}, {"LOWER": "syndrome"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "learning"}, {"LOWER": "disability"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "learning"}, {"LOWER": "disabilities"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "learning"}, {"LOWER": "disorder"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "learning"}, {"LOWER": "difficulty"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "learning"}, {"LOWER": "difficulties"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "intellectual"}, {"LOWER": "disability"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "developmental"}, {"LOWER": "disability"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "cognitive"}, {"LOWER": "disability"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "math"}, {"LOWER": "anxiety"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "mathematics"}, {"LOWER": "anxiety"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "number"}, {"LOWER": "sense"}, {"LOWER": "deficit"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "processing"}, {"LOWER": "disorder"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "auditory"}, {"LOWER": "processing"}, {"LOWER": "disorder"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "visual"}, {"LOWER": "processing"}, {"LOWER": "disorder"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "sensory"}, {"LOWER": "processing"}, {"LOWER": "disorder"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "executive"}, {"LOWER": "function"}, {"LOWER": "disorder"}]},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "working"}, {"LOWER": "memory"}, {"LOWER": "deficit"}]},
+        {"label": "DISABILITY", "pattern": "SLD"},
+        {"label": "DISABILITY", "pattern": [{"LOWER": "specific"}, {"LOWER": "learning"}, {"LOWER": "disability"}]},
+
+        # === EDUCATIONAL PROGRAMS & FRAMEWORKS ===
+        # Acronyms often misclassified as ORG
+        {"label": "PROGRAM", "pattern": "IEP"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "individualized"}, {"LOWER": "education"}, {"LOWER": "program"}]},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "individualized"}, {"LOWER": "education"}, {"LOWER": "plan"}]},
+        {"label": "PROGRAM", "pattern": "504"},
+        {"label": "PROGRAM", "pattern": [{"TEXT": "504"}, {"LOWER": "plan"}]},
+        {"label": "PROGRAM", "pattern": [{"TEXT": "Section"}, {"TEXT": "504"}]},
+        {"label": "PROGRAM", "pattern": "RTI"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "response"}, {"LOWER": "to"}, {"LOWER": "intervention"}]},
+        {"label": "PROGRAM", "pattern": "MTSS"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "multi-tiered"}, {"LOWER": "system"}, {"LOWER": "of"}, {"LOWER": "supports"}]},
+        {"label": "PROGRAM", "pattern": "ALP"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "advanced"}, {"LOWER": "learning"}, {"LOWER": "plan"}]},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "accelerated"}, {"LOWER": "learning"}, {"LOWER": "program"}]},
+        {"label": "PROGRAM", "pattern": "PBIS"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "positive"}, {"LOWER": "behavioral"}, {"LOWER": "interventions"}]},
+        {"label": "PROGRAM", "pattern": "UDL"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "universal"}, {"LOWER": "design"}, {"LOWER": "for"}, {"LOWER": "learning"}]},
+        {"label": "PROGRAM", "pattern": "IDEA"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "individuals"}, {"LOWER": "with"}, {"LOWER": "disabilities"}, {"LOWER": "education"}, {"LOWER": "act"}]},
+        {"label": "PROGRAM", "pattern": "FAPE"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "free"}, {"LOWER": "appropriate"}, {"LOWER": "public"}, {"LOWER": "education"}]},
+        {"label": "PROGRAM", "pattern": "LRE"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "least"}, {"LOWER": "restrictive"}, {"LOWER": "environment"}]},
+        {"label": "PROGRAM", "pattern": "ESL"},
+        {"label": "PROGRAM", "pattern": "ELL"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "english"}, {"LOWER": "language"}, {"LOWER": "learner"}]},
+        {"label": "PROGRAM", "pattern": "SPED"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "special"}, {"LOWER": "education"}]},
+        {"label": "PROGRAM", "pattern": "STEM"},
+        {"label": "PROGRAM", "pattern": "STEAM"},
+        {"label": "PROGRAM", "pattern": "GT"},
+        {"label": "PROGRAM", "pattern": [{"LOWER": "gifted"}, {"LOWER": "and"}, {"LOWER": "talented"}]},
+
+        # === ASSESSMENTS & TESTS ===
+        {"label": "TEST", "pattern": "WISC"},
+        {"label": "TEST", "pattern": [{"TEXT": "WISC"}, {"TEXT": "-"}, {"IS_ALPHA": True}]},
+        {"label": "TEST", "pattern": "WAIS"},
+        {"label": "TEST", "pattern": "WJ"},
+        {"label": "TEST", "pattern": [{"LOWER": "woodcock"}, {"LOWER": "johnson"}]},
+        {"label": "TEST", "pattern": "KeyMath"},
+        {"label": "TEST", "pattern": "TEMA"},
+        {"label": "TEST", "pattern": [{"LOWER": "test"}, {"LOWER": "of"}, {"LOWER": "early"}, {"LOWER": "mathematics"}, {"LOWER": "ability"}]},
+        {"label": "TEST", "pattern": "PAL"},
+        {"label": "TEST", "pattern": "CBM"},
+        {"label": "TEST", "pattern": [{"LOWER": "curriculum"}, {"LOWER": "based"}, {"LOWER": "measurement"}]},
+        {"label": "TEST", "pattern": "DIBELS"},
+        {"label": "TEST", "pattern": "AIMSweb"},
+        {"label": "TEST", "pattern": "MAP"},
+        {"label": "TEST", "pattern": [{"TEXT": "MAP"}, {"LOWER": "testing"}]},
+        {"label": "TEST", "pattern": "NWEA"},
+        {"label": "TEST", "pattern": "NAEP"},
+        {"label": "TEST", "pattern": "PISA"},
+        {"label": "TEST", "pattern": "TIMSS"},
+
+        # === MATH CONCEPTS & TERMS ===
+        # Some math terms may be misclassified
+        {"label": "CONCEPT", "pattern": [{"LOWER": "number"}, {"LOWER": "sense"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "place"}, {"LOWER": "value"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "subitizing"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "cardinality"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "ordinality"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "fact"}, {"LOWER": "fluency"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "math"}, {"LOWER": "facts"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "mental"}, {"LOWER": "math"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "number"}, {"LOWER": "line"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "base"}, {"LOWER": "ten"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "base"}, {"TEXT": "10"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "manipulatives"}]},
+        {"label": "CONCEPT", "pattern": [{"LOWER": "concrete"}, {"LOWER": "representational"}, {"LOWER": "abstract"}]},
+        {"label": "CONCEPT", "pattern": "CRA"},
+
+        # === TECHNOLOGY & TOOLS ===
+        {"label": "TOOL", "pattern": [{"LOWER": "assistive"}, {"LOWER": "technology"}]},
+        {"label": "TOOL", "pattern": "AT"},
+        {"label": "TOOL", "pattern": [{"LOWER": "text"}, {"LOWER": "to"}, {"LOWER": "speech"}]},
+        {"label": "TOOL", "pattern": "TTS"},
+        {"label": "TOOL", "pattern": [{"LOWER": "speech"}, {"LOWER": "to"}, {"LOWER": "text"}]},
+        {"label": "TOOL", "pattern": "STT"},
+        {"label": "TOOL", "pattern": [{"LOWER": "screen"}, {"LOWER": "reader"}]},
+        {"label": "TOOL", "pattern": "EdTech"},
+        {"label": "TOOL", "pattern": [{"LOWER": "educational"}, {"LOWER": "technology"}]},
+        {"label": "TOOL", "pattern": "LMS"},
+        {"label": "TOOL", "pattern": [{"LOWER": "learning"}, {"LOWER": "management"}, {"LOWER": "system"}]},
+        {"label": "TOOL", "pattern": "CAI"},
+        {"label": "TOOL", "pattern": [{"LOWER": "computer"}, {"LOWER": "assisted"}, {"LOWER": "instruction"}]},
+        {"label": "TOOL", "pattern": "ITS"},
+        {"label": "TOOL", "pattern": [{"LOWER": "intelligent"}, {"LOWER": "tutoring"}, {"LOWER": "system"}]},
+        {"label": "TOOL", "pattern": [{"LOWER": "adaptive"}, {"LOWER": "learning"}]},
+        {"label": "TOOL", "pattern": [{"LOWER": "virtual"}, {"LOWER": "manipulatives"}]},
+
+        # === INSTRUCTIONAL METHODS ===
+        {"label": "METHOD", "pattern": [{"LOWER": "explicit"}, {"LOWER": "instruction"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "direct"}, {"LOWER": "instruction"}]},
+        {"label": "METHOD", "pattern": "DI"},
+        {"label": "METHOD", "pattern": [{"LOWER": "scaffolding"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "differentiated"}, {"LOWER": "instruction"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "evidence"}, {"LOWER": "based"}, {"LOWER": "practice"}]},
+        {"label": "METHOD", "pattern": "EBP"},
+        {"label": "METHOD", "pattern": [{"LOWER": "research"}, {"LOWER": "based"}, {"LOWER": "intervention"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "multi"}, {"LOWER": "sensory"}, {"LOWER": "instruction"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "multisensory"}, {"LOWER": "instruction"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "orton"}, {"LOWER": "gillingham"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "structured"}, {"LOWER": "literacy"}]},
+        {"label": "METHOD", "pattern": [{"LOWER": "touch"}, {"LOWER": "math"}]},
+        {"label": "METHOD", "pattern": "TouchMath"},
+    ]
+
     def __init__(self, model: str = "en_core_web_sm"):
         """
         Initialize the SpacyNLP instance with the specified model.
+
+        Adds an EntityRuler with domain-specific patterns for education,
+        disability, math, and technology fields to correct common
+        misclassifications from the statistical NER.
 
         Args:
             model: spaCy model name (default: "en_core_web_sm")
@@ -46,6 +204,11 @@ class SpacyNLP:
         else:
             try:
                 self.nlp = spacy.load(model)
+
+                # Add EntityRuler with domain-specific patterns AFTER NER
+                # This allows the ruler to override NER misclassifications
+                self._add_entity_ruler()
+
                 SpacyNLP._model_cache[model] = self.nlp
             except OSError as e:
                 raise RuntimeError(
@@ -55,6 +218,22 @@ class SpacyNLP:
 
         # Check if model has word vectors
         self._has_vectors = self.nlp.vocab.vectors.shape[0] > 0
+
+    def _add_entity_ruler(self):
+        """Add EntityRuler with domain-specific patterns after NER component."""
+        # Check if entity_ruler already exists (from cache)
+        if "entity_ruler" in self.nlp.pipe_names:
+            return
+
+        # Create EntityRuler that overrides existing entities
+        ruler = self.nlp.add_pipe(
+            "entity_ruler",
+            after="ner",
+            config={"overwrite_ents": True}
+        )
+
+        # Add domain-specific patterns
+        ruler.add_patterns(self.DOMAIN_PATTERNS)
 
     def has_vectors(self) -> bool:
         """Check if the loaded model has word vectors."""
@@ -98,8 +277,21 @@ class SpacyNLP:
         results = []
         total = len(texts)
 
-        # Use nlp.pipe() for efficient batch processing
-        for doc_idx, doc in enumerate(self.nlp.pipe(texts, batch_size=batch_size)):
+        # Determine which components to disable for faster processing
+        # When NER/parser not needed, skip them for 2-5x speedup
+        disable_components = []
+        if not include_entity:
+            for comp in ["ner", "entity_ruler"]:
+                if comp in self.nlp.pipe_names:
+                    disable_components.append(comp)
+        if not include_dependency:
+            if "parser" in self.nlp.pipe_names:
+                disable_components.append("parser")
+
+        # Use nlp.pipe() for efficient batch processing with disabled components
+        pipe_context = self.nlp.select_pipes(disable=disable_components) if disable_components else nullcontext()
+        with pipe_context:
+          for doc_idx, doc in enumerate(self.nlp.pipe(texts, batch_size=batch_size)):
             # Report progress if callback provided
             if progress_callback and (doc_idx % 10 == 0 or doc_idx == total - 1):
                 progress_callback(doc_idx + 1, total)
@@ -147,6 +339,61 @@ class SpacyNLP:
                         row["morph"] = str(token.morph)
 
                     results.append(row)
+
+        return pd.DataFrame(results)
+
+    def lemmatize(
+        self,
+        texts: List[str],
+        batch_size: int = 100,
+        n_process: int = 1,
+        progress_callback: Optional[callable] = None
+    ) -> pd.DataFrame:
+        """
+        Fast lemmatization by disabling unnecessary pipeline components.
+
+        This is 2-5x faster than parse_to_dataframe() when only lemmas are needed.
+        Disables NER, entity_ruler, parser, and other components not needed for lemmatization.
+
+        Args:
+            texts: List of text strings to lemmatize
+            batch_size: Batch size for nlp.pipe() (default: 100, larger for speed)
+            n_process: Number of processes for parallel processing (default: 1)
+            progress_callback: Optional callback(current, total) for progress tracking
+
+        Returns:
+            pandas DataFrame with doc_id, token, and lemma columns
+        """
+        results = []
+        total = len(texts)
+
+        # Determine which components to disable for lemmatization-only
+        # Keep: tok2vec (required), tagger (for lemmatizer), lemmatizer, attribute_ruler
+        # Disable: ner, entity_ruler, parser (if present)
+        disable_components = []
+        for comp in self.nlp.pipe_names:
+            if comp in ["ner", "entity_ruler", "parser"]:
+                disable_components.append(comp)
+
+        # Use nlp.pipe() with disabled components for faster processing
+        with self.nlp.select_pipes(disable=disable_components):
+            for doc_idx, doc in enumerate(self.nlp.pipe(
+                texts,
+                batch_size=batch_size,
+                n_process=n_process
+            )):
+                if progress_callback and (doc_idx % 20 == 0 or doc_idx == total - 1):
+                    progress_callback(doc_idx + 1, total)
+
+                doc_id = f"text{doc_idx + 1}"
+
+                for token_idx, token in enumerate(doc):
+                    results.append({
+                        "doc_id": doc_id,
+                        "token_id": token_idx + 1,
+                        "token": token.text,
+                        "lemma": token.lemma_
+                    })
 
         return pd.DataFrame(results)
 

@@ -94,6 +94,18 @@ results <- fit_embedding_model(
 )
 ```
 
+**Outlier Reduction Strategies:** HDBSCAN may assign some documents as outliers (-1).
+Use `outlier_strategy` to control reassignment (follows BERTopic methodology):
+
+| Strategy | Description |
+|----------|-------------|
+| `"probabilities"` (default) | Reassign based on topic probability scores |
+| `"c-tf-idf"` | Reassign based on c-TF-IDF similarity to topic representations |
+| `"embeddings"` | Reassign based on cosine similarity in embedding space |
+| `"distributions"` | Reassign based on topic distributions |
+
+Set `outlier_threshold` to control minimum confidence for reassignment (default: 0.0).
+
 **Learn More:** [BERTopic](https://maartengr.github.io/BERTopic/) | [Sentence-BERT](https://www.sbert.net/)
 
 </details>

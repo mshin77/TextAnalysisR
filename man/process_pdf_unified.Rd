@@ -40,6 +40,7 @@ Other preprocessing:
 \code{\link{get_available_dfm}()},
 \code{\link{get_available_tokens}()},
 \code{\link{import_files}()},
+\code{\link{lemmatize_tokens}()},
 \code{\link{prep_texts}()},
 \code{\link{unite_cols}()}
 }

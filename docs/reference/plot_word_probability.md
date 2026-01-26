@@ -16,6 +16,7 @@ plot_word_probability(
   title = NULL,
   colors = NULL,
   measure_label = "Beta",
+  base_font_size = 14,
   ...
 )
 ```
@@ -39,11 +40,11 @@ plot_word_probability(
 
 - height:
 
-  The height of the resulting Plotly plot, in pixels (default: 1200).
+  Plot height for responsive spacing adjustments (default: 1200).
 
 - width:
 
-  The width of the resulting Plotly plot, in pixels (default: 800).
+  Plot width for responsive spacing adjustments (default: 800).
 
 - ylab:
 
@@ -61,13 +62,18 @@ plot_word_probability(
 
   Label for the probability measure (default: "Beta").
 
+- base_font_size:
+
+  Base font size in pixels for the plot theme (default: 14). Axis text
+  and strip text will be base_font_size + 2.
+
 - ...:
 
-  Additional arguments passed to plotly::ggplotly().
+  Additional arguments (currently unused, kept for compatibility).
 
 ## Value
 
-A plotly object showing word probabilities faceted by topic.
+A ggplot2 object showing word probabilities faceted by topic.
 
 ## See also
 

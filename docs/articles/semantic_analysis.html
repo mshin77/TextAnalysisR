@@ -169,7 +169,8 @@ Documentation</a></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/semantic_document_clustering.html">semantic_document_clustering</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
-<span>  n_clusters <span class="op">=</span> <span class="fl">5</span></span>
+<span>  n_clusters <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  reduce_outliers <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="ai-suggested-cluster-labels">AI-Suggested Cluster Labels<a class="anchor" aria-label="anchor" href="#ai-suggested-cluster-labels"></a>
@@ -228,6 +229,19 @@ than to documents in other clusters.</p>
 </tr>
 </tbody>
 </table>
+<p><strong>Outlier Reduction:</strong> DBSCAN assigns noise points to
+cluster 0. Two strategies available via <code>outlier_strategy</code>
+(follows BERTopic methodology):</p>
+<ul>
+<li>
+<code>"centroid"</code> (default): Euclidean distance to nearest
+centroid in UMAP space</li>
+<li>
+<code>"embeddings"</code>: Cosine similarity in original
+high-dimensional embedding space</li>
+</ul>
+<p>Set <code>reduce_outliers = TRUE</code> (default) to enable outlier
+reassignment.</p>
 <p><strong>Usage:</strong> Choose discovery mode (Automatic, Manual,
 Advanced). Select semantic feature space and algorithm. Automatic mode
 finds optimal cluster count. Use visualizations and quality metrics to

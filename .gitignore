@@ -12,7 +12,8 @@ cran-comments.md
 test_*.R
 run_checks.R
 
-# Temporary files
+**/*.tmp
+**/tmp*
 *.tmp
 *.tmp.*
 .DS_Store

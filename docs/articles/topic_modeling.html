@@ -168,6 +168,40 @@ extraction</li>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  n_topics <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><strong>Outlier Reduction Strategies:</strong> HDBSCAN may assign
+some documents as outliers (-1). Use <code>outlier_strategy</code> to
+control reassignment (follows BERTopic methodology):</p>
+<table class="table">
+<colgroup>
+<col width="43%">
+<col width="56%">
+</colgroup>
+<thead><tr class="header">
+<th>Strategy</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<code>"probabilities"</code> (default)</td>
+<td>Reassign based on topic probability scores</td>
+</tr>
+<tr class="even">
+<td><code>"c-tf-idf"</code></td>
+<td>Reassign based on c-TF-IDF similarity to topic representations</td>
+</tr>
+<tr class="odd">
+<td><code>"embeddings"</code></td>
+<td>Reassign based on cosine similarity in embedding space</td>
+</tr>
+<tr class="even">
+<td><code>"distributions"</code></td>
+<td>Reassign based on topic distributions</td>
+</tr>
+</tbody>
+</table>
+<p>Set <code>outlier_threshold</code> to control minimum confidence for
+reassignment (default: 0.0).</p>
 <p><strong>Learn More:</strong> <a href="https://maartengr.github.io/BERTopic/" class="external-link">BERTopic</a> | <a href="https://www.sbert.net/" class="external-link">Sentence-BERT</a></p>
 </details><hr>
 <details><summary><strong>Hybrid Topic Modeling</strong>

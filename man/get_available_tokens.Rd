@@ -48,6 +48,7 @@ tokens <- get_available_tokens(
 Other preprocessing: 
 \code{\link{get_available_dfm}()},
 \code{\link{import_files}()},
+\code{\link{lemmatize_tokens}()},
 \code{\link{prep_texts}()},
 \code{\link{process_pdf_unified}()},
 \code{\link{unite_cols}()}

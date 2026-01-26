@@ -9,7 +9,8 @@ plot_topic_effects_continuous(
   ncol = 2,
   height = 800,
   width = 1000,
-  title = "Continuous Variable Effects"
+  title = "Continuous Variable Effects",
+  base_font_size = 14
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ plot_topic_effects_continuous(
 \item{width}{Plot width in pixels (default: 1000)}
 
 \item{title}{Plot title (default: "Continuous Variable Effects")}
+
+\item{base_font_size}{Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.}
 }
 \value{
 A plotly object

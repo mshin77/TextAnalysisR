@@ -11,7 +11,8 @@ plot_topic_effects_categorical(
   ncol = 2,
   height = 800,
   width = 1000,
-  title = "Category Effects"
+  title = "Category Effects",
+  base_font_size = 14
 )
 ```
 
@@ -36,6 +37,11 @@ plot_topic_effects_categorical(
 - title:
 
   Plot title (default: "Category Effects")
+
+- base_font_size:
+
+  Base font size in pixels for the plot theme (default: 14). Axis text
+  and strip text will be base_font_size + 2.
 
 ## Value
 

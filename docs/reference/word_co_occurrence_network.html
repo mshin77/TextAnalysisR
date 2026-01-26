@@ -65,7 +65,8 @@
 <span>  node_label_size <span class="op">=</span> <span class="fl">22</span>,</span>
 <span>  community_method <span class="op">=</span> <span class="st">"leiden"</span>,</span>
 <span>  node_size_by <span class="op">=</span> <span class="st">"degree"</span>,</span>
-<span>  node_color_by <span class="op">=</span> <span class="st">"community"</span></span>
+<span>  node_color_by <span class="op">=</span> <span class="st">"community"</span>,</span>
+<span>  category_params <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -115,6 +116,10 @@
 
 <dt id="arg-node-color-by">node_color_by<a class="anchor" aria-label="anchor" href="#arg-node-color-by"></a></dt>
 <dd><p>Node coloring method: "community" or "centrality" (default: "community").</p></dd>
+
+
+<dt id="arg-category-params">category_params<a class="anchor" aria-label="anchor" href="#arg-category-params"></a></dt>
+<dd><p>Optional named list of category-specific parameters. Each element should be a list with <code>co_occur_n</code> and <code>top_node_n</code> values for that category (default: NULL).</p></dd>
 
 </dl></div>
     <div class="section level2">
