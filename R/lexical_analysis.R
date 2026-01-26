@@ -2381,7 +2381,7 @@ init_spacy_nlp <- function(model = "en_core_web_sm", force = FALSE) {
   }
 
   # Check if already initialized with same model
-  if (!force && !is.null(.spacy_env$nlp) && .spacy_env$model == model) {
+  if (!force && !is.null(.spacy_env$nlp) && isTRUE(.spacy_env$model == model)) {
     return(invisible(.spacy_env$nlp))
   }
 
