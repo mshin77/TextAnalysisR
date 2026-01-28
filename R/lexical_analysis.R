@@ -2543,7 +2543,7 @@ spacy_parse_full <- function(x,
   df <- reticulate::py_to_r(result)
 
   # Map doc_id from text1, text2, ... to actual document names
-  if (is.data.frame(df) && nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
     doc_id_map <- data.frame(
       old_id = paste0("text", seq_along(doc_names)),
       new_id = doc_names,
@@ -2605,7 +2605,7 @@ spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
   df <- reticulate::py_to_r(result)
 
   # Map doc_id from text1, text2, ... to actual document names
-  if (is.data.frame(df) && nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
     doc_id_map <- data.frame(
       old_id = paste0("text", seq_along(doc_names)),
       new_id = doc_names,
@@ -2660,7 +2660,7 @@ spacy_extract_entities <- function(x, model = "en_core_web_sm") {
   df <- reticulate::py_to_r(result)
 
   # Map doc_id
-  if (is.data.frame(df) && nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
     doc_id_map <- data.frame(
       old_id = paste0("text", seq_along(doc_names)),
       new_id = doc_names,
@@ -2708,7 +2708,7 @@ extract_noun_chunks <- function(x, model = "en_core_web_sm") {
   df <- reticulate::py_to_r(result)
 
   # Map doc_id
-  if (is.data.frame(df) && nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
     doc_id_map <- data.frame(
       old_id = paste0("text", seq_along(doc_names)),
       new_id = doc_names,
@@ -2754,7 +2754,7 @@ extract_subjects_objects <- function(x, model = "en_core_web_sm") {
   result <- .spacy_env$nlp$get_subjects_objects(texts_list)
   df <- reticulate::py_to_r(result)
 
-  if (is.data.frame(df) && nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
     doc_id_map <- data.frame(
       old_id = paste0("text", seq_along(doc_names)),
       new_id = doc_names,
@@ -2800,7 +2800,7 @@ get_sentences <- function(x, model = "en_core_web_sm") {
   result <- .spacy_env$nlp$get_sentences(texts_list)
   df <- reticulate::py_to_r(result)
 
-  if (is.data.frame(df) && nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
     doc_id_map <- data.frame(
       old_id = paste0("text", seq_along(doc_names)),
       new_id = doc_names,

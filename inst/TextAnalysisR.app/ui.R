@@ -1240,6 +1240,7 @@ Supports:
                 style = "display: flex; gap: 8px; align-items: flex-end;",
                 div(
                   style = "flex: 0 0 36px;",
+                  title = "Select the entity color",
                   if (requireNamespace("colourpicker", quietly = TRUE)) {
                     colourpicker::colourInput("custom_entity_color", NULL,
                       value = "#607D8B", showColour = "background")
@@ -1475,20 +1476,8 @@ Supports:
                       )
                     ),
                     # Download button for Dependency Parsing
-                    div(
-                      style = "margin-bottom: 15px; text-align: right;",
-                      downloadButton("download_dep_plot", "Download Plot", class = "btn-secondary btn-sm")
-                    ),
-                    # displaCy dependency tree visualization
-                    div(
-                      style = "background: white; padding: 15px; border: 1px solid #dee2e6;
-                               border-radius: 4px; margin-bottom: 20px; overflow-x: auto; overflow-y: hidden;",
-                      # Wrapper to remove whitespace above the tree
-                      div(
-                        style = "margin-top: -100px; padding-top: 0;",
-                        uiOutput("dep_displacy_html")
-                      )
-                    ),
+                    uiOutput("dep_download_button"),
+                    uiOutput("dep_displacy_container"),
                     # Existing full parse table
                     DT::dataTableOutput("spacy_full_table")
                   )
@@ -1498,7 +1487,7 @@ Supports:
                   value = "ner",
                   br(),
                   conditionalPanel(
-                    condition = "output.ner_ready == false",
+                    condition = "output.spacy_ready == false",
                     div(
                       style = "padding: 60px 40px; text-align: center;",
                       div(
@@ -1507,7 +1496,23 @@ Supports:
                         tags$p(
                           "Click ",
                           tags$strong("'Apply'", style = "color: #0c1f4a;"),
-                          " on the Word Forms tab to run spaCy analysis and extract named entities.",
+                          " on the Word Forms tab to run spaCy analysis.",
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                        )
+                      )
+                    )
+                  ),
+                  conditionalPanel(
+                    condition = "output.ner_pending == true",
+                    div(
+                      style = "padding: 60px 40px; text-align: center;",
+                      div(
+                        style = "max-width: 500px; margin: 0 auto;",
+                        tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
+                        tags$p(
+                          "Click ",
+                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          " to extract named entities.",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
                       )
@@ -1515,27 +1520,10 @@ Supports:
                   ),
                   conditionalPanel(
                     condition = "output.ner_ready == true",
-                    # Document selector for displaCy visualization
-                    div(
-                      style = "margin-bottom: 15px;",
-                      selectInput(
-                        "ner_viz_doc",
-                        "Select document to visualize entities:",
-                        choices = NULL,
-                        width = "100%"
-                      )
-                    ),
-                    # displaCy entity visualization
-                    div(
-                      style = "background: white; padding: 15px; border: 1px solid #dee2e6;
-                               border-radius: 4px; margin-bottom: 20px; overflow-x: auto;",
-                      uiOutput("ner_displacy_html")
-                    ),
-                    # Download button for NER
-                    div(
-                      style = "margin-bottom: 15px; text-align: right;",
-                      downloadButton("download_ner_plot", "Download Plot", class = "btn-secondary btn-sm")
-                    ),
+                    # Document selector, displaCy visualization, and download button (conditional)
+                    uiOutput("ner_doc_selector"),
+                    uiOutput("ner_displacy_container"),
+                    uiOutput("ner_download_button"),
                     # Existing frequency plot
                     uiOutput("entity_plot_uiOutput"),
                     br(),

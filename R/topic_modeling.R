@@ -336,21 +336,25 @@ get_topic_texts <- function(top_terms_df,
 }
 
 
-#' Generate Topic Labels Using OpenAI's API
+#' Generate Topic Labels Using AI
 #'
 #' This function generates descriptive labels for each topic based on their
-#' top terms using OpenAI's ChatCompletion API.
+#' top terms using AI providers (OpenAI, Gemini, or Ollama).
 #'
 #' @param top_topic_terms A data frame containing the top terms for each topic.
-#' @param model A character string specifying which OpenAI model to use (default: "gpt-3.5-turbo").
-#' @param system A character string containing the system prompt for the OpenAI API.
-#' If NULL, the function uses the default system prompt.
-#' @param user A character string containing the user prompt for the OpenAI API.
-#' If NULL, the function uses the default user prompt.
+#' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
+#'   "auto" will try Ollama first, then check for OpenAI/Gemini keys.
+#' @param model A character string specifying which model to use. If NULL, uses
+#'   provider defaults: "gpt-4o-mini" (OpenAI), "gemini-2.0-flash" (Gemini),
+#'   or recommended Ollama model.
+#' @param system A character string containing the system prompt for the API.
+#'   If NULL, the function uses the default system prompt.
+#' @param user A character string containing the user prompt for the API.
+#'   If NULL, the function uses the default user prompt.
 #' @param temperature A numeric value controlling the randomness of the output (default: 0.5).
-#' @param openai_api_key A character string containing the OpenAI API key.
-#' If NULL, the function attempts to load the key from the OPENAI_API_KEY
-#' environment variable or the .env file in the working directory.
+#' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
+#'   Not required for Ollama.
+#' @param openai_api_key Deprecated. Use `api_key` instead. Kept for backward compatibility.
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
 #' @return A data frame containing the top terms for each topic along with their generated labels.
@@ -359,93 +363,109 @@ get_topic_texts <- function(top_terms_df,
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
-#'   mydata <- TextAnalysisR::SpecialEduTech
+#' \dontrun{
+#' top_topic_terms <- get_topic_terms(stm_model, top_term_n = 10)
 #'
-#'   united_tbl <- TextAnalysisR::unite_cols(
-#'     mydata,
-#'     listed_vars = c("title", "keyword", "abstract")
-#'   )
+#' # Auto-detect provider (tries Ollama -> OpenAI -> Gemini)
+#' labels <- generate_topic_labels(top_topic_terms)
 #'
-#'   tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
-#'
-#'   dfm_object <- quanteda::dfm(tokens)
-#'
-#'   out <- quanteda::convert(dfm_object, to = "stm")
-#'
-#' stm_15 <- stm::stm(
-#'   data = out$meta,
-#'   documents = out$documents,
-#'   vocab = out$vocab,
-#'   max.em.its = 75,
-#'   init.type = "Spectral",
-#'   K = 15,
-#'   prevalence = ~ reference_type + s(year),
-#'   verbose = TRUE)
-#'
-#' top_topic_terms <- TextAnalysisR::get_topic_terms(
-#'   stm_model = stm_15,
-#'   top_term_n = 10,
-#'   verbose = TRUE
-#'   )
-#'
-#' top_labeled_topic_terms <- TextAnalysisR::generate_topic_labels(
-#'   top_topic_terms,
-#'   model = "gpt-3.5-turbo",
-#'   temperature = 0.5,
-#'   openai_api_key = "your_openai_api_key",
-#'   verbose = TRUE)
-#' print(top_labeled_topic_terms)
-#'
-#' top_labeled_topic_terms <- TextAnalysisR::generate_topic_labels(
-#'   top_topic_terms,
-#'   model = "gpt-3.5-turbo",
-#'   temperature = 0.5,
-#'   verbose = TRUE)
-#' print(top_labeled_topic_terms)
+#' # Use specific provider
+#' labels_ollama <- generate_topic_labels(top_topic_terms, provider = "ollama")
+#' labels_openai <- generate_topic_labels(top_topic_terms, provider = "openai")
+#' labels_gemini <- generate_topic_labels(top_topic_terms, provider = "gemini")
 #' }
 generate_topic_labels <- function(top_topic_terms,
-                                  model = "gpt-3.5-turbo",
+                                  provider = "auto",
+                                  model = NULL,
                                   system = NULL,
                                   user = NULL,
                                   temperature = 0.5,
+                                  api_key = NULL,
                                   openai_api_key = NULL,
                                   verbose = TRUE) {
 
-  if (!requireNamespace("dotenv", quietly = TRUE) ||
-      !requireNamespace("httr", quietly = TRUE) ||
+  if (!requireNamespace("httr", quietly = TRUE) ||
       !requireNamespace("jsonlite", quietly = TRUE)) {
     stop(
-      "The 'dotenv', 'httr', and 'jsonlite' packages are required for this functionality. ",
-      "Please install them using install.packages(c('dotenv', 'httr', 'jsonlite'))."
+      "The 'httr' and 'jsonlite' packages are required for this functionality. ",
+      "Please install them using install.packages(c('httr', 'jsonlite'))."
     )
   }
 
-
-  if (file.exists(".env")) {
+  if (file.exists(".env") && requireNamespace("dotenv", quietly = TRUE)) {
     dotenv::load_dot_env()
   }
 
-  if (is.null(openai_api_key)) {
-    openai_api_key <- Sys.getenv("OPENAI_API_KEY")
+  # Handle backward compatibility: openai_api_key -> api_key
+
+  if (!is.null(openai_api_key) && is.null(api_key)) {
+    api_key <- openai_api_key
+    if (provider == "auto") provider <- "openai"
   }
 
-  if (nzchar(openai_api_key) == FALSE) {
+  # Auto-detect provider
+  if (provider == "auto") {
+    if (check_ollama(verbose = FALSE)) {
+      provider <- "ollama"
+      if (verbose) message("Using Ollama (local AI) for topic label generation")
+    } else if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
+      provider <- "openai"
+      if (verbose) message("Using OpenAI for topic label generation")
+    } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
+      provider <- "gemini"
+      if (verbose) message("Using Gemini for topic label generation")
+    } else {
+      stop("No AI provider available. Install Ollama or set OPENAI_API_KEY/GEMINI_API_KEY.")
+    }
+  }
+
+  # Set provider-based default model
+  if (is.null(model)) {
+    model <- switch(provider,
+      "ollama" = {
+        recommended <- get_recommended_ollama_model(verbose = verbose)
+        if (is.null(recommended)) "phi3:mini" else recommended
+      },
+      "openai" = "gpt-4o-mini",
+      "gemini" = "gemini-2.0-flash"
+    )
+  }
+
+  # Resolve API key for cloud providers
+  if (provider %in% c("openai", "gemini") && is.null(api_key)) {
+    api_key <- switch(provider,
+      "openai" = Sys.getenv("OPENAI_API_KEY"),
+      "gemini" = Sys.getenv("GEMINI_API_KEY")
+    )
+  }
+
+  # Validate API key for cloud providers
+  if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
+    env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
     stop(
-      "No OpenAI API key found. Please add your API key using one of these methods:\n",
-      "  1. Create a .env file in your working directory with: OPENAI_API_KEY=your-key-here\n",
-      "  2. Set it in R: Sys.setenv(OPENAI_API_KEY = \"your-key-here\")\n",
-      "  3. Pass it directly: openai_api_key = \"your-key-here\"\n",
+      sprintf("No %s API key found. Please add your API key using one of these methods:\n", provider),
+      sprintf("  1. Create a .env file in your working directory with: %s=your-key-here\n", env_var),
+      sprintf("  2. Set it in R: Sys.setenv(%s = \"your-key-here\")\n", env_var),
+      "  3. Pass it directly: api_key = \"your-key-here\"\n",
       "  4. If using the Shiny app, enter it via the secure API key input dialog\n\n",
+      "Alternatively, use Ollama for free local AI: https://ollama.com\n",
       "Security Note: Store .env with restricted permissions (chmod 600 .env on Unix/Linux/Mac)"
     )
   }
 
-  if (!validate_api_key(openai_api_key, strict = FALSE)$valid) {
-    stop("Invalid API key format. Please check your OpenAI API key.")
+  if (provider %in% c("openai", "gemini")) {
+    validation <- validate_api_key(api_key, strict = FALSE)
+    if (!validation$valid) {
+      stop(sprintf("Invalid API key format: %s", validation$error))
+    }
   }
 
-  system <- "
+  if (verbose) {
+    message("Generating topic labels for ", dplyr::n_distinct(top_topic_terms$topic),
+            " topics using ", provider, " (", model, ")...")
+  }
+
+  system_prompt <- "
 You are a highly skilled data scientist specializing in generating concise and
 descriptive topic labels based on provided top terms for each topic.
 Each topic consists of a list of terms ordered from most to least significant (by beta scores).
@@ -511,6 +531,12 @@ Mathematical learning tools for students with disabilities
 Focus on incorporating the most significant keywords while following the
 guidelines above to produce a concise, descriptive topic label.
 "
+
+  # Use custom system prompt if provided
+  if (!is.null(system)) {
+    system_prompt <- system
+  }
+
   top_topic_terms <- top_topic_terms %>%
     dplyr::group_by(topic) %>%
     dplyr::arrange(desc(beta)) %>%
@@ -531,6 +557,9 @@ guidelines above to produce a concise, descriptive topic label.
       clear = FALSE, width = 60 )
   }
 
+  # Rate limiting: 1s for cloud APIs, 0.5s for Ollama
+  rate_limit_delay <- if (provider == "ollama") 0.5 else 1
+
   for (i in seq_len(nrow(unique_topics))) {
     if (verbose) {
       pb$tick()
@@ -542,7 +571,7 @@ guidelines above to produce a concise, descriptive topic label.
       dplyr::filter(topic == current_topic) %>%
       dplyr::pull(term)
 
-    user <- paste0(
+    user_prompt <- paste0(
       "You have a topic with keywords listed from most to least significant: ",
       paste(selected_terms, collapse = ", "),
       ". Please create a concise and descriptive label (5-7 words) that:",
@@ -551,57 +580,32 @@ guidelines above to produce a concise, descriptive topic label.
       " 3. Adheres to the style guidelines provided in the system message."
     )
 
-    body_list <- list(
-      model = model,
-      messages = list(
-        list(role = "system", content = system),
-        list(role = "user", content = user)
-      ),
-      temperature = temperature,
-      max_tokens = 50
-    )
-
-    response <- httr::POST(
-      url = "https://api.openai.com/v1/chat/completions",
-      httr::add_headers(
-        `Content-Type` = "application/json",
-        `Authorization` = paste("Bearer", openai_api_key)
-      ),
-      body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
-      encode = "json"
-    )
-
-    if (httr::status_code(response) != 200) {
-      warning(sprintf("OpenAI API request failed for topic '%s': %s",
-                      current_topic, httr::content(response, "text", encoding = "UTF-8")))
-      next
+    # Use custom user prompt if provided
+    if (!is.null(user)) {
+      user_prompt <- user
     }
 
-    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+    topic_label <- tryCatch({
+      response <- call_llm_api(
+        provider = provider,
+        system_prompt = system_prompt,
+        user_prompt = user_prompt,
+        model = model,
+        temperature = temperature,
+        max_tokens = 50,
+        api_key = api_key
+      )
+      label <- trimws(response)
+      label <- gsub('^"(.*)"$', '\\1', label)
+      label
+    }, error = function(e) {
+      warning(sprintf("API request failed for topic '%s': %s", current_topic, e$message))
+      NA_character_
+    })
 
-    if (verbose) {
-      cat("Response JSON structure for topic", i, ":\n")
-      print(str(res_json))
-    }
+    unique_topics$topic_label[i] <- topic_label
 
-    if (!is.null(res_json$choices) && nrow(res_json$choices) > 0) {
-      if (!is.null(res_json$choices$message$content)) {
-        topic_label <- res_json$choices$message$content[1]
-        topic_label <- trimws(topic_label)
-        topic_label <- gsub('^"(.*)"$', '\\1', topic_label)
-        unique_topics$topic_label[i] <- topic_label
-      } else {
-        warning(sprintf("Unexpected response structure for topic '%s': %s",
-                        current_topic, jsonlite::toJSON(res_json, auto_unbox = TRUE)))
-        next
-      }
-    } else {
-      warning(sprintf("Unexpected response structure for topic '%s': %s",
-                      current_topic, jsonlite::toJSON(res_json, auto_unbox = TRUE)))
-      next
-    }
-
-    Sys.sleep(1)
+    Sys.sleep(rate_limit_delay)
   }
 
   top_labeled_topic_terms <- top_topic_terms %>%
@@ -1334,7 +1338,7 @@ fit_embedding_model <- function(texts,
           }
         }
 
-        embeddings_matrix <- topic_model$embedding_model$encode(valid_texts)
+        embeddings_matrix <- embeddings
 
         reduced_embeddings_obj <- topic_model$umap_model$embedding_
         reduced_embeddings <- as.matrix(reduced_embeddings_obj)
