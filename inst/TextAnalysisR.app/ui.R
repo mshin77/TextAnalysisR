@@ -1788,41 +1788,34 @@ Supports:
             condition = "input.semantic_analysis_tabs == 'similarity'",
             tags$h5(HTML("<strong>Document Similarity</strong> <a href='https://www.sbert.net/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
 
-            # Embedding Configuration
-            tags$label("Embedding Configuration", style = "font-weight: 600; margin-bottom: 8px; display: block; color: #0c1f4a;"),
-            uiOutput("embedding_status_ui"),
-            selectInput(
-              "embedding_provider_setup",
-              "Provider:",
-              choices = c(
-                "Auto-detect (Recommended)" = "auto",
-                "Ollama (Local)" = "ollama",
-                "OpenAI" = "openai",
-                "Gemini" = "gemini",
-                "Sentence Transformers" = "sentence_transformers"
-              ),
-              selected = "auto"
-            ),
-            selectInput(
-              "embedding_model_setup",
-              "Model:",
-              choices = c(
-                "Default (Auto)" = "",
-                "all-MiniLM-L6-v2" = "all-MiniLM-L6-v2",
-                "all-mpnet-base-v2" = "all-mpnet-base-v2",
-                "nomic-embed-text" = "nomic-embed-text",
-                "mxbai-embed-large" = "mxbai-embed-large"
-              ),
-              selected = ""
-            ),
-            div(
-              style = "margin-bottom: 15px;",
-              actionButton("generate_embeddings", "Generate Embeddings", class = "btn-primary btn-block", icon = icon("brain"))
-            ),
-            tags$hr(style = "margin: 10px 0; border-color: #dee2e6;"),
-
             conditionalPanel(
               condition = "input.semantic_feature_space == 'embeddings'",
+              tags$label("Embedding Configuration", style = "font-weight: 600; margin-bottom: 8px; display: block; color: #0c1f4a;"),
+              uiOutput("embedding_status_ui"),
+              selectInput(
+                "embedding_provider_setup",
+                "Provider:",
+                choices = c(
+                  "Auto-detect (Recommended)" = "auto",
+                  "Ollama (Local)" = "ollama",
+                  "OpenAI" = "openai",
+                  "Gemini" = "gemini",
+                  "Sentence Transformers" = "sentence_transformers"
+                ),
+                selected = "auto"
+              ),
+              selectInput(
+                "embedding_model_setup",
+                "Model:",
+                choices = c(
+                  "Default (Auto)" = "",
+                  "all-MiniLM-L6-v2" = "all-MiniLM-L6-v2",
+                  "all-mpnet-base-v2" = "all-mpnet-base-v2",
+                  "nomic-embed-text" = "nomic-embed-text",
+                  "mxbai-embed-large" = "mxbai-embed-large"
+                ),
+                selected = ""
+              ),
               div(
                 selectInput(
                   "embedding_model",
@@ -1833,7 +1826,12 @@ Supports:
                   ),
                   selected = "all-MiniLM-L6-v2"
                 )
-              )
+              ),
+              div(
+                style = "margin-bottom: 15px;",
+                actionButton("generate_embeddings", "Generate Embeddings", class = "btn-primary btn-block", icon = icon("brain"))
+              ),
+              tags$hr(style = "margin: 10px 0; border-color: #dee2e6;")
             ),
             conditionalPanel(
               condition = "input.semantic_feature_space == 'words'"
