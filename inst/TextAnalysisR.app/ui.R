@@ -1099,9 +1099,23 @@ Supports:
             actionButton("run_dispersion", "Analyze", class = "btn-primary btn-block", icon = icon("chart-line"))
           ),
           conditionalPanel(
-            condition = "input.conditioned2 == 1 && (input.linguistic_subtabs == 'ner' || input.linguistic_subtabs == 'dependencies')",
+            condition = "input.conditioned2 == 1 && input.linguistic_subtabs == 'dependencies'",
             selectizeInput(
-              "lemma_doc_id_var",
+              "dep_doc_id_var",
+              "Document ID variable",
+              choices = NULL,
+              selected = "",
+              options = list(
+                allowEmptyOption = TRUE,
+                persist = TRUE,
+                placeholder = "Optional"
+              )
+            )
+          ),
+          conditionalPanel(
+            condition = "input.conditioned2 == 1 && input.linguistic_subtabs == 'ner'",
+            selectizeInput(
+              "ner_doc_id_var",
               "Document ID variable",
               choices = NULL,
               selected = "",
@@ -1132,12 +1146,12 @@ Supports:
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_named", NULL, inline = FALSE,
                       choiceNames = list(
-                        HTML("<span style='font-weight:500;'>PERSON</span> <span style='color:#64748B;'>- People, including fictional</span>"),
-                        HTML("<span style='font-weight:500;'>NORP</span> <span style='color:#64748B;'>- Nationalities, religious/political groups</span>"),
-                        HTML("<span style='font-weight:500;'>ORG</span> <span style='color:#64748B;'>- Companies, agencies, institutions</span>"),
-                        HTML("<span style='font-weight:500;'>GPE</span> <span style='color:#64748B;'>- Countries, cities, states</span>"),
-                        HTML("<span style='font-weight:500;'>LOC</span> <span style='color:#64748B;'>- Non-GPE locations, mountains, water bodies</span>"),
-                        HTML("<span style='font-weight:500;'>FAC</span> <span style='color:#64748B;'>- Buildings, airports, highways, bridges</span>")
+                        HTML("<span class='sidebar-color-picker' data-entity='PERSON' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#e91e63;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERSON</span> <span style='color:#64748B;'>- People, including fictional</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='NORP' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ff8f00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>NORP</span> <span style='color:#64748B;'>- Nationalities, religious/political groups</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='ORG' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#1565c0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORG</span> <span style='color:#64748B;'>- Companies, agencies, institutions</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='GPE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#2e7d32;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>GPE</span> <span style='color:#64748B;'>- Countries, cities, states</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='LOC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#0277bd;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LOC</span> <span style='color:#64748B;'>- Non-GPE locations, mountains, water bodies</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='FAC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9e9d24;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>FAC</span> <span style='color:#64748B;'>- Buildings, airports, highways, bridges</span>")
                       ),
                       choiceValues = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC"),
                       selected = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC")
@@ -1151,11 +1165,11 @@ Supports:
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_objects", NULL, inline = FALSE,
                       choiceNames = list(
-                        HTML("<span style='font-weight:500;'>PRODUCT</span> <span style='color:#64748B;'>- Objects, vehicles, foods, etc.</span>"),
-                        HTML("<span style='font-weight:500;'>EVENT</span> <span style='color:#64748B;'>- Named hurricanes, battles, wars, sports</span>"),
-                        HTML("<span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#64748B;'>- Titles of books, songs, etc.</span>"),
-                        HTML("<span style='font-weight:500;'>LAW</span> <span style='color:#64748B;'>- Named documents made into laws</span>"),
-                        HTML("<span style='font-weight:500;'>LANGUAGE</span> <span style='color:#64748B;'>- Any named language</span>")
+                        HTML("<span class='sidebar-color-picker' data-entity='PRODUCT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#283593;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PRODUCT</span> <span style='color:#64748B;'>- Objects, vehicles, foods, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='EVENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c62828;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>EVENT</span> <span style='color:#64748B;'>- Named hurricanes, battles, wars, sports</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#4527a0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#64748B;'>- Titles of books, songs, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00695c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#64748B;'>- Named documents made into laws</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#558b2f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#64748B;'>- Any named language</span>")
                       ),
                       choiceValues = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE"),
                       selected = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE")
@@ -1169,13 +1183,13 @@ Supports:
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_numeric", NULL, inline = FALSE,
                       choiceNames = list(
-                        HTML("<span style='font-weight:500;'>DATE</span> <span style='color:#64748B;'>- Absolute or relative dates/periods</span>"),
-                        HTML("<span style='font-weight:500;'>TIME</span> <span style='color:#64748B;'>- Times smaller than a day</span>"),
-                        HTML("<span style='font-weight:500;'>MONEY</span> <span style='color:#64748B;'>- Monetary values including unit</span>"),
-                        HTML("<span style='font-weight:500;'>PERCENT</span> <span style='color:#64748B;'>- Percentage including %</span>"),
-                        HTML("<span style='font-weight:500;'>QUANTITY</span> <span style='color:#64748B;'>- Measurements (weight, distance)</span>"),
-                        HTML("<span style='font-weight:500;'>ORDINAL</span> <span style='color:#64748B;'>- first, second, third, etc.</span>"),
-                        HTML("<span style='font-weight:500;'>CARDINAL</span> <span style='color:#64748B;'>- Numerals not in other category</span>")
+                        HTML("<span class='sidebar-color-picker' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ef6c00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#64748B;'>- Absolute or relative dates/periods</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#d84315;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#64748B;'>- Times smaller than a day</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#6a1b9a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#64748B;'>- Monetary values including unit</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='PERCENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00838f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERCENT</span> <span style='color:#64748B;'>- Percentage including %</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#78909c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#64748B;'>- Measurements (weight, distance)</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5d4037;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#64748B;'>- first, second, third, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='CARDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#546e7a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>CARDINAL</span> <span style='color:#64748B;'>- Numerals not in other category</span>")
                       ),
                       choiceValues = c("DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL"),
                       selected = c("DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL")
@@ -1207,26 +1221,44 @@ Supports:
                   placeholder = "Select a domain"
                 )
               ),
-              tags$div(
-                style = "display: flex; gap: 8px;",
-                downloadButton("export_domain_preset", "Export",
-                  class = "btn-secondary", style = "flex: 1;"),
-                fileInput("import_domain_preset", NULL, accept = c(".xlsx", ".csv"),
-                  buttonLabel = "Import", placeholder = NULL, width = "50%")
+              div(
+                style = "display: flex; gap: 10px; margin-bottom: 8px;",
+                div(
+                  style = "flex: 1;",
+                  downloadButton("export_domain_preset", "Export",
+                    class = "btn-secondary btn-block", icon = icon("download"))
+                ),
+                div(
+                  style = "flex: 1;",
+                  actionButton("import_domain_trigger", "Import",
+                    class = "btn-secondary btn-block", icon = icon("upload"))
+                ),
+                tags$input(type = "file", id = "import_domain_preset_file",
+                  accept = ".xlsx,.csv", style = "display: none;"),
+                tags$script(HTML("
+                  $('#import_domain_trigger').on('click', function() {
+                    $('#import_domain_preset_file').click();
+                  });
+                  $('#import_domain_preset_file').on('change', function() {
+                    var file = this.files[0];
+                    if (file) {
+                      var reader = new FileReader();
+                      reader.onload = function(e) {
+                        Shiny.setInputValue('import_domain_preset_data', {
+                          name: file.name,
+                          dataurl: e.target.result
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                      this.value = '';
+                    }
+                  });
+                "))
               ),
-              tags$style(HTML("
-                #import_domain_preset { margin: 0 !important; padding: 0 !important; flex: 1; height: 34px !important; max-height: 34px !important; overflow: hidden; }
-                #import_domain_preset .input-group { width: 100%; height: 34px; }
-                #import_domain_preset .form-control { display: none !important; }
-                #import_domain_preset .input-group-btn,
-                #import_domain_preset .input-group-prepend { width: 100%; height: 34px; }
-                #import_domain_preset .btn-file { width: 100%; height: 34px; border-radius: 4px; padding: 6px 12px; }
-                #import_domain_preset .progress { display: none !important; height: 0 !important; margin: 0 !important; }
-                #import_domain_preset > span { display: none !important; }
-                #import_domain_preset .shiny-input-container { margin-bottom: 0 !important; }
-                #export_domain_preset { height: 34px; }
-              ")),
-              uiOutput("domain_entity_categories")
+              div(
+                style = "max-height: 300px; overflow-y: auto;",
+                uiOutput("domain_entity_categories")
+              )
             ),
             uiOutput("custom_entities_ui"),
             tags$hr(style = "margin: 15px 0; border-color: #dee2e6;"),

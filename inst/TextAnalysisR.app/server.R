@@ -866,9 +866,16 @@ server <- shinyServer(function(input, output, session) {
 
       updateSelectizeInput(
         session,
-        "lemma_doc_id_var",
-        choices = c("None" = "", col_names),
-        selected = ""
+        "dep_doc_id_var",
+        choices = col_names,
+        selected = character(0)
+      )
+
+      updateSelectizeInput(
+        session,
+        "ner_doc_id_var",
+        choices = col_names,
+        selected = character(0)
       )
 
       if (length(col_names) > 2) {
@@ -2841,9 +2848,15 @@ server <- shinyServer(function(input, output, session) {
       var_names <- names(doc_vars)
       updateSelectizeInput(
         session,
-        "lemma_doc_id_var",
-        choices = c("None" = "", var_names),
-        selected = ""
+        "dep_doc_id_var",
+        choices = var_names,
+        selected = character(0)
+      )
+      updateSelectizeInput(
+        session,
+        "ner_doc_id_var",
+        choices = var_names,
+        selected = character(0)
       )
     }
   })
@@ -2902,8 +2915,27 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
+  get_selected_entity_types <- reactive({
+    selected <- c(input$ner_named, input$ner_objects, input$ner_numeric)
+    for (cat in current_categories()) {
+      cat_input <- input[[paste0("domain_", cat)]]
+      if (!is.null(cat_input) && length(cat_input) > 0) {
+        selected <- c(selected, toupper(cat))
+      }
+    }
+    custom_ent_names <- names(user_custom_entities())
+    for (name in custom_ent_names) {
+      safe_name <- gsub("[^a-zA-Z0-9]", "_", name)
+      ent_input <- input[[paste0("custom_ent_", safe_name)]]
+      if (!is.null(ent_input) && length(ent_input) > 0) {
+        selected <- c(selected, name)
+      }
+    }
+    unique(selected)
+  })
+
   observe({
-    selected_entities <- c(input$ner_named, input$ner_objects, input$ner_numeric)
+    selected_entities <- get_selected_entity_types()
     updateSelectizeInput(session, "entity_type_filter", selected = selected_entities)
   })
 
@@ -3928,12 +3960,10 @@ server <- shinyServer(function(input, output, session) {
     none = list(
       name = "None (Custom)",
       defaults = list(
-        disability = character(0), program = character(0), test = character(0),
-        concept = character(0), tool = character(0), method = character(0)
+        disability = character(0), mathematics = character(0), technology = character(0)
       ),
       selected = list(
-        disability = character(0), program = character(0), test = character(0),
-        concept = character(0), tool = character(0), method = character(0)
+        disability = character(0), mathematics = character(0), technology = character(0)
       )
     ),
     special_education = list(
@@ -3943,30 +3973,28 @@ server <- shinyServer(function(input, output, session) {
                        "autism", "asperger syndrome", "learning disability", "learning disorder",
                        "intellectual disability", "developmental disability", "cognitive disability",
                        "math anxiety", "processing disorder", "SLD"),
-        program = c("IEP", "individualized education program", "504", "504 plan", "RTI",
-                    "response to intervention", "MTSS", "UDL", "universal design for learning",
-                    "IDEA", "FAPE", "LRE", "ESL", "ELL", "SPED", "special education", "STEM", "STEAM"),
-        test = c("WISC", "WAIS", "WJ", "woodcock johnson", "KeyMath", "TEMA", "CBM",
-                 "curriculum based measurement", "DIBELS", "AIMSweb", "MAP", "NWEA", "NAEP", "PISA", "TIMSS"),
-        concept = c("number sense", "place value", "subitizing", "cardinality", "ordinality",
-                    "fact fluency", "math facts", "mental math", "number line", "base ten",
-                    "manipulatives", "CRA", "concrete representational abstract"),
-        tool = c("assistive technology", "AT", "text to speech", "TTS", "speech to text",
-                 "screen reader", "EdTech", "educational technology", "LMS",
-                 "learning management system", "CAI", "computer assisted instruction",
-                 "ITS", "intelligent tutoring system", "adaptive learning", "virtual manipulatives"),
-        method = c("explicit instruction", "direct instruction", "DI", "scaffolding",
-                   "differentiated instruction", "evidence based practice", "EBP",
-                   "research based intervention", "multisensory instruction",
-                   "orton gillingham", "structured literacy", "touch math", "TouchMath")
+        mathematics = c("counting", "cardinality", "subitizing", "number sense", "place value",
+                        "base ten", "addition", "subtraction", "multiplication", "division",
+                        "fractions", "decimals", "ratios", "proportions",
+                        "operations", "algebraic thinking", "equations",
+                        "measurement", "geometry",
+                        "word problems", "fact fluency"),
+        technology = c("assistive technology", "AT", "text to speech", "TTS", "speech to text",
+                       "screen reader", "virtual manipulatives", "interactive whiteboard",
+                       "CAI", "computer assisted instruction",
+                       "ITS", "intelligent tutoring system", "adaptive learning",
+                       "LMS", "learning management system",
+                       "EdTech", "educational technology",
+                       "AI", "artificial intelligence",
+                       "augmented reality")
       ),
       selected = list(
-        disability = c("dyscalculia", "dyslexia", "dysgraphia", "ADHD", "ASD", "autism", "learning disability", "math anxiety"),
-        program = c("IEP", "504", "RTI", "MTSS", "UDL", "IDEA", "special education", "STEM"),
-        test = c("WISC", "DIBELS", "CBM", "NAEP", "PISA", "TIMSS"),
-        concept = c("number sense", "place value", "fact fluency", "manipulatives", "CRA"),
-        tool = c("assistive technology", "text to speech", "educational technology", "adaptive learning", "virtual manipulatives"),
-        method = c("explicit instruction", "direct instruction", "scaffolding", "differentiated instruction", "evidence based practice")
+        disability = c("dyscalculia", "dyslexia", "dysgraphia", "autism", "learning disability", "math anxiety"),
+        mathematics = c("number sense",
+                        "addition", "subtraction", "multiplication", "division",
+                        "fractions", "word problems"),
+        technology = c("assistive technology", "virtual manipulatives", "adaptive learning",
+                       "AI")
       )
     )
   )
@@ -4057,10 +4085,16 @@ server <- shinyServer(function(input, output, session) {
     }
   )
 
-  observeEvent(input$import_domain_preset, {
-    req(input$import_domain_preset)
-    file_path <- input$import_domain_preset$datapath
-    file_name <- input$import_domain_preset$name
+  observeEvent(input$import_domain_preset_data, {
+    req(input$import_domain_preset_data)
+    file_name <- input$import_domain_preset_data$name
+    dataurl <- input$import_domain_preset_data$dataurl
+
+    # Decode the data URL to a temp file
+    raw_data <- sub("^data:[^;]*;base64,", "", dataurl)
+    tmp <- tempfile(fileext = paste0(".", tools::file_ext(file_name)))
+    writeBin(jsonlite::base64_dec(raw_data), tmp)
+    file_path <- tmp
 
     tryCatch({
       if (grepl("\\.xlsx$", file_name, ignore.case = TRUE)) {
@@ -4184,7 +4218,7 @@ server <- shinyServer(function(input, output, session) {
         style = "margin-bottom: 8px;", open = NA,
         tags$summary(
           style = paste0("cursor: pointer; font-weight: 600; color: ", color, "; font-size: 14px;"),
-          HTML(paste0("<span style='display: inline-block; width: 12px; height: 12px; background: ", color, "; border-radius: 2px; margin-right: 6px;'></span>", cat_label))
+          HTML(paste0("<span class='sidebar-color-picker' data-entity='", cat_label, "' data-source='domain' data-category='", cat, "' style='display: inline-block; width: 12px; height: 12px; background: ", color, "; border-radius: 2px; margin-right: 6px; cursor: pointer;'></span>", cat_label))
         ),
         div(
           style = "padding: 8px 0 0 0;",
@@ -4596,9 +4630,10 @@ server <- shinyServer(function(input, output, session) {
           dplyr::count(`Variable`, name = "n") %>%
           dplyr::rename(entity = `Variable`)
 
-        if (!is.null(input$entity_type_filter) && length(input$entity_type_filter) > 0 && input$entity_type_filter[1] != "") {
+        selected_types <- get_selected_entity_types()
+        if (length(selected_types) > 0) {
           entity_data <- entity_data %>%
-            dplyr::filter(entity %in% input$entity_type_filter)
+            dplyr::filter(entity %in% selected_types)
         }
 
         entity_data <- entity_data %>%
@@ -4614,9 +4649,10 @@ server <- shinyServer(function(input, output, session) {
         dplyr::filter(!is.na(entity), entity != "") %>%
         dplyr::mutate(entity_clean = gsub("_[BI]$", "", entity))
 
-      if (!is.null(input$entity_type_filter) && length(input$entity_type_filter) > 0 && input$entity_type_filter[1] != "") {
+      selected_types <- get_selected_entity_types()
+      if (length(selected_types) > 0) {
         entity_data <- entity_data %>%
-          dplyr::filter(entity_clean %in% input$entity_type_filter)
+          dplyr::filter(entity_clean %in% selected_types)
       }
 
       entity_data <- entity_data %>%
@@ -4629,9 +4665,9 @@ server <- shinyServer(function(input, output, session) {
           dplyr::count(`Variable`, name = "n") %>%
           dplyr::rename(entity = `Variable`)
 
-        if (!is.null(input$entity_type_filter) && length(input$entity_type_filter) > 0 && input$entity_type_filter[1] != "") {
+        if (length(selected_types) > 0) {
           custom_counts <- custom_counts %>%
-            dplyr::filter(entity %in% input$entity_type_filter)
+            dplyr::filter(entity %in% selected_types)
         }
 
         entity_data <- dplyr::bind_rows(entity_data, custom_counts) %>%
@@ -4662,6 +4698,88 @@ server <- shinyServer(function(input, output, session) {
 
   # Track which entity is being edited for color
   editing_entity_color <- reactiveVal(NULL)
+  editing_entity_lemma <- reactiveVal(NULL)
+
+  # Sidebar color picker
+  editing_sidebar_entity <- reactiveVal(NULL)
+
+  spacy_default_colors <- c(
+    "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
+    "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
+    "ORDINAL" = "#5d4037", "PERCENT" = "#00838f", "PRODUCT" = "#283593",
+    "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
+    "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
+    "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c"
+  )
+
+  observeEvent(input$sidebar_color_edit, {
+    info <- input$sidebar_color_edit
+    if (is.null(info)) return()
+
+    entity_name <- info$entity
+    source <- info$source
+    category <- info$category
+
+    current_color <- info$color
+    if (source == "domain" && !is.null(category) && nzchar(category)) {
+      colors <- domain_entity_colors()
+      current_color <- colors[[category]] %||% current_color
+    } else {
+      custom <- custom_entity_colors()
+      if (entity_name %in% names(custom)) {
+        current_color <- custom[[entity_name]]
+      } else if (entity_name %in% names(spacy_default_colors)) {
+        current_color <- spacy_default_colors[[entity_name]]
+      }
+    }
+    if (is.null(current_color) || is.na(current_color)) current_color <- "#757575"
+
+    showModal(modalDialog(
+      title = paste("Change Color:", entity_name),
+      if (requireNamespace("colourpicker", quietly = TRUE)) {
+        colourpicker::colourInput("sidebar_new_color", "Select Color", value = current_color)
+      } else {
+        textInput("sidebar_new_color", "Select Color (hex)", value = current_color)
+      },
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("save_sidebar_color", "Save", class = "btn-primary")
+      ),
+      easyClose = TRUE
+    ))
+
+    editing_sidebar_entity(list(entity = entity_name, source = source, category = category))
+  })
+
+  observeEvent(input$save_sidebar_color, {
+    info <- editing_sidebar_entity()
+    if (is.null(info)) return()
+
+    new_color <- input$sidebar_new_color
+    entity_name <- info$entity
+    source <- info$source
+    category <- info$category
+
+    current <- custom_entity_colors()
+    current[[entity_name]] <- new_color
+    custom_entity_colors(current)
+
+    if (source == "domain" && !is.null(category) && nzchar(category)) {
+      colors <- domain_entity_colors()
+      colors[[category]] <- new_color
+      domain_entity_colors(colors)
+    }
+
+    if (source == "spacy") {
+      shinyjs::runjs(paste0(
+        "$('.sidebar-color-picker[data-entity=\"", entity_name, "\"]').css('background-color', '", new_color, "');"
+      ))
+    }
+
+    entity_table_refresh(entity_table_refresh() + 1)
+    removeModal()
+    showNotification(paste("Color updated for", entity_name), type = "message", duration = 2)
+  })
 
   # Add custom entity type
   observeEvent(input$add_custom_entity_type, {
@@ -4726,6 +4844,7 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(info)) return()
 
     entity_name <- info$entity
+    lemma_name <- info$lemma
 
     # Get current color from custom colors or use default
     entity_colors <- c(
@@ -4746,7 +4865,11 @@ server <- shinyServer(function(input, output, session) {
     }
 
     showModal(modalDialog(
-      title = paste("Edit Color for", entity_name),
+      title = if (!is.null(lemma_name) && nzchar(lemma_name))
+        paste0("Edit Entity: ", entity_name, " (Lemma: ", lemma_name, ")")
+      else
+        paste("Edit Entity:", entity_name),
+      textInput("modal_entity_name", "Entity Name", value = entity_name),
       if (requireNamespace("colourpicker", quietly = TRUE)) {
         colourpicker::colourInput("modal_entity_color", "Select Color", value = current_color)
       } else {
@@ -4760,28 +4883,75 @@ server <- shinyServer(function(input, output, session) {
     ))
 
     editing_entity_color(entity_name)
+    editing_entity_lemma(lemma_name)
   })
 
   observeEvent(input$save_entity_color, {
-    entity_name <- editing_entity_color()
-    if (is.null(entity_name)) return()
+    old_name <- editing_entity_color()
+    if (is.null(old_name)) return()
 
+    new_name <- toupper(trimws(input$modal_entity_name))
     new_color <- input$modal_entity_color
 
+    if (nchar(new_name) == 0) new_name <- old_name
+
+    name_changed <- new_name != old_name
+
     current_colors <- custom_entity_colors()
-    current_colors[[entity_name]] <- new_color
+
+    if (name_changed) {
+      parsed <- spacy_parsed()
+      target_lemma <- editing_entity_lemma()
+      if (!is.null(parsed)) {
+        if (!is.null(target_lemma) && nzchar(target_lemma)) {
+          parsed <- parsed %>%
+            dplyr::mutate(entity = dplyr::if_else(
+              gsub("_[BI]$", "", entity) == old_name &
+                (tolower(lemma) == tolower(target_lemma) | tolower(token) == tolower(target_lemma)),
+              new_name,
+              entity
+            ))
+        } else {
+          parsed <- parsed %>%
+            dplyr::mutate(entity = dplyr::if_else(
+              gsub("_[BI]$", "", entity) == old_name,
+              gsub(old_name, new_name, entity),
+              entity
+            ))
+        }
+        spacy_parsed(parsed)
+      }
+
+      if (old_name %in% names(current_colors)) {
+        current_colors[[new_name]] <- current_colors[[old_name]]
+        current_colors[[old_name]] <- NULL
+      }
+
+      entities <- user_custom_entities()
+      if (old_name %in% names(entities)) {
+        entities[[new_name]] <- entities[[old_name]]
+        entities[[old_name]] <- NULL
+        user_custom_entities(entities)
+      }
+    }
+
+    current_colors[[new_name]] <- new_color
     custom_entity_colors(current_colors)
 
-    # Update user_custom_entities if exists
     entities <- user_custom_entities()
-    if (entity_name %in% names(entities)) {
-      entities[[entity_name]]$color <- new_color
+    if (new_name %in% names(entities)) {
+      entities[[new_name]]$color <- new_color
       user_custom_entities(entities)
     }
 
     entity_table_refresh(entity_table_refresh() + 1)
     removeModal()
-    showNotification(paste("Color updated for", entity_name), type = "message", duration = 2)
+
+    if (name_changed) {
+      showNotification(paste("Entity renamed from", old_name, "to", new_name), type = "message", duration = 2)
+    } else {
+      showNotification(paste("Color updated for", new_name), type = "message", duration = 2)
+    }
   })
 
   # Sync custom colors to JavaScript for table rendering
@@ -4855,8 +5025,8 @@ server <- shinyServer(function(input, output, session) {
                 "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
                 "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
                 "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-                "    'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50',",
-                "    'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4',",
+                "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
+                "    'TECHNOLOGY': '#FF9800',",
                 "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
                 "  };",
                 "  if (window.customEntityColors) {",
@@ -4909,8 +5079,8 @@ server <- shinyServer(function(input, output, session) {
                   "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
                   "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
                   "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-                  "    'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50',",
-                  "    'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4',",
+                  "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
+                  "    'TECHNOLOGY': '#FF9800',",
                   "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
                   "  };",
                   "  if (window.customEntityColors) {",
@@ -4966,12 +5136,12 @@ server <- shinyServer(function(input, output, session) {
       dplyr::left_join(doc_number_mapping, by = "doc_id")
 
     # Add Document ID if selected
-    if (!is.null(input$lemma_doc_id_var) && input$lemma_doc_id_var != "") {
+    if (!is.null(input$ner_doc_id_var) && input$ner_doc_id_var != "") {
       doc_vars <- quanteda::docvars(tokens_obj)
-      if (!is.null(doc_vars) && input$lemma_doc_id_var %in% names(doc_vars)) {
+      if (!is.null(doc_vars) && input$ner_doc_id_var %in% names(doc_vars)) {
         doc_id_mapping <- data.frame(
           doc_id = all_doc_ids,
-          `Document ID` = doc_vars[[input$lemma_doc_id_var]],
+          `Document ID` = doc_vars[[input$ner_doc_id_var]],
           stringsAsFactors = FALSE,
           check.names = FALSE
         )
@@ -4981,11 +5151,10 @@ server <- shinyServer(function(input, output, session) {
       }
     }
 
-    # Filter by entity type if specified (but keep all tokens visible in word order)
-    if (!is.null(input$entity_type_filter) && length(input$entity_type_filter) > 0 && input$entity_type_filter[1] != "") {
-      # When filtering, only show tokens that have the selected entity types
+    selected_types <- get_selected_entity_types()
+    if (length(selected_types) > 0) {
       entity_detail <- entity_detail %>%
-        dplyr::filter(entity %in% input$entity_type_filter | entity == "")
+        dplyr::filter(entity %in% selected_types | entity == "")
     }
 
     # Arrange by document and word order (sentence_id, token_id)
@@ -4993,7 +5162,7 @@ server <- shinyServer(function(input, output, session) {
       dplyr::arrange(doc_num, sentence_id, token_id)
 
     # Select columns for display
-    if (!is.null(input$lemma_doc_id_var) && input$lemma_doc_id_var != "") {
+    if (!is.null(input$ner_doc_id_var) && input$ner_doc_id_var != "") {
       entity_detail <- entity_detail %>%
         dplyr::select(
           Document,
@@ -5021,7 +5190,7 @@ server <- shinyServer(function(input, output, session) {
     # This table now shows all spaCy tokens in word order with entity labels
 
     # Determine column indices based on Document ID presence
-    has_doc_id <- !is.null(input$lemma_doc_id_var) && input$lemma_doc_id_var != ""
+    has_doc_id <- !is.null(input$ner_doc_id_var) && input$ner_doc_id_var != ""
     entity_col_idx <- if (has_doc_id) 6 else 5  # Entity column index (0-based), after adding Lemma
 
     # Trigger re-render when custom colors change
@@ -5047,8 +5216,8 @@ server <- shinyServer(function(input, output, session) {
       "'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c', ",
       "'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24', ",
       "'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c', ",
-      "'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50', ",
-      "'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4', ",
+      "'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50', ",
+      "'TECHNOLOGY': '#FF9800', ",
       "'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
       if (nzchar(custom_color_js)) paste0(", ", custom_color_js) else ""
     )
@@ -5082,15 +5251,16 @@ server <- shinyServer(function(input, output, session) {
               "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
               "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
               "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-              "    'DISABILITY': '#E91E63', 'PROGRAM': '#2196F3', 'TEST': '#4CAF50',",
-              "    'CONCEPT': '#9C27B0', 'TOOL': '#FF9800', 'METHOD': '#00BCD4',",
+              "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
+              "    'TECHNOLOGY': '#FF9800',",
               "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
               "  };",
               "  if (window.customEntityColors) {",
               "    Object.assign(colors, window.customEntityColors);",
               "  }",
               "  var color = colors[data] || '#757575';",
-              "  return '<span class=\"entity-badge\" data-entity=\"' + data + '\" style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 12px; cursor: pointer;\" title=\"Click to change color\">' + data + '</span>';",
+              "  var lemma = row[row.length - 2] || '';",
+              "  return '<span class=\"entity-badge\" data-entity=\"' + data + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 12px; cursor: pointer;\" title=\"Click to edit\">' + data + '</span>';",
               "}"
             )
           )
@@ -5105,44 +5275,60 @@ server <- shinyServer(function(input, output, session) {
   # displaCy Visualizations for NER and Dependency tabs
   # ============================================================================
 
-  # Update document choices when spaCy data is ready or Document ID variable changes
-  observe({
-    req(spacy_parsed())
-    doc_ids <- unique(spacy_parsed()$doc_id)
-
-    # Get tokens object for docvars lookup
-    tokens_obj <- if (!is.null(final_tokens())) {
+  # Helper to get tokens object for docvars lookup
+  .get_tokens_obj <- reactive({
+    if (!is.null(final_tokens())) {
       final_tokens()
+    } else if (!is.null(lemmatized_tokens())) {
+      lemmatized_tokens()
     } else if (!is.null(processed_tokens())) {
       processed_tokens()
+    } else if (!is.null(preprocessed_combined())) {
+      preprocessed_combined()
     } else {
       NULL
     }
+  })
 
-    # Create display labels - use Document ID variable if selected
+  # Build labeled doc choices using a given doc_id_var input
+  .build_labeled_doc_ids <- function(doc_ids, tokens_obj, doc_id_var) {
     if (!is.null(tokens_obj) &&
-        !is.null(input$lemma_doc_id_var) &&
-        input$lemma_doc_id_var != "") {
+        !is.null(doc_id_var) &&
+        doc_id_var != "") {
       doc_vars <- quanteda::docvars(tokens_obj)
-      if (!is.null(doc_vars) && input$lemma_doc_id_var %in% names(doc_vars)) {
-        # Use actual Document ID values as labels
+      if (!is.null(doc_vars) && doc_id_var %in% names(doc_vars)) {
         all_doc_ids <- quanteda::docnames(tokens_obj)
-        doc_id_values <- doc_vars[[input$lemma_doc_id_var]]
-        # Create named vector: display label -> internal doc_id
+        doc_id_values <- doc_vars[[doc_id_var]]
         doc_labels <- as.character(doc_id_values)
         names(doc_ids) <- doc_labels[match(doc_ids, all_doc_ids)]
-      } else {
-        # Fallback to generic labels
-        doc_labels <- paste("Doc", seq_along(doc_ids))
-        names(doc_ids) <- doc_labels
       }
-    } else {
-      # Default generic labels
-      doc_labels <- paste("Doc", seq_along(doc_ids))
-      names(doc_ids) <- doc_labels
     }
+    doc_ids
+  }
 
+  # Labeled doc choices for NER tab
+  ner_labeled_doc_choices <- reactive({
+    req(spacy_parsed())
+    doc_ids <- unique(spacy_parsed()$doc_id)
+    .build_labeled_doc_ids(doc_ids, .get_tokens_obj(), input$ner_doc_id_var)
+  })
+
+  # Labeled doc choices for Dependency Parsing tab
+  dep_labeled_doc_choices <- reactive({
+    req(spacy_parsed())
+    doc_ids <- unique(spacy_parsed()$doc_id)
+    .build_labeled_doc_ids(doc_ids, .get_tokens_obj(), input$dep_doc_id_var)
+  })
+
+  # Update NER document choices
+  observe({
+    doc_ids <- ner_labeled_doc_choices()
     updateSelectInput(session, "ner_viz_doc", choices = doc_ids)
+  })
+
+  # Update Dependency Parsing document choices
+  observe({
+    doc_ids <- dep_labeled_doc_choices()
     updateSelectInput(session, "dep_viz_doc", choices = doc_ids)
   })
 
@@ -5183,18 +5369,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (nrow(doc_data) == 0) return(NULL)
 
-    # Build list of selected entity types from all sidebar checkboxes
-    selected_entities <- c(input$ner_named, input$ner_objects, input$ner_numeric)
-    for (cat in current_categories()) {
-      cat_input <- input[[paste0("domain_", cat)]]
-      if (!is.null(cat_input)) selected_entities <- c(selected_entities, cat_input)
-    }
-    custom_ent_names <- names(user_custom_entities())
-    for (name in custom_ent_names) {
-      safe_name <- gsub("[^a-zA-Z0-9]", "_", name)
-      ent_input <- input[[paste0("custom_ent_", safe_name)]]
-      if (!is.null(ent_input)) selected_entities <- c(selected_entities, name)
-    }
+    selected_entities <- get_selected_entity_types()
 
     # Filter to only show selected entity types (keep empty entities for context)
     if (length(selected_entities) > 0) {
@@ -5215,8 +5390,8 @@ server <- shinyServer(function(input, output, session) {
       "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
       "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
       "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
-      "DISABILITY" = "#E91E63", "PROGRAM" = "#2196F3", "TEST" = "#4CAF50",
-      "CONCEPT" = "#9C27B0", "TOOL" = "#FF9800", "METHOD" = "#00BCD4",
+      "DISABILITY" = "#E91E63", "MATHEMATICS" = "#4CAF50",
+      "TECHNOLOGY" = "#FF9800",
       "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#26a69a",
       "CUSTOM" = "#d81b60"
     )
@@ -5254,13 +5429,21 @@ server <- shinyServer(function(input, output, session) {
   output$ner_doc_selector <- renderUI({
     if (!ner_has_data()) return(NULL)
 
+    doc_choices <- ner_labeled_doc_choices()
+    current_sel <- input$ner_viz_doc
+    if (!is.null(current_sel) && current_sel %in% doc_choices) {
+      sel <- current_sel
+    } else {
+      sel <- doc_choices[1]
+    }
+
     div(
       style = "margin-bottom: 15px;",
       selectInput(
         "ner_viz_doc",
         "Select document to visualize entities:",
-        choices = unique(spacy_parsed()$doc_id),
-        selected = input$ner_viz_doc,
+        choices = doc_choices,
+        selected = sel,
         width = "100%"
       )
     )
@@ -6120,7 +6303,7 @@ server <- shinyServer(function(input, output, session) {
     col_idx <- info$col
     new_value <- info$value
 
-    has_doc_id <- !is.null(input$lemma_doc_id_var) && input$lemma_doc_id_var != ""
+    has_doc_id <- !is.null(input$ner_doc_id_var) && input$ner_doc_id_var != ""
     entity_col <- if (has_doc_id) 6 else 5
 
     if (col_idx != entity_col) return()
@@ -6161,10 +6344,10 @@ server <- shinyServer(function(input, output, session) {
             dplyr::left_join(doc_number_mapping, by = "doc_id") %>%
             dplyr::arrange(doc_num, sentence_id, token_id)
 
-          # Apply any entity type filters
-          if (!is.null(input$entity_type_filter) && length(input$entity_type_filter) > 0 && input$entity_type_filter[1] != "") {
+          selected_types <- get_selected_entity_types()
+          if (length(selected_types) > 0) {
             entity_detail <- entity_detail %>%
-              dplyr::filter(entity_clean %in% input$entity_type_filter | entity_clean == "")
+              dplyr::filter(entity_clean %in% selected_types | entity_clean == "")
           }
 
           if (row_idx <= nrow(entity_detail)) {
@@ -6177,12 +6360,11 @@ server <- shinyServer(function(input, output, session) {
 
             entity_value <- if (nzchar(new_value)) toupper(new_value) else ""
 
-            matched_count <- sum(tolower(parsed$lemma) == target_lemma | tolower(parsed$token) == target_token)
-
             parsed <- parsed %>%
               dplyr::mutate(
                 entity = dplyr::if_else(
-                  tolower(lemma) == target_lemma | tolower(token) == target_token,
+                  (tolower(lemma) == target_lemma | tolower(token) == target_token) &
+                    gsub("_[BI]$", "", entity) == old_entity,
                   entity_value,
                   entity
                 )
@@ -6232,9 +6414,9 @@ server <- shinyServer(function(input, output, session) {
             }
 
             showNotification(
-              paste0("Entity '", entity_value, "' applied to ", matched_count, " token(s) with lemma '", target_lemma, "'"),
+              paste0("Edit Entity: Lemma '", target_lemma, "' changed from ", old_entity, " to ", entity_value),
               type = "message",
-              duration = 2
+              duration = 3
             )
           }
         }
@@ -6518,12 +6700,12 @@ server <- shinyServer(function(input, output, session) {
       dplyr::left_join(doc_number_mapping, by = "doc_id")
 
     # Add Document ID if selected (only if tokens_obj available)
-    if (!is.null(tokens_obj) && !is.null(input$lemma_doc_id_var) && input$lemma_doc_id_var != "") {
+    if (!is.null(tokens_obj) && !is.null(input$dep_doc_id_var) && input$dep_doc_id_var != "") {
       doc_vars <- quanteda::docvars(tokens_obj)
-      if (!is.null(doc_vars) && input$lemma_doc_id_var %in% names(doc_vars)) {
+      if (!is.null(doc_vars) && input$dep_doc_id_var %in% names(doc_vars)) {
         doc_id_mapping <- data.frame(
           doc_id = all_doc_ids,
-          `Document ID` = doc_vars[[input$lemma_doc_id_var]],
+          `Document ID` = doc_vars[[input$dep_doc_id_var]],
           stringsAsFactors = FALSE,
           check.names = FALSE
         )

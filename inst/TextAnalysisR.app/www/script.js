@@ -285,9 +285,11 @@ $(document).on('dblclick', '#entity_table td:last-child span', function(e) {
 $(document).on('click', '#entity_table .entity-badge', function(e) {
     e.stopPropagation();
     var entityName = $(this).data('entity');
+    var lemmaName = $(this).data('lemma');
     if (entityName) {
         Shiny.setInputValue('edit_entity_color', {
             entity: entityName,
+            lemma: lemmaName || '',
             time: new Date().getTime()
         }, {priority: 'event'});
     }
