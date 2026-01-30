@@ -789,10 +789,6 @@ Supports:
               actionLink("showDepInfo", icon("info-circle"),
                          style = "color: #337ab7; font-size: 16px;",
                          title = "Click for dependency relations guide")
-            ),
-            tags$p(
-              "Dependency parsing shows grammatical relationships between words in a sentence.",
-              style = "font-size: 13px; color: #64748B; margin-bottom: 10px;"
             )
           ),
           conditionalPanel(
@@ -1325,7 +1321,33 @@ Supports:
               actionButton("process_codebook", ""),
               actionButton("process_codebook_bottom", ""),
               fileInput("codebook_upload", NULL)
-            )
+            ),
+            tags$script(HTML("
+              $(document).on('click', '.sidebar-color-picker', function(e) {
+                e.stopPropagation();
+                var $el = $(this);
+                var entity = $el.data('entity');
+                var source = $el.data('source') || '';
+                var category = $el.data('category') || '';
+                var bgColor = $el.css('background-color');
+                var hex = bgColor;
+                if (bgColor.indexOf('rgb') === 0) {
+                  var parts = bgColor.match(/\\d+/g);
+                  if (parts && parts.length >= 3) {
+                    hex = '#' +
+                      ('0' + parseInt(parts[0]).toString(16)).slice(-2) +
+                      ('0' + parseInt(parts[1]).toString(16)).slice(-2) +
+                      ('0' + parseInt(parts[2]).toString(16)).slice(-2);
+                  }
+                }
+                Shiny.setInputValue('sidebar_color_edit', {
+                  entity: entity,
+                  source: source,
+                  category: category,
+                  color: hex
+                }, {priority: 'event'});
+              });
+            "))
           )
         ),
         mainPanel(
@@ -1509,9 +1531,7 @@ Supports:
                     ),
                     # Download button for Dependency Parsing
                     uiOutput("dep_download_button"),
-                    uiOutput("dep_displacy_container"),
-                    # Existing full parse table
-                    DT::dataTableOutput("spacy_full_table")
+                    uiOutput("dep_displacy_container")
                   )
                 ),
                 tabPanel(
@@ -4526,7 +4546,7 @@ Focus on incorporating the most significant keywords while following the guideli
               value = "ai_content",
               div(
                 style = "padding: 20px;",
-                
+
                 conditionalPanel(
                   condition = "output.has_generated_content == true",
                   DT::dataTableOutput("generated_content_table")

@@ -4211,8 +4211,8 @@ server <- shinyServer(function(input, output, session) {
       color <- colors[[cat]] %||% "#607D8B"
       input_id <- paste0("domain_", cat)
       cat_label <- toupper(cat)
-      cat_choices <- defaults[[cat]] %||% new_selections[[cat]] %||% character(0)
-      cat_selected <- selected[[cat]] %||% new_selections[[cat]] %||% character(0)
+      cat_choices <- unique(c(defaults[[cat]], new_selections[[cat]])) %||% character(0)
+      cat_selected <- unique(c(selected[[cat]], new_selections[[cat]])) %||% character(0)
 
       tags$details(
         style = "margin-bottom: 8px;", open = NA,
@@ -4312,10 +4312,13 @@ server <- shinyServer(function(input, output, session) {
     is_initialized <- isolate(sidebar_initialized())
 
     if (!is_initialized) {
+      new_selections <- isolate(new_category_selections())
       for (cat in categories) {
         input_id <- paste0("domain_", cat)
         cat_defaults <- defaults[[cat]] %||% character(0)
         cat_selected <- selected[[cat]] %||% character(0)
+        cat_new <- new_selections[[cat]] %||% character(0)
+        cat_selected <- unique(c(cat_selected, cat_new))
 
         choices <- unique(c(cat_defaults, top_tokens, cat_selected))
         updateSelectizeInput(session, input_id,
@@ -4770,11 +4773,9 @@ server <- shinyServer(function(input, output, session) {
       domain_entity_colors(colors)
     }
 
-    if (source == "spacy") {
-      shinyjs::runjs(paste0(
-        "$('.sidebar-color-picker[data-entity=\"", entity_name, "\"]').css('background-color', '", new_color, "');"
-      ))
-    }
+    shinyjs::runjs(paste0(
+      "$('.sidebar-color-picker[data-entity=\"", entity_name, "\"]').css('background-color', '", new_color, "');"
+    ))
 
     entity_table_refresh(entity_table_refresh() + 1)
     removeModal()
@@ -4945,10 +4946,117 @@ server <- shinyServer(function(input, output, session) {
     }
 
     entity_table_refresh(entity_table_refresh() + 1)
+
+    if (name_changed) {
+      sidebar_lemma <- editing_entity_lemma()
+      parsed <- spacy_parsed()
+
+      if (!is.null(parsed)) {
+        tokens_to_move <- if (!is.null(sidebar_lemma) && nzchar(sidebar_lemma)) {
+          sidebar_lemma
+        } else {
+          unique(parsed$token[gsub("_[BI]$", "", parsed$entity) == new_name])
+        }
+
+        if (length(tokens_to_move) > 0) {
+          domain_types <- toupper(current_categories())
+          new_entity_upper <- toupper(new_name)
+          all_tokens <- get_uncategorized_tokens(parsed)
+
+          if (toupper(old_name) %in% domain_types) {
+            old_domain_input_id <- paste0("domain_", tolower(old_name))
+            old_selection <- input[[old_domain_input_id]]
+            new_old_selection <- old_selection[!tolower(old_selection) %in% tolower(tokens_to_move)]
+            if (length(new_old_selection) != length(old_selection)) {
+              old_domain_key <- tolower(old_name)
+              choices <- unique(c(domain_defaults()[[old_domain_key]], all_tokens))
+              updateSelectizeInput(session, old_domain_input_id,
+                choices = choices,
+                selected = new_old_selection,
+                server = TRUE
+              )
+            }
+            pending <- new_category_selections()
+            old_cat_key <- tolower(old_name)
+            if (!is.null(pending[[old_cat_key]])) {
+              pending[[old_cat_key]] <- pending[[old_cat_key]][!tolower(pending[[old_cat_key]]) %in% tolower(tokens_to_move)]
+              new_category_selections(pending)
+            }
+          }
+
+          if (new_entity_upper %in% domain_types) {
+            domain_input_id <- paste0("domain_", tolower(new_name))
+            current_selection <- input[[domain_input_id]]
+            tokens_to_add <- tokens_to_move[!tolower(tokens_to_move) %in% tolower(current_selection)]
+            if (length(tokens_to_add) > 0) {
+              pending <- new_category_selections()
+              pending[[tolower(new_name)]] <- unique(c(pending[[tolower(new_name)]], tokens_to_add))
+              new_category_selections(pending)
+              new_selection <- c(current_selection, tokens_to_add)
+              domain_key <- tolower(new_name)
+              choices <- unique(c(domain_defaults()[[domain_key]], all_tokens, new_selection))
+              updateSelectizeInput(session, domain_input_id,
+                choices = choices,
+                selected = new_selection,
+                server = TRUE
+              )
+            }
+          } else {
+            new_cat_lower <- tolower(new_name)
+            cats <- current_categories()
+            if (!new_cat_lower %in% cats) {
+              pending <- new_category_selections()
+              pending[[new_cat_lower]] <- unique(c(pending[[new_cat_lower]], tokens_to_move))
+              new_category_selections(pending)
+
+              existing_colors <- unlist(domain_entity_colors())
+              available_colors <- default_category_colors[!default_category_colors %in% existing_colors]
+              new_color_cat <- if (length(available_colors) > 0) {
+                available_colors[1]
+              } else {
+                sprintf("#%06X", sample(0:16777215, 1))
+              }
+
+              colors <- domain_entity_colors()
+              colors[[new_cat_lower]] <- new_color_cat
+              domain_entity_colors(colors)
+
+              custom_colors_sidebar <- custom_entity_colors()
+              custom_colors_sidebar[[new_entity_upper]] <- new_color_cat
+              custom_entity_colors(custom_colors_sidebar)
+
+              current_categories(c(cats, new_cat_lower))
+            } else {
+              pending <- new_category_selections()
+              pending[[new_cat_lower]] <- unique(c(pending[[new_cat_lower]], tokens_to_move))
+              new_category_selections(pending)
+
+              domain_input_id <- paste0("domain_", new_cat_lower)
+              current_selection <- input[[domain_input_id]]
+              tokens_to_add <- tokens_to_move[!tolower(tokens_to_move) %in% tolower(current_selection)]
+              if (length(tokens_to_add) > 0) {
+                new_selection <- c(current_selection, tokens_to_add)
+                updateSelectizeInput(session, domain_input_id,
+                  choices = unique(c(new_selection, all_tokens)),
+                  selected = new_selection,
+                  server = TRUE
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+
     removeModal()
 
     if (name_changed) {
-      showNotification(paste("Entity renamed from", old_name, "to", new_name), type = "message", duration = 2)
+      target_lemma <- editing_entity_lemma()
+      if (!is.null(target_lemma) && nzchar(target_lemma)) {
+        showNotification(paste0("'", target_lemma, "' entity renamed from ", old_name, " to ", new_name), type = "message", duration = 2)
+      } else {
+        showNotification(paste("Entity renamed from", old_name, "to", new_name), type = "message", duration = 2)
+      }
     } else {
       showNotification(paste("Color updated for", new_name), type = "message", duration = 2)
     }
@@ -5472,11 +5580,13 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  # Reactive to check if dependency visualization has content
   dep_viz_content <- reactive({
     parsed <- spacy_parsed()
+    if (is.null(parsed) || nrow(parsed) == 0) return(NULL)
     doc_id <- input$dep_viz_doc
-    if (is.null(parsed) || is.null(doc_id) || doc_id == "") return(NULL)
+    if (is.null(doc_id) || doc_id == "") {
+      doc_id <- unique(parsed$doc_id)[1]
+    }
 
     doc_data <- parsed %>% dplyr::filter(doc_id == !!doc_id)
     if (nrow(doc_data) == 0) return(NULL)
@@ -6378,39 +6488,94 @@ server <- shinyServer(function(input, output, session) {
             spacy_parsed(parsed)
             entity_table_refresh(entity_table_refresh() + 1)
 
-            # Auto-add new entity types to custom entities (Issues 4 & 5)
-            standard_entities <- c(
-              "PERSON", "NORP", "ORG", "GPE", "LOC", "FAC",
-              "PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE",
-              "DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL"
-            )
-            domain_entities <- toupper(current_categories())
+            # Sync sidebar domain categories
+            domain_types <- toupper(current_categories())
+            if (nzchar(entity_value)) {
+              all_tokens <- get_uncategorized_tokens(parsed)
+              token_to_move <- target_row$token
 
-            if (nzchar(entity_value) &&
-                !entity_value %in% standard_entities &&
-                !entity_value %in% domain_entities) {
-
-              # Add to custom_entity_colors if new
-              if (!entity_value %in% names(custom_entity_colors())) {
-                current_colors <- custom_entity_colors()
-                current_colors[[entity_value]] <- "#757575"
-                custom_entity_colors(current_colors)
-              }
-
-              # Add to user_custom_entities
-              current_custom <- user_custom_entities()
-              if (!entity_value %in% names(current_custom)) {
-                current_custom[[entity_value]] <- list(
-                  terms = c(target_row$token),
-                  color = custom_entity_colors()[[entity_value]]
-                )
-              } else {
-                existing_terms <- current_custom[[entity_value]]$terms
-                if (!target_row$token %in% existing_terms) {
-                  current_custom[[entity_value]]$terms <- c(existing_terms, target_row$token)
+              if (toupper(old_entity) %in% domain_types) {
+                old_domain_input_id <- paste0("domain_", tolower(old_entity))
+                old_selection <- input[[old_domain_input_id]]
+                new_old_selection <- old_selection[!tolower(old_selection) %in% tolower(token_to_move)]
+                if (length(new_old_selection) != length(old_selection)) {
+                  old_domain_key <- tolower(old_entity)
+                  choices <- unique(c(domain_defaults()[[old_domain_key]], all_tokens))
+                  updateSelectizeInput(session, old_domain_input_id,
+                    choices = choices,
+                    selected = new_old_selection,
+                    server = TRUE
+                  )
+                }
+                pending <- new_category_selections()
+                old_cat_key <- tolower(old_entity)
+                if (!is.null(pending[[old_cat_key]])) {
+                  pending[[old_cat_key]] <- pending[[old_cat_key]][!tolower(pending[[old_cat_key]]) %in% tolower(token_to_move)]
+                  new_category_selections(pending)
                 }
               }
-              user_custom_entities(current_custom)
+
+              if (entity_value %in% domain_types) {
+                new_cat_lower <- tolower(entity_value)
+                domain_input_id <- paste0("domain_", new_cat_lower)
+                current_selection <- input[[domain_input_id]]
+
+                if (!tolower(token_to_move) %in% tolower(current_selection)) {
+                  pending <- new_category_selections()
+                  pending[[new_cat_lower]] <- unique(c(pending[[new_cat_lower]], token_to_move))
+                  new_category_selections(pending)
+                  new_selection <- c(current_selection, token_to_move)
+                  domain_key <- new_cat_lower
+                  choices <- unique(c(domain_defaults()[[domain_key]], all_tokens, new_selection))
+                  updateSelectizeInput(session, domain_input_id,
+                    choices = choices,
+                    selected = new_selection,
+                    server = TRUE
+                  )
+                }
+              } else if (nzchar(entity_value)) {
+                new_cat_lower <- tolower(entity_value)
+                new_entity_upper <- toupper(entity_value)
+                cats <- current_categories()
+                if (!new_cat_lower %in% cats) {
+                  pending <- new_category_selections()
+                  pending[[new_cat_lower]] <- unique(c(pending[[new_cat_lower]], token_to_move))
+                  new_category_selections(pending)
+
+                  existing_colors <- unlist(domain_entity_colors())
+                  available_colors <- default_category_colors[!default_category_colors %in% existing_colors]
+                  new_color <- if (length(available_colors) > 0) {
+                    available_colors[1]
+                  } else {
+                    sprintf("#%06X", sample(0:16777215, 1))
+                  }
+
+                  colors <- domain_entity_colors()
+                  colors[[new_cat_lower]] <- new_color
+                  domain_entity_colors(colors)
+
+                  custom_colors <- custom_entity_colors()
+                  custom_colors[[new_entity_upper]] <- new_color
+                  custom_entity_colors(custom_colors)
+
+                  current_categories(c(cats, new_cat_lower))
+                } else {
+                  pending <- new_category_selections()
+                  pending[[new_cat_lower]] <- unique(c(pending[[new_cat_lower]], token_to_move))
+                  new_category_selections(pending)
+
+                  domain_input_id <- paste0("domain_", new_cat_lower)
+                  current_selection <- input[[domain_input_id]]
+                  if (!tolower(token_to_move) %in% tolower(current_selection)) {
+                    new_selection <- c(current_selection, token_to_move)
+                    updateSelectizeInput(session, domain_input_id,
+                      choices = unique(c(new_selection, all_tokens)),
+                      selected = new_selection,
+                      server = TRUE
+                    )
+                  }
+                }
+              }
             }
 
             showNotification(
@@ -6503,6 +6668,12 @@ server <- shinyServer(function(input, output, session) {
                   server = TRUE
                 )
               }
+              pending <- new_category_selections()
+              old_cat_key <- tolower(old_entity)
+              if (!is.null(pending[[old_cat_key]])) {
+                pending[[old_cat_key]] <- pending[[old_cat_key]][!tolower(pending[[old_cat_key]]) %in% tolower(target_token)]
+                new_category_selections(pending)
+              }
             }
 
             # Check if new entity type exists as a domain category
@@ -6512,6 +6683,9 @@ server <- shinyServer(function(input, output, session) {
               current_selection <- input[[domain_input_id]]
 
               if (!tolower(target_token) %in% tolower(current_selection)) {
+                pending <- new_category_selections()
+                pending[[tolower(new_value)]] <- unique(c(pending[[tolower(new_value)]], target_token))
+                new_category_selections(pending)
                 new_selection <- c(current_selection, target_token)
                 domain_key <- tolower(new_value)
                 choices <- unique(c(domain_defaults()[[domain_key]], all_tokens, new_selection))
@@ -6653,101 +6827,6 @@ server <- shinyServer(function(input, output, session) {
       }
     }
   )
-
-  output$spacy_full_table <- DT::renderDataTable({
-    parsed <- spacy_parsed()
-    req(parsed)
-    req(nrow(parsed) > 0)
-
-    required_cols <- c("doc_id", "sentence_id", "token_id", "token")
-    req(all(required_cols %in% names(parsed)))
-
-    tokens_obj <- if (!is.null(final_tokens())) {
-      final_tokens()
-    } else if (!is.null(lemmatized_tokens())) {
-      lemmatized_tokens()
-    } else if (!is.null(processed_tokens())) {
-      processed_tokens()
-    } else if (!is.null(preprocessed_combined())) {
-      preprocessed_combined()
-    } else {
-      NULL
-    }
-
-    # Get document IDs - from tokens if available, otherwise from spacy_parsed
-    if (!is.null(tokens_obj)) {
-      all_doc_ids <- quanteda::docnames(tokens_obj)
-    } else {
-      all_doc_ids <- unique(parsed$doc_id)
-    }
-    doc_number_mapping <- data.frame(
-      doc_id = all_doc_ids,
-      Document = paste0("Doc ", seq_along(all_doc_ids)),
-      doc_num = seq_along(all_doc_ids),
-      stringsAsFactors = FALSE
-    )
-
-    # Clean entity column if present (remove _B/_I suffixes)
-    if ("entity" %in% names(parsed)) {
-      parsed <- parsed %>% dplyr::mutate(entity = gsub("_[BI]$", "", entity))
-    }
-
-    # Select available columns - any_of() gracefully handles missing ones
-    result <- parsed %>%
-      dplyr::select(dplyr::any_of(c("doc_id", "sentence_id", "token_id", "token",
-                                     "lemma", "pos", "tag", "entity",
-                                     "head_token_id", "dep_rel"))) %>%
-      dplyr::left_join(doc_number_mapping, by = "doc_id")
-
-    # Add Document ID if selected (only if tokens_obj available)
-    if (!is.null(tokens_obj) && !is.null(input$dep_doc_id_var) && input$dep_doc_id_var != "") {
-      doc_vars <- quanteda::docvars(tokens_obj)
-      if (!is.null(doc_vars) && input$dep_doc_id_var %in% names(doc_vars)) {
-        doc_id_mapping <- data.frame(
-          doc_id = all_doc_ids,
-          `Document ID` = doc_vars[[input$dep_doc_id_var]],
-          stringsAsFactors = FALSE,
-          check.names = FALSE
-        )
-        result <- result %>% dplyr::left_join(doc_id_mapping, by = "doc_id")
-      }
-    }
-
-    # Sort by document number, then sentence, then token
-    result <- result %>%
-      dplyr::arrange(doc_num, sentence_id, token_id)
-
-    # Rename columns to title case (matching entity_table pattern)
-    result <- result %>%
-      dplyr::rename(
-        dplyr::any_of(c(
-          Sentence = "sentence_id",
-          `Token ID` = "token_id",
-          Token = "token",
-          Lemma = "lemma",
-          POS = "pos",
-          Tag = "tag",
-          Entity = "entity",
-          `Head Token ID` = "head_token_id",
-          Dependency = "dep_rel"
-        ))
-      )
-
-    # Final column ordering - any_of() handles missing columns (exclude doc_num)
-    final_cols <- c("Document", "Document ID", "Sentence", "Token ID", "Token",
-                    "Lemma", "POS", "Tag", "Entity", "Head Token ID", "Dependency")
-    result %>% dplyr::select(dplyr::any_of(final_cols))
-  },
-  rownames = FALSE,
-  extensions = 'Buttons',
-  filter = 'top',
-  options = list(
-    scrollX = TRUE,
-    scrollY = "400px",
-    pageLength = 25,
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-  ))
 
   ################################################################################
   # SEMANTIC ANALYSIS TAB
