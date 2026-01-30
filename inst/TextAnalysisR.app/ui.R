@@ -1253,10 +1253,10 @@ Supports:
               ),
               div(
                 style = "max-height: 300px; overflow-y: auto;",
-                uiOutput("domain_entity_categories")
+                uiOutput("domain_entity_categories"),
+                uiOutput("custom_entities_ui")
               )
             ),
-            uiOutput("custom_entities_ui"),
             tags$hr(style = "margin: 15px 0; border-color: #dee2e6;"),
             tags$div(
               style = "margin-bottom: 15px;",
@@ -1348,6 +1348,26 @@ Supports:
                   color: hex
                 }, {priority: 'event'});
               });
+            ")),
+          tags$script(HTML("
+            $(document).on('click', '.entity-visibility-chk', function(e) {
+              e.stopPropagation();
+              Shiny.setInputValue('entity_visibility_toggle', {
+                category: $(this).data('category'),
+                source: $(this).data('source'),
+                checked: this.checked,
+                time: new Date().getTime()
+              }, {priority: 'event'});
+            });
+            $(document).on('click', '.entity-delete-btn', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              Shiny.setInputValue('delete_entity_category', {
+                category: $(this).data('category'),
+                source: $(this).data('source'),
+                time: new Date().getTime()
+              }, {priority: 'event'});
+            });
             "))
           )
         ),

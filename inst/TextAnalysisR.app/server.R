@@ -2917,14 +2917,18 @@ server <- shinyServer(function(input, output, session) {
 
   get_selected_entity_types <- reactive({
     selected <- c(input$ner_named, input$ner_objects, input$ner_numeric)
+    enabled_domain <- domain_entity_enabled()
     for (cat in current_categories()) {
+      if (!isTRUE(enabled_domain[[cat]])) next
       cat_input <- input[[paste0("domain_", cat)]]
       if (!is.null(cat_input) && length(cat_input) > 0) {
         selected <- c(selected, toupper(cat))
       }
     }
+    enabled_custom <- custom_entity_enabled()
     custom_ent_names <- names(user_custom_entities())
     for (name in custom_ent_names) {
+      if (!isTRUE(enabled_custom[[name]])) next
       safe_name <- gsub("[^a-zA-Z0-9]", "_", name)
       ent_input <- input[[paste0("custom_ent_", safe_name)]]
       if (!is.null(ent_input) && length(ent_input) > 0) {
@@ -4195,6 +4199,11 @@ server <- shinyServer(function(input, output, session) {
 
   current_categories <- reactiveVal(c("disability", "program", "test", "concept", "tool", "method"))
 
+  domain_entity_enabled <- reactiveVal(list(
+    disability = TRUE, program = TRUE, test = TRUE, concept = TRUE, tool = TRUE, method = TRUE
+  ))
+  custom_entity_enabled <- reactiveVal(list())
+
   # Store initial selections for newly created categories (from table edits)
   new_category_selections <- reactiveVal(list())
 
@@ -4206,6 +4215,11 @@ server <- shinyServer(function(input, output, session) {
     defaults <- domain_defaults()
     selected <- domain_selected()
     new_selections <- new_category_selections()
+    enabled_map <- domain_entity_enabled()
+
+    preset_id <- current_domain_preset()
+    presets <- domain_presets()
+    preset_cats <- if (preset_id %in% names(presets)) names(presets[[preset_id]]$defaults) else character(0)
 
     category_ui_list <- lapply(categories, function(cat) {
       color <- colors[[cat]] %||% "#607D8B"
@@ -4214,11 +4228,27 @@ server <- shinyServer(function(input, output, session) {
       cat_choices <- unique(c(defaults[[cat]], new_selections[[cat]])) %||% character(0)
       cat_selected <- unique(c(selected[[cat]], new_selections[[cat]])) %||% character(0)
 
+      is_checked <- isTRUE(enabled_map[[cat]])
+      checked_attr <- if (is_checked) " checked" else ""
+      is_user_created <- !(cat %in% preset_cats)
+      delete_html <- if (is_user_created) {
+        paste0("<span class='entity-delete-btn' data-category='", cat,
+               "' data-source='domain' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:12px;'>",
+               "<i class='fa fa-eraser'></i></span>")
+      } else ""
+
       tags$details(
         style = "margin-bottom: 8px;", open = NA,
         tags$summary(
           style = paste0("cursor: pointer; font-weight: 600; color: ", color, "; font-size: 14px;"),
-          HTML(paste0("<span class='sidebar-color-picker' data-entity='", cat_label, "' data-source='domain' data-category='", cat, "' style='display: inline-block; width: 12px; height: 12px; background: ", color, "; border-radius: 2px; margin-right: 6px; cursor: pointer;'></span>", cat_label))
+          HTML(paste0(
+            "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
+            "<input type='checkbox' class='entity-visibility-chk' data-category='", cat, "' data-source='domain'", checked_attr, " style='margin:0;cursor:pointer;'/>",
+            "<span class='sidebar-color-picker' data-entity='", cat_label, "' data-source='domain' data-category='", cat, "' style='display:inline-block;width:12px;height:12px;background:", color, ";border-radius:2px;cursor:pointer;'></span>",
+            "<span>", cat_label, "</span>",
+            delete_html,
+            "</span>"
+          ))
         ),
         div(
           style = "padding: 8px 0 0 0;",
@@ -4267,6 +4297,9 @@ server <- shinyServer(function(input, output, session) {
       if (length(new_categories) > 0) {
         current_categories(new_categories)
 
+        enabled <- setNames(as.list(rep(TRUE, length(new_categories))), new_categories)
+        domain_entity_enabled(enabled)
+
         current_colors <- domain_entity_colors()
         for (i in seq_along(new_categories)) {
           cat <- new_categories[i]
@@ -4305,7 +4338,7 @@ server <- shinyServer(function(input, output, session) {
 
     parsed <- spacy_parsed()
     all_tokens <- if (!is.null(parsed)) get_uncategorized_tokens(parsed) else character(0)
-    top_tokens <- head(all_tokens, 10)
+    top_tokens <- head(all_tokens, 50)
     defaults <- domain_defaults()
     selected <- domain_selected()
     is_initialized <- isolate(sidebar_initialized())
@@ -4477,15 +4510,31 @@ server <- shinyServer(function(input, output, session) {
   output$custom_entities_ui <- renderUI({
     entities <- user_custom_entities()
     if (length(entities) == 0) return(NULL)
+    enabled_map <- custom_entity_enabled()
 
     entity_sections <- lapply(names(entities), function(name) {
       ent <- entities[[name]]
+      is_checked <- isTRUE(enabled_map[[name]])
+      checked_attr <- if (is_checked) " checked" else ""
+      delete_html <- paste0(
+        "<span class='entity-delete-btn' data-category='", name,
+        "' data-source='custom' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:12px;'>",
+        "<i class='fa fa-eraser'></i></span>"
+      )
+
       tags$details(
         style = "margin-bottom: 8px;",
         open = NA,
         tags$summary(
           style = paste0("cursor: pointer; font-weight: 600; color: ", ent$color, "; font-size: 14px;"),
-          HTML(paste0("<span class='sidebar-color-picker' data-entity='", name, "' data-source='custom' data-category='' style='display: inline-block; width: 12px; height: 12px; background: ", ent$color, "; border-radius: 2px; margin-right: 6px; cursor: pointer;'></span>", name))
+          HTML(paste0(
+            "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
+            "<input type='checkbox' class='entity-visibility-chk' data-category='", name, "' data-source='custom'", checked_attr, " style='margin:0;cursor:pointer;'/>",
+            "<span class='sidebar-color-picker' data-entity='", name, "' data-source='custom' data-category='' style='display:inline-block;width:12px;height:12px;background:", ent$color, ";border-radius:2px;cursor:pointer;'></span>",
+            "<span>", name, "</span>",
+            delete_html,
+            "</span>"
+          ))
         ),
         div(
           style = "padding: 8px 0 0 0;",
@@ -4502,6 +4551,29 @@ server <- shinyServer(function(input, output, session) {
     })
 
     do.call(tagList, entity_sections)
+  })
+
+  observe({
+    entities <- user_custom_entities()
+    if (length(entities) == 0) return()
+    parsed <- spacy_parsed()
+    top_lemmas <- head(get_uncategorized_tokens(parsed), 50)
+
+    shinyjs::delay(200, {
+      for (name in names(entities)) {
+        ent <- entities[[name]]
+        input_id <- paste0("custom_ent_", gsub("[^a-zA-Z0-9]", "_", name))
+        current_sel <- isolate(input[[input_id]])
+        sel <- if (!is.null(current_sel)) current_sel else ent$terms
+        choices <- unique(c(ent$terms, top_lemmas, sel))
+        updateSelectizeInput(session, input_id,
+          choices = choices,
+          selected = sel,
+          options = list(create = TRUE),
+          server = TRUE
+        )
+      }
+    })
   })
 
   observeEvent(input$apply_custom_entity, {
@@ -4560,6 +4632,10 @@ server <- shinyServer(function(input, output, session) {
       entities[[entity_name]] <- list(terms = character(0), color = color)
     }
     user_custom_entities(entities)
+
+    enabled <- custom_entity_enabled()
+    enabled[[entity_name]] <- TRUE
+    custom_entity_enabled(enabled)
 
     updateTextInput(session, "custom_entity_name", value = "")
     updateSelectizeInput(session, "uncategorized_tokens", selected = character(0))
@@ -4842,6 +4918,84 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
+  observeEvent(input$entity_visibility_toggle, {
+    info <- input$entity_visibility_toggle
+    if (is.null(info)) return()
+    if (info$source == "domain") {
+      enabled <- domain_entity_enabled()
+      enabled[[info$category]] <- isTRUE(info$checked)
+      domain_entity_enabled(enabled)
+    } else {
+      enabled <- custom_entity_enabled()
+      enabled[[info$category]] <- isTRUE(info$checked)
+      custom_entity_enabled(enabled)
+    }
+  })
+
+  observeEvent(input$delete_entity_category, {
+    info <- input$delete_entity_category
+    if (is.null(info)) return()
+    cat_name <- info$category
+    source <- info$source
+
+    if (source == "domain") {
+      cats <- current_categories()
+      cats <- cats[cats != cat_name]
+      current_categories(cats)
+
+      colors <- domain_entity_colors()
+      colors[[cat_name]] <- NULL
+      domain_entity_colors(colors)
+
+      custom_colors <- custom_entity_colors()
+      custom_colors[[toupper(cat_name)]] <- NULL
+      custom_entity_colors(custom_colors)
+
+      pending <- new_category_selections()
+      pending[[cat_name]] <- NULL
+      new_category_selections(pending)
+
+      enabled <- domain_entity_enabled()
+      enabled[[cat_name]] <- NULL
+      domain_entity_enabled(enabled)
+
+      parsed <- spacy_parsed()
+      if (!is.null(parsed) && "entity" %in% names(parsed)) {
+        parsed$entity[parsed$entity == toupper(cat_name)] <- ""
+        spacy_parsed(parsed)
+      }
+
+      mods <- entity_type_modifications()
+      mods <- mods[vapply(mods, function(v) v != toupper(cat_name), logical(1))]
+      entity_type_modifications(mods)
+
+      entity_table_refresh(entity_table_refresh() + 1)
+      showNotification(paste0("Removed category '", toupper(cat_name), "'"), type = "message", duration = 2)
+
+    } else if (source == "custom") {
+      entities <- user_custom_entities()
+      entities[[cat_name]] <- NULL
+      user_custom_entities(entities)
+
+      custom_colors <- custom_entity_colors()
+      custom_colors[[cat_name]] <- NULL
+      custom_entity_colors(custom_colors)
+
+      enabled <- custom_entity_enabled()
+      enabled[[cat_name]] <- NULL
+      custom_entity_enabled(enabled)
+
+      parsed <- spacy_parsed()
+      if (!is.null(parsed) && "entity" %in% names(parsed)) {
+        parsed$entity[parsed$entity == cat_name] <- ""
+        spacy_parsed(parsed)
+      }
+
+      entity_table_refresh(entity_table_refresh() + 1)
+      showNotification(paste0("Removed custom entity '", cat_name, "'"), type = "message", duration = 2)
+    }
+  })
+
   # Edit entity color from table badge click
   observeEvent(input$edit_entity_color, {
     info <- input$edit_entity_color
@@ -5043,6 +5197,10 @@ server <- shinyServer(function(input, output, session) {
               custom_colors_sidebar <- custom_entity_colors()
               custom_colors_sidebar[[new_entity_upper]] <- new_color
               custom_entity_colors(custom_colors_sidebar)
+
+              enabled <- domain_entity_enabled()
+              enabled[[new_cat_lower]] <- TRUE
+              domain_entity_enabled(enabled)
 
               current_categories(c(cats, new_cat_lower))
             } else {
@@ -6580,6 +6738,10 @@ server <- shinyServer(function(input, output, session) {
                   custom_colors[[new_entity_upper]] <- new_color
                   custom_entity_colors(custom_colors)
 
+                  enabled <- domain_entity_enabled()
+                  enabled[[new_cat_lower]] <- TRUE
+                  domain_entity_enabled(enabled)
+
                   current_categories(c(cats, new_cat_lower))
                 } else {
                   pending <- new_category_selections()
@@ -6748,6 +6910,10 @@ server <- shinyServer(function(input, output, session) {
                 custom_colors <- custom_entity_colors()
                 custom_colors[[new_entity_upper]] <- new_color
                 custom_entity_colors(custom_colors)
+
+                enabled <- domain_entity_enabled()
+                enabled[[new_cat_lower]] <- TRUE
+                domain_entity_enabled(enabled)
 
                 # Add to current_categories (triggers UI re-render with selection already set)
                 current_categories(c(cats, new_cat_lower))
