@@ -287,9 +287,23 @@ $(document).on('click', '#entity_table .entity-badge', function(e) {
     var entityName = $(this).data('entity');
     var lemmaName = $(this).data('lemma');
     if (entityName) {
+        var bgColor = $(this).css('background-color');
+        var hex = '#757575';
+        if (bgColor && bgColor.indexOf('rgb') === 0) {
+            var parts = bgColor.match(/\d+/g);
+            if (parts && parts.length >= 3) {
+                hex = '#' +
+                    ('0' + parseInt(parts[0]).toString(16)).slice(-2) +
+                    ('0' + parseInt(parts[1]).toString(16)).slice(-2) +
+                    ('0' + parseInt(parts[2]).toString(16)).slice(-2);
+            }
+        } else if (bgColor && bgColor.charAt(0) === '#') {
+            hex = bgColor;
+        }
         Shiny.setInputValue('edit_entity_color', {
             entity: entityName,
             lemma: lemmaName || '',
+            color: hex,
             time: new Date().getTime()
         }, {priority: 'event'});
     }

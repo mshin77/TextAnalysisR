@@ -4706,6 +4706,9 @@ server <- shinyServer(function(input, output, session) {
   # Sidebar color picker
   editing_sidebar_entity <- reactiveVal(NULL)
 
+  # Store the intended display color to guard against stale colourpicker values
+  editing_entity_display_color <- reactiveVal(NULL)
+
   spacy_default_colors <- c(
     "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
     "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
@@ -4751,6 +4754,23 @@ server <- shinyServer(function(input, output, session) {
       easyClose = TRUE
     ))
 
+    editing_entity_display_color(current_color)
+
+    if (requireNamespace("colourpicker", quietly = TRUE)) {
+      colourpicker::updateColourInput(session, "sidebar_new_color", value = current_color)
+    } else {
+      updateTextInput(session, "sidebar_new_color", value = current_color)
+    }
+
+    shinyjs::runjs(
+      "Shiny.setInputValue('_color_user_picked', null, {priority: 'event'});
+       setTimeout(function(){
+         $('#sidebar_new_color').off('change.track').on('change.track', function(){
+           Shiny.setInputValue('_color_user_picked', $(this).val());
+         });
+       }, 400);"
+    )
+
     editing_sidebar_entity(list(entity = entity_name, source = source, category = category))
   })
 
@@ -4758,7 +4778,10 @@ server <- shinyServer(function(input, output, session) {
     info <- editing_sidebar_entity()
     if (is.null(info)) return()
 
-    new_color <- input$sidebar_new_color
+    new_color <- input[["_color_user_picked"]]
+    if (is.null(new_color) || !nzchar(new_color)) {
+      new_color <- editing_entity_display_color()
+    }
     entity_name <- info$entity
     source <- info$source
     category <- info$category
@@ -4847,21 +4870,8 @@ server <- shinyServer(function(input, output, session) {
     entity_name <- info$entity
     lemma_name <- info$lemma
 
-    # Get current color from custom colors or use default
-    entity_colors <- c(
-      "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-      "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
-      "ORDINAL" = "#5d4037", "PERCENT" = "#00838f", "PRODUCT" = "#283593",
-      "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
-      "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
-      "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c"
-    )
-    current_custom <- custom_entity_colors()
-    current_color <- current_custom[[entity_name]]
-    if (is.null(current_color)) {
-      current_color <- entity_colors[entity_name]
-    }
-    if (is.null(current_color) || is.na(current_color)) {
+    current_color <- info$color
+    if (is.null(current_color) || !nzchar(current_color)) {
       current_color <- "#757575"
     }
 
@@ -4883,6 +4893,23 @@ server <- shinyServer(function(input, output, session) {
       easyClose = TRUE
     ))
 
+    editing_entity_display_color(current_color)
+
+    if (requireNamespace("colourpicker", quietly = TRUE)) {
+      colourpicker::updateColourInput(session, "modal_entity_color", value = current_color)
+    } else {
+      updateTextInput(session, "modal_entity_color", value = current_color)
+    }
+
+    shinyjs::runjs(
+      "Shiny.setInputValue('_color_user_picked', null, {priority: 'event'});
+       setTimeout(function(){
+         $('#modal_entity_color').off('change.track').on('change.track', function(){
+           Shiny.setInputValue('_color_user_picked', $(this).val());
+         });
+       }, 400);"
+    )
+
     editing_entity_color(entity_name)
     editing_entity_lemma(lemma_name)
   })
@@ -4892,7 +4919,10 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(old_name)) return()
 
     new_name <- toupper(trimws(input$modal_entity_name))
-    new_color <- input$modal_entity_color
+    new_color <- input[["_color_user_picked"]]
+    if (is.null(new_color) || !nzchar(new_color)) {
+      new_color <- editing_entity_display_color()
+    }
 
     if (nchar(new_name) == 0) new_name <- old_name
 
@@ -4925,13 +4955,17 @@ server <- shinyServer(function(input, output, session) {
 
       if (old_name %in% names(current_colors)) {
         current_colors[[new_name]] <- current_colors[[old_name]]
-        current_colors[[old_name]] <- NULL
+        if (is.null(target_lemma) || !nzchar(target_lemma)) {
+          current_colors[[old_name]] <- NULL
+        }
       }
 
       entities <- user_custom_entities()
       if (old_name %in% names(entities)) {
         entities[[new_name]] <- entities[[old_name]]
-        entities[[old_name]] <- NULL
+        if (is.null(target_lemma) || !nzchar(target_lemma)) {
+          entities[[old_name]] <- NULL
+        }
         user_custom_entities(entities)
       }
     }
@@ -4946,6 +4980,17 @@ server <- shinyServer(function(input, output, session) {
     }
 
     entity_table_refresh(entity_table_refresh() + 1)
+
+    shinyjs::runjs(paste0(
+      "$('.sidebar-color-picker[data-entity=\"", new_name, "\"]').css('background-color', '", new_color, "');"
+    ))
+
+    domain_cat <- tolower(new_name)
+    if (domain_cat %in% current_categories()) {
+      colors <- domain_entity_colors()
+      colors[[domain_cat]] <- new_color
+      domain_entity_colors(colors)
+    }
 
     if (name_changed) {
       sidebar_lemma <- editing_entity_lemma()
@@ -5009,21 +5054,9 @@ server <- shinyServer(function(input, output, session) {
               pending[[new_cat_lower]] <- unique(c(pending[[new_cat_lower]], tokens_to_move))
               new_category_selections(pending)
 
-              existing_colors <- unlist(domain_entity_colors())
-              available_colors <- default_category_colors[!default_category_colors %in% existing_colors]
-              new_color_cat <- if (length(available_colors) > 0) {
-                available_colors[1]
-              } else {
-                sprintf("#%06X", sample(0:16777215, 1))
-              }
-
               colors <- domain_entity_colors()
-              colors[[new_cat_lower]] <- new_color_cat
+              colors[[new_cat_lower]] <- new_color
               domain_entity_colors(colors)
-
-              custom_colors_sidebar <- custom_entity_colors()
-              custom_colors_sidebar[[new_entity_upper]] <- new_color_cat
-              custom_entity_colors(custom_colors_sidebar)
 
               current_categories(c(cats, new_cat_lower))
             } else {
