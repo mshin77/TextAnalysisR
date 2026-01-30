@@ -5058,6 +5058,10 @@ server <- shinyServer(function(input, output, session) {
               colors[[new_cat_lower]] <- new_color
               domain_entity_colors(colors)
 
+              custom_colors_sidebar <- custom_entity_colors()
+              custom_colors_sidebar[[new_entity_upper]] <- new_color
+              custom_entity_colors(custom_colors_sidebar)
+
               current_categories(c(cats, new_cat_lower))
             } else {
               pending <- new_category_selections()
