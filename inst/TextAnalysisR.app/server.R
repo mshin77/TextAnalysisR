@@ -4231,23 +4231,22 @@ server <- shinyServer(function(input, output, session) {
     do.call(tagList, category_ui_list)
   })
 
-  # Helper to get all uncategorized tokens from parsed data
   get_uncategorized_tokens <- function(parsed) {
     if (is.null(parsed) || !"token" %in% names(parsed)) return(character(0))
 
-    # Get tokens - if entity column exists, filter uncategorized; otherwise use all
+    col <- if ("lemma" %in% names(parsed)) "lemma" else "token"
+
     if ("entity" %in% names(parsed)) {
       token_freq <- parsed %>%
         dplyr::filter(is.na(.data$entity) | .data$entity == "") %>%
-        dplyr::count(.data$token, sort = TRUE) %>%
-        dplyr::pull(.data$token)
+        dplyr::count(.data[[col]], sort = TRUE) %>%
+        dplyr::pull(1)
     } else {
       token_freq <- parsed %>%
-        dplyr::count(.data$token, sort = TRUE) %>%
-        dplyr::pull(.data$token)
+        dplyr::count(.data[[col]], sort = TRUE) %>%
+        dplyr::pull(1)
     }
 
-    # Filter out punctuation and numbers
     token_freq <- token_freq[!grepl("^[[:punct:]]+$", token_freq)]
     token_freq <- token_freq[!grepl("^[0-9]+$", token_freq)]
     token_freq <- token_freq[nchar(token_freq) > 1]
@@ -4324,6 +4323,7 @@ server <- shinyServer(function(input, output, session) {
         updateSelectizeInput(session, input_id,
           choices = choices,
           selected = cat_selected,
+          options = list(create = TRUE),
           server = TRUE
         )
       }
@@ -4485,7 +4485,7 @@ server <- shinyServer(function(input, output, session) {
         open = NA,
         tags$summary(
           style = paste0("cursor: pointer; font-weight: 600; color: ", ent$color, "; font-size: 14px;"),
-          HTML(paste0("<span style='display: inline-block; width: 12px; height: 12px; background: ", ent$color, "; border-radius: 2px; margin-right: 6px;'></span>", name))
+          HTML(paste0("<span class='sidebar-color-picker' data-entity='", name, "' data-source='custom' data-category='' style='display: inline-block; width: 12px; height: 12px; background: ", ent$color, "; border-radius: 2px; margin-right: 6px; cursor: pointer;'></span>", name))
         ),
         div(
           style = "padding: 8px 0 0 0;",
@@ -4501,10 +4501,7 @@ server <- shinyServer(function(input, output, session) {
       )
     })
 
-    tagList(
-      tags$hr(style = "margin: 15px 0; border-color: #dee2e6;"),
-      do.call(tagList, entity_sections)
-    )
+    do.call(tagList, entity_sections)
   })
 
   observeEvent(input$apply_custom_entity, {
@@ -4796,6 +4793,14 @@ server <- shinyServer(function(input, output, session) {
       domain_entity_colors(colors)
     }
 
+    if (source == "custom") {
+      entities <- user_custom_entities()
+      if (entity_name %in% names(entities)) {
+        entities[[entity_name]]$color <- new_color
+        user_custom_entities(entities)
+      }
+    }
+
     shinyjs::runjs(paste0(
       "$('.sidebar-color-picker[data-entity=\"", entity_name, "\"]').css('background-color', '", new_color, "');"
     ))
@@ -4826,31 +4831,6 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  # Render custom entity list
-  output$custom_entity_list <- renderUI({
-    entities <- custom_entity_colors()
-    if (length(entities) == 0) return(NULL)
-
-    tags$div(
-      style = "max-height: 120px; overflow-y: auto; margin-top: 10px;",
-      lapply(names(entities), function(name) {
-        color <- entities[[name]]
-        tags$div(
-          style = "display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin-bottom: 4px; background: #f8f9fa; border-radius: 4px;",
-          tags$span(
-            style = paste0("display: inline-block; width: 16px; height: 16px; background-color: ", color, "; border-radius: 3px;")
-          ),
-          tags$span(name, style = "flex: 1; font-size: 13px; font-weight: 500;"),
-          actionLink(
-            paste0("remove_entity_", name),
-            icon("times"),
-            style = "color: #dc3545; font-size: 12px;",
-            onclick = paste0("Shiny.setInputValue('remove_custom_entity', '", name, "', {priority: 'event'})")
-          )
-        )
-      })
-    )
-  })
 
   # Remove custom entity type
   observeEvent(input$remove_custom_entity, {
@@ -5018,6 +4998,7 @@ server <- shinyServer(function(input, output, session) {
               updateSelectizeInput(session, old_domain_input_id,
                 choices = choices,
                 selected = new_old_selection,
+                options = list(create = TRUE),
                 server = TRUE
               )
             }
@@ -5043,6 +5024,7 @@ server <- shinyServer(function(input, output, session) {
               updateSelectizeInput(session, domain_input_id,
                 choices = choices,
                 selected = new_selection,
+                options = list(create = TRUE),
                 server = TRUE
               )
             }
@@ -5076,6 +5058,7 @@ server <- shinyServer(function(input, output, session) {
                 updateSelectizeInput(session, domain_input_id,
                   choices = unique(c(new_selection, all_tokens)),
                   selected = new_selection,
+                  options = list(create = TRUE),
                   server = TRUE
                 )
               }
@@ -6541,6 +6524,7 @@ server <- shinyServer(function(input, output, session) {
                   updateSelectizeInput(session, old_domain_input_id,
                     choices = choices,
                     selected = new_old_selection,
+                    options = list(create = TRUE),
                     server = TRUE
                   )
                 }
@@ -6567,6 +6551,7 @@ server <- shinyServer(function(input, output, session) {
                   updateSelectizeInput(session, domain_input_id,
                     choices = choices,
                     selected = new_selection,
+                    options = list(create = TRUE),
                     server = TRUE
                   )
                 }
@@ -6608,6 +6593,7 @@ server <- shinyServer(function(input, output, session) {
                     updateSelectizeInput(session, domain_input_id,
                       choices = unique(c(new_selection, all_tokens)),
                       selected = new_selection,
+                      options = list(create = TRUE),
                       server = TRUE
                     )
                   }
@@ -6702,6 +6688,7 @@ server <- shinyServer(function(input, output, session) {
                 updateSelectizeInput(session, old_domain_input_id,
                   choices = choices,
                   selected = new_old_selection,
+                  options = list(create = TRUE),
                   server = TRUE
                 )
               }
@@ -6729,6 +6716,7 @@ server <- shinyServer(function(input, output, session) {
                 updateSelectizeInput(session, domain_input_id,
                   choices = choices,
                   selected = new_selection,
+                  options = list(create = TRUE),
                   server = TRUE
                 )
               }
@@ -6777,6 +6765,7 @@ server <- shinyServer(function(input, output, session) {
                   updateSelectizeInput(session, domain_input_id,
                     choices = unique(c(new_selection, all_tokens)),
                     selected = new_selection,
+                    options = list(create = TRUE),
                     server = TRUE
                   )
                 }

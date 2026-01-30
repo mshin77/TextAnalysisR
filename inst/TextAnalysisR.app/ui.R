@@ -1325,6 +1325,7 @@ Supports:
             tags$script(HTML("
               $(document).on('click', '.sidebar-color-picker', function(e) {
                 e.stopPropagation();
+                e.preventDefault();
                 var $el = $(this);
                 var entity = $el.data('entity');
                 var source = $el.data('source') || '';
