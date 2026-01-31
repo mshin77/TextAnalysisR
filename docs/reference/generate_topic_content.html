@@ -68,7 +68,7 @@ default prompts, or fully custom prompts.</p>
 <span>  term_var <span class="op">=</span> <span class="st">"term"</span>,</span>
 <span>  weight_var <span class="op">=</span> <span class="st">"beta"</span>,</span>
 <span>  provider <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"openai"</span>, <span class="st">"ollama"</span><span class="op">)</span>,</span>
-<span>  model <span class="op">=</span> <span class="st">"gpt-3.5-turbo"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"gpt-4.1-mini"</span>,</span>
 <span>  temperature <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  system_prompt <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  user_prompt_template <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -128,7 +128,7 @@ topic identifier, term, and optionally term weight (beta).</p></dd>
 
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
-<dd><p>Model name. For OpenAI: "gpt-3.5-turbo", "gpt-4", etc.
+<dd><p>Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc.
 For Ollama: "llama3", "mistral", etc.</p></dd>
 
 
@@ -198,7 +198,7 @@ OPENAI_API_KEY environment variable (can be loaded from .env file).</p>
 <span class="r-in"><span>  topic_terms_df <span class="op">=</span> <span class="va">top_terms</span>,</span></span>
 <span class="r-in"><span>  content_type <span class="op">=</span> <span class="st">"survey_item"</span>,</span></span>
 <span class="r-in"><span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span></span>
-<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"gpt-3.5-turbo"</span></span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"gpt-4.1-mini"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Generate research questions</span></span></span>

@@ -182,7 +182,7 @@ prompts</li>
 <span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span></span>
 <span> <span class="va">top_topic_terms</span>,</span>
 <span> provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
-<span> model <span class="op">=</span> <span class="st">"phi3:mini"</span></span>
+<span> model <span class="op">=</span> <span class="st">"llama3.2"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate survey items</span></span>
@@ -356,9 +356,9 @@ prompts</li>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Provider-specific</span></span>
-<span><span class="fu"><a href="../reference/call_openai_chat.html">call_openai_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gpt-4o-mini"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/call_gemini_chat.html">call_gemini_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gemini-2.0-flash"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/call_ollama.html">call_ollama</a></span><span class="op">(</span><span class="va">prompt</span>, model <span class="op">=</span> <span class="st">"phi3:mini"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/call_openai_chat.html">call_openai_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gpt-4.1-mini"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/call_gemini_chat.html">call_gemini_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gemini-2.5-flash"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/call_ollama.html">call_ollama</a></span><span class="op">(</span><span class="va">prompt</span>, model <span class="op">=</span> <span class="st">"llama3.2"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="ollama-utilities">6. Ollama Utilities<a class="anchor" aria-label="anchor" href="#ollama-utilities"></a>
@@ -434,8 +434,8 @@ Risk Management Framework</a> principles:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 1. Install Ollama: https://ollama.com</span></span>
 <span><span class="co"># 2. Pull a model (in terminal):</span></span>
-<span><span class="co">#    ollama pull phi3:mini</span></span>
-<span><span class="co">#    ollama pull llama3.1:8b</span></span>
+<span><span class="co">#    ollama pull llama3.2</span></span>
+<span><span class="co">#    ollama pull mistral</span></span>
 <span></span>
 <span><span class="co"># 3. Verify in R:</span></span>
 <span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -477,18 +477,18 @@ Risk Management Framework</a> principles:</p>
 <tbody>
 <tr class="odd">
 <td>OpenAI</td>
-<td>gpt-4o-mini</td>
+<td>gpt-4.1-mini</td>
 <td>text-embedding-3-small</td>
 </tr>
 <tr class="even">
 <td>Gemini</td>
-<td>gemini-2.0-flash</td>
-<td>text-embedding-004</td>
+<td>gemini-2.5-flash</td>
+<td>gemini-embedding-001</td>
 </tr>
 <tr class="odd">
 <td>Ollama</td>
-<td>phi3:mini</td>
-<td>-</td>
+<td>llama3.2</td>
+<td>nomic-embed-text</td>
 </tr>
 <tr class="even">
 <td>Local</td>

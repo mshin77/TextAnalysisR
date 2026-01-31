@@ -9,7 +9,9 @@ AI.
 
 ``` bash
 # Install from https://ollama.com
-ollama pull llava
+ollama pull llava          # General purpose (default)
+ollama pull bakllava       # Mistral-based alternative
+ollama pull llava-phi3     # Lightweight option
 ```
 
 ### Web-based (OpenAI)

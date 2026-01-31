@@ -15,7 +15,7 @@ generate_topic_content(
   term_var = "term",
   weight_var = "beta",
   provider = c("openai", "ollama"),
-  model = "gpt-3.5-turbo",
+  model = "gpt-4.1-mini",
   temperature = 0,
   system_prompt = NULL,
   user_prompt_template = NULL,
@@ -79,7 +79,7 @@ generate_topic_content(
 
 - model:
 
-  Model name. For OpenAI: "gpt-3.5-turbo", "gpt-4", etc. For Ollama:
+  Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc. For Ollama:
   "llama3", "mistral", etc.
 
 - temperature:
@@ -153,7 +153,7 @@ survey_items <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "survey_item",
   provider = "openai",
-  model = "gpt-3.5-turbo"
+  model = "gpt-4.1-mini"
 )
 
 # Generate research questions

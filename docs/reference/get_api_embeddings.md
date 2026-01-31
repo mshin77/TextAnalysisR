@@ -33,7 +33,7 @@ get_api_embeddings(
 
   - openai: "text-embedding-3-small"
 
-  - gemini: "text-embedding-004"
+  - gemini: "gemini-embedding-001"
 
 - api_key:
 

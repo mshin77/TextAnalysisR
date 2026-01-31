@@ -38,7 +38,7 @@ Content types available:
 labels <- generate_topic_labels(
  top_topic_terms,
  provider = "ollama",
- model = "phi3:mini"
+ model = "llama3.2"
 )
 
 # Generate survey items
@@ -143,9 +143,9 @@ response <- call_llm_api(
 )
 
 # Provider-specific
-call_openai_chat(system_prompt, user_prompt, model = "gpt-4o-mini")
-call_gemini_chat(system_prompt, user_prompt, model = "gemini-2.0-flash")
-call_ollama(prompt, model = "phi3:mini")
+call_openai_chat(system_prompt, user_prompt, model = "gpt-4.1-mini")
+call_gemini_chat(system_prompt, user_prompt, model = "gemini-2.5-flash")
+call_ollama(prompt, model = "llama3.2")
 ```
 
 ### 6. Ollama Utilities
@@ -185,8 +185,8 @@ principles:
 ``` r
 # 1. Install Ollama: https://ollama.com
 # 2. Pull a model (in terminal):
-#    ollama pull phi3:mini
-#    ollama pull llama3.1:8b
+#    ollama pull llama3.2
+#    ollama pull mistral
 
 # 3. Verify in R:
 check_ollama()
@@ -220,7 +220,7 @@ init_spacy_nlp("en_core_web_md")
 
 | Provider | Chat Model       | Embedding Model        |
 |----------|------------------|------------------------|
-| OpenAI   | gpt-4o-mini      | text-embedding-3-small |
-| Gemini   | gemini-2.0-flash | text-embedding-004     |
-| Ollama   | phi3:mini        | \-                     |
+| OpenAI   | gpt-4.1-mini     | text-embedding-3-small |
+| Gemini   | gemini-2.5-flash | gemini-embedding-001   |
+| Ollama   | llama3.2         | nomic-embed-text       |
 | Local    | \-               | all-MiniLM-L6-v2       |

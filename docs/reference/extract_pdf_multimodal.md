@@ -32,7 +32,7 @@ extract_pdf_multimodal(
 
   - For Ollama: "llava", "llava:13b", "bakllava"
 
-  - For OpenAI: "gpt-4-vision-preview", "gpt-4o"
+  - For OpenAI: "gpt-4.1", "gpt-4.1-mini"
 
 - api_key:
 
@@ -98,7 +98,7 @@ List with:
 
 - Setup: Just provide API key
 
-- Models: gpt-4-vision-preview, gpt-4o
+- Models: gpt-4.1, gpt-4.1-mini
 
 ## See also
 
@@ -131,7 +131,7 @@ topics <- fit_semantic_model(corpus, k = 5)
 result <- extract_pdf_multimodal(
   "paper.pdf",
   vision_provider = "openai",
-  vision_model = "gpt-4o",
+  vision_model = "gpt-4.1",
   api_key = Sys.getenv("OPENAI_API_KEY")
 )
 } # }

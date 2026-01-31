@@ -7,7 +7,7 @@ Sends a prompt to Ollama and returns the generated text.
 ``` r
 call_ollama(
   prompt,
-  model = "phi3:mini",
+  model = "llama3.2",
   temperature = 0.3,
   max_tokens = 512,
   timeout = 60,
@@ -23,7 +23,7 @@ call_ollama(
 
 - model:
 
-  Character string specifying the Ollama model (default: "phi3:mini").
+  Character string specifying the Ollama model (default: "llama3.2").
 
 - temperature:
 
@@ -67,7 +67,7 @@ Other ai:
 if (FALSE) { # \dontrun{
 response <- call_ollama(
   prompt = "Summarize these keywords: machine learning, neural networks, AI",
-  model = "phi3:mini"
+  model = "llama3.2"
 )
 print(response)
 } # }

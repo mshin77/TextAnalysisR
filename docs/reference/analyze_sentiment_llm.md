@@ -37,8 +37,8 @@ analyze_sentiment_llm(
 
 - model:
 
-  Model name. If NULL, uses provider defaults: "gpt-4o-mini" (OpenAI),
-  "gemini-2.0-flash" (Gemini), "phi3:mini" (Ollama).
+  Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
+  "gemini-2.5-flash" (Gemini), "llama3.2" (Ollama).
 
 - api_key:
 

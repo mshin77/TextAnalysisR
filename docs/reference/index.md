@@ -207,7 +207,7 @@ STM, embedding-based, and hybrid models
 - [`identify_topic_trends()`](https://mshin77.github.io/TextAnalysisR/reference/identify_topic_trends.md)
   : Identify Topic Trends
 - [`generate_topic_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.md)
-  : Generate Topic Labels Using OpenAI's API
+  : Generate Topic Labels Using AI
 - [`generate_topic_content()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_content.md)
   : Generate Content from Topic Terms
 - [`plot_topic_probability()`](https://mshin77.github.io/TextAnalysisR/reference/plot_topic_probability.md)
@@ -323,9 +323,5 @@ Example datasets
   : Acronym List
 - [`stm_15`](https://mshin77.github.io/TextAnalysisR/reference/stm_15.md)
   : An example structure of a structural topic model
-- [`dictionary_list_1`](https://mshin77.github.io/TextAnalysisR/reference/dictionary_list_1.md)
-  : Dictionary List 1
-- [`dictionary_list_2`](https://mshin77.github.io/TextAnalysisR/reference/dictionary_list_2.md)
-  : Dictionary List 2
 - [`stopwords_list`](https://mshin77.github.io/TextAnalysisR/reference/stopwords_list.md)
   : Stopwords List

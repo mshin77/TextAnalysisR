@@ -8,7 +8,7 @@ Makes a chat completion request to Google's Gemini API.
 call_gemini_chat(
   system_prompt,
   user_prompt,
-  model = "gemini-2.0-flash",
+  model = "gemini-2.5-flash",
   temperature = 0,
   max_tokens = 150,
   api_key
@@ -28,7 +28,7 @@ call_gemini_chat(
 - model:
 
   Character string specifying the Gemini model (default:
-  "gemini-2.0-flash")
+  "gemini-2.5-flash")
 
 - temperature:
 

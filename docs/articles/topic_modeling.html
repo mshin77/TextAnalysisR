@@ -141,6 +141,43 @@ Vignette</a></p>
 </summary><p>Uses transformer embeddings with dimensionality reduction and
 clustering. Best for short texts, multilingual content, and semantic
 similarity.</p>
+<p><strong>Embedding Providers:</strong></p>
+<table class="table">
+<colgroup>
+<col width="41%">
+<col width="29%">
+<col width="29%">
+</colgroup>
+<thead><tr class="header">
+<th>Provider</th>
+<th>Model</th>
+<th>Notes</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Ollama (default)</td>
+<td>nomic-embed-text, mxbai-embed-large, all-minilm</td>
+<td>Free, local, private</td>
+</tr>
+<tr class="even">
+<td>Sentence Transformers</td>
+<td>all-MiniLM-L6-v2, all-mpnet-base-v2</td>
+<td>Requires Python</td>
+</tr>
+<tr class="odd">
+<td>OpenAI</td>
+<td>text-embedding-3-small, text-embedding-3-large</td>
+<td>API key required</td>
+</tr>
+<tr class="even">
+<td>Gemini</td>
+<td>gemini-embedding-001</td>
+<td>API key required</td>
+</tr>
+</tbody>
+</table>
+<p>Embeddings generated in Document Similarity are cached and reused
+automatically if the same provider/model is selected.</p>
 <p><strong>Backend Options:</strong></p>
 <table class="table">
 <thead><tr class="header">
@@ -163,11 +200,17 @@ similarity.</p>
 </tbody>
 </table>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Python backend (BERTopic)</span></span>
+<code class="sourceCode R"><span><span class="co"># With precomputed embeddings (Ollama, OpenAI, Gemini)</span></span>
+<span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_best_embeddings.html">get_best_embeddings</a></span><span class="op">(</span></span>
+<span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
+<span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"nomic-embed-text"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"umap_hdbscan"</span>,</span>
-<span>  n_topics <span class="op">=</span> <span class="fl">15</span></span>
+<span>  precomputed_embeddings <span class="op">=</span> <span class="va">embeddings</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># R backend (no BERTopic needed)</span></span>
@@ -332,7 +375,7 @@ use</li>
 <span>  content_type <span class="op">=</span> <span class="st">"survey_item"</span>,</span>
 <span>  topic_labels <span class="op">=</span> <span class="va">topic_labels</span>,  <span class="co"># Optional</span></span>
 <span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
-<span>  model <span class="op">=</span> <span class="st">"llama3"</span></span>
+<span>  model <span class="op">=</span> <span class="st">"llama3.2"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Review before use</span></span>

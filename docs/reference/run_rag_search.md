@@ -41,13 +41,13 @@ run_rag_search(
 - embedding_model:
 
   Character string, embedding model. Defaults: "nomic-embed-text"
-  (ollama), "text-embedding-3-small" (openai), "text-embedding-004"
+  (ollama), "text-embedding-3-small" (openai), "gemini-embedding-001"
   (gemini)
 
 - chat_model:
 
-  Character string, chat model. Defaults: "phi3:mini" (ollama),
-  "gpt-4o-mini" (openai), "gemini-2.0-flash" (gemini)
+  Character string, chat model. Defaults: "llama3.2" (ollama),
+  "gpt-4.1-mini" (openai), "gemini-2.5-flash" (gemini)
 
 - top_k:
 

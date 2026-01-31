@@ -1,17 +1,19 @@
-# Generate Topic Labels Using OpenAI's API
+# Generate Topic Labels Using AI
 
 This function generates descriptive labels for each topic based on their
-top terms using OpenAI's ChatCompletion API.
+top terms using AI providers (OpenAI, Gemini, or Ollama).
 
 ## Usage
 
 ``` r
 generate_topic_labels(
   top_topic_terms,
-  model = "gpt-3.5-turbo",
+  provider = "auto",
+  model = NULL,
   system = NULL,
   user = NULL,
   temperature = 0.5,
+  api_key = NULL,
   openai_api_key = NULL,
   verbose = TRUE
 )
@@ -23,31 +25,40 @@ generate_topic_labels(
 
   A data frame containing the top terms for each topic.
 
+- provider:
+
+  AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
+  "auto" will try Ollama first, then check for OpenAI/Gemini keys.
+
 - model:
 
-  A character string specifying which OpenAI model to use (default:
-  "gpt-3.5-turbo").
+  A character string specifying which model to use. If NULL, uses
+  provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash"
+  (Gemini), or recommended Ollama model.
 
 - system:
 
-  A character string containing the system prompt for the OpenAI API. If
-  NULL, the function uses the default system prompt.
+  A character string containing the system prompt for the API. If NULL,
+  the function uses the default system prompt.
 
 - user:
 
-  A character string containing the user prompt for the OpenAI API. If
-  NULL, the function uses the default user prompt.
+  A character string containing the user prompt for the API. If NULL,
+  the function uses the default user prompt.
 
 - temperature:
 
   A numeric value controlling the randomness of the output (default:
   0.5).
 
+- api_key:
+
+  API key for OpenAI or Gemini. If NULL, uses environment variable. Not
+  required for Ollama.
+
 - openai_api_key:
 
-  A character string containing the OpenAI API key. If NULL, the
-  function attempts to load the key from the OPENAI_API_KEY environment
-  variable or the .env file in the working directory.
+  Deprecated. Use `api_key` instead. Kept for backward compatibility.
 
 - verbose:
 
@@ -90,49 +101,15 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (interactive()) {
-  mydata <- TextAnalysisR::SpecialEduTech
+if (FALSE) { # \dontrun{
+top_topic_terms <- get_topic_terms(stm_model, top_term_n = 10)
 
-  united_tbl <- TextAnalysisR::unite_cols(
-    mydata,
-    listed_vars = c("title", "keyword", "abstract")
-  )
+# Auto-detect provider (tries Ollama -> OpenAI -> Gemini)
+labels <- generate_topic_labels(top_topic_terms)
 
-  tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
-
-  dfm_object <- quanteda::dfm(tokens)
-
-  out <- quanteda::convert(dfm_object, to = "stm")
-
-stm_15 <- stm::stm(
-  data = out$meta,
-  documents = out$documents,
-  vocab = out$vocab,
-  max.em.its = 75,
-  init.type = "Spectral",
-  K = 15,
-  prevalence = ~ reference_type + s(year),
-  verbose = TRUE)
-
-top_topic_terms <- TextAnalysisR::get_topic_terms(
-  stm_model = stm_15,
-  top_term_n = 10,
-  verbose = TRUE
-  )
-
-top_labeled_topic_terms <- TextAnalysisR::generate_topic_labels(
-  top_topic_terms,
-  model = "gpt-3.5-turbo",
-  temperature = 0.5,
-  openai_api_key = "your_openai_api_key",
-  verbose = TRUE)
-print(top_labeled_topic_terms)
-
-top_labeled_topic_terms <- TextAnalysisR::generate_topic_labels(
-  top_topic_terms,
-  model = "gpt-3.5-turbo",
-  temperature = 0.5,
-  verbose = TRUE)
-print(top_labeled_topic_terms)
-}
+# Use specific provider
+labels_ollama <- generate_topic_labels(top_topic_terms, provider = "ollama")
+labels_openai <- generate_topic_labels(top_topic_terms, provider = "openai")
+labels_gemini <- generate_topic_labels(top_topic_terms, provider = "gemini")
+} # }
 ```

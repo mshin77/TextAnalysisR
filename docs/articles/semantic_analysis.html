@@ -340,37 +340,48 @@ Detection</a></p>
 <span>  timestamps <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">year</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <hr>
-<details><summary><strong>Embedding Models</strong>
-</summary><table class="table">
+<details><summary><strong>Embedding Providers</strong>
+</summary><p>Document-to-document similarity using vector embeddings. Multiple
+providers are available:</p>
+<table class="table">
+<colgroup>
+<col width="41%">
+<col width="29%">
+<col width="29%">
+</colgroup>
 <thead><tr class="header">
+<th>Provider</th>
 <th>Model</th>
-<th>Speed</th>
-<th>Quality</th>
-<th>Use Case</th>
+<th>Notes</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>all-MiniLM-L6-v2</td>
-<td>Fast</td>
-<td>Good</td>
-<td>General purpose</td>
+<td>Ollama</td>
+<td>nomic-embed-text (default), mxbai-embed-large, all-minilm</td>
+<td>Free, local, private</td>
 </tr>
 <tr class="even">
-<td>all-mpnet-base-v2</td>
-<td>Slow</td>
-<td>Best</td>
-<td>Highest quality</td>
+<td>OpenAI</td>
+<td>text-embedding-3-small, text-embedding-3-large</td>
+<td>API key required</td>
 </tr>
 <tr class="odd">
-<td>paraphrase-multilingual</td>
-<td>Medium</td>
-<td>Good</td>
-<td>Multiple languages</td>
+<td>Gemini</td>
+<td>gemini-embedding-001</td>
+<td>API key required</td>
+</tr>
+<tr class="even">
+<td>Sentence Transformers</td>
+<td>all-MiniLM-L6-v2 (fast), all-mpnet-base-v2 (highest quality)</td>
+<td>Requires Python</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Learn More:</strong> <a href="https://www.sbert.net/docs/pretrained_models.html" class="external-link">Sentence
-Transformers Models</a></p>
+<p>Embeddings are cached and shared across Document Similarity, Topic
+Modeling, and Semantic Search when using the same provider and
+model.</p>
+<p><strong>Learn More:</strong> <a href="https://www.sbert.net/" class="external-link">Sentence Transformers</a> | <a href="https://ollama.com/blog/embedding-models" class="external-link">Ollama Embedding
+Models</a></p>
 </details><hr>
 </div>
 <div class="section level2">

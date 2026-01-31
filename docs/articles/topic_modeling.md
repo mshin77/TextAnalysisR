@@ -65,6 +65,18 @@ Uses transformer embeddings with dimensionality reduction and
 clustering. Best for short texts, multilingual content, and semantic
 similarity.
 
+**Embedding Providers:**
+
+| Provider | Model | Notes |
+|----|----|----|
+| Ollama (default) | nomic-embed-text, mxbai-embed-large, all-minilm | Free, local, private |
+| Sentence Transformers | all-MiniLM-L6-v2, all-mpnet-base-v2 | Requires Python |
+| OpenAI | text-embedding-3-small, text-embedding-3-large | API key required |
+| Gemini | gemini-embedding-001 | API key required |
+
+Embeddings generated in Document Similarity are cached and reused
+automatically if the same provider/model is selected.
+
 **Backend Options:**
 
 | Backend    | When to Use                      |
@@ -74,11 +86,17 @@ similarity.
 | `"auto"`   | Auto-detect available backend    |
 
 ``` r
-# Python backend (BERTopic)
+# With precomputed embeddings (Ollama, OpenAI, Gemini)
+embeddings <- get_best_embeddings(
+  texts = united_tbl$united_texts,
+  provider = "ollama",
+  model = "nomic-embed-text"
+)
+
 results <- fit_embedding_model(
   texts = united_tbl$united_texts,
   method = "umap_hdbscan",
-  n_topics = 15
+  precomputed_embeddings = embeddings
 )
 
 # R backend (no BERTopic needed)
@@ -198,7 +216,7 @@ content <- generate_topic_content(
   content_type = "survey_item",
   topic_labels = topic_labels,  # Optional
   provider = "ollama",
-  model = "llama3"
+  model = "llama3.2"
 )
 
 # Review before use

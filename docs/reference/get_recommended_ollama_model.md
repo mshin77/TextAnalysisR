@@ -6,7 +6,7 @@ Returns a recommended Ollama model based on what's available.
 
 ``` r
 get_recommended_ollama_model(
-  preferred_models = c("phi3:mini", "llama3.1:8b", "mistral:7b", "tinyllama"),
+  preferred_models = c("llama3.2", "gemma3", "mistral:7b", "tinyllama"),
   verbose = FALSE
 )
 ```

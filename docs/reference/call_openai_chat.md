@@ -8,7 +8,7 @@ Makes a chat completion request to OpenAI's API.
 call_openai_chat(
   system_prompt,
   user_prompt,
-  model = "gpt-3.5-turbo",
+  model = "gpt-4.1-mini",
   temperature = 0,
   max_tokens = 150,
   api_key
@@ -27,7 +27,7 @@ call_openai_chat(
 
 - model:
 
-  Character string specifying the model (default: "gpt-3.5-turbo")
+  Character string specifying the model (default: "gpt-4.1-mini")
 
 - temperature:
 

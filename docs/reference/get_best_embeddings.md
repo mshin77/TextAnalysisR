@@ -15,7 +15,13 @@ following priority:
 ## Usage
 
 ``` r
-get_best_embeddings(texts, provider = "auto", model = NULL, verbose = TRUE)
+get_best_embeddings(
+  texts,
+  provider = "auto",
+  model = NULL,
+  api_key = NULL,
+  verbose = TRUE
+)
 ```
 
 ## Arguments
@@ -33,6 +39,11 @@ get_best_embeddings(texts, provider = "auto", model = NULL, verbose = TRUE)
 
   Character string specifying the embedding model. If NULL, uses default
   model for the selected provider.
+
+- api_key:
+
+  Optional API key for OpenAI or Gemini providers. If NULL, falls back
+  to environment variables (OPENAI_API_KEY, GEMINI_API_KEY).
 
 - verbose:
 
