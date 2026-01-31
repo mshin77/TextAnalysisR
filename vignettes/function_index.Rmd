@@ -34,7 +34,7 @@ plot_tfidf_keywords(keywords)
 
 # 4. Topic modeling
 model <- fit_embedding_model(texts, n_topics = 5)
-get_topic_terms(model, n_terms = 10)
+get_topic_terms(model, top_term_n = 10)
 
 # 5. Sentiment analysis
 sentiment <- sentiment_lexicon_analysis(texts, lexicon = "bing")

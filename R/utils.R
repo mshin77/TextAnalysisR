@@ -1090,6 +1090,10 @@ check_python_env <- function(envname = "textanalysisr-env") {
 # OLLAMA LOCAL LLM UTILITIES
 ################################################################################
 
+.ollama_base_url <- function() {
+  Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+}
+
 #' Check if Ollama is Available
 #'
 #' @description Checks if Ollama is installed and running on the local machine.
@@ -1110,7 +1114,7 @@ check_python_env <- function(envname = "textanalysisr-env") {
 check_ollama <- function(verbose = FALSE) {
   tryCatch({
     response <- httr::GET(
-      "http://localhost:11434/api/tags",
+      paste0(.ollama_base_url(), "/api/tags"),
       httr::timeout(2)
     )
 
@@ -1161,7 +1165,7 @@ list_ollama_models <- function(verbose = FALSE) {
 
   tryCatch({
     response <- httr::GET(
-      "http://localhost:11434/api/tags",
+      paste0(.ollama_base_url(), "/api/tags"),
       httr::timeout(5)
     )
 
@@ -1247,7 +1251,7 @@ call_ollama <- function(prompt,
     )
 
     response <- httr::POST(
-      "http://localhost:11434/api/generate",
+      paste0(.ollama_base_url(), "/api/generate"),
       body = jsonlite::toJSON(body, auto_unbox = TRUE),
       httr::content_type_json(),
       httr::timeout(timeout)
@@ -1632,7 +1636,7 @@ describe_image_ollama <- function(image_base64,
     )
 
     response <- httr::POST(
-      url = "http://localhost:11434/api/generate",
+      url = paste0(.ollama_base_url(), "/api/generate"),
       body = jsonlite::toJSON(body, auto_unbox = TRUE),
       httr::content_type_json(),
       httr::timeout(timeout)
@@ -2033,7 +2037,7 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
 
     response <- tryCatch({
       httr::POST(
-        url = "http://localhost:11434/api/embeddings",
+        url = paste0(.ollama_base_url(), "/api/embeddings"),
         body = jsonlite::toJSON(body, auto_unbox = TRUE),
         httr::content_type_json(),
         httr::timeout(60)
