@@ -1,7 +1,7 @@
 # Python Environment
 
-Python enables advanced features: NLP with spaCy, PDF tables,
-embeddings, and AI analysis.
+Python enables advanced features: NLP with spaCy, embeddings, and neural
+sentiment analysis.
 
 ## Quick Setup
 

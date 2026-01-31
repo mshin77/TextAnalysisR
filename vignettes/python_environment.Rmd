@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 ```
 
-Python enables advanced features: NLP with spaCy, PDF tables, embeddings, and AI analysis.
+Python enables advanced features: NLP with spaCy, embeddings, and neural sentiment analysis.
 
 ## Quick Setup
 

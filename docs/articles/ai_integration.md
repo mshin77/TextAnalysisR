@@ -55,6 +55,7 @@ items <- generate_topic_content(
 |----|----|
 | [`generate_cluster_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels.md) | AI-suggested names for document clusters |
 | [`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md) | Question-answering over your corpus (RAG) |
+| [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md) | Vision LLM image description (Ollama/OpenAI/Gemini) |
 | [`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md) | Web-based document embeddings (OpenAI, Gemini) |
 | [`generate_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/generate_embeddings.md) | Local embeddings (sentence-transformers) |
 

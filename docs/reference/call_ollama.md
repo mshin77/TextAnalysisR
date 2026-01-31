@@ -52,6 +52,7 @@ Other ai:
 [`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md),
 [`call_openai_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.md),
 [`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md),
+[`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md),
 [`generate_topic_content()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_content.md),
 [`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md),
 [`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md),

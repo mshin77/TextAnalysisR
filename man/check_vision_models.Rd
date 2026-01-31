@@ -7,9 +7,9 @@
 check_vision_models(provider = "ollama", api_key = NULL)
 }
 \arguments{
-\item{provider}{Character: "ollama" or "openai"}
+\item{provider}{Character: "ollama", "openai", or "gemini"}
 
-\item{api_key}{Character: API key (for OpenAI)}
+\item{api_key}{Character: API key (for OpenAI/Gemini)}
 }
 \value{
 List with availability status and recommendations
@@ -19,12 +19,8 @@ Check if required vision models are available for multimodal processing.
 }
 \examples{
 \dontrun{
-# Check Ollama vision models
 status <- check_vision_models("ollama")
-print(status$message)
-
-# Check OpenAI access
-status <- check_vision_models("openai", api_key = Sys.getenv("OPENAI_API_KEY"))
+status <- check_vision_models("gemini", api_key = Sys.getenv("GEMINI_API_KEY"))
 }
 }
 \seealso{

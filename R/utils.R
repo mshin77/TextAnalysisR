@@ -1390,8 +1390,13 @@ call_openai_chat <- function(system_prompt,
 
   if (httr::status_code(response) != 200) {
     error_content <- httr::content(response, "text", encoding = "UTF-8")
-    stop(sprintf("OpenAI API error (status %d): %s",
-                 httr::status_code(response), error_content))
+    tryCatch(
+      log_security_event("API_ERROR", sprintf("OpenAI chat status %d: %s",
+        httr::status_code(response), error_content), list(token = NULL), "ERROR"),
+      error = function(e) NULL
+    )
+    stop(sprintf("OpenAI API request failed (status %d). Check your API key and try again.",
+                 httr::status_code(response)))
   }
 
   res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1461,20 +1466,28 @@ call_gemini_chat <- function(system_prompt,
 
   url <- paste0(
     "https://generativelanguage.googleapis.com/v1beta/models/",
-    model, ":generateContent?key=", api_key
+    model, ":generateContent"
   )
 
   response <- httr::POST(
     url = url,
-    httr::add_headers(`Content-Type` = "application/json"),
+    httr::add_headers(
+      `Content-Type` = "application/json",
+      `x-goog-api-key` = api_key
+    ),
     body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
     encode = "json"
   )
 
   if (httr::status_code(response) != 200) {
     error_content <- httr::content(response, "text", encoding = "UTF-8")
-    stop(sprintf("Gemini API error (status %d): %s",
-                 httr::status_code(response), error_content))
+    tryCatch(
+      log_security_event("API_ERROR", sprintf("Gemini chat status %d: %s",
+        httr::status_code(response), error_content), list(token = NULL), "ERROR"),
+      error = function(e) NULL
+    )
+    stop(sprintf("Gemini API request failed (status %d). Check your API key and try again.",
+                 httr::status_code(response)))
   }
 
   res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1592,6 +1605,227 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
 }
 
 
+#' Describe Image with Ollama Vision Model
+#'
+#' @param image_base64 Character string of base64-encoded PNG image
+#' @param prompt Character string describing what to extract
+#' @param model Character string, Ollama vision model name (default: "llava")
+#' @param timeout Numeric, request timeout in seconds (default: 120)
+#'
+#' @return Character string description, or NULL on failure
+#' @keywords internal
+describe_image_ollama <- function(image_base64,
+                                  prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                                  model = "llava",
+                                  timeout = 120) {
+  if (!requireNamespace("httr", quietly = TRUE) ||
+      !requireNamespace("jsonlite", quietly = TRUE)) {
+    return(NULL)
+  }
+
+  tryCatch({
+    body <- list(
+      model = model,
+      prompt = prompt,
+      images = list(image_base64),
+      stream = FALSE
+    )
+
+    response <- httr::POST(
+      url = "http://localhost:11434/api/generate",
+      body = jsonlite::toJSON(body, auto_unbox = TRUE),
+      httr::content_type_json(),
+      httr::timeout(timeout)
+    )
+
+    if (httr::status_code(response) != 200) return(NULL)
+
+    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+    result <- res_json$response
+    if (is.null(result) || !nzchar(trimws(result))) return(NULL)
+    return(trimws(result))
+  }, error = function(e) {
+    NULL
+  })
+}
+
+
+#' Describe Image with OpenAI Vision API
+#'
+#' @param image_base64 Character string of base64-encoded PNG image
+#' @param prompt Character string describing what to extract
+#' @param model Character string, OpenAI model name (default: "gpt-4.1")
+#' @param max_tokens Integer, maximum tokens in response (default: 500)
+#' @param api_key Character string, OpenAI API key
+#'
+#' @return Character string description, or NULL on failure
+#' @keywords internal
+describe_image_openai <- function(image_base64,
+                                  prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                                  model = "gpt-4.1",
+                                  max_tokens = 500,
+                                  api_key) {
+  if (!requireNamespace("httr", quietly = TRUE) ||
+      !requireNamespace("jsonlite", quietly = TRUE)) {
+    return(NULL)
+  }
+
+  tryCatch({
+    body <- list(
+      model = model,
+      messages = list(
+        list(
+          role = "user",
+          content = list(
+            list(type = "text", text = prompt),
+            list(
+              type = "image_url",
+              image_url = list(
+                url = paste0("data:image/png;base64,", image_base64)
+              )
+            )
+          )
+        )
+      ),
+      max_tokens = max_tokens
+    )
+
+    response <- httr::POST(
+      url = "https://api.openai.com/v1/chat/completions",
+      httr::add_headers(
+        Authorization = paste("Bearer", api_key),
+        `Content-Type` = "application/json"
+      ),
+      body = jsonlite::toJSON(body, auto_unbox = TRUE),
+      httr::timeout(120)
+    )
+
+    if (httr::status_code(response) != 200) return(NULL)
+
+    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+    result <- res_json$choices$message$content[[1]]
+    if (is.null(result) || !nzchar(trimws(result))) return(NULL)
+    return(trimws(result))
+  }, error = function(e) {
+    NULL
+  })
+}
+
+
+#' Describe Image with Gemini Vision API
+#'
+#' @param image_base64 Character string of base64-encoded PNG image
+#' @param prompt Character string describing what to extract
+#' @param model Character string, Gemini model name (default: "gemini-2.5-flash")
+#' @param max_tokens Integer, maximum tokens in response (default: 500)
+#' @param api_key Character string, Gemini API key
+#'
+#' @return Character string description, or NULL on failure
+#' @keywords internal
+describe_image_gemini <- function(image_base64,
+                                  prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                                  model = "gemini-2.5-flash",
+                                  max_tokens = 500,
+                                  api_key) {
+  if (!requireNamespace("httr", quietly = TRUE) ||
+      !requireNamespace("jsonlite", quietly = TRUE)) {
+    return(NULL)
+  }
+
+  tryCatch({
+    body <- list(
+      contents = list(
+        list(
+          parts = list(
+            list(text = prompt),
+            list(
+              inline_data = list(
+                mime_type = "image/png",
+                data = image_base64
+              )
+            )
+          )
+        )
+      ),
+      generationConfig = list(
+        maxOutputTokens = max_tokens
+      )
+    )
+
+    url <- paste0(
+      "https://generativelanguage.googleapis.com/v1beta/models/",
+      model, ":generateContent"
+    )
+
+    response <- httr::POST(
+      url = url,
+      httr::add_headers(
+        `Content-Type` = "application/json",
+        `x-goog-api-key` = api_key
+      ),
+      body = jsonlite::toJSON(body, auto_unbox = TRUE),
+      httr::timeout(120)
+    )
+
+    if (httr::status_code(response) != 200) return(NULL)
+
+    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+    if (!is.null(res_json$candidates) && length(res_json$candidates) > 0) {
+      parts <- res_json$candidates[[1]]$content$parts
+      if (!is.null(parts) && length(parts) > 0) {
+        result <- parts[[1]]$text
+        if (!is.null(result) && nzchar(trimws(result))) return(trimws(result))
+      }
+    }
+    return(NULL)
+  }, error = function(e) {
+    NULL
+  })
+}
+
+
+#' Describe Image Using Vision LLM
+#'
+#' @description
+#' Unified dispatcher for image description using vision LLMs.
+#' Routes to the appropriate provider (Ollama, OpenAI, or Gemini).
+#'
+#' @param image_base64 Character string of base64-encoded PNG image
+#' @param provider Character: "ollama", "openai", or "gemini"
+#' @param model Character: Model name (uses provider default if NULL)
+#' @param api_key Character: API key (required for openai/gemini)
+#' @param prompt Character: Description prompt
+#' @param timeout Numeric: Request timeout in seconds (default: 120)
+#'
+#' @return Character string description, or NULL on failure
+#'
+#' @family ai
+#' @export
+describe_image <- function(image_base64,
+                           provider = "ollama",
+                           model = NULL,
+                           api_key = NULL,
+                           prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                           timeout = 120) {
+  if (is.null(model)) {
+    model <- switch(provider,
+      "ollama" = "llava",
+      "openai" = "gpt-4.1",
+      "gemini" = "gemini-2.5-flash",
+      "llava"
+    )
+  }
+
+  switch(provider,
+    "ollama" = describe_image_ollama(image_base64, prompt, model, timeout),
+    "openai" = describe_image_openai(image_base64, prompt, model, timeout, api_key),
+    "gemini" = describe_image_gemini(image_base64, prompt, model, timeout, api_key),
+    NULL
+  )
+}
+
+
 #' Get Embeddings from API
 #'
 #' @description
@@ -1704,8 +1938,13 @@ get_openai_embeddings <- function(texts, model, api_key) {
 
   if (httr::status_code(response) != 200) {
     error_content <- httr::content(response, "text", encoding = "UTF-8")
-    stop(sprintf("OpenAI Embeddings API error (status %d): %s",
-                 httr::status_code(response), error_content))
+    tryCatch(
+      log_security_event("API_ERROR", sprintf("OpenAI embeddings status %d: %s",
+        httr::status_code(response), error_content), list(token = NULL), "ERROR"),
+      error = function(e) NULL
+    )
+    stop(sprintf("OpenAI Embeddings API request failed (status %d). Check your API key and try again.",
+                 httr::status_code(response)))
   }
 
   res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1736,20 +1975,28 @@ get_gemini_embeddings <- function(texts, model, api_key) {
 
     url <- paste0(
       "https://generativelanguage.googleapis.com/v1beta/models/",
-      model, ":embedContent?key=", api_key
+      model, ":embedContent"
     )
 
     response <- httr::POST(
       url = url,
-      httr::add_headers(`Content-Type` = "application/json"),
+      httr::add_headers(
+        `Content-Type` = "application/json",
+        `x-goog-api-key` = api_key
+      ),
       body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
       encode = "json"
     )
 
     if (httr::status_code(response) != 200) {
       error_content <- httr::content(response, "text", encoding = "UTF-8")
-      stop(sprintf("Gemini Embeddings API error (status %d): %s",
-                   httr::status_code(response), error_content))
+      tryCatch(
+        log_security_event("API_ERROR", sprintf("Gemini embeddings status %d: %s",
+          httr::status_code(response), error_content), list(token = NULL), "ERROR"),
+        error = function(e) NULL
+      )
+      stop(sprintf("Gemini Embeddings API request failed (status %d). Check your API key and try again.",
+                   httr::status_code(response)))
     }
 
     res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1797,8 +2044,13 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
 
     if (httr::status_code(response) != 200) {
       error_content <- httr::content(response, "text", encoding = "UTF-8")
-      stop(sprintf("Ollama embeddings error (status %d): %s",
-                   httr::status_code(response), error_content))
+      tryCatch(
+        log_security_event("API_ERROR", sprintf("Ollama embeddings status %d: %s",
+          httr::status_code(response), error_content), list(token = NULL), "ERROR"),
+        error = function(e) NULL
+      )
+      stop(sprintf("Ollama embeddings request failed (status %d). Check that Ollama is running and the model is available.",
+                   httr::status_code(response)))
     }
 
     res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1989,6 +2241,61 @@ sanitize_text_input <- function(text) {
   if (nchar(text) > max_chars) {
     stop("Text input exceeds maximum length of 1 million characters")
   }
+
+  return(text)
+}
+
+#' Sanitize LLM Input
+#'
+#' @description
+#' Sanitizes user input before inclusion in LLM prompts to mitigate prompt
+#' injection attacks. Filters common injection patterns such as instruction
+#' overrides, system prompt markers, and role-switching attempts.
+#' Distinct from \code{sanitize_text_input()} which targets XSS.
+#'
+#' @param text Character string of user input destined for an LLM prompt
+#' @param max_length Maximum allowed character length (default: 2000)
+#' @return Sanitized character string
+#'
+#' @section NIST Compliance:
+#' Implements NIST SI-10 (Information Input Validation) for AI/LLM contexts.
+#'
+#' @keywords internal
+sanitize_llm_input <- function(text, max_length = 2000) {
+  if (is.null(text) || !is.character(text) || !nzchar(text)) {
+    return(text)
+  }
+
+  if (nchar(text) > max_length) {
+    text <- substr(text, 1, max_length)
+  }
+
+  injection_patterns <- c(
+    "ignore (all |any )?previous instructions",
+    "ignore (all |any )?prior instructions",
+    "disregard (all |any )?previous",
+    "forget (all |any )?previous",
+    "you are now",
+    "act as if",
+    "pretend you are",
+    "new instructions:",
+    "override:",
+    "system prompt:",
+    "\\[INST\\]",
+    "\\[/INST\\]",
+    "<<SYS>>",
+    "<</SYS>>",
+    "<\\|im_start\\|>",
+    "<\\|im_end\\|>",
+    "### (Human|Assistant|System):",
+    "\\bBEGIN INSTRUCTION\\b",
+    "\\bEND INSTRUCTION\\b"
+  )
+
+  combined_pattern <- paste(injection_patterns, collapse = "|")
+  text <- gsub(combined_pattern, "", text, ignore.case = TRUE, perl = TRUE)
+
+  text <- trimws(text)
 
   return(text)
 }

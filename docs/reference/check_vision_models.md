@@ -12,11 +12,11 @@ check_vision_models(provider = "ollama", api_key = NULL)
 
 - provider:
 
-  Character: "ollama" or "openai"
+  Character: "ollama", "openai", or "gemini"
 
 - api_key:
 
-  Character: API key (for OpenAI)
+  Character: API key (for OpenAI/Gemini)
 
 ## Value
 
@@ -39,11 +39,7 @@ Other pdf:
 
 ``` r
 if (FALSE) { # \dontrun{
-# Check Ollama vision models
 status <- check_vision_models("ollama")
-print(status$message)
-
-# Check OpenAI access
-status <- check_vision_models("openai", api_key = Sys.getenv("OPENAI_API_KEY"))
+status <- check_vision_models("gemini", api_key = Sys.getenv("GEMINI_API_KEY"))
 } # }
 ```

@@ -136,6 +136,7 @@ Other ai:
 [`call_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/call_ollama.md),
 [`call_openai_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.md),
 [`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md),
+[`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md),
 [`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md),
 [`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md),
 [`get_content_type_prompt()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_prompt.md),

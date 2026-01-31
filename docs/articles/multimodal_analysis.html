@@ -82,7 +82,23 @@
     
     
 <p>Extract text from PDFs with charts, diagrams, and images using vision
-AI.</p>
+AI. R-native pipeline – no Python required.</p>
+<div class="section level2">
+<h2 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
+</h2>
+<ol style="list-style-type: decimal">
+<li>Extracts text from each page using <code><a href="https://docs.ropensci.org/pdftools//reference/pdftools.html" class="external-link">pdftools::pdf_text()</a></code>
+(R-native)</li>
+<li>Renders each page as a PNG image via
+<code><a href="https://docs.ropensci.org/pdftools//reference/pdf_render_page.html" class="external-link">pdftools::pdf_render_page()</a></code>
+</li>
+<li>Identifies sparse-text pages (&lt; 500 characters) that likely
+contain figures</li>
+<li>Sends only those pages to a vision LLM for description</li>
+<li>Merges extracted text + image descriptions into a single text
+corpus</li>
+</ol>
+</div>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
@@ -95,10 +111,11 @@ AI.</p>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="ex">ollama</span> pull llava-phi3     <span class="co"># Lightweight option</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="web-based-openai">Web-based (OpenAI)<a class="anchor" aria-label="anchor" href="#web-based-openai"></a>
+<h3 id="cloud-openai-gemini">Cloud (OpenAI / Gemini)<a class="anchor" aria-label="anchor" href="#cloud-openai-gemini"></a>
 </h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"sk-..."</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"sk-..."</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"your-gemini-key"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -107,21 +124,49 @@ AI.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR">TextAnalysisR</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Extract PDF with images</span></span>
+<span><span class="co"># Extract PDF with vision AI (default: Ollama)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pdf_multimodal.html">extract_pdf_multimodal</a></span><span class="op">(</span></span>
 <span>  <span class="st">"document.pdf"</span>,</span>
-<span>  vision_provider <span class="op">=</span> <span class="st">"ollama"</span>  <span class="co"># or "openai"</span></span>
+<span>  vision_provider <span class="op">=</span> <span class="st">"ollama"</span>  <span class="co"># or "openai" or "gemini"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Use in analysis</span></span>
 <span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">combined_text</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="gemini-example">Gemini Example<a class="anchor" aria-label="anchor" href="#gemini-example"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pdf_multimodal.html">extract_pdf_multimodal</a></span><span class="op">(</span></span>
+<span>  <span class="st">"paper.pdf"</span>,</span>
+<span>  vision_provider <span class="op">=</span> <span class="st">"gemini"</span>,</span>
+<span>  api_key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"GEMINI_API_KEY"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="describe-individual-images">Describe Individual Images<a class="anchor" aria-label="anchor" href="#describe-individual-images"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">description</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/describe_image.html">describe_image</a></span><span class="op">(</span></span>
+<span>  <span class="va">image_base64</span>,</span>
+<span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
+<span>  api_key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"OPENAI_API_KEY"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
-<h2 id="smart-extraction">Smart Extraction<a class="anchor" aria-label="anchor" href="#smart-extraction"></a>
+<h2 id="unified-pdf-pipeline">Unified PDF Pipeline<a class="anchor" aria-label="anchor" href="#unified-pdf-pipeline"></a>
 </h2>
-<p>Auto-detects document type:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pdf_smart.html">extract_pdf_smart</a></span><span class="op">(</span><span class="st">"paper.pdf"</span>, doc_type <span class="op">=</span> <span class="st">"auto"</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/process_pdf_unified.html">process_pdf_unified()</a></code> provides automatic fallback:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Multimodal</strong> (pdftools + vision LLM) – extracts text
+and describes visual content</li>
+<li>
+<strong>Text-only</strong> (pdftools) – fallback if no vision
+provider is available</li>
+</ol>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_pdf_unified.html">process_pdf_unified</a></span><span class="op">(</span><span class="st">"paper.pdf"</span>, vision_provider <span class="op">=</span> <span class="st">"gemini"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="provider-comparison">Provider Comparison<a class="anchor" aria-label="anchor" href="#provider-comparison"></a>
@@ -132,6 +177,7 @@ AI.</p>
 <th>Cost</th>
 <th>Privacy</th>
 <th>Accuracy</th>
+<th>Setup</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -139,12 +185,21 @@ AI.</p>
 <td>Free</td>
 <td>Local</td>
 <td>Good</td>
+<td>Install Ollama + pull model</td>
 </tr>
 <tr class="even">
 <td>OpenAI</td>
 <td>Per use</td>
-<td>Web-based</td>
+<td>Cloud</td>
 <td>Best</td>
+<td>API key</td>
+</tr>
+<tr class="odd">
+<td>Gemini</td>
+<td>Per use</td>
+<td>Cloud</td>
+<td>Best</td>
+<td>API key</td>
 </tr>
 </tbody>
 </table>

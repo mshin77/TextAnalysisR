@@ -64,6 +64,7 @@ items <- generate_topic_content(
 |----------|---------|
 | `generate_cluster_labels()` | AI-suggested names for document clusters |
 | `run_rag_search()` | Question-answering over your corpus (RAG) |
+| `describe_image()` | Vision LLM image description (Ollama/OpenAI/Gemini) |
 | `get_api_embeddings()` | Web-based document embeddings (OpenAI, Gemini) |
 | `generate_embeddings()` | Local embeddings (sentence-transformers) |
 

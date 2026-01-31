@@ -180,9 +180,10 @@ word_correlation_network(dfm, top_node_n = 30, corr_n = 0.3)
 
 | Function | Purpose |
 |----|----|
-| [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md) | Auto-fallback PDF extraction |
+| [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md) | Auto-fallback: multimodal (R + vision LLM) then text-only |
 | [`extract_text_from_pdf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf.md) | Extract text (R) |
-| [`extract_pdf_multimodal()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.md) | Vision AI for images in PDFs |
+| [`extract_pdf_multimodal()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.md) | R-native vision AI for images in PDFs (Ollama/OpenAI/Gemini) |
+| [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md) | Describe an image using vision LLM |
 | [`detect_pdf_content_type()`](https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.md) | Detect PDF content type |
 
 ## 8. AI Integration
@@ -201,6 +202,7 @@ Supports local ([Ollama](https://ollama.com)) and web-based
 | [`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md) | Unified LLM API (all providers) |
 | [`call_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/call_ollama.md) | Local Ollama API |
 | [`call_gemini_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.md) | Gemini API |
+| [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md) | Vision LLM image description (Ollama/OpenAI/Gemini) |
 | [`generate_topic_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.md) | AI-suggested topic labels |
 | [`generate_topic_content()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_content.md) | Topic-grounded content drafts |
 | [`generate_cluster_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels.md) | AI-suggested cluster names |

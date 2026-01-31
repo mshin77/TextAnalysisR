@@ -13,18 +13,19 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 
 TextAnalysisR includes built-in security features.
 
-## Data Protection
+## Input Validation
 
 | Feature | Description |
 |---------|-------------|
-| File validation | Only CSV, XLSX, TXT, RDS (max 50MB) |
-| Input sanitization | Removes harmful code patterns |
-| API key validation | Format checking before use |
-| Rate limiting | 100 requests/hour |
+| File uploads | Extension whitelist, 50MB limit, malicious content scanning |
+| Text and LLM inputs | XSS and prompt injection filtering |
+| Column names | Regex validation to prevent formula injection |
 
-## API Key Storage
+## API Key Security
 
-**In App:** Secure password field, session-only storage
+- Stored via `.env` or environment variables (never logged or persisted)
+- Masked input field with format validation
+- Transmitted via secure headers only
 
 **Environment Variable:**
 ```{r}
@@ -36,9 +37,20 @@ Sys.setenv(OPENAI_API_KEY = "sk-...")
 keyring::key_set("openai_api")
 ```
 
-## Privacy
+## Network Security
 
-- 100% local processing with R package
-- Optional local AI via Ollama
-- HIPAA/FERPA compliant
-- Works offline
+- Content Security Policy, X-Frame-Options, SRI for CDN resources
+- HTTPS with TLS 1.2+ via Nginx/Cloudflare
+
+## Data Protection
+
+- Session-scoped with no persistent storage, cookies, or identifiers
+- Rate limiting: 100 requests/hour per session
+- Security event logging with sanitized error messages
+- Local processing option (FERPA/HIPAA compatible)
+- Offline AI via Ollama for fully local operation
+
+## Infrastructure
+
+- Cloudflare DNS with DDoS protection
+- Docker + Nginx deployment

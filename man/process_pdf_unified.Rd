@@ -18,11 +18,11 @@ process_pdf_unified(
 
 \item{use_multimodal}{Logical, enable multimodal extraction}
 
-\item{vision_provider}{Character, "ollama" or "openai"}
+\item{vision_provider}{Character, "ollama", "openai", or "gemini"}
 
 \item{vision_model}{Character, model name}
 
-\item{api_key}{Character, OpenAI API key (if using OpenAI)}
+\item{api_key}{Character, API key (if using openai/gemini)}
 
 \item{describe_images}{Logical, generate image descriptions}
 }
@@ -30,9 +30,10 @@ process_pdf_unified(
 List: success, data, type, method, message
 }
 \description{
-Unified PDF processing with automatic fallback:
+Unified PDF processing:
 \enumerate{
-\item Multimodal (Python + Vision) 2. Python pdfplumber 3. R pdftools
+\item Multimodal (R-native pdftools + Vision LLM) if enabled
+\item R pdftools text extraction as fallback
 }
 }
 \seealso{

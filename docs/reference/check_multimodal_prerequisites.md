@@ -1,7 +1,7 @@
 # Check Multimodal Prerequisites
 
-Checks all prerequisites for multimodal PDF extraction and returns
-detailed status with setup instructions.
+Checks all prerequisites for multimodal PDF extraction. Uses R-native
+pdftools for rendering (no Python required).
 
 ## Usage
 
@@ -18,7 +18,7 @@ check_multimodal_prerequisites(
 
 - vision_provider:
 
-  Character: "ollama" or "openai"
+  Character: "ollama", "openai", or "gemini"
 
 - vision_model:
 
@@ -26,11 +26,11 @@ check_multimodal_prerequisites(
 
 - api_key:
 
-  Character: API key for OpenAI (if using openai provider)
+  Character: API key for OpenAI/Gemini (if using cloud provider)
 
 - envname:
 
-  Character: Python environment name
+  Character: Kept for backward compatibility, ignored
 
 ## Value
 

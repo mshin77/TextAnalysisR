@@ -1,8 +1,10 @@
 # Process PDF File (Unified Entry Point)
 
-Unified PDF processing with automatic fallback:
+Unified PDF processing:
 
-1.  Multimodal (Python + Vision) 2. Python pdfplumber 3. R pdftools
+1.  Multimodal (R-native pdftools + Vision LLM) if enabled
+
+2.  R pdftools text extraction as fallback
 
 ## Usage
 
@@ -29,7 +31,7 @@ process_pdf_unified(
 
 - vision_provider:
 
-  Character, "ollama" or "openai"
+  Character, "ollama", "openai", or "gemini"
 
 - vision_model:
 
@@ -37,7 +39,7 @@ process_pdf_unified(
 
 - api_key:
 
-  Character, OpenAI API key (if using OpenAI)
+  Character, API key (if using openai/gemini)
 
 - describe_images:
 

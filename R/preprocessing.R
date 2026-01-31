@@ -229,15 +229,57 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
 }
 
 
+#' Render PDF Pages to Base64 PNG
+#'
+#' @description
+#' Renders each page of a PDF as a PNG image and returns base64-encoded strings.
+#' Uses pdftools (R-native, no Python required).
+#'
+#' @param file_path Character string path to PDF file
+#' @param dpi Numeric, rendering resolution (default: 150)
+#'
+#' @return List of base64-encoded PNG strings, one per page
+#' @keywords internal
+render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
+  if (!requireNamespace("pdftools", quietly = TRUE)) {
+    stop("pdftools package required for PDF rendering")
+  }
+
+  n_pages <- pdftools::pdf_info(file_path)$pages
+  if (n_pages == 0) return(list())
+
+  pages <- vector("list", n_pages)
+  for (i in seq_len(n_pages)) {
+    tryCatch({
+      bitmap <- pdftools::pdf_render_page(file_path, page = i, dpi = dpi, numeric = FALSE)
+      tmp <- tempfile(fileext = ".png")
+      on.exit(unlink(tmp), add = TRUE)
+      grDevices::png(tmp, width = ncol(bitmap), height = nrow(bitmap))
+      graphics::par(mar = c(0, 0, 0, 0))
+      graphics::plot.new()
+      graphics::rasterImage(bitmap, 0, 0, 1, 1)
+      grDevices::dev.off()
+      raw_bytes <- readBin(tmp, "raw", file.info(tmp)$size)
+      unlink(tmp)
+      pages[[i]] <- jsonlite::base64_enc(raw_bytes)
+    }, error = function(e) {
+      pages[[i]] <<- NULL
+    })
+  }
+  Filter(Negate(is.null), pages)
+}
+
+
 .extract_multimodal_pdf <- function(file_path, vision_provider,
                                     vision_model, api_key,
                                     describe_images) {
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("reticulate package required")
-  }
-
   if (is.null(vision_model)) {
-    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4.1"
+    vision_model <- switch(vision_provider,
+      "ollama" = "llava",
+      "openai" = "gpt-4.1",
+      "gemini" = "gemini-2.5-flash",
+      "llava"
+    )
   }
 
   if (vision_provider == "ollama") {
@@ -247,19 +289,37 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
     }
   }
 
-  pdf_result <- extract_pdf_multimodal(
-    file_path = file_path,
-    vision_provider = vision_provider,
-    vision_model = vision_model,
-    api_key = api_key,
-    describe_images = describe_images
-  )
+  text_pages <- tryCatch(pdftools::pdf_text(file_path), error = function(e) character(0))
 
-  if (!pdf_result$success) {
-    stop(pdf_result$message)
+  page_images <- render_pdf_pages_to_base64(file_path)
+
+  image_descriptions <- list()
+  num_described <- 0
+
+  if (describe_images && length(page_images) > 0) {
+    for (i in seq_along(page_images)) {
+      page_text_len <- if (i <= length(text_pages)) nchar(trimws(text_pages[i])) else 0
+      if (page_text_len > 500) next
+
+      desc <- describe_image(
+        image_base64 = page_images[[i]],
+        provider = vision_provider,
+        model = vision_model,
+        api_key = api_key
+      )
+      if (!is.null(desc)) {
+        image_descriptions[[length(image_descriptions) + 1]] <- desc
+        num_described <- num_described + 1
+      }
+    }
   }
 
-  combined_lines <- strsplit(pdf_result$combined_text, "\n")[[1]]
+  all_text <- paste(trimws(text_pages), collapse = "\n\n")
+  if (length(image_descriptions) > 0) {
+    all_text <- paste0(all_text, "\n\n", paste(image_descriptions, collapse = "\n\n"))
+  }
+
+  combined_lines <- strsplit(all_text, "\n")[[1]]
   combined_lines <- combined_lines[nchar(trimws(combined_lines)) > 0]
 
   list(
@@ -267,10 +327,9 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
     data = data.frame(text = combined_lines, stringsAsFactors = FALSE),
     type = "multimodal",
     method = "multimodal",
-    message = paste("Extracted text and", pdf_result$num_images,
-                    "image descriptions"),
-    num_images = pdf_result$num_images,
-    vision_provider = pdf_result$vision_provider
+    message = paste("Extracted text and", num_described, "page descriptions"),
+    num_images = num_described,
+    vision_provider = vision_provider
   )
 }
 
@@ -323,14 +382,15 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
 #' @title Process PDF File (Unified Entry Point)
 #'
 #' @description
-#' Unified PDF processing with automatic fallback:
-#' 1. Multimodal (Python + Vision) 2. Python pdfplumber 3. R pdftools
+#' Unified PDF processing:
+#' 1. Multimodal (R-native pdftools + Vision LLM) if enabled
+#' 2. R pdftools text extraction as fallback
 #'
 #' @param file_path Character string path to PDF file
 #' @param use_multimodal Logical, enable multimodal extraction
-#' @param vision_provider Character, "ollama" or "openai"
+#' @param vision_provider Character, "ollama", "openai", or "gemini"
 #' @param vision_model Character, model name
-#' @param api_key Character, OpenAI API key (if using OpenAI)
+#' @param api_key Character, API key (if using openai/gemini)
 #' @param describe_images Logical, generate image descriptions
 #'
 #' @return List: success, data, type, method, message
@@ -386,24 +446,17 @@ process_pdf_unified <- function(file_path,
       method = "multimodal",
       message = paste0(
         "Multimodal extraction encountered an error.\n\n",
-        "Error: ", result$message, "\n\n",
-        "Note: Pull the vision model using terminal/command prompt (not R code): ollama pull llava"
+        "Error: ", result$message,
+        if (vision_provider == "ollama") "\n\nNote: Pull the vision model using terminal/command prompt (not R code): ollama pull llava" else ""
       )
     ))
   }
-
-  result <- tryCatch(
-    .extract_python_pdf(file_path),
-    error = function(e) list(success = FALSE,
-                             message = paste("Python failed:", e$message))
-  )
-  if (result$success) return(result)
 
   tryCatch(
     .extract_r_pdf(file_path),
     error = function(e) {
       list(success = FALSE, data = NULL, type = "error", method = "none",
-           message = paste("All methods failed:", e$message))
+           message = paste("PDF extraction failed:", e$message))
     }
   )
 }
@@ -1189,13 +1242,13 @@ process_pdf_file_py <- function(file_path, content_type = "auto", envname = "tex
 #' Check Multimodal Prerequisites
 #'
 #' @description
-#' Checks all prerequisites for multimodal PDF extraction and returns
-#' detailed status with setup instructions.
+#' Checks all prerequisites for multimodal PDF extraction.
+#' Uses R-native pdftools for rendering (no Python required).
 #'
-#' @param vision_provider Character: "ollama" or "openai"
+#' @param vision_provider Character: "ollama", "openai", or "gemini"
 #' @param vision_model Character: Model name (optional)
-#' @param api_key Character: API key for OpenAI (if using openai provider)
-#' @param envname Character: Python environment name
+#' @param api_key Character: API key for OpenAI/Gemini (if using cloud provider)
+#' @param envname Character: Kept for backward compatibility, ignored
 #'
 #' @return List with:
 #'   - ready: Logical - TRUE if all prerequisites met
@@ -1214,45 +1267,14 @@ check_multimodal_prerequisites <- function(
   details <- list()
   instructions <- character(0)
 
-  py_available <- FALSE
-  py_packages_ok <- FALSE
-
-  tryCatch({
-    if (requireNamespace("reticulate", quietly = TRUE)) {
-      reticulate::use_condaenv(envname, required = FALSE)
-      py_available <- reticulate::py_available(initialize = FALSE)
-
-      if (py_available) {
-        required_packages <- c("pdf2image", "PIL", "requests")
-        py_packages_ok <- all(sapply(required_packages, function(pkg) {
-          tryCatch({
-            reticulate::py_module_available(pkg)
-          }, error = function(e) FALSE)
-        }))
-      }
-    }
-  }, error = function(e) {
-    py_available <- FALSE
-  })
-
-  if (!py_available) {
-    missing <- c(missing, "Python environment")
-    instructions <- c(instructions, paste0(
-      "Python environment '", envname, "' not found.\n",
-      "Setup: library(TextAnalysisR); setup_python_env()"
-    ))
-  } else if (!py_packages_ok) {
-    missing <- c(missing, "Python packages")
-    instructions <- c(instructions, paste0(
-      "Required Python packages missing.\n",
-      "Setup: library(TextAnalysisR); setup_python_env()"
-    ))
+  pdftools_ok <- requireNamespace("pdftools", quietly = TRUE)
+  if (!pdftools_ok) {
+    missing <- c(missing, "pdftools package")
+    instructions <- c(instructions,
+      "pdftools package required.\nInstall: install.packages('pdftools')"
+    )
   }
-
-  details$python <- list(
-    available = py_available,
-    packages_ok = py_packages_ok
-  )
+  details$pdftools <- list(available = pdftools_ok)
 
   if (vision_provider == "ollama") {
     ollama_ok <- check_ollama(verbose = FALSE)
@@ -1264,34 +1286,35 @@ check_multimodal_prerequisites <- function(
         "1. Start Ollama application\n",
         "2. Pull vision model: ollama pull llava"
       ))
-    } else {
-      if (!is.null(vision_model)) {
-        models_available <- tryCatch({
-          list_ollama_models()
-        }, error = function(e) character(0))
-
-        if (!vision_model %in% models_available) {
-          missing <- c(missing, paste("Vision model:", vision_model))
-          instructions <- c(instructions, paste0(
-            "Vision model '", vision_model, "' not found.\n",
-            "Pull model: ollama pull ", vision_model
-          ))
-        }
+    } else if (!is.null(vision_model)) {
+      models_available <- tryCatch(list_ollama_models(), error = function(e) character(0))
+      if (!vision_model %in% models_available) {
+        missing <- c(missing, paste("Vision model:", vision_model))
+        instructions <- c(instructions, paste0(
+          "Vision model '", vision_model, "' not found.\n",
+          "Pull model: ollama pull ", vision_model
+        ))
       }
     }
-
     details$ollama <- list(available = ollama_ok)
 
   } else if (vision_provider == "openai") {
     if (is.null(api_key) || nchar(api_key) == 0) {
       missing <- c(missing, "OpenAI API key")
-      instructions <- c(instructions, paste0(
-        "OpenAI API key required.\n",
-        "Provide your API key in the 'OpenAI API Key' field"
-      ))
+      instructions <- c(instructions,
+        "OpenAI API key required.\nProvide your API key in the 'OpenAI API Key' field"
+      )
     }
+    details$openai <- list(api_key_provided = !is.null(api_key) && nchar(api_key) > 0)
 
-    details$openai <- list(api_key_provided = !is.null(api_key))
+  } else if (vision_provider == "gemini") {
+    if (is.null(api_key) || nchar(api_key) == 0) {
+      missing <- c(missing, "Gemini API key")
+      instructions <- c(instructions,
+        "Gemini API key required.\nProvide your API key in the 'Gemini API Key' field"
+      )
+    }
+    details$gemini <- list(api_key_provided = !is.null(api_key) && nchar(api_key) > 0)
   }
 
   ready <- length(missing) == 0
@@ -1300,7 +1323,7 @@ check_multimodal_prerequisites <- function(
     full_instructions <- paste0(
       "Multimodal extraction requires:\n\n",
       paste(paste0(seq_along(instructions), ". ", instructions), collapse = "\n\n"),
-      "\n\nNote: Pull the vision model using terminal/command prompt (not R code): ollama pull llava"
+      if (vision_provider == "ollama") "\n\nNote: Pull the vision model using terminal/command prompt (not R code): ollama pull llava" else ""
     )
   } else {
     full_instructions <- "All prerequisites met"
@@ -1316,70 +1339,47 @@ check_multimodal_prerequisites <- function(
 #' Extract PDF with Multimodal Analysis
 #'
 #' @description
-#' Extract both text and visual content from PDFs, converting everything
-#' to text for downstream analysis in your existing workflow.
+#' Extract both text and visual content from PDFs using R-native pdftools
+#' and vision LLM APIs. No Python required.
 #'
 #' @param file_path Character string path to PDF file
-#' @param vision_provider Character: "ollama" (local, default) or "openai" (cloud)
+#' @param vision_provider Character: "ollama" (local, default), "openai", or "gemini"
 #' @param vision_model Character: Model name
 #'   - For Ollama: "llava", "llava:13b", "bakllava"
 #'   - For OpenAI: "gpt-4.1", "gpt-4.1-mini"
-#' @param api_key Character: OpenAI API key (required if vision_provider="openai")
-#' @param describe_images Logical: Convert images to text descriptions (default: TRUE)
-#' @param envname Character: Python environment name (default: "textanalysisr-env")
+#'   - For Gemini: "gemini-2.5-flash", "gemini-2.5-pro"
+#' @param api_key Character: API key (required for openai/gemini providers)
+#' @param describe_images Logical: Convert page images to text descriptions (default: TRUE)
+#' @param envname Character: Kept for backward compatibility, ignored
 #'
 #' @return List with:
 #'   - success: Logical
 #'   - combined_text: Character string with all content for text analysis
 #'   - text_content: List of text chunks
 #'   - image_descriptions: List of image descriptions
-#'   - num_images: Integer count of processed images
+#'   - num_images: Integer count of described pages
 #'   - vision_provider: Character indicating provider used
 #'   - message: Character status message
 #'
 #' @details
-#' **Workflow Integration:**
-#' 1. Extracts text using Marker (preserves equations, tables, structure)
-#' 2. Detects images/charts/diagrams in PDF
-#' 3. Uses vision LLM to describe visual content as text
-#' 4. Merges text + descriptions → single text corpus
-#' 5. Feed to existing text analysis pipeline
-#'
-#' **Vision Provider Options:**
-#'
-#' **Ollama (Default - Local & Free):**
-#' - Privacy: Everything runs locally
-#' - Cost: Free
-#' - Setup: Requires Ollama installed + vision model pulled
-#' - Models: llava, bakllava, llava-phi3
-#'
-#' **OpenAI (Optional - Cloud):**
-#' - Privacy: Data sent to OpenAI
-#' - Cost: Paid (user's API key)
-#' - Setup: Just provide API key
-#' - Models: gpt-4.1, gpt-4.1-mini
+#' **Workflow:**
+#' 1. Extracts text using pdftools (R-native)
+#' 2. Renders each page as an image
+#' 3. Sends sparse-text pages to vision LLM for description
+#' 4. Merges text + descriptions into a single text corpus
 #'
 #' @family pdf
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' # Local analysis with Ollama (free, private)
 #' result <- extract_pdf_multimodal("research_paper.pdf")
-#'
-#' # Access combined text for analysis
 #' text_for_analysis <- result$combined_text
 #'
-#' # Use in existing workflow
-#' corpus <- prep_texts(text_for_analysis)
-#' topics <- fit_semantic_model(corpus, k = 5)
-#'
-#' # Optional: Use OpenAI for better accuracy
 #' result <- extract_pdf_multimodal(
 #'   "paper.pdf",
-#'   vision_provider = "openai",
-#'   vision_model = "gpt-4.1",
-#'   api_key = Sys.getenv("OPENAI_API_KEY")
+#'   vision_provider = "gemini",
+#'   api_key = Sys.getenv("GEMINI_API_KEY")
 #' )
 #' }
 extract_pdf_multimodal <- function(
@@ -1390,23 +1390,19 @@ extract_pdf_multimodal <- function(
   describe_images = TRUE,
   envname = "textanalysisr-env"
 ) {
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required.")
-  }
-
   if (!file.exists(file_path)) {
-    return(list(
-      success = FALSE,
-      message = "File not found"
-    ))
+    return(list(success = FALSE, message = "File not found"))
   }
 
-  # Set default models
   if (is.null(vision_model)) {
-    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4.1"
+    vision_model <- switch(vision_provider,
+      "ollama" = "llava",
+      "openai" = "gpt-4.1",
+      "gemini" = "gemini-2.5-flash",
+      "llava"
+    )
   }
 
-  # Check prerequisites
   if (vision_provider == "ollama") {
     if (!check_ollama(verbose = FALSE)) {
       return(list(
@@ -1420,37 +1416,60 @@ extract_pdf_multimodal <- function(
       ))
     }
   } else if (vision_provider == "openai") {
-    if (is.null(api_key)) {
-      return(list(
-        success = FALSE,
-        message = "OpenAI API key required for vision_provider='openai'"
-      ))
+    if (is.null(api_key) || !nzchar(api_key)) {
+      return(list(success = FALSE, message = "OpenAI API key required for vision_provider='openai'"))
+    }
+  } else if (vision_provider == "gemini") {
+    if (is.null(api_key) || !nzchar(api_key)) {
+      return(list(success = FALSE, message = "Gemini API key required for vision_provider='gemini'"))
     }
   }
 
   tryCatch({
-    reticulate::use_condaenv(envname, required = FALSE)
+    text_pages <- pdftools::pdf_text(file_path)
+    text_content <- list(paste(trimws(text_pages), collapse = "\n\n"))
 
-    pdf_module <- reticulate::import_from_path(
-      "multimodal_extraction",
-      path = system.file("python", package = "TextAnalysisR")
-    )
+    image_descriptions <- list()
+    num_described <- 0
 
-    result <- pdf_module$extract_pdf_with_images(
-      file_path = file_path,
+    if (describe_images) {
+      page_images <- render_pdf_pages_to_base64(file_path)
+
+      for (i in seq_along(page_images)) {
+        page_text_len <- if (i <= length(text_pages)) nchar(trimws(text_pages[i])) else 0
+        if (page_text_len > 500) next
+
+        desc <- describe_image(
+          image_base64 = page_images[[i]],
+          provider = vision_provider,
+          model = vision_model,
+          api_key = api_key
+        )
+        if (!is.null(desc)) {
+          image_descriptions[[length(image_descriptions) + 1]] <- desc
+          num_described <- num_described + 1
+        }
+      }
+    }
+
+    combined_text <- paste(trimws(text_pages), collapse = "\n\n")
+    if (length(image_descriptions) > 0) {
+      combined_text <- paste0(combined_text, "\n\n", paste(image_descriptions, collapse = "\n\n"))
+    }
+
+    return(list(
+      success = TRUE,
+      text_content = text_content,
+      image_descriptions = image_descriptions,
+      combined_text = combined_text,
+      total_pages = length(text_pages),
+      num_images = num_described,
       vision_provider = vision_provider,
-      vision_model = vision_model,
-      api_key = api_key,
-      describe_images = describe_images
-    )
-
-    return(result)
+      message = paste("Extracted text and", num_described, "page descriptions")
+    ))
 
   }, error = function(e) {
-    return(list(
-      success = FALSE,
-      message = paste("Error:", e$message)
-    ))
+    return(list(success = FALSE, message = paste("Error:", e$message)))
   })
 }
 
@@ -1458,17 +1477,15 @@ extract_pdf_multimodal <- function(
 #' Smart PDF Extraction with Auto-Detection
 #'
 #' @description
-#' Automatically detects document type and chooses best extraction method:
-#' - Academic papers → Nougat (equations)
-#' - Documents with visuals → Multimodal extraction
-#' - General documents → Marker
+#' Extracts text and visual content from PDFs using R-native pdftools
+#' and vision LLM APIs. Routes directly to multimodal extraction.
 #'
 #' @param file_path Character string path to PDF file
-#' @param doc_type Character: "auto" (default), "academic", or "general"
-#' @param vision_provider Character: "ollama" (default) or "openai"
+#' @param doc_type Character: "auto" (default), "academic", or "general" (kept for compatibility)
+#' @param vision_provider Character: "ollama" (default), "openai", or "gemini"
 #' @param vision_model Character: Model name for vision analysis
 #' @param api_key Character: API key for cloud providers
-#' @param envname Character: Python environment name
+#' @param envname Character: Kept for backward compatibility, ignored
 #'
 #' @return List with extracted content ready for text analysis
 #'
@@ -1477,15 +1494,8 @@ extract_pdf_multimodal <- function(
 #'
 #' @examples
 #' \dontrun{
-#' # Auto-detect and extract
 #' result <- extract_pdf_smart("document.pdf")
-#'
-#' # Feed to text analysis
 #' corpus <- prep_texts(result$combined_text)
-#' topics <- fit_semantic_model(corpus, k = 10)
-#'
-#' # Force academic extraction (with equations)
-#' result <- extract_pdf_smart("paper.pdf", doc_type = "academic")
 #' }
 extract_pdf_smart <- function(
   file_path,
@@ -1495,45 +1505,17 @@ extract_pdf_smart <- function(
   api_key = NULL,
   envname = "textanalysisr-env"
 ) {
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required.")
-  }
-
   if (!file.exists(file_path)) {
-    return(list(
-      success = FALSE,
-      message = "File not found"
-    ))
+    return(list(success = FALSE, message = "File not found"))
   }
 
-  if (is.null(vision_model)) {
-    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4.1"
-  }
-
-  tryCatch({
-    reticulate::use_condaenv(envname, required = FALSE)
-
-    pdf_module <- reticulate::import_from_path(
-      "multimodal_extraction",
-      path = system.file("python", package = "TextAnalysisR")
-    )
-
-    result <- pdf_module$extract_pdf_smart(
-      file_path = file_path,
-      doc_type = doc_type,
-      vision_provider = vision_provider,
-      vision_model = vision_model,
-      api_key = api_key
-    )
-
-    return(result)
-
-  }, error = function(e) {
-    return(list(
-      success = FALSE,
-      message = paste("Error:", e$message)
-    ))
-  })
+  extract_pdf_multimodal(
+    file_path = file_path,
+    vision_provider = vision_provider,
+    vision_model = vision_model,
+    api_key = api_key,
+    describe_images = TRUE
+  )
 }
 
 
@@ -1542,8 +1524,8 @@ extract_pdf_smart <- function(
 #' @description
 #' Check if required vision models are available for multimodal processing.
 #'
-#' @param provider Character: "ollama" or "openai"
-#' @param api_key Character: API key (for OpenAI)
+#' @param provider Character: "ollama", "openai", or "gemini"
+#' @param api_key Character: API key (for OpenAI/Gemini)
 #'
 #' @return List with availability status and recommendations
 #'
@@ -1552,12 +1534,8 @@ extract_pdf_smart <- function(
 #'
 #' @examples
 #' \dontrun{
-#' # Check Ollama vision models
 #' status <- check_vision_models("ollama")
-#' print(status$message)
-#'
-#' # Check OpenAI access
-#' status <- check_vision_models("openai", api_key = Sys.getenv("OPENAI_API_KEY"))
+#' status <- check_vision_models("gemini", api_key = Sys.getenv("GEMINI_API_KEY"))
 #' }
 check_vision_models <- function(provider = "ollama", api_key = NULL) {
   if (provider == "ollama") {
@@ -1593,19 +1571,25 @@ check_vision_models <- function(provider = "ollama", api_key = NULL) {
     ))
 
   } else if (provider == "openai") {
-    if (is.null(api_key)) {
-      return(list(
-        available = FALSE,
-        message = "OpenAI API key required"
-      ))
+    if (is.null(api_key) || !nzchar(api_key)) {
+      return(list(available = FALSE, message = "OpenAI API key required"))
     }
 
-    # Simple API key validation
     valid <- nchar(api_key) > 20 && grepl("^sk-", api_key)
-
     return(list(
       available = valid,
       message = if (valid) "API key format valid" else "Invalid API key format"
+    ))
+
+  } else if (provider == "gemini") {
+    if (is.null(api_key) || !nzchar(api_key)) {
+      return(list(available = FALSE, message = "Gemini API key required"))
+    }
+
+    valid <- nchar(api_key) > 10
+    return(list(
+      available = valid,
+      message = if (valid) "API key provided" else "Invalid API key"
     ))
   }
 

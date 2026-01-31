@@ -541,6 +541,10 @@
 <h2 id="pdf-processing">7. PDF Processing<a class="anchor" aria-label="anchor" href="#pdf-processing"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
@@ -548,7 +552,7 @@
 <tbody>
 <tr class="odd">
 <td><code><a href="../reference/process_pdf_unified.html">process_pdf_unified()</a></code></td>
-<td>Auto-fallback PDF extraction</td>
+<td>Auto-fallback: multimodal (R + vision LLM) then text-only</td>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/extract_text_from_pdf.html">extract_text_from_pdf()</a></code></td>
@@ -556,9 +560,13 @@
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/extract_pdf_multimodal.html">extract_pdf_multimodal()</a></code></td>
-<td>Vision AI for images in PDFs</td>
+<td>R-native vision AI for images in PDFs (Ollama/OpenAI/Gemini)</td>
 </tr>
 <tr class="even">
+<td><code><a href="../reference/describe_image.html">describe_image()</a></code></td>
+<td>Describe an image using vision LLM</td>
+</tr>
+<tr class="odd">
 <td><code><a href="../reference/detect_pdf_content_type.html">detect_pdf_content_type()</a></code></td>
 <td>Detect PDF content type</td>
 </tr>
@@ -575,6 +583,10 @@ validated topic terms and beta scores, not parametric AI knowledge.</p>
 <p>Supports local (<a href="https://ollama.com" class="external-link">Ollama</a>) and
 web-based (<a href="https://platform.openai.com/" class="external-link">OpenAI</a>, <a href="https://ai.google.dev/" class="external-link">Gemini</a>) providers.</p>
 <table class="table">
+<colgroup>
+<col width="52%">
+<col width="47%">
+</colgroup>
 <thead><tr class="header">
 <th>Function</th>
 <th>Purpose</th>
@@ -593,30 +605,34 @@ web-based (<a href="https://platform.openai.com/" class="external-link">OpenAI</
 <td>Gemini API</td>
 </tr>
 <tr class="even">
+<td><code><a href="../reference/describe_image.html">describe_image()</a></code></td>
+<td>Vision LLM image description (Ollama/OpenAI/Gemini)</td>
+</tr>
+<tr class="odd">
 <td><code><a href="../reference/generate_topic_labels.html">generate_topic_labels()</a></code></td>
 <td>AI-suggested topic labels</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/generate_topic_content.html">generate_topic_content()</a></code></td>
 <td>Topic-grounded content drafts</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/generate_cluster_labels.html">generate_cluster_labels()</a></code></td>
 <td>AI-suggested cluster names</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/analyze_sentiment_llm.html">analyze_sentiment_llm()</a></code></td>
 <td>LLM-based sentiment analysis</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/run_rag_search.html">run_rag_search()</a></code></td>
 <td>RAG search over documents</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code><a href="../reference/get_api_embeddings.html">get_api_embeddings()</a></code></td>
 <td>Web-based embeddings (OpenAI, Gemini)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code><a href="../reference/get_spacy_embeddings.html">get_spacy_embeddings()</a></code></td>
 <td>Local spaCy word embeddings</td>
 </tr>

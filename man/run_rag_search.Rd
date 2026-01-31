@@ -92,6 +92,7 @@ Other ai:
 \code{\link{call_ollama}()},
 \code{\link{call_openai_chat}()},
 \code{\link{check_ollama}()},
+\code{\link{describe_image}()},
 \code{\link{generate_topic_content}()},
 \code{\link{get_api_embeddings}()},
 \code{\link{get_best_embeddings}()},

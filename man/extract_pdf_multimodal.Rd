@@ -16,19 +16,20 @@ extract_pdf_multimodal(
 \arguments{
 \item{file_path}{Character string path to PDF file}
 
-\item{vision_provider}{Character: "ollama" (local, default) or "openai" (cloud)}
+\item{vision_provider}{Character: "ollama" (local, default), "openai", or "gemini"}
 
 \item{vision_model}{Character: Model name
 \itemize{
 \item For Ollama: "llava", "llava:13b", "bakllava"
 \item For OpenAI: "gpt-4.1", "gpt-4.1-mini"
+\item For Gemini: "gemini-2.5-flash", "gemini-2.5-pro"
 }}
 
-\item{api_key}{Character: OpenAI API key (required if vision_provider="openai")}
+\item{api_key}{Character: API key (required for openai/gemini providers)}
 
-\item{describe_images}{Logical: Convert images to text descriptions (default: TRUE)}
+\item{describe_images}{Logical: Convert page images to text descriptions (default: TRUE)}
 
-\item{envname}{Character: Python environment name (default: "textanalysisr-env")}
+\item{envname}{Character: Kept for backward compatibility, ignored}
 }
 \value{
 List with:
@@ -37,61 +38,33 @@ List with:
 \item combined_text: Character string with all content for text analysis
 \item text_content: List of text chunks
 \item image_descriptions: List of image descriptions
-\item num_images: Integer count of processed images
+\item num_images: Integer count of described pages
 \item vision_provider: Character indicating provider used
 \item message: Character status message
 }
 }
 \description{
-Extract both text and visual content from PDFs, converting everything
-to text for downstream analysis in your existing workflow.
+Extract both text and visual content from PDFs using R-native pdftools
+and vision LLM APIs. No Python required.
 }
 \details{
-\strong{Workflow Integration:}
+\strong{Workflow:}
 \enumerate{
-\item Extracts text using Marker (preserves equations, tables, structure)
-\item Detects images/charts/diagrams in PDF
-\item Uses vision LLM to describe visual content as text
-\item Merges text + descriptions → single text corpus
-\item Feed to existing text analysis pipeline
-}
-
-\strong{Vision Provider Options:}
-
-\strong{Ollama (Default - Local & Free):}
-\itemize{
-\item Privacy: Everything runs locally
-\item Cost: Free
-\item Setup: Requires Ollama installed + vision model pulled
-\item Models: llava, bakllava, llava-phi3
-}
-
-\strong{OpenAI (Optional - Cloud):}
-\itemize{
-\item Privacy: Data sent to OpenAI
-\item Cost: Paid (user's API key)
-\item Setup: Just provide API key
-\item Models: gpt-4.1, gpt-4.1-mini
+\item Extracts text using pdftools (R-native)
+\item Renders each page as an image
+\item Sends sparse-text pages to vision LLM for description
+\item Merges text + descriptions into a single text corpus
 }
 }
 \examples{
 \dontrun{
-# Local analysis with Ollama (free, private)
 result <- extract_pdf_multimodal("research_paper.pdf")
-
-# Access combined text for analysis
 text_for_analysis <- result$combined_text
 
-# Use in existing workflow
-corpus <- prep_texts(text_for_analysis)
-topics <- fit_semantic_model(corpus, k = 5)
-
-# Optional: Use OpenAI for better accuracy
 result <- extract_pdf_multimodal(
   "paper.pdf",
-  vision_provider = "openai",
-  vision_model = "gpt-4.1",
-  api_key = Sys.getenv("OPENAI_API_KEY")
+  vision_provider = "gemini",
+  api_key = Sys.getenv("GEMINI_API_KEY")
 )
 }
 }

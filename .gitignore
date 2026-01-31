@@ -1,4 +1,5 @@
 .env
+.Renviron
 security.log
 .Rproj.user
 .Rhistory

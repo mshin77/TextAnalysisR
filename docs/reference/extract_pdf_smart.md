@@ -1,12 +1,7 @@
 # Smart PDF Extraction with Auto-Detection
 
-Automatically detects document type and chooses best extraction method:
-
-- Academic papers → Nougat (equations)
-
-- Documents with visuals → Multimodal extraction
-
-- General documents → Marker
+Extracts text and visual content from PDFs using R-native pdftools and
+vision LLM APIs. Routes directly to multimodal extraction.
 
 ## Usage
 
@@ -29,11 +24,12 @@ extract_pdf_smart(
 
 - doc_type:
 
-  Character: "auto" (default), "academic", or "general"
+  Character: "auto" (default), "academic", or "general" (kept for
+  compatibility)
 
 - vision_provider:
 
-  Character: "ollama" (default) or "openai"
+  Character: "ollama" (default), "openai", or "gemini"
 
 - vision_model:
 
@@ -45,7 +41,7 @@ extract_pdf_smart(
 
 - envname:
 
-  Character: Python environment name
+  Character: Kept for backward compatibility, ignored
 
 ## Value
 
@@ -68,14 +64,7 @@ Other pdf:
 
 ``` r
 if (FALSE) { # \dontrun{
-# Auto-detect and extract
 result <- extract_pdf_smart("document.pdf")
-
-# Feed to text analysis
 corpus <- prep_texts(result$combined_text)
-topics <- fit_semantic_model(corpus, k = 10)
-
-# Force academic extraction (with equations)
-result <- extract_pdf_smart("paper.pdf", doc_type = "academic")
 } # }
 ```

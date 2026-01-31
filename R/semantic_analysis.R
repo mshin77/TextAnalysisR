@@ -4451,6 +4451,8 @@ run_rag_search <- function(
   top_scores <- similarities[top_indices]
   retrieved_docs <- documents[top_indices]
 
+  query <- sanitize_llm_input(query)
+
   # Step 5: Generate answer using LLM with retrieved context
   context <- paste(
     sapply(seq_along(retrieved_docs), function(i) {

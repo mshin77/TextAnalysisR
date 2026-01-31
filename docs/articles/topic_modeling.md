@@ -65,7 +65,7 @@ Uses transformer embeddings with dimensionality reduction and
 clustering. Best for short texts, multilingual content, and semantic
 similarity.
 
-**Embedding Providers:**
+**AI Provider:**
 
 | Provider | Model | Notes |
 |----|----|----|

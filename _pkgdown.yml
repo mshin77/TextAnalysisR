@@ -138,6 +138,7 @@ reference:
   - call_gemini_chat
   - call_llm_api
   - check_vision_models
+  - describe_image
   - get_recommended_ollama_model
   - get_best_embeddings
   - get_api_embeddings

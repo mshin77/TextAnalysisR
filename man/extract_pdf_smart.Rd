@@ -16,38 +16,27 @@ extract_pdf_smart(
 \arguments{
 \item{file_path}{Character string path to PDF file}
 
-\item{doc_type}{Character: "auto" (default), "academic", or "general"}
+\item{doc_type}{Character: "auto" (default), "academic", or "general" (kept for compatibility)}
 
-\item{vision_provider}{Character: "ollama" (default) or "openai"}
+\item{vision_provider}{Character: "ollama" (default), "openai", or "gemini"}
 
 \item{vision_model}{Character: Model name for vision analysis}
 
 \item{api_key}{Character: API key for cloud providers}
 
-\item{envname}{Character: Python environment name}
+\item{envname}{Character: Kept for backward compatibility, ignored}
 }
 \value{
 List with extracted content ready for text analysis
 }
 \description{
-Automatically detects document type and chooses best extraction method:
-\itemize{
-\item Academic papers → Nougat (equations)
-\item Documents with visuals → Multimodal extraction
-\item General documents → Marker
-}
+Extracts text and visual content from PDFs using R-native pdftools
+and vision LLM APIs. Routes directly to multimodal extraction.
 }
 \examples{
 \dontrun{
-# Auto-detect and extract
 result <- extract_pdf_smart("document.pdf")
-
-# Feed to text analysis
 corpus <- prep_texts(result$combined_text)
-topics <- fit_semantic_model(corpus, k = 10)
-
-# Force academic extraction (with equations)
-result <- extract_pdf_smart("paper.pdf", doc_type = "academic")
 }
 }
 \seealso{

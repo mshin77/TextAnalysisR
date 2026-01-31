@@ -12,13 +12,13 @@ check_multimodal_prerequisites(
 )
 }
 \arguments{
-\item{vision_provider}{Character: "ollama" or "openai"}
+\item{vision_provider}{Character: "ollama", "openai", or "gemini"}
 
 \item{vision_model}{Character: Model name (optional)}
 
-\item{api_key}{Character: API key for OpenAI (if using openai provider)}
+\item{api_key}{Character: API key for OpenAI/Gemini (if using cloud provider)}
 
-\item{envname}{Character: Python environment name}
+\item{envname}{Character: Kept for backward compatibility, ignored}
 }
 \value{
 List with:
@@ -30,7 +30,7 @@ List with:
 }
 }
 \description{
-Checks all prerequisites for multimodal PDF extraction and returns
-detailed status with setup instructions.
+Checks all prerequisites for multimodal PDF extraction.
+Uses R-native pdftools for rendering (no Python required).
 }
 \keyword{internal}

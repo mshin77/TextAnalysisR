@@ -268,6 +268,8 @@ Topic-grounded content generation via local and web-based APIs
   : Call LLM API (Unified Wrapper)
 - [`check_vision_models()`](https://mshin77.github.io/TextAnalysisR/reference/check_vision_models.md)
   : Check Vision Model Availability
+- [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md)
+  : Describe Image Using Vision LLM
 - [`get_recommended_ollama_model()`](https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.md)
   : Get Recommended Ollama Model
 - [`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md)

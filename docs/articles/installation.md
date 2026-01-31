@@ -16,8 +16,9 @@ run_app()
 Visit [textanalysisr.org](https://www.textanalysisr.org) - no
 installation needed.
 
-Note: Web version has limited features (no Python, no AI, no large
-files).
+Note: Web version has limited features (no Python, no local AI via
+Ollama, no large files). Cloud AI providers (OpenAI, Gemini) are
+available with an API key.
 
 ## Optional Features
 
@@ -32,7 +33,7 @@ TextAnalysisR::setup_python_env()
 
 ### Python Features
 
-For PDF tables, embeddings, and topic-grounded analysis:
+For embeddings and neural sentiment analysis:
 
 ``` r
 setup_python_env()
