@@ -21,7 +21,7 @@ get_api_embeddings(
 \itemize{
 \item ollama: "nomic-embed-text"
 \item openai: "text-embedding-3-small"
-\item gemini: "text-embedding-004"
+\item gemini: "gemini-embedding-001"
 }}
 
 \item{api_key}{Character string with API key (not required for Ollama)}

@@ -21,7 +21,7 @@ extract_pdf_multimodal(
 \item{vision_model}{Character: Model name
 \itemize{
 \item For Ollama: "llava", "llava:13b", "bakllava"
-\item For OpenAI: "gpt-4-vision-preview", "gpt-4o"
+\item For OpenAI: "gpt-4.1", "gpt-4.1-mini"
 }}
 
 \item{api_key}{Character: OpenAI API key (required if vision_provider="openai")}
@@ -71,7 +71,7 @@ to text for downstream analysis in your existing workflow.
 \item Privacy: Data sent to OpenAI
 \item Cost: Paid (user's API key)
 \item Setup: Just provide API key
-\item Models: gpt-4-vision-preview, gpt-4o
+\item Models: gpt-4.1, gpt-4.1-mini
 }
 }
 \examples{
@@ -90,7 +90,7 @@ topics <- fit_semantic_model(corpus, k = 5)
 result <- extract_pdf_multimodal(
   "paper.pdf",
   vision_provider = "openai",
-  vision_model = "gpt-4o",
+  vision_model = "gpt-4.1",
   api_key = Sys.getenv("OPENAI_API_KEY")
 )
 }

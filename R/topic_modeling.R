@@ -345,7 +345,7 @@ get_topic_texts <- function(top_terms_df,
 #' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
 #'   "auto" will try Ollama first, then check for OpenAI/Gemini keys.
 #' @param model A character string specifying which model to use. If NULL, uses
-#'   provider defaults: "gpt-4o-mini" (OpenAI), "gemini-2.0-flash" (Gemini),
+#'   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash" (Gemini),
 #'   or recommended Ollama model.
 #' @param system A character string containing the system prompt for the API.
 #'   If NULL, the function uses the default system prompt.
@@ -424,10 +424,10 @@ generate_topic_labels <- function(top_topic_terms,
     model <- switch(provider,
       "ollama" = {
         recommended <- get_recommended_ollama_model(verbose = verbose)
-        if (is.null(recommended)) "phi3:mini" else recommended
+        if (is.null(recommended)) "llama3.2" else recommended
       },
-      "openai" = "gpt-4o-mini",
-      "gemini" = "gemini-2.0-flash"
+      "openai" = "gpt-4.1-mini",
+      "gemini" = "gemini-2.5-flash"
     )
   }
 
@@ -693,7 +693,7 @@ calculate_topic_probability <- function(stm_model,
 }
 
 run_llm_topics_internal <- function(texts, n_topics = 10,
-                                                    llm_model = "gpt-3.5-turbo",
+                                                    llm_model = "gpt-4.1-mini",
                                                     enhancement_type = "refinement",
                                                     research_domain = "generic",
                                                     domain_prompt = "",
@@ -3519,7 +3519,7 @@ fit_llm_semantic_model <- function(texts,
                                      analysis_types = c("similarity", "clustering"),
                                      embedding_model = "all-MiniLM-L6-v2",
                                      enable_ai_labeling = TRUE,
-                                     ai_model = "gpt-3.5-turbo",
+                                     ai_model = "gpt-4.1-mini",
                                      enable_cross_validation = FALSE,
                                      enable_temporal_analysis = FALSE,
                                      dates = NULL,
@@ -5053,7 +5053,7 @@ Content:"
 #' @param term_var Name of the column containing terms (default: "term").
 #' @param weight_var Name of the column containing term weights (default: "beta").
 #' @param provider LLM provider: "openai" or "ollama" (default: "openai").
-#' @param model Model name. For OpenAI: "gpt-3.5-turbo", "gpt-4", etc.
+#' @param model Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc.
 #'   For Ollama: "llama3", "mistral", etc.
 #' @param temperature Sampling temperature (0-2). Lower = more deterministic (default: 0).
 #' @param system_prompt Custom system prompt. If NULL, uses default for content_type.
@@ -5085,7 +5085,7 @@ Content:"
 #'   topic_terms_df = top_terms,
 #'   content_type = "survey_item",
 #'   provider = "openai",
-#'   model = "gpt-3.5-turbo"
+#'   model = "gpt-4.1-mini"
 #' )
 #'
 #' # Generate research questions
@@ -5112,7 +5112,7 @@ generate_topic_content <- function(topic_terms_df,
                                     term_var = "term",
                                     weight_var = "beta",
                                     provider = c("openai", "ollama"),
-                                    model = "gpt-3.5-turbo",
+                                    model = "gpt-4.1-mini",
                                     temperature = 0,
                                     system_prompt = NULL,
                                     user_prompt_template = NULL,

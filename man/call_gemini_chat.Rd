@@ -7,7 +7,7 @@
 call_gemini_chat(
   system_prompt,
   user_prompt,
-  model = "gemini-2.0-flash",
+  model = "gemini-2.5-flash",
   temperature = 0,
   max_tokens = 150,
   api_key
@@ -18,7 +18,7 @@ call_gemini_chat(
 
 \item{user_prompt}{Character string with user message}
 
-\item{model}{Character string specifying the Gemini model (default: "gemini-2.0-flash")}
+\item{model}{Character string specifying the Gemini model (default: "gemini-2.5-flash")}
 
 \item{temperature}{Numeric temperature for response randomness (default: 0)}
 

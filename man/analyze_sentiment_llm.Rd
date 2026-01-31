@@ -22,8 +22,8 @@ analyze_sentiment_llm(
 
 \item{provider}{AI provider to use: "openai" (default), "gemini", or "ollama".}
 
-\item{model}{Model name. If NULL, uses provider defaults: "gpt-4o-mini" (OpenAI),
-"gemini-2.0-flash" (Gemini), "phi3:mini" (Ollama).}
+\item{model}{Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
+"gemini-2.5-flash" (Gemini), "llama3.2" (Ollama).}
 
 \item{api_key}{API key for OpenAI or Gemini. If NULL, uses environment variable.
 Not required for Ollama.}

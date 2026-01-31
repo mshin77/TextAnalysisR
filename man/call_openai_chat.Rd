@@ -7,7 +7,7 @@
 call_openai_chat(
   system_prompt,
   user_prompt,
-  model = "gpt-3.5-turbo",
+  model = "gpt-4.1-mini",
   temperature = 0,
   max_tokens = 150,
   api_key
@@ -18,7 +18,7 @@ call_openai_chat(
 
 \item{user_prompt}{Character string with user message}
 
-\item{model}{Character string specifying the model (default: "gpt-3.5-turbo")}
+\item{model}{Character string specifying the model (default: "gpt-4.1-mini")}
 
 \item{temperature}{Numeric temperature for response randomness (default: 0)}
 

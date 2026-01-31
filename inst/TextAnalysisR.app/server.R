@@ -41,6 +41,82 @@ server <- shinyServer(function(input, output, session) {
   `%||%` <- function(a, b) if (is.null(a)) b else a
 
   ################################################################################
+  # CENTRALIZED AI CONFIGURATION
+  ################################################################################
+
+  ai_config <- reactiveValues(
+    openai_api_key = Sys.getenv("OPENAI_API_KEY"),
+    gemini_api_key = Sys.getenv("GEMINI_API_KEY")
+  )
+
+  get_api_key <- function(provider, feature_key = NULL) {
+    if (!is.null(feature_key) && nzchar(feature_key)) return(feature_key)
+    key <- switch(provider,
+      "openai" = isolate(ai_config$openai_api_key),
+      "gemini" = isolate(ai_config$gemini_api_key),
+      NULL
+    )
+    if (is.null(key) || !nzchar(key)) {
+      key <- switch(provider,
+        "openai" = Sys.getenv("OPENAI_API_KEY"),
+        "gemini" = Sys.getenv("GEMINI_API_KEY"), ""
+      )
+    }
+    return(key)
+  }
+
+  observe({
+    keys <- c(
+      input$embedding_openai_api_key, input$rag_openai_api_key,
+      input$cluster_openai_api_key, input$llm_sentiment_openai_api_key,
+      input$stm_label_openai_api_key, input$k_rec_openai_api_key,
+      input$content_openai_api_key, input$hybrid_label_openai_api_key,
+      input$topic_embedding_openai_api_key, input$openai_api_key, input$global_openai_api_key
+    )
+    valid <- keys[!is.null(keys) & nzchar(keys)]
+    if (length(valid) > 0) ai_config$openai_api_key <- valid[1]
+  })
+
+  observe({
+    keys <- c(
+      input$embedding_gemini_api_key, input$rag_gemini_api_key,
+      input$cluster_gemini_api_key, input$llm_sentiment_gemini_api_key,
+      input$stm_label_gemini_api_key, input$k_rec_gemini_api_key,
+      input$content_gemini_api_key, input$hybrid_label_gemini_api_key,
+      input$topic_embedding_gemini_api_key, input$global_gemini_api_key
+    )
+    valid <- keys[!is.null(keys) & nzchar(keys)]
+    if (length(valid) > 0) ai_config$gemini_api_key <- valid[1]
+  })
+
+  available_ollama_models <- reactiveVal(NULL)
+
+  observe({
+    invalidateLater(30000)
+    models <- tryCatch({
+      if (TextAnalysisR::check_ollama(verbose = FALSE)) {
+        TextAnalysisR::list_ollama_models(verbose = FALSE)
+      } else NULL
+    }, error = function(e) NULL)
+    available_ollama_models(models)
+  })
+
+  ai_usage_log <- reactiveVal(data.frame(
+    timestamp = character(), feature = character(),
+    provider = character(), model = character(),
+    stringsAsFactors = FALSE
+  ))
+
+  log_ai_usage <- function(feature, provider, model) {
+    current <- ai_usage_log()
+    ai_usage_log(rbind(current, data.frame(
+      timestamp = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+      feature = feature, provider = provider, model = model,
+      stringsAsFactors = FALSE
+    )))
+  }
+
+  ################################################################################
   # DEPLOYMENT & FEATURE DETECTION
   ################################################################################
 
@@ -214,7 +290,7 @@ server <- shinyServer(function(input, output, session) {
           condition = "input.vision_provider == 'ollama'",
           selectInput("ollama_vision_model",
             "Ollama model:",
-            choices = c("llava", "bakllava", "llava-phi3"),
+            choices = c("LLaVA (Default)" = "llava", "BakLLaVA" = "bakllava", "LLaVA-Phi3" = "llava-phi3"),
             selected = "llava"
           ),
           tags$div(
@@ -231,8 +307,8 @@ server <- shinyServer(function(input, output, session) {
           ),
           selectInput("openai_vision_model",
             "OpenAI model:",
-            choices = c("gpt-4o", "gpt-4-vision-preview"),
-            selected = "gpt-4o"
+            choices = c("GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini"),
+            selected = "gpt-4.1"
           )
         )
       )
@@ -614,12 +690,13 @@ server <- shinyServer(function(input, output, session) {
 
             # Get settings
             vision_provider <- input$vision_provider %||% "ollama"
-            api_key <- if (vision_provider == "openai") input$openai_api_key else NULL
+            api_key <- if (vision_provider == "openai") get_api_key("openai", input$openai_api_key) else NULL
             vision_model <- if (vision_provider == "ollama") {
               input$ollama_vision_model %||% "llava"
             } else {
-              input$openai_vision_model %||% "gpt-4o"
+              input$openai_vision_model %||% "gpt-4.1"
             }
+            log_ai_usage("Vision OCR", vision_provider, vision_model)
 
             # Process PDF with unified function
             pdf_result <- tryCatch({
@@ -3160,7 +3237,7 @@ server <- shinyServer(function(input, output, session) {
             tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
           ),
           tags$hr(),
-          tags$p(style = "color: #92400E; font-size: 14px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
+          tags$p(style = "color: #92400E; font-size: 16px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
             "Note: spaCy provides POS, NER, and morphology features.")
         ),
         easyClose = TRUE,
@@ -3295,7 +3372,7 @@ server <- shinyServer(function(input, output, session) {
     showModal(modalDialog(
       title = tags$div(style = "color: #0c1f4a;", "Morphological Features Guide"),
       tags$div(
-        style = "font-size: 14px;",
+        style = "font-size: 16px;",
         tags$p("Morphological analysis extracts grammatical properties of words:"),
         tags$ul(
           tags$li(tags$strong("Number:"), " Singular (Sing) vs Plural (Plur)"),
@@ -3307,7 +3384,7 @@ server <- shinyServer(function(input, output, session) {
           tags$li(tags$strong("Aspect:"), " Perfective (Perf), Imperfective (Imp), Progressive (Prog)")
         ),
         tags$hr(),
-        tags$p(style = "font-size: 13px; color: #64748B;",
+        tags$p(style = "font-size: 16px; color: #64748B;",
           "Note: Not all features apply to all words. For example, Tense only applies to verbs."),
         tags$hr(style = "margin-top: 20px; margin-bottom: 15px;"),
         tags$div(
@@ -3949,7 +4026,7 @@ server <- shinyServer(function(input, output, session) {
             tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
           ),
           tags$hr(),
-          tags$p(style = "color: #92400E; font-size: 14px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
+          tags$p(style = "color: #92400E; font-size: 16px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
             "Note: spaCy provides POS, NER, and morphology features.")
         ),
         easyClose = TRUE,
@@ -4233,14 +4310,14 @@ server <- shinyServer(function(input, output, session) {
       is_user_created <- !(cat %in% preset_cats)
       delete_html <- if (is_user_created) {
         paste0("<span class='entity-delete-btn' data-category='", cat,
-               "' data-source='domain' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:12px;'>",
+               "' data-source='domain' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
                "<i class='fa fa-eraser'></i></span>")
       } else ""
 
       tags$details(
         style = "margin-bottom: 8px;", open = NA,
         tags$summary(
-          style = paste0("cursor: pointer; font-weight: 600; color: ", color, "; font-size: 14px;"),
+          style = paste0("cursor: pointer; font-weight: 600; color: ", color, "; font-size: 16px;"),
           HTML(paste0(
             "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
             "<input type='checkbox' class='entity-visibility-chk' data-category='", cat, "' data-source='domain'", checked_attr, " style='margin:0;cursor:pointer;'/>",
@@ -4518,7 +4595,7 @@ server <- shinyServer(function(input, output, session) {
       checked_attr <- if (is_checked) " checked" else ""
       delete_html <- paste0(
         "<span class='entity-delete-btn' data-category='", name,
-        "' data-source='custom' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:12px;'>",
+        "' data-source='custom' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
         "<i class='fa fa-eraser'></i></span>"
       )
 
@@ -4526,7 +4603,7 @@ server <- shinyServer(function(input, output, session) {
         style = "margin-bottom: 8px;",
         open = NA,
         tags$summary(
-          style = paste0("cursor: pointer; font-weight: 600; color: ", ent$color, "; font-size: 14px;"),
+          style = paste0("cursor: pointer; font-weight: 600; color: ", ent$color, "; font-size: 16px;"),
           HTML(paste0(
             "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
             "<input type='checkbox' class='entity-visibility-chk' data-category='", name, "' data-source='custom'", checked_attr, " style='margin:0;cursor:pointer;'/>",
@@ -5319,7 +5396,7 @@ server <- shinyServer(function(input, output, session) {
                 "    Object.assign(colors, window.customEntityColors);",
                 "  }",
                 "  var color = colors[data] || '#757575';",
-                "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 12px;\">' + data + '</span>';",
+                "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px;\">' + data + '</span>';",
                 "}"
               )
             )
@@ -5373,7 +5450,7 @@ server <- shinyServer(function(input, output, session) {
                   "    Object.assign(colors, window.customEntityColors);",
                   "  }",
                   "  var color = colors[data] || '#757575';",
-                  "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 12px;\">' + data + '</span>';",
+                  "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px;\">' + data + '</span>';",
                   "}"
                 )
               )
@@ -5546,7 +5623,7 @@ server <- shinyServer(function(input, output, session) {
               "  }",
               "  var color = colors[data] || '#757575';",
               "  var lemma = row[row.length - 2] || '';",
-              "  return '<span class=\"entity-badge\" data-entity=\"' + data + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 12px; cursor: pointer;\" title=\"Click to edit\">' + data + '</span>';",
+              "  return '<span class=\"entity-badge\" data-entity=\"' + data + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px; cursor: pointer;\" title=\"Click to edit\">' + data + '</span>';",
               "}"
             )
           )
@@ -7133,9 +7210,9 @@ server <- shinyServer(function(input, output, session) {
         tags$label("Selected categories (ranked by document count):", style = "font-weight: bold; font-size: 16px; display: block; margin-bottom: 5px;"),
         tags$div(
           style = "display: flex; gap: 8px;",
-          actionLink("select_all_cooccur", "Select All", style = "color: #337ab7; font-size: 14px;"),
+          actionLink("select_all_cooccur", "Select All", style = "color: #337ab7; font-size: 16px;"),
           tags$span("|", style = "color: #9CA3AF;"),
-          actionLink("select_none_cooccur", "Clear All", style = "color: #337ab7; font-size: 14px;")
+          actionLink("select_none_cooccur", "Clear All", style = "color: #337ab7; font-size: 16px;")
         )
       ),
       tags$div(
@@ -7202,7 +7279,7 @@ server <- shinyServer(function(input, output, session) {
             paste0("reset_cooccur_", level_id),
             "Reset to Global",
             class = "btn-sm btn-outline-secondary",
-            style = "font-size: 14px; padding: 2px 8px;"
+            style = "font-size: 16px; padding: 2px 8px;"
           )
         ),
         div(
@@ -7496,9 +7573,9 @@ server <- shinyServer(function(input, output, session) {
         tags$label("Selected categories (ranked by document count):", style = "font-weight: bold; font-size: 16px; display: block; margin-bottom: 5px;"),
         tags$div(
           style = "display: flex; gap: 8px;",
-          actionLink("select_all_corr", "Select All", style = "color: #337ab7; font-size: 14px;"),
+          actionLink("select_all_corr", "Select All", style = "color: #337ab7; font-size: 16px;"),
           tags$span("|", style = "color: #9CA3AF;"),
-          actionLink("select_none_corr", "Clear All", style = "color: #337ab7; font-size: 14px;")
+          actionLink("select_none_corr", "Clear All", style = "color: #337ab7; font-size: 16px;")
         )
       ),
       tags$div(
@@ -7568,7 +7645,7 @@ server <- shinyServer(function(input, output, session) {
             paste0("reset_corr_", level_id),
             "Reset to Global",
             class = "btn-sm btn-outline-secondary",
-            style = "font-size: 14px; padding: 2px 8px;"
+            style = "font-size: 16px; padding: 2px 8px;"
           )
         ),
         div(
@@ -8464,68 +8541,89 @@ server <- shinyServer(function(input, output, session) {
     })
   })
 
-  # LLM sentiment model selector based on provider
   output$llm_sentiment_model_ui <- renderUI({
     provider <- input$llm_sentiment_provider %||% "ollama"
 
-    if (provider == "ollama") {
-      # Check if Ollama is available and get models
-      ollama_available <- tryCatch({
-        TextAnalysisR::check_ollama()
-      }, error = function(e) FALSE)
+    switch(provider,
+      "ollama" = {
+        ollama_available <- tryCatch({
+          TextAnalysisR::check_ollama()
+        }, error = function(e) FALSE)
 
-      if (ollama_available) {
-        models <- tryCatch({
-          TextAnalysisR::list_ollama_models()
-        }, error = function(e) c("llama3.2", "mistral", "gemma2"))
+        if (ollama_available) {
+          models <- tryCatch({
+            TextAnalysisR::list_ollama_models()
+          }, error = function(e) c("llama3.2", "mistral", "gemma3"))
 
-        selectInput(
-          "llm_sentiment_model",
-          "Ollama Model",
-          choices = models,
-          selected = if ("llama3.2" %in% models) "llama3.2" else models[1]
+          tagList(
+            selectInput(
+              "llm_sentiment_model",
+              "Ollama Model",
+              choices = models,
+              selected = if ("llama3.2" %in% models) "llama3.2" else models[1]
+            ),
+            tags$p(
+              style = "font-size: 16px; color: #666;",
+              "Requires Ollama. Get it from ",
+              tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
+            )
+          )
+        } else {
+          div(
+            class = "alert alert-warning",
+            style = "padding: 8px; margin-bottom: 10px;",
+            icon("exclamation-triangle"),
+            " Ollama not running. Start Ollama or select another provider."
+          )
+        }
+      },
+      "openai" = {
+        tagList(
+          selectInput(
+            "llm_sentiment_model",
+            "OpenAI Model",
+            choices = c(
+              "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini",
+              "GPT-4.1 (Accurate)" = "gpt-4.1"
+            ),
+            selected = "gpt-4.1-mini"
+          ),
+          passwordInput(
+            "llm_sentiment_openai_api_key",
+            "API Key:",
+            placeholder = "sk-..."
+          )
         )
-      } else {
-        div(
-          class = "alert alert-warning",
-          style = "padding: 8px; margin-bottom: 10px;",
-          icon("exclamation-triangle"),
-          " Ollama not running. Start Ollama or select another provider."
+      },
+      "gemini" = {
+        tagList(
+          selectInput(
+            "llm_sentiment_model",
+            "Gemini Model",
+            choices = c(
+              "Gemini 2.5 Flash (Fast)" = "gemini-2.5-flash",
+              "Gemini 2.5 Flash Lite" = "gemini-2.5-flash-lite",
+              "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
+            ),
+            selected = "gemini-2.5-flash"
+          ),
+          passwordInput(
+            "llm_sentiment_gemini_api_key",
+            "API Key:",
+            placeholder = "AIza..."
+          )
         )
       }
-    } else if (provider == "openai") {
-      selectInput(
-        "llm_sentiment_model",
-        "OpenAI Model",
-        choices = c(
-          "GPT-4o Mini (Fast)" = "gpt-4o-mini",
-          "GPT-4o (Accurate)" = "gpt-4o",
-          "GPT-3.5 Turbo" = "gpt-3.5-turbo"
-        ),
-        selected = "gpt-4o-mini"
-      )
-    } else {
-      selectInput(
-        "llm_sentiment_model",
-        "Gemini Model",
-        choices = c(
-          "Gemini 2.0 Flash" = "gemini-2.0-flash-exp",
-          "Gemini 1.5 Flash" = "gemini-1.5-flash",
-          "Gemini 1.5 Pro" = "gemini-1.5-pro"
-        ),
-        selected = "gemini-2.0-flash-exp"
-      )
-    }
+    )
   })
 
-  # LLM sentiment analysis handler
   observeEvent(input$run_llm_sentiment, {
     show_loading_notification("Running LLM sentiment analysis...", id = "llm_sentiment_loading")
 
     tryCatch({
       provider <- input$llm_sentiment_provider %||% "ollama"
 
-      # Check provider availability
+      api_key <- NULL
       if (provider == "ollama") {
         if (!TextAnalysisR::check_ollama()) {
           remove_notification_by_id("llm_sentiment_loading")
@@ -8533,18 +8631,17 @@ server <- shinyServer(function(input, output, session) {
           return()
         }
       } else if (provider == "openai") {
-        api_key <- Sys.getenv("OPENAI_API_KEY")
-        if (api_key == "") {
+        api_key <- get_api_key("openai", input$llm_sentiment_openai_api_key)
+        if (!nzchar(api_key)) {
           remove_notification_by_id("llm_sentiment_loading")
-          show_error_notification("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
+          show_error_notification("OpenAI API key not found. Enter it above or set OPENAI_API_KEY in .Renviron.")
           return()
         }
       } else if (provider == "gemini") {
-        api_key <- Sys.getenv("GEMINI_API_KEY")
-        if (api_key == "") api_key <- Sys.getenv("GOOGLE_API_KEY")
-        if (api_key == "") {
+        api_key <- get_api_key("gemini", input$llm_sentiment_gemini_api_key)
+        if (!nzchar(api_key)) {
           remove_notification_by_id("llm_sentiment_loading")
-          show_error_notification("Gemini API key not found. Set GEMINI_API_KEY environment variable.")
+          show_error_notification("Gemini API key not found. Enter it above or set GEMINI_API_KEY in .Renviron.")
           return()
         }
       }
@@ -8561,15 +8658,16 @@ server <- shinyServer(function(input, output, session) {
       doc_names <- if ("doc_id" %in% names(texts_df)) texts_df$doc_id else paste0("doc", seq_len(nrow(texts_df)))
 
       model_name <- input$llm_sentiment_model
+      log_ai_usage("LLM Sentiment", provider, model_name)
       batch_size <- input$llm_sentiment_batch_size %||% 5
       include_explanation <- input$llm_sentiment_explanation %||% TRUE
 
-      # Run LLM sentiment analysis
       llm_sentiment_result <- TextAnalysisR::analyze_sentiment_llm(
         texts = texts_vec,
         doc_names = doc_names,
         provider = provider,
         model = model_name,
+        api_key = api_key,
         batch_size = batch_size,
         include_explanation = include_explanation,
         verbose = FALSE
@@ -10578,7 +10676,7 @@ server <- shinyServer(function(input, output, session) {
       docs_data <- docs_data[nchar(trimws(docs_data$combined_text)) > 0, ]
     }
 
-    current_model <- input$embedding_model %||% "all-MiniLM-L6-v2"
+    current_model <- embeddings_cache$model %||% "all-MiniLM-L6-v2"
     current_texts_hash <- digest::digest(texts, algo = "md5")
 
     use_cached <- !is.null(embeddings_cache$embeddings) &&
@@ -10862,7 +10960,7 @@ server <- shinyServer(function(input, output, session) {
             "Total Categories"
           ),
           Value = c(
-            ifelse(method == "sentence_transformers", paste("Embeddings (", input$embedding_model %||% "all-MiniLM-L6-v2", ")", sep = ""), "Basic Text Similarity"),
+            ifelse(method == "sentence_transformers", paste("Embeddings (", embeddings_cache$model %||% "all-MiniLM-L6-v2", ")", sep = ""), "Basic Text Similarity"),
             nrow(sim_matrix),
             length(off_diagonal),
             mean_sim,
@@ -12047,7 +12145,7 @@ server <- shinyServer(function(input, output, session) {
     input$semantic_analysis_tabs
 
     # Hide Feature Space selector for summary, cooccurrence, and correlation tabs
-    if (input$semantic_analysis_tabs %in% c("summary", "cooccurrence", "correlation")) {
+    if (input$semantic_analysis_tabs %in% c("summary", "cooccurrence", "correlation", "sentiment")) {
       return(NULL)
     }
 
@@ -12102,7 +12200,7 @@ server <- shinyServer(function(input, output, session) {
           step = 0.05
         ),
         tags$div(
-          style = "font-size: 14px; color: #64748B; margin-top: -8px; margin-bottom: 8px;",
+          style = "font-size: 16px; color: #64748B; margin-top: -8px; margin-bottom: 8px;",
           "Higher values = fewer, stronger document connections"
         )
       )
@@ -12150,17 +12248,29 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    # Get preferred provider and model from UI (if available)
-    provider <- input$embedding_provider_setup %||% "auto"
-    model_name <- input$embedding_model_setup %||% NULL  # NULL = use default for provider
+    provider <- input$embedding_provider_setup %||% "ollama"
+    model_name <- switch(provider,
+      "ollama" = input$embedding_ollama_model %||% "nomic-embed-text",
+      "openai" = input$embedding_openai_model %||% "text-embedding-3-small",
+      "gemini" = input$embedding_gemini_model %||% "gemini-embedding-001",
+      NULL
+    )
+    api_key <- switch(provider,
+      "openai" = get_api_key("openai", input$embedding_openai_api_key),
+      "gemini" = get_api_key("gemini", input$embedding_gemini_api_key),
+      NULL
+    )
+    if (!is.null(api_key) && !nzchar(api_key)) api_key <- NULL
 
-    loading_id <- show_loading_notification("Generating embeddings... Auto-detecting best provider.")
+    log_ai_usage("Embeddings", provider, model_name)
+    loading_id <- show_loading_notification(paste0("Generating embeddings using ", provider, "..."))
 
     tryCatch({
       embeddings <- TextAnalysisR::get_best_embeddings(
         texts = texts_vec,
         provider = provider,
         model = model_name,
+        api_key = api_key,
         verbose = FALSE
       )
 
@@ -12405,7 +12515,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (feature_type == "embeddings") {
-      model_name <- input$embedding_model %||% "all-MiniLM-L6-v2"
+      model_name <- embeddings_cache$model %||% "all-MiniLM-L6-v2"
       base_key <- paste(base_key, "model", model_name, sep = "_")
     }
 
@@ -12717,7 +12827,7 @@ server <- shinyServer(function(input, output, session) {
       run_similarity_analysis(
         feature_type = feature_type,
         similarity_method = "cosine",
-        embedding_model = input$embedding_model %||% "all-MiniLM-L6-v2"
+        embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2"
       )
 
       calculation_state$in_progress <- FALSE
@@ -12951,7 +13061,7 @@ server <- shinyServer(function(input, output, session) {
                  <ol>
                    <li>Download Ollama from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>
                    <li>Run: <code>ollama pull nomic-embed-text</code> (for embeddings)</li>
-                   <li>Run: <code>ollama pull phi3:mini</code> (for chat)</li>
+                   <li>Run: <code>ollama pull llama3.2</code> (for chat)</li>
                    <li>Start Ollama and try again</li>
                  </ol>"),
             easyClose = TRUE,
@@ -12960,37 +13070,26 @@ server <- shinyServer(function(input, output, session) {
           return()
         }
 
-        chat_model <- input$rag_ollama_model %||% "phi3:mini"
+        chat_model <- input$rag_ollama_model %||% "llama3.2"
 
       } else if (provider == "openai") {
-        # Get OpenAI API key from input or environment
-        api_key <- input$rag_openai_api_key
-        if (is.null(api_key) || !nzchar(api_key)) {
-          api_key <- Sys.getenv("OPENAI_API_KEY")
-        }
-
+        api_key <- get_api_key("openai", input$rag_openai_api_key)
         if (!nzchar(api_key)) {
           showNotification("OpenAI API key required. Enter in the field or set OPENAI_API_KEY.", type = "error")
           return()
         }
-
-        chat_model <- input$rag_openai_model %||% "gpt-4o-mini"
+        chat_model <- input$rag_openai_model %||% "gpt-4.1-mini"
 
       } else if (provider == "gemini") {
-        # Get Gemini API key from input or environment
-        api_key <- input$rag_gemini_api_key
-        if (is.null(api_key) || !nzchar(api_key)) {
-          api_key <- Sys.getenv("GEMINI_API_KEY")
-        }
-
+        api_key <- get_api_key("gemini", input$rag_gemini_api_key)
         if (!nzchar(api_key)) {
           showNotification("Gemini API key required. Enter in the field or set GEMINI_API_KEY.", type = "error")
           return()
         }
-
-        chat_model <- input$rag_gemini_model %||% "gemini-2.0-flash"
+        chat_model <- input$rag_gemini_model %||% "gemini-2.5-flash"
       }
 
+      log_ai_usage("RAG Search", provider, chat_model)
       showNotification("Generating answer with LLM...", type = "message",
                        duration = NULL, id = "ragProgress")
 
@@ -13269,18 +13368,6 @@ server <- shinyServer(function(input, output, session) {
         type = "warning",
         duration = 10
       )
-    }
-  })
-
-  observeEvent(input$embedding_model, {
-    if (!is.null(comparison_results$results[["embeddings"]])) {
-      comparison_results$results[["embeddings"]] <- NULL
-      comparison_results$calculation_status[["embeddings"]] <- FALSE
-      clear_embeddings_cache()
-      similarity_analysis_triggered(FALSE)
-      calculation_state$visualization_shown[["embeddings"]] <- FALSE
-      showNotification("⚠ Embedding model changed. Please recalculate embeddings similarity.", type = "warning", duration = 5)
-      shinyjs::hide("similarity_status")
     }
   })
 
@@ -14152,7 +14239,7 @@ server <- shinyServer(function(input, output, session) {
             texts = texts,
             method = input$unified_method,
             n_topics = input$unified_n_topics,
-            embedding_model = input$embedding_model %||% "all-MiniLM-L6-v2",
+            embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2",
             clustering_method = "kmeans",
             min_topic_size = input$unified_min_topic_size,
             seed = input$semantic_cluster_seed,
@@ -14163,7 +14250,7 @@ server <- shinyServer(function(input, output, session) {
           # Store embeddings in cache if newly generated
           if (is.null(cached_embeddings) && !is.null(unified_result$embeddings)) {
             embeddings_cache$embeddings <- unified_result$embeddings
-            embeddings_cache$model <- input$embedding_model %||% "all-MiniLM-L6-v2"
+            embeddings_cache$model <- embeddings_cache$model %||% "all-MiniLM-L6-v2"
             embeddings_cache$texts_hash <- digest::digest(texts, algo = "md5")
             embeddings_cache$timestamp <- Sys.time()
             embeddings_cache$source <- "topic_modeling_unified"
@@ -14191,7 +14278,7 @@ server <- shinyServer(function(input, output, session) {
             texts = texts,
             n_topics = input$neural_n_topics,
             hidden_units = input$neural_hidden_size,
-            embedding_model = input$embedding_model %||% "all-MiniLM-L6-v2",
+            embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2",
             seed = input$semantic_cluster_seed
           )
 
@@ -14830,7 +14917,7 @@ server <- shinyServer(function(input, output, session) {
         }
 
         method_name <- if (feature_type == "embeddings") {
-          paste("Embeddings (", input$embedding_model %||% "all-MiniLM-L6-v2", ")", sep = "")
+          paste("Embeddings (", embeddings_cache$model %||% "all-MiniLM-L6-v2", ")", sep = "")
         } else {
           paste(stringr::str_to_title(feature_type), "Features")
         }
@@ -17753,7 +17840,7 @@ server <- shinyServer(function(input, output, session) {
           style = "background-color: #FEF3C7; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
           tags$small(
             style = "color: #92400E;",
-            icon("exclamation-triangle"), " Ollama running but no models found. Run: ollama pull phi3:mini"
+            icon("exclamation-triangle"), " Ollama running but no models found. Run: ollama pull llama3.2"
           )
         )
       }
@@ -17834,7 +17921,7 @@ server <- shinyServer(function(input, output, session) {
             "<ol>",
             "<li>Download from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>",
             "<li>Install and start Ollama</li>",
-            "<li>Run: <code>ollama pull phi3:mini</code></li>",
+            "<li>Run: <code>ollama pull llama3.2</code></li>",
             "</ol>"
           )),
           easyClose = TRUE,
@@ -17843,45 +17930,32 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
-      model <- input$cluster_ollama_model %||% "phi3:mini"
+      model <- input$cluster_ollama_model %||% "llama3.2"
 
     } else if (provider == "openai") {
-      # Get API key from input or environment
-      api_key <- input$cluster_openai_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("OPENAI_API_KEY")
-      }
-
+      api_key <- get_api_key("openai", input$cluster_openai_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
           "OpenAI API key required. Enter in the API Key field or set OPENAI_API_KEY in .Renviron",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      model <- input$cluster_openai_model %||% "gpt-4o-mini"
+      model <- input$cluster_openai_model %||% "gpt-4.1-mini"
 
     } else if (provider == "gemini") {
-      # Get API key from input or environment
-      api_key <- input$cluster_gemini_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("GEMINI_API_KEY")
-      }
-
+      api_key <- get_api_key("gemini", input$cluster_gemini_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
           "Gemini API key required. Enter in the API Key field or set GEMINI_API_KEY in .Renviron",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      model <- input$cluster_gemini_model %||% "gemini-2.0-flash"
+      model <- input$cluster_gemini_model %||% "gemini-2.5-flash"
     }
 
+    log_ai_usage("Cluster Labels", provider, model)
     show_loading_notification(paste("Generating AI labels using", provider, "..."), id = "loadingAILabels")
 
     tryCatch({
@@ -18472,7 +18546,7 @@ server <- shinyServer(function(input, output, session) {
             "<ol>",
             "<li>Download from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>",
             "<li>Install and start Ollama</li>",
-            "<li>Run: <code>ollama pull phi3:mini</code></li>",
+            "<li>Run: <code>ollama pull llama3.2</code></li>",
             "</ol>"
           )),
           easyClose = TRUE,
@@ -18481,60 +18555,44 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
-      model <- input$k_rec_ollama_model %||% "phi3:mini"
+      model <- input$k_rec_ollama_model %||% "llama3.2"
 
     } else if (provider == "openai") {
-      # Get API key from input or environment
-      api_key <- input$k_rec_openai_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("OPENAI_API_KEY")
-      }
-
+      api_key <- get_api_key("openai", input$k_rec_openai_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
           "OpenAI API key required. Enter in the API Key field or set OPENAI_API_KEY in .Renviron",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      # Validate API key format
       if (!TextAnalysisR:::validate_api_key(api_key, strict = TRUE)) {
         TextAnalysisR:::log_security_event(
           "INVALID_API_KEY_ATTEMPT",
           "Malformed API key submitted for K recommendation",
-          session,
-          "WARNING"
+          session, "WARNING"
         )
         shiny::showNotification(
           "Invalid API key format. OpenAI keys should start with 'sk-' and be 48+ characters.",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      model <- input$k_rec_openai_model %||% "gpt-4o-mini"
+      model <- input$k_rec_openai_model %||% "gpt-4.1-mini"
 
     } else if (provider == "gemini") {
-      # Get API key from input or environment
-      api_key <- input$k_rec_gemini_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("GEMINI_API_KEY")
-      }
-
+      api_key <- get_api_key("gemini", input$k_rec_gemini_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
           "Gemini API key required. Enter in the API Key field or set GEMINI_API_KEY in .Renviron",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      model <- input$k_rec_gemini_model %||% "gemini-2.0-flash"
+      model <- input$k_rec_gemini_model %||% "gemini-2.5-flash"
     }
+
+    log_ai_usage("K Recommendation", provider, model)
 
     # Process metrics
     search_result <- K_search()
@@ -18975,7 +19033,7 @@ server <- shinyServer(function(input, output, session) {
           tags$p(
             tags$strong(style = "color: #6B7280;", "Optional:"),
             " Steps 2, 3, 5, and 6",
-            style = "margin-top: 10px; font-size: 12px;"
+            style = "margin-top: 10px; font-size: 16px;"
           )
         ),
         easyClose = TRUE,
@@ -19164,43 +19222,112 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  # Python status indicator for Embedding topic modeling
-  output$embedding_topic_python_status <- renderUI({
-    # Only render when embedding path is selected
+  output$embedding_topic_provider_status <- renderUI({
     req(input$topic_modeling_path == "embedding")
+    provider <- input$topic_embedding_provider %||% "ollama"
 
-    # Isolate Python checks to prevent reactive loop
-    python_ok <- isolate(tryCatch({
-      requireNamespace("reticulate", quietly = TRUE) &&
-        reticulate::py_module_available("sentence_transformers")
-    }, error = function(e) FALSE))
+    if (provider == "ollama") {
+      ollama_ok <- isolate(tryCatch({
+        TextAnalysisR::check_ollama(verbose = FALSE)
+      }, error = function(e) FALSE))
+
+      if (ollama_ok) {
+        tags$div(
+          class = "status-sidebar-success",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
+          tags$span("Ollama connected")
+        )
+      } else {
+        tags$div(
+          class = "status-sidebar-warning",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
+          tags$span("Ollama not detected. Install from ollama.com")
+        )
+      }
+    } else if (provider == "sentence-transformers") {
+      python_ok <- isolate(tryCatch({
+        requireNamespace("reticulate", quietly = TRUE) &&
+          reticulate::py_module_available("sentence_transformers")
+      }, error = function(e) FALSE))
+
+      if (python_ok) {
+        tags$div(
+          class = "status-sidebar-success",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
+          tags$span("Python + sentence-transformers ready")
+        )
+      } else {
+        tags$div(
+          class = "status-sidebar-warning",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
+          tags$span("Python required. Run: "),
+          tags$code("pip install sentence-transformers", style = "font-size: 16px;")
+        )
+      }
+    } else if (provider == "openai") {
+      api_key <- isolate(get_api_key("openai", input$topic_embedding_openai_api_key))
+      if (!is.null(api_key) && nzchar(api_key)) {
+        tags$div(
+          class = "status-sidebar-success",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
+          tags$span("OpenAI API key set")
+        )
+      } else {
+        tags$div(
+          class = "status-sidebar-warning",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
+          tags$span("OpenAI API key required")
+        )
+      }
+    } else if (provider == "gemini") {
+      api_key <- isolate(get_api_key("gemini", input$topic_embedding_gemini_api_key))
+      if (!is.null(api_key) && nzchar(api_key)) {
+        tags$div(
+          class = "status-sidebar-success",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
+          tags$span("Gemini API key set")
+        )
+      } else {
+        tags$div(
+          class = "status-sidebar-warning",
+          style = "margin-bottom: 10px;",
+          tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
+          tags$span("Gemini API key required")
+        )
+      }
+    }
+  })
+
+  output$embedding_topic_backend_status <- renderUI({
+    req(input$topic_modeling_path == "embedding")
+    req(input$embedding_backend == "python")
 
     bertopic_ok <- isolate(tryCatch({
-      python_ok && reticulate::py_module_available("bertopic")
+      requireNamespace("reticulate", quietly = TRUE) &&
+        reticulate::py_module_available("bertopic")
     }, error = function(e) FALSE))
 
-    if (python_ok && bertopic_ok) {
+    if (bertopic_ok) {
       tags$div(
         class = "status-sidebar-success",
         style = "margin-bottom: 10px;",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
-        tags$span("Python + BERTopic ready")
-      )
-    } else if (python_ok) {
-      tags$div(
-        class = "status-sidebar-warning",
-        style = "margin-bottom: 10px;",
-        tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
-        tags$span("BERTopic not found. Run: "),
-        tags$code("pip install bertopic", style = "font-size: 12px;")
+        tags$span("BERTopic ready")
       )
     } else {
       tags$div(
         class = "status-sidebar-warning",
         style = "margin-bottom: 10px;",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
-        tags$span("Python required. Run: "),
-        tags$code("pip install sentence-transformers bertopic", style = "font-size: 12px;")
+        tags$span("BERTopic not found. Run: "),
+        tags$code("pip install bertopic", style = "font-size: 16px;")
       )
     }
   })
@@ -19217,7 +19344,7 @@ server <- shinyServer(function(input, output, session) {
         p("Please complete Step 1 (Unite Texts) in the Preprocess tab."),
         tags$p(
           tags$strong("Note:"), " Embedding-based topic modeling only requires Step 1 (Unite Texts).",
-          style = "margin-top: 10px; font-size: 12px; color: #6B7280;"
+          style = "margin-top: 10px; font-size: 16px; color: #6B7280;"
         ),
         easyClose = TRUE,
         footer = shiny::modalButton("OK")
@@ -19234,8 +19361,8 @@ server <- shinyServer(function(input, output, session) {
       n_topics <- input$embedding_r_n_topics %||% 5
       n_topics_msg <- if (cluster %in% c("dbscan", "hdbscan")) "automatic" else n_topics
     } else {
-      method <- input$embedding_method %||% "umap_hdbscan"
-      n_topics_msg <- if (method == "umap_hdbscan") "automatic" else input$embedding_n_topics
+      method <- "umap_hdbscan"
+      n_topics_msg <- "automatic"
     }
 
     show_loading_notification(HTML(paste0(
@@ -19246,6 +19373,54 @@ server <- shinyServer(function(input, output, session) {
       texts <- united_tbl()$united_texts
       start_time <- Sys.time()
 
+      provider <- input$topic_embedding_provider %||% "ollama"
+      model_name <- switch(provider,
+        "ollama" = input$topic_embedding_ollama_model %||% "nomic-embed-text",
+        "sentence-transformers" = input$topic_embedding_st_model %||% "all-MiniLM-L6-v2",
+        "openai" = input$topic_embedding_openai_model %||% "text-embedding-3-small",
+        "gemini" = input$topic_embedding_gemini_model %||% "gemini-embedding-001",
+        "all-MiniLM-L6-v2"
+      )
+      api_key <- switch(provider,
+        "openai" = get_api_key("openai", input$topic_embedding_openai_api_key),
+        "gemini" = get_api_key("gemini", input$topic_embedding_gemini_api_key),
+        NULL
+      )
+      if (!is.null(api_key) && !nzchar(api_key)) api_key <- NULL
+
+      current_texts_hash <- digest::digest(texts, algo = "md5")
+      use_cached <- !is.null(embeddings_cache$embeddings) &&
+                    !is.null(embeddings_cache$model) &&
+                    !is.null(embeddings_cache$texts_hash) &&
+                    embeddings_cache$model == model_name &&
+                    embeddings_cache$texts_hash == current_texts_hash
+
+      precomputed <- NULL
+      if (provider != "sentence-transformers") {
+        if (use_cached) {
+          message("Reusing cached embeddings (", model_name, ")")
+          precomputed <- embeddings_cache$embeddings
+        } else {
+          message("Generating embeddings via ", provider, " (", model_name, ")...")
+          precomputed <- TextAnalysisR::get_best_embeddings(
+            texts = texts,
+            provider = provider,
+            model = model_name,
+            api_key = api_key,
+            verbose = FALSE
+          )
+          embeddings_cache$embeddings <- precomputed
+          embeddings_cache$model <- model_name
+          embeddings_cache$provider <- provider
+          embeddings_cache$texts_hash <- current_texts_hash
+          embeddings_cache$timestamp <- Sys.time()
+          embeddings_cache$source <- "topic_modeling_embedding"
+          embeddings_cache$n_docs <- nrow(precomputed)
+        }
+      }
+
+      log_ai_usage("Topic Modeling Embeddings", provider, model_name)
+
       raw_output <- capture.output({
         if (backend == "r") {
           embedding_result <- TextAnalysisR::fit_embedding_model(
@@ -19253,7 +19428,7 @@ server <- shinyServer(function(input, output, session) {
             method = method,
             backend = "r",
             n_topics = input$embedding_r_n_topics %||% 5,
-            embedding_model = input$embedding_model_name,
+            embedding_model = model_name,
             umap_neighbors = input$embedding_r_umap_neighbors %||% 15,
             umap_min_dist = input$embedding_r_umap_min_dist %||% 0.1,
             tsne_perplexity = input$embedding_tsne_perplexity %||% 30,
@@ -19261,35 +19436,21 @@ server <- shinyServer(function(input, output, session) {
             dbscan_eps = input$embedding_dbscan_eps %||% 0.5,
             dbscan_minpts = input$embedding_dbscan_minpts %||% 5,
             min_topic_size = input$embedding_r_min_cluster_size %||% 5,
-            representation_method = input$embedding_topic_representation,
             reduce_outliers = input$embedding_r_reduce_outliers %||% TRUE,
-            seed = 123,
-            verbose = TRUE
-          )
-        } else if (input$embedding_method == "umap_hdbscan") {
-          embedding_result <- TextAnalysisR::fit_embedding_model(
-            texts = texts,
-            method = input$embedding_method,
-            backend = "python",
-            embedding_model = input$embedding_model_name,
-            umap_neighbors = input$embedding_umap_neighbors,
-            umap_min_dist = input$embedding_umap_min_dist,
-            min_topic_size = input$embedding_min_topic_size,
-            cluster_selection_method = input$embedding_cluster_selection,
-            reduce_outliers = input$embedding_reduce_outliers,
-            diversity = input$embedding_topic_diversity,
-            representation_method = input$embedding_topic_representation,
+            precomputed_embeddings = precomputed,
             seed = 123,
             verbose = TRUE
           )
         } else {
           embedding_result <- TextAnalysisR::fit_embedding_model(
             texts = texts,
-            method = input$embedding_method,
+            method = "umap_hdbscan",
             backend = "python",
-            n_topics = input$embedding_n_topics,
-            embedding_model = input$embedding_model_name,
-            representation_method = input$embedding_topic_representation,
+            embedding_model = model_name,
+            umap_neighbors = input$embedding_umap_neighbors,
+            umap_min_dist = input$embedding_umap_min_dist,
+            min_topic_size = input$embedding_min_topic_size,
+            precomputed_embeddings = precomputed,
             seed = 123,
             verbose = TRUE
           )
@@ -19337,13 +19498,13 @@ server <- shinyServer(function(input, output, session) {
               style = "color: #0c4a6e; margin: 0 0 10px 0;"
             ),
             tags$table(
-              style = "width: 100%; font-size: 13px;",
+              style = "width: 100%; font-size: 16px;",
               tags$tr(tags$td("Documents:"), tags$td(style = "text-align: right; font-weight: 500;", n_docs)),
               tags$tr(tags$td("Topics found:"), tags$td(style = "text-align: right; font-weight: 500;", n_topics)),
               tags$tr(tags$td("Outliers:"), tags$td(style = "text-align: right; font-weight: 500;", paste0(n_outliers, " (", round(100 * n_outliers / n_docs, 1), "%)")))
             )
           ),
-          tags$p("Click 'Display' to view visualizations.", style = "font-size: 12px; color: #6b7280; margin-top: 10px;")
+          tags$p("Click 'Display' to view visualizations.", style = "font-size: 16px; color: #6b7280; margin-top: 10px;")
         )
       })
 
@@ -20579,7 +20740,7 @@ server <- shinyServer(function(input, output, session) {
                <p><strong>Setup:</strong></p>
                <ol>
                  <li>Download Ollama from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>
-                 <li>Run: <code>ollama pull phi3:mini</code></li>
+                 <li>Run: <code>ollama pull llama3.2</code></li>
                  <li>Start Ollama and try again</li>
                </ol>"),
           easyClose = TRUE,
@@ -20587,31 +20748,26 @@ server <- shinyServer(function(input, output, session) {
         ))
         return()
       }
-      model <- input$stm_label_ollama_model %||% "phi3:mini"
+      model <- input$stm_label_ollama_model %||% "llama3.2"
 
     } else if (provider == "openai") {
-      api_key <- input$stm_label_openai_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("OPENAI_API_KEY")
-      }
+      api_key <- get_api_key("openai", input$stm_label_openai_api_key)
       if (!nzchar(api_key)) {
         showNotification("OpenAI API key required. Enter in the field or set OPENAI_API_KEY.", type = "error")
         return()
       }
-      model <- input$stm_label_openai_model %||% "gpt-4o-mini"
+      model <- input$stm_label_openai_model %||% "gpt-4.1-mini"
 
     } else if (provider == "gemini") {
-      api_key <- input$stm_label_gemini_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("GEMINI_API_KEY")
-      }
+      api_key <- get_api_key("gemini", input$stm_label_gemini_api_key)
       if (!nzchar(api_key)) {
         showNotification("Gemini API key required. Enter in the field or set GEMINI_API_KEY.", type = "error")
         return()
       }
-      model <- input$stm_label_gemini_model %||% "gemini-2.0-flash"
+      model <- input$stm_label_gemini_model %||% "gemini-2.5-flash"
     }
 
+    log_ai_usage("STM Labels", provider, model)
     shiny::showNotification("Generating topic labels...", type = "message", duration = NULL, id = "label_gen_notification")
 
     top_topic_terms <- stm_topic_terms() %>%
@@ -20693,7 +20849,7 @@ server <- shinyServer(function(input, output, session) {
             "<ol>",
             "<li>Download from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>",
             "<li>Install and start Ollama</li>",
-            "<li>Run: <code>ollama pull phi3:mini</code></li>",
+            "<li>Run: <code>ollama pull llama3.2</code></li>",
             "</ol>"
           )),
           easyClose = TRUE,
@@ -20702,60 +20858,44 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
-      model <- input$content_ollama_model %||% "phi3:mini"
+      model <- input$content_ollama_model %||% "llama3.2"
 
     } else if (provider == "openai") {
-      # Get API key from input or environment
-      api_key <- input$content_openai_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("OPENAI_API_KEY")
-      }
-
+      api_key <- get_api_key("openai", input$content_openai_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
           "OpenAI API key required. Enter in the API Key field or set OPENAI_API_KEY in .Renviron",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      # Validate API key format
       if (!TextAnalysisR:::validate_api_key(api_key, strict = TRUE)) {
         TextAnalysisR:::log_security_event(
           "INVALID_API_KEY_ATTEMPT",
           "Malformed API key submitted for content generation",
-          session,
-          "WARNING"
+          session, "WARNING"
         )
         shiny::showNotification(
           "Invalid API key format. OpenAI keys should start with 'sk-' and be 48+ characters.",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      model <- input$content_openai_model %||% "gpt-4o-mini"
+      model <- input$content_openai_model %||% "gpt-4.1-mini"
 
     } else if (provider == "gemini") {
-      # Get API key from input or environment
-      api_key <- input$content_gemini_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("GEMINI_API_KEY")
-      }
-
+      api_key <- get_api_key("gemini", input$content_gemini_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
           "Gemini API key required. Enter in the API Key field or set GEMINI_API_KEY in .Renviron",
-          type = "error",
-          duration = 5
+          type = "error", duration = 5
         )
         return()
       }
-
-      model <- input$content_gemini_model %||% "gemini-2.0-flash"
+      model <- input$content_gemini_model %||% "gemini-2.5-flash"
     }
+
+    log_ai_usage("Content Generation", provider, model)
 
     # Generate content
     content_type <- input$content_type
@@ -21875,7 +22015,7 @@ server <- shinyServer(function(input, output, session) {
                <p><strong>Setup:</strong></p>
                <ol>
                  <li>Download Ollama from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>
-                 <li>Run: <code>ollama pull phi3:mini</code></li>
+                 <li>Run: <code>ollama pull llama3.2</code></li>
                  <li>Start Ollama and try again</li>
                </ol>"),
           easyClose = TRUE,
@@ -21883,31 +22023,26 @@ server <- shinyServer(function(input, output, session) {
         ))
         return()
       }
-      model <- input$hybrid_label_ollama_model %||% "phi3:mini"
+      model <- input$hybrid_label_ollama_model %||% "llama3.2"
 
     } else if (provider == "openai") {
-      api_key <- input$hybrid_label_openai_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("OPENAI_API_KEY")
-      }
+      api_key <- get_api_key("openai", input$hybrid_label_openai_api_key)
       if (!nzchar(api_key)) {
         showNotification("OpenAI API key required. Enter in the field or set OPENAI_API_KEY.", type = "error")
         return()
       }
-      model <- input$hybrid_label_openai_model %||% "gpt-4o-mini"
+      model <- input$hybrid_label_openai_model %||% "gpt-4.1-mini"
 
     } else if (provider == "gemini") {
-      api_key <- input$hybrid_label_gemini_api_key
-      if (is.null(api_key) || !nzchar(api_key)) {
-        api_key <- Sys.getenv("GEMINI_API_KEY")
-      }
+      api_key <- get_api_key("gemini", input$hybrid_label_gemini_api_key)
       if (!nzchar(api_key)) {
         showNotification("Gemini API key required. Enter in the field or set GEMINI_API_KEY.", type = "error")
         return()
       }
-      model <- input$hybrid_label_gemini_model %||% "gemini-2.0-flash"
+      model <- input$hybrid_label_gemini_model %||% "gemini-2.5-flash"
     }
 
+    log_ai_usage("Hybrid Labels", provider, model)
     shiny::showNotification("Generating hybrid topic labels...", type = "message", duration = NULL, id = "hybrid_label_gen_notification")
 
     tryCatch({
@@ -22277,6 +22412,78 @@ server <- shinyServer(function(input, output, session) {
       )
     }
   })
+
+  ################################################################################
+  # DYNAMIC OLLAMA MODEL LIST UPDATES
+  ################################################################################
+
+  observe({
+    models <- available_ollama_models()
+    if (!is.null(models) && length(models) > 0) {
+      llm_default <- if ("llama3.2" %in% models) "llama3.2" else models[1]
+      llm_ids <- c("cluster_ollama_model", "rag_ollama_model",
+                   "stm_label_ollama_model", "k_rec_ollama_model",
+                   "content_ollama_model", "hybrid_label_ollama_model")
+      for (id in llm_ids) {
+        updateSelectInput(session, id, choices = models, selected = llm_default)
+      }
+
+      embed_models <- grep("embed|nomic|minilm|mxbai", models, value = TRUE, ignore.case = TRUE)
+      if (length(embed_models) > 0) {
+        embed_default <- if ("nomic-embed-text" %in% embed_models) "nomic-embed-text" else embed_models[1]
+        updateSelectInput(session, "embedding_ollama_model", choices = embed_models, selected = embed_default)
+      }
+    }
+  })
+
+  ################################################################################
+  # AI SETTINGS PANEL
+  ################################################################################
+
+  observe({
+    key <- input$global_openai_api_key
+    if (!is.null(key) && nzchar(key)) ai_config$openai_api_key <- key
+  })
+  observe({
+    key <- input$global_gemini_api_key
+    if (!is.null(key) && nzchar(key)) ai_config$gemini_api_key <- key
+  })
+
+  output$global_ollama_status <- renderUI({
+    models <- available_ollama_models()
+    if (!is.null(models) && length(models) > 0) {
+      tagList(
+        tags$span(style = "color: #28a745;", icon("check-circle"), " Ollama running"),
+        tags$p(style = "font-size: 16px; color: #666; margin-top: 4px;",
+          paste(length(models), "models:", paste(head(models, 5), collapse = ", "),
+                if (length(models) > 5) "..." else ""))
+      )
+    } else {
+      tagList(
+        tags$span(style = "color: #dc3545;", icon("exclamation-triangle"), " Ollama not detected"),
+        tags$p(style = "font-size: 16px; color: #666;",
+          "Install from ", tags$a(href = "https://ollama.com", target = "_blank", "ollama.com"))
+      )
+    }
+  })
+
+  output$has_ai_usage_log <- reactive({ nrow(ai_usage_log()) > 0 })
+  outputOptions(output, "has_ai_usage_log", suspendWhenHidden = FALSE)
+
+  output$ai_usage_log_table <- DT::renderDT({
+    log <- ai_usage_log()
+    req(nrow(log) > 0)
+    DT::datatable(
+      log[order(log$timestamp, decreasing = TRUE), ],
+      rownames = FALSE,
+      options = list(pageLength = 10, dom = "tp")
+    )
+  })
+
+  output$download_ai_log <- downloadHandler(
+    filename = function() paste0("ai_usage_log_", Sys.Date(), ".csv"),
+    content = function(file) write.csv(ai_usage_log(), file, row.names = FALSE)
+  )
 
   session$onSessionEnded(function() {
     stopApp()

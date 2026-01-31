@@ -20,8 +20,8 @@ generate_cluster_labels(
 \item{provider}{AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
 "auto" will try Ollama first, then check for OpenAI/Gemini keys.}
 
-\item{model}{Model name. If NULL, uses provider defaults: "gpt-4o-mini" (OpenAI),
-"gemini-2.0-flash" (Gemini), or recommended Ollama model.}
+\item{model}{Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
+"gemini-2.5-flash" (Gemini), or recommended Ollama model.}
 
 \item{temperature}{Temperature parameter (default: 0.3).}
 

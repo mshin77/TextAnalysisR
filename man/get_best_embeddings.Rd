@@ -4,7 +4,13 @@
 \alias{get_best_embeddings}
 \title{Get Best Available Embeddings}
 \usage{
-get_best_embeddings(texts, provider = "auto", model = NULL, verbose = TRUE)
+get_best_embeddings(
+  texts,
+  provider = "auto",
+  model = NULL,
+  api_key = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{texts}{Character vector of texts to embed}
@@ -14,6 +20,9 @@ get_best_embeddings(texts, provider = "auto", model = NULL, verbose = TRUE)
 
 \item{model}{Character string specifying the embedding model. If NULL, uses default
 model for the selected provider.}
+
+\item{api_key}{Optional API key for OpenAI or Gemini providers. If NULL, falls back
+to environment variables (OPENAI_API_KEY, GEMINI_API_KEY).}
 
 \item{verbose}{Logical, whether to print progress messages (default: TRUE)}
 }

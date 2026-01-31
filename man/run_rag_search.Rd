@@ -26,10 +26,10 @@ OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.}
 
 \item{embedding_model}{Character string, embedding model. Defaults:
 "nomic-embed-text" (ollama), "text-embedding-3-small" (openai),
-"text-embedding-004" (gemini)}
+"gemini-embedding-001" (gemini)}
 
-\item{chat_model}{Character string, chat model. Defaults: "phi3:mini" (ollama),
-"gpt-4o-mini" (openai), "gemini-2.0-flash" (gemini)}
+\item{chat_model}{Character string, chat model. Defaults: "llama3.2" (ollama),
+"gpt-4.1-mini" (openai), "gemini-2.5-flash" (gemini)}
 
 \item{top_k}{Integer, number of documents to retrieve (default: 5)}
 }

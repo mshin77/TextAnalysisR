@@ -1180,7 +1180,7 @@ list_ollama_models <- function(verbose = FALSE) {
       } else {
         if (verbose) {
           message("No Ollama models found. Please pull a model:")
-          message("  ollama pull phi3:mini")
+          message("  ollama pull llama3.2")
         }
         return(character(0))
       }
@@ -1201,7 +1201,7 @@ list_ollama_models <- function(verbose = FALSE) {
 #' @description Sends a prompt to Ollama and returns the generated text.
 #'
 #' @param prompt Character string containing the prompt.
-#' @param model Character string specifying the Ollama model (default: "phi3:mini").
+#' @param model Character string specifying the Ollama model (default: "llama3.2").
 #' @param temperature Numeric value controlling randomness (default: 0.3).
 #' @param max_tokens Maximum number of tokens to generate (default: 512).
 #' @param timeout Timeout in seconds for the request (default: 60).
@@ -1216,12 +1216,12 @@ list_ollama_models <- function(verbose = FALSE) {
 #' \dontrun{
 #' response <- call_ollama(
 #'   prompt = "Summarize these keywords: machine learning, neural networks, AI",
-#'   model = "phi3:mini"
+#'   model = "llama3.2"
 #' )
 #' print(response)
 #' }
 call_ollama <- function(prompt,
-                       model = "phi3:mini",
+                       model = "llama3.2",
                        temperature = 0.3,
                        max_tokens = 512,
                        timeout = 60,
@@ -1293,7 +1293,7 @@ call_ollama <- function(prompt,
 #' model <- get_recommended_ollama_model()
 #' print(model)
 #' }
-get_recommended_ollama_model <- function(preferred_models = c("phi3:mini", "llama3.1:8b", "mistral:7b", "tinyllama"),
+get_recommended_ollama_model <- function(preferred_models = c("llama3.2", "gemma3", "mistral:7b", "tinyllama"),
                                         verbose = FALSE) {
 
   available_models <- list_ollama_models(verbose = FALSE)
@@ -1301,10 +1301,10 @@ get_recommended_ollama_model <- function(preferred_models = c("phi3:mini", "llam
   if (is.null(available_models) || length(available_models) == 0) {
     if (verbose) {
       message("No Ollama models available. Recommended models:")
-      message("  1. phi3:mini (2.3GB, best balance)")
-      message("  2. llama3.1:8b (4.7GB, strong reasoning)")
+      message("  1. llama3.2 (2.0GB, best balance)")
+      message("  2. gemma3 (3.9GB, strong reasoning)")
       message("  3. mistral:7b (4.1GB, high quality)")
-      message("\nTo install: ollama pull phi3:mini")
+      message("\nTo install: ollama pull llama3.2")
     }
     return(NULL)
   }
@@ -1336,7 +1336,7 @@ get_recommended_ollama_model <- function(preferred_models = c("phi3:mini", "llam
 #'
 #' @param system_prompt Character string with system instructions
 #' @param user_prompt Character string with user message
-#' @param model Character string specifying the model (default: "gpt-3.5-turbo")
+#' @param model Character string specifying the model (default: "gpt-4.1-mini")
 #' @param temperature Numeric temperature for response randomness (default: 0)
 #' @param max_tokens Maximum number of tokens to generate (default: 150)
 #' @param api_key Character string with OpenAI API key
@@ -1356,7 +1356,7 @@ get_recommended_ollama_model <- function(preferred_models = c("phi3:mini", "llam
 #' }
 call_openai_chat <- function(system_prompt,
                               user_prompt,
-                              model = "gpt-3.5-turbo",
+                              model = "gpt-4.1-mini",
                               temperature = 0,
                               max_tokens = 150,
                               api_key) {
@@ -1411,7 +1411,7 @@ call_openai_chat <- function(system_prompt,
 #'
 #' @param system_prompt Character string with system instructions
 #' @param user_prompt Character string with user message
-#' @param model Character string specifying the Gemini model (default: "gemini-2.0-flash")
+#' @param model Character string specifying the Gemini model (default: "gemini-2.5-flash")
 #' @param temperature Numeric temperature for response randomness (default: 0)
 #' @param max_tokens Maximum number of tokens to generate (default: 150)
 #' @param api_key Character string with Gemini API key
@@ -1431,7 +1431,7 @@ call_openai_chat <- function(system_prompt,
 #' }
 call_gemini_chat <- function(system_prompt,
                               user_prompt,
-                              model = "gemini-2.0-flash",
+                              model = "gemini-2.5-flash",
                               temperature = 0,
                               max_tokens = 150,
                               api_key) {
@@ -1541,9 +1541,9 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
   # Set default models based on provider
   if (is.null(model)) {
     model <- switch(provider,
-      "openai" = "gpt-4o-mini",
-      "gemini" = "gemini-2.0-flash",
-      "ollama" = "phi3:mini"
+      "openai" = "gpt-4.1-mini",
+      "gemini" = "gemini-2.5-flash",
+      "ollama" = "llama3.2"
     )
   }
 
@@ -1602,7 +1602,7 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
 #' @param model Character string specifying the embedding model. Defaults:
 #'   - ollama: "nomic-embed-text"
 #'   - openai: "text-embedding-3-small"
-#'   - gemini: "text-embedding-004"
+#'   - gemini: "gemini-embedding-001"
 #' @param api_key Character string with API key (not required for Ollama)
 #' @param batch_size Integer, number of texts to embed per API call (default: 100)
 #'
@@ -1637,7 +1637,7 @@ get_api_embeddings <- function(texts,
     model <- switch(provider,
       "ollama" = "nomic-embed-text",
       "openai" = "text-embedding-3-small",
-      "gemini" = "text-embedding-004"
+      "gemini" = "gemini-embedding-001"
     )
   }
 
@@ -1828,6 +1828,8 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
 #'   "openai", or "gemini". Use "auto" for automatic detection.
 #' @param model Character string specifying the embedding model. If NULL, uses default
 #'   model for the selected provider.
+#' @param api_key Optional API key for OpenAI or Gemini providers. If NULL, falls back
+#'   to environment variables (OPENAI_API_KEY, GEMINI_API_KEY).
 #' @param verbose Logical, whether to print progress messages (default: TRUE)
 #'
 #' @return Matrix with embeddings (rows = texts, columns = dimensions)
@@ -1851,22 +1853,21 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
 get_best_embeddings <- function(texts,
                                  provider = "auto",
                                  model = NULL,
+                                 api_key = NULL,
                                  verbose = TRUE) {
 
   if (!is.character(texts) || length(texts) == 0) {
     stop("texts must be a non-empty character vector")
   }
 
-  # Determine provider
   if (provider == "auto") {
-    # Priority: Ollama > sentence-transformers > OpenAI > Gemini
     if (check_ollama(verbose = FALSE)) {
       provider <- "ollama"
       if (verbose) message("Using Ollama embeddings (local)")
     } else if (check_feature("python")) {
       provider <- "sentence-transformers"
       if (verbose) message("Using sentence-transformers embeddings (local Python)")
-    } else if (nzchar(Sys.getenv("OPENAI_API_KEY"))) {
+    } else if ((!is.null(api_key) && nzchar(api_key)) || nzchar(Sys.getenv("OPENAI_API_KEY"))) {
       provider <- "openai"
       if (verbose) message("Using OpenAI embeddings (API)")
     } else if (nzchar(Sys.getenv("GEMINI_API_KEY"))) {
@@ -1882,7 +1883,6 @@ get_best_embeddings <- function(texts,
     }
   }
 
-  # Generate embeddings using selected provider
   embeddings <- switch(provider,
     "ollama" = {
       if (!check_ollama(verbose = FALSE)) {
@@ -1900,11 +1900,11 @@ get_best_embeddings <- function(texts,
     },
     "openai" = {
       model <- model %||% "text-embedding-3-small"
-      get_api_embeddings(texts, provider = "openai", model = model)
+      get_api_embeddings(texts, provider = "openai", model = model, api_key = api_key)
     },
     "gemini" = {
-      model <- model %||% "text-embedding-004"
-      get_api_embeddings(texts, provider = "gemini", model = model)
+      model <- model %||% "gemini-embedding-001"
+      get_api_embeddings(texts, provider = "gemini", model = model, api_key = api_key)
     },
     stop(paste0(
       "Unknown provider: ", provider, ". ",

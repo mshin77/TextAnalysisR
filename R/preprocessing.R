@@ -237,7 +237,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
   }
 
   if (is.null(vision_model)) {
-    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4o"
+    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4.1"
   }
 
   if (vision_provider == "ollama") {
@@ -1323,7 +1323,7 @@ check_multimodal_prerequisites <- function(
 #' @param vision_provider Character: "ollama" (local, default) or "openai" (cloud)
 #' @param vision_model Character: Model name
 #'   - For Ollama: "llava", "llava:13b", "bakllava"
-#'   - For OpenAI: "gpt-4-vision-preview", "gpt-4o"
+#'   - For OpenAI: "gpt-4.1", "gpt-4.1-mini"
 #' @param api_key Character: OpenAI API key (required if vision_provider="openai")
 #' @param describe_images Logical: Convert images to text descriptions (default: TRUE)
 #' @param envname Character: Python environment name (default: "textanalysisr-env")
@@ -1357,7 +1357,7 @@ check_multimodal_prerequisites <- function(
 #' - Privacy: Data sent to OpenAI
 #' - Cost: Paid (user's API key)
 #' - Setup: Just provide API key
-#' - Models: gpt-4-vision-preview, gpt-4o
+#' - Models: gpt-4.1, gpt-4.1-mini
 #'
 #' @family pdf
 #' @export
@@ -1378,7 +1378,7 @@ check_multimodal_prerequisites <- function(
 #' result <- extract_pdf_multimodal(
 #'   "paper.pdf",
 #'   vision_provider = "openai",
-#'   vision_model = "gpt-4o",
+#'   vision_model = "gpt-4.1",
 #'   api_key = Sys.getenv("OPENAI_API_KEY")
 #' )
 #' }
@@ -1403,7 +1403,7 @@ extract_pdf_multimodal <- function(
 
   # Set default models
   if (is.null(vision_model)) {
-    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4-vision-preview"
+    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4.1"
   }
 
   # Check prerequisites
@@ -1507,7 +1507,7 @@ extract_pdf_smart <- function(
   }
 
   if (is.null(vision_model)) {
-    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4-vision-preview"
+    vision_model <- if (vision_provider == "ollama") "llava" else "gpt-4.1"
   }
 
   tryCatch({

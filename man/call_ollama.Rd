@@ -6,7 +6,7 @@
 \usage{
 call_ollama(
   prompt,
-  model = "phi3:mini",
+  model = "llama3.2",
   temperature = 0.3,
   max_tokens = 512,
   timeout = 60,
@@ -16,7 +16,7 @@ call_ollama(
 \arguments{
 \item{prompt}{Character string containing the prompt.}
 
-\item{model}{Character string specifying the Ollama model (default: "phi3:mini").}
+\item{model}{Character string specifying the Ollama model (default: "llama3.2").}
 
 \item{temperature}{Numeric value controlling randomness (default: 0.3).}
 
@@ -36,7 +36,7 @@ Sends a prompt to Ollama and returns the generated text.
 \dontrun{
 response <- call_ollama(
   prompt = "Summarize these keywords: machine learning, neural networks, AI",
-  model = "phi3:mini"
+  model = "llama3.2"
 )
 print(response)
 }
