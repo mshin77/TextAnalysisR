@@ -251,14 +251,9 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
   pages <- vector("list", n_pages)
   for (i in seq_len(n_pages)) {
     tryCatch({
-      bitmap <- pdftools::pdf_render_page(file_path, page = i, dpi = dpi, numeric = FALSE)
       tmp <- tempfile(fileext = ".png")
-      on.exit(unlink(tmp), add = TRUE)
-      grDevices::png(tmp, width = ncol(bitmap), height = nrow(bitmap))
-      graphics::par(mar = c(0, 0, 0, 0))
-      graphics::plot.new()
-      graphics::rasterImage(bitmap, 0, 0, 1, 1)
-      grDevices::dev.off()
+      pdftools::pdf_convert(file_path, format = "png", pages = i,
+                            dpi = dpi, filenames = tmp, verbose = FALSE)
       raw_bytes <- readBin(tmp, "raw", file.info(tmp)$size)
       unlink(tmp)
       pages[[i]] <- jsonlite::base64_enc(raw_bytes)
@@ -1301,18 +1296,14 @@ check_multimodal_prerequisites <- function(
   } else if (vision_provider == "openai") {
     if (is.null(api_key) || nchar(api_key) == 0) {
       missing <- c(missing, "OpenAI API key")
-      instructions <- c(instructions,
-        "OpenAI API key required.\nProvide your API key in the 'OpenAI API Key' field"
-      )
+      instructions <- c(instructions, .missing_api_key_message("openai", "shiny"))
     }
     details$openai <- list(api_key_provided = !is.null(api_key) && nchar(api_key) > 0)
 
   } else if (vision_provider == "gemini") {
     if (is.null(api_key) || nchar(api_key) == 0) {
       missing <- c(missing, "Gemini API key")
-      instructions <- c(instructions,
-        "Gemini API key required.\nProvide your API key in the 'Gemini API Key' field"
-      )
+      instructions <- c(instructions, .missing_api_key_message("gemini", "shiny"))
     }
     details$gemini <- list(api_key_provided = !is.null(api_key) && nchar(api_key) > 0)
   }
@@ -1417,11 +1408,11 @@ extract_pdf_multimodal <- function(
     }
   } else if (vision_provider == "openai") {
     if (is.null(api_key) || !nzchar(api_key)) {
-      return(list(success = FALSE, message = "OpenAI API key required for vision_provider='openai'"))
+      return(list(success = FALSE, message = .missing_api_key_message("openai", "shiny")))
     }
   } else if (vision_provider == "gemini") {
     if (is.null(api_key) || !nzchar(api_key)) {
-      return(list(success = FALSE, message = "Gemini API key required for vision_provider='gemini'"))
+      return(list(success = FALSE, message = .missing_api_key_message("gemini", "shiny")))
     }
   }
 

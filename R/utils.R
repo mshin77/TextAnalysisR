@@ -1393,14 +1393,8 @@ call_openai_chat <- function(system_prompt,
   )
 
   if (httr::status_code(response) != 200) {
-    error_content <- httr::content(response, "text", encoding = "UTF-8")
-    tryCatch(
-      log_security_event("API_ERROR", sprintf("OpenAI chat status %d: %s",
-        httr::status_code(response), error_content), list(token = NULL), "ERROR"),
-      error = function(e) NULL
-    )
-    stop(sprintf("OpenAI API request failed (status %d). Check your API key and try again.",
-                 httr::status_code(response)))
+    .stop_api_error("openai", "chat", httr::status_code(response),
+                    httr::content(response, "text", encoding = "UTF-8"))
   }
 
   res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1484,14 +1478,8 @@ call_gemini_chat <- function(system_prompt,
   )
 
   if (httr::status_code(response) != 200) {
-    error_content <- httr::content(response, "text", encoding = "UTF-8")
-    tryCatch(
-      log_security_event("API_ERROR", sprintf("Gemini chat status %d: %s",
-        httr::status_code(response), error_content), list(token = NULL), "ERROR"),
-      error = function(e) NULL
-    )
-    stop(sprintf("Gemini API request failed (status %d). Check your API key and try again.",
-                 httr::status_code(response)))
+    .stop_api_error("gemini", "chat", httr::status_code(response),
+                    httr::content(response, "text", encoding = "UTF-8"))
   }
 
   res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1575,7 +1563,7 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
     }
 
     if (!nzchar(api_key)) {
-      stop(paste0("API key required for ", provider, ". Set ", toupper(provider), "_API_KEY environment variable."))
+      stop(.missing_api_key_message(provider, "package"), call. = FALSE)
     }
   }
 
@@ -1704,13 +1692,19 @@ describe_image_openai <- function(image_base64,
       httr::timeout(120)
     )
 
-    if (httr::status_code(response) != 200) return(NULL)
+    status <- httr::status_code(response)
+    if (status != 200) {
+      resp_text <- tryCatch(httr::content(response, "text", encoding = "UTF-8"), error = function(e) "")
+      message(.format_api_error_message("openai", "vision", status, resp_text))
+      return(NULL)
+    }
 
     res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
     result <- res_json$choices$message$content[[1]]
     if (is.null(result) || !nzchar(trimws(result))) return(NULL)
     return(trimws(result))
   }, error = function(e) {
+    message("[Vision OpenAI] Error: ", e$message)
     NULL
   })
 }
@@ -1771,19 +1765,32 @@ describe_image_gemini <- function(image_base64,
       httr::timeout(120)
     )
 
-    if (httr::status_code(response) != 200) return(NULL)
+    status <- httr::status_code(response)
+    if (status != 200) {
+      resp_text <- tryCatch(httr::content(response, "text", encoding = "UTF-8"), error = function(e) "")
+      message(.format_api_error_message("gemini", "vision", status, resp_text))
+      return(NULL)
+    }
 
     res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
 
     if (!is.null(res_json$candidates) && length(res_json$candidates) > 0) {
-      parts <- res_json$candidates[[1]]$content$parts
+      parts <- tryCatch({
+        if (is.data.frame(res_json$candidates)) {
+          res_json$candidates$content$parts[[1]]
+        } else {
+          res_json$candidates[[1]]$content$parts
+        }
+      }, error = function(e) NULL)
+
       if (!is.null(parts) && length(parts) > 0) {
-        result <- parts[[1]]$text
+        result <- if (is.data.frame(parts)) parts$text[1] else parts[[1]]$text
         if (!is.null(result) && nzchar(trimws(result))) return(trimws(result))
       }
     }
     return(NULL)
   }, error = function(e) {
+    message("[Vision Gemini] Error: ", e$message)
     NULL
   })
 }
@@ -1889,7 +1896,7 @@ get_api_embeddings <- function(texts,
     }
 
     if (!nzchar(api_key)) {
-      stop(paste0("API key required. Set ", toupper(provider), "_API_KEY environment variable."))
+      stop(.missing_api_key_message(provider, "package"), call. = FALSE)
     }
   }
 
@@ -1941,14 +1948,8 @@ get_openai_embeddings <- function(texts, model, api_key) {
   )
 
   if (httr::status_code(response) != 200) {
-    error_content <- httr::content(response, "text", encoding = "UTF-8")
-    tryCatch(
-      log_security_event("API_ERROR", sprintf("OpenAI embeddings status %d: %s",
-        httr::status_code(response), error_content), list(token = NULL), "ERROR"),
-      error = function(e) NULL
-    )
-    stop(sprintf("OpenAI Embeddings API request failed (status %d). Check your API key and try again.",
-                 httr::status_code(response)))
+    .stop_api_error("openai", "embeddings", httr::status_code(response),
+                    httr::content(response, "text", encoding = "UTF-8"))
   }
 
   res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -1993,14 +1994,8 @@ get_gemini_embeddings <- function(texts, model, api_key) {
     )
 
     if (httr::status_code(response) != 200) {
-      error_content <- httr::content(response, "text", encoding = "UTF-8")
-      tryCatch(
-        log_security_event("API_ERROR", sprintf("Gemini embeddings status %d: %s",
-          httr::status_code(response), error_content), list(token = NULL), "ERROR"),
-        error = function(e) NULL
-      )
-      stop(sprintf("Gemini Embeddings API request failed (status %d). Check your API key and try again.",
-                   httr::status_code(response)))
+      .stop_api_error("gemini", "embeddings", httr::status_code(response),
+                      httr::content(response, "text", encoding = "UTF-8"))
     }
 
     res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
@@ -2371,6 +2366,91 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
 
   return(invisible(NULL))
 }
+
+
+.parse_provider_error <- function(provider, response_body) {
+  tryCatch({
+    parsed <- jsonlite::fromJSON(response_body)
+    detail <- if (provider == "openai") {
+      parsed$error$message
+    } else if (provider == "gemini") {
+      parsed$error$message %||% parsed$error$status
+    }
+    if (is.null(detail) || !nzchar(detail)) return(NULL)
+    if (nchar(detail) > 300) detail <- paste0(substr(detail, 1, 297), "...")
+    return(detail)
+  }, error = function(e) NULL)
+}
+
+
+.format_api_error_message <- function(provider, endpoint, status_code, response_body) {
+  status_meaning <- switch(as.character(status_code),
+    "400" = "Bad request",
+    "401" = "Authentication failed",
+    "403" = "Forbidden",
+    "404" = "Not found",
+    "429" = "Rate limit exceeded",
+    "500" = "Server error",
+    "502" = "Bad gateway",
+    "503" = "Service unavailable",
+    paste0("HTTP error ", status_code)
+  )
+
+  action <- switch(as.character(status_code),
+    "401" = {
+      key_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
+      paste0("Verify your ", key_var, ".")
+    },
+    "429" = "Wait and retry, or check your usage limits.",
+    "500" = "Provider-side issue. Try again later.",
+    "502" = "Provider-side issue. Try again later.",
+    "503" = "Provider-side issue. Try again later.",
+    "Check your request and try again."
+  )
+
+  provider_label <- if (provider == "openai") "OpenAI" else "Gemini"
+  msg <- sprintf("%s %s API request failed (HTTP %d: %s).\n%s",
+                 provider_label, endpoint, status_code, status_meaning, action)
+
+  detail <- .parse_provider_error(provider, response_body)
+  if (!is.null(detail)) {
+    msg <- paste0(msg, "\nProvider message: ", detail)
+  }
+
+  msg
+}
+
+
+.stop_api_error <- function(provider, endpoint, status_code, response_body) {
+  tryCatch(
+    log_security_event("API_ERROR", sprintf("%s %s status %d: %s",
+      if (provider == "openai") "OpenAI" else "Gemini",
+      endpoint, status_code, response_body), list(token = NULL), "ERROR"),
+    error = function(e) NULL
+  )
+  stop(.format_api_error_message(provider, endpoint, status_code, response_body),
+       call. = FALSE)
+}
+
+
+.missing_api_key_message <- function(provider, context = "package") {
+  env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
+  provider_label <- if (provider == "openai") "OpenAI" else "Gemini"
+
+  if (context == "shiny") {
+    return(sprintf("%s API key required. Enter in the API Key field or set %s in .Renviron.",
+                   provider_label, env_var))
+  }
+
+  paste0(
+    sprintf("No %s API key found. Provide your key using one of these methods:\n", provider_label),
+    sprintf("  1. Sys.setenv(%s = \"your-key-here\")\n", env_var),
+    sprintf("  2. Add %s=your-key-here to your .Renviron file\n", env_var),
+    "  3. Pass directly via the api_key parameter\n\n",
+    "Or use Ollama for free local AI: https://ollama.com"
+  )
+}
+
 
 #' Validate API Key Format
 #'

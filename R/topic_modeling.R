@@ -441,16 +441,7 @@ generate_topic_labels <- function(top_topic_terms,
 
   # Validate API key for cloud providers
   if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
-    env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
-    stop(
-      sprintf("No %s API key found. Please add your API key using one of these methods:\n", provider),
-      sprintf("  1. Create a .env file in your working directory with: %s=your-key-here\n", env_var),
-      sprintf("  2. Set it in R: Sys.setenv(%s = \"your-key-here\")\n", env_var),
-      "  3. Pass it directly: api_key = \"your-key-here\"\n",
-      "  4. If using the Shiny app, enter it via the secure API key input dialog\n\n",
-      "Alternatively, use Ollama for free local AI: https://ollama.com\n",
-      "Security Note: Store .env with restricted permissions (chmod 600 .env on Unix/Linux/Mac)"
-    )
+    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
   }
 
   if (provider %in% c("openai", "gemini")) {
@@ -5181,7 +5172,7 @@ generate_topic_content <- function(topic_terms_df,
       }
       api_key <- Sys.getenv("OPENAI_API_KEY")
       if (api_key == "") {
-        stop("OpenAI API key not found. Set OPENAI_API_KEY environment variable or pass api_key parameter.")
+        stop(.missing_api_key_message("openai", "package"), call. = FALSE)
       }
     }
   } else if (provider == "ollama") {

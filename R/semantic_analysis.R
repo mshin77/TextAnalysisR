@@ -1166,15 +1166,7 @@ generate_cluster_labels <- function(cluster_keywords,
 
   # Validate API key for cloud providers
   if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
-    env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
-    stop(
-      sprintf("No %s API key found. Please add your API key using one of these methods:\n", provider),
-      sprintf("  1. Create a .env file in your working directory with: %s=your-key-here\n", env_var),
-      sprintf("  2. Set it in R: Sys.setenv(%s = \"your-key-here\")\n", env_var),
-      "  3. If using the Shiny app, enter it via the secure API key input dialog\n\n",
-      "Alternatively, use Ollama for free local AI: https://ollama.com\n",
-      "Security Note: Store .env with restricted permissions (chmod 600 .env on Unix/Linux/Mac)"
-    )
+    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
   }
 
   if (provider %in% c("openai", "gemini")) {
@@ -2865,14 +2857,7 @@ analyze_sentiment_llm <- function(texts,
 
   # Validate API key for cloud providers
   if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
-    env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
-    stop(
-      sprintf("No %s API key found. Please add your API key using one of these methods:\n", provider),
-      sprintf("  1. Create a .env file: %s=your-key-here\n", env_var),
-      sprintf("  2. Set in R: Sys.setenv(%s = \"your-key-here\")\n", env_var),
-      "  3. Pass directly: api_key = \"your-key-here\"\n\n",
-      "Or use Ollama for free local AI: https://ollama.com"
-    )
+    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
   }
 
   if (verbose) {
@@ -4339,7 +4324,7 @@ run_rag_search <- function(
     if (!nzchar(api_key)) {
       return(list(
         success = FALSE,
-        error = paste0("API key not provided. Set ", toupper(provider), "_API_KEY environment variable."),
+        error = .missing_api_key_message(provider, "package"),
         answer = "",
         confidence = 0.0,
         sources = c()
