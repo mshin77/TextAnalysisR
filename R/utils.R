@@ -1390,10 +1390,9 @@ call_openai_chat <- function(system_prompt,
   response <- httr::POST(
     url = "https://api.openai.com/v1/chat/completions",
     httr::add_headers(
-      `Content-Type` = "application/json",
       `Authorization` = paste("Bearer", api_key)
     ),
-    body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
+    body = body_list,
     encode = "json"
   )
 
@@ -1441,7 +1440,7 @@ call_gemini_chat <- function(system_prompt,
                               user_prompt,
                               model = "gemini-2.5-flash",
                               temperature = 0,
-                              max_tokens = 150,
+                              max_tokens = 1024,
                               api_key) {
 
   if (!requireNamespace("httr", quietly = TRUE)) {
@@ -1451,13 +1450,17 @@ call_gemini_chat <- function(system_prompt,
     stop("jsonlite package is required for Gemini API calls")
   }
 
-  # Gemini uses a different message format
   body_list <- list(
+    systemInstruction = list(
+      parts = list(
+        list(text = system_prompt)
+      )
+    ),
     contents = list(
       list(
         role = "user",
         parts = list(
-          list(text = paste0(system_prompt, "\n\n", user_prompt))
+          list(text = user_prompt)
         )
       )
     ),
@@ -1475,10 +1478,9 @@ call_gemini_chat <- function(system_prompt,
   response <- httr::POST(
     url = url,
     httr::add_headers(
-      `Content-Type` = "application/json",
       `x-goog-api-key` = api_key
     ),
-    body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
+    body = body_list,
     encode = "json"
   )
 
