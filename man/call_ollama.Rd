@@ -9,7 +9,7 @@ call_ollama(
   model = "llama3.2",
   temperature = 0.3,
   max_tokens = 512,
-  timeout = 60,
+  timeout = 120,
   verbose = FALSE
 )
 }

@@ -1228,56 +1228,61 @@ call_ollama <- function(prompt,
                        model = "llama3.2",
                        temperature = 0.3,
                        max_tokens = 512,
-                       timeout = 60,
+                       timeout = 120,
                        verbose = FALSE) {
 
   if (!check_ollama(verbose = verbose)) {
     stop("Ollama is not available. Please ensure Ollama is installed and running.")
   }
 
+  available_models <- list_ollama_models(verbose = FALSE)
+  if (!is.null(available_models) && length(available_models) > 0) {
+    model_base <- sub(":.*", "", model)
+    matched <- any(grepl(paste0("^", model_base), available_models))
+    if (!matched) {
+      stop(sprintf(
+        "Model '%s' is not installed in Ollama. Available models: %s. Run 'ollama pull %s' to install it.",
+        model, paste(available_models, collapse = ", "), model
+      ))
+    }
+  }
+
   if (verbose) {
     message("Calling Ollama with model: ", model)
   }
 
-  tryCatch({
-    body <- list(
-      model = model,
-      prompt = prompt,
-      stream = FALSE,
-      options = list(
-        temperature = temperature,
-        num_predict = max_tokens
-      )
+  body <- list(
+    model = model,
+    prompt = prompt,
+    stream = FALSE,
+    options = list(
+      temperature = temperature,
+      num_predict = max_tokens
     )
+  )
 
-    response <- httr::POST(
-      paste0(.ollama_base_url(), "/api/generate"),
-      body = jsonlite::toJSON(body, auto_unbox = TRUE),
-      httr::content_type_json(),
-      httr::timeout(timeout)
-    )
+  response <- httr::POST(
+    paste0(.ollama_base_url(), "/api/generate"),
+    body = jsonlite::toJSON(body, auto_unbox = TRUE),
+    httr::content_type_json(),
+    httr::timeout(timeout)
+  )
 
-    if (httr::status_code(response) == 200) {
-      content <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+  if (httr::status_code(response) != 200) {
+    stop(sprintf("Ollama API returned status code: %d", httr::status_code(response)))
+  }
 
-      if (!is.null(content$response)) {
-        if (verbose) {
-          message("Ollama response received successfully")
-        }
-        return(trimws(content$response))
-      } else {
-        warning("Ollama response was empty")
-        return(NULL)
-      }
-    } else {
-      warning("Ollama API returned status code: ", httr::status_code(response))
-      return(NULL)
-    }
+  content <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
 
-  }, error = function(e) {
-    warning("Error calling Ollama: ", e$message)
-    return(NULL)
-  })
+  if (is.null(content$response) || !nzchar(trimws(content$response))) {
+    stop("Ollama returned an empty response.")
+  }
+
+  if (verbose) {
+    message("Ollama response received successfully")
+  }
+
+  return(trimws(content$response))
 }
 
 #' Get Recommended Ollama Model
@@ -1482,10 +1487,12 @@ call_gemini_chat <- function(system_prompt,
                     httr::content(response, "text", encoding = "UTF-8"))
   }
 
-  res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+  res_json <- jsonlite::fromJSON(
+    httr::content(response, "text", encoding = "UTF-8"),
+    simplifyVector = FALSE
+  )
 
   if (!is.null(res_json$candidates) && length(res_json$candidates) > 0) {
-    # Extract text from Gemini response structure
     parts <- res_json$candidates[[1]]$content$parts
     if (!is.null(parts) && length(parts) > 0) {
       return(parts[[1]]$text)
