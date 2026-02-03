@@ -1206,6 +1206,7 @@ list_ollama_models <- function(verbose = FALSE) {
 #'
 #' @param prompt Character string containing the prompt.
 #' @param model Character string specifying the Ollama model (default: "llama3.2").
+#' @param system Character string with system instructions (default: NULL).
 #' @param temperature Numeric value controlling randomness (default: 0.3).
 #' @param max_tokens Maximum number of tokens to generate (default: 512).
 #' @param timeout Timeout in seconds for the request (default: 60).
@@ -1226,6 +1227,7 @@ list_ollama_models <- function(verbose = FALSE) {
 #' }
 call_ollama <- function(prompt,
                        model = "llama3.2",
+                       system = NULL,
                        temperature = 0.3,
                        max_tokens = 512,
                        timeout = 120,
@@ -1260,6 +1262,10 @@ call_ollama <- function(prompt,
       num_predict = max_tokens
     )
   )
+
+  if (!is.null(system) && nzchar(system)) {
+    body$system <- system
+  }
 
   response <- httr::POST(
     paste0(.ollama_base_url(), "/api/generate"),
@@ -1440,7 +1446,7 @@ call_gemini_chat <- function(system_prompt,
                               user_prompt,
                               model = "gemini-2.5-flash",
                               temperature = 0,
-                              max_tokens = 1024,
+                              max_tokens = 8192,
                               api_key) {
 
   if (!requireNamespace("httr", quietly = TRUE)) {
@@ -1497,7 +1503,17 @@ call_gemini_chat <- function(system_prompt,
   if (!is.null(res_json$candidates) && length(res_json$candidates) > 0) {
     parts <- res_json$candidates[[1]]$content$parts
     if (!is.null(parts) && length(parts) > 0) {
-      return(parts[[1]]$text)
+      answer_texts <- character(0)
+      for (part in parts) {
+        if (isTRUE(part$thought)) next
+        if (!is.null(part$text) && nzchar(part$text)) {
+          answer_texts <- c(answer_texts, part$text)
+        }
+      }
+      if (length(answer_texts) > 0) {
+        return(paste(answer_texts, collapse = "\n"))
+      }
+      return(parts[[length(parts)]]$text)
     }
   }
 
@@ -1595,8 +1611,9 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
       api_key = api_key
     ),
     "ollama" = call_ollama(
-      prompt = paste0(system_prompt, "\n\n", user_prompt),
+      prompt = user_prompt,
       model = model,
+      system = system_prompt,
       temperature = temperature,
       max_tokens = max_tokens
     )
@@ -1616,7 +1633,7 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
 #' @return Character string description, or NULL on failure
 #' @keywords internal
 describe_image_ollama <- function(image_base64,
-                                  prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                                  prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                                   model = "llava",
                                   timeout = 120) {
   if (!requireNamespace("httr", quietly = TRUE) ||
@@ -1662,7 +1679,7 @@ describe_image_ollama <- function(image_base64,
 #' @return Character string description, or NULL on failure
 #' @keywords internal
 describe_image_openai <- function(image_base64,
-                                  prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                                  prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                                   model = "gpt-4.1",
                                   max_tokens = 500,
                                   api_key) {
@@ -1730,7 +1747,7 @@ describe_image_openai <- function(image_base64,
 #' @return Character string description, or NULL on failure
 #' @keywords internal
 describe_image_gemini <- function(image_base64,
-                                  prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                                  prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                                   model = "gemini-2.5-flash",
                                   max_tokens = 500,
                                   api_key) {
@@ -1826,7 +1843,7 @@ describe_image <- function(image_base64,
                            provider = "ollama",
                            model = NULL,
                            api_key = NULL,
-                           prompt = "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+                           prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                            timeout = 120) {
   if (is.null(model)) {
     model <- switch(provider,

@@ -7,7 +7,7 @@
 describe_image_gemini(
   image_base64,
   prompt =
-    "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+    "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
   model = "gemini-2.5-flash",
   max_tokens = 500,
   api_key

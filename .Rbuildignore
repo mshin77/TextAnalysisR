@@ -18,3 +18,4 @@
 ^\.Renviron$
 ^check_package\.R$
 ^vignettes$
+^\.env\.example$

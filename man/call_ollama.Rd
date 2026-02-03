@@ -7,6 +7,7 @@
 call_ollama(
   prompt,
   model = "llama3.2",
+  system = NULL,
   temperature = 0.3,
   max_tokens = 512,
   timeout = 120,
@@ -17,6 +18,8 @@ call_ollama(
 \item{prompt}{Character string containing the prompt.}
 
 \item{model}{Character string specifying the Ollama model (default: "llama3.2").}
+
+\item{system}{Character string with system instructions (default: NULL).}
 
 \item{temperature}{Numeric value controlling randomness (default: 0.3).}
 

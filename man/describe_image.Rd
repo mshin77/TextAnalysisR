@@ -10,7 +10,7 @@ describe_image(
   model = NULL,
   api_key = NULL,
   prompt =
-    "Describe this image in detail, focusing on any charts, diagrams, tables, or textual content. Extract any visible text.",
+    "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
   timeout = 120
 )
 }
