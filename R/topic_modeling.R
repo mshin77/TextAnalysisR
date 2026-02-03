@@ -424,7 +424,7 @@ generate_topic_labels <- function(top_topic_terms,
     model <- switch(provider,
       "ollama" = {
         recommended <- get_recommended_ollama_model(verbose = verbose)
-        if (is.null(recommended)) "llama3.2" else recommended
+        if (is.null(recommended)) "tinyllama" else recommended
       },
       "openai" = "gpt-4.1-mini",
       "gemini" = "gemini-2.5-flash"
@@ -647,40 +647,14 @@ calculate_topic_probability <- function(stm_model,
                                     verbose = TRUE,
                                     ...) {
 
-  gamma_td <- tidytext::tidy(stm_model, matrix="gamma", ...)
+  gamma_td <- tidytext::tidy(stm_model, matrix = "gamma", ...)
 
-  gamma_terms <- gamma_td %>%
-    group_by(topic) %>%
-    summarise(gamma = mean(gamma)) %>%
-    arrange(desc(gamma)) %>%
-    mutate(topic = stats::reorder(topic, gamma)) %>%
-    top_n(top_n, gamma) %>%
-    mutate(tt = as.numeric(topic)) %>%
-    mutate(ord = topic) %>%
-    mutate(topic = paste('Topic', topic)) %>%
-    arrange(ord)
-
-  levelt = paste("Topic", gamma_terms$ord) %>% unique()
-  gamma_terms$topic = factor(gamma_terms$topic, levels = levelt)
-
-  gamma_terms %>%
-    select(topic, gamma) %>%
-    mutate_if(is.numeric, ~ round(., 3)) %>%
-    DT::datatable(
-      rownames = FALSE,
-      extensions = 'Buttons',
-      options = list(
-        scrollX = TRUE,
-        scrollY = "400px",
-        width = "80%",
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
-      )
-    ) %>%
-    DT::formatStyle(
-      columns = c("topic", "gamma"),
-      fontSize = '16px'
-    )
+  gamma_td %>%
+    dplyr::group_by(topic) %>%
+    dplyr::summarise(gamma = mean(gamma), .groups = "drop") %>%
+    dplyr::arrange(dplyr::desc(gamma)) %>%
+    dplyr::top_n(top_n, gamma) %>%
+    dplyr::mutate(gamma = round(gamma, 3))
 }
 
 run_llm_topics_internal <- function(texts, n_topics = 10,
@@ -4449,7 +4423,9 @@ plot_word_probability <- function(top_topic_terms,
   ggplot_obj <- ggplot2::ggplot(
     top_topic_terms,
     ggplot2::aes(term, beta, fill = labeled_topic,
-                 text = paste("Topic:", labeled_topic, "<br>", measure_label, ":", sprintf("%.3f", beta)))
+                 text = paste0("Term: ", gsub("___.*$", "", term), "<br>",
+                              "Topic: ", labeled_topic, "<br>",
+                              measure_label, ": ", sprintf("%.3f", beta)))
   ) +
     ggplot2::geom_col(show.legend = FALSE, alpha = 0.8) +
     ggplot2::facet_wrap(~ labeled_topic, scales = "free", ncol = ncol, strip.position = "top") +
@@ -4493,48 +4469,28 @@ plot_word_probability <- function(top_topic_terms,
 #' @description
 #' Generates a bar plot showing the prevalence of each topic across all documents.
 #'
-#' @param stm_model A fitted STM model object.
-#' @param gamma_data Optional pre-computed gamma data frame (default: NULL).
+#' @param gamma_data A data frame with gamma values from calculate_topic_probability().
 #' @param top_n The number of topics to display (default: 10).
-#' @param height The height of the resulting Plotly plot, in pixels (default: 800).
-#' @param width The width of the resulting Plotly plot, in pixels (default: 1000).
 #' @param topic_labels Optional topic labels (default: NULL).
 #' @param colors Optional color palette for topics (default: NULL).
-#' @param verbose Logical, if TRUE, prints progress messages.
+#' @param ylab Y-axis label (default: "Topic Proportion").
 #' @param base_font_size Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.
-#' @param ... Further arguments passed to tidytext::tidy.
 #'
-#' @return A plotly object showing a bar plot of topic prevalence.
+#' @return A ggplot2 object showing a bar plot of topic prevalence.
 #'
 #' @family topic_modeling
 #' @export
-plot_topic_probability <- function(stm_model = NULL,
-                                   gamma_data = NULL,
+plot_topic_probability <- function(gamma_data,
                                    top_n = 10,
-                                   height = 800,
-                                   width = 1000,
                                    topic_labels = NULL,
                                    colors = NULL,
-                                   verbose = TRUE,
-                                   base_font_size = 14,
-                                   ...) {
+                                   ylab = "Topic Proportion",
+                                   base_font_size = 14) {
 
-    if (!is.null(gamma_data)) {
-      gamma_terms <- gamma_data
-      if (!is.null(top_n) && top_n < nrow(gamma_terms)) {
-        gamma_terms <- gamma_terms %>%
-          dplyr::top_n(top_n, gamma)
-      }
-    } else if (!is.null(stm_model)) {
-      gamma_td <- tidytext::tidy(stm_model, matrix = "gamma", ...)
-      gamma_terms <- gamma_td %>%
-        dplyr::group_by(topic) %>%
-        dplyr::summarise(gamma = mean(gamma)) %>%
-        dplyr::arrange(dplyr::desc(gamma)) %>%
-        dplyr::mutate(topic = stats::reorder(topic, gamma)) %>%
+    gamma_terms <- gamma_data
+    if (!is.null(top_n) && top_n < nrow(gamma_terms)) {
+      gamma_terms <- gamma_terms %>%
         dplyr::top_n(top_n, gamma)
-    } else {
-      stop("Either stm_model or gamma_data must be provided")
     }
 
     if (!is.null(topic_labels)) {
@@ -4571,7 +4527,7 @@ plot_topic_probability <- function(stm_model = NULL,
       ggplot2::coord_flip() +
       ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
       ggplot2::xlab("") +
-      ggplot2::ylab("Topic Proportion") +
+      ggplot2::ylab(ylab) +
       ggplot2::theme_minimal(base_size = base_font_size) +
       ggplot2::theme(
         legend.position = "none",
@@ -4591,21 +4547,7 @@ plot_topic_probability <- function(stm_model = NULL,
       ggplot_obj <- ggplot_obj + ggplot2::scale_fill_manual(values = colors)
     }
 
-    plotly::ggplotly(ggplot_obj, tooltip = "text", height = height, width = width) %>%
-      plotly::layout(
-        xaxis = list(
-          tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
-        ),
-        yaxis = list(
-          tickfont = list(size = base_font_size + 2, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          titlefont = list(size = base_font_size + 2, color = "#0c1f4a", family = "Roboto, sans-serif")
-        ),
-        margin = list(t = 50, b = 40, l = 80, r = 40),
-        hoverlabel = list(
-          font = list(size = base_font_size + 2, family = "Roboto, sans-serif")
-        )
-      )
+    ggplot_obj
 }
 
 

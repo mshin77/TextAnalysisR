@@ -5,41 +5,29 @@
 \title{Plot Per-Document Per-Topic Probabilities}
 \usage{
 plot_topic_probability(
-  stm_model = NULL,
-  gamma_data = NULL,
+  gamma_data,
   top_n = 10,
-  height = 800,
-  width = 1000,
   topic_labels = NULL,
   colors = NULL,
-  verbose = TRUE,
-  base_font_size = 14,
-  ...
+  ylab = "Topic Proportion",
+  base_font_size = 14
 )
 }
 \arguments{
-\item{stm_model}{A fitted STM model object.}
-
-\item{gamma_data}{Optional pre-computed gamma data frame (default: NULL).}
+\item{gamma_data}{A data frame with gamma values from calculate_topic_probability().}
 
 \item{top_n}{The number of topics to display (default: 10).}
-
-\item{height}{The height of the resulting Plotly plot, in pixels (default: 800).}
-
-\item{width}{The width of the resulting Plotly plot, in pixels (default: 1000).}
 
 \item{topic_labels}{Optional topic labels (default: NULL).}
 
 \item{colors}{Optional color palette for topics (default: NULL).}
 
-\item{verbose}{Logical, if TRUE, prints progress messages.}
+\item{ylab}{Y-axis label (default: "Topic Proportion").}
 
 \item{base_font_size}{Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.}
-
-\item{...}{Further arguments passed to tidytext::tidy.}
 }
 \value{
-A plotly object showing a bar plot of topic prevalence.
+A ggplot2 object showing a bar plot of topic prevalence.
 }
 \description{
 Generates a bar plot showing the prevalence of each topic across all documents.

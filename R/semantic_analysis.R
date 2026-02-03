@@ -1149,7 +1149,7 @@ generate_cluster_labels <- function(cluster_keywords,
     model <- switch(provider,
       "ollama" = {
         recommended <- get_recommended_ollama_model(verbose = verbose)
-        if (is.null(recommended)) "llama3.2" else recommended
+        if (is.null(recommended)) "tinyllama" else recommended
       },
       "openai" = "gpt-4.1-mini",
       "gemini" = "gemini-2.5-flash"
@@ -2758,7 +2758,7 @@ sentiment_embedding_analysis <- function(texts,
 #' @param doc_names Optional character vector of document names (default: text1, text2, ...).
 #' @param provider AI provider to use: "openai" (default), "gemini", or "ollama".
 #' @param model Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
-#'   "gemini-2.5-flash" (Gemini), "llama3.2" (Ollama).
+#'   "gemini-2.5-flash" (Gemini), "tinyllama" (Ollama).
 #' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
 #'   Not required for Ollama.
 #' @param batch_size Number of texts to process per API call (default: 5).
@@ -2843,7 +2843,7 @@ analyze_sentiment_llm <- function(texts,
     model <- switch(provider,
       "openai" = "gpt-4.1-mini",
       "gemini" = "gemini-2.5-flash",
-      "ollama" = "llama3.2"
+      "ollama" = "tinyllama"
     )
   }
 
@@ -4253,7 +4253,7 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #' @param embedding_model Character string, embedding model. Defaults:
 #'   "nomic-embed-text" (ollama), "text-embedding-3-small" (openai),
 #'   "gemini-embedding-001" (gemini)
-#' @param chat_model Character string, chat model. Defaults: "llama3.2" (ollama),
+#' @param chat_model Character string, chat model. Defaults: "tinyllama" (ollama),
 #'   "gpt-4.1-mini" (openai), "gemini-2.5-flash" (gemini)
 #' @param top_k Integer, number of documents to retrieve (default: 5)
 #'
@@ -4364,7 +4364,7 @@ run_rag_search <- function(
 
   if (is.null(chat_model)) {
     chat_model <- switch(provider,
-      "ollama" = "llama3.2",
+      "ollama" = "tinyllama",
       "openai" = "gpt-4.1-mini",
       "gemini" = "gemini-2.5-flash"
     )
