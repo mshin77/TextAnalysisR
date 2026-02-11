@@ -1,7 +1,7 @@
 Package: TextAnalysisR
-Title: Text Mining and Natural Language Processing Toolkit
+Title: A Text Mining Workflow Tool
 Version: 0.0.3
-Date: 2025-12-25
+Date: 2025-12-27
 Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7907-9193", affiliation = "Illinois State University"))
@@ -85,7 +85,7 @@ Suggests:
     textdata,
     umap
 Depends: R (>= 2.10)
-URL: https://mshin77.github.io/TextAnalysisR
+URL: https://github.com/mshin77/TextAnalysisR
 BugReports: https://github.com/mshin77/TextAnalysisR/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3

@@ -2313,8 +2313,8 @@ server <- shinyServer(function(input, output, session) {
         "",
         "If you use this preprocessing workflow in your research, please cite:",
         "",
-        "Shin, M. (2025). TextAnalysisR: Text mining workflow tool (Version 0.0.3)",
-        "  [R package]. https://github.com/mshin77/TextAnalysisR",
+        "Shin, M. (2025). TextAnalysisR: A text mining workflow tool (R package version 0.0.3)",
+        "  [Computer software]. https://github.com/mshin77/TextAnalysisR",
         "",
         "================================================================================",
         "END OF REPORT",
@@ -16106,7 +16106,8 @@ server <- shinyServer(function(input, output, session) {
     search_result <- hybrid_K_search()
     if (!is.null(search_result) && !is.null(search_result$results)) {
       height_val <- input$height_search_k %||% 600
-      plotly::plotlyOutput("hybrid_quality_metrics_plot", height = paste0(height_val, "px"), width = "100%")
+      width_val <- input$width_search_k %||% 1000
+      plotly::plotlyOutput("hybrid_quality_metrics_plot", height = paste0(height_val, "px"), width = paste0(width_val, "px"))
     }
   })
 
@@ -16155,7 +16156,8 @@ server <- shinyServer(function(input, output, session) {
     search_result <- hybrid_K_search()
     if (!is.null(search_result) && !is.null(search_result$results)) {
       height_val <- input$height_search_k %||% 600
-      plotly::plotlyOutput("hybrid_model_comparison_plot", height = paste0(height_val, "px"), width = "100%")
+      width_val <- input$width_search_k %||% 1000
+      plotly::plotlyOutput("hybrid_model_comparison_plot", height = paste0(height_val, "px"), width = paste0(width_val, "px"))
     }
   })
 
@@ -18462,12 +18464,13 @@ server <- shinyServer(function(input, output, session) {
 
   output$quality_metrics_plot_uiOutput <- renderUI({
     height_val <- input$height_search_k %||% 600
+    width_val <- input$width_search_k %||% 1000
     div(
-      style = "margin-bottom: 20px; overflow: hidden;",
+      style = "margin-bottom: 20px; overflow: auto;",
       plotly::plotlyOutput(
         "quality_metrics_plot",
         height = paste0(height_val, "px"),
-        width = "100%"
+        width = paste0(width_val, "px")
       )
     )
   })
@@ -18609,12 +18612,13 @@ server <- shinyServer(function(input, output, session) {
 
   output$model_comparison_plot_uiOutput <- renderUI({
     height_val <- input$height_search_k %||% 600
+    width_val <- input$width_search_k %||% 1000
     div(
-      style = "margin-bottom: 20px; overflow: hidden;",
+      style = "margin-bottom: 20px; overflow: auto;",
       plotly::plotlyOutput(
         "model_comparison_plot",
         height = paste0(height_val, "px"),
-        width = "100%"
+        width = paste0(width_val, "px")
       )
     )
   })

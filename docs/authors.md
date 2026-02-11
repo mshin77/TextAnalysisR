@@ -11,11 +11,11 @@
 Source:
 [`inst/CITATION`](https://github.com/mshin77/TextAnalysisR/blob/HEAD/inst/CITATION)
 
-Shin, M. (2025). TextAnalysisR: Text mining workflow tool (Version
-0.0.3) \[R package\]. https://github.com/mshin77/TextAnalysisR
+Shin, M. (2025). TextAnalysisR: A text mining workflow tool (R package
+version 0.0.3) \[Computer software\]. https://github.com/mshin77/TextAnalysisR
 
     @Manual{,
-      title = {TextAnalysisR: Text mining workflow tool},
+      title = {TextAnalysisR: A text mining workflow tool},
       author = {Mikyung Shin},
       year = {2025},
       note = {R package version 0.0.3},

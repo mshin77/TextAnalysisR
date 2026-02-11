@@ -4,7 +4,7 @@
 \name{TextAnalysisR-package}
 \alias{TextAnalysisR}
 \alias{TextAnalysisR-package}
-\title{TextAnalysisR: Text Mining and Natural Language Processing Toolkit}
+\title{TextAnalysisR: A Text Mining Workflow Tool}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
@@ -13,7 +13,7 @@ Comprehensive toolkit for text mining and natural language processing with an in
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://mshin77.github.io/TextAnalysisR}
+  \item \url{https://github.com/mshin77/TextAnalysisR}
   \item Report bugs at \url{https://github.com/mshin77/TextAnalysisR/issues}
 }
 

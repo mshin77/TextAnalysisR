@@ -528,75 +528,88 @@ lexical_diversity_analysis <- function(x,
     stop("Package 'quanteda.textstats' is required. Please install it.")
   }
 
-  # Measures available in quanteda.textstats
-
-  quanteda_measures <- c("TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Vm", "Maas", "MATTR", "MSTTR")
-
-  # MTLD requires koRpus package (most recommended measure per McCarthy & Jarvis 2010)
+  quanteda_measures <- c("TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Vm", "Maas", "MSTTR")
   mtld_requested <- FALSE
+  mattr_requested <- FALSE
 
   if ("all" %in% measures) {
     measures_to_use <- quanteda_measures
     mtld_requested <- TRUE
+    mattr_requested <- TRUE
   } else {
     if ("MTLD" %in% measures) {
       mtld_requested <- TRUE
       measures <- setdiff(measures, "MTLD")
     }
+    if ("MATTR" %in% measures) {
+      mattr_requested <- TRUE
+      measures <- setdiff(measures, "MATTR")
+    }
     measures_to_use <- intersect(measures, quanteda_measures)
   }
 
-  # Determine input type and prepare tokens for MTLD if needed
   is_tokens_input <- inherits(x, "tokens")
-
-  # For MTLD with DFM input, proper token sequences are needed
-  # Create tokens from texts if available, otherwise warn
-  mtld_tokens <- NULL
-  if (mtld_requested && !is_tokens_input) {
+  seq_tokens <- NULL
+  if ((mtld_requested || mattr_requested) && !is_tokens_input) {
     if (!is.null(texts) && length(texts) == quanteda::ndoc(x)) {
-      # Create tokens from original texts to preserve order for MTLD
-      mtld_tokens <- quanteda::tokens(texts, remove_punct = TRUE)
+      seq_tokens <- quanteda::tokens(texts, remove_punct = TRUE)
     } else {
-      message("Note: MTLD requires sequential token order (McCarthy & Jarvis, 2010). ",
-              "DFM input loses token order. For accurate MTLD, pass a tokens object ",
-              "or provide the 'texts' parameter. Skipping MTLD calculation.")
+      message("MTLD/MATTR require sequential token order. DFM input loses token order. ",
+              "Pass a tokens object or provide the 'texts' parameter. Skipping.")
       mtld_requested <- FALSE
+      mattr_requested <- FALSE
     }
   }
 
   tryCatch({
-    # Calculate minimum document length to set appropriate window size
-    doc_lengths <- quanteda::ntoken(x)
-    min_length <- min(doc_lengths)
-
-    # Set window size for MATTR/MSTTR (default is 100, adjust if documents are shorter)
-    window_size <- min(100, max(10, min_length))
-
-    # Calculate quanteda measures if any requested
-    if (length(measures_to_use) > 0) {
-      lexdiv_results <- suppressWarnings(
-        quanteda.textstats::textstat_lexdiv(
-          x,
-          measure = measures_to_use,
-          MATTR_window = window_size,
-          MSTTR_segment = window_size
-        )
-      )
+    if (is_tokens_input) {
+      x_dfm <- quanteda::dfm(x)
     } else {
-      # Create empty data frame with document names
-      lexdiv_results <- data.frame(document = quanteda::docnames(x))
+      x_dfm <- x
     }
 
-    # Add MTLD if requested - use custom implementation (McCarthy & Jarvis 2010)
+    doc_lengths <- quanteda::ntoken(x_dfm)
+    valid_mask <- doc_lengths > 0
+    min_length <- if (any(valid_mask)) min(doc_lengths[valid_mask]) else 0
+
+    window_size <- min(100, max(10, min_length))
+
+    if (length(measures_to_use) > 0 && any(valid_mask)) {
+      if (all(valid_mask)) {
+        lexdiv_results <- suppressWarnings(
+          quanteda.textstats::textstat_lexdiv(
+            x_dfm,
+            measure = measures_to_use,
+            MATTR_window = window_size,
+            MSTTR_segment = window_size
+          )
+        )
+      } else {
+        x_valid <- quanteda::dfm_subset(x_dfm, valid_mask)
+        valid_results <- suppressWarnings(
+          quanteda.textstats::textstat_lexdiv(
+            x_valid,
+            measure = measures_to_use,
+            MATTR_window = min(100, max(10, min(quanteda::ntoken(x_valid)))),
+            MSTTR_segment = min(100, max(10, min(quanteda::ntoken(x_valid))))
+          )
+        )
+        lexdiv_results <- data.frame(document = quanteda::docnames(x_dfm))
+        for (m in measures_to_use) {
+          lexdiv_results[[m]] <- NA_real_
+          lexdiv_results[[m]][valid_mask] <- valid_results[[m]]
+        }
+      }
+    } else {
+      lexdiv_results <- data.frame(document = quanteda::docnames(x_dfm))
+    }
+
     if (mtld_requested) {
       tryCatch({
-        # Optimized MTLD implementation based on McCarthy & Jarvis (2010)
-        # Uses O(n) environment-based hash tracking instead of O(n^2) vector concatenation
         calculate_mtld <- function(tokens, factor_size = 0.72) {
           n <- length(tokens)
           if (n < 10) return(NA_real_)
 
-          # Helper function to calculate MTLD in one direction using O(n) algorithm
           mtld_one_direction <- function(toks) {
             n_toks <- length(toks)
             seen <- new.env(hash = TRUE, size = n_toks)
@@ -615,14 +628,12 @@ lexical_diversity_analysis <- function(x,
 
               if (current_ttr <= factor_size) {
                 factors <- factors + 1
-                # Reset for new factor
                 rm(list = ls(seen), envir = seen)
                 unique_count <- 0
                 start_idx <- i + 1
               }
             }
 
-            # Add partial factor for remaining tokens
             if (start_idx <= n_toks) {
               remaining_length <- n_toks - start_idx + 1
               if (remaining_length > 0 && unique_count > 0) {
@@ -635,20 +646,15 @@ lexical_diversity_analysis <- function(x,
             if (factors > 0) n_toks / factors else NA_real_
           }
 
-          # Forward and backward MTLD
           forward_mtld <- mtld_one_direction(tokens)
           backward_mtld <- mtld_one_direction(rev(tokens))
-
-          # Average forward and backward
           mean(c(forward_mtld, backward_mtld), na.rm = TRUE)
         }
 
-        # Determine token source for MTLD calculation
-        tokens_for_mtld <- if (is_tokens_input) x else mtld_tokens
+        tokens_source <- if (is_tokens_input) x else seq_tokens
 
-        # Get tokens for each document
-        mtld_values <- vapply(seq_len(quanteda::ndoc(tokens_for_mtld)), function(i) {
-          doc_tokens <- as.character(tokens_for_mtld[[i]])
+        mtld_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
+          doc_tokens <- as.character(tokens_source[[i]])
           if (length(doc_tokens) < 10) return(NA_real_)
           calculate_mtld(doc_tokens)
         }, numeric(1))
@@ -659,7 +665,27 @@ lexical_diversity_analysis <- function(x,
       })
     }
 
-    # Add document names if not present
+    if (mattr_requested) {
+      tryCatch({
+        tokens_source <- if (is_tokens_input) x else seq_tokens
+        mattr_window <- min(50, min(quanteda::ntoken(tokens_source)))
+
+        mattr_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
+          doc_tokens <- as.character(tokens_source[[i]])
+          n <- length(doc_tokens)
+          if (n < mattr_window) return(NA_real_)
+          ttrs <- vapply(seq_len(n - mattr_window + 1), function(j) {
+            length(unique(doc_tokens[j:(j + mattr_window - 1)])) / mattr_window
+          }, numeric(1))
+          mean(ttrs)
+        }, numeric(1))
+
+        lexdiv_results$MATTR <- as.numeric(mattr_values)
+      }, error = function(e) {
+        message("MATTR calculation failed: ", e$message, ". Skipping MATTR.")
+      })
+    }
+
     if (!"document" %in% names(lexdiv_results)) {
       lexdiv_results$document <- quanteda::docnames(x)
     }
@@ -3478,7 +3504,6 @@ plot_weighted_log_odds <- function(weighted_data,
         font = list(size = 20, color = "#0c1f4a", family = "Roboto, sans-serif"),
         x = 0.5, xanchor = "center"
       ),
-      height = max(height, n_rows * 300),
       margin = list(l = 100, r = 40, t = 80, b = 60),
       hoverlabel = list(
         align = "left",
@@ -3486,6 +3511,8 @@ plot_weighted_log_odds <- function(weighted_data,
         bgcolor = "#0c1f4a"
       )
     )
+
+  p$height <- max(height, n_rows * 300)
 
   return(p)
 }
