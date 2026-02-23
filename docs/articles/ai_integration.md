@@ -34,6 +34,7 @@ Content types available:
 - **interview_question**: Open-ended interview prompts
 
 ``` r
+
 # Generate topic labels
 labels <- generate_topic_labels(
  top_topic_terms,
@@ -60,6 +61,7 @@ items <- generate_topic_content(
 | [`generate_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/generate_embeddings.md) | Local embeddings (sentence-transformers) |
 
 ``` r
+
 # Generate cluster labels
 cluster_labels <- generate_cluster_labels(
  cluster_keywords,
@@ -83,6 +85,7 @@ result <- run_rag_search(
 | [`sentiment_lexicon_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/sentiment_lexicon_analysis.md) | Dictionary-based | Multiple lexicons (AFINN, Bing, NRC) |
 
 ``` r
+
 # LLM-based sentiment (nuanced)
 sentiment <- analyze_sentiment_llm(
  texts,
@@ -111,6 +114,7 @@ Deep linguistic processing via spaCy NLP models:
 | [`get_sentences()`](https://mshin77.github.io/TextAnalysisR/reference/get_sentences.md) | Sentence segmentation |
 
 ``` r
+
 # Initialize spaCy
 init_spacy_nlp("en_core_web_sm")
 
@@ -136,6 +140,7 @@ svo <- extract_subjects_objects(texts)
 Unified interface for all providers:
 
 ``` r
+
 # Provider-agnostic (recommended)
 response <- call_llm_api(
  provider = "openai",
@@ -158,6 +163,7 @@ call_ollama(prompt, model = "llama3.2")
 | [`get_recommended_ollama_model()`](https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.md) | Auto-select optimal model |
 
 ``` r
+
 # Check if Ollama is available
 if (check_ollama()) {
  models <- list_ollama_models()
@@ -184,6 +190,7 @@ principles:
 ### Local AI (Ollama)
 
 ``` r
+
 # 1. Install Ollama: https://ollama.com
 # 2. Pull a model (in terminal):
 #    ollama pull llama3.2
@@ -197,6 +204,7 @@ list_ollama_models()
 ### Web-based AI (OpenAI/Gemini)
 
 ``` r
+
 # Set API keys (choose one or both)
 Sys.setenv(OPENAI_API_KEY = "your-openai-key")
 Sys.setenv(GEMINI_API_KEY = "your-gemini-key")
@@ -209,6 +217,7 @@ Sys.setenv(GEMINI_API_KEY = "your-gemini-key")
 ### Linguistic Analysis (spaCy)
 
 ``` r
+
 # Install Python dependencies
 setup_python_env()
 

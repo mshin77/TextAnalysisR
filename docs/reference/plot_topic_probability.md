@@ -7,40 +7,24 @@ documents.
 
 ``` r
 plot_topic_probability(
-  stm_model = NULL,
-  gamma_data = NULL,
+  gamma_data,
   top_n = 10,
-  height = 800,
-  width = 1000,
   topic_labels = NULL,
   colors = NULL,
-  verbose = TRUE,
-  base_font_size = 14,
-  ...
+  ylab = "Topic Proportion",
+  base_font_size = 14
 )
 ```
 
 ## Arguments
 
-- stm_model:
-
-  A fitted STM model object.
-
 - gamma_data:
 
-  Optional pre-computed gamma data frame (default: NULL).
+  A data frame with gamma values from calculate_topic_probability().
 
 - top_n:
 
   The number of topics to display (default: 10).
-
-- height:
-
-  The height of the resulting Plotly plot, in pixels (default: 800).
-
-- width:
-
-  The width of the resulting Plotly plot, in pixels (default: 1000).
 
 - topic_labels:
 
@@ -50,22 +34,18 @@ plot_topic_probability(
 
   Optional color palette for topics (default: NULL).
 
-- verbose:
+- ylab:
 
-  Logical, if TRUE, prints progress messages.
+  Y-axis label (default: "Topic Proportion").
 
 - base_font_size:
 
   Base font size in pixels for the plot theme (default: 14). Axis text
   and strip text will be base_font_size + 2.
 
-- ...:
-
-  Further arguments passed to tidytext::tidy.
-
 ## Value
 
-A plotly object showing a bar plot of topic prevalence.
+A ggplot2 object showing a bar plot of topic prevalence.
 
 ## See also
 

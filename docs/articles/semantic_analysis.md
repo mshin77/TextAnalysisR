@@ -6,6 +6,7 @@ networks.
 ## Setup
 
 ``` r
+
 library(TextAnalysisR)
 
 mydata <- SpecialEduTech
@@ -17,6 +18,7 @@ dfm_object <- quanteda::dfm(tokens)
 ## Document Similarity
 
 ``` r
+
 similarity <- semantic_similarity_analysis(
   texts = united_tbl$united_texts,
   method = "cosine"
@@ -54,6 +56,7 @@ Documentation](https://www.sbert.net/)
 ### Lexicon-based (no Python)
 
 ``` r
+
 sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
 plot_sentiment_distribution(sentiment$document_sentiment)
 ```
@@ -61,6 +64,7 @@ plot_sentiment_distribution(sentiment$document_sentiment)
 ### Neural (requires Python)
 
 ``` r
+
 sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
 ```
 
@@ -73,6 +77,7 @@ sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
 > keyword extraction.
 
 ``` r
+
 results <- fit_embedding_model(
   texts = united_tbl$united_texts,
   method = "umap_dbscan",
@@ -93,6 +98,7 @@ for details.
 ### AI Cluster Labels
 
 ``` r
+
 labels <- generate_cluster_labels(
   results$topic_keywords,
   provider = "ollama"
@@ -119,6 +125,7 @@ detection.
 ### Word Co-occurrence Network
 
 ``` r
+
 network <- word_co_occurrence_network(
   dfm_object,
   co_occur_n = 10,                    # Minimum co-occurrence count
@@ -135,6 +142,7 @@ network$stats  # 9 network statistics
 ### Word Correlation Network
 
 ``` r
+
 corr_network <- word_correlation_network(
   dfm_object,
   common_term_n = 20,                 # Minimum term frequency
@@ -189,6 +197,7 @@ Detection](https://igraph.org/r/doc/communities.html)
 Track themes over time:
 
 ``` r
+
 temporal <- temporal_semantic_analysis(
   texts = united_tbl$united_texts,
   timestamps = united_tbl$year

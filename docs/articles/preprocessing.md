@@ -5,6 +5,7 @@ Preprocessing cleans and prepares text for analysis.
 ## Workflow
 
 ``` r
+
 library(TextAnalysisR)
 
 # 1. Load data
@@ -101,6 +102,7 @@ words. For sentiment analysis or syntactic studies, consider keeping
 stopwords as they may carry important meaning.
 
 ``` r
+
 tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
 ```
 
@@ -152,6 +154,7 @@ Create it after preprocessing (tokenization, stopword removal,
 lemmatization).
 
 ``` r
+
 dfm_object <- quanteda::dfm(tokens_clean)
 ```
 
@@ -165,6 +168,7 @@ Documentation](https://quanteda.io/reference/dfm.html)
 Detect phrases like “machine learning”:
 
 ``` r
+
 tokens <- detect_multi_words(tokens, min_count = 10)
 ```
 

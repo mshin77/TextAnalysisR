@@ -7,7 +7,7 @@
 ## usethis namespace: end
 NULL
 
-#' @title TextAnalysisR: Comprehensive Text Analysis Package
+#' @title TextAnalysisR: A Text Mining Workflow Tool
 #'
 #' @description
 #' TextAnalysisR provides a comprehensive suite of text analysis tools including:

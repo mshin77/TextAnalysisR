@@ -10,7 +10,7 @@ call_gemini_chat(
   user_prompt,
   model = "gemini-2.5-flash",
   temperature = 0,
-  max_tokens = 150,
+  max_tokens = 8192,
   api_key
 )
 ```

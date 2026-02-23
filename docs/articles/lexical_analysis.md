@@ -5,6 +5,7 @@ Lexical analysis examines word patterns and frequencies.
 ## Setup
 
 ``` r
+
 library(TextAnalysisR)
 
 mydata <- SpecialEduTech
@@ -16,6 +17,7 @@ dfm_object <- quanteda::dfm(tokens)
 ## Word Frequency
 
 ``` r
+
 plot_word_frequency(dfm_object, top_n = 20)
 ```
 
@@ -27,6 +29,7 @@ Find distinctive words per document using Term Frequency-Inverse
 Document Frequency:
 
 ``` r
+
 keywords <- extract_keywords_tfidf(dfm_object, top_n = 10)
 plot_tfidf_keywords(keywords, n_docs = 5)
 ```
@@ -41,6 +44,7 @@ corpus, identifying distinctive vocabulary.
 Compare word usage between groups:
 
 ``` r
+
 keyness <- extract_keywords_keyness(
   dfm_object,
   target_group = "Journal Article",
@@ -72,6 +76,7 @@ together. They capture multi-word expressions like “machine learning” or
 (collocation strength) to detect meaningful multi-word expressions.
 
 ``` r
+
 tokens <- detect_multi_words(tokens, min_count = 10)
 ```
 
@@ -116,6 +121,7 @@ Python spaCy via reticulate.
 | Case     | Grammatical case   | Nom, Acc, Dat, Gen  |
 
 ``` r
+
 parsed <- extract_pos_tags(texts)  # Uses spacy_parse_full
 # Returns columns: doc_id, token, lemma, pos, tag
 ```
@@ -152,12 +158,14 @@ Recognition](https://spacy.io/usage/linguistic-features#named-entities)
 ### Co-occurrence
 
 ``` r
+
 word_co_occurrence_network(dfm_object, co_occur_n = 10)
 ```
 
 ### Correlation
 
 ``` r
+
 word_correlation_network(dfm_object, corr_n = 0.3)
 ```
 
@@ -171,6 +179,7 @@ distinctive vocabulary.
 **Simple Log Odds Ratio:**
 
 ``` r
+
 log_odds <- calculate_log_odds_ratio(
   dfm_object,
   group_var = "category",
@@ -188,6 +197,7 @@ This method identifies words that reliably distinguish between groups,
 not just rare words with extreme ratios.
 
 ``` r
+
 # Requires tidylo package: install.packages("tidylo")
 weighted_odds <- calculate_weighted_log_odds(
   dfm_object,
@@ -207,6 +217,7 @@ Lexical dispersion (X-ray plot) shows where terms appear across
 documents.
 
 ``` r
+
 dispersion <- calculate_lexical_dispersion(tokens, terms = c("education", "technology"))
 plot_lexical_dispersion(dispersion)
 ```
@@ -238,6 +249,7 @@ of sentence structure and word characteristics.
 - Short texts may produce less reliable scores
 
 ``` r
+
 readability <- calculate_text_readability(united_tbl$united_texts)
 plot_readability_distribution(readability)
 ```
@@ -270,6 +282,7 @@ relationship between unique words (types) and total words (tokens).
 - Maas, Yule K, and Simpson D use inverse scales (lower = more diverse)
 
 ``` r
+
 diversity <- lexical_diversity_analysis(dfm_object)
 plot_lexical_diversity_distribution(diversity)
 ```

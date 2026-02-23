@@ -748,7 +748,7 @@ run_llm_topics_internal <- function(texts, n_topics = 10,
 #'
 #' @return List containing neural topic model and diagnostics
 #' @family topic-modeling
-#' @export
+#' @keywords internal
 run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
                                            hidden_units = 100, dropout_rate = 0.2,
                                            embedding_model = "all-MiniLM-L6-v2", seed = 123) {
@@ -814,7 +814,7 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #'
 #' @return List containing temporal topic model and evolution analysis
 #' @family topic-modeling
-#' @export
+#' @keywords internal
 run_temporal_topics_internal <- function(texts, metadata = NULL,
                                                         n_topics = 10,
                                                         temporal_unit = "year",
@@ -892,7 +892,6 @@ run_temporal_topics_internal <- function(texts, metadata = NULL,
 #'
 #' @return List containing contrastive topic model and metrics
 #' @family topic-modeling
-#' @export
 #' @keywords internal
 run_contrastive_topics_internal <- function(texts, n_topics = 10, temperature = 0.1,
                                                    negative_sampling_rate = 5,
@@ -946,7 +945,6 @@ run_contrastive_topics_internal <- function(texts, n_topics = 10, temperature = 
 #'
 #' @return List containing calculated evaluation metrics
 #' @family topic-modeling
-#' @export
 #' @keywords internal
 calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 

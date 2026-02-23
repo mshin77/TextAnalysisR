@@ -7,6 +7,7 @@ Quick reference guide organized by workflow stage.
 ### Complete Workflow (5 steps)
 
 ``` r
+
 library(TextAnalysisR)
 
 # 1. Load data
@@ -33,6 +34,7 @@ plot_sentiment_distribution(sentiment)
 ### Generate Embeddings
 
 ``` r
+
 # Auto-detect best available provider
 embeddings <- get_best_embeddings(texts)
 
@@ -44,6 +46,7 @@ plot_semantic_viz(reduced)
 ### Network Analysis
 
 ``` r
+
 # Co-occurrence network
 word_co_occurrence_network(dfm, top_node_n = 30, co_occur_n = 5)
 
@@ -255,5 +258,6 @@ first.
 The Shiny app provides an interactive interface for all functions:
 
 ``` r
+
 run_app()
 ```

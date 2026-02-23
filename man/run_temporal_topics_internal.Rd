@@ -68,3 +68,4 @@ Other topic-modeling:
 \code{\link{validate_semantic_coherence}()}
 }
 \concept{topic-modeling}
+\keyword{internal}

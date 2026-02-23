@@ -3,11 +3,11 @@ bibentry(
   title    = "TextAnalysisR: A text mining workflow tool",
   author   = person("Mikyung", "Shin", email = "shin.mikyung@gmail.com",
                     comment = c(ORCID = "0000-0001-7907-9193")),
-  year     = 2025,
+  year     = 2026,
   note     = "R package version 0.0.3",
   url      = "https://github.com/mshin77/TextAnalysisR",
   textVersion = paste(
-    "Shin, M. (2025).",
+    "Shin, M. (2026).",
     "TextAnalysisR: A text mining workflow tool (R package version 0.0.3) [Computer software].",
     "https://github.com/mshin77/TextAnalysisR"
   )

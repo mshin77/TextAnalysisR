@@ -6,6 +6,7 @@ sentiment analysis.
 ## Quick Setup
 
 ``` r
+
 library(TextAnalysisR)
 setup_python_env()
 ```
@@ -21,6 +22,7 @@ Uses virtualenv (or conda if available).
 ## Check Status
 
 ``` r
+
 check_python_env()
 ```
 
@@ -31,6 +33,7 @@ check_python_env()
 Set preferred environment in `.Rprofile`:
 
 ``` r
+
 Sys.setenv(RETICULATE_PYTHON_ENV = "textanalysisr-env")
 ```
 
@@ -41,6 +44,7 @@ Then restart R.
 Avoid OneDrive paths. Use:
 
 ``` r
+
 setup_python_env(method = "virtualenv", envpath = "C:/Python/envs")
 ```
 
@@ -65,6 +69,7 @@ pip install sentence-transformers transformers torch
 ## Diagnostics
 
 ``` r
+
 library(reticulate)
 py_config()
 virtualenv_list()

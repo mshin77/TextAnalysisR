@@ -19,12 +19,14 @@ TextAnalysisR includes built-in security features.
 **Environment Variable:**
 
 ``` r
+
 Sys.setenv(OPENAI_API_KEY = "sk-...")
 ```
 
 **Encrypted (Advanced):**
 
 ``` r
+
 keyring::key_set("openai_api")
 ```
 

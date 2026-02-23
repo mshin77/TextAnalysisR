@@ -1,4 +1,4 @@
-# TextAnalysisR: Text Mining and Natural Language Processing Toolkit
+# TextAnalysisR: A Text Mining Workflow Tool
 
 Comprehensive toolkit for text mining and natural language processing
 with an interactive 'Shiny' interface. Import documents from multiple
@@ -15,7 +15,7 @@ security for production deployment.
 
 Useful links:
 
-- <https://mshin77.github.io/TextAnalysisR>
+- <https://github.com/mshin77/TextAnalysisR>
 
 - Report bugs at <https://github.com/mshin77/TextAnalysisR/issues>
 

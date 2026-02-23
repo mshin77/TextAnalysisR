@@ -29,6 +29,7 @@ ollama pull llava-phi3     # Lightweight option
 ### Cloud (OpenAI / Gemini)
 
 ``` r
+
 Sys.setenv(OPENAI_API_KEY = "sk-...")
 Sys.setenv(GEMINI_API_KEY = "your-gemini-key")
 ```
@@ -36,6 +37,7 @@ Sys.setenv(GEMINI_API_KEY = "your-gemini-key")
 ## Usage
 
 ``` r
+
 library(TextAnalysisR)
 
 # Extract PDF with vision AI (default: Ollama)
@@ -51,6 +53,7 @@ tokens <- prep_texts(result$combined_text)
 ### Gemini Example
 
 ``` r
+
 result <- extract_pdf_multimodal(
   "paper.pdf",
   vision_provider = "gemini",
@@ -61,6 +64,7 @@ result <- extract_pdf_multimodal(
 ### Describe Individual Images
 
 ``` r
+
 description <- describe_image(
   image_base64,
   provider = "openai",
@@ -79,6 +83,7 @@ provides automatic fallback:
     available
 
 ``` r
+
 result <- process_pdf_unified("paper.pdf", vision_provider = "gemini")
 ```
 

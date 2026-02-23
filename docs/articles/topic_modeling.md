@@ -5,6 +5,7 @@ Topic modeling discovers hidden themes in text collections.
 ## Setup
 
 ``` r
+
 library(TextAnalysisR)
 
 mydata <- SpecialEduTech
@@ -16,6 +17,7 @@ dfm_object <- quanteda::dfm(tokens)
 ## Find Optimal Topics
 
 ``` r
+
 find_optimal_k(dfm_object, topic_range = 5:30)
 ```
 
@@ -40,6 +42,7 @@ across documents based on metadata like time, author, or category.
 - **Held-out Likelihood:** Predictive performance on unseen documents
 
 ``` r
+
 out <- quanteda::convert(dfm_object, to = "stm")
 
 model <- stm::stm(
@@ -86,6 +89,7 @@ automatically if the same provider/model is selected.
 | `"auto"`   | Auto-detect available backend    |
 
 ``` r
+
 # With precomputed embeddings (Ollama, OpenAI, Gemini)
 embeddings <- get_best_embeddings(
   texts = united_tbl$united_texts,
@@ -143,6 +147,7 @@ topic assignments.
 - **Adjusted Rand Index:** Clustering agreement corrected for chance
 
 ``` r
+
 results <- fit_hybrid_model(
   texts = united_tbl$united_texts,
   metadata = united_tbl[, c("reference_type", "year")],
@@ -167,6 +172,7 @@ edit:
 4.  **Override**: Use manual labels field to replace AI suggestions
 
 ``` r
+
 # AI suggests, human decides
 labels <- generate_topic_labels(
   terms,
@@ -204,6 +210,7 @@ probabilities (beta scores), ensuring outputs are anchored to your data.
 ### Example
 
 ``` r
+
 # Get topic terms with beta scores
 top_terms <- get_topic_terms(model, top_term_n = 10)
 
@@ -246,6 +253,7 @@ practices.
 **Customizing Prompts:**
 
 ``` r
+
 # Get default prompts
 system_prompt <- get_content_type_prompt("survey_item")
 user_template <- get_content_type_user_template("survey_item")

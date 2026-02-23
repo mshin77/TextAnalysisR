@@ -46,7 +46,7 @@ run_rag_search(
 
 - chat_model:
 
-  Character string, chat model. Defaults: "llama3.2" (ollama),
+  Character string, chat model. Defaults: "tinyllama" (ollama),
   "gpt-4.1-mini" (openai), "gemini-2.5-flash" (gemini)
 
 - top_k:

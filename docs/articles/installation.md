@@ -3,6 +3,7 @@
 ## R Package
 
 ``` r
+
 install.packages("remotes")
 remotes::install_github("mshin77/TextAnalysisR")
 library(TextAnalysisR)
@@ -27,6 +28,7 @@ available with an API key.
 For lemmatization, POS tagging, and named entity recognition:
 
 ``` r
+
 # Python spaCy required - see setup_python_env()
 TextAnalysisR::setup_python_env()
 ```
@@ -36,6 +38,7 @@ TextAnalysisR::setup_python_env()
 For embeddings and neural sentiment analysis:
 
 ``` r
+
 setup_python_env()
 ```
 

@@ -6,6 +6,7 @@ R code.
 ## Install
 
 ``` r
+
 install.packages("remotes")
 remotes::install_github("mshin77/TextAnalysisR")
 ```
@@ -13,6 +14,7 @@ remotes::install_github("mshin77/TextAnalysisR")
 ## Launch App
 
 ``` r
+
 library(TextAnalysisR)
 run_app()
 ```
@@ -23,6 +25,7 @@ version.
 ## Quick Example
 
 ``` r
+
 library(TextAnalysisR)
 
 # Load data

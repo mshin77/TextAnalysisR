@@ -1,8 +1,21 @@
 # Changelog
 
+## TextAnalysisR 0.0.3 (2026-02-22)
+
+### Changes
+
+- Fixed citation and documentation year from 2025 to 2026
+- Updated package title to “A Text Mining Workflow Tool” across
+  documentation
+- Added pkgdown site URL to DESCRIPTION
+- Updated
+  [`plot_topic_probability()`](https://mshin77.github.io/TextAnalysisR/reference/plot_topic_probability.md)
+  documentation
+- Refreshed pkgdown site articles and reference pages
+
 ## TextAnalysisR 0.0.3 (2025-12-27)
 
-### Breaking Changes
+### Changes
 
 - [`fit_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_topics.md)
   renamed to
@@ -72,6 +85,12 @@
 ### Security
 
 - Rate limiting, input validation, API key protection
+
+### Bug Fixes
+
+- Removed internal functions from package exports
+  (`run_neural_topics_internal`, `run_temporal_topics_internal`,
+  `run_contrastive_topics_internal`, `calculate_eval_metrics_internal`)
 
 ## TextAnalysisR 0.0.2 (2024-12-05)
 
