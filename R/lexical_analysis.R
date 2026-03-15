@@ -220,25 +220,15 @@ plot_morphology_feature <- function(data,
                                     title = NULL,
                                     colors = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required for visualization.")
-  }
-
   col_name <- paste0("morph_", feature)
 
   if (!col_name %in% names(data)) {
-    # Return empty plot with message
     return(
-      plotly::plot_ly(type = "scatter", mode = "markers") %>%
-        plotly::layout(
-          title = list(text = paste("Feature", feature, "not available"),
-                       font = list(size = 14, color = "#6B7280")),
-          xaxis = list(visible = FALSE),
-          yaxis = list(visible = FALSE),
-          annotations = list(
-            list(text = "No data", showarrow = FALSE, font = list(size = 16))
-          )
-        )
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = paste("Feature", feature, "not available"),
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
     )
   }
 
@@ -247,11 +237,11 @@ plot_morphology_feature <- function(data,
 
   if (length(values) == 0) {
     return(
-      plotly::plot_ly(type = "scatter", mode = "markers") %>%
-        plotly::layout(
-          title = list(text = paste("No", feature, "data found"),
-                       font = list(size = 14, color = "#6B7280"))
-        )
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = paste("No", feature, "data found"),
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
     )
   }
 
@@ -264,7 +254,6 @@ plot_morphology_feature <- function(data,
     title <- paste(feature, "Distribution")
   }
 
-  # Feature-specific default colors
   if (is.null(colors)) {
     colors <- switch(feature,
       "Number" = c("Sing" = "#3B82F6", "Plur" = "#10B981"),
@@ -288,36 +277,17 @@ plot_morphology_feature <- function(data,
     rep("#337ab7", nrow(freq_df))
   }
 
-  plotly::plot_ly(
-    data = freq_df,
-    x = ~Value,
-    y = ~Count,
-    type = "bar",
-    marker = list(color = bar_colors),
-    hoverinfo = "text",
-    hovertext = ~paste0(Value, "\nCount: ", Count, "\n", Percentage, "%")
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = "",
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = "Frequency",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      margin = list(t = 50, b = 50, l = 60, r = 20),
-      hoverlabel = list(
-        bgcolor = "#0c1f4a",
-        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
-        bordercolor = "#0c1f4a",
-        align = "left"
-      )
+  freq_df$fill_color <- bar_colors
+
+  ggplot2::ggplot(freq_df, ggplot2::aes(x = Value, y = Count,
+                                         text = paste0(Value, "\nCount: ", Count, "\n", Percentage, "%"))) +
+    ggplot2::geom_col(fill = freq_df$fill_color) +
+    ggplot2::labs(x = "", y = "Frequency", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
     )
 }
 
@@ -774,10 +744,6 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
                                                metric,
                                                title = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required.")
-  }
-
   if (!metric %in% names(lexdiv_data)) {
     stop(paste("Metric", metric, "not found in lexical diversity data"))
   }
@@ -790,23 +756,28 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
   metric_values <- metric_values[is.finite(metric_values)]
 
   if (length(metric_values) == 0) {
-    return(plot_error("No valid data for selected metric"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No valid data for selected metric",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
-  plotly::plot_ly(
-    y = metric_values,
-    type = "box",
-    name = "Distribution",
-    marker = list(color = "#8B5CF6"),
-    line = list(color = "#0c1f4a"),
-    fillcolor = "rgba(139, 92, 246, 0.7)",
-    hoverinfo = "y",
-    hoverlabel = get_plotly_hover_config()
-  ) %>%
-    apply_standard_plotly_layout(
-      title = title,
-      yaxis_title = metric,
-      margin = list(t = 60, b = 60, l = 80, r = 40)
+  plot_df <- data.frame(value = metric_values)
+
+  ggplot2::ggplot(plot_df, ggplot2::aes(y = value)) +
+    ggplot2::geom_boxplot(fill = "rgba(139, 92, 246, 0.7)",
+                          color = "#0c1f4a", outlier.color = "#8B5CF6") +
+    ggplot2::labs(y = metric, x = "", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank()
     )
 
 }
@@ -818,6 +789,8 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
 #' Wrapper function for plot_word_frequency for lexical analysis.
 #'
 #' @param ... Arguments passed to plot_word_frequency
+#'
+#' @return A plotly bar chart of word frequencies
 #'
 #' @family lexical
 #' @export
@@ -834,11 +807,11 @@ lexical_frequency_analysis <- function(...) {
 #'
 #' @param dfm_object A document-feature matrix created by quanteda::dfm().
 #' @param n The number of top words to display (default: 20).
-#' @param height The height of the resulting Plotly plot, in pixels (default: 800).
-#' @param width The width of the resulting Plotly plot, in pixels (default: 1000).
-#' @param ... Additional arguments passed to plotly::ggplotly().
+#' @param height Plot height in pixels (default: 800). Kept for backward compatibility.
+#' @param width Plot width in pixels (default: 1000). Kept for backward compatibility.
+#' @param ... Additional arguments (kept for backward compatibility).
 #'
-#' @return A plotly object showing word frequency.
+#' @return A ggplot object showing word frequency.
 #'
 #' @family visualization
 #' @export
@@ -874,7 +847,7 @@ plot_word_frequency <- function(dfm_object,
     ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = 0.5)) +
     ggplot2::coord_flip() +
     ggplot2::labs(x = "", y = "Frequency") +
-    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
       panel.grid.major.x = ggplot2::element_blank(),
       panel.grid.major.y = ggplot2::element_line(color = "#E0E0E0", linewidth = 0.3),
@@ -883,33 +856,15 @@ plot_word_frequency <- function(dfm_object,
       axis.line.y = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
       axis.ticks.y = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(t = 3)),
-      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", margin = ggplot2::margin(r = 3)),
-      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B", margin = ggplot2::margin(t = 3)),
+      axis.text.y = ggplot2::element_text(size = 11, color = "#3B3B3B", margin = ggplot2::margin(r = 3)),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 5)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 5)),
       plot.margin = ggplot2::margin(t = 5, r = 10, b = 5, l = 5)
     )
 
-  plotly::ggplotly(ggplot_obj, height = height, width = width, tooltip = "text", ...) %>%
-    plotly::layout(
-      autosize = TRUE,
-      margin = list(t = 20, b = 80, l = 80, r = 20),
-      xaxis = list(
-        title = list(text = "Frequency", font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = "", font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      hoverlabel = list(
-        bgcolor = "#0c1f4a",
-        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
-        bordercolor = "#0c1f4a",
-        align = "left"
-      )
-    )
+  ggplot_obj
 }
 
 
@@ -960,25 +915,14 @@ plot_ngram_frequency <- function(ngram_data,
                                   width = NULL,
                                   show_stats = TRUE) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(ngram_data) || nrow(ngram_data) == 0) {
-    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
-      plotly::layout(
-        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-        annotations = list(
-          list(
-            text = "No n-grams detected. Adjust parameters and click 'Detect N-grams'",
-            x = 0.5, y = 0.5,
-            xref = "paper", yref = "paper",
-            showarrow = FALSE,
-            font = list(size = 16, color = "#6B7280", family = "Roboto")
-          )
-        )
-      ))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No n-grams detected. Adjust parameters and click 'Detect N-grams'",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
   top_ngrams <- utils::head(ngram_data, top_n)
@@ -995,64 +939,29 @@ plot_ngram_frequency <- function(ngram_data,
     rep(FALSE, nrow(top_ngrams))
   }
 
-  hover_text <- if (show_stats && "lambda" %in% names(top_ngrams) && "z" %in% names(top_ngrams)) {
-    paste0(
-      top_ngrams$collocation, "\n",
-      "Frequency: ", top_ngrams$count, "\n",
-      "Lambda: ", round(top_ngrams$lambda, 2), "\n",
-      "Z-score: ", round(top_ngrams$z, 2)
-    )
+  top_ngrams$bar_fill <- ifelse(is_selected, highlight_color, default_color)
+  top_ngrams$bar_border <- ifelse(is_selected, "#337ab7", "#4B5563")
+
+  top_ngrams$hover_text <- if (show_stats && "lambda" %in% names(top_ngrams) && "z" %in% names(top_ngrams)) {
+    paste0(top_ngrams$collocation, "\nFrequency: ", top_ngrams$count,
+           "\nLambda: ", round(top_ngrams$lambda, 2),
+           "\nZ-score: ", round(top_ngrams$z, 2))
   } else {
-    paste0(
-      top_ngrams$collocation, "\n",
-      "Frequency: ", top_ngrams$count
-    )
+    paste0(top_ngrams$collocation, "\nFrequency: ", top_ngrams$count)
   }
 
-  p <- plotly::plot_ly(
-    data = top_ngrams,
-    x = ~collocation_ordered,
-    y = ~count,
-    type = "bar",
-    marker = list(
-      color = ifelse(is_selected, highlight_color, default_color),
-      line = list(
-        color = ifelse(is_selected, "#337ab7", "#4B5563"),
-        width = 1
-      )
-    ),
-    hoverinfo = "text",
-    hovertext = hover_text,
-    textposition = "none",
-    height = height,
-    width = width
-  )
-
-  p %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = "",
-        tickangle = -45,
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = "Frequency",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      margin = list(b = 150, l = 60, r = 20, t = 60),
-      showlegend = FALSE,
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
-        bgcolor = "#0c1f4a"
-      )
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  ggplot2::ggplot(top_ngrams, ggplot2::aes(x = collocation_ordered, y = count,
+                                            text = hover_text)) +
+    ggplot2::geom_col(fill = top_ngrams$bar_fill, color = top_ngrams$bar_border,
+                      linewidth = 0.3) +
+    ggplot2::labs(x = "", y = "Frequency", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B", angle = -45, hjust = 0),
+      axis.text.y = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
+    )
 }
 
 
@@ -1089,65 +998,43 @@ plot_mwe_frequency <- function(mwe_data,
                                 height = 500,
                                 width = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(mwe_data) || nrow(mwe_data) == 0) {
-    return(create_empty_plot_message("No multi-word expressions found"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No multi-word expressions found",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
   if (color_by_source && "source" %in% names(mwe_data)) {
-    bar_colors <- ifelse(mwe_data$source == "Top 20", primary_color, secondary_color)
+    mwe_data$bar_fill <- ifelse(mwe_data$source == "Top 20", primary_color, secondary_color)
   } else {
-    bar_colors <- primary_color
+    mwe_data$bar_fill <- primary_color
   }
 
-  hover_text <- if (all(c("rank", "docfreq", "source") %in% names(mwe_data))) {
-    paste0(
-      mwe_data$feature, "\n",
-      "Frequency: ", mwe_data$frequency, "\n",
-      "Rank: ", mwe_data$rank, "\n",
-      "Doc Frequency: ", mwe_data$docfreq, "\n",
-      "Source: ", mwe_data$source
-    )
+  mwe_data$hover_text <- if (all(c("rank", "docfreq", "source") %in% names(mwe_data))) {
+    paste0(mwe_data$feature, "\nFrequency: ", mwe_data$frequency,
+           "\nRank: ", mwe_data$rank,
+           "\nDoc Frequency: ", mwe_data$docfreq,
+           "\nSource: ", mwe_data$source)
   } else {
     paste0(mwe_data$feature, "\nFrequency: ", mwe_data$frequency)
   }
 
-  plotly::plot_ly(
-    data = mwe_data,
-    x = ~stats::reorder(feature, frequency),
-    y = ~frequency,
-    type = "bar",
-    marker = list(color = bar_colors),
-    hoverinfo = "text",
-    hovertext = hover_text,
-    textposition = "none",
-    height = height,
-    width = width
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = "",
-        tickangle = -45,
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = "Frequency",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      margin = list(b = 150, l = 60, r = 20, t = 60),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
-        bgcolor = "#0c1f4a"
-      )
+  mwe_data$feature_ordered <- stats::reorder(mwe_data$feature, mwe_data$frequency)
+
+  ggplot2::ggplot(mwe_data, ggplot2::aes(x = feature_ordered, y = frequency,
+                                          text = hover_text)) +
+    ggplot2::geom_col(fill = mwe_data$bar_fill) +
+    ggplot2::labs(x = "", y = "Frequency", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B", angle = -45, hjust = 0),
+      axis.text.y = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
     )
 }
 
@@ -1286,10 +1173,6 @@ plot_tfidf_keywords <- function(tfidf_data,
                                  title = NULL,
                                  normalized = FALSE) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required.")
-  }
-
   tfidf_data_sorted <- tfidf_data[order(tfidf_data$TF_IDF_Score, decreasing = FALSE), ]
 
   score_label <- if (normalized) "TF-IDF Score (Normalized)" else "TF-IDF Score"
@@ -1298,45 +1181,24 @@ plot_tfidf_keywords <- function(tfidf_data,
     title <- paste("Top Keywords by", score_label)
   }
 
-  plotly::plot_ly(
-    x = tfidf_data_sorted$TF_IDF_Score,
-    y = tfidf_data_sorted$Keyword,
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#337ab7"),
-    text = ~paste0(
-      "Keyword: ", tfidf_data_sorted$Keyword, "<br>",
-      score_label, ": ", round(tfidf_data_sorted$TF_IDF_Score, 4), "<br>",
-      "Frequency: ", tfidf_data_sorted$Frequency
-    ),
-    textposition = "none",
-    hovertemplate = "%{text}<extra></extra>",
-    hoverlabel = get_plotly_hover_config("#E3F2FD", "#1976D2")
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = list(text = score_label),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = ""),
-        categoryorder = "trace",
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      margin = list(l = 150, r = 20, t = 60, b = 60),
-      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-      hoverlabel = list(
-        font = list(size = 16, family = "Roboto, sans-serif"),
-        align = "left"
-      )
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  tfidf_data_sorted$Keyword_ordered <- factor(tfidf_data_sorted$Keyword,
+                                               levels = tfidf_data_sorted$Keyword)
+
+  tfidf_data_sorted$hover_text <- paste0("Keyword: ", tfidf_data_sorted$Keyword,
+                                          "\n", score_label, ": ",
+                                          round(tfidf_data_sorted$TF_IDF_Score, 4),
+                                          "\nFrequency: ", tfidf_data_sorted$Frequency)
+
+  ggplot2::ggplot(tfidf_data_sorted, ggplot2::aes(x = TF_IDF_Score, y = Keyword_ordered,
+                                                    text = hover_text)) +
+    ggplot2::geom_col(fill = "#337ab7") +
+    ggplot2::labs(x = score_label, y = "", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
+    )
 }
 
 
@@ -1357,12 +1219,14 @@ plot_keyness_keywords <- function(keyness_data,
                                   title = NULL,
                                   group_label = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required.")
-  }
-
   if (nrow(keyness_data) == 0) {
-    return(plot_error("Keyness analysis requires multiple documents"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "Keyness analysis requires multiple documents",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
   keyness_data_sorted <- keyness_data[order(abs(keyness_data$Keyness_Score), decreasing = FALSE), ]
@@ -1375,44 +1239,23 @@ plot_keyness_keywords <- function(keyness_data,
     }
   }
 
-  plotly::plot_ly(
-    x = keyness_data_sorted$Keyness_Score,
-    y = keyness_data_sorted$Keyword,
-    type = "bar",
-    orientation = "h",
-    marker = list(color = "#337ab7"),
-    text = ~paste0(
-      "Keyword: ", keyness_data_sorted$Keyword, "<br>",
-      "Keyness Score (G\u00b2): ", round(keyness_data_sorted$Keyness_Score, 2)
-    ),
-    textposition = "none",
-    hovertemplate = "%{text}<extra></extra>",
-    hoverlabel = get_plotly_hover_config("#E3F2FD", "#1976D2")
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = list(text = "Keyness Score (G\u00b2)"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = ""),
-        categoryorder = "trace",
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      margin = list(l = 150, r = 20, t = 60, b = 60),
-      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-      hoverlabel = list(
-        font = list(size = 16, family = "Roboto, sans-serif"),
-        align = "left"
-      )
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  keyness_data_sorted$Keyword_ordered <- factor(keyness_data_sorted$Keyword,
+                                                 levels = keyness_data_sorted$Keyword)
+
+  keyness_data_sorted$hover_text <- paste0("Keyword: ", keyness_data_sorted$Keyword,
+                                            "\nKeyness Score (G\u00b2): ",
+                                            round(keyness_data_sorted$Keyness_Score, 2))
+
+  ggplot2::ggplot(keyness_data_sorted, ggplot2::aes(x = Keyness_Score, y = Keyword_ordered,
+                                                     text = hover_text)) +
+    ggplot2::geom_col(fill = "#337ab7") +
+    ggplot2::labs(x = "Keyness Score (G\u00b2)", y = "", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
+    )
 }
 
 
@@ -1435,10 +1278,6 @@ plot_keyword_comparison <- function(tfidf_data,
                                     title = NULL,
                                     normalized = FALSE) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required.")
-  }
-
   top_keywords <- head(tfidf_data, top_n)
 
   score_label <- if (normalized) "TF-IDF Score (Normalized)" else "TF-IDF Score"
@@ -1447,57 +1286,33 @@ plot_keyword_comparison <- function(tfidf_data,
     title <- paste0("Top Keywords: ", score_label, " vs Frequency")
   }
 
-  plotly::plot_ly(
-    data = top_keywords,
-    x = ~Keyword,
-    y = ~TF_IDF_Score,
-    type = "bar",
-    name = "TF-IDF",
-    marker = list(color = "#337ab7"),
-    hovertemplate = paste0("%{x}<br>TF-IDF: %{y:.4f}<extra></extra>"),
-    textposition = "none",
-    hoverlabel = get_plotly_hover_config("#E3F2FD", "#1976D2")
-  ) %>%
-    plotly::add_trace(
-      y = ~Frequency / max(Frequency) * max(TF_IDF_Score),
-      name = "Frequency",
-      marker = list(color = "#5cb85c"),
-      hovertemplate = "%{x}<br>Frequency: %{text}<extra></extra>",
-      text = ~Frequency,
-      textposition = "none",
-      hoverlabel = get_plotly_hover_config("#E8F5E9", "#2E7D32")
-    ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = list(text = "Keywords"),
-        tickangle = -45,
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = "Score"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      barmode = "group",
-      margin = list(l = 60, r = 100, t = 60, b = 120),
-      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-      hoverlabel = list(align = "left", font = list(size = 16)),
-      showlegend = TRUE,
-      legend = list(
-        font = list(size = 16, family = "Roboto, sans-serif"),
-        orientation = "v",
-        x = 1.02,
-        y = 0.5,
-        xanchor = "left",
-        yanchor = "middle"
-      )
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  top_keywords$Freq_scaled <- top_keywords$Frequency / max(top_keywords$Frequency) *
+    max(top_keywords$TF_IDF_Score)
+
+  plot_long <- rbind(
+    data.frame(Keyword = top_keywords$Keyword,
+               Score = top_keywords$TF_IDF_Score,
+               Metric = "TF-IDF",
+               stringsAsFactors = FALSE),
+    data.frame(Keyword = top_keywords$Keyword,
+               Score = top_keywords$Freq_scaled,
+               Metric = "Frequency",
+               stringsAsFactors = FALSE)
+  )
+  plot_long$Keyword <- factor(plot_long$Keyword, levels = top_keywords$Keyword)
+
+  ggplot2::ggplot(plot_long, ggplot2::aes(x = Keyword, y = Score, fill = Metric)) +
+    ggplot2::geom_col(position = "dodge") +
+    ggplot2::scale_fill_manual(values = c("TF-IDF" = "#337ab7", "Frequency" = "#5cb85c")) +
+    ggplot2::labs(x = "Keywords", y = "Score", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B", angle = -45, hjust = 0),
+      axis.text.y = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      legend.position = "right"
+    )
 }
 
 
@@ -1536,10 +1351,6 @@ plot_readability_distribution <- function(readability_data,
                                           metric,
                                           title = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required.")
-  }
-
   if (!metric %in% names(readability_data)) {
     stop(paste("Metric", metric, "not found in readability data"))
   }
@@ -1552,23 +1363,28 @@ plot_readability_distribution <- function(readability_data,
   metric_values <- metric_values[is.finite(metric_values)]
 
   if (length(metric_values) == 0) {
-    return(plot_error("No valid data for selected metric"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No valid data for selected metric",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
-  plotly::plot_ly(
-    y = metric_values,
-    type = "box",
-    name = "Distribution",
-    marker = list(color = "#4A90E2"),
-    line = list(color = "#0c1f4a"),
-    fillcolor = "rgba(74, 144, 226, 0.7)",
-    hoverinfo = "y",
-    hoverlabel = get_plotly_hover_config()
-  ) %>%
-    apply_standard_plotly_layout(
-      title = title,
-      yaxis_title = metric,
-      margin = list(t = 60, b = 60, l = 80, r = 40)
+  plot_df <- data.frame(value = metric_values)
+
+  ggplot2::ggplot(plot_df, ggplot2::aes(y = value)) +
+    ggplot2::geom_boxplot(fill = "rgba(74, 144, 226, 0.7)",
+                          color = "#0c1f4a", outlier.color = "#4A90E2") +
+    ggplot2::labs(y = metric, x = "", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank()
     )
 
 }
@@ -1593,10 +1409,6 @@ plot_readability_by_group <- function(readability_data,
                                       group_var,
                                       title = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE) || !requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Packages 'plotly' and 'ggplot2' are required.")
-  }
-
   if (!metric %in% names(readability_data)) {
     stop(paste("Metric", metric, "not found in readability data"))
   }
@@ -1620,30 +1432,16 @@ plot_readability_by_group <- function(readability_data,
 
   unique_groups <- unique(plot_data$group)
 
-  p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = group, y = metric_value, fill = group)) +
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = group, y = metric_value, fill = group)) +
     ggplot2::geom_boxplot(alpha = 0.7) +
     ggplot2::scale_fill_manual(values = colors[1:length(unique_groups)]) +
-    ggplot2::labs(x = group_var, y = metric) +
-    create_standard_ggplot_theme() +
-    ggplot2::theme(legend.position = "none") +
-    ggplot2::ggtitle(title)
-
-  plotly::ggplotly(p, tooltip = "y") %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      hoverlabel = get_plotly_hover_config(),
-      margin = list(t = 60, b = 100, l = 80, r = 40)
+    ggplot2::labs(x = group_var, y = metric, title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      legend.position = "none"
     )
 }
 
@@ -1669,15 +1467,10 @@ plot_top_readability_documents <- function(readability_data,
                                            order = "highest",
                                            title = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE) || !requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Packages 'plotly' and 'dplyr' are required.")
-  }
-
   if (!metric %in% names(readability_data)) {
     stop(paste("Metric", metric, "not found in readability data"))
   }
 
-  # Handle both "Document" and "document" column names
   doc_col <- if ("Document" %in% names(readability_data)) "Document" else "document"
 
   sorted_data <- readability_data %>%
@@ -1688,44 +1481,26 @@ plot_top_readability_documents <- function(readability_data,
     title <- paste("Top", top_n, "Documents by", metric)
   }
 
-  sorted_data$tooltip_text <- paste0(
-    "<b>", sorted_data[[doc_col]], "</b><br>",
-    metric, ": ", round(sorted_data[[metric]], 2)
-  )
+  sorted_data$doc_label <- sorted_data[[doc_col]]
+  sorted_data$doc_ordered <- factor(sorted_data$doc_label,
+                                     levels = rev(sorted_data$doc_label))
+  sorted_data$metric_val <- sorted_data[[metric]]
+  sorted_data$hover_text <- paste0(sorted_data$doc_label, "\n",
+                                    metric, ": ", round(sorted_data$metric_val, 2))
 
   text_angle <- if (top_n <= 10) 0 else -45
 
-  plotly::plot_ly(
-    data = sorted_data,
-    x = as.formula(paste0("~`", doc_col, "`")),
-    y = ~.data[[metric]],
-    type = "bar",
-    marker = list(color = "#4A90E2"),
-    text = ~tooltip_text,
-    hovertemplate = "%{text}<extra></extra>",
-    textposition = "none",
-    showlegend = FALSE
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = list(text = "Document"),
-        tickangle = text_angle,
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = metric),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      margin = list(t = 60, b = 100, l = 80, r = 40),
-      hoverlabel = get_plotly_hover_config()
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  ggplot2::ggplot(sorted_data, ggplot2::aes(x = doc_ordered, y = metric_val,
+                                             text = hover_text)) +
+    ggplot2::geom_col(fill = "#4A90E2") +
+    ggplot2::coord_flip() +
+    ggplot2::labs(x = "Document", y = metric, title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
+    )
 }
 
 #' Calculate Text Readability
@@ -1912,12 +1687,6 @@ plot_term_trends_continuous <- function(term_data,
                                          height = 600,
                                          width = NULL) {
 
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    stop("Package 'ggplot2' is required. Please install it.")
-  }
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
   if (!requireNamespace("scales", quietly = TRUE)) {
     stop("Package 'scales' is required. Please install it.")
   }
@@ -1952,7 +1721,7 @@ plot_term_trends_continuous <- function(term_data,
     title <- paste("Term Frequency by", continuous_var)
   }
 
-  p <- ggplot2::ggplot(
+  ggplot2::ggplot(
     term_data,
     ggplot2::aes(
       x = .data[[continuous_var]],
@@ -1964,76 +1733,20 @@ plot_term_trends_continuous <- function(term_data,
     ggplot2::geom_line(color = "#337ab7", alpha = 0.6, linewidth = 0.5) +
     ggplot2::facet_wrap(~term, scales = "free") +
     ggplot2::scale_y_continuous(labels = scales::number_format(accuracy = 1)) +
-    ggplot2::labs(y = "Word Frequency", x = continuous_var) +
-    ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::labs(y = "Word Frequency", x = continuous_var, title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
       legend.position = "none",
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
       axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
       axis.ticks = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.3),
-      strip.text.x = ggplot2::element_text(size = 16, color = "#0c1f4a", family = "Roboto"),
-      axis.text.x = ggplot2::element_text(size = 16, color = "#3B3B3B", family = "Roboto"),
-      axis.text.y = ggplot2::element_text(size = 16, color = "#3B3B3B", family = "Roboto"),
-      axis.title = ggplot2::element_text(size = 16, color = "#0c1f4a", family = "Roboto"),
+      strip.text.x = ggplot2::element_text(size = 11, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
       axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 15)),
       axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 15)),
       plot.margin = ggplot2::margin(t = 5, r = 10, b = 25, l = 15)
     )
-
-  plot_args <- list(p)
-  if (!is.null(height)) plot_args$height <- height
-  if (!is.null(width)) plot_args$width <- width
-
-  p_plot <- do.call(plotly::ggplotly, plot_args)
-
-  for (i in seq_along(p_plot$x$layout$annotations)) {
-    p_plot$x$layout$annotations[[i]]$font <- list(
-      size = 16,
-      color = "#0c1f4a",
-      family = "Roboto, sans-serif"
-    )
-  }
-
-  axis_names <- names(p_plot$x$layout)
-  for (axis_name in axis_names) {
-    if (grepl("^xaxis", axis_name)) {
-      p_plot$x$layout[[axis_name]]$tickfont <- list(
-        size = 14,
-        color = "#3B3B3B",
-        family = "Roboto, sans-serif"
-      )
-      p_plot$x$layout[[axis_name]]$titlefont <- list(
-        size = 16,
-        color = "#0c1f4a",
-        family = "Roboto, sans-serif"
-      )
-    }
-    if (grepl("^yaxis", axis_name)) {
-      p_plot$x$layout[[axis_name]]$tickfont <- list(
-        size = 14,
-        color = "#3B3B3B",
-        family = "Roboto, sans-serif"
-      )
-      p_plot$x$layout[[axis_name]]$titlefont <- list(
-        size = 16,
-        color = "#0c1f4a",
-        family = "Roboto, sans-serif"
-      )
-    }
-  }
-
-  p_plot %>%
-    plotly::layout(
-      margin = list(l = 80, r = 150, t = 40, b = 100),
-      font = list(
-        family = "Roboto, sans-serif",
-        size = 14,
-        color = "#3B3B3B"
-      ),
-      hoverlabel = list(
-        font = list(size = 14, family = "Roboto, sans-serif")
-      )
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
 }
 
 
@@ -2075,25 +1788,14 @@ plot_pos_frequencies <- function(pos_data,
                                   height = 500,
                                   width = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(pos_data) || nrow(pos_data) == 0) {
-    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
-      plotly::layout(
-        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-        annotations = list(
-          list(
-            text = "No POS data available",
-            x = 0.5, y = 0.5,
-            xref = "paper", yref = "paper",
-            showarrow = FALSE,
-            font = list(size = 16, color = "#6B7280", family = "Roboto")
-          )
-        )
-      ))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No POS data available",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
   if (!"n" %in% names(pos_data)) {
@@ -2106,38 +1808,17 @@ plot_pos_frequencies <- function(pos_data,
       dplyr::slice_head(n = top_n)
   }
 
-  plotly::plot_ly(
-    data = pos_freq,
-    x = ~stats::reorder(pos, n),
-    y = ~n,
-    type = "bar",
-    marker = list(color = color),
-    hoverinfo = "text",
-    hovertext = ~paste0(pos, "\nFrequency: ", n),
-    height = height,
-    width = width
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = "POS Tag",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = "Frequency",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      margin = list(b = 100, l = 60, r = 20, t = 60),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
-        bgcolor = "#0c1f4a"
-      )
+  pos_freq$pos_ordered <- stats::reorder(pos_freq$pos, pos_freq$n)
+
+  ggplot2::ggplot(pos_freq, ggplot2::aes(x = pos_ordered, y = n,
+                                          text = paste0(pos, "\nFrequency: ", n))) +
+    ggplot2::geom_col(fill = color) +
+    ggplot2::labs(x = "POS Tag", y = "Frequency", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
     )
 }
 
@@ -2185,25 +1866,14 @@ plot_entity_frequencies <- function(entity_data,
                                      width = NULL,
                                      custom_colors = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(entity_data) || nrow(entity_data) == 0) {
-    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
-      plotly::layout(
-        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-        annotations = list(
-          list(
-            text = "No named entities found",
-            x = 0.5, y = 0.5,
-            xref = "paper", yref = "paper",
-            showarrow = FALSE,
-            font = list(size = 16, color = "#6B7280", family = "Roboto")
-          )
-        )
-      ))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No named entities found",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
   if (!"n" %in% names(entity_data)) {
@@ -2234,45 +1904,22 @@ plot_entity_frequencies <- function(entity_data,
   }
 
   bar_colors <- sapply(entity_freq$entity, function(e) {
-    if (e %in% names(entity_colors)) {
-      entity_colors[[e]]
-    } else {
-      "#757575"
-    }
+    if (e %in% names(entity_colors)) entity_colors[[e]] else "#757575"
   })
 
-  plotly::plot_ly(
-    data = entity_freq,
-    x = ~stats::reorder(entity, n),
-    y = ~n,
-    type = "bar",
-    marker = list(color = bar_colors),
-    hoverinfo = "text",
-    hovertext = ~paste0(entity, "\nFrequency: ", n),
-    height = height,
-    width = width
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = "",
-        tickangle = -45,
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = "Frequency",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      margin = list(b = 150, l = 60, r = 20, t = 60),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
-        bgcolor = "#0c1f4a"
-      )
+  entity_freq$entity_ordered <- stats::reorder(entity_freq$entity, entity_freq$n)
+  entity_freq$fill_color <- bar_colors
+
+  ggplot2::ggplot(entity_freq, ggplot2::aes(x = entity_ordered, y = n,
+                                             text = paste0(entity, "\nFrequency: ", n))) +
+    ggplot2::geom_col(fill = entity_freq$fill_color) +
+    ggplot2::labs(x = "", y = "Frequency", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B", angle = -45, hjust = 0),
+      axis.text.y = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
     )
 }
 
@@ -2566,16 +2213,14 @@ spacy_parse_full <- function(x,
   )
 
   # Convert pandas DataFrame to R data.frame
-  df <- reticulate::py_to_r(result)
+  df <- as.data.frame(reticulate::py_to_r(result))
 
   # Map doc_id from text1, text2, ... to actual document names
   if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    doc_id_map <- data.frame(
-      old_id = paste0("text", seq_along(doc_names)),
-      new_id = doc_names,
-      stringsAsFactors = FALSE
-    )
-    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+    df$doc_id <- as.character(df$doc_id)
+    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
+    matched <- doc_id_map[df$doc_id]
+    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
   }
 
   return(df)
@@ -2628,16 +2273,14 @@ spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
   )
 
   # Convert pandas DataFrame to R data.frame
-  df <- reticulate::py_to_r(result)
+  df <- as.data.frame(reticulate::py_to_r(result))
 
   # Map doc_id from text1, text2, ... to actual document names
   if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    doc_id_map <- data.frame(
-      old_id = paste0("text", seq_along(doc_names)),
-      new_id = doc_names,
-      stringsAsFactors = FALSE
-    )
-    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+    df$doc_id <- as.character(df$doc_id)
+    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
+    matched <- doc_id_map[df$doc_id]
+    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
   }
 
   return(df)
@@ -2683,16 +2326,14 @@ spacy_extract_entities <- function(x, model = "en_core_web_sm") {
 
   texts_list <- as.list(unname(texts))
   result <- .spacy_env$nlp$get_entities(texts_list)
-  df <- reticulate::py_to_r(result)
+  df <- as.data.frame(reticulate::py_to_r(result))
 
   # Map doc_id
   if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    doc_id_map <- data.frame(
-      old_id = paste0("text", seq_along(doc_names)),
-      new_id = doc_names,
-      stringsAsFactors = FALSE
-    )
-    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+    df$doc_id <- as.character(df$doc_id)
+    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
+    matched <- doc_id_map[df$doc_id]
+    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
   }
 
   return(df)
@@ -2731,16 +2372,14 @@ extract_noun_chunks <- function(x, model = "en_core_web_sm") {
 
   texts_list <- as.list(unname(texts))
   result <- .spacy_env$nlp$get_noun_chunks(texts_list)
-  df <- reticulate::py_to_r(result)
+  df <- as.data.frame(reticulate::py_to_r(result))
 
   # Map doc_id
   if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    doc_id_map <- data.frame(
-      old_id = paste0("text", seq_along(doc_names)),
-      new_id = doc_names,
-      stringsAsFactors = FALSE
-    )
-    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+    df$doc_id <- as.character(df$doc_id)
+    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
+    matched <- doc_id_map[df$doc_id]
+    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
   }
 
   return(df)
@@ -2778,15 +2417,13 @@ extract_subjects_objects <- function(x, model = "en_core_web_sm") {
 
   texts_list <- as.list(unname(texts))
   result <- .spacy_env$nlp$get_subjects_objects(texts_list)
-  df <- reticulate::py_to_r(result)
+  df <- as.data.frame(reticulate::py_to_r(result))
 
   if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    doc_id_map <- data.frame(
-      old_id = paste0("text", seq_along(doc_names)),
-      new_id = doc_names,
-      stringsAsFactors = FALSE
-    )
-    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+    df$doc_id <- as.character(df$doc_id)
+    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
+    matched <- doc_id_map[df$doc_id]
+    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
   }
 
   return(df)
@@ -2824,15 +2461,13 @@ get_sentences <- function(x, model = "en_core_web_sm") {
 
   texts_list <- as.list(unname(texts))
   result <- .spacy_env$nlp$get_sentences(texts_list)
-  df <- reticulate::py_to_r(result)
+  df <- as.data.frame(reticulate::py_to_r(result))
 
   if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    doc_id_map <- data.frame(
-      old_id = paste0("text", seq_along(doc_names)),
-      new_id = doc_names,
-      stringsAsFactors = FALSE
-    )
-    df$doc_id <- doc_id_map$new_id[match(df$doc_id, doc_id_map$old_id)]
+    df$doc_id <- as.character(df$doc_id)
+    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
+    matched <- doc_id_map[df$doc_id]
+    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
   }
 
   return(df)
@@ -3280,15 +2915,16 @@ plot_log_odds_ratio <- function(log_odds_data,
                                  width = NULL,
                                  title = "Log Odds Ratio Comparison") {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(log_odds_data) || nrow(log_odds_data) == 0) {
-    return(create_empty_plot_message("No log odds data available"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No log odds data available",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
-  # Get top positive and negative terms
   positive <- log_odds_data[log_odds_data$log_odds_ratio > 0, ]
   negative <- log_odds_data[log_odds_data$log_odds_ratio < 0, ]
 
@@ -3301,79 +2937,44 @@ plot_log_odds_ratio <- function(log_odds_data,
   )
 
   if (nrow(plot_data) == 0) {
-    return(create_empty_plot_message("No significant differences found"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No significant differences found",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
-  # Order by log odds ratio
   plot_data <- plot_data[order(plot_data$log_odds_ratio), ]
   plot_data$term_ordered <- factor(plot_data$term, levels = plot_data$term)
+  plot_data$direction <- ifelse(plot_data$log_odds_ratio > 0, "positive", "negative")
 
-  # Assign colors
-  plot_data$color <- ifelse(plot_data$log_odds_ratio > 0, color_positive, color_negative)
+  plot_data$hover_text <- paste0(plot_data$term,
+                                  "\nLog Odds: ", round(plot_data$log_odds_ratio, 3),
+                                  "\n", plot_data$category1, ": ", plot_data$count1,
+                                  "\n", plot_data$category2, ": ", plot_data$count2)
 
-  # Create hover text
-  plot_data$hover_text <- paste0(
-    "<b>", plot_data$term, "</b><br>",
-    "Log Odds: ", round(plot_data$log_odds_ratio, 3), "<br>",
-    plot_data$category1, ": ", plot_data$count1, "<br>",
-    plot_data$category2, ": ", plot_data$count2
-  )
-
-  # Get category labels for subtitle
   cat1 <- unique(plot_data$category1)[1]
   cat2 <- unique(plot_data$category2)[1]
-  subtitle <- paste0(
-    "<span style='color:", color_negative, ";'>", cat2, " (-)</span> vs ",
-    "<span style='color:", color_positive, ";'>", cat1, " (+)</span>"
-  )
+  subtitle <- paste0(cat2, " (-) vs ", cat1, " (+)")
 
-  p <- plotly::plot_ly(
-    data = plot_data,
-    x = ~log_odds_ratio,
-    y = ~term_ordered,
-    type = "bar",
-    orientation = "h",
-    marker = list(color = ~color),
-    hoverinfo = "text",
-    hovertext = ~hover_text,
-    height = height,
-    width = width
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = paste0(title, "<br><sub>", subtitle, "</sub>"),
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = "Log Odds Ratio",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        zeroline = TRUE,
-        zerolinecolor = "#CBD5E1",
-        zerolinewidth = 2
-      ),
-      yaxis = list(
-        title = "",
-        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      margin = list(l = 120, r = 40, t = 80, b = 60),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
-        bgcolor = "#0c1f4a"
-      ),
-      shapes = list(
-        list(
-          type = "line",
-          x0 = 0, x1 = 0,
-          y0 = 0, y1 = 1,
-          yref = "paper",
-          line = list(color = "#94A3B8", width = 1, dash = "dot")
-        )
-      )
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = log_odds_ratio, y = term_ordered,
+                                           fill = direction, text = hover_text)) +
+    ggplot2::geom_col() +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dotted", color = "#94A3B8") +
+    ggplot2::scale_fill_manual(values = c("positive" = color_positive,
+                                           "negative" = color_negative),
+                                guide = "none") +
+    ggplot2::labs(x = "Log Odds Ratio", y = "",
+                  title = title, subtitle = subtitle) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      plot.subtitle = ggplot2::element_text(size = 11, color = "#6B7280"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
     )
-
-  return(p)
 }
 
 
@@ -3410,111 +3011,67 @@ plot_weighted_log_odds <- function(weighted_data,
                                    width = NULL,
                                    title = "Weighted Log Odds by Group") {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(weighted_data) || nrow(weighted_data) == 0) {
-    return(create_empty_plot_message("No weighted log odds data available"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No weighted log odds data available",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
-  # Get group variable name (first column that's not feature/n/log_odds)
   group_col <- setdiff(names(weighted_data), c("feature", "n", "log_odds_weighted", "log_odds"))[1]
 
   if (is.null(group_col)) {
-    return(create_empty_plot_message("Could not identify group column"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "Could not identify group column",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
-  # Get unique groups
   groups <- unique(weighted_data[[group_col]])
 
-  # Create subplot for each group
-  plots <- lapply(groups, function(grp) {
+  plot_list <- lapply(groups, function(grp) {
     grp_data <- weighted_data[weighted_data[[group_col]] == grp, ]
-
-    # Get top N by absolute weighted log odds
     grp_data <- grp_data[order(abs(grp_data$log_odds_weighted), decreasing = TRUE), ]
     grp_data <- utils::head(grp_data, top_n)
-
-    # Order by weighted log odds for display
     grp_data <- grp_data[order(grp_data$log_odds_weighted), ]
     grp_data$feature_ordered <- factor(grp_data$feature, levels = grp_data$feature)
+    grp_data$direction <- ifelse(grp_data$log_odds_weighted > 0, "positive", "negative")
 
-    # Assign colors
-    grp_data$color <- ifelse(grp_data$log_odds_weighted > 0, color_positive, color_negative)
-
-    # Create hover text
-    grp_data$hover_text <- paste0(
-      "<b>", grp_data$feature, "</b><br>",
-      "Weighted Log Odds: ", round(grp_data$log_odds_weighted, 3), "<br>",
-      "Count: ", grp_data$n
-    )
-
-    plotly::plot_ly(
-      data = grp_data,
-      x = ~log_odds_weighted,
-      y = ~feature_ordered,
-      type = "bar",
-      orientation = "h",
-      marker = list(color = ~color),
-      text = ~hover_text,
-      hoverinfo = "text",
-      showlegend = FALSE
-    ) %>%
-      plotly::layout(
-        annotations = list(
-          list(
-            text = as.character(grp),
-            x = 0.5,
-            y = 1.05,
-            xref = "paper",
-            yref = "paper",
-            showarrow = FALSE,
-            font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif")
-          )
-        ),
-        xaxis = list(title = ""),
-        yaxis = list(title = ""),
-        shapes = list(
-          list(
-            type = "line",
-            x0 = 0, x1 = 0,
-            y0 = 0, y1 = 1,
-            yref = "paper",
-            line = list(color = "#94A3B8", width = 1, dash = "dot")
-          )
-        )
+    ggplot2::ggplot(grp_data, ggplot2::aes(x = log_odds_weighted, y = feature_ordered,
+                                            fill = direction)) +
+      ggplot2::geom_col() +
+      ggplot2::geom_vline(xintercept = 0, linetype = "dotted", color = "#94A3B8") +
+      ggplot2::scale_fill_manual(values = c("positive" = color_positive,
+                                             "negative" = color_negative),
+                                  guide = "none") +
+      ggplot2::labs(x = "", y = "", title = as.character(grp)) +
+      ggplot2::theme_minimal(base_size = 11) +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a", hjust = 0.5),
+        axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+        axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
       )
   })
 
-  # Combine subplots
-  n_groups <- length(groups)
-  n_rows <- ceiling(n_groups / 2)
+  if (requireNamespace("patchwork", quietly = TRUE)) {
+    n_groups <- length(groups)
+    n_cols <- min(2, n_groups)
+    combined <- patchwork::wrap_plots(plot_list, ncol = n_cols) +
+      patchwork::plot_annotation(title = title,
+                                  theme = ggplot2::theme(
+                                    plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a",
+                                                                       hjust = 0.5)
+                                  ))
+    return(combined)
+  }
 
-  p <- plotly::subplot(
-    plots,
-    nrows = n_rows,
-    shareX = FALSE,
-    shareY = FALSE,
-    margin = 0.08
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 20, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        x = 0.5, xanchor = "center"
-      ),
-      margin = list(l = 100, r = 40, t = 80, b = 60),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
-        bgcolor = "#0c1f4a"
-      )
-    )
-
-  p$height <- max(height, n_rows * 300)
-
-  return(p)
+  plot_list[[1]] + ggplot2::ggtitle(title)
 }
 
 
@@ -3653,19 +3210,19 @@ plot_lexical_dispersion <- function(dispersion_data,
                                      width = NULL,
                                      marker_size = 8) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(dispersion_data) || nrow(dispersion_data) == 0) {
-    return(create_empty_plot_message("No term occurrences found in the corpus"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "No term occurrences found in the corpus",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
 
-  # Get unique terms and assign colors
   unique_terms <- unique(dispersion_data$term)
 
   if (is.null(colors)) {
-    # Default color palette
     default_colors <- c("#3B82F6", "#10B981", "#F59E0B", "#EF4444",
                         "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16")
     colors <- stats::setNames(
@@ -3674,87 +3231,40 @@ plot_lexical_dispersion <- function(dispersion_data,
     )
   }
 
-  # Create y-axis positions for terms
-  dispersion_data$y_pos <- match(dispersion_data$term, unique_terms)
+  dispersion_data$term <- factor(dispersion_data$term, levels = rev(unique_terms))
 
-  # Create hover text
   dispersion_data$hover_text <- paste0(
-    "<b>", dispersion_data$term, "</b><br>",
-    "Document: ", dispersion_data$doc_id, "<br>",
-    "Position: ", round(dispersion_data$position, 3),
+    dispersion_data$term,
+    "\nDocument: ", dispersion_data$doc_id,
+    "\nPosition: ", round(dispersion_data$position, 3),
     if (scale == "relative") " (relative)" else ""
   )
 
-  # Build plot
-  p <- plotly::plot_ly(height = height, width = width)
-
-  for (term in unique_terms) {
-    term_data <- dispersion_data[dispersion_data$term == term, ]
-    term_y <- match(term, unique_terms)
-
-    p <- p %>%
-      plotly::add_trace(
-        data = term_data,
-        x = ~position,
-        y = rep(term_y, nrow(term_data)),
-        type = "scatter",
-        mode = "markers",
-        marker = list(
-          symbol = "line-ns",
-          size = marker_size,
-          color = colors[term],
-          line = list(width = 2, color = colors[term])
-        ),
-        name = term,
-        hoverinfo = "text",
-        hovertext = ~hover_text
-      )
-  }
-
-  # X-axis label based on scale
   x_label <- if (scale == "relative") {
     "Relative Position (0 = start, 1 = end)"
   } else {
     "Token Position"
   }
 
-  p <- p %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = x_label,
-        titlefont = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        range = if (scale == "relative") c(0, 1) else NULL,
-        zeroline = FALSE
-      ),
-      yaxis = list(
-        title = "",
-        tickmode = "array",
-        tickvals = seq_along(unique_terms),
-        ticktext = unique_terms,
-        tickfont = list(size = 14, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        zeroline = FALSE
-      ),
-      margin = list(l = 120, r = 40, t = 60, b = 100),
-      showlegend = TRUE,
-      legend = list(
-        orientation = "h",
-        x = 0.5,
-        xanchor = "center",
-        y = -0.25
-      ),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 14, color = "white", family = "Roboto, sans-serif"),
-        bgcolor = "#0c1f4a"
-      )
+  p <- ggplot2::ggplot(dispersion_data, ggplot2::aes(x = position, y = term,
+                                                      color = term,
+                                                      text = hover_text)) +
+    ggplot2::geom_point(shape = "|", size = marker_size / 2) +
+    ggplot2::scale_color_manual(values = colors) +
+    ggplot2::labs(x = x_label, y = "", title = title, color = "") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      legend.position = "bottom"
     )
 
-  return(p)
+  if (scale == "relative") {
+    p <- p + ggplot2::xlim(0, 1)
+  }
+
+  p
 }
 
 

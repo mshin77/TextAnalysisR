@@ -4,7 +4,7 @@
 \alias{create_standard_ggplot_theme}
 \title{Create Standard ggplot2 Theme}
 \usage{
-create_standard_ggplot_theme(base_size = 14)
+create_standard_ggplot_theme(base_size = 11)
 }
 \arguments{
 \item{base_size}{Base font size (default: 14)}

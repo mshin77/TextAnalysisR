@@ -17,6 +17,7 @@ fit_embedding_model(
   umap_neighbors = 15,
   umap_min_dist = 0,
   umap_n_components = 5,
+  umap_metric = "cosine",
   tsne_perplexity = 30,
   pca_dims = 50,
   dbscan_eps = 0.5,
@@ -62,6 +63,8 @@ fit_embedding_model(
 \item{umap_min_dist}{The minimum distance for UMAP (default: 0.0). Use 0.0 for tight, well-separated clusters. Use 0.1+ for visualization purposes. Range: 0.0-0.99.}
 
 \item{umap_n_components}{The number of UMAP components (default: 5).}
+
+\item{umap_metric}{Distance metric for UMAP: "cosine" (recommended for text) or "euclidean" (default: "cosine").}
 
 \item{tsne_perplexity}{Perplexity parameter for t-SNE (default: 30). Only used when method includes "tsne".}
 

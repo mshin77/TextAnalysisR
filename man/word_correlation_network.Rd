@@ -48,7 +48,7 @@ word_correlation_network(
 \item{category_params}{Optional named list of category-specific parameters. Each element should be a list with \code{common_term_n}, \code{corr_n}, and \code{top_node_n} values for that category (default: NULL).}
 }
 \value{
-A list containing the Plotly plot, a table, and a summary.
+A list containing the ggplot2 plot, a table, and a summary.
 }
 \description{
 This function creates a word correlation network based on a document-feature matrix (dfm).

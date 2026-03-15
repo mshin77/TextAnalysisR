@@ -19,7 +19,7 @@ and category columns}
 \item{title}{Plot title (default: "Sentiment Score Distribution")}
 }
 \value{
-A plotly box plot
+A ggplot2 box plot
 }
 \description{
 Creates a box plot showing sentiment score distribution by category.

@@ -35,15 +35,6 @@ if (interactive()) {
 
   dfm_object <- quanteda::dfm(tokens)
 
-  stm_15 <- TextAnalysisR::create_stm_model(
-  dfm_object,
-  topic_n = 15,
-  max.em.its = 75,
-  categorical_var = "reference_type",
-  continuous_var = "year",
-  verbose = TRUE
-  )
-
   out <- quanteda::convert(dfm_object, to = "stm")
 
 stm_15 <- stm::stm(

@@ -21,7 +21,7 @@ plot_emotion_radar(
 \item{title}{Plot title (default: "Emotion Analysis")}
 }
 \value{
-A plotly polar chart
+A ggplot2 polar chart
 }
 \description{
 Creates a polar/radar chart for NRC emotion analysis with optional grouping.

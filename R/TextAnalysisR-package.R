@@ -37,8 +37,8 @@ NULL
 #' - `plot_topic_probability()`: Visualize topic prevalence
 #'
 #' **Network Analysis:**
-#' - `plot_cooccurrence_network()`: Word co-occurrence networks
-#' - `plot_correlation_network()`: Word correlation networks
+#' - `word_co_occurrence_network()`: Word co-occurrence networks
+#' - `word_correlation_network()`: Word correlation networks
 #' - `calculate_word_frequency()`: Word frequency over variables
 #' 
 #' **Semantic Analysis:**
@@ -78,7 +78,7 @@ NULL
 #' freq_plot <- plot_word_frequency(dfm_obj, n = 20)
 #'
 #' # Network analysis
-#' cooccur_network <- plot_cooccurrence_network(
+#' cooccur_network <- word_co_occurrence_network(
 #'   dfm_obj,
 #'   co_occur_n = 10,
 #'   top_node_n = 50

@@ -11,14 +11,14 @@ plot_word_frequency(dfm_object, n = 20, height = NULL, width = NULL, ...)
 
 \item{n}{The number of top words to display (default: 20).}
 
-\item{height}{The height of the resulting Plotly plot, in pixels (default: 800).}
+\item{height}{Plot height in pixels (default: 800). Kept for backward compatibility.}
 
-\item{width}{The width of the resulting Plotly plot, in pixels (default: 1000).}
+\item{width}{Plot width in pixels (default: 1000). Kept for backward compatibility.}
 
-\item{...}{Additional arguments passed to plotly::ggplotly().}
+\item{...}{Additional arguments (kept for backward compatibility).}
 }
 \value{
-A plotly object showing word frequency.
+A ggplot object showing word frequency.
 }
 \description{
 Creates a bar plot showing the most frequent words in a document-feature matrix (dfm).

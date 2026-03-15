@@ -16,6 +16,14 @@ import warnings
 import pandas as pd
 
 
+def _to_r_safe_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert Arrow-backed string columns to plain object dtype for reticulate compatibility."""
+    for col in df.columns:
+        if pd.api.types.is_string_dtype(df[col]):
+            df[col] = df[col].astype(object)
+    return df
+
+
 class SpacyNLP:
     """
     Unified spaCy NLP interface for TextAnalysisR.
@@ -340,7 +348,7 @@ class SpacyNLP:
 
                     results.append(row)
 
-        return pd.DataFrame(results)
+        return _to_r_safe_df(pd.DataFrame(results))
 
     def lemmatize(
         self,
@@ -395,7 +403,7 @@ class SpacyNLP:
                         "lemma": token.lemma_
                     })
 
-        return pd.DataFrame(results)
+        return _to_r_safe_df(pd.DataFrame(results))
 
     def get_entities(self, texts: List[str], batch_size: int = 50,
                       progress_callback: Optional[callable] = None) -> pd.DataFrame:
@@ -430,7 +438,7 @@ class SpacyNLP:
                     "end_token": ent.end
                 })
 
-        return pd.DataFrame(results)
+        return _to_r_safe_df(pd.DataFrame(results))
 
     def get_noun_chunks(self, texts: List[str], batch_size: int = 50,
                          progress_callback: Optional[callable] = None) -> pd.DataFrame:
@@ -469,7 +477,7 @@ class SpacyNLP:
                     "end_char": chunk.end_char
                 })
 
-        return pd.DataFrame(results)
+        return _to_r_safe_df(pd.DataFrame(results))
 
     def get_subjects_objects(self, texts: List[str], batch_size: int = 50,
                                progress_callback: Optional[callable] = None) -> pd.DataFrame:
@@ -530,7 +538,7 @@ class SpacyNLP:
                                 "object": "; ".join(objects) if objects else ""
                             })
 
-        return pd.DataFrame(results)
+        return _to_r_safe_df(pd.DataFrame(results))
 
     def _get_span_text(self, token) -> str:
         """Get the text of a token and its dependents (subtree)."""
@@ -595,17 +603,17 @@ class SpacyNLP:
             DataFrame with similar words and their scores
         """
         if not self._has_vectors:
-            return pd.DataFrame([{
+            return _to_r_safe_df(pd.DataFrame([{
                 "error": f"Model '{self.model_name}' has no word vectors. "
                          "Use en_core_web_md or en_core_web_lg for word similarity."
-            }])
+            }]))
 
         # Get the word's vector
         doc = self.nlp(word)
         if not doc[0].has_vector:
-            return pd.DataFrame([{
+            return _to_r_safe_df(pd.DataFrame([{
                 "error": f"Word '{word}' not in vocabulary or has no vector."
-            }])
+            }]))
 
         word_vector = doc[0].vector
 
@@ -635,7 +643,7 @@ class SpacyNLP:
                             if len(results) >= top_n:
                                 break
 
-                return pd.DataFrame(results) if results else pd.DataFrame([{"word": None, "similarity": None, "rank": None}])
+                return _to_r_safe_df(pd.DataFrame(results)) if results else _to_r_safe_df(pd.DataFrame([{"word": None, "similarity": None, "rank": None}]))
 
             # Fallback: vectorized numpy search (still faster than loop)
             vectors = self.nlp.vocab.vectors.data
@@ -660,10 +668,10 @@ class SpacyNLP:
                     if len(results) >= top_n:
                         break
 
-            return pd.DataFrame(results)
+            return _to_r_safe_df(pd.DataFrame(results))
 
         except Exception as e:
-            return pd.DataFrame([{"error": f"Error finding similar words: {str(e)}"}])
+            return _to_r_safe_df(pd.DataFrame([{"error": f"Error finding similar words: {str(e)}"}]))
 
     def get_sentences(self, texts: List[str], batch_size: int = 50,
                         progress_callback: Optional[callable] = None) -> pd.DataFrame:
@@ -697,7 +705,7 @@ class SpacyNLP:
                     "n_tokens": len(sent)
                 })
 
-        return pd.DataFrame(results)
+        return _to_r_safe_df(pd.DataFrame(results))
 
     def render_displacy_ent(
         self,

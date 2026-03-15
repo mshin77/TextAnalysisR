@@ -21,7 +21,7 @@ plot_sentiment_by_category(
 \item{title}{Plot title (default: auto-generated)}
 }
 \value{
-A plotly grouped/stacked bar chart
+A ggplot2 grouped/stacked bar chart
 }
 \description{
 Creates a grouped or stacked bar plot showing sentiment distribution across categories.

@@ -1,6 +1,7 @@
 ^TextAnalysisR\.Rproj$
 ^\.Rproj\.user$
 ^\.claude$
+inst/TextAnalysisR\.app/\.claude$
 ^LICENSE\.md$
 ^README\.Rmd$
 ^_pkgdown\.yml$

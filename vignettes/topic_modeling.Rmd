@@ -210,7 +210,6 @@ topic_labels <- c("1" = "Digital Learning Tools", "2" = "Family Engagement")
 content <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "survey_item",
-  topic_labels = topic_labels,  # Optional
   provider = "ollama",
   model = "llama3.2"
 )

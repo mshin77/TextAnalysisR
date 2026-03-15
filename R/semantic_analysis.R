@@ -956,6 +956,9 @@ semantic_similarity_analysis <- function(...) {
 #' @param method Dimensionality reduction method ("PCA", "t-SNE", "UMAP")
 #' @param clusters Optional cluster assignments
 #' @param ... Additional arguments
+#'
+#' @return A ggplot2 visualization of document clusters
+#'
 #' @family semantic
 #' @export
 semantic_document_clustering <- function(embeddings, method = "UMAP", clusters = NULL, ...) {
@@ -1275,6 +1278,9 @@ Generated Topic Label:"
 #' @param labels Cluster labels (optional)
 #' @param doc_ids Document IDs
 #' @param file_path Path to save the CSV file
+#'
+#' @return Invisible data frame of the exported data
+#'
 #' @family semantic
 #' @export
 export_document_clustering <- function(coordinates,
@@ -2194,7 +2200,7 @@ analyze_sentiment <- function(texts,
 #' @param sentiment_data Data frame from analyze_sentiment() or with 'sentiment' column
 #' @param title Plot title (default: "Sentiment Distribution")
 #'
-#' @return A plotly bar chart
+#' @return A ggplot2 bar chart
 #'
 #' @family sentiment
 #' @export
@@ -2210,10 +2216,6 @@ analyze_sentiment <- function(texts,
 plot_sentiment_distribution <- function(sentiment_data,
                                         title = "Sentiment Distribution") {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (!"sentiment" %in% names(sentiment_data)) {
     stop("Data must contain a 'sentiment' column. Use analyze_sentiment() first.")
   }
@@ -2225,20 +2227,16 @@ plot_sentiment_distribution <- function(sentiment_data,
 
   colors <- get_sentiment_colors()
 
-  plotly::plot_ly(
-    x = names(sentiment_counts),
-    y = as.numeric(sentiment_counts),
-    type = "bar",
-    text = as.numeric(sentiment_counts),
-    textposition = "none",
-    marker = list(color = colors[names(sentiment_counts)]),
-    hovertemplate = "%{x}<br>Count: %{y}<extra></extra>"
-  ) %>%
-    apply_standard_plotly_layout(
-      title = title,
-      xaxis_title = "Sentiment",
-      yaxis_title = "Number of Documents"
-    )
+  plot_df <- data.frame(
+    sentiment = factor(names(sentiment_counts), levels = names(sentiment_counts)),
+    count = as.numeric(sentiment_counts)
+  )
+
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$sentiment, y = .data$count, fill = .data$sentiment)) +
+    ggplot2::geom_col() +
+    ggplot2::scale_fill_manual(values = colors, guide = "none") +
+    ggplot2::labs(title = title, x = "Sentiment", y = "Number of Documents") +
+    ggplot2::theme_minimal(base_size = 11)
 }
 
 
@@ -2252,7 +2250,7 @@ plot_sentiment_distribution <- function(sentiment_data,
 #' @param plot_type Type of plot: "bar" or "stacked" (default: "bar")
 #' @param title Plot title (default: auto-generated)
 #'
-#' @return A plotly grouped/stacked bar chart
+#' @return A ggplot2 grouped/stacked bar chart
 #'
 #' @family sentiment
 #' @export
@@ -2271,10 +2269,6 @@ plot_sentiment_by_category <- function(sentiment_data,
                                        category_var,
                                        plot_type = "bar",
                                        title = NULL) {
-
-  if (!requireNamespace("plotly", quietly = TRUE) || !requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Packages 'plotly' and 'dplyr' are required.")
-  }
 
   if (!category_var %in% names(sentiment_data)) {
     stop(paste("Category variable", category_var, "not found in data"))
@@ -2299,42 +2293,14 @@ plot_sentiment_by_category <- function(sentiment_data,
     title <- paste("Sentiment by", category_var)
   }
 
-  plotly::plot_ly(
-    grouped_data,
-    x = ~category_var,
-    y = ~proportion,
-    color = ~sentiment,
-    colors = colors,
-    type = "bar",
-    text = ~paste(
-      "Category:", category_var,
-      "<br>Sentiment:", sentiment,
-      "<br>Proportion:", sprintf("%.3f", proportion)
-    ),
-    hovertemplate = "%{text}<extra></extra>"
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = list(text = category_var),
-        tickangle = -45,
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = "Proportion"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      barmode = if (plot_type == "stacked") "stack" else "group",
-      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-      hoverlabel = list(align = "left", font = list(size = 16)),
-      margin = list(l = 80, r = 40, t = 80, b = 120)
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  bar_position <- if (plot_type == "stacked") "stack" else "dodge"
+
+  ggplot2::ggplot(grouped_data, ggplot2::aes(x = .data$category_var, y = .data$proportion, fill = .data$sentiment)) +
+    ggplot2::geom_col(position = bar_position) +
+    ggplot2::scale_fill_manual(values = colors) +
+    ggplot2::labs(title = title, x = category_var, y = "Proportion", fill = "Sentiment") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 }
 
 
@@ -2349,7 +2315,7 @@ plot_sentiment_by_category <- function(sentiment_data,
 #' @param text_preview Optional vector of text snippets for tooltips (default: NULL)
 #' @param title Plot title (default: "Document Sentiment Scores")
 #'
-#' @return A plotly line chart with color gradient
+#' @return A ggplot2 line chart with color gradient
 #'
 #' @family sentiment
 #' @export
@@ -2370,83 +2336,20 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 
   if (!is.null(doc_ids)) {
     doc_data$display_id <- doc_ids[doc_data$document]
-
-    if (!is.null(text_preview)) {
-      text_content <- text_preview[doc_data$document]
-      hover_text <- paste0(
-        "<b>Document ID:</b> ", doc_data$display_id, "\n",
-        "<b>Sentiment:</b> ", doc_data$sentiment, "\n",
-        "<b>Score:</b> ", round(doc_data$sentiment_score, 2),
-        ifelse(!is.na(text_content) & text_content != "", paste0("\n<b>Text:</b>\n", text_content), "")
-      )
-    } else {
-      hover_text <- paste0(
-        "<b>Document ID:</b> ", doc_data$display_id, "\n",
-        "<b>Sentiment:</b> ", doc_data$sentiment, "\n",
-        "<b>Score:</b> ", round(doc_data$sentiment_score, 2)
-      )
-    }
   } else {
     doc_data$display_id <- paste("Doc", doc_data$document)
-
-    if (!is.null(text_preview)) {
-      text_content <- text_preview[doc_data$document]
-      hover_text <- paste0(
-        "<b>Document:</b> ", doc_data$display_id, "<br>",
-        "<b>Sentiment:</b> ", doc_data$sentiment, "<br>",
-        "<b>Score:</b> ", round(doc_data$sentiment_score, 2),
-        ifelse(!is.na(text_content) & text_content != "", paste0("<br><b>Text:</b> ", text_content), "")
-      )
-    } else {
-      hover_text <- paste0(
-        "<b>Document:</b> ", doc_data$display_id, "<br>",
-        "<b>Sentiment:</b> ", doc_data$sentiment, "<br>",
-        "<b>Score:</b> ", round(doc_data$sentiment_score, 2)
-      )
-    }
   }
 
-  hover_bg_colors <- sapply(doc_data$sentiment_score, get_sentiment_color)
-
-  plotly::plot_ly(
-    doc_data,
-    x = ~doc_index,
-    y = ~sentiment_score,
-    type = "scatter",
-    mode = "lines+markers",
-    text = hover_text,
-    hovertemplate = "%{text}<extra></extra>",
-    marker = list(
-      color = ~sentiment_score,
-      colorscale = list(
-        c(0, "rgb(239, 68, 68)"),
-        c(0.5, "rgb(107, 114, 128)"),
-        c(1, "rgb(16, 185, 129)")
-      ),
-      showscale = TRUE,
-      colorbar = list(title = "Sentiment Score")
-    ),
-    hoverlabel = list(
-      bgcolor = hover_bg_colors,
-      bordercolor = hover_bg_colors,
-      font = list(
-        family = "Roboto, sans-serif",
-        size = 15,
-        color = "#ffffff"
-      ),
-      align = "left",
-      namelength = -1,
-      maxwidth = 400
-    )
-  ) %>%
-    apply_standard_plotly_layout(
-      title = title,
-      xaxis_title = "Document Index",
-      yaxis_title = "Sentiment Score"
-    ) %>%
-    plotly::layout(
-      yaxis = list(zeroline = TRUE)
-    )
+  ggplot2::ggplot(doc_data, ggplot2::aes(x = .data$doc_index, y = .data$sentiment_score)) +
+    ggplot2::geom_line(color = "#6B7280") +
+    ggplot2::geom_point(ggplot2::aes(color = .data$sentiment_score), size = 2) +
+    ggplot2::scale_color_gradient2(
+      low = "#EF4444", mid = "#6B7280", high = "#10B981", midpoint = 0,
+      name = "Sentiment Score"
+    ) +
+    ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "#9CA3AF") +
+    ggplot2::labs(title = title, x = "Document Index", y = "Sentiment Score") +
+    ggplot2::theme_minimal(base_size = 11)
 }
 
 #' Analyze Sentiment Using Tidytext Lexicons
@@ -3055,7 +2958,7 @@ Important:
 #' @param normalize Logical, whether to normalize scores to 0-100 scale (default: FALSE)
 #' @param title Plot title (default: "Emotion Analysis")
 #'
-#' @return A plotly polar chart
+#' @return A ggplot2 polar chart
 #'
 #' @family sentiment
 #' @export
@@ -3083,67 +2986,23 @@ plot_emotion_radar <- function(emotion_data,
 
     categories <- unique(plot_data[[group_var]])
 
-    # Return empty plot with proper type if no categories
     if (length(categories) == 0) {
       return(
-        plotly::plot_ly(type = "scatter", mode = "markers") %>%
-          plotly::layout(
-            xaxis = list(visible = FALSE),
-            yaxis = list(visible = FALSE),
-            annotations = list(
-              list(text = "No data available", showarrow = FALSE,
-                   font = list(size = 16), xref = "paper", yref = "paper",
-                   x = 0.5, y = 0.5)
-            )
-          )
+        ggplot2::ggplot() +
+          ggplot2::annotate("text", x = 0.5, y = 0.5, label = "No data available", size = 5, color = "#ef4444") +
+          ggplot2::theme_void()
       )
     }
 
-    p <- plotly::plot_ly()
+    plot_data$group_col <- plot_data[[group_var]]
 
-    for (cat in categories) {
-      cat_data <- plot_data %>% dplyr::filter(!!rlang::sym(group_var) == cat)
-
-      p <- p %>%
-        plotly::add_trace(
-          type = 'scatterpolar',
-          mode = 'lines+markers',
-          r = cat_data$total_score,
-          theta = cat_data$emotion,
-          fill = 'toself',
-          name = as.character(cat)
-        )
-    }
-
-    p %>%
-      plotly::layout(
-        title = list(
-          text = title,
-          font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-        ),
-        polar = list(
-          radialaxis = list(
-            visible = TRUE,
-            range = c(0, max(plot_data$total_score, na.rm = TRUE) * 1.1),
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-          ),
-          angularaxis = list(
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-          )
-        ),
-        font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-        hoverlabel = list(
-          align = "left",
-          font = list(size = 16, family = "Roboto, sans-serif"),
-          maxwidth = 300
-        ),
-        legend = list(
-          font = list(size = 16, family = "Roboto, sans-serif")
-        ),
-        showlegend = TRUE,
-        margin = list(l = 80, r = 80, t = 80, b = 80)
-      ) %>%
-      plotly::config(displayModeBar = TRUE)
+    ggplot2::ggplot(plot_data, ggplot2::aes(x = .data$emotion, y = .data$total_score,
+                                             group = .data$group_col, color = .data$group_col, fill = .data$group_col)) +
+      ggplot2::geom_polygon(alpha = 0.1) +
+      ggplot2::geom_point(size = 2) +
+      ggplot2::coord_polar() +
+      ggplot2::labs(title = title, x = NULL, y = NULL, color = group_var, fill = group_var) +
+      ggplot2::theme_minimal(base_size = 11)
 
   } else {
 
@@ -3156,40 +3015,17 @@ plot_emotion_radar <- function(emotion_data,
       }
     }
 
-    plotly::plot_ly(
-      type = 'scatterpolar',
-      mode = 'lines+markers',
-      r = scores,
-      theta = emotion_data$emotion,
-      fill = 'toself',
-      name = 'Emotion Scores',
-      marker = list(color = "#8B5CF6")
-    ) %>%
-      plotly::layout(
-        title = list(
-          text = title,
-          font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-        ),
-        polar = list(
-          radialaxis = list(
-            visible = TRUE,
-            range = c(0, max(scores, na.rm = TRUE) * 1.1),
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-          ),
-          angularaxis = list(
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-          )
-        ),
-        font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-        hoverlabel = list(
-          align = "left",
-          font = list(size = 16, family = "Roboto, sans-serif"),
-          maxwidth = 300
-        ),
-        showlegend = FALSE,
-        margin = list(l = 80, r = 80, t = 80, b = 80)
-      ) %>%
-      plotly::config(displayModeBar = TRUE)
+    radar_df <- data.frame(
+      emotion = emotion_data$emotion,
+      score = scores
+    )
+
+    ggplot2::ggplot(radar_df, ggplot2::aes(x = .data$emotion, y = .data$score, group = 1)) +
+      ggplot2::geom_polygon(fill = "#8B5CF6", alpha = 0.1, color = "#8B5CF6") +
+      ggplot2::geom_point(color = "#8B5CF6", size = 2) +
+      ggplot2::coord_polar() +
+      ggplot2::labs(title = title, x = NULL, y = NULL) +
+      ggplot2::theme_minimal(base_size = 11)
   }
 }
 
@@ -3204,17 +3040,13 @@ plot_emotion_radar <- function(emotion_data,
 #' @param category_var Name of the category variable column (default: "category_var")
 #' @param title Plot title (default: "Sentiment Score Distribution")
 #'
-#' @return A plotly box plot
+#' @return A ggplot2 box plot
 #'
 #' @family sentiment
 #' @export
 plot_sentiment_boxplot <- function(sentiment_data,
                                    category_var = "category_var",
                                    title = "Sentiment Score Distribution") {
-
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
 
   if (!category_var %in% names(sentiment_data)) {
     stop("Category variable '", category_var, "' not found in data")
@@ -3224,42 +3056,12 @@ plot_sentiment_boxplot <- function(sentiment_data,
     stop("sentiment_score column not found in data")
   }
 
-  plotly::plot_ly(
-    sentiment_data,
-    x = as.formula(paste0("~", category_var)),
-    y = ~sentiment_score,
-    type = "box",
-    color = as.formula(paste0("~", category_var))
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = list(text = category_var),
-        tickangle = -45,
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = "Sentiment Score"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 16, family = "Roboto, sans-serif"),
-        maxwidth = 300
-      ),
-      legend = list(
-        font = list(size = 16, family = "Roboto, sans-serif")
-      ),
-      showlegend = FALSE,
-      margin = list(l = 80, r = 40, t = 80, b = 120)
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  ggplot2::ggplot(sentiment_data, ggplot2::aes(x = .data[[category_var]], y = .data$sentiment_score,
+                                                fill = .data[[category_var]])) +
+    ggplot2::geom_boxplot(show.legend = FALSE) +
+    ggplot2::labs(title = title, x = category_var, y = "Sentiment Score") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 }
 
 
@@ -3273,17 +3075,13 @@ plot_sentiment_boxplot <- function(sentiment_data,
 #' @param category_var Name of the category variable column (default: "category_var")
 #' @param title Plot title (default: "Sentiment Score Distribution")
 #'
-#' @return A plotly violin plot
+#' @return A ggplot2 violin plot
 #'
 #' @family sentiment
 #' @export
 plot_sentiment_violin <- function(sentiment_data,
                                   category_var = "category_var",
                                   title = "Sentiment Score Distribution") {
-
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
 
   if (!category_var %in% names(sentiment_data)) {
     stop("Category variable '", category_var, "' not found in data")
@@ -3293,43 +3091,12 @@ plot_sentiment_violin <- function(sentiment_data,
     stop("sentiment_score column not found in data")
   }
 
-  plotly::plot_ly(
-    sentiment_data,
-    x = as.formula(paste0("~", category_var)),
-    y = ~sentiment_score,
-    type = "violin",
-    color = as.formula(paste0("~", category_var)),
-    hovertemplate = "%{x}<br>Score: %{y:.3f}<extra></extra>"
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      xaxis = list(
-        title = list(text = category_var),
-        tickangle = -45,
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = list(text = "Sentiment Score"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-      hoverlabel = list(
-        align = "left",
-        font = list(size = 16, family = "Roboto, sans-serif"),
-        maxwidth = 300
-      ),
-      legend = list(
-        font = list(size = 16, family = "Roboto, sans-serif")
-      ),
-      showlegend = FALSE,
-      margin = list(l = 80, r = 40, t = 80, b = 120)
-    ) %>%
-    plotly::config(displayModeBar = TRUE)
+  ggplot2::ggplot(sentiment_data, ggplot2::aes(x = .data[[category_var]], y = .data$sentiment_score,
+                                                fill = .data[[category_var]])) +
+    ggplot2::geom_violin(show.legend = FALSE) +
+    ggplot2::labs(title = title, x = category_var, y = "Sentiment Score") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 }
 
 
@@ -3354,7 +3121,7 @@ NULL
 
 # Network Analysis Functions
 # NOTE: word_co_occurrence_network and word_correlation_network functions
-# are now in R/network_analysis.R using Plotly-based visualization.
+# are now in R/network_analysis.R using ggplot2-based visualization.
 
 #' @title Plot Semantic Analysis Visualization
 #'
@@ -3377,7 +3144,7 @@ NULL
 #' @param width The width of the resulting Plotly plot, in pixels (default: 800).
 #' @param title Optional custom title for the plot (default: NULL).
 #'
-#' @return A plotly object showing the specified visualization.
+#' @return A ggplot2 object showing the specified visualization.
 #'
 #' @family visualization
 #' @export
@@ -3403,11 +3170,6 @@ plot_semantic_viz <- function(analysis_result = NULL,
                                        hover_config = NULL,
                                        cluster_colors = NULL) {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("plotly package is required for visualization. ",
-         "Please install it with: install.packages('plotly')")
-  }
-
   tryCatch({
     plot_obj <- switch(plot_type,
       "similarity" = {
@@ -3417,51 +3179,22 @@ plot_semantic_viz <- function(analysis_result = NULL,
           data_labels <- paste0("Doc ", seq_len(nrow(similarity_matrix)))
         }
 
-        plotly::plot_ly(
-          z = similarity_matrix,
-          x = data_labels,
-          y = data_labels,
-          type = "heatmap",
-          colorscale = "Viridis",
-          hovertemplate = "Doc %{x}<br>Doc %{y}<br>Similarity: %{z:.3f}<extra></extra>",
-          width = width,
-          height = height
-        ) %>%
-        plotly::layout(
-          title = if (!is.null(title)) {
-            list(
-              text = title,
-              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-              x = 0.5,
-              xref = "paper",
-              xanchor = "center",
-              y = 0.98,
-              yref = "paper",
-              yanchor = "top"
-            )
-          } else {
-            list(
-              text = paste("Similarity Heatmap -", analysis_result$method),
-              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-              x = 0.5,
-              xref = "paper",
-              xanchor = "center",
-              y = 0.98,
-              yref = "paper",
-              yanchor = "top"
-            )
-          },
-          xaxis = list(
-            title = "Documents",
-            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
-          ),
-          yaxis = list(
-            title = "Documents",
-            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
-          )
+        plot_title <- title %||% paste("Similarity Heatmap -", analysis_result$method)
+
+        heat_df <- expand.grid(
+          x = seq_len(ncol(similarity_matrix)),
+          y = seq_len(nrow(similarity_matrix))
         )
+        heat_df$similarity <- as.vector(similarity_matrix)
+        heat_df$x_label <- factor(data_labels[heat_df$x], levels = data_labels)
+        heat_df$y_label <- factor(data_labels[heat_df$y], levels = data_labels)
+
+        ggplot2::ggplot(heat_df, ggplot2::aes(x = .data$x_label, y = .data$y_label, fill = .data$similarity)) +
+          ggplot2::geom_tile() +
+          ggplot2::scale_fill_viridis_c(name = "Similarity") +
+          ggplot2::labs(title = plot_title, x = "Documents", y = "Documents") +
+          ggplot2::theme_minimal(base_size = 11) +
+          ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
       },
       "dimensionality_reduction" = {
         reduced_data <- if (!is.null(coords)) {
@@ -3479,89 +3212,44 @@ plot_semantic_viz <- function(analysis_result = NULL,
         plot_clusters <- !is.null(clusters) || (!is.null(analysis_result) && !is.null(analysis_result$clusters))
         cluster_data <- clusters %||% (if (!is.null(analysis_result)) analysis_result$clusters else NULL)
 
-        if (plot_clusters) {
-          color_var <- as.factor(cluster_data)
-          showlegend <- TRUE
-        } else if (!is.null(color_by)) {
-          color_var <- color_by
-          showlegend <- TRUE
-        } else {
-          color_var <- I("steelblue")
-          showlegend <- FALSE
-        }
-
-        hover_template <- if (!is.null(hover_text)) {
-          "%{text}<extra></extra>"
-        } else {
-          "%{text}<br>X: %{x:.3f}<br>Y: %{y:.3f}<extra></extra>"
-        }
-
-        plot_text <- if (!is.null(hover_text)) hover_text else data_labels
-
-        p <- plotly::plot_ly(
+        scatter_df <- data.frame(
           x = reduced_data[, 1],
           y = if (ncol(reduced_data) > 1) reduced_data[, 2] else rep(0, nrow(reduced_data)),
-          text = plot_text,
-          color = color_var,
-          type = "scatter",
-          mode = "markers",
-          marker = list(size = 8, opacity = 0.7),
-          hovertemplate = hover_template,
-          width = width,
-          height = height,
-          showlegend = showlegend
+          label = data_labels
         )
 
-        if (!is.null(hover_config)) {
-          p <- p %>% plotly::layout(hoverlabel = hover_config)
+        if (plot_clusters) {
+          scatter_df$color_var <- as.factor(cluster_data)
+        } else if (!is.null(color_by)) {
+          scatter_df$color_var <- color_by
         }
 
-        p %>% plotly::layout(
-          title = if (!is.null(title)) {
-            list(
-              text = title,
-              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-              x = 0.5,
-              xref = "paper",
-              xanchor = "center",
-              y = 0.98,
-              yref = "paper",
-              yanchor = "top"
-            )
-          } else {
-            list(
-              text = paste("Dimensionality Reduction -",
-                           if (!is.null(analysis_result)) analysis_result$method else "Custom"),
-              font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-              x = 0.5,
-              xref = "paper",
-              xanchor = "center",
-              y = 0.98,
-              yref = "paper",
-              yanchor = "top"
-            )
-          },
-          xaxis = list(
-            title = paste("Component 1",
+        plot_title <- title %||% paste("Dimensionality Reduction -",
+                                        if (!is.null(analysis_result)) analysis_result$method else "Custom")
+
+        x_title <- paste("Component 1",
                           if (!is.null(analysis_result) && !is.null(analysis_result$variance_explained))
                             paste0("(", round(analysis_result$variance_explained[1] * 100, 1), "%)")
-                          else ""),
-            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
-          ),
-          yaxis = list(
-            title = paste("Component 2",
+                          else "")
+        y_title <- paste("Component 2",
                           if (!is.null(analysis_result) && !is.null(analysis_result$variance_explained) &&
                               length(analysis_result$variance_explained) > 1)
                             paste0("(", round(analysis_result$variance_explained[2] * 100, 1), "%)")
-                          else ""),
-            titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto"),
-            tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto")
-          )
-        )
+                          else "")
+
+        p <- ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y))
+
+        if ("color_var" %in% names(scatter_df)) {
+          p <- p + ggplot2::geom_point(ggplot2::aes(color = .data$color_var), size = 2, alpha = 0.7)
+        } else {
+          p <- p + ggplot2::geom_point(color = "steelblue", size = 2, alpha = 0.7)
+        }
+
+        p + ggplot2::labs(title = plot_title, x = x_title, y = y_title, color = NULL) +
+          ggplot2::theme_minimal(base_size = 11)
       },
       "clustering" = {
-        plot_data <- if (!is.null(coords)) {
+        plot_data_mat <- if (!is.null(coords)) {
           coords
         } else if (!is.null(analysis_result)) {
           analysis_result$umap_embedding %||% analysis_result$reduced_data
@@ -3571,128 +3259,41 @@ plot_semantic_viz <- function(analysis_result = NULL,
 
         cluster_data <- clusters %||% (if (!is.null(analysis_result)) analysis_result$clusters else NULL)
 
-        if (is.null(plot_data)) {
+        plot_title <- title %||% paste("Clustering Results -",
+                                        if (!is.null(analysis_result)) analysis_result$method else "Custom")
+
+        if (is.null(plot_data_mat)) {
           if (is.null(data_labels)) {
             data_labels <- paste0("Doc ", seq_len(length(cluster_data)))
           }
 
-          plotly::plot_ly(
+          scatter_df <- data.frame(
             x = seq_along(cluster_data),
             y = cluster_data,
-            color = as.factor(cluster_data),
-            text = data_labels,
-            type = "scatter",
-            mode = "markers",
-            marker = list(size = 8, opacity = 0.7),
-            hovertemplate = "%{text}<br>Cluster: %{y}<extra></extra>",
-            width = width,
-            height = height
-          ) %>%
-          plotly::layout(
-            title = if (!is.null(title)) {
-              list(
-                text = title,
-                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-                x = 0.5,
-                xref = "paper",
-                xanchor = "center",
-                y = 0.98,
-                yref = "paper",
-                yanchor = "top"
-              )
-            } else {
-              list(
-                text = paste("Clustering Results -",
-                             if (!is.null(analysis_result)) analysis_result$method else "Custom"),
-                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-                x = 0.5,
-                xref = "paper",
-                xanchor = "center",
-                y = 0.98,
-                yref = "paper",
-                yanchor = "top"
-              )
-            },
-            margin = list(l = 80, r = 40, t = 80, b = 60),
-            xaxis = list(
-              title = "Document Index",
-              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-            ),
-            yaxis = list(
-              title = "Cluster",
-              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-            )
+            cluster = as.factor(cluster_data),
+            label = data_labels
           )
+
+          ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster)) +
+            ggplot2::geom_point(size = 2, alpha = 0.7) +
+            ggplot2::labs(title = plot_title, x = "Document Index", y = "Cluster", color = "Cluster") +
+            ggplot2::theme_minimal(base_size = 11)
         } else {
           if (is.null(data_labels)) {
-            data_labels <- paste0("Doc ", seq_len(nrow(plot_data)))
+            data_labels <- paste0("Doc ", seq_len(nrow(plot_data_mat)))
           }
 
-          hover_template <- if (!is.null(hover_text)) {
-            "%{text}<extra></extra>"
-          } else {
-            paste0("%{text}<br>X: %{x:.3f}<br>Y: %{y:.3f}<br>",
-                   "Cluster: %{color}<extra></extra>")
-          }
-
-          plot_text <- if (!is.null(hover_text)) hover_text else data_labels
-
-          p <- plotly::plot_ly(
-            x = plot_data[, 1],
-            y = if (ncol(plot_data) > 1) plot_data[, 2] else rep(0, nrow(plot_data)),
-            color = as.factor(cluster_data),
-            text = plot_text,
-            type = "scatter",
-            mode = "markers",
-            marker = list(size = 8, opacity = 0.7),
-            hovertemplate = hover_template,
-            width = width,
-            height = height
+          scatter_df <- data.frame(
+            x = plot_data_mat[, 1],
+            y = if (ncol(plot_data_mat) > 1) plot_data_mat[, 2] else rep(0, nrow(plot_data_mat)),
+            cluster = as.factor(cluster_data),
+            label = data_labels
           )
 
-          if (!is.null(hover_config)) {
-            p <- p %>% plotly::layout(hoverlabel = hover_config)
-          }
-
-          p %>% plotly::layout(
-            title = if (!is.null(title)) {
-              list(
-                text = title,
-                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-                x = 0.5,
-                xref = "paper",
-                xanchor = "center",
-                y = 0.98,
-                yref = "paper",
-                yanchor = "top"
-              )
-            } else {
-              list(
-                text = paste("Clustering Results -",
-                             if (!is.null(analysis_result)) analysis_result$method else "Custom"),
-                font = list(size = 18, color = "#0c1f4a", family = "Roboto"),
-                x = 0.5,
-                xref = "paper",
-                xanchor = "center",
-                y = 0.98,
-                yref = "paper",
-                yanchor = "top"
-              )
-            },
-            margin = list(l = 80, r = 40, t = 80, b = 60),
-            xaxis = list(
-              title = "Component 1",
-              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-            ),
-            yaxis = list(
-              title = "Component 2",
-              titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-              tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-            )
-          )
+          ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster)) +
+            ggplot2::geom_point(size = 2, alpha = 0.7) +
+            ggplot2::labs(title = plot_title, x = "Component 1", y = "Component 2", color = "Cluster") +
+            ggplot2::theme_minimal(base_size = 11)
         }
       },
       stop("Unsupported plot type: ", plot_type)
@@ -3953,12 +3554,12 @@ plot_cross_category_heatmap <- function(similarity_data,
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
       strip.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B"),
-      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 10),
-      axis.text.y = ggplot2::element_text(size = 10),
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 11),
+      axis.text.y = ggplot2::element_text(size = 11),
       axis.title.x = ggplot2::element_blank(),
       legend.title = ggplot2::element_text(size = 11, color = "#3B3B3B"),
       legend.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
-      plot.title = ggplot2::element_text(size = 12, hjust = 0.5)
+      plot.title = ggplot2::element_text(size = 13, hjust = 0.5)
     ) +
     ggplot2::labs(y = row_label, title = title)
 
@@ -3997,7 +3598,7 @@ plot_cross_category_heatmap <- function(similarity_data,
 #' @param row_label Label for row axis (default: NULL, uses row_category)
 #' @param output_type Output type: "plotly" or "ggplot" (default: "plotly", auto-switches to "ggplot" for faceting)
 #'
-#' @return A plotly or ggplot2 heatmap object
+#' @return A ggplot2 heatmap object
 #'
 #' @family visualization
 #' @export
@@ -4044,15 +3645,15 @@ plot_similarity_heatmap <- function(similarity_matrix,
                                      row_label = NULL,
                                      output_type = "plotly") {
 
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    stop("Package 'plotly' is required. Please install it.")
-  }
-
   if (is.null(similarity_matrix) || nrow(similarity_matrix) < 2) {
-    return(create_empty_plot_message("Need at least 2 documents for similarity analysis"))
+    return(
+      ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = "Need at least 2 documents for similarity analysis",
+                          size = 5, color = "#ef4444") +
+        ggplot2::theme_void()
+    )
   }
-
-  # Cross-category mode: create faceted ggplot heatmap
 
   if (!is.null(row_category) && !is.null(col_categories) && !is.null(docs_data)) {
     if (is.null(facet)) facet <- TRUE
@@ -4076,111 +3677,20 @@ plot_similarity_heatmap <- function(similarity_matrix,
   n_docs <- nrow(similarity_matrix)
 
   feature_config <- switch(feature_type,
-    "words" = list(display_name = "Word Co-occurrence", colorscale = "Plasma"),
-    "topics" = list(display_name = "Topic Distribution", colorscale = "Inferno"),
-    "ngrams" = list(display_name = "N-gram Pattern", colorscale = "Viridis"),
-    "embeddings" = list(display_name = "Semantic Embedding", colorscale = "Magma"),
-    list(display_name = feature_type, colorscale = "Turbo")
+    "words" = list(display_name = "Word Co-occurrence", viridis_option = "C"),
+    "topics" = list(display_name = "Topic Distribution", viridis_option = "B"),
+    "ngrams" = list(display_name = "N-gram Pattern", viridis_option = "D"),
+    "embeddings" = list(display_name = "Semantic Embedding", viridis_option = "A"),
+    list(display_name = feature_type, viridis_option = "H")
   )
-
-  if (!is.null(colorscale)) {
-    feature_config$colorscale <- colorscale
-  }
-
-  wrap_long_text <- function(text, max_chars = 40) {
-    text <- as.character(text)
-    if (nchar(text) <= max_chars) return(text)
-
-    words <- strsplit(text, " ")[[1]]
-    lines <- character()
-    current_line <- ""
-
-    for (word in words) {
-      if (nchar(paste(current_line, word)) > max_chars) {
-        if (nchar(current_line) > 0) {
-          lines <- c(lines, current_line)
-          current_line <- word
-        } else {
-          while (nchar(word) > max_chars) {
-            lines <- c(lines, substr(word, 1, max_chars))
-            word <- substr(word, max_chars + 1, nchar(word))
-          }
-          current_line <- word
-        }
-      } else {
-        current_line <- if (nchar(current_line) == 0) word else paste(current_line, word)
-      }
-    }
-    if (nchar(current_line) > 0) lines <- c(lines, current_line)
-
-    paste(lines, collapse = "<br>")
-  }
 
   if (!is.null(docs_data) && nrow(docs_data) >= n_docs) {
     docs_data <- docs_data[1:n_docs, ]
     x_labels <- docs_data$document_number %||% paste("Doc", 1:n_docs)
     y_labels <- x_labels
-
-    doc_ids_processed <- vapply(
-      docs_data$document_id_display %||% x_labels,
-      wrap_long_text,
-      character(1),
-      USE.NAMES = FALSE
-    )
-    cats_processed <- vapply(
-      docs_data$category_display %||% rep("", n_docs),
-      function(x) wrap_long_text(x, 35),
-      character(1),
-      USE.NAMES = FALSE
-    )
-
-    feature_method_text <- paste0(
-      "<b>Feature:</b> ", feature_type, "<br>",
-      "<b>Method:</b> ", method_name, "<br><b>Similarity:</b> "
-    )
-
-    doc_label <- if (!is.null(doc_id_var) && doc_id_var != "" && doc_id_var != "None") {
-      "ID"
-    } else {
-      "Document"
-    }
-
-    row_templates <- paste0(
-      "<b>", doc_label, ":</b> ", doc_ids_processed, "<br>",
-      "<b>Category:</b> ", cats_processed, "<br>"
-    )
-
-    col_templates <- paste0(
-      "<b>", doc_label, ":</b> ", doc_ids_processed, "<br>",
-      "<b>Category:</b> ", cats_processed, "<br>"
-    )
-
-    rounded_sim <- round(similarity_matrix, 3)
-
-    hover_text <- matrix(
-      paste0(
-        rep(row_templates, each = n_docs),
-        rep(col_templates, times = n_docs),
-        feature_method_text,
-        as.vector(t(rounded_sim))
-      ),
-      nrow = n_docs,
-      ncol = n_docs,
-      byrow = TRUE
-    )
-
-    hovertemplate <- "%{text}<extra></extra>"
-    text_matrix <- hover_text
   } else {
     x_labels <- paste("Doc", 1:n_docs)
     y_labels <- x_labels
-    text_matrix <- round(similarity_matrix, 3)
-    hovertemplate <- paste0(
-      "Document: %{x}<br>Document: %{y}<br>",
-      "Feature: ", feature_type, "<br>",
-      "Method: ", method_name, "<br>",
-      "Similarity: %{text}<extra></extra>"
-    )
   }
 
   if (is.null(title)) {
@@ -4191,50 +3701,43 @@ plot_similarity_heatmap <- function(similarity_matrix,
     }
   }
 
-  plotly::plot_ly(
-    z = similarity_matrix,
-    x = x_labels,
-    y = y_labels,
-    type = "heatmap",
-    colorscale = feature_config$colorscale,
-    showscale = TRUE,
-    colorbar = list(
-      title = list(
-        text = "Similarity<br>Score",
-        font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      titleside = "right",
-      len = 0.8,
-      thickness = 15
-    ),
-    text = text_matrix,
-    hovertemplate = hovertemplate,
-    height = height,
-    width = width
-  ) %>%
-    plotly::layout(
-      title = list(
-        text = title,
-        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        x = 0.5,
-        xref = "paper",
-        xanchor = "center"
-      ),
-      xaxis = list(
-        title = "Documents",
-        tickangle = -45,
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        title = "Documents",
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
-      ),
-      plot_bgcolor = "#ffffff",
-      paper_bgcolor = "#ffffff",
-      margin = list(t = 80, b = 60, l = 100, r = 80)
+  heat_df <- expand.grid(
+    col_idx = seq_len(n_docs),
+    row_idx = seq_len(n_docs)
+  )
+  heat_df$similarity <- as.vector(similarity_matrix)
+  heat_df$x_label <- factor(x_labels[heat_df$col_idx], levels = x_labels)
+  heat_df$y_label <- factor(y_labels[heat_df$row_idx], levels = y_labels)
+
+  if (!is.null(docs_data) && nrow(docs_data) >= n_docs) {
+    doc_ids <- docs_data$document_id_display %||% x_labels
+    cats <- docs_data$category_display %||% rep("", n_docs)
+    heat_df$tooltip_text <- paste0(
+      "Row: ", doc_ids[heat_df$row_idx],
+      "\nCol: ", doc_ids[heat_df$col_idx],
+      "\nCategory: ", cats[heat_df$row_idx], " / ", cats[heat_df$col_idx],
+      "\n", method_name, " Similarity: ", round(heat_df$similarity, 3)
     )
+  } else {
+    heat_df$tooltip_text <- paste0(
+      x_labels[heat_df$row_idx], " vs ", x_labels[heat_df$col_idx],
+      "\nSimilarity: ", round(heat_df$similarity, 3)
+    )
+  }
+
+  p <- ggplot2::ggplot(heat_df, ggplot2::aes(x = .data$x_label, y = .data$y_label,
+                                               fill = .data$similarity, text = .data$tooltip_text)) +
+    ggplot2::geom_tile()
+
+  if (show_values) {
+    p <- p + ggplot2::geom_text(ggplot2::aes(label = round(.data$similarity, 2)), size = 3)
+  }
+
+  p +
+    ggplot2::scale_fill_viridis_c(name = "Similarity\nScore", option = feature_config$viridis_option) +
+    ggplot2::labs(title = title, x = "Documents", y = "Documents") +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 }
 
 
@@ -4523,10 +4026,11 @@ run_rag_search <- function(
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `co_occur_n` and `top_node_n` values for that category (default: NULL).
 #'
-#' @return A list containing the Plotly plot, a table, and a summary.
+#' @return A list containing the ggplot2 plot, a table, and a summary.
 #'
 #' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
-#' @importFrom plotly plot_ly add_segments add_markers layout add_trace subplot
+#' @importFrom ggplot2 ggplot aes geom_segment geom_point scale_size_identity theme_void labs
+#' @importFrom patchwork wrap_plots
 #' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tibble as_tibble
 #' @importFrom tidytext tidy
@@ -4588,8 +4092,8 @@ word_co_occurrence_network <- function(dfm_object,
   }
 
   dfm_td <- tidytext::tidy(dfm_object)
-  docvars_df <- dfm_object@docvars
-  docvars_df$document <- docvars_df$docname_
+  docvars_df <- quanteda::docvars(dfm_object)
+  docvars_df$document <- quanteda::docnames(dfm_object)
   dfm_td <- dplyr::left_join(dfm_td, docvars_df, by = "document")
 
   if (!is.null(doc_var) && doc_var != "" && !doc_var %in% colnames(dfm_td)) {
@@ -4795,92 +4299,54 @@ word_co_occurrence_network <- function(dfm_object,
       node_data$color <- palette[as.character(node_data$community)]
     }
 
-    p <- plotly::plot_ly(type = 'scatter', mode = 'markers', width = width, height = height)
-    for (lg in unique(edge_data$line_group)) {
-      esub <- dplyr::filter(edge_data, line_group == lg) %>%
-        dplyr::mutate(mid_x = (x + xend) / 2,
-                      mid_y = (y + yend) / 2)
-      if (nrow(esub) > 0) {
-        p <- p %>%
-          plotly::add_segments(data = esub, x = ~x, y = ~y,
-                               xend = ~xend, yend = ~yend,
-                               line = list(color = '#5C5CFF', width = ~line_width),
-                               hoverinfo = 'none', opacity = ~alpha,
-                               showlegend = TRUE, name = edge_group_labels[lg],
-                               legendgroup = "Edges") %>%
-          plotly::add_trace(data = esub, x = ~mid_x, y = ~mid_y, type = 'scatter',
-                            mode = 'markers',
-                            marker = list(size = 0.1, color = '#e0f7ff', opacity = 0),
-                            text = ~paste("Co-occurrence:", cooccur_count,
-                                          "<br>Source:", from,
-                                          "<br>Target:", to),
-                            hoverinfo = 'text', showlegend = FALSE)
-      }
-    }
-    # Add nodes based on color mode
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_segment(data = edge_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
+                                         linewidth = .data$line_width, alpha = .data$alpha),
+                            color = "#5C5CFF", show.legend = FALSE) +
+      ggplot2::scale_linewidth_identity() +
+      ggplot2::scale_alpha_identity()
+
     if (node_color_by == "frequency") {
-      # Color by frequency gradient - render all nodes at once
-      p <- p %>% plotly::add_markers(
-        data = node_data, x = ~x, y = ~y,
-        marker = list(
-          size = ~size,
-          color = ~frequency,
-          colorscale = "Viridis",
-          showscale = TRUE,
-          colorbar = list(title = "Frequency"),
-          line = list(width = 2, color = '#FFFFFF')
-        ),
-        hoverinfo = 'text', text = ~hover_text,
-        showlegend = FALSE
-      )
+      p <- p +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency),
+                            stroke = 0.5) +
+        ggplot2::scale_color_viridis_c(name = "Frequency")
     } else {
-      # Default: color by community - loop through communities
-      for (comm in community_levels) {
-        comm_data <- dplyr::filter(node_data, community == comm)
-        p <- p %>% plotly::add_markers(
-          data = comm_data, x = ~x, y = ~y,
-          marker = list(
-            size = ~size,
-            color = palette[comm],
-            showscale = FALSE,
-            line = list(width = 3, color = '#FFFFFF')
-          ),
-          hoverinfo = 'text', text = ~hover_text,
-          showlegend = TRUE, name = paste("Community", comm),
-          legendgroup = "Community"
+      p <- p +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community),
+                            shape = 21, color = "white", stroke = 1) +
+        ggplot2::scale_fill_manual(values = palette, name = "Community")
+    }
+
+    p <- p +
+      ggplot2::scale_size_identity() +
+      ggplot2::theme_void(base_size = 11) +
+      ggplot2::labs(title = "Word Co-occurrence Network") +
+      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
+
+    if (nrow(top_nodes) > 0) {
+      if (requireNamespace("ggrepel", quietly = TRUE)) {
+        p <- p + ggrepel::geom_text_repel(
+          data = top_nodes,
+          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+          size = top_nodes$text_size / 3,
+          max.overlaps = Inf,
+          segment.color = NA
+        )
+      } else {
+        p <- p + ggplot2::geom_text(
+          data = top_nodes,
+          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+          size = top_nodes$text_size / 3
         )
       }
     }
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
-    annotations <- if (nrow(top_nodes) > 0) {
-      lapply(seq_len(nrow(top_nodes)), function(i) {
-        list(x = top_nodes$x[i],
-             y = top_nodes$y[i],
-             text = top_nodes$label[i],
-             xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
-             yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
-             xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
-             yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
-             showarrow = FALSE,
-             font = list(size = top_nodes$text_size[i], color = 'black'))
-      })
-    } else {
-      list()
-    }
 
-    p <- p %>% plotly::layout(dragmode = "pan",
-                              title = list(text = "Word Co-occurrence Network",
-                                           font = list(size = 19,
-                                                       color = "black",
-                                                       family = "Arial Black")),
-                              showlegend = TRUE,
-                              xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-                              yaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-                              margin = list(l = 40, r = 100, t = 60, b = 40),
-                              annotations = annotations,
-                              legend = list(title = list(text = "Co-occurrence"),
-                                            orientation = "v", x = 1.1, y = 1,
-                                            xanchor = "left", yanchor = "top"))
     list(plot = p, layout_df = layout_df, graph = graph)
   }
 
@@ -4896,7 +4362,6 @@ word_co_occurrence_network <- function(dfm_object,
           stop("doc_var is missing or not found in the current group")
         }
 
-        # Look up category-specific parameters if available
         local_co_occur_n <- NULL
         local_top_node_n <- NULL
         if (!is.null(category_params) && group_level %in% names(category_params)) {
@@ -4908,27 +4373,14 @@ word_co_occurrence_network <- function(dfm_object,
 
         net <- build_network_plot(.x, group_level, local_co_occur_n, local_top_node_n)
         if (!is.null(net)) {
-          net$plot %>% plotly::layout(
-            annotations = list(
-              list(
-                text = group_level,
-                x = 0.42,
-                xanchor = "center",
-                y = 0.98,
-                yanchor = "bottom",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 19, color = "black", family = "Arial Black")
-              )
-            )
-          )
+          net$plot + ggplot2::labs(title = group_level)
         } else {
           NULL
         }
       })
 
-    combined_plot <- plotly::subplot(plots_list, nrows = nrows, shareX = TRUE, shareY = TRUE,
-                                     titleX = TRUE, titleY = TRUE)
+    plots_list <- Filter(Negate(is.null), plots_list)
+    combined_plot <- patchwork::wrap_plots(plots_list, nrow = nrows)
 
     table_list <- lapply(docvar_levels, function(level) {
       message(paste("Generating table for level:", level))
@@ -4999,10 +4451,11 @@ word_co_occurrence_network <- function(dfm_object,
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `common_term_n`, `corr_n`, and `top_node_n` values for that category (default: NULL).
 #'
-#' @return A list containing the Plotly plot, a table, and a summary.
+#' @return A list containing the ggplot2 plot, a table, and a summary.
 #'
 #' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
-#' @importFrom plotly plot_ly add_segments add_markers layout add_trace subplot
+#' @importFrom ggplot2 ggplot aes geom_segment geom_point scale_size_identity theme_void labs
+#' @importFrom patchwork wrap_plots
 #' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tibble as_tibble
 #' @importFrom tidytext tidy
@@ -5066,8 +4519,8 @@ word_correlation_network <- function(dfm_object,
   }
 
   dfm_td <- tidytext::tidy(dfm_object)
-  docvars_df <- dfm_object@docvars
-  docvars_df$document <- docvars_df$docname_
+  docvars_df <- quanteda::docvars(dfm_object)
+  docvars_df$document <- quanteda::docnames(dfm_object)
   dfm_td <- dplyr::left_join(dfm_td, docvars_df, by = "document")
 
   if (!is.null(doc_var) && doc_var != "" && !doc_var %in% colnames(dfm_td)) {
@@ -5280,89 +4733,54 @@ word_correlation_network <- function(dfm_object,
       node_data$color <- palette[as.character(node_data$community)]
     }
 
-    p <- plotly::plot_ly(type = 'scatter', mode = 'markers', width = width, height = height)
-    for (lg in unique(edge_data$line_group)) {
-      esub <- dplyr::filter(edge_data, line_group == lg) %>%
-        dplyr::mutate(mid_x = (x + xend) / 2,
-                      mid_y = (y + yend) / 2)
-      if (nrow(esub) > 0) {
-        p <- p %>%
-          plotly::add_segments(data = esub, x = ~x, y = ~y,
-                               xend = ~xend, yend = ~yend,
-                               line = list(color = '#5C5CFF', width = ~line_width),
-                               hoverinfo = 'none', opacity = ~alpha,
-                               showlegend = TRUE, name = edge_group_labels[lg],
-                               legendgroup = "Edges") %>%
-          plotly::add_trace(data = esub, x = ~mid_x, y = ~mid_y, type = 'scatter',
-                            mode = 'markers',
-                            marker = list(size = 0.1, color = '#e0f7ff', opacity = 0),
-                            text = ~paste("Correlation:", correlation,
-                                          "<br>Source:", from,
-                                          "<br>Target:", to),
-                            hoverinfo = 'text', showlegend = FALSE)
-      }
-    }
-    # Add nodes based on color mode
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_segment(data = edge_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
+                                         linewidth = .data$line_width, alpha = .data$alpha),
+                            color = "#5C5CFF", show.legend = FALSE) +
+      ggplot2::scale_linewidth_identity() +
+      ggplot2::scale_alpha_identity()
+
     if (node_color_by == "frequency") {
-      # Color by frequency gradient - render all nodes at once
-      p <- p %>% plotly::add_markers(
-        data = node_data, x = ~x, y = ~y,
-        marker = list(
-          size = ~size,
-          color = ~frequency,
-          colorscale = "Viridis",
-          showscale = TRUE,
-          colorbar = list(title = "Frequency"),
-          line = list(width = 2, color = '#FFFFFF')
-        ),
-        hoverinfo = 'text', text = ~hover_text,
-        showlegend = FALSE
-      )
+      p <- p +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency),
+                            stroke = 0.5) +
+        ggplot2::scale_color_viridis_c(name = "Frequency")
     } else {
-      # Default: color by community - loop through communities
-      for (comm in community_levels) {
-        comm_data <- dplyr::filter(node_data, community == comm)
-        p <- p %>% plotly::add_markers(
-          data = comm_data, x = ~x, y = ~y,
-          marker = list(
-            size = ~size,
-            color = palette[comm],
-            showscale = FALSE,
-            line = list(width = 3, color = '#FFFFFF')
-          ),
-          hoverinfo = 'text', text = ~hover_text,
-          showlegend = TRUE, name = paste("Community", comm),
-          legendgroup = "Community"
+      p <- p +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community),
+                            shape = 21, color = "white", stroke = 1) +
+        ggplot2::scale_fill_manual(values = palette, name = "Community")
+    }
+
+    p <- p +
+      ggplot2::scale_size_identity() +
+      ggplot2::theme_void(base_size = 11) +
+      ggplot2::labs(title = "Word Correlation Network") +
+      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
+
+    if (nrow(top_nodes) > 0) {
+      if (requireNamespace("ggrepel", quietly = TRUE)) {
+        p <- p + ggrepel::geom_text_repel(
+          data = top_nodes,
+          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+          size = top_nodes$text_size / 3,
+          max.overlaps = Inf,
+          segment.color = NA
+        )
+      } else {
+        p <- p + ggplot2::geom_text(
+          data = top_nodes,
+          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+          size = top_nodes$text_size / 3
         )
       }
     }
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
-    annotations <- if (nrow(top_nodes) > 0) {
-      lapply(seq_len(nrow(top_nodes)), function(i) {
-        list(x = top_nodes$x[i],
-             y = top_nodes$y[i],
-             text = top_nodes$label[i],
-             xanchor = ifelse(top_nodes$x[i] > 0, "left", "right"),
-             yanchor = ifelse(top_nodes$y[i] > 0, "bottom", "top"),
-             xshift = ifelse(top_nodes$x[i] > 0, 5, -5),
-             yshift = ifelse(top_nodes$y[i] > 0, 3, -3),
-             showarrow = FALSE,
-             font = list(size = top_nodes$text_size[i], color = 'black'))
-      })
-    } else {
-      list()
-    }
 
-    p <- p %>% plotly::layout(dragmode = "pan",
-                              title = list(text = "Word Correlation Network", font = list(size = 19, color = "black", family = "Arial Black")),
-                              showlegend = TRUE,
-                              xaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-                              yaxis = list(title = "", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
-                              margin = list(l = 40, r = 100, t = 60, b = 40),
-                              annotations = annotations,
-                              legend = list(title = list(text = "Correlation"),
-                                            orientation = "v", x = 1.1, y = 1,
-                                            xanchor = "left", yanchor = "top"))
     list(plot = p, layout_df = layout_df, graph = graph)
   }
 
@@ -5378,7 +4796,6 @@ word_correlation_network <- function(dfm_object,
           stop("doc_var is missing or not found in the current group")
         }
 
-        # Look up category-specific parameters if available
         local_common_term_n <- NULL
         local_corr_n <- NULL
         local_top_node_n <- NULL
@@ -5393,27 +4810,14 @@ word_correlation_network <- function(dfm_object,
 
         net <- build_network_plot(.x, group_level, local_common_term_n, local_corr_n, local_top_node_n)
         if (!is.null(net)) {
-          net$plot %>% plotly::layout(
-            annotations = list(
-              list(
-                text = group_level,
-                x = 0.42,
-                xanchor = "center",
-                y = 0.98,
-                yanchor = "bottom",
-                yref = "paper",
-                showarrow = FALSE,
-                font = list(size = 19, color = "black", family = "Arial Black")
-              )
-            )
-          )
+          net$plot + ggplot2::labs(title = group_level)
         } else {
           NULL
         }
       })
 
-    combined_plot <- plotly::subplot(plots_list, nrows = nrows, shareX = TRUE, shareY = TRUE,
-                                     titleX = TRUE, titleY = TRUE)
+    plots_list <- Filter(Negate(is.null), plots_list)
+    combined_plot <- patchwork::wrap_plots(plots_list, nrow = nrows)
 
     table_list <- lapply(docvar_levels, function(level) {
       message(paste("Generating table for level:", level))

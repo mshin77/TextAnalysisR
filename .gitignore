@@ -1,6 +1,7 @@
 .env
 .Renviron
 security.log
+.Rbuildignore
 .Rproj.user
 .Rhistory
 .claude

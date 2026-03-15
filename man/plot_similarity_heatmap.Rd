@@ -66,7 +66,7 @@ plot_similarity_heatmap(
 \item{output_type}{Output type: "plotly" or "ggplot" (default: "plotly", auto-switches to "ggplot" for faceting)}
 }
 \value{
-A plotly or ggplot2 heatmap object
+A ggplot2 heatmap object
 }
 \description{
 Creates an interactive heatmap visualization of document similarity matrices

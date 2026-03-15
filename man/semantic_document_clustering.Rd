@@ -15,6 +15,9 @@ semantic_document_clustering(embeddings, method = "UMAP", clusters = NULL, ...)
 
 \item{...}{Additional arguments}
 }
+\value{
+A ggplot2 visualization of document clusters
+}
 \description{
 Creates a unified visualization of document clustering with optional clustering
 }

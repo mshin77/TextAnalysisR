@@ -35,8 +35,6 @@ test_that("prep_texts works", {
 
 test_that("plot_word_frequency works", {
   skip_if_not_installed("quanteda")
-  skip_if_not_installed("plotly")
-
   data(SpecialEduTech, package = "TextAnalysisR")
   texts <- SpecialEduTech$abstract[1:5]
   corp <- quanteda::corpus(texts)
@@ -44,7 +42,7 @@ test_that("plot_word_frequency works", {
   dfm_obj <- quanteda::dfm(toks)
 
   plot <- plot_word_frequency(dfm_obj, n = 5)
-  expect_s3_class(plot, "plotly")
+  expect_s3_class(plot, "gg")
 })
 
 test_that("sentiment_lexicon_analysis works with basic texts", {
@@ -89,8 +87,6 @@ test_that("calculate_text_readability works", {
 
 test_that("lexical_frequency_analysis works", {
   skip_if_not_installed("quanteda")
-  skip_if_not_installed("plotly")
-
   data(SpecialEduTech, package = "TextAnalysisR")
   texts <- SpecialEduTech$abstract[1:5]
 
@@ -100,7 +96,7 @@ test_that("lexical_frequency_analysis works", {
 
   result <- lexical_frequency_analysis(dfm_obj, n = 5)
 
-  expect_s3_class(result, "plotly")
+  expect_s3_class(result, "gg")
 })
 
 test_that("extract_keywords_tfidf works", {

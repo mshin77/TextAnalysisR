@@ -12,7 +12,7 @@ plot_sentiment_distribution(sentiment_data, title = "Sentiment Distribution")
 \item{title}{Plot title (default: "Sentiment Distribution")}
 }
 \value{
-A plotly bar chart
+A ggplot2 bar chart
 }
 \description{
 Creates a bar plot showing the distribution of sentiment classifications.

@@ -223,6 +223,8 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
 
     data_list <- Filter(Negate(is.null), data_list)
     data <- dplyr::bind_rows(data_list)
+  } else {
+    stop("Unrecognized dataset_choice: ", dataset_choice)
   }
 
   return(data)

@@ -23,6 +23,9 @@ export_document_clustering(
 
 \item{file_path}{Path to save the CSV file}
 }
+\value{
+Invisible data frame of the exported data
+}
 \description{
 Export document clustering analysis results to CSV
 }

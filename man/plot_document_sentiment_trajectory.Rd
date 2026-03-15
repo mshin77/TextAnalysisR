@@ -24,7 +24,7 @@ plot_document_sentiment_trajectory(
 \item{title}{Plot title (default: "Document Sentiment Scores")}
 }
 \value{
-A plotly line chart with color gradient
+A ggplot2 line chart with color gradient
 }
 \description{
 Creates a line chart showing sentiment scores across documents with color gradient.

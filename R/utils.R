@@ -39,7 +39,12 @@ globalVariables(names = c(
   "terms", "text", "theme_description", "to", "tokens_remove", "tokens_select",
   "topic", "topic_display", "topic_label", "total_count", "total_score", "tt",
   "united_texts", "upper", "value", "word", "word_frequency", "x", "xend",
-  "y", "yend"
+  "y", "yend",
+  "Count", "Keyness_Score", "Keyword", "Keyword_ordered", "Metric",
+  "Percentage", "Score", "TF_IDF_Score", "Value", "collocation_ordered",
+  "direction", "doc_ordered", "entity_ordered", "feature_ordered", "k",
+  "log_odds_ratio", "log_odds_weighted", "metric_val", "pos_ordered",
+  "position", "term_ordered"
 ))
 
 
@@ -582,10 +587,11 @@ calculate_word_frequency <- function(dfm_object,
   dfm_outcome_obj <- dfm_object
   dfm_td <- tidytext::tidy(dfm_object)
 
-  dfm_outcome_obj@docvars$document <- dfm_outcome_obj@docvars$docname_
+  docvars_df <- quanteda::docvars(dfm_outcome_obj)
+  docvars_df$document <- quanteda::docnames(dfm_outcome_obj)
 
   dfm_td <- dfm_td %>%
-    left_join(dfm_outcome_obj@docvars,
+    left_join(docvars_df,
               by = c("document" = "document"))
 
   con_var_term_counts <- dfm_td %>%
@@ -623,25 +629,7 @@ calculate_word_frequency <- function(dfm_object,
       axis.title.y = element_text(margin = margin(r = 11))
     )
 
-  con_var_term_plotly <- plotly::ggplotly(
-    con_var_term_gg,
-    height = height,
-    width = width
-  ) %>%
-    plotly::layout(
-      margin = list(l = 40, r = 150, t = 60, b = 40),
-      xaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      yaxis = list(
-        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
-      ),
-      hoverlabel = list(
-        font = list(size = 16, family = "Roboto, sans-serif")
-      )
-    )
+  con_var_term_plot <- con_var_term_gg
 
   significance_results <- con_var_term_counts %>%
     mutate(word = term) %>%
@@ -777,7 +765,7 @@ calculate_word_frequency <- function(dfm_object,
     })
 
   list(
-    plot = con_var_term_plotly,
+    plot = con_var_term_plot,
     table = htmltools::tagList(significance_results_tables) %>% htmltools::browsable()
   )
 }
@@ -1859,8 +1847,8 @@ describe_image <- function(image_base64,
 
   switch(provider,
     "ollama" = describe_image_ollama(image_base64, prompt, model, timeout),
-    "openai" = describe_image_openai(image_base64, prompt, model, timeout, api_key),
-    "gemini" = describe_image_gemini(image_base64, prompt, model, timeout, api_key),
+    "openai" = describe_image_openai(image_base64, prompt, model, api_key = api_key),
+    "gemini" = describe_image_gemini(image_base64, prompt, model, api_key = api_key),
     NULL
   )
 }
@@ -2838,10 +2826,10 @@ check_alt_text <- function(alt_text, element_type = "image", decorative = FALSE)
 #'
 #' @details
 #' Design standards applied:
-#' - Title: 18px Roboto, #0c1f4a
-#' - Axis titles: 16px Roboto, #0c1f4a
-#' - Axis tick labels: 16px Roboto, #3B3B3B
-#' - Hover tooltips: 16px Roboto
+#' - Title: 14px Roboto, #0c1f4a
+#' - Axis titles: 13px Roboto, #0c1f4a
+#' - Axis tick labels: 12px Roboto, #3B3B3B
+#' - Hover tooltips: 12px Roboto, #0c1f4a on #ffffff
 #' - WCAG AA compliant colors
 #'
 #' @family visualization
@@ -2869,41 +2857,38 @@ apply_standard_plotly_layout <- function(plot,
   }
 
   layout_config <- list(
-    font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
-    hoverlabel = list(
-      font = list(size = 16, family = "Roboto, sans-serif"),
-      align = "left"
-    ),
+    font = list(family = "Roboto, sans-serif", size = 12, color = "#3B3B3B"),
+    hoverlabel = get_plotly_hover_config(),
     margin = margin,
     showlegend = show_legend,
     xaxis = list(
-      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
     ),
     yaxis = list(
-      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
-      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   )
 
   if (!is.null(title)) {
     layout_config$title <- list(
       text = title,
-      font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   }
 
   if (!is.null(xaxis_title)) {
     layout_config$xaxis$title <- list(
       text = xaxis_title,
-      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      font = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   }
 
   if (!is.null(yaxis_title)) {
     layout_config$yaxis$title <- list(
       text = yaxis_title,
-      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
+      font = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   }
 
@@ -2933,10 +2918,10 @@ apply_standard_plotly_layout <- function(plot,
 get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") {
   list(
     bgcolor = bgcolor,
-    bordercolor = bgcolor,
+    bordercolor = "#e0e0e0",
     font = list(
       family = "Roboto, sans-serif",
-      size = 16,
+      size = 12,
       color = fontcolor
     ),
     align = "left",
@@ -2970,7 +2955,7 @@ get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") 
 #'   geom_point() +
 #'   create_standard_ggplot_theme()
 #' }
-create_standard_ggplot_theme <- function(base_size = 14) {
+create_standard_ggplot_theme <- function(base_size = 11) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("Package 'ggplot2' is required. Please install it.")
@@ -2979,35 +2964,29 @@ create_standard_ggplot_theme <- function(base_size = 14) {
   ggplot2::theme_minimal(base_size = base_size) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(
-        size = 18,
+        size = 13,
         color = "#0c1f4a",
-        hjust = 0.5,
-        family = "Roboto"
+        hjust = 0.5
       ),
       axis.title = ggplot2::element_text(
-        size = 16,
-        color = "#0c1f4a",
-        family = "Roboto"
+        size = 12,
+        color = "#0c1f4a"
       ),
       axis.text = ggplot2::element_text(
-        size = 16,
-        color = "#3B3B3B",
-        family = "Roboto"
+        size = 11,
+        color = "#3B3B3B"
       ),
       strip.text = ggplot2::element_text(
-        size = 16,
-        color = "#0c1f4a",
-        family = "Roboto"
+        size = 11,
+        color = "#0c1f4a"
       ),
       legend.text = ggplot2::element_text(
-        size = 16,
-        color = "#3B3B3B",
-        family = "Roboto"
+        size = 11,
+        color = "#3B3B3B"
       ),
       legend.title = ggplot2::element_text(
-        size = 16,
-        color = "#0c1f4a",
-        family = "Roboto"
+        size = 12,
+        color = "#0c1f4a"
       )
     )
 }

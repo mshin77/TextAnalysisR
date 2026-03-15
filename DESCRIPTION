@@ -9,7 +9,7 @@ Description: Comprehensive toolkit for text mining and natural language processi
     an interactive 'Shiny' interface. Import documents from multiple formats (PDF, DOCX,
     XLSX, CSV, TXT) using 'Marker' for PDF extraction, preprocess with 'quanteda', and
     perform linguistic analysis via 'spaCy', topic modeling ('stm', 'BERTopic'),
-    semantic analysis, sentiment analysis, and network visualization with 'plotly'.
+    semantic analysis, sentiment analysis, and network visualization with 'ggplot2'.
     Features topic-grounded content generation and AI-suggested labeling via local
     ('Ollama', 'spaCy', transformers) and web-based ('OpenAI', 'Gemini') APIs,
     WCAG 2.1 AA accessibility, multi-language support, and enterprise security for
@@ -29,7 +29,7 @@ Imports:
     igraph,
     magrittr,
     Matrix,
-    plotly,
+    patchwork,
     quanteda,
     quanteda.textstats,
     RColorBrewer,
@@ -83,7 +83,9 @@ Suggests:
     syuzhet,
     testthat (>= 3.0.0),
     textdata,
-    umap
+    umap,
+    ggrepel,
+    plotly
 Depends: R (>= 2.10)
 URL: https://mshin77.github.io/TextAnalysisR,
     https://github.com/mshin77/TextAnalysisR

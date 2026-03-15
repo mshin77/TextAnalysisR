@@ -36,10 +36,10 @@ This ensures all plots have uniform fonts, colors, margins, and interactive feat
 \details{
 Design standards applied:
 \itemize{
-\item Title: 18px Roboto, #0c1f4a
-\item Axis titles: 16px Roboto, #0c1f4a
-\item Axis tick labels: 16px Roboto, #3B3B3B
-\item Hover tooltips: 16px Roboto
+\item Title: 14px Roboto, #0c1f4a
+\item Axis titles: 13px Roboto, #0c1f4a
+\item Axis tick labels: 12px Roboto, #3B3B3B
+\item Hover tooltips: 12px Roboto, #0c1f4a on #ffffff
 \item WCAG AA compliant colors
 }
 }

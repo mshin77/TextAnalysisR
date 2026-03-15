@@ -9,6 +9,9 @@ lexical_frequency_analysis(...)
 \arguments{
 \item{...}{Arguments passed to plot_word_frequency}
 }
+\value{
+A plotly bar chart of word frequencies
+}
 \description{
 Wrapper function for plot_word_frequency for lexical analysis.
 }

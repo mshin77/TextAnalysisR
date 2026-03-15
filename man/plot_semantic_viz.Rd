@@ -47,7 +47,7 @@ for scatter plot, or "clustering" for cluster visualization (default: "similarit
 \item{cluster_colors}{Optional color palette for clusters (default: NULL).}
 }
 \value{
-A plotly object showing the specified visualization.
+A ggplot2 object showing the specified visualization.
 }
 \description{
 Creates interactive visualizations for semantic analysis results including

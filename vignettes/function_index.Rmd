@@ -32,13 +32,14 @@ dfm <- quanteda::dfm(tokens)
 keywords <- extract_keywords_tfidf(dfm, top_n = 20)
 plot_tfidf_keywords(keywords)
 
-# 4. Topic modeling
-model <- fit_embedding_model(texts, n_topics = 5)
-get_topic_terms(model, top_term_n = 10)
+# 4. Topic modeling (embedding-based)
+model <- fit_embedding_model(texts, n_topics = 5, backend = "r")
+model$topic_keywords
 
 # 5. Sentiment analysis
-sentiment <- sentiment_lexicon_analysis(texts, lexicon = "bing")
-plot_sentiment_distribution(sentiment)
+dfm <- quanteda::dfm(tokens)
+sentiment <- sentiment_lexicon_analysis(dfm, lexicon = "bing")
+plot_sentiment_distribution(sentiment$document_sentiment)
 ```
 
 ### Generate Embeddings
@@ -48,7 +49,7 @@ plot_sentiment_distribution(sentiment)
 embeddings <- get_best_embeddings(texts)
 
 # Reduce dimensions for visualization
-reduced <- reduce_dimensions(embeddings, method = "umap", n_components = 2)
+reduced <- reduce_dimensions(embeddings, method = "UMAP", n_components = 2)
 plot_semantic_viz(reduced)
 ```
 

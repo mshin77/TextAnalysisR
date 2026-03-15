@@ -14,7 +14,7 @@ plot_word_probability(
   title = NULL,
   colors = NULL,
   measure_label = "Beta",
-  base_font_size = 14,
+  base_font_size = 11,
   ...
 )
 }
@@ -38,7 +38,7 @@ to labels, or a character string specifying a column name in top_topic_terms (de
 
 \item{measure_label}{Label for the probability measure (default: "Beta").}
 
-\item{base_font_size}{Base font size in pixels for the plot theme (default: 14). Axis text and strip text will be base_font_size + 2.}
+\item{base_font_size}{Base font size in points for the plot theme (default: 11). Axis text and strip text will be base_font_size + 2.}
 
 \item{...}{Additional arguments (currently unused, kept for compatibility).}
 }
