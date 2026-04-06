@@ -295,6 +295,8 @@ class SpacyNLP:
         if not include_dependency:
             if "parser" in self.nlp.pipe_names:
                 disable_components.append("parser")
+                if "sentencizer" not in self.nlp.pipe_names:
+                    self.nlp.add_pipe("sentencizer")
 
         # Use nlp.pipe() for efficient batch processing with disabled components
         pipe_context = self.nlp.select_pipes(disable=disable_components) if disable_components else nullcontext()
