@@ -462,33 +462,33 @@ topic by following these guidelines:
    - Use 'students with visual impairments' instead of 'impaired students'
    - Use 'students with blindness' instead of 'blind students'.
 
-1. Analyze Top Terms' Significance
+2. Analyze Top Terms' Significance
    - Primary Focus: Emphasize high beta-score terms as they strongly define the topic.
    - Secondary Consideration: Include lower-scoring terms if they add essential context.
 
-2. Synthesize the Topic Label
+3. Synthesize the Topic Label
    - Clarity: Make sure the label is clear and easily understandable.
    - Conciseness: Aim for a short phrase of about 5-7 words.
    - Relevance: Reflect the collective meaning of the most influential terms.
    - Intelligent interpretation: Use your understanding to create meaningful
      labels that capture the topic's essence.
 
-3. Maintain Consistency
+4. Maintain Consistency
    - Capitalize the first word of all topic labels.
    - Keep formatting and terminology uniform across all labels.
    - Avoid ambiguity or generic wording that does not fit the provided top terms.
 
-4. Adhere to Style Guidelines
+5. Adhere to Style Guidelines
    - Capitalization: Use title case for labels.
    - Avoid Jargon: Maintain accessibility; only use technical terms if absolutely necessary.
    - Uniqueness: Ensure each label is distinct and does not overlap significantly with others.
 
-5. Handle Edge Cases
+6. Handle Edge Cases
    - Conflicting Top Terms: If the terms suggest different directions,
      prioritize those with higher beta scores.
    - Low-Scoring Terms: Include them only if they add meaningful context.
 
-6. Iterative Improvement
+7. Iterative Improvement
    - If the generated label is insufficiently representative, re-check term
      significance and revise accordingly.
    - Always adhere to these guidelines.
@@ -659,53 +659,18 @@ run_llm_topics_internal <- function(texts, n_topics = 10,
   tryCatch({
     base_result <- fit_embedding_model(
       texts = texts,
-      method = "semantic_style",
+      method = "umap_hdbscan",
       n_topics = n_topics,
       embedding_model = embedding_model,
       seed = seed
     )
 
-    llm_enhancement <- list()
-
-    if (enhancement_type == "refinement") {
-      llm_enhancement$topic_refinement <- lapply(1:n_topics, function(i) {
-        list(
-          topic_id = i,
-          refined_label = paste("Enhanced Topic", i),
-          coherence_score = round(runif(1, 0.7, 0.95), 3),
-          semantic_validation = "High",
-          domain_relevance = round(runif(1, 0.6, 0.9), 3)
-        )
-      })
-    } else if (enhancement_type == "validation") {
-      llm_enhancement$semantic_validation <- lapply(1:n_topics, function(i) {
-        list(
-          topic_id = i,
-          validation_score = round(runif(1, 0.75, 0.98), 3),
-          conceptual_coherence = sample(c("Strong", "Moderate", "Weak"), 1,
-                                        prob = c(0.6, 0.3, 0.1)),
-          domain_specificity = round(runif(1, 0.5, 0.95), 3)
-        )
-      })
-    } else if (enhancement_type == "labeling") {
-      llm_enhancement$auto_labels <- lapply(1:n_topics, function(i) {
-        domain_labels <- switch(research_domain,
-          "math_education" = c("Algebra Concepts", "Geometry Learning",
-                               "Statistics Methods", "Problem Solving"),
-          "social_science" = c("Social Theory", "Research Methods",
-                               "Cultural Analysis", "Policy Studies"),
-          "edu_psychology" = c("Learning Theory", "Cognitive Development",
-                               "Motivation", "Assessment"),
-          c("Concept A", "Theme B", "Pattern C", "Category D")
-        )
-        list(
-          topic_id = i,
-          auto_label = sample(domain_labels, 1),
-          confidence = round(runif(1, 0.8, 0.95), 3),
-          alternative_labels = sample(domain_labels, 2)
-        )
-      })
-    }
+    coherence_result <- calculate_coherence(base_result$embeddings, base_result$topic_assignments)
+    llm_enhancement <- list(
+      coherence = coherence_result,
+      enhancement_type = enhancement_type,
+      research_domain = research_domain
+    )
 
     result <- base_result
     result$method <- "llm_enhanced"
@@ -739,7 +704,7 @@ run_llm_topics_internal <- function(texts, n_topics = 10,
 #'
 #' @return List containing neural topic model and diagnostics
 #' @family topic-modeling
-#' @keywords internal
+#' @export
 run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
                                            hidden_units = 100, dropout_rate = 0.2,
                                            embedding_model = "all-MiniLM-L6-v2", seed = 123) {
@@ -753,21 +718,17 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
       seed = seed
     )
 
+    coherence <- calculate_coherence(base_result$embeddings, base_result$topic_assignments)
+
     diagnostics <- list(
       architecture = list(
         hidden_layers = hidden_layers,
         hidden_units = hidden_units,
         dropout_rate = dropout_rate
       ),
-      training_metrics = list(
-        final_loss = round(runif(1, 0.1, 0.3), 4),
-        epochs_trained = sample(50:200, 1),
-        convergence_achieved = TRUE
-      ),
       topic_quality = list(
-        neural_coherence = round(runif(n_topics, 0.7, 0.95), 3),
-        representation_quality = round(runif(n_topics, 0.6, 0.9), 3),
-        discriminability = round(runif(n_topics, 0.65, 0.85), 3)
+        neural_coherence = coherence$coherence_scores,
+        mean_coherence = coherence$mean_coherence
       )
     )
 
@@ -817,7 +778,7 @@ run_temporal_topics_internal <- function(texts, metadata = NULL,
   tryCatch({
     base_result <- fit_embedding_model(
       texts = texts,
-      method = "semantic_style",
+      method = "umap_hdbscan",
       n_topics = n_topics,
       embedding_model = embedding_model,
       seed = seed
@@ -826,30 +787,20 @@ run_temporal_topics_internal <- function(texts, metadata = NULL,
     temporal_analysis <- list()
 
     if (!is.null(metadata)) {
-
       time_points <- if ("year" %in% names(metadata)) metadata$year
-                     else sample(2020:2024, length(texts), replace = TRUE)
-      unique_periods <- sort(unique(time_points))
+                     else rep(NA, length(texts))
+      unique_periods <- sort(unique(time_points[!is.na(time_points)]))
 
       temporal_analysis$time_periods <- unique_periods
-      temporal_analysis$topic_evolution <- lapply(1:n_topics, function(i) {
-        evolution_data <- data.frame(
-          period = unique_periods,
-          prevalence = round(runif(length(unique_periods), 0.05, 0.3), 3),
-          strength = round(runif(length(unique_periods), 0.4, 0.9), 3),
-          emerging = sample(c(TRUE, FALSE), length(unique_periods),
-                            prob = c(0.2, 0.8), replace = TRUE)
-        )
-        list(topic_id = i, evolution = evolution_data)
-      })
+      temporal_analysis$topic_assignments <- base_result$topic_assignments
 
-      if (detect_evolution) {
-        temporal_analysis$evolution_patterns <- list(
-          emerging_topics = sample(1:n_topics, max(1, n_topics %/% 4)),
-          declining_topics = sample(1:n_topics, max(1, n_topics %/% 5)),
-          stable_topics = sample(1:n_topics, max(1, n_topics %/% 2)),
-          trend_analysis = "Comprehensive trend analysis completed"
-        )
+      if (length(unique_periods) > 0) {
+        temporal_analysis$topic_prevalence_by_period <- lapply(unique_periods, function(period) {
+          period_idx <- which(time_points == period)
+          period_assignments <- base_result$topic_assignments[period_idx]
+          table(period_assignments) / length(period_assignments)
+        })
+        names(temporal_analysis$topic_prevalence_by_period) <- as.character(unique_periods)
       }
     }
 
@@ -898,14 +849,15 @@ run_contrastive_topics_internal <- function(texts, n_topics = 10, temperature = 
       seed = seed
     )
 
+    quality <- calculate_topic_quality(base_result$embeddings, base_result$topic_assignments)
+    coherence <- calculate_coherence(base_result$embeddings, base_result$topic_assignments)
+
     contrastive_metrics <- list(
       temperature = temperature,
       negative_sampling_rate = negative_sampling_rate,
-      contrastive_loss = round(runif(1, 0.15, 0.35), 4),
-      topic_separation = round(runif(n_topics, 0.7, 0.95), 3),
-      discriminability = round(runif(n_topics, 0.65, 0.9), 3),
-      intra_topic_coherence = round(runif(n_topics, 0.75, 0.92), 3),
-      inter_topic_distance = round(runif(n_topics, 0.6, 0.85), 3)
+      mean_coherence = coherence$mean_coherence,
+      topic_coherence = coherence$coherence_scores,
+      mean_separation = quality$mean_topic_separation
     )
 
     result <- base_result
@@ -940,44 +892,37 @@ run_contrastive_topics_internal <- function(texts, n_topics = 10, temperature = 
 calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
 
   metrics <- list()
-  n_topics <- result$n_topics
 
   tryCatch({
-    if ("coherence" %in% selected_metrics) {
-      metrics$coherence <- round(runif(n_topics, 0.6, 0.9), 3)
-    }
+    has_embeddings <- !is.null(result$embeddings)
+    has_assignments <- !is.null(result$topic_assignments)
 
-    if ("neural_coherence" %in% selected_metrics) {
-      metrics$neural_coherence <- round(runif(n_topics, 0.7, 0.95), 3)
-    }
+    if (has_embeddings && has_assignments) {
+      coherence_result <- calculate_coherence(result$embeddings, result$topic_assignments)
 
-    if ("llm_coherence" %in% selected_metrics) {
-      metrics$llm_coherence <- round(runif(n_topics, 0.75, 0.98), 3)
-    }
+      if ("coherence" %in% selected_metrics || "neural_coherence" %in% selected_metrics) {
+        metrics$coherence <- round(coherence_result$coherence_scores, 3)
+      }
 
-    if ("semantic_diversity" %in% selected_metrics) {
-      metrics$semantic_diversity <- round(runif(n_topics, 0.5, 0.85), 3)
-    }
+      if ("silhouette" %in% selected_metrics) {
+        valid_idx <- result$topic_assignments > 0
+        if (sum(valid_idx) > 10 && length(unique(result$topic_assignments[valid_idx])) > 1 &&
+            requireNamespace("cluster", quietly = TRUE)) {
+          dist_mat <- stats::dist(result$embeddings[valid_idx, ])
+          sil <- cluster::silhouette(result$topic_assignments[valid_idx], dist_mat)
+          metrics$silhouette <- round(tapply(sil[, "sil_width"], sil[, "cluster"], mean, na.rm = TRUE), 3)
+        }
+      }
 
-    if ("topic_stability" %in% selected_metrics) {
-      metrics$topic_stability <- round(runif(n_topics, 0.65, 0.92), 3)
+      quality_result <- calculate_topic_quality(result$embeddings, result$topic_assignments)
+      metrics$overall_quality <- round(quality_result$overall_quality %||% NA_real_, 3)
     }
-
-    if ("silhouette" %in% selected_metrics) {
-      metrics$silhouette <- round(runif(n_topics, 0.4, 0.8), 3)
-    }
-
-    metrics$overall_quality <- round(mean(c(
-      if (!is.null(metrics$coherence)) mean(metrics$coherence) else 0.7,
-      if (!is.null(metrics$semantic_diversity)) mean(metrics$semantic_diversity) else 0.7,
-      if (!is.null(metrics$topic_stability)) mean(metrics$topic_stability) else 0.7
-    )), 3)
 
     return(metrics)
 
   }, error = function(e) {
-    warning("Comprehensive evaluation metrics calculation failed: ", e$message)
-    return(list(overall_quality = 0.7))
+    warning("Evaluation metrics calculation failed: ", e$message)
+    return(list(overall_quality = NA_real_))
   })
 }
 
@@ -1775,11 +1720,11 @@ fit_embedding_topics <- function(texts,
 #'
 #'   topic_model <- TextAnalysisR::fit_embedding_model(
 #'     texts = texts,
-#'     method = "semantic_style",
+#'     method = "umap_hdbscan",
 #'     n_topics = 8
 #'   )
 #'
-#'   similar_topics <- TextAnalysisR::find_similar_topics(
+#'   similar_topics <- TextAnalysisR::find_topic_matches(
 #'     topic_model = topic_model,
 #'     query = "mathematical learning",
 #'     top_n = 5
@@ -3704,42 +3649,6 @@ calculate_coherence <- function(embeddings, topic_assignments) {
   ))
 }
 
-#' @title Analyze Semantic Evolution
-#'
-#' @description
-#' Analyzes how semantic patterns evolve over time.
-#'
-#' @param temporal_results Results from temporal analysis.
-#' @param verbose Logical, if TRUE, prints progress messages.
-#'
-#' @return Evolution patterns.
-#'
-#' @keywords internal
-analyze_topic_evolution <- function(temporal_results, verbose = TRUE) {
-
-  if (verbose) message("Analyzing semantic evolution patterns...")
-
-  periods <- names(temporal_results)
-  evolution_metrics <- list()
-
-  topic_stability <- calculate_topic_stability(temporal_results)
-
-  semantic_drift <- calculate_semantic_drift(temporal_results)
-
-  topic_trends <- identify_topic_trends(temporal_results)
-
-  evolution_metrics <- list(
-    topic_stability = topic_stability,
-    semantic_drift = semantic_drift,
-    topic_trends = topic_trends,
-    periods_analyzed = periods
-  )
-
-  if (verbose) message("Evolution analysis completed")
-
-  return(evolution_metrics)
-}
-
 #' @title Calculate Topic Stability
 #'
 #' @description
@@ -3769,7 +3678,7 @@ calculate_topic_stability <- function(temporal_results) {
   return(list(
     stability_scores = stability_scores,
     mean_stability = mean(stability_scores, na.rm = TRUE),
-    periods = periods[-1]
+    periods = paste(periods[-length(periods)], periods[-1], sep = " -> ")
   ))
 }
 
@@ -3796,46 +3705,43 @@ calculate_keyword_stability <- function(keywords1, keywords2) {
   return(if (union > 0) intersection / union else 0)
 }
 
-#' @title Calculate Topic-Cluster Correspondence (Placeholder)
+#' @title Calculate Topic-Cluster Correspondence
 #' @description
-#' Placeholder function that returns simulated correspondence metrics.
-#' Use \code{calculate_topic_correspondence()} for real metrics.
+#' Computes Jaccard-based correspondence between topic keywords and cluster keywords.
 #'
 #' @param topic_keywords Topic keywords list.
 #' @param cluster_keywords Cluster keywords list.
-#' @param ... Additional parameters (ignored).
+#' @param ... Additional parameters (currently unused).
 #'
-#' @return List with placeholder correspondence metrics.
+#' @return List with correspondence metrics.
 #'
 #' @keywords internal
 calculate_topic_cluster_correspondence <- function(topic_keywords, cluster_keywords, ...) {
-  warning("This function returns placeholder data. Use calculate_topic_correspondence() for real metrics.",
-          call. = FALSE)
-
-  correspondence <- list(
-    match_score = runif(1, 0.6, 0.9),
+  result <- calculate_topic_correspondence(topic_keywords, cluster_keywords)
+  list(
+    match_score = result$mean_correspondence,
     n_topics = length(topic_keywords),
-    n_clusters = length(cluster_keywords)
+    n_clusters = length(cluster_keywords),
+    correspondence_matrix = result$correspondence_matrix
   )
-
-  return(correspondence)
 }
 
 #' @title Validate Semantic Coherence
-#' @description Validates the semantic coherence of topic assignments
-#' @param embeddings Document embeddings matrix
-#' @param topic_assignments Vector of topic assignments for documents
-#' @param ... Additional parameters
-#' @return List containing coherence score and metrics
+#' @description Validates the semantic coherence of topic assignments using
+#'   intra-cluster distance in embedding space.
+#' @param embeddings Document embeddings matrix.
+#' @param topic_assignments Vector of topic assignments for documents.
+#' @param ... Additional parameters (currently unused).
+#' @return List containing coherence score and metrics.
 #' @family topic-modeling
 #' @export
 validate_semantic_coherence <- function(embeddings, topic_assignments, ...) {
-  coherence <- list(
-    score = runif(1, 0.7, 0.95),
-    n_topics = length(unique(topic_assignments))
+  result <- calculate_coherence(embeddings, topic_assignments)
+  list(
+    score = result$mean_coherence,
+    n_topics = length(unique(topic_assignments)),
+    per_topic = result$topic_coherence
   )
-
-  return(coherence)
 }
 
 #' @title Calculate Assignment Consistency
@@ -4232,7 +4138,7 @@ plot_model_comparison <- function(search_results,
 #'
 #' @return A ggplot2 object showing word probabilities faceted by topic.
 #'
-#' @family topic_modeling
+#' @family topic-modeling
 #' @export
 plot_word_probability <- function(top_topic_terms,
                                    topic_label = NULL,
@@ -4352,7 +4258,7 @@ plot_word_probability <- function(top_topic_terms,
 #'
 #' @return A ggplot2 object showing a bar plot of topic prevalence.
 #'
-#' @family topic_modeling
+#' @family topic-modeling
 #' @export
 plot_topic_probability <- function(gamma_data,
                                    top_n = 10,
@@ -4439,7 +4345,7 @@ plot_topic_probability <- function(gamma_data,
 #'
 #' @return A plotly object
 #'
-#' @family topic_modeling
+#' @family topic-modeling
 #' @export
 plot_topic_effects_categorical <- function(effects_data,
                                            ncol = 2,
@@ -4508,7 +4414,7 @@ plot_topic_effects_categorical <- function(effects_data,
 #'
 #' @return A plotly object
 #'
-#' @family topic_modeling
+#' @family topic-modeling
 #' @export
 plot_topic_effects_continuous <- function(effects_data,
                                           ncol = 2,
