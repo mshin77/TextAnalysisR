@@ -49,9 +49,7 @@ server <- shinyServer(function(input, output, session) {
     ) %>% plotly::style(hoverinfo = "text")
   }
 
-  ################################################################################
-  # CENTRALIZED AI CONFIGURATION
-  ################################################################################
+  # Centralized AI configuration
 
   ai_config <- reactiveValues(
     openai_api_key = Sys.getenv("OPENAI_API_KEY"),
@@ -132,9 +130,7 @@ server <- shinyServer(function(input, output, session) {
     )))
   }
 
-  ################################################################################
-  # DEPLOYMENT & FEATURE DETECTION
-  ################################################################################
+  # Deployment and feature detection
 
   is_web <- TextAnalysisR::check_web_deployment()
   is_docker <- TextAnalysisR:::check_docker_deployment()
@@ -187,9 +183,7 @@ server <- shinyServer(function(input, output, session) {
     TextAnalysisR::show_web_banner()
   })
 
-  ################################################################################
-  # HOME TAB
-  ################################################################################
+  # Home tab
 
   output$about_content <- renderUI({
     includeMarkdown("markdown/about.md")
@@ -378,9 +372,7 @@ server <- shinyServer(function(input, output, session) {
     date_column = NULL
   )
 
-  ################################################################################
-  # UPLOAD TAB
-  ################################################################################
+  # Upload tab
 
   observeEvent(input$dataset_choice, {
     updateCheckboxGroupInput(session, "show_vars", choices = character(0), selected = character(0))
@@ -686,7 +678,7 @@ server <- shinyServer(function(input, output, session) {
     }, error = function(e) {
       try(removeNotification("loadingFile"), silent = TRUE)
 
-      cat("=== FILE PROCESSING ERROR DEBUG ===\n")
+      cat("File processing error debug\\n")
       cat("Error message:", e$message, "\n")
       cat("Error class:", class(e), "\n")
       if (!is.null(e$call)) cat("Error call:", deparse(e$call), "\n")
@@ -1059,9 +1051,7 @@ server <- shinyServer(function(input, output, session) {
     )
   )
 
-  ################################################################################
-  # PREPROCESS TAB
-  ################################################################################
+  # Preprocess tab
 
   preprocessed_skip <- reactiveVal(NULL)
   processed_tokens <- reactiveVal(NULL)
@@ -2101,9 +2091,9 @@ server <- shinyServer(function(input, output, session) {
       tryCatch({
         if (is.null(united_tbl())) {
           error_msg <- c(
-            "================================================================================",
-            "PREPROCESSING REPORT NOT AVAILABLE",
-            "================================================================================",
+            "",
+            "Preprocessing report not available",
+            "",
             "",
             "No preprocessing data available to generate report.",
             "",
@@ -2117,23 +2107,23 @@ server <- shinyServer(function(input, output, session) {
             "  - Step 4: Multi-Word Dictionary",
             "",
             paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
-            "================================================================================"
+            ""
           )
           writeLines(paste(error_msg, collapse = "\n"), file)
           return()
         }
 
         report_lines <- c(
-          "================================================================================",
-          "TEXT PREPROCESSING REPORT",
-          "================================================================================",
+          "",
+          "Text preprocessing report",
+          "",
           "",
           paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
-          paste("TextAnalysisR Version: 0.0.3"),
+          paste("TextAnalysisR Version: 0.1.3"),
           "",
-          "================================================================================",
-          "STEP 1: TEXT UNIFICATION",
-          "================================================================================",
+          "",
+          "Step 1: Text unification",
+          "",
           ""
         )
 
@@ -2151,9 +2141,9 @@ server <- shinyServer(function(input, output, session) {
       }
 
       report_lines <- c(report_lines,
-        "================================================================================",
-        "STEP 2: TOKENIZATION",
-        "================================================================================",
+        "",
+        "Step 2: Tokenization",
+        "",
         ""
       )
 
@@ -2193,9 +2183,9 @@ server <- shinyServer(function(input, output, session) {
       )
 
       report_lines <- c(report_lines,
-        "================================================================================",
-        "STEP 3: STOPWORD REMOVAL",
-        "================================================================================",
+        "",
+        "Step 3: Stopword removal",
+        "",
         ""
       )
 
@@ -2216,9 +2206,9 @@ server <- shinyServer(function(input, output, session) {
       }
 
       report_lines <- c(report_lines,
-        "================================================================================",
-        "STEP 4: MULTI-WORD EXPRESSIONS",
-        "================================================================================",
+        "",
+        "Step 4: Multi-word expressions",
+        "",
         ""
       )
 
@@ -2249,9 +2239,9 @@ server <- shinyServer(function(input, output, session) {
       }
 
       report_lines <- c(report_lines,
-        "================================================================================",
-        "STEP 5: DOCUMENT-FEATURE MATRIX",
-        "================================================================================",
+        "",
+        "Step 5: Document-feature matrix",
+        "",
         ""
       )
 
@@ -2271,9 +2261,9 @@ server <- shinyServer(function(input, output, session) {
       }
 
       report_lines <- c(report_lines,
-        "================================================================================",
-        "FINAL STATISTICS",
-        "================================================================================",
+        "",
+        "Final statistics",
+        "",
         ""
       )
 
@@ -2307,35 +2297,35 @@ server <- shinyServer(function(input, output, session) {
       }
 
       report_lines <- c(report_lines,
-        "================================================================================",
-        "SOFTWARE INFORMATION",
-        "================================================================================",
+        "",
+        "Software information",
+        "",
         "",
         paste("TextAnalysisR:", packageVersion("TextAnalysisR")),
         paste("quanteda:", packageVersion("quanteda")),
         paste("R version:", R.version.string),
         paste("Platform:", R.version$platform),
         "",
-        "================================================================================",
-        "CITATION",
-        "================================================================================",
+        "",
+        "Citation",
+        "",
         "",
         "If you use this preprocessing workflow in your research, please cite:",
         "",
-        "Shin, M. (2026). TextAnalysisR: A text mining workflow tool (R package version 0.0.3)",
+        "Shin, M. (2026). TextAnalysisR: A text mining workflow tool (R package version 0.1.3)",
         "  [Computer software]. https://github.com/mshin77/TextAnalysisR",
         "",
-        "================================================================================",
-        "END OF REPORT",
-        "================================================================================"
+        "",
+        "End of report",
+        ""
       )
 
         writeLines(report_lines, file)
       }, error = function(e) {
         error_msg <- c(
-          "================================================================================",
-          "ERROR GENERATING PREPROCESSING REPORT",
-          "================================================================================",
+          "",
+          "Error generating preprocessing report",
+          "",
           "",
           paste("Error:", e$message),
           "",
@@ -2349,7 +2339,7 @@ server <- shinyServer(function(input, output, session) {
           "  3. Try generating the report again",
           "",
           paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
-          "================================================================================"
+          ""
         )
         writeLines(paste(error_msg, collapse = "\n"), file)
       })
@@ -2512,9 +2502,7 @@ server <- shinyServer(function(input, output, session) {
     buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
   ))
 
-  ################################################################################
-  # LEXICAL ANALYSIS TAB
-  ################################################################################
+  # Lexical analysis tab
 
   spacy_parsed <- reactiveVal(NULL)
   lemma_cache_key <- reactiveVal(NULL)
@@ -3487,17 +3475,17 @@ server <- shinyServer(function(input, output, session) {
     has_morphology <- length(morph_cols) > 0
 
     report_lines <- c(
-      "===========================================",
-      "PART-OF-SPEECH ANALYSIS REPORT",
+      "",
+      "Part-of-speech analysis report",
       if (has_morphology) "(with Morphological Features)" else "",
-      "===========================================",
+      "",
       "",
       paste("Total Tokens Analyzed:", format(total_tokens, big.mark = ",")),
       paste("Unique POS Tags Found:", unique_pos),
       if (has_morphology) paste("Morphology Features Available:", length(morph_cols)) else "",
       "",
       "Top 5 Most Frequent POS Tags:",
-      "-------------------------------------------"
+      ""
     )
 
     for (i in 1:min(5, nrow(top_pos))) {
@@ -3516,7 +3504,7 @@ server <- shinyServer(function(input, output, session) {
       report_lines <- c(report_lines,
         "",
         "Morphological Features Summary:",
-        "-------------------------------------------"
+        ""
       )
 
       # Summarize key morphology features
@@ -3545,9 +3533,9 @@ server <- shinyServer(function(input, output, session) {
 
     report_lines <- c(report_lines,
       "",
-      "===========================================",
+      "",
       paste("Generated:", Sys.time()),
-      "==========================================="
+      ""
     )
 
     output$modal_pos_report <- renderPrint({
@@ -3596,15 +3584,15 @@ server <- shinyServer(function(input, output, session) {
         top_pos <- pos_summary %>% dplyr::slice_head(n = 5)
 
         report_lines <- c(
-          "===========================================",
-          "PART-OF-SPEECH ANALYSIS REPORT",
-          "===========================================",
+          "",
+          "Part-of-speech analysis report",
+          "",
           "",
           paste("Total Tokens Analyzed:", format(total_tokens, big.mark = ",")),
           paste("Unique POS Tags Found:", unique_pos),
           "",
           "Top 5 Most Frequent POS Tags:",
-          "-------------------------------------------"
+          ""
         )
 
         for (i in 1:min(5, nrow(top_pos))) {
@@ -3628,22 +3616,22 @@ server <- shinyServer(function(input, output, session) {
 
         report_lines <- c(report_lines,
           "",
-          "===========================================",
+          "",
           paste("Generated:", Sys.time()),
-          "===========================================",
           "",
           "",
-          "DETAILED POS TAG FREQUENCY TABLE:",
-          "==========================================="
+          "",
+          "Detailed POS tag frequency table:",
+          ""
         )
 
         writeLines(paste(report_lines, collapse = "\n"), file)
         write.table(pos_summary, file, append = TRUE, sep = "\t", row.names = FALSE, quote = FALSE)
       }, error = function(e) {
         error_msg <- c(
-          "===========================================",
-          "ERROR GENERATING POS REPORT",
-          "===========================================",
+          "",
+          "Error generating POS report",
+          "",
           "",
           paste("Error:", e$message),
           "",
@@ -3652,7 +3640,7 @@ server <- shinyServer(function(input, output, session) {
           "  - SpaCy processing is complete",
           "",
           paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
-          "==========================================="
+          ""
         )
         writeLines(paste(error_msg, collapse = "\n"), file)
       })
@@ -3694,16 +3682,16 @@ server <- shinyServer(function(input, output, session) {
     top_features <- head(freq_table, 20)
 
     report_lines <- c(
-      "================================================================================",
-      "DOCUMENT-FEATURE MATRIX (DFM) REPORT",
-      "================================================================================",
+      "",
+      "Document-feature matrix (DFM) report",
+      "",
       "",
       paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
       paste("TextAnalysisR Version:", packageVersion("TextAnalysisR")),
       "",
-      "================================================================================",
-      "DFM SUMMARY",
-      "================================================================================",
+      "",
+      "DFM summary",
+      "",
       "",
       paste("Documents:", format(doc_count, big.mark = ",")),
       paste("Features (unique tokens):", format(feature_count, big.mark = ",")),
@@ -3711,9 +3699,9 @@ server <- shinyServer(function(input, output, session) {
       paste("Average tokens per document:", round(avg_doc_length, 2)),
       paste("Sparsity:", paste0(round(sparsity * 100, 2), "%")),
       "",
-      "================================================================================",
-      "SOURCE INFORMATION",
-      "================================================================================",
+      "",
+      "Source information",
+      "",
       "",
       paste("Tokens source:", source_info),
       "",
@@ -3722,9 +3710,9 @@ server <- shinyServer(function(input, output, session) {
       "  - Empty tokens removed",
       "  - Duplicate features after lowercasing merged",
       "",
-      "================================================================================",
-      "TOP 20 MOST FREQUENT FEATURES",
-      "================================================================================",
+      "",
+      "Top 20 most frequent features",
+      "",
       ""
     )
 
@@ -3741,9 +3729,9 @@ server <- shinyServer(function(input, output, session) {
 
     report_lines <- c(report_lines,
       "",
-      "================================================================================",
+      "",
       paste("End of Report - Generated:", Sys.time()),
-      "================================================================================"
+      ""
     )
 
     output$modal_dfm_report <- renderPrint({
@@ -3794,16 +3782,16 @@ server <- shinyServer(function(input, output, session) {
         top_features <- head(freq_table, 20)
 
         report_lines <- c(
-          "================================================================================",
-          "DOCUMENT-FEATURE MATRIX (DFM) REPORT",
-          "================================================================================",
+          "",
+          "Document-feature matrix (DFM) report",
+          "",
           "",
           paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
           paste("TextAnalysisR Version:", packageVersion("TextAnalysisR")),
           "",
-          "================================================================================",
-          "DFM SUMMARY",
-          "================================================================================",
+          "",
+          "DFM summary",
+          "",
           "",
           paste("Documents:", format(doc_count, big.mark = ",")),
           paste("Features (unique tokens):", format(feature_count, big.mark = ",")),
@@ -3811,9 +3799,9 @@ server <- shinyServer(function(input, output, session) {
           paste("Average tokens per document:", round(avg_doc_length, 2)),
           paste("Sparsity:", paste0(round(sparsity * 100, 2), "%")),
           "",
-          "================================================================================",
-          "SOURCE INFORMATION",
-          "================================================================================",
+          "",
+          "Source information",
+          "",
           "",
           paste("Tokens source:", source_info),
           "",
@@ -3822,9 +3810,9 @@ server <- shinyServer(function(input, output, session) {
           "  - Empty tokens removed",
           "  - Duplicate features after lowercasing merged",
           "",
-          "================================================================================",
-          "TOP 20 MOST FREQUENT FEATURES",
-          "================================================================================",
+          "",
+          "Top 20 most frequent features",
+          "",
           ""
         )
 
@@ -3841,9 +3829,9 @@ server <- shinyServer(function(input, output, session) {
 
         report_lines <- c(report_lines,
           "",
-          "================================================================================",
-          "FULL FEATURE FREQUENCY TABLE",
-          "================================================================================",
+          "",
+          "Full feature frequency table",
+          "",
           ""
         )
 
@@ -3851,9 +3839,9 @@ server <- shinyServer(function(input, output, session) {
         write.table(freq_table, file, append = TRUE, sep = "\t", row.names = FALSE, quote = FALSE)
       }, error = function(e) {
         error_msg <- c(
-          "================================================================================",
-          "ERROR GENERATING DFM REPORT",
-          "================================================================================",
+          "",
+          "Error generating DFM report",
+          "",
           "",
           paste("Error:", e$message),
           "",
@@ -3862,7 +3850,7 @@ server <- shinyServer(function(input, output, session) {
           "  - Data processing is complete",
           "",
           paste("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
-          "================================================================================"
+          ""
         )
         writeLines(paste(error_msg, collapse = "\n"), file)
       })
@@ -5684,9 +5672,7 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  # ============================================================================
-  # displaCy Visualizations for NER and Dependency tabs
-  # ============================================================================
+  # displaCy visualizations for NER and dependency tabs
 
   # Helper to get tokens object for docvars lookup
   .get_tokens_obj <- reactive({
@@ -7189,9 +7175,7 @@ server <- shinyServer(function(input, output, session) {
     }
   )
 
-  ################################################################################
-  # SEMANTIC ANALYSIS TAB
-  ################################################################################
+  # Semantic analysis tab
 
   colnames_cat <- reactive({
     req(mydata())
@@ -9834,9 +9818,7 @@ server <- shinyServer(function(input, output, session) {
       formatRound(columns = numeric_cols, digits = 3)
   })
 
-  # ============================================================================
-  # LOG ODDS RATIO ANALYSIS
-  # ============================================================================
+  # Log odds ratio analysis
 
   log_odds_results <- reactiveValues(
     analyzed = FALSE,
@@ -10067,9 +10049,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
 
-  # ============================================================================
-  # LEXICAL DISPERSION ANALYSIS
-  # ============================================================================
+  # Lexical dispersion analysis
 
   dispersion_results <- reactiveValues(
     analyzed = FALSE,
@@ -11901,9 +11881,7 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  ################################################################################
-  # TOPIC MODELING TAB
-  ################################################################################
+  # Topic modeling tab
 
   # Update Topic Modeling K Search covariates
   observeEvent(mydata(), {
@@ -22435,9 +22413,7 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  ################################################################################
-  # DYNAMIC OLLAMA MODEL LIST UPDATES
-  ################################################################################
+  # Dynamic Ollama model list updates
 
   observe({
     models <- available_ollama_models()
@@ -22458,9 +22434,7 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  ################################################################################
-  # AI SETTINGS PANEL
-  ################################################################################
+  # AI settings panel
 
   observe({
     key <- input$global_openai_api_key
