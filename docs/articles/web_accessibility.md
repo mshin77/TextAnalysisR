@@ -1,0 +1,29 @@
+# Accessibility
+
+TextAnalysisR meets WCAG 2.1 Level AA standards.
+
+## Keyboard Navigation
+
+| Key             | Action                |
+|-----------------|-----------------------|
+| Tab / Shift+Tab | Move between elements |
+| Enter / Space   | Activate buttons      |
+| Esc             | Close dialogs         |
+
+## Visual Features
+
+- Dark mode toggle
+- High contrast (4.5:1 ratio)
+- 200% zoom support
+- Reduced motion option
+
+## Screen Reader Support
+
+- Descriptive button labels
+- Chart text descriptions
+- Status announcements
+
+## Language Support
+
+- 100+ languages via Google Translate
+- Auto-detected text-to-speech

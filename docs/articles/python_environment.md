@@ -1,0 +1,76 @@
+# Python Environment
+
+Python enables advanced features: NLP with spaCy, embeddings, and neural
+sentiment analysis.
+
+## Quick Setup
+
+``` r
+
+library(TextAnalysisR)
+setup_python_env()
+```
+
+This automatically:
+
+1.  Creates virtual environment `textanalysisr-env`
+2.  Installs **spacy** and **pdfplumber**
+3.  Downloads spaCy English model (`en_core_web_sm`)
+
+Uses virtualenv (or conda if available).
+
+## Check Status
+
+``` r
+
+check_python_env()
+```
+
+## Common Issues
+
+### “Another Python already initialized”
+
+Set preferred environment in `.Rprofile`:
+
+``` r
+
+Sys.setenv(RETICULATE_PYTHON_ENV = "textanalysisr-env")
+```
+
+Then restart R.
+
+### Environment in OneDrive
+
+Avoid OneDrive paths. Use:
+
+``` r
+
+setup_python_env(envname = "textanalysisr-env")
+```
+
+## spaCy Models
+
+The default `en_core_web_sm` model is installed automatically. For word
+vectors (similarity):
+
+``` bash
+python -m spacy download en_core_web_md  # Medium (91 MB)
+python -m spacy download en_core_web_lg  # Large (560 MB)
+```
+
+## Deep Learning (Optional)
+
+For embeddings and neural sentiment:
+
+``` bash
+pip install sentence-transformers transformers torch
+```
+
+## Diagnostics
+
+``` r
+
+library(reticulate)
+py_config()
+virtualenv_list()
+```
