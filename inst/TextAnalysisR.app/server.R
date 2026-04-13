@@ -15824,7 +15824,7 @@ server <- shinyServer(function(input, output, session) {
     req(hybrid_K_search())
     search_result <- hybrid_K_search()
     if (is.null(search_result$results)) return(NULL)
-    TextAnalysisR::plot_quality_metrics(search_result)
+    suppressWarnings(TextAnalysisR::plot_quality_metrics(search_result))
   })
 
   local({
@@ -15838,10 +15838,11 @@ server <- shinyServer(function(input, output, session) {
         output[[output_id]] <- plotly::renderPlotly({
           plots <- hybrid_quality_metric_plots()
           req(plots[[metric]])
-          gg_to_plotly(plots[[metric]])
+          suppressWarnings(gg_to_plotly(plots[[metric]]))
         })
 
         output[[ui_output_id]] <- renderUI({
+          req(hybrid_K_search())
           plots <- hybrid_quality_metric_plots()
           if (is.null(plots) || is.null(plots[[metric]])) return(NULL)
           height_val <- (input$height_search_k %||% 600) / 2
@@ -18185,7 +18186,7 @@ server <- shinyServer(function(input, output, session) {
 
   quality_metric_plots <- reactive({
     req(K_search())
-    TextAnalysisR::plot_quality_metrics(K_search())
+    suppressWarnings(TextAnalysisR::plot_quality_metrics(K_search()))
   })
 
   local({
@@ -18199,14 +18200,14 @@ server <- shinyServer(function(input, output, session) {
         output[[output_id]] <- plotly::renderPlotly({
           plots <- quality_metric_plots()
           req(plots[[metric]])
-          gg_to_plotly(plots[[metric]])
+          suppressWarnings(gg_to_plotly(plots[[metric]]))
         })
 
         output[[ui_output_id]] <- renderUI({
+          req(K_search())
           plots <- quality_metric_plots()
           if (is.null(plots) || is.null(plots[[metric]])) return(NULL)
           height_val <- (input$height_search_k %||% 600) / 2
-          width_val <- (input$width_search_k %||% 1000) / 2
           div(
             style = "margin-bottom: 10px;",
             plotly::plotlyOutput(
