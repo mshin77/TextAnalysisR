@@ -15820,29 +15820,42 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  output$hybrid_quality_metrics_plot_uiOutput <- renderUI({
-    search_result <- hybrid_K_search()
-    if (!is.null(search_result) && !is.null(search_result$results)) {
-      height_val <- input$height_search_k %||% 600
-      width_val <- input$width_search_k %||% 1000
-      plotly::plotlyOutput("hybrid_quality_metrics_plot", height = paste0(height_val, "px"), width = paste0(width_val, "px"))
-    }
-  })
-
-  output$hybrid_quality_metrics_plot <- plotly::renderPlotly({
+  hybrid_quality_metric_plots <- reactive({
     req(hybrid_K_search())
     search_result <- hybrid_K_search()
     if (is.null(search_result$results)) return(NULL)
+    TextAnalysisR::plot_quality_metrics(search_result)
+  })
 
-    width_val <- if (!is.null(input$width_search_k)) input$width_search_k else 1000
-    height_val <- if (!is.null(input$height_search_k)) input$height_search_k else 800
+  local({
+    metrics <- c("semcoh", "residual", "heldout", "lbound")
+    for (m in metrics) {
+      local({
+        metric <- m
+        output_id <- paste0("hybrid_quality_metrics_", metric)
+        ui_output_id <- paste0(output_id, "_uiOutput")
 
-    gg_to_plotly(TextAnalysisR::plot_quality_metrics(
-      search_results = search_result,
-      title = "Hybrid Model Diagnostics by K (STM Component)",
-      height = height_val,
-      width = width_val
-    ))
+        output[[output_id]] <- plotly::renderPlotly({
+          plots <- hybrid_quality_metric_plots()
+          req(plots[[metric]])
+          gg_to_plotly(plots[[metric]])
+        })
+
+        output[[ui_output_id]] <- renderUI({
+          plots <- hybrid_quality_metric_plots()
+          if (is.null(plots) || is.null(plots[[metric]])) return(NULL)
+          height_val <- (input$height_search_k %||% 600) / 2
+          div(
+            style = "margin-bottom: 10px;",
+            plotly::plotlyOutput(
+              output_id,
+              height = paste0(height_val, "px"),
+              width = "100%"
+            )
+          )
+        })
+      })
+    }
   })
 
   output$hybrid_quality_summary_table <- DT::renderDataTable({
@@ -18170,27 +18183,41 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  output$quality_metrics_plot <- plotly::renderPlotly({
+  quality_metric_plots <- reactive({
     req(K_search())
-    gg_to_plotly(TextAnalysisR::plot_quality_metrics(
-      K_search(),
-      title = "Diagnostic Plots",
-      height = input$height_search_k,
-      width = input$width_search_k
-    ))
+    TextAnalysisR::plot_quality_metrics(K_search())
   })
 
-  output$quality_metrics_plot_uiOutput <- renderUI({
-    height_val <- input$height_search_k %||% 600
-    width_val <- input$width_search_k %||% 1000
-    div(
-      style = "margin-bottom: 20px; overflow: auto;",
-      plotly::plotlyOutput(
-        "quality_metrics_plot",
-        height = paste0(height_val, "px"),
-        width = paste0(width_val, "px")
-      )
-    )
+  local({
+    metrics <- c("semcoh", "residual", "heldout", "lbound")
+    for (m in metrics) {
+      local({
+        metric <- m
+        output_id <- paste0("quality_metrics_", metric)
+        ui_output_id <- paste0(output_id, "_uiOutput")
+
+        output[[output_id]] <- plotly::renderPlotly({
+          plots <- quality_metric_plots()
+          req(plots[[metric]])
+          gg_to_plotly(plots[[metric]])
+        })
+
+        output[[ui_output_id]] <- renderUI({
+          plots <- quality_metric_plots()
+          if (is.null(plots) || is.null(plots[[metric]])) return(NULL)
+          height_val <- (input$height_search_k %||% 600) / 2
+          width_val <- (input$width_search_k %||% 1000) / 2
+          div(
+            style = "margin-bottom: 10px;",
+            plotly::plotlyOutput(
+              output_id,
+              height = paste0(height_val, "px"),
+              width = "100%"
+            )
+          )
+        })
+      })
+    }
   })
 
   output$quality_summary_table <- DT::renderDataTable({

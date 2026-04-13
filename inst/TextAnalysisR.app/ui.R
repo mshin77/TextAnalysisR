@@ -4670,7 +4670,14 @@ Focus on incorporating the most significant keywords while following the guideli
                     br(),
                     uiOutput("topic_search_message"),
                     br(),
-                    uiOutput("quality_metrics_plot_uiOutput")
+                    fluidRow(
+                      column(6, uiOutput("quality_metrics_semcoh_uiOutput")),
+                      column(6, uiOutput("quality_metrics_residual_uiOutput"))
+                    ),
+                    fluidRow(
+                      column(6, uiOutput("quality_metrics_heldout_uiOutput")),
+                      column(6, uiOutput("quality_metrics_lbound_uiOutput"))
+                    )
                   ),
                   tabPanel(
                     "Quality Comparison",
@@ -4747,7 +4754,14 @@ Focus on incorporating the most significant keywords while following the guideli
                     br(),
                     uiOutput("hybrid_topic_search_message"),
                     br(),
-                    uiOutput("hybrid_quality_metrics_plot_uiOutput")
+                    fluidRow(
+                      column(6, uiOutput("hybrid_quality_metrics_semcoh_uiOutput")),
+                      column(6, uiOutput("hybrid_quality_metrics_residual_uiOutput"))
+                    ),
+                    fluidRow(
+                      column(6, uiOutput("hybrid_quality_metrics_heldout_uiOutput")),
+                      column(6, uiOutput("hybrid_quality_metrics_lbound_uiOutput"))
+                    )
                   ),
                   tabPanel(
                     "Quality Comparison",

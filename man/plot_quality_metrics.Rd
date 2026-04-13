@@ -4,27 +4,17 @@
 \alias{plot_quality_metrics}
 \title{Plot Topic Model Quality Metrics}
 \usage{
-plot_quality_metrics(
-  search_results,
-  title = "Diagnostic Plots",
-  height = 600,
-  width = 800
-)
+plot_quality_metrics(search_results)
 }
 \arguments{
 \item{search_results}{Results from stm::searchK or find_optimal_k()}
-
-\item{title}{Plot title (default: "Diagnostic Plots")}
-
-\item{height}{Plot height in pixels (default: 600)}
-
-\item{width}{Plot width in pixels (default: 800)}
 }
 \value{
-A plotly object with faceted diagnostic plots
+A named list of ggplot objects, one per available metric
+(possible keys: semcoh, residual, heldout, lbound).
 }
 \description{
-Creates a faceted plot showing diagnostic metrics across different K values
+Creates individual diagnostic metric plots across different K values
 from stm::searchK results.
 }
 \seealso{

@@ -3699,22 +3699,17 @@ fit_topic_prevalence_model <- function(topic_proportions,
 #' Plot Topic Model Quality Metrics
 #'
 #' @description
-#' Creates a faceted plot showing diagnostic metrics across different K values
+#' Creates individual diagnostic metric plots across different K values
 #' from stm::searchK results.
 #'
 #' @param search_results Results from stm::searchK or find_optimal_k()
-#' @param title Plot title (default: "Diagnostic Plots")
-#' @param height Plot height in pixels (default: 600)
-#' @param width Plot width in pixels (default: 800)
 #'
-#' @return A plotly object with faceted diagnostic plots
+#' @return A named list of ggplot objects, one per available metric
+#'   (possible keys: semcoh, residual, heldout, lbound).
 #'
 #' @family topic-modeling
 #' @export
-plot_quality_metrics <- function(search_results,
-                                  title = "Diagnostic Plots",
-                                  height = 600,
-                                  width = 800) {
+plot_quality_metrics <- function(search_results) {
 
   results_data <- if ("results" %in% names(search_results)) {
     search_results$results
@@ -3744,22 +3739,23 @@ plot_quality_metrics <- function(search_results,
     stop("No valid metrics found in search results")
   }
 
-  plots <- list()
-  for (i in seq_along(available_metrics)) {
-    metric <- available_metrics[i]
+  plots <- stats::setNames(vector("list", length(available_metrics)), available_metrics)
+  for (metric in available_metrics) {
     info <- metric_info[[metric]]
 
     plot_df <- data.frame(
       K = results_data$K,
       value = results_data[[metric]]
     )
+    plot_df$hover_text <- paste("K:", plot_df$K, "<br>", info$name, ":", round(plot_df$value, 4))
 
-    plots[[i]] <- ggplot2::ggplot(plot_df, ggplot2::aes(x = K, y = value)) +
+    plots[[metric]] <- ggplot2::ggplot(plot_df, ggplot2::aes(x = K, y = value)) +
       ggplot2::geom_line(color = info$color, linewidth = 0.8) +
-      ggplot2::geom_point(color = info$color, size = 2.5) +
-      ggplot2::labs(x = "Number of Topics (K)", y = info$name) +
+      ggplot2::geom_point(ggplot2::aes(text = .data$hover_text), color = info$color, size = 2.5) +
+      ggplot2::labs(x = "Number of Topics (K)", y = info$name, title = info$name) +
       ggplot2::theme_minimal(base_size = 11) +
       ggplot2::theme(
+        plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a", hjust = 0.5),
         panel.grid.minor = ggplot2::element_blank(),
         panel.grid.major = ggplot2::element_line(color = "#E5E7EB", linewidth = 0.3),
         axis.line = ggplot2::element_line(color = "#3B3B3B", linewidth = 0.5),
@@ -3768,10 +3764,7 @@ plot_quality_metrics <- function(search_results,
       )
   }
 
-  patchwork::wrap_plots(plots, ncol = 2) +
-    patchwork::plot_annotation(title = title,
-      theme = ggplot2::theme(plot.title = ggplot2::element_text(
-        size = 14, color = "#0c1f4a", hjust = 0.5)))
+  plots
 }
 
 

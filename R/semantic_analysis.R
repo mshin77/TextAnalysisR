@@ -4312,13 +4312,13 @@ word_co_occurrence_network <- function(dfm_object,
     if (node_color_by == "frequency") {
       p <- p +
         ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency),
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency, text = .data$hover_text),
                             stroke = 0.5) +
         ggplot2::scale_color_viridis_c(name = "Frequency")
     } else {
       p <- p +
         ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community),
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community, text = .data$hover_text),
                             shape = 21, color = "white", stroke = 1) +
         ggplot2::scale_fill_manual(values = palette, name = "Community")
     }
@@ -4746,13 +4746,13 @@ word_correlation_network <- function(dfm_object,
     if (node_color_by == "frequency") {
       p <- p +
         ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency),
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency, text = .data$hover_text),
                             stroke = 0.5) +
         ggplot2::scale_color_viridis_c(name = "Frequency")
     } else {
       p <- p +
         ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community),
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community, text = .data$hover_text),
                             shape = 21, color = "white", stroke = 1) +
         ggplot2::scale_fill_manual(values = palette, name = "Community")
     }
