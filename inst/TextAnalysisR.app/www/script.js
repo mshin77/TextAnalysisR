@@ -8,6 +8,7 @@
   var style = document.createElement('style');
   style.textContent = '.loading-spinner{width:60px;height:60px;border:4px solid #e2e8f0;border-top-color:#337ab7;border-radius:50%;animation:spin 1s linear infinite;}@keyframes spin{to{transform:rotate(360deg);}}';
   document.head.appendChild(style);
+  document.body.classList.add('app-loading');
   document.body.insertBefore(overlay, document.body.firstChild);
 })();
 
@@ -512,11 +513,14 @@ $(document).on('mouseover', '.shiny-notification', function(e) {
 
 // Coding mode custom message handler - wait for Shiny to be available
 $(document).on('shiny:connected', function() {
-  // Dismiss loading overlay
+  // Dismiss loading overlay and enable shinybusy
   var overlay = document.getElementById('loading-overlay');
   if (overlay) {
     overlay.style.opacity = '0';
-    setTimeout(function() { overlay.remove(); }, 500);
+    setTimeout(function() {
+      overlay.remove();
+      document.body.classList.remove('app-loading');
+    }, 500);
   }
 
   if (typeof Shiny !== 'undefined') {

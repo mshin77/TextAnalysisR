@@ -577,6 +577,11 @@ button.btn.action-button:active {
   border-color: #337ab7 !important;
 }
 
+/* Hide shinybusy during initial load (loading-overlay handles it) */
+body.app-loading .shinybusy {
+  display: none !important;
+}
+
 /* Shinybusy overlay */
 .shinybusy-overlay {
   background-color: rgba(0, 0, 0, 0.15) !important;
