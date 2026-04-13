@@ -29,7 +29,7 @@ plot_sentiment_boxplot(
 
 ## Value
 
-A plotly box plot
+A ggplot2 box plot
 
 ## See also
 

@@ -6,7 +6,7 @@ standards.
 ## Usage
 
 ``` r
-create_standard_ggplot_theme(base_size = 14)
+create_standard_ggplot_theme(base_size = 11)
 ```
 
 ## Arguments

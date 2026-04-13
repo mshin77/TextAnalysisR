@@ -21,7 +21,7 @@ plot_sentiment_distribution(sentiment_data, title = "Sentiment Distribution")
 
 ## Value
 
-A plotly bar chart
+A ggplot2 bar chart
 
 ## See also
 

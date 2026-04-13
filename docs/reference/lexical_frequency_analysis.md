@@ -14,6 +14,10 @@ lexical_frequency_analysis(...)
 
   Arguments passed to plot_word_frequency
 
+## Value
+
+A plotly bar chart of word frequencies
+
 ## See also
 
 Other lexical:

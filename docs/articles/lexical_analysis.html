@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">TextAnalysisR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,14 +97,14 @@
 <h2 id="word-frequency">Word Frequency<a class="anchor" aria-label="anchor" href="#word-frequency"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span><span class="va">dfm_object</span>, top_n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span><span class="va">dfm_object</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
 <hr>
 <details><summary><strong>TF-IDF Keyword Extraction</strong>
 </summary><p>Find distinctive words per document using Term Frequency-Inverse
 Document Frequency:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">keywords</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_tfidf.html">extract_keywords_tfidf</a></span><span class="op">(</span><span class="va">dfm_object</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plot_tfidf_keywords.html">plot_tfidf_keywords</a></span><span class="op">(</span><span class="va">keywords</span>, n_docs <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/plot_tfidf_keywords.html">plot_tfidf_keywords</a></span><span class="op">(</span><span class="va">keywords</span><span class="op">)</span></span></code></pre></div>
 <p>TF-IDF weights terms that are frequent in a document but rare across
 the corpus, identifying distinctive vocabulary.</p>
 </details><hr>
@@ -113,9 +113,7 @@ the corpus, identifying distinctive vocabulary.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">keyness</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_keyness.html">extract_keywords_keyness</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
-<span>  target_group <span class="op">=</span> <span class="st">"Journal Article"</span>,</span>
-<span>  reference_groups <span class="op">=</span> <span class="st">"Conference Paper"</span>,</span>
-<span>  category_var <span class="op">=</span> <span class="st">"reference_type"</span></span>
+<span>  target <span class="op">=</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/docvars.html" class="external-link">docvars</a></span><span class="op">(</span><span class="va">dfm_object</span>, <span class="st">"reference_type"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"Journal Article"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_keyness_keywords.html">plot_keyness_keywords</a></span><span class="op">(</span><span class="va">keyness</span><span class="op">)</span></span></code></pre></div>
 <p>Keyness analysis identifies statistically significant differences in

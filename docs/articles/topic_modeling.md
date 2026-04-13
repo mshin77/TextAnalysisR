@@ -221,7 +221,6 @@ topic_labels <- c("1" = "Digital Learning Tools", "2" = "Family Engagement")
 content <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "survey_item",
-  topic_labels = topic_labels,  # Optional
   provider = "ollama",
   model = "llama3.2"
 )
@@ -265,6 +264,31 @@ content <- generate_topic_content(
   system_prompt = "You are a survey methodology expert...",
   user_prompt_template = "Create an item for: {topic_label}\nTerms: {terms}"
 )
+```
+
+## Topic Prevalence Modeling
+
+Model how topic prevalence varies with document-level covariates using
+count regression. Auto-selects between Poisson, Negative Binomial, and
+Zero-Inflated Negative Binomial based on data diagnostics (dispersion
+ratio and zero proportion).
+
+``` r
+
+# Get topic proportions from STM gamma matrix
+gamma_matrix <- model$theta
+
+# Fit prevalence model for topic 1
+prevalence_result <- fit_topic_prevalence_model(
+  topic_proportions = gamma_matrix[, 1],
+  metadata = out$meta,
+  formula = topic_count ~ reference_type,
+  model_type = "auto"
+)
+
+prevalence_result$model_type       # Selected model
+prevalence_result$summary          # Tidy coefficients with odds ratios
+prevalence_result$diagnostics      # Zero proportion, dispersion ratio
 ```
 
 ------------------------------------------------------------------------

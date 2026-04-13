@@ -39,7 +39,7 @@ plot_document_sentiment_trajectory(
 
 ## Value
 
-A plotly line chart with color gradient
+A ggplot2 line chart with color gradient
 
 ## See also
 

@@ -18,7 +18,7 @@ dfm_object <- quanteda::dfm(tokens)
 
 ``` r
 
-plot_word_frequency(dfm_object, top_n = 20)
+plot_word_frequency(dfm_object, n = 20)
 ```
 
 ------------------------------------------------------------------------
@@ -31,7 +31,7 @@ Document Frequency:
 ``` r
 
 keywords <- extract_keywords_tfidf(dfm_object, top_n = 10)
-plot_tfidf_keywords(keywords, n_docs = 5)
+plot_tfidf_keywords(keywords)
 ```
 
 TF-IDF weights terms that are frequent in a document but rare across the
@@ -47,9 +47,7 @@ Compare word usage between groups:
 
 keyness <- extract_keywords_keyness(
   dfm_object,
-  target_group = "Journal Article",
-  reference_groups = "Conference Paper",
-  category_var = "reference_type"
+  target = quanteda::docvars(dfm_object, "reference_type") == "Journal Article"
 )
 plot_keyness_keywords(keyness)
 ```

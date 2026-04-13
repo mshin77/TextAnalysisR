@@ -22,13 +22,14 @@ dfm <- quanteda::dfm(tokens)
 keywords <- extract_keywords_tfidf(dfm, top_n = 20)
 plot_tfidf_keywords(keywords)
 
-# 4. Topic modeling
-model <- fit_embedding_model(texts, n_topics = 5)
-get_topic_terms(model, top_term_n = 10)
+# 4. Topic modeling (embedding-based)
+model <- fit_embedding_model(texts, n_topics = 5, backend = "r")
+model$topic_keywords
 
 # 5. Sentiment analysis
-sentiment <- sentiment_lexicon_analysis(texts, lexicon = "bing")
-plot_sentiment_distribution(sentiment)
+dfm <- quanteda::dfm(tokens)
+sentiment <- sentiment_lexicon_analysis(dfm, lexicon = "bing")
+plot_sentiment_distribution(sentiment$document_sentiment)
 ```
 
 ### Generate Embeddings
@@ -39,7 +40,7 @@ plot_sentiment_distribution(sentiment)
 embeddings <- get_best_embeddings(texts)
 
 # Reduce dimensions for visualization
-reduced <- reduce_dimensions(embeddings, method = "umap", n_components = 2)
+reduced <- reduce_dimensions(embeddings, method = "UMAP", n_components = 2)
 plot_semantic_viz(reduced)
 ```
 
@@ -168,6 +169,7 @@ word_correlation_network(dfm, top_node_n = 30, corr_n = 0.3)
 | [`get_topic_terms()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_terms.md) | Extract top words per topic |
 | [`get_topic_prevalence()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_prevalence.md) | Calculate topic prevalence |
 | [`generate_topic_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.md) | AI-generated topic names |
+| [`fit_topic_prevalence_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_topic_prevalence_model.md) | Count regression for topic prevalence (auto-selects Poisson/NegBin/Zero-Inflated) |
 
 **Visualization Functions**
 

@@ -27,6 +27,10 @@ semantic_document_clustering(embeddings, method = "UMAP", clusters = NULL, ...)
 
   Additional arguments
 
+## Value
+
+A ggplot2 visualization of document clusters
+
 ## See also
 
 Other semantic:

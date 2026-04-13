@@ -80,7 +80,7 @@ plot_semantic_viz(
 
 ## Value
 
-A plotly object showing the specified visualization.
+A ggplot2 object showing the specified visualization.
 
 ## See also
 

@@ -3,7 +3,7 @@
 
 ## usethis namespace: start
 #' @importFrom tibble tibble
-#' @importFrom stats as.dist kmeans median runif sd setNames var
+#' @importFrom stats as.dist coef kmeans lm median runif sd setNames var
 ## usethis namespace: end
 NULL
 

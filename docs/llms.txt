@@ -120,8 +120,6 @@ Word frequency, keywords, readability, and dispersion
 
 - [`calculate_word_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_word_frequency.md)
   : Analyze and Visualize Word Frequencies Across a Continuous Variable
-- [`lexical_analysis`](https://mshin77.github.io/TextAnalysisR/reference/lexical_analysis.md)
-  : Lexical Analysis Functions
 - [`extract_keywords_keyness()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_keyness.md)
   : Extract Keywords Using Statistical Keyness
 - [`extract_keywords_tfidf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_tfidf.md)
@@ -255,6 +253,8 @@ STM, embedding-based, and hybrid models
   : Fit Semantic Model
 - [`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md)
   : Fit Temporal Topic Model
+- [`fit_topic_prevalence_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_topic_prevalence_model.md)
+  : Fit Topic Prevalence Model
 - [`auto_tune_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/auto_tune_embedding_topics.md)
   : Auto-tune BERTopic Hyperparameters
 - [`assess_embedding_stability()`](https://mshin77.github.io/TextAnalysisR/reference/assess_embedding_stability.md)

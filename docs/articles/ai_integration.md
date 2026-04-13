@@ -97,7 +97,7 @@ sentiment <- analyze_sentiment_llm(
 sentiment <- sentiment_embedding_analysis(texts)
 
 # Lexicon-based sentiment
-sentiment <- sentiment_lexicon_analysis(texts, lexicon = "nrc")
+sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "nrc")
 ```
 
 ### 4. Linguistic Analysis (spaCy)

@@ -52,13 +52,13 @@ A plotly plot object with standardized layout
 
 Design standards applied:
 
-- Title: 18px Roboto, \#0c1f4a
+- Title: 14px Roboto, \#0c1f4a
 
-- Axis titles: 16px Roboto, \#0c1f4a
+- Axis titles: 13px Roboto, \#0c1f4a
 
-- Axis tick labels: 16px Roboto, \#3B3B3B
+- Axis tick labels: 12px Roboto, \#3B3B3B
 
-- Hover tooltips: 16px Roboto
+- Hover tooltips: 12px Roboto, \#0c1f4a on \#ffffff
 
 - WCAG AA compliant colors
 

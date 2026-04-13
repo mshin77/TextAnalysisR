@@ -21,7 +21,7 @@ dfm_object <- quanteda::dfm(tokens)
 
 similarity <- semantic_similarity_analysis(
   texts = united_tbl$united_texts,
-  method = "cosine"
+  similarity_method = "cosine"
 )
 ```
 
@@ -200,7 +200,7 @@ Track themes over time:
 
 temporal <- temporal_semantic_analysis(
   texts = united_tbl$united_texts,
-  timestamps = united_tbl$year
+  dates = united_tbl$year
 )
 ```
 

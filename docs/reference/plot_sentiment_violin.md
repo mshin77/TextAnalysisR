@@ -29,7 +29,7 @@ plot_sentiment_violin(
 
 ## Value
 
-A plotly violin plot
+A ggplot2 violin plot
 
 ## See also
 

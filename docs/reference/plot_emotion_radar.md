@@ -35,7 +35,7 @@ plot_emotion_radar(
 
 ## Value
 
-A plotly polar chart
+A ggplot2 polar chart
 
 ## See also
 

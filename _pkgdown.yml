@@ -36,7 +36,6 @@ reference:
   desc: "Word frequency, keywords, readability, and dispersion"
   contents:
   - calculate_word_frequency
-  - lexical_analysis
   - starts_with("extract_keywords")
   - lexical_frequency_analysis
   - lexical_diversity_analysis
@@ -176,6 +175,7 @@ reference:
 - title: "internal"
   contents:
   - TextAnalysisR-package
+  - lexical_analysis
   - "`%>%`"
   - run_text_workflow
   - starts_with("run_")
@@ -193,14 +193,8 @@ reference:
   - get_word_similarity
   - find_similar_words
   - find_topic_matches
-  - analyze_topic_evolution
-  - generate_semantic_topic_keywords
-  - calculate_eval_metrics_internal
   - calculate_semantic_drift
   - assess_hybrid_stability
-  - calculate_topic_alignment
-  - calculate_hybrid_quality_metrics
-  - combine_keywords_weighted
   - calculate_assignment_consistency
   - calculate_keyword_stability
   - starts_with("show_")
@@ -218,23 +212,43 @@ reference:
   - get_dt_options
   - create_message_table
   - create_analysis_datatable
-  - validate_file_upload
-  - sanitize_text_input
-  - check_rate_limit
-  - log_security_event
-  - validate_api_key
-  - calculate_contrast_ratio
-  - check_wcag_contrast
-  - create_aria_label
-  - create_sr_text
-  - validate_keyboard_navigation
-  - check_alt_text
   - clean_similarity_matrix
   - renumber_clusters_sequentially
   - truncate_text_to_words
   - truncate_text_with_ellipsis
   - wrap_long_text
   - wrap_text_for_tooltip
+  - calculate_coherence
+  - calculate_contrast_ratio
+  - calculate_hybrid_quality_metrics
+  - calculate_metrics
+  - calculate_topic_alignment
+  - calculate_topic_cluster_correspondence
+  - calculate_topic_quality
+  - check_alt_text
+  - check_docker_deployment
+  - check_multimodal_prerequisites
+  - check_rate_limit
+  - check_wcag_contrast
+  - combine_keywords_weighted
+  - create_aria_label
+  - create_sr_text
+  - describe_image_gemini
+  - describe_image_ollama
+  - describe_image_openai
+  - generate_semantic_topic_keywords
+  - generate_topic_keywords
+  - get_gemini_embeddings
+  - get_ollama_embeddings
+  - get_openai_embeddings
+  - log_security_event
+  - render_pdf_pages_to_base64
+  - sanitize_llm_input
+  - sanitize_text_input
+  - validate_api_key
+  - validate_column_name
+  - validate_file_upload
+  - validate_keyboard_navigation
 
 articles:
 - title: "Getting Started"

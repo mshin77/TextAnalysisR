@@ -36,6 +36,10 @@ export_document_clustering(
 
   Path to save the CSV file
 
+## Value
+
+Invisible data frame of the exported data
+
 ## See also
 
 Other semantic:

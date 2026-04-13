@@ -1,7 +1,7 @@
-# Calculate Topic-Cluster Correspondence (Placeholder)
+# Calculate Topic-Cluster Correspondence
 
-Placeholder function that returns simulated correspondence metrics. Use
-`calculate_topic_correspondence()` for real metrics.
+Computes Jaccard-based correspondence between topic keywords and cluster
+keywords.
 
 ## Usage
 
@@ -21,8 +21,8 @@ calculate_topic_cluster_correspondence(topic_keywords, cluster_keywords, ...)
 
 - ...:
 
-  Additional parameters (ignored).
+  Additional parameters (currently unused).
 
 ## Value
 
-List with placeholder correspondence metrics.
+List with correspondence metrics.

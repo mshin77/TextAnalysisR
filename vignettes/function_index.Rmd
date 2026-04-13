@@ -192,6 +192,7 @@ word_correlation_network(dfm, top_node_n = 30, corr_n = 0.3)
 | `get_topic_terms()` | Extract top words per topic |
 | `get_topic_prevalence()` | Calculate topic prevalence |
 | `generate_topic_labels()` | AI-generated topic names |
+| `fit_topic_prevalence_model()` | Count regression for topic prevalence (auto-selects Poisson/NegBin/Zero-Inflated) |
 
 <details>
 <summary><strong>Visualization Functions</strong></summary>

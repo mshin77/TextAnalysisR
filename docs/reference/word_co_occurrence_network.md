@@ -78,7 +78,7 @@ word_co_occurrence_network(
 
 ## Value
 
-A list containing the Plotly plot, a table, and a summary.
+A list containing the ggplot2 plot, a table, and a summary.
 
 ## See also
 

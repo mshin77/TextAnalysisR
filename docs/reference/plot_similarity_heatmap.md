@@ -110,7 +110,7 @@ plot_similarity_heatmap(
 
 ## Value
 
-A plotly or ggplot2 heatmap object
+A ggplot2 heatmap object
 
 ## See also
 

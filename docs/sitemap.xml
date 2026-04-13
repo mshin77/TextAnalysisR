@@ -24,7 +24,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_similarity_gaps.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_topic_evolution.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/apply_standard_plotly_layout.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/assess_embedding_stability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/assess_hybrid_stability.html</loc></url>
@@ -37,7 +36,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_cross_similarity.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_dispersion_metrics.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_document_similarity.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_eval_metrics_internal.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_hybrid_quality_metrics.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_keyword_stability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_lexical_dispersion.html</loc></url>
@@ -107,6 +105,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_hybrid_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_topic_prevalence_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels_auto.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/generate_embeddings.html</loc></url>
@@ -195,10 +194,8 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/renumber_clusters_sequentially.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/require_feature.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_app.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_contrastive_topics_internal.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_neural_topics_internal.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_temporal_topics_internal.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/run_text_workflow.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/sanitize_llm_input.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/sanitize_text_input.html</loc></url>

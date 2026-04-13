@@ -21,19 +21,19 @@ plot_word_frequency(dfm_object, n = 20, height = NULL, width = NULL, ...)
 
 - height:
 
-  The height of the resulting Plotly plot, in pixels (default: 800).
+  Plot height in pixels (default: 800). Kept for backward compatibility.
 
 - width:
 
-  The width of the resulting Plotly plot, in pixels (default: 1000).
+  Plot width in pixels (default: 1000). Kept for backward compatibility.
 
 - ...:
 
-  Additional arguments passed to plotly::ggplotly().
+  Additional arguments (kept for backward compatibility).
 
 ## Value
 
-A plotly object showing word frequency.
+A ggplot object showing word frequency.
 
 ## See also
 

@@ -114,18 +114,6 @@ find_optimal_k <- function(dfm_object,
     }
   }
   
-  # Pivot to long format for faceted plot
-  metrics_data <- results_clean %>%
-    dplyr::select(K, dplyr::any_of(c("semcoh", "residual", "heldout", "lbound"))) %>%
-    tidyr::pivot_longer(cols = -K, names_to = "metric", values_to = "value") %>%
-    dplyr::mutate(metric = dplyr::case_when(
-      metric == "semcoh" ~ "Semantic Coherence",
-      metric == "residual" ~ "Residuals",
-      metric == "heldout" ~ "Held-out Likelihood",
-      metric == "lbound" ~ "Lower Bound",
-      TRUE ~ metric
-    ))
-  
   # Return the same structure as stm::searchK for compatibility
   list(
     results = results_clean,
@@ -521,18 +509,16 @@ guidelines above to produce a concise, descriptive topic label.
 
   top_topic_terms <- top_topic_terms %>%
     dplyr::group_by(topic) %>%
-    dplyr::arrange(desc(beta)) %>%
+    dplyr::arrange(dplyr::desc(beta)) %>%
     dplyr::ungroup()
 
   unique_topics <- top_topic_terms %>%
     dplyr::distinct(topic) %>%
     dplyr::arrange(as.numeric(topic)) %>%
-    dplyr::mutate(topic = row_number(), topic_label = NA)
+    dplyr::mutate(topic_label = NA)
 
-  if (verbose) {
-    if (!requireNamespace("progress", quietly = TRUE)) {
-      utils::install.packages("progress")
-    }
+  pb <- NULL
+  if (verbose && requireNamespace("progress", quietly = TRUE)) {
     pb <- progress::progress_bar$new(
       format = " Processing [:bar] :percent ETA: :eta",
       total = nrow(unique_topics),
@@ -543,9 +529,7 @@ guidelines above to produce a concise, descriptive topic label.
   rate_limit_delay <- if (provider == "ollama") 0.5 else 1
 
   for (i in seq_len(nrow(unique_topics))) {
-    if (verbose) {
-      pb$tick()
-    }
+    if (!is.null(pb)) pb$tick()
 
     current_topic <- unique_topics$topic[i]
 
@@ -593,7 +577,7 @@ guidelines above to produce a concise, descriptive topic label.
   top_labeled_topic_terms <- top_topic_terms %>%
     dplyr::left_join(unique_topics, by = "topic") %>%
     dplyr::select(topic_label, topic, term, beta) %>%
-    dplyr::arrange(topic, desc(beta))
+    dplyr::arrange(topic, dplyr::desc(beta))
 
   return(top_labeled_topic_terms)
 }
@@ -646,46 +630,6 @@ calculate_topic_probability <- function(stm_model,
     dplyr::arrange(dplyr::desc(gamma)) %>%
     dplyr::top_n(top_n, gamma) %>%
     dplyr::mutate(gamma = round(gamma, 3))
-}
-
-run_llm_topics_internal <- function(texts, n_topics = 10,
-                                                    llm_model = "gpt-4.1-mini",
-                                                    enhancement_type = "refinement",
-                                                    research_domain = "generic",
-                                                    domain_prompt = "",
-                                                    embedding_model = "all-MiniLM-L6-v2",
-                                                    seed = 123) {
-
-  tryCatch({
-    base_result <- fit_embedding_model(
-      texts = texts,
-      method = "umap_hdbscan",
-      n_topics = n_topics,
-      embedding_model = embedding_model,
-      seed = seed
-    )
-
-    coherence_result <- calculate_coherence(base_result$embeddings, base_result$topic_assignments)
-    llm_enhancement <- list(
-      coherence = coherence_result,
-      enhancement_type = enhancement_type,
-      research_domain = research_domain
-    )
-
-    result <- base_result
-    result$method <- "llm_enhanced"
-    result$llm_enhancement <- llm_enhancement
-    result$llm_model <- llm_model
-    result$enhancement_type <- enhancement_type
-    result$research_domain <- research_domain
-
-    return(result)
-
-  }, error = function(e) {
-    warning("LLM-enhanced topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_model(texts = texts, method = "umap_hdbscan", n_topics = n_topics,
-                                 embedding_model = embedding_model, seed = seed))
-  })
 }
 
 #' @title Neural Topic Modeling
@@ -746,183 +690,6 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
     return(fit_embedding_model(texts = texts, method = "embedding_clustering",
                                    n_topics = n_topics,
                                  embedding_model = embedding_model, seed = seed))
-  })
-}
-
-#' @title Temporal Dynamic Topic Modeling
-#'
-#' @description
-#' Analyzes topic evolution over time periods using dynamic modeling approaches
-#' to track concept emergence, evolution, and decline.
-#'
-#' @param texts Character vector of documents
-#' @param metadata Data frame containing temporal information
-#' @param n_topics Number of topics to discover
-#' @param temporal_unit Unit for temporal analysis ("year", "quarter", "month")
-#' @param temporal_window Size of temporal window for analysis
-#' @param detect_evolution Whether to detect topic evolution patterns
-#' @param embedding_model Transformer model for embeddings
-#' @param seed Random seed for reproducibility
-#'
-#' @return List containing temporal topic model and evolution analysis
-#' @family topic-modeling
-#' @keywords internal
-run_temporal_topics_internal <- function(texts, metadata = NULL,
-                                                        n_topics = 10,
-                                                        temporal_unit = "year",
-                                                        temporal_window = 3,
-                                                        detect_evolution = TRUE,
-                                                        embedding_model = "all-MiniLM-L6-v2",
-                                                        seed = 123) {
-
-  tryCatch({
-    base_result <- fit_embedding_model(
-      texts = texts,
-      method = "umap_hdbscan",
-      n_topics = n_topics,
-      embedding_model = embedding_model,
-      seed = seed
-    )
-
-    temporal_analysis <- list()
-
-    if (!is.null(metadata)) {
-      time_points <- if ("year" %in% names(metadata)) metadata$year
-                     else rep(NA, length(texts))
-      unique_periods <- sort(unique(time_points[!is.na(time_points)]))
-
-      temporal_analysis$time_periods <- unique_periods
-      temporal_analysis$topic_assignments <- base_result$topic_assignments
-
-      if (length(unique_periods) > 0) {
-        temporal_analysis$topic_prevalence_by_period <- lapply(unique_periods, function(period) {
-          period_idx <- which(time_points == period)
-          period_assignments <- base_result$topic_assignments[period_idx]
-          table(period_assignments) / length(period_assignments)
-        })
-        names(temporal_analysis$topic_prevalence_by_period) <- as.character(unique_periods)
-      }
-    }
-
-    result <- base_result
-    result$method <- "temporal_dynamic"
-    result$temporal_analysis <- temporal_analysis
-    result$temporal_unit <- temporal_unit
-    result$temporal_window <- temporal_window
-
-    return(result)
-
-  }, error = function(e) {
-    warning("Temporal dynamic topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_model(texts = texts, method = "umap_hdbscan", n_topics = n_topics,
-                                 embedding_model = embedding_model, seed = seed))
-  })
-}
-
-#' @title Contrastive Learning Topic Modeling
-#'
-#' @description
-#' Implements contrastive learning approaches for topic modeling to improve
-#' topic separation and discriminability.
-#'
-#' @param texts Character vector of documents
-#' @param n_topics Number of topics to discover
-#' @param temperature Temperature parameter for contrastive learning
-#' @param negative_sampling_rate Rate of negative sampling
-#' @param embedding_model Transformer model for embeddings
-#' @param seed Random seed for reproducibility
-#'
-#' @return List containing contrastive topic model and metrics
-#' @family topic-modeling
-#' @keywords internal
-run_contrastive_topics_internal <- function(texts, n_topics = 10, temperature = 0.1,
-                                                   negative_sampling_rate = 5,
-                                                   embedding_model = "all-MiniLM-L6-v2",
-                                                   seed = 123) {
-
-  tryCatch({
-    base_result <- fit_embedding_model(
-      texts = texts,
-      method = "embedding_clustering",
-      n_topics = n_topics,
-      embedding_model = embedding_model,
-      seed = seed
-    )
-
-    quality <- calculate_topic_quality(base_result$embeddings, base_result$topic_assignments)
-    coherence <- calculate_coherence(base_result$embeddings, base_result$topic_assignments)
-
-    contrastive_metrics <- list(
-      temperature = temperature,
-      negative_sampling_rate = negative_sampling_rate,
-      mean_coherence = coherence$mean_coherence,
-      topic_coherence = coherence$coherence_scores,
-      mean_separation = quality$mean_topic_separation
-    )
-
-    result <- base_result
-    result$method <- "contrastive_learning"
-    result$contrastive_metrics <- contrastive_metrics
-    result$temperature <- temperature
-    result$negative_sampling_rate <- negative_sampling_rate
-
-    return(result)
-
-  }, error = function(e) {
-    warning("Contrastive learning topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_model(texts = texts, method = "embedding_clustering",
-                                   n_topics = n_topics,
-                                 embedding_model = embedding_model, seed = seed))
-  })
-}
-
-#' @title Comprehensive Evaluation Metrics Calculator
-#'
-#' @description
-#' Calculates comprehensive evaluation metrics for topic models including neural coherence,
-#' LLM-based coherence, semantic diversity, and topic stability measures.
-#'
-#' @param result Topic modeling result object
-#' @param texts Original text documents
-#' @param selected_metrics Vector of metrics to calculate
-#'
-#' @return List containing calculated evaluation metrics
-#' @family topic-modeling
-#' @keywords internal
-calculate_eval_metrics_internal <- function(result, texts, selected_metrics) {
-
-  metrics <- list()
-
-  tryCatch({
-    has_embeddings <- !is.null(result$embeddings)
-    has_assignments <- !is.null(result$topic_assignments)
-
-    if (has_embeddings && has_assignments) {
-      coherence_result <- calculate_coherence(result$embeddings, result$topic_assignments)
-
-      if ("coherence" %in% selected_metrics || "neural_coherence" %in% selected_metrics) {
-        metrics$coherence <- round(coherence_result$coherence_scores, 3)
-      }
-
-      if ("silhouette" %in% selected_metrics) {
-        valid_idx <- result$topic_assignments > 0
-        if (sum(valid_idx) > 10 && length(unique(result$topic_assignments[valid_idx])) > 1 &&
-            requireNamespace("cluster", quietly = TRUE)) {
-          dist_mat <- stats::dist(result$embeddings[valid_idx, ])
-          sil <- cluster::silhouette(result$topic_assignments[valid_idx], dist_mat)
-          metrics$silhouette <- round(tapply(sil[, "sil_width"], sil[, "cluster"], mean, na.rm = TRUE), 3)
-        }
-      }
-
-      quality_result <- calculate_topic_quality(result$embeddings, result$topic_assignments)
-      metrics$overall_quality <- round(quality_result$overall_quality %||% NA_real_, 3)
-    }
-
-    return(metrics)
-
-  }, error = function(e) {
-    warning("Evaluation metrics calculation failed: ", e$message)
-    return(list(overall_quality = NA_real_))
   })
 }
 
@@ -1074,10 +841,6 @@ fit_embedding_model <- function(texts,
     message("Method: ", method)
     message("Number of topics: ", n_topics)
     message("Backend: Python (BERTopic)")
-  }
-
-  if (is.null(texts) || length(texts) == 0) {
-    stop("No texts provided for analysis")
   }
 
   valid_texts <- texts[nchar(trimws(texts)) > 0]
@@ -2356,8 +2119,8 @@ auto_tune_embedding_topics <- function(
     })
 
     if (!is.null(model_result)) {
-      silhouette_score <- model_result$quality_metrics$silhouette_mean %||% 0
-      coherence_score <- model_result$quality_metrics$coherence_mean %||% 0
+      silhouette_score <- model_result$quality_metrics$mean_topic_separation %||% 0
+      coherence_score <- model_result$quality_metrics$mean_topic_coherence %||% 0
       combined_score <- (silhouette_score + coherence_score) / 2
 
       results[[length(results) + 1]] <- list(
@@ -2558,7 +2321,7 @@ assess_embedding_stability <- function(
   }
 
   # Calculate quality metric variance
-  silhouette_scores <- sapply(models, function(m) m$quality_metrics$silhouette_mean %||% 0)
+  silhouette_scores <- sapply(models, function(m) m$quality_metrics$mean_topic_separation %||% 0)
 
   # Compile stability metrics
   stability_metrics <- list(
@@ -3422,91 +3185,6 @@ calculate_topic_quality <- function(embeddings, topic_assignments, similarity_ma
   })
 }
 
-fit_llm_semantic_model <- function(texts,
-                                     analysis_types = c("similarity", "clustering"),
-                                     embedding_model = "all-MiniLM-L6-v2",
-                                     enable_ai_labeling = TRUE,
-                                     ai_model = "gpt-4.1-mini",
-                                     enable_cross_validation = FALSE,
-                                     enable_temporal_analysis = FALSE,
-                                     dates = NULL,
-                                     time_windows = "yearly",
-                                     seed = 123,
-                                     verbose = TRUE) {
-
-  if (verbose) {
-    message("Starting LLM-enhanced semantic analysis...")
-    message("Analysis types: ", paste(analysis_types, collapse = ", "))
-  }
-
-  start_time <- Sys.time()
-  results <- list()
-
-  if (verbose) message("Step 1: Generating embeddings...")
-  embeddings <- generate_embeddings(texts, embedding_model, verbose = verbose)
-  results$embeddings <- embeddings
-
-  if ("clustering" %in% analysis_types) {
-    if (verbose) message("Step 2: Running clustering analysis...")
-    clustering_results <- fit_embedding_model(
-      texts = texts,
-      method = "umap_hdbscan",
-      n_topics = 10,
-      embedding_model = "all-MiniLM-L6-v2",
-      seed = seed,
-      verbose = verbose
-    )
-    results$clustering <- clustering_results
-
-    if (enable_ai_labeling) {
-      if (verbose) message("Step 3: Generating AI labels...")
-      ai_labels <- generate_cluster_labels(
-        cluster_keywords = clustering_results$topic_keywords,
-        model = ai_model,
-        verbose = verbose
-      )
-      results$ai_labels <- ai_labels
-    }
-  }
-
-  if (enable_cross_validation) {
-    if (verbose) message("Step 4: Running cross-validation...")
-    cross_validation_results <- cross_analysis_validation(results, verbose = verbose)
-    results$cross_validation <- cross_validation_results
-  }
-
-  if (enable_temporal_analysis && !is.null(dates)) {
-    if (verbose) message("Step 5: Running temporal analysis...")
-    temporal_results <- temporal_semantic_analysis(
-      texts = texts,
-      dates = dates,
-      time_windows = time_windows,
-      embeddings = embeddings,
-      verbose = verbose
-    )
-    results$temporal <- temporal_results
-  }
-
-  execution_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
-
-  if (verbose) {
-    message("Semantic analysis completed in ", round(execution_time, 2), " seconds")
-  }
-
-  results$metadata <- list(
-    analysis_types = analysis_types,
-    embedding_model = embedding_model,
-    ai_labeling_enabled = enable_ai_labeling,
-    cross_validation_enabled = enable_cross_validation,
-    temporal_analysis_enabled = enable_temporal_analysis,
-    execution_time = execution_time,
-    timestamp = Sys.time(),
-    seed = seed
-  )
-
-  return(results)
-}
-
 #' @title Fit Temporal Topic Model
 #' @description Analyzes how topics evolve over time by fitting topic models to
 #'   different time periods and tracking semantic changes.
@@ -3570,7 +3248,7 @@ fit_temporal_model <- function(texts,
       topic_assignments = period_results$topic_assignments,
       topic_keywords = period_results$topic_keywords,
       n_documents = length(period_texts),
-      n_topics = period_results$n_topics_found
+      n_topics = period_results$n_topics
     )
   }
 
@@ -3777,16 +3455,23 @@ calculate_assignment_consistency <- function(assignments1, assignments2, ...) {
 analyze_semantic_evolution <- function(temporal_results, verbose = FALSE, ...) {
   if (verbose) message("Analyzing semantic evolution...")
 
-  evolution_analysis <- list(
-    periods_analyzed = length(temporal_results),
-    evolution_patterns = list(
-      emergence = character(),
-      decline = character(),
-      stable = character()
-    )
-  )
+  periods <- names(temporal_results)
+  if (length(periods) < 2) {
+    return(list(
+      periods_analyzed = length(periods),
+      topic_stability = NA,
+      evolution_patterns = list(emergence = character(), decline = character(), stable = character())
+    ))
+  }
 
-  return(evolution_analysis)
+  topic_stability <- calculate_topic_stability(temporal_results)
+  semantic_drift <- calculate_semantic_drift(temporal_results)
+
+  list(
+    periods_analyzed = length(periods),
+    topic_stability = topic_stability,
+    semantic_drift = semantic_drift
+  )
 }
 
 #' @title Calculate Semantic Drift
@@ -3831,16 +3516,68 @@ identify_topic_trends <- function(temporal_results, ...) {
     return(list(trends = NULL, message = "Insufficient temporal data"))
   }
 
-  trends <- list(
-    increasing = character(),
-    decreasing = character(),
-    stable = character(),
-    message = "Trend analysis completed"
-  )
+  periods <- names(temporal_results)
+  all_topics <- unique(unlist(lapply(temporal_results, function(r) {
+    unique(r$topic_assignments)
+  })))
 
-  return(trends)
+  prevalence_matrix <- sapply(temporal_results, function(r) {
+    counts <- table(factor(r$topic_assignments, levels = all_topics))
+    counts / sum(counts)
+  })
+
+  increasing <- character()
+  decreasing <- character()
+  stable <- character()
+
+  for (i in seq_len(nrow(prevalence_matrix))) {
+    trend <- prevalence_matrix[i, ]
+    if (length(trend) < 2) next
+    slope <- coef(lm(trend ~ seq_along(trend)))[2]
+    topic_label <- rownames(prevalence_matrix)[i]
+    if (slope > 0.01) increasing <- c(increasing, topic_label)
+    else if (slope < -0.01) decreasing <- c(decreasing, topic_label)
+    else stable <- c(stable, topic_label)
+  }
+
+  list(
+    increasing = increasing,
+    decreasing = decreasing,
+    stable = stable,
+    prevalence_matrix = prevalence_matrix
+  )
 }
 
+#' @title Fit Topic Prevalence Model
+#'
+#' @description
+#' Fits a count regression model to topic prevalence data, auto-selecting between
+#' Poisson, Negative Binomial, and Zero-Inflated Negative Binomial based on
+#' dispersion ratio and zero-inflation diagnostics.
+#'
+#' @param topic_proportions Numeric vector of topic proportions (0-1) for one topic.
+#' @param metadata Data frame of document-level covariates.
+#' @param formula Model formula (character or formula object). Response variable is
+#'   created internally as \code{topic_count}.
+#' @param model_type Model selection strategy: \code{"auto"} (default), \code{"poisson"},
+#'   \code{"negbin"}, or \code{"zeroinfl"}.
+#' @param zero_inflation_threshold Proportion of zeros above which a zero-inflated
+#'   model is attempted (default: 0.5).
+#' @param count_multiplier Multiplier to convert proportions to pseudo-counts
+#'   (default: 1000).
+#' @param max_iterations Maximum iterations for model fitting (default: 200).
+#'
+#' @return List containing:
+#'   \itemize{
+#'     \item \code{model}: Fitted model object
+#'     \item \code{summary}: Tidy summary with odds ratios
+#'     \item \code{model_type}: Selected model type
+#'     \item \code{diagnostics}: Zero proportion, dispersion ratio, mean/variance
+#'     \item \code{formula}: Formula used
+#'   }
+#'
+#' @family topic-modeling
+#' @export
 fit_topic_prevalence_model <- function(topic_proportions,
                                       metadata,
                                       formula,
@@ -3949,13 +3686,13 @@ fit_topic_prevalence_model <- function(topic_proportions,
 
   tidy_result$model_type <- final_model_type
 
-  return(list(
+  list(
     model = fitted_model,
     summary = tidy_result,
     model_type = final_model_type,
     diagnostics = diagnostics,
     formula = formula
-  ))
+  )
 }
 
 

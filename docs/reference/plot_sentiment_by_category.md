@@ -34,7 +34,7 @@ plot_sentiment_by_category(
 
 ## Value
 
-A plotly grouped/stacked bar chart
+A ggplot2 grouped/stacked bar chart
 
 ## See also
 

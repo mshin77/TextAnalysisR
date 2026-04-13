@@ -2,7 +2,7 @@
 % Please edit documentation in R/topic_modeling.R
 \name{calculate_topic_cluster_correspondence}
 \alias{calculate_topic_cluster_correspondence}
-\title{Calculate Topic-Cluster Correspondence (Placeholder)}
+\title{Calculate Topic-Cluster Correspondence}
 \usage{
 calculate_topic_cluster_correspondence(topic_keywords, cluster_keywords, ...)
 }
@@ -11,13 +11,12 @@ calculate_topic_cluster_correspondence(topic_keywords, cluster_keywords, ...)
 
 \item{cluster_keywords}{Cluster keywords list.}
 
-\item{...}{Additional parameters (ignored).}
+\item{...}{Additional parameters (currently unused).}
 }
 \value{
-List with placeholder correspondence metrics.
+List with correspondence metrics.
 }
 \description{
-Placeholder function that returns simulated correspondence metrics.
-Use \code{calculate_topic_correspondence()} for real metrics.
+Computes Jaccard-based correspondence between topic keywords and cluster keywords.
 }
 \keyword{internal}

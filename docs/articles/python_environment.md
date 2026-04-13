@@ -45,7 +45,7 @@ Avoid OneDrive paths. Use:
 
 ``` r
 
-setup_python_env(method = "virtualenv", envpath = "C:/Python/envs")
+setup_python_env(envname = "textanalysisr-env")
 ```
 
 ## spaCy Models

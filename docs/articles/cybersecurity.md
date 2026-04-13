@@ -23,13 +23,6 @@ TextAnalysisR includes built-in security features.
 Sys.setenv(OPENAI_API_KEY = "sk-...")
 ```
 
-**Encrypted (Advanced):**
-
-``` r
-
-keyring::key_set("openai_api")
-```
-
 ## Network Security
 
 - Content Security Policy, X-Frame-Options, SRI for CDN resources

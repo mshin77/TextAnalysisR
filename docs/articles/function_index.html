@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">TextAnalysisR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,13 +103,14 @@
 <span><span class="va">keywords</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_tfidf.html">extract_keywords_tfidf</a></span><span class="op">(</span><span class="va">dfm</span>, top_n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_tfidf_keywords.html">plot_tfidf_keywords</a></span><span class="op">(</span><span class="va">keywords</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 4. Topic modeling</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span><span class="va">texts</span>, n_topics <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/get_topic_terms.html">get_topic_terms</a></span><span class="op">(</span><span class="va">model</span>, top_term_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co"># 4. Topic modeling (embedding-based)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span><span class="va">texts</span>, n_topics <span class="op">=</span> <span class="fl">5</span>, backend <span class="op">=</span> <span class="st">"r"</span><span class="op">)</span></span>
+<span><span class="va">model</span><span class="op">$</span><span class="va">topic_keywords</span></span>
 <span></span>
 <span><span class="co"># 5. Sentiment analysis</span></span>
-<span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sentiment_lexicon_analysis.html">sentiment_lexicon_analysis</a></span><span class="op">(</span><span class="va">texts</span>, lexicon <span class="op">=</span> <span class="st">"bing"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plot_sentiment_distribution.html">plot_sentiment_distribution</a></span><span class="op">(</span><span class="va">sentiment</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span>
+<span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sentiment_lexicon_analysis.html">sentiment_lexicon_analysis</a></span><span class="op">(</span><span class="va">dfm</span>, lexicon <span class="op">=</span> <span class="st">"bing"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_sentiment_distribution.html">plot_sentiment_distribution</a></span><span class="op">(</span><span class="va">sentiment</span><span class="op">$</span><span class="va">document_sentiment</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="generate-embeddings">Generate Embeddings<a class="anchor" aria-label="anchor" href="#generate-embeddings"></a>
@@ -119,7 +120,7 @@
 <span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_best_embeddings.html">get_best_embeddings</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Reduce dimensions for visualization</span></span>
-<span><span class="va">reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reduce_dimensions.html">reduce_dimensions</a></span><span class="op">(</span><span class="va">embeddings</span>, method <span class="op">=</span> <span class="st">"umap"</span>, n_components <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reduce_dimensions.html">reduce_dimensions</a></span><span class="op">(</span><span class="va">embeddings</span>, method <span class="op">=</span> <span class="st">"UMAP"</span>, n_components <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_semantic_viz.html">plot_semantic_viz</a></span><span class="op">(</span><span class="va">reduced</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -500,6 +501,11 @@
 <tr class="odd">
 <td><code><a href="../reference/generate_topic_labels.html">generate_topic_labels()</a></code></td>
 <td>AI-generated topic names</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/fit_topic_prevalence_model.html">fit_topic_prevalence_model()</a></code></td>
+<td>Count regression for topic prevalence (auto-selects
+Poisson/NegBin/Zero-Inflated)</td>
 </tr>
 </tbody>
 </table>
