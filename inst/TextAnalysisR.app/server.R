@@ -1,18 +1,18 @@
 suppressPackageStartupMessages({
-  library(dplyr)
-  library(quanteda)
   library(shiny)
-  library(tidyr)
-  library(plotly)
-  library(stringr)
-  library(DT)
-  library(htmltools)
-  library(tibble)
   library(shinyjs)
   library(shinybusy)
-  library(TextAnalysisR)
+  library(htmltools)
   library(tools)
+  library(dplyr)
+  library(tidyr)
+  library(stringr)
+  library(tibble)
+  library(DT)
+  library(plotly)
   library(markdown)
+  library(TextAnalysisR)
+  library(quanteda)
 })
 
 options(shiny.maxRequestSize = 100 * 1024^2)
@@ -37,10 +37,16 @@ server <- shinyServer(function(input, output, session) {
 
   # Convert ggplot to plotly with consistent tooltip styling
   gg_to_plotly <- function(gg, tooltip = "text", height = NULL, width = NULL) {
-    p <- suppressWarnings(plotly::ggplotly(gg, tooltip = tooltip, height = height, width = width))
-    p %>% plotly::layout(
-      hoverlabel = TextAnalysisR::get_plotly_hover_config()
-    ) %>% plotly::style(hoverinfo = "text")
+    suppressWarnings({
+      p <- plotly::ggplotly(gg, tooltip = tooltip, height = height, width = width)
+      p %>% plotly::layout(
+        hoverlabel = list(
+          font = list(family = "Roboto, sans-serif", size = 16),
+          align = "left",
+          namelength = -1
+        )
+      ) %>% plotly::style(hoverinfo = "text")
+    })
   }
 
   # Centralized AI configuration
@@ -16082,7 +16088,7 @@ server <- shinyServer(function(input, output, session) {
         ),
         font = list(family = "Roboto, sans-serif", size = 12, color = "#3B3B3B"),
         hovermode = "closest",
-        hoverlabel = TextAnalysisR::get_plotly_hover_config(),
+        hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left"),
         legend = list(
           font = list(size = 12, family = "Roboto, sans-serif")
         ),
@@ -17498,7 +17504,7 @@ server <- shinyServer(function(input, output, session) {
             titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
           ),
           margin = list(t = 60, b = 60, l = 80, r = 40),
-          hoverlabel = TextAnalysisR::get_plotly_hover_config()
+          hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
         )
     } else {
       TextAnalysisR::create_empty_plot_message("No temporal data to display")
@@ -17633,7 +17639,7 @@ server <- shinyServer(function(input, output, session) {
             font = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
           ),
           margin = list(t = 60, b = 60, l = 80, r = 40),
-          hoverlabel = TextAnalysisR::get_plotly_hover_config()
+          hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
         )
     } else {
       TextAnalysisR::create_empty_plot_message("No comparison data available")
@@ -19776,7 +19782,7 @@ server <- shinyServer(function(input, output, session) {
                 titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
               ),
               margin = list(t = 60, b = 60, l = 80, r = 40),
-              hoverlabel = TextAnalysisR::get_plotly_hover_config()
+              hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
             )
 
         } else if (viz_type == "documents" && "reduced_embeddings" %in% names(model)) {
@@ -19816,7 +19822,7 @@ server <- shinyServer(function(input, output, session) {
                 font = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
               ),
               margin = list(t = 60, b = 60, l = 80, r = 40),
-              hoverlabel = TextAnalysisR::get_plotly_hover_config()
+              hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
             )
 
         } else if (viz_type == "heatmap" && "embeddings" %in% names(model)) {
@@ -19856,7 +19862,7 @@ server <- shinyServer(function(input, output, session) {
                   tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
                 ),
                 margin = list(t = 60, b = 60, l = 100, r = 40),
-                hoverlabel = TextAnalysisR::get_plotly_hover_config()
+                hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
               )
           } else {
             TextAnalysisR::create_empty_plot_message(
@@ -19911,7 +19917,7 @@ server <- shinyServer(function(input, output, session) {
                 ),
                 showlegend = FALSE,
                 margin = list(t = 60, b = 60, l = 80, r = 40),
-                hoverlabel = TextAnalysisR::get_plotly_hover_config()
+                hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
               )
           }
         }
@@ -20057,7 +20063,7 @@ server <- shinyServer(function(input, output, session) {
             titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
           ),
           margin = list(t = 60, b = 60, l = 80, r = 40),
-          hoverlabel = TextAnalysisR::get_plotly_hover_config()
+          hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
         )
     })
 
@@ -20114,7 +20120,7 @@ server <- shinyServer(function(input, output, session) {
         xaxis = list(title = "Embedding Cluster"),
         yaxis = list(title = "STM Topic"),
         margin = list(t = 80, b = 60, l = 80, r = 40),
-        hoverlabel = TextAnalysisR::get_plotly_hover_config()
+        hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
       )
   })
 
@@ -21175,7 +21181,7 @@ server <- shinyServer(function(input, output, session) {
       plotly::layout(
         margin = list(t = 50, b = 50, l = 80, r = 20),
         hovermode = "closest",
-        hoverlabel = TextAnalysisR::get_plotly_hover_config()
+        hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
       ) %>%
       plotly::style(hoverinfo = "text")
   })
@@ -21643,7 +21649,7 @@ server <- shinyServer(function(input, output, session) {
       ) %>%
         plotly::layout(
           margin = list(t = 50, b = 40, l = 80, r = 40),
-          hoverlabel = TextAnalysisR::get_plotly_hover_config()
+          hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
         )
     })
   })

@@ -32,26 +32,9 @@ run_app <- function(launch.browser = interactive()) {
     stop("Error: TextAnalysisR.app directory not found.")
   }
 
-  # Check Python environment on first run
-  python_check <- tryCatch({
-    check_python_env()
-  }, error = function(e) {
-    list(available = FALSE)
-  })
-
-  if (!python_check$available) {
-    message("\nOptional: For PDF tables and AI features, run setup_python_env()")
-    response <- readline(prompt = "Run setup now? (y/n): ")
-
-    if (tolower(trimws(response)) == "y") {
-      tryCatch({
-        setup_python_env()
-        message("Setup complete. Restart R and relaunch app.")
-      }, error = function(e) {
-        message("Setup failed: ", e$message)
-      })
-    }
-  }
+  # Skip blocking Python check — features check lazily via check_feature()
+  message("Launching TextAnalysisR...")
+  message("Tip: PDF tables and AI features require Python. Run setup_python_env() if needed.\n")
 
   shiny::runApp(appDir, display.mode = "normal", launch.browser = launch.browser)
 }

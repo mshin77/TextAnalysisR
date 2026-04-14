@@ -2876,11 +2876,14 @@ apply_standard_plotly_layout <- function(plot,
 
 #' @keywords internal
 #' @export
-get_plotly_hover_config <- function() {
+get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") {
   list(
+    bgcolor = bgcolor,
+    bordercolor = bgcolor,
     font = list(
       family = "Roboto, sans-serif",
-      size = 16
+      size = 16,
+      color = fontcolor
     ),
     align = "left",
     namelength = -1
