@@ -46,12 +46,7 @@ plot_term_trends_continuous(term_df, "year", c("learning", "education"))
 }
 \seealso{
 Other visualization: 
-\code{\link{apply_standard_plotly_layout}()},
-\code{\link{create_empty_plot_message}()},
-\code{\link{create_message_table}()},
 \code{\link{create_standard_ggplot_theme}()},
-\code{\link{get_dt_options}()},
-\code{\link{get_plotly_hover_config}()},
 \code{\link{get_sentiment_color}()},
 \code{\link{get_sentiment_colors}()},
 \code{\link{plot_cluster_terms}()},

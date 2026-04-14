@@ -177,20 +177,8 @@ get_feature_status <- function() {
 }
 
 #' Show Web Deployment Banner
-#'
-#' @description
-#' Creates a Shiny UI banner for web deployments showing feature limitations.
-#'
-#' @param disabled Character vector of disabled feature names (optional)
-#'
-#' @return A shiny tagList UI element (or NULL if local)
-#'
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' output$banner <- renderUI({ show_web_banner() })
-#' }
 show_web_banner <- function(disabled = NULL) {
   if (!check_web_deployment()) return(NULL)
 
@@ -2829,22 +2817,8 @@ check_alt_text <- function(alt_text, element_type = "image", decorative = FALSE)
 #' - Title: 14px Roboto, #0c1f4a
 #' - Axis titles: 13px Roboto, #0c1f4a
 #' - Axis tick labels: 12px Roboto, #3B3B3B
-#' - Hover tooltips: 12px Roboto, #0c1f4a on #ffffff
-#' - WCAG AA compliant colors
-#'
-#' @family visualization
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' library(plotly)
-#' p <- plot_ly(x = 1:10, y = rnorm(10), type = "scatter", mode = "markers")
-#' p %>% apply_standard_plotly_layout(
-#'   title = "My Plot",
-#'   xaxis_title = "X Values",
-#'   yaxis_title = "Y Values"
-#' )
-#' }
 apply_standard_plotly_layout <- function(plot,
                                          title = NULL,
                                          xaxis_title = NULL,
@@ -2900,21 +2874,8 @@ apply_standard_plotly_layout <- function(plot,
 }
 
 
-#' Get Standard Plotly Hover Label Configuration
-#'
-#' @description
-#' Returns standardized hover label styling for plotly plots.
-#'
-#' @return A list of hover label configuration parameters
-#'
-#' @family visualization
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' hover_config <- get_plotly_hover_config()
-#' plot_ly(..., hoverlabel = hover_config)
-#' }
 get_plotly_hover_config <- function() {
   list(
     font = list(
@@ -3044,25 +3005,8 @@ get_sentiment_color <- function(score) {
 }
 
 
-#' Create Message Data Table
-#'
-#' @description
-#' Creates a formatted DT::datatable displaying an informational message.
-#' Useful for showing status messages in place of empty tables.
-#'
-#' @param message Character string message to display
-#' @param font_size Font size (default: "16px")
-#' @param color Text color (default: "#6c757d")
-#'
-#' @return A DT::datatable object
-#'
-#' @family visualization
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' create_message_table("No data available. Please run analysis first.")
-#' }
 create_message_table <- function(message,
                                  font_size = "16px",
                                  color = "#6c757d") {
@@ -3100,26 +3044,8 @@ create_message_table <- function(message,
 }
 
 
-#' Create Empty Plot with Message
-#'
-#' @description
-#' Creates an empty plotly plot displaying a centered message.
-#' Useful for showing status messages, error states, or empty data notifications.
-#'
-#' @param message Character string message to display
-#' @param color Text color (default: "#6B7280")
-#' @param font_size Font size in pixels (default: 16)
-#'
-#' @return A plotly object with centered message annotation
-#'
-#' @family visualization
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' create_empty_plot_message("No data available")
-#' create_empty_plot_message("Click 'Run Analysis' to begin", color = "#337ab7")
-#' }
 create_empty_plot_message <- function(message,
                                        color = "#6B7280",
                                        font_size = 16) {
@@ -3162,26 +3088,8 @@ create_empty_plot_message <- function(message,
 }
 
 
-#' Get Standard DataTable Options
-#'
-#' @description
-#' Returns standardized DT::datatable options for consistent table formatting
-#' across the TextAnalysisR application.
-#'
-#' @param scroll_y Vertical scroll height (default: "400px")
-#' @param page_length Number of rows per page (default: 25)
-#' @param show_buttons Whether to show export buttons (default: TRUE
-#'
-#' @return A list of DT options
-#'
-#' @family visualization
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' DT::datatable(my_data, options = get_dt_options())
-#' DT::datatable(my_data, options = get_dt_options(scroll_y = "300px"))
-#' }
 get_dt_options <- function(scroll_y = "400px",
                             page_length = 25,
                             show_buttons = TRUE) {
@@ -3204,19 +3112,8 @@ get_dt_options <- function(scroll_y = "400px",
 # SHINY UI HELPER FUNCTIONS
 ################################################################################
 
-#' Show Loading/Progress Notification
-#'
-#' @description
-#' Displays a persistent loading notification with a specific ID that can be removed later.
-#'
-#' @param message The loading message to display
-#' @param id Notification ID for later removal (optional)
-#'
-#' @return Displays a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny showNotification
 show_loading_notification <- function(message, id = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3232,19 +3129,8 @@ show_loading_notification <- function(message, id = NULL) {
   invisible(NULL)
 }
 
-#' Show Completion Notification
-#'
-#' @description
-#' Displays a temporary success notification when a task completes.
-#'
-#' @param message The completion message to display
-#' @param duration Duration in seconds (default: 5)
-#'
-#' @return Displays a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny showNotification
 show_completion_notification <- function(message, duration = 5) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3259,19 +3145,8 @@ show_completion_notification <- function(message, duration = 5) {
   invisible(NULL)
 }
 
-#' Show Error Notification
-#'
-#' @description
-#' Displays an error notification to the user.
-#'
-#' @param message The error message to display
-#' @param duration Duration in seconds (default: 7)
-#'
-#' @return Displays a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny showNotification
 show_error_notification <- function(message, duration = 7) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3286,19 +3161,8 @@ show_error_notification <- function(message, duration = 7) {
   invisible(NULL)
 }
 
-#' Show Warning Notification
-#'
-#' @description
-#' Displays a warning notification to the user.
-#'
-#' @param message The warning message to display
-#' @param duration Duration in seconds (default: 5)
-#'
-#' @return Displays a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny showNotification
 show_warning_notification <- function(message, duration = 5) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3313,18 +3177,8 @@ show_warning_notification <- function(message, duration = 5) {
   invisible(NULL)
 }
 
-#' Remove Notification by ID
-#'
-#' @description
-#' Removes a notification with a specific ID.
-#'
-#' @param id The notification ID to remove
-#'
-#' @return Removes a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny removeNotification
 remove_notification_by_id <- function(id) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3335,20 +3189,8 @@ remove_notification_by_id <- function(id) {
   invisible(NULL)
 }
 
-#' Show No DFM Notification
-#'
-#' @description
-#' Displays a standardized error notification when DFM is required but not available.
-#' Shorter alternative to the modal dialog for simple error messages.
-#'
-#' @param feature_name Name of the feature requiring DFM (default: "this feature")
-#' @param duration Duration in seconds (default: 7)
-#'
-#' @return Displays a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny showNotification
 show_no_dfm_notification <- function(feature_name = "this feature", duration = 7) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3368,19 +3210,8 @@ show_no_dfm_notification <- function(feature_name = "this feature", duration = 7
   invisible(NULL)
 }
 
-#' Show Feature Matrix Notification
-#'
-#' @description
-#' Displays error notification when feature matrix is required but not available.
-#' Similar to show_no_dfm_notification but uses "feature matrix" terminology.
-#'
-#' @param duration Duration in seconds (default: 7)
-#'
-#' @return Displays a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny showNotification
 show_no_feature_matrix_notification <- function(duration = 7) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3395,18 +3226,8 @@ show_no_feature_matrix_notification <- function(duration = 7) {
   invisible(NULL)
 }
 
-#' Show Unite Texts Required Notification
-#'
-#' @description
-#' Displays error notification when Step 1 (Unite Texts) is required.
-#'
-#' @param duration Duration in seconds (default: 5)
-#'
-#' @return Displays a Shiny notification. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @importFrom shiny showNotification
 show_unite_texts_required_notification <- function(duration = 5) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3421,43 +3242,8 @@ show_unite_texts_required_notification <- function(duration = 5) {
   invisible(NULL)
 }
 
-#' Show Guide Modal Dialog from HTML File
-#'
-#' @description
-#' Loads and displays a modal dialog with guide content from an HTML file.
-#' This function is designed for Shiny applications to display help documentation
-#' stored in external HTML files, reducing server.R file size and improving
-#' maintainability.
-#'
-#' @param guide_name Name of the guide file (without .html extension).
-#'   Files should be located in inst/TextAnalysisR.app/markdown/guides/
-#' @param title Modal dialog title to display
-#' @param size Size of the modal dialog (default: "l" for large).
-#'   Options: "s" (small), "m" (medium), "l" (large)
-#'
-#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
-#'
-#' @details
-#' Guide HTML files should be placed in:
-#' \code{inst/TextAnalysisR.app/markdown/guides/<guide_name>.html}
-#'
-#' The function will look for the guide file in the installed package location.
-#' If the file is not found, it displays an error message in the modal.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' observeEvent(input$showDimRedInfo, {
-#'   show_guide_modal("dimensionality_reduction_guide", "Dimensionality Reduction Guide")
-#' })
-#'
-#' observeEvent(input$showClusteringInfo, {
-#'   show_guide_modal("clustering_guide", "Document Clustering Guide")
-#' })
-#' }
-#'
-#' @importFrom shiny showModal modalDialog modalButton
 show_guide_modal <- function(guide_name, title, size = "l") {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3509,28 +3295,8 @@ show_guide_modal <- function(guide_name, title, size = "l") {
   invisible(NULL)
 }
 
-#' Show DFM Requirement Modal
-#'
-#' @description
-#' Displays a standardized modal dialog informing users they need to complete
-#' preprocessing steps before using a feature that requires a document-feature matrix.
-#'
-#' @param feature_name Name of the feature requiring DFM (e.g., "topic modeling", "keyword extraction")
-#' @param additional_message Optional additional message to display (default: NULL)
-#'
-#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' if (is.null(dfm_init())) {
-#'   show_dfm_required_modal("topic modeling")
-#'   return(NULL)
-#' }
-#' }
-#'
-#' @importFrom shiny showModal modalDialog modalButton tags p
 show_dfm_required_modal <- function(feature_name = "this feature", additional_message = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3579,32 +3345,8 @@ show_dfm_required_modal <- function(feature_name = "this feature", additional_me
   invisible(NULL)
 }
 
-#' Show Preprocessing Steps Modal
-#'
-#' @description
-#' Displays a modal dialog listing required preprocessing steps for a feature.
-#' Generic version that works for any feature requiring preprocessing.
-#'
-#' @param title Modal title (default: "Preprocessing Required")
-#' @param message Main message to display
-#' @param required_steps Character vector of required preprocessing steps
-#' @param optional_steps Character vector of optional preprocessing steps (default: NULL)
-#' @param additional_note Optional additional note to display (default: NULL)
-#'
-#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' show_preprocessing_steps_modal(
-#'   message = "Please complete preprocessing to generate tokens.",
-#'   required_steps = c("Step 1: Unite Texts", "Step 4: Document-Feature Matrix"),
-#'   optional_steps = c("Steps 2, 3, 5, and 6")
-#' )
-#' }
-#'
-#' @importFrom shiny showModal modalDialog modalButton tags p
 show_preprocessing_steps_modal <- function(title = "Preprocessing Required",
                                           message,
                                           required_steps,
@@ -3685,30 +3427,8 @@ get_dfm_setup_instructions <- function(feature_name = "this feature") {
   )
 }
 
-#' Show DFM Setup Instructions Modal
-#'
-#' @description
-#' Displays a modal dialog with console-style instructions for creating a DFM.
-#' Uses verbatimTextOutput for formatting.
-#'
-#' @param output_id Shiny output ID for the verbatimTextOutput
-#' @param feature_name Name of the feature requiring DFM (default: "this feature")
-#' @param session Shiny session object (default: getDefaultReactiveDomain())
-#'
-#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' output$dfm_instructions <- renderPrint({
-#'   cat(get_dfm_setup_instructions("keywords"), sep = "\n")
-#' })
-#'
-#' show_dfm_instructions_modal("dfm_instructions", "keywords")
-#' }
-#'
-#' @importFrom shiny showModal modalDialog modalButton verbatimTextOutput getDefaultReactiveDomain
 show_dfm_instructions_modal <- function(output_id, feature_name = "this feature", session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3730,28 +3450,8 @@ show_dfm_instructions_modal <- function(output_id, feature_name = "this feature"
   invisible(NULL)
 }
 
-#' Show Generic Preprocessing Required Modal
-#'
-#' @description
-#' Displays a simple modal indicating preprocessing is required.
-#' Lightweight alternative when detailed steps aren't needed.
-#'
-#' @param message Custom message (default: "Please complete preprocessing steps first.")
-#' @param title Modal title (default: "Preprocessing Required")
-#'
-#' @return Displays a Shiny modal dialog. Returns NULL invisibly.
-#'
+#' @keywords internal
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' if (!preprocessing_complete()) {
-#'   show_preprocessing_required_modal()
-#'   return()
-#' }
-#' }
-#'
-#' @importFrom shiny showModal modalDialog modalButton p
 show_preprocessing_required_modal <- function(message = "Please complete preprocessing steps first.",
                                              title = "Preprocessing Required") {
   if (!requireNamespace("shiny", quietly = TRUE)) {
@@ -3894,19 +3594,7 @@ wrap_long_text <- function(text, chars_per_line = 50, max_lines = 3) {
   paste(lines[1:min(length(lines), max_lines)], collapse = "\n")
 }
 
-#' Wrap Text for Tooltip Display
-#'
-#' @description Formats text for tooltip display with size limits
-#'   and line wrapping.
-#'
-#' @param text Character string to format.
-#' @param max_words Maximum words (not currently used, kept for compatibility).
-#' @param chars_per_line Maximum characters per line (default: 50).
-#' @param max_lines Maximum number of lines (default: 3).
-#'
-#' @return Formatted text suitable for tooltip display.
-#'
-#' @family text-utilities
+#' @keywords internal
 #' @export
 wrap_text_for_tooltip <- function(text, max_words = 150, chars_per_line = 50, max_lines = 3) {
   text <- as.character(text)

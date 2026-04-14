@@ -4029,8 +4029,7 @@ run_rag_search <- function(
 #' @return A list containing the ggplot2 plot, a table, and a summary.
 #'
 #' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
-#' @importFrom ggplot2 ggplot aes scale_size_identity labs
-#' @importFrom ggraph ggraph geom_edge_link0 geom_node_point geom_node_text scale_edge_width_identity scale_edge_alpha_identity theme_graph
+#' @importFrom ggplot2 ggplot aes geom_segment geom_point scale_size_identity theme_void labs
 #' @importFrom patchwork wrap_plots
 #' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tibble as_tibble
@@ -4219,13 +4218,20 @@ word_co_occurrence_network <- function(dfm_object,
       dplyr::left_join(word_freq, by = c("label" = "term")) %>%
       dplyr::mutate(frequency = ifelse(is.na(frequency), 1, frequency))
 
-    # Edge attributes for ggraph
-    edge_weights <- igraph::E(graph)$n
-    b <- unique(stats::quantile(edge_weights, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
-    if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
-    line_group <- as.integer(cut(edge_weights, breaks = b, include.lowest = TRUE))
-    igraph::E(graph)$edge_width <- scales::rescale(line_group, to = c(0.3, 2.5))
-    igraph::E(graph)$edge_alpha <- scales::rescale(line_group, to = c(0.15, 0.5))
+    edge_data <- igraph::as_data_frame(graph, what = "edges") %>%
+      dplyr::mutate(x    = layout_df$x[match(from, layout_df$label)],
+                    y    = layout_df$y[match(from, layout_df$label)],
+                    xend = layout_df$x[match(to, layout_df$label)],
+                    yend = layout_df$y[match(to, layout_df$label)],
+                    cooccur_count = n) %>%
+      dplyr::select(from, to, x, y, xend, yend, cooccur_count) %>%
+      dplyr::mutate(line_group = as.integer({
+        b <- unique(stats::quantile(cooccur_count, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
+        if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
+        cut(cooccur_count, breaks = b, include.lowest = TRUE)
+      }),
+      line_width = scales::rescale(line_group, to = c(1, 5)),
+      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
 
     # Node size
     size_metric <- switch(node_size_by,
@@ -4235,85 +4241,83 @@ word_co_occurrence_network <- function(dfm_object,
       "fixed" = rep(20, nrow(layout_df)),
       layout_df$degree
     )
-    igraph::V(graph)$node_size <- if (node_size_by == "fixed") {
-      rep(node_label_size * 0.3, igraph::vcount(graph))
-    } else {
-      scales::rescale(log1p(size_metric), to = c(node_label_size * 0.15, node_label_size * 0.5))
-    }
-    igraph::V(graph)$frequency <- layout_df$frequency
 
-    # Hover text for plotly tooltips
-    igraph::V(graph)$hover_text <- paste(
-      "Word:", igraph::V(graph)$name,
-      "<br>Degree:", igraph::V(graph)$degree,
-      "<br>Betweenness:", round(igraph::V(graph)$betweenness, 2),
-      "<br>Closeness:", round(igraph::V(graph)$closeness, 2),
-      "<br>Eigenvector:", round(igraph::V(graph)$eigenvector, 2),
-      "<br>Frequency:", layout_df$frequency,
-      "<br>Community:", layout_df$community,
-      if (!is.null(doc_var) && !is.null(group_level)) {
-        paste0("<br>", doc_var, ": ", group_level)
-      } else ""
-    )
+    node_data <- layout_df %>%
+      dplyr::mutate(
+        size_metric_log = log1p(size_metric),
+        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
+        text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
+        alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
+        hover_text = paste("Word:", label,
+                           "<br>Degree:", degree,
+                           "<br>Betweenness:", round(betweenness, 2),
+                           "<br>Closeness:", round(closeness, 2),
+                           "<br>Eigenvector:", round(eigenvector, 2),
+                           "<br>Frequency:", frequency,
+                           "<br>Community:", community,
+                           if (!is.null(doc_var)) {
+                             if (length(docvar_levels) > 1) {
+                               paste0("<br>", doc_var, ": ", group_level)
+                             } else {
+                               paste0("<br>", doc_var)
+                             }
+                           } else ""
+        )
+      )
 
     # Community palette
-    n_communities <- length(unique(layout_df$community))
-    palette <- if (n_communities >= 3 && n_communities <= 8) {
-      RColorBrewer::brewer.pal(n_communities, "Set2")
+    n_communities <- length(unique(node_data$community))
+    if (n_communities >= 3 && n_communities <= 8) {
+      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
     } else if (n_communities > 8) {
-      grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-    } else if (n_communities > 0) {
-      RColorBrewer::brewer.pal(3, "Set2")[seq_len(n_communities)]
+      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
+    } else if (n_communities > 0 && n_communities < 3) {
+      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
     } else {
-      "#000000"
+      palette <- rep("#000000", n_communities)
     }
-    igraph::V(graph)$community <- factor(igraph::V(graph)$community)
-    names(palette) <- levels(igraph::V(graph)$community)
 
-    # Label top nodes only
-    top_names <- layout_df %>%
-      dplyr::arrange(dplyr::desc(degree)) %>%
-      utils::head(effective_top_node_n) %>%
-      dplyr::pull(label)
-    igraph::V(graph)$show_label <- ifelse(
-      igraph::V(graph)$name %in% top_names, igraph::V(graph)$name, ""
-    )
-    igraph::V(graph)$label_size <- scales::rescale(
-      log1p(igraph::V(graph)$degree),
-      to = c((node_label_size - 8) / 3, node_label_size / 3)
-    )
+    node_data$community <- factor(node_data$community, levels = unique(node_data$community))
+    names(palette) <- levels(node_data$community)
 
-    p <- ggraph::ggraph(graph, layout = "fr") +
-      ggraph::geom_edge_link0(
-        ggplot2::aes(edge_width = edge_width, edge_alpha = edge_alpha),
-        edge_colour = "#5C5CFF", show.legend = FALSE
-      ) +
-      ggraph::scale_edge_width_identity() +
-      ggraph::scale_edge_alpha_identity()
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_segment(data = edge_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
+                                         linewidth = .data$line_width, alpha = .data$alpha),
+                            color = "#5C5CFF", show.legend = FALSE) +
+      ggplot2::scale_linewidth_identity() +
+      ggplot2::scale_alpha_identity()
 
     if (node_color_by == "frequency") {
       p <- p +
-        ggraph::geom_node_point(ggplot2::aes(size = node_size, colour = frequency,
-                                             text = hover_text)) +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency, text = .data$hover_text),
+                            stroke = 0.5) +
         ggplot2::scale_color_viridis_c(name = "Frequency")
     } else {
       p <- p +
-        ggraph::geom_node_point(
-          ggplot2::aes(size = node_size, fill = community, text = hover_text),
-          shape = 21, colour = "white", stroke = 0.8
-        ) +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community, text = .data$hover_text),
+                            shape = 21, color = "white", stroke = 1) +
         ggplot2::scale_fill_manual(values = palette, name = "Community")
     }
 
     p <- p +
       ggplot2::scale_size_identity() +
-      ggraph::geom_node_text(
-        ggplot2::aes(label = show_label, size = label_size),
-        repel = TRUE, max.overlaps = Inf, show.legend = FALSE
-      ) +
-      ggraph::theme_graph(base_size = 11) +
+      ggplot2::theme_void(base_size = 11) +
       ggplot2::labs(title = "Word Co-occurrence Network") +
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
+
+    if (nrow(top_nodes) > 0) {
+      p <- p + ggplot2::geom_text(
+        data = top_nodes,
+        ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+        size = top_nodes$text_size / 3,
+        check_overlap = TRUE
+      )
+    }
 
     list(plot = p, layout_df = layout_df, graph = graph)
   }
@@ -4422,8 +4426,7 @@ word_co_occurrence_network <- function(dfm_object,
 #' @return A list containing the ggplot2 plot, a table, and a summary.
 #'
 #' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
-#' @importFrom ggplot2 ggplot aes scale_size_identity labs
-#' @importFrom ggraph ggraph geom_edge_link0 geom_node_point geom_node_text scale_edge_width_identity scale_edge_alpha_identity theme_graph
+#' @importFrom ggplot2 ggplot aes geom_segment geom_point scale_size_identity theme_void labs
 #' @importFrom patchwork wrap_plots
 #' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tibble as_tibble
@@ -4618,13 +4621,20 @@ word_correlation_network <- function(dfm_object,
       dplyr::left_join(word_freq, by = c("label" = "term")) %>%
       dplyr::mutate(frequency = ifelse(is.na(frequency), 1, frequency))
 
-    # Edge attributes for ggraph
-    edge_corr <- igraph::E(graph)$correlation
-    b <- unique(stats::quantile(edge_corr, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
-    if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
-    line_group <- as.integer(cut(edge_corr, breaks = b, include.lowest = TRUE))
-    igraph::E(graph)$edge_width <- scales::rescale(line_group, to = c(0.3, 2.5))
-    igraph::E(graph)$edge_alpha <- scales::rescale(line_group, to = c(0.15, 0.5))
+    edge_data <- igraph::as_data_frame(graph, what = "edges") %>%
+      dplyr::mutate(x    = layout_df$x[match(from, layout_df$label)],
+                    y    = layout_df$y[match(from, layout_df$label)],
+                    xend = layout_df$x[match(to, layout_df$label)],
+                    yend = layout_df$y[match(to, layout_df$label)],
+                    correlation = correlation) %>%
+      dplyr::select(from, to, x, y, xend, yend, correlation) %>%
+      dplyr::mutate(line_group = as.integer({
+        b <- unique(stats::quantile(correlation, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
+        if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
+        cut(correlation, breaks = b, include.lowest = TRUE)
+      }),
+      line_width = scales::rescale(line_group, to = c(1, 5)),
+      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
 
     # Node size
     size_metric <- switch(node_size_by,
@@ -4634,85 +4644,84 @@ word_correlation_network <- function(dfm_object,
       "fixed" = rep(20, nrow(layout_df)),
       layout_df$degree
     )
-    igraph::V(graph)$node_size <- if (node_size_by == "fixed") {
-      rep(node_label_size * 0.3, igraph::vcount(graph))
-    } else {
-      scales::rescale(log1p(size_metric), to = c(node_label_size * 0.15, node_label_size * 0.5))
-    }
-    igraph::V(graph)$frequency <- layout_df$frequency
 
-    # Hover text for plotly tooltips
-    igraph::V(graph)$hover_text <- paste(
-      "Word:", igraph::V(graph)$name,
-      "<br>Degree:", igraph::V(graph)$degree,
-      "<br>Betweenness:", round(igraph::V(graph)$betweenness, 2),
-      "<br>Closeness:", round(igraph::V(graph)$closeness, 2),
-      "<br>Eigenvector:", round(igraph::V(graph)$eigenvector, 2),
-      "<br>Frequency:", layout_df$frequency,
-      "<br>Community:", layout_df$community,
-      if (!is.null(doc_var) && !is.null(group_level)) {
-        paste0("<br>", doc_var, ": ", group_level)
-      } else ""
-    )
+    node_data <- layout_df %>%
+      dplyr::mutate(
+        size_metric_log = log1p(size_metric),
+        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
+        text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
+        alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
+        hover_text = paste(
+          "Word:", label,
+          "<br>Degree:", degree,
+          "<br>Betweenness:", round(betweenness, 2),
+          "<br>Closeness:", round(closeness, 2),
+          "<br>Eigenvector:", round(eigenvector, 2),
+          "<br>Frequency:", frequency,
+          "<br>Community:", community,
+          if (!is.null(doc_var)) {
+            if (length(docvar_levels) > 1) {
+              paste0("<br>", doc_var, ": ", group_level)
+            } else {
+              paste0("<br>", doc_var)
+            }
+          } else ""
+        )
+      )
 
     # Community palette
-    n_communities <- length(unique(layout_df$community))
-    palette <- if (n_communities >= 3 && n_communities <= 8) {
-      RColorBrewer::brewer.pal(n_communities, "Set2")
+    n_communities <- length(unique(node_data$community))
+    if (n_communities >= 3 && n_communities <= 8) {
+      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
     } else if (n_communities > 8) {
-      grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-    } else if (n_communities > 0) {
-      RColorBrewer::brewer.pal(3, "Set2")[seq_len(n_communities)]
+      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
+    } else if (n_communities > 0 && n_communities < 3) {
+      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
     } else {
-      "#000000"
+      palette <- rep("#000000", n_communities)
     }
-    igraph::V(graph)$community <- factor(igraph::V(graph)$community)
-    names(palette) <- levels(igraph::V(graph)$community)
 
-    # Label top nodes only
-    top_names <- layout_df %>%
-      dplyr::arrange(dplyr::desc(degree)) %>%
-      utils::head(effective_top_node_n) %>%
-      dplyr::pull(label)
-    igraph::V(graph)$show_label <- ifelse(
-      igraph::V(graph)$name %in% top_names, igraph::V(graph)$name, ""
-    )
-    igraph::V(graph)$label_size <- scales::rescale(
-      log1p(igraph::V(graph)$degree),
-      to = c((node_label_size - 8) / 3, node_label_size / 3)
-    )
+    node_data$community <- factor(node_data$community, levels = unique(node_data$community))
+    names(palette) <- levels(node_data$community)
 
-    p <- ggraph::ggraph(graph, layout = "fr") +
-      ggraph::geom_edge_link0(
-        ggplot2::aes(edge_width = edge_width, edge_alpha = edge_alpha),
-        edge_colour = "#5C5CFF", show.legend = FALSE
-      ) +
-      ggraph::scale_edge_width_identity() +
-      ggraph::scale_edge_alpha_identity()
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+
+    p <- ggplot2::ggplot() +
+      ggplot2::geom_segment(data = edge_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
+                                         linewidth = .data$line_width, alpha = .data$alpha),
+                            color = "#5C5CFF", show.legend = FALSE) +
+      ggplot2::scale_linewidth_identity() +
+      ggplot2::scale_alpha_identity()
 
     if (node_color_by == "frequency") {
       p <- p +
-        ggraph::geom_node_point(ggplot2::aes(size = node_size, colour = frequency,
-                                             text = hover_text)) +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency, text = .data$hover_text),
+                            stroke = 0.5) +
         ggplot2::scale_color_viridis_c(name = "Frequency")
     } else {
       p <- p +
-        ggraph::geom_node_point(
-          ggplot2::aes(size = node_size, fill = community, text = hover_text),
-          shape = 21, colour = "white", stroke = 0.8
-        ) +
+        ggplot2::geom_point(data = node_data,
+                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community, text = .data$hover_text),
+                            shape = 21, color = "white", stroke = 1) +
         ggplot2::scale_fill_manual(values = palette, name = "Community")
     }
 
     p <- p +
       ggplot2::scale_size_identity() +
-      ggraph::geom_node_text(
-        ggplot2::aes(label = show_label, size = label_size),
-        repel = TRUE, max.overlaps = Inf, show.legend = FALSE
-      ) +
-      ggraph::theme_graph(base_size = 11) +
+      ggplot2::theme_void(base_size = 11) +
       ggplot2::labs(title = "Word Correlation Network") +
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
+
+    if (nrow(top_nodes) > 0) {
+      p <- p + ggplot2::geom_text(
+        data = top_nodes,
+        ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+        size = top_nodes$text_size / 3,
+        check_overlap = TRUE
+      )
+    }
 
     list(plot = p, layout_df = layout_df, graph = graph)
   }

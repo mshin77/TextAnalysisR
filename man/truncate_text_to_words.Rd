@@ -21,7 +21,6 @@ ellipsis if truncated.
 \seealso{
 Other text-utilities: 
 \code{\link{truncate_text_with_ellipsis}()},
-\code{\link{wrap_long_text}()},
-\code{\link{wrap_text_for_tooltip}()}
+\code{\link{wrap_long_text}()}
 }
 \concept{text-utilities}

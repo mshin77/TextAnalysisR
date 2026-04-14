@@ -14,12 +14,7 @@ Returns standardized color mapping for sentiment analysis.
 }
 \seealso{
 Other visualization: 
-\code{\link{apply_standard_plotly_layout}()},
-\code{\link{create_empty_plot_message}()},
-\code{\link{create_message_table}()},
 \code{\link{create_standard_ggplot_theme}()},
-\code{\link{get_dt_options}()},
-\code{\link{get_plotly_hover_config}()},
 \code{\link{get_sentiment_color}()},
 \code{\link{plot_cluster_terms}()},
 \code{\link{plot_cross_category_heatmap}()},

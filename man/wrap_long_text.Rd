@@ -23,7 +23,6 @@ Handles both spaced text and continuous text (like URLs).
 \seealso{
 Other text-utilities: 
 \code{\link{truncate_text_to_words}()},
-\code{\link{truncate_text_with_ellipsis}()},
-\code{\link{wrap_text_for_tooltip}()}
+\code{\link{truncate_text_with_ellipsis}()}
 }
 \concept{text-utilities}

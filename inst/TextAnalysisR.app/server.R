@@ -37,12 +37,10 @@ server <- shinyServer(function(input, output, session) {
 
   # Convert ggplot to plotly with consistent tooltip styling
   gg_to_plotly <- function(gg, tooltip = "text", height = NULL, width = NULL) {
-    p <- plotly::ggplotly(gg, tooltip = tooltip, height = height, width = width)
+    p <- suppressWarnings(plotly::ggplotly(gg, tooltip = tooltip, height = height, width = width))
     p %>% plotly::layout(
-      hoverlabel = TextAnalysisR::get_plotly_hover_config(),
-      dragmode = FALSE
-    ) %>% plotly::style(hoverinfo = "text") %>%
-      plotly::config(displayModeBar = FALSE)
+      hoverlabel = TextAnalysisR::get_plotly_hover_config()
+    ) %>% plotly::style(hoverinfo = "text")
   }
 
   # Centralized AI configuration
@@ -5934,7 +5932,6 @@ server <- shinyServer(function(input, output, session) {
       filter = "top",
       options = list(
         scrollX = TRUE,
-        scrollY = "400px",
         dom = "Bfrtip",
         buttons = c("copy", "csv", "excel"),
         pageLength = 50,

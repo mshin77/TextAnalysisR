@@ -6,17 +6,7 @@
 \usage{
 show_web_banner(disabled = NULL)
 }
-\arguments{
-\item{disabled}{Character vector of disabled feature names (optional)}
-}
-\value{
-A shiny tagList UI element (or NULL if local)
-}
 \description{
-Creates a Shiny UI banner for web deployments showing feature limitations.
+Show Web Deployment Banner
 }
-\examples{
-\dontrun{
-output$banner <- renderUI({ show_web_banner() })
-}
-}
+\keyword{internal}
