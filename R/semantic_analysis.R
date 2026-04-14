@@ -4254,7 +4254,11 @@ word_co_occurrence_network <- function(dfm_object,
     node_data <- layout_df %>%
       dplyr::mutate(
         size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
+        size = if (node_size_by == "fixed") {
+          node_label_size * 0.9
+        } else {
+          scales::rescale(size_metric_log, to = c(node_label_size * 0.55, node_label_size * 1.36))
+        },
         text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
         alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
         hover_text = paste("Word:", label,
@@ -4687,7 +4691,11 @@ word_correlation_network <- function(dfm_object,
     node_data <- layout_df %>%
       dplyr::mutate(
         size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
+        size = if (node_size_by == "fixed") {
+          node_label_size * 0.9
+        } else {
+          scales::rescale(size_metric_log, to = c(node_label_size * 0.55, node_label_size * 1.36))
+        },
         text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
         alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
         hover_text = paste(

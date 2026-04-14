@@ -14644,37 +14644,50 @@ server <- shinyServer(function(input, output, session) {
     }
 
     isolate({
+      tryCatch({
+        docs_data <- document_display_data()
+        if (is.null(docs_data) || nrow(docs_data) < 2) {
+          return(create_error_plot(
+            if (is.null(docs_data)) "Process documents in Semantic Analysis > Summary first" else "At least 2 documents required for similarity analysis",
+            color = "#6c757d"
+          ))
+        }
 
-      docs_data <- document_display_data()
-      if (is.null(docs_data) || nrow(docs_data) < 2) {
-        return(create_error_plot(
-          if (is.null(docs_data)) "Process documents in Semantic Analysis > Summary first" else "At least 2 documents required for similarity analysis",
-          color = "#6c757d"
+        similarity_data <- get_similarity_data_for_plot(feature_type)
+        if (!is.null(similarity_data$error)) {
+          return(create_error_plot(similarity_data$error))
+        }
+
+        filtered_data <- apply_category_filter_to_similarity(
+          similarity_data$similarity_matrix,
+          input$heatmap_category_filter
+        )
+
+        n_docs <- nrow(filtered_data$matrix)
+        if (n_docs > 500) {
+          return(create_error_plot(
+            paste0("Matrix too large for interactive heatmap (", n_docs, " x ", n_docs,
+                   " = ", format(n_docs^2, big.mark = ","), " cells). Filter by category to reduce size."),
+            color = "#F59E0B"
+          ))
+        }
+
+        plot <- gg_to_plotly(TextAnalysisR::plot_similarity_heatmap(
+          similarity_matrix = filtered_data$matrix,
+          docs_data = filtered_data$docs_data,
+          feature_type = feature_type,
+          method_name = similarity_data$method_name,
+          category_filter = input$heatmap_category_filter,
+          doc_id_var = input$doc_id_var
         ))
-      }
 
-      similarity_data <- get_similarity_data_for_plot(feature_type)
-      if (!is.null(similarity_data$error)) {
-        return(create_error_plot(similarity_data$error))
-      }
+        comparison_results$cached_plots[[cached_plot_key]] <- plot
 
-      filtered_data <- apply_category_filter_to_similarity(
-        similarity_data$similarity_matrix,
-        input$heatmap_category_filter
-      )
-
-      plot <- gg_to_plotly(TextAnalysisR::plot_similarity_heatmap(
-        similarity_matrix = filtered_data$matrix,
-        docs_data = filtered_data$docs_data,
-        feature_type = feature_type,
-        method_name = similarity_data$method_name,
-        category_filter = input$heatmap_category_filter,
-        doc_id_var = input$doc_id_var
-      ))
-
-      comparison_results$cached_plots[[cached_plot_key]] <- plot
-
-      return(plot)
+        return(plot)
+      }, error = function(e) {
+        message("Similarity plot error: ", e$message)
+        return(create_error_plot(paste("Plot rendering error:", e$message)))
+      })
     })
   })
 
