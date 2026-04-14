@@ -4,12 +4,7 @@
 \alias{get_plotly_hover_config}
 \title{Get Standard Plotly Hover Label Configuration}
 \usage{
-get_plotly_hover_config(bgcolor = "#ffffff", fontcolor = "#0c1f4a")
-}
-\arguments{
-\item{bgcolor}{Background color (default: "#ffffff")}
-
-\item{fontcolor}{Font color (default: "#0c1f4a")}
+get_plotly_hover_config()
 }
 \value{
 A list of hover label configuration parameters

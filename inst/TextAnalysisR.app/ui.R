@@ -1,11 +1,7 @@
 suppressPackageStartupMessages({
-  library(quanteda)
   library(shiny)
-
   library(shinyBS)
   library(shinyjs)
-  library(shinyWidgets)
-  library(markdown)
 })
 
 # Detect web/Docker deployment (hide GPU option in these environments)

@@ -2857,38 +2857,41 @@ apply_standard_plotly_layout <- function(plot,
   }
 
   layout_config <- list(
-    font = list(family = "Roboto, sans-serif", size = 12, color = "#3B3B3B"),
-    hoverlabel = get_plotly_hover_config(),
+    font = list(family = "Roboto, sans-serif", size = 16, color = "#3B3B3B"),
+    hoverlabel = list(
+      font = list(size = 16, family = "Roboto, sans-serif"),
+      align = "left"
+    ),
     margin = margin,
     showlegend = show_legend,
     xaxis = list(
-      tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-      titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
     ),
     yaxis = list(
-      tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-      titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+      tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif"),
+      titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   )
 
   if (!is.null(title)) {
     layout_config$title <- list(
       text = title,
-      font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif")
+      font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   }
 
   if (!is.null(xaxis_title)) {
     layout_config$xaxis$title <- list(
       text = xaxis_title,
-      font = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   }
 
   if (!is.null(yaxis_title)) {
     layout_config$yaxis$title <- list(
       text = yaxis_title,
-      font = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+      font = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif")
     )
   }
 
@@ -2902,9 +2905,6 @@ apply_standard_plotly_layout <- function(plot,
 #' @description
 #' Returns standardized hover label styling for plotly plots.
 #'
-#' @param bgcolor Background color (default: "#ffffff")
-#' @param fontcolor Font color (default: "#0c1f4a")
-#'
 #' @return A list of hover label configuration parameters
 #'
 #' @family visualization
@@ -2915,14 +2915,11 @@ apply_standard_plotly_layout <- function(plot,
 #' hover_config <- get_plotly_hover_config()
 #' plot_ly(..., hoverlabel = hover_config)
 #' }
-get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") {
+get_plotly_hover_config <- function() {
   list(
-    bgcolor = bgcolor,
-    bordercolor = "#e0e0e0",
     font = list(
       family = "Roboto, sans-serif",
-      size = 12,
-      color = fontcolor
+      size = 16
     ),
     align = "left",
     namelength = -1

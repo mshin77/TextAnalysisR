@@ -21,12 +21,8 @@
 #'
 #' @import dplyr
 #' @import ggplot2
-#' @import ggraph
 #' @import shiny
-#' @import stm
 #' @import tidyr
-#' @import tidytext
-#' @import widyr
 #' @importFrom magrittr %>%
 
 run_app <- function(launch.browser = interactive()) {

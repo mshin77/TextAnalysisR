@@ -1,24 +1,18 @@
 suppressPackageStartupMessages({
   library(dplyr)
   library(quanteda)
-  library(quanteda.textstats)
   library(shiny)
-  library(stm)
   library(tidyr)
-  library(tidytext)
   library(plotly)
   library(stringr)
   library(DT)
   library(htmltools)
   library(tibble)
-  library(openxlsx)
   library(shinyjs)
   library(shinybusy)
   library(TextAnalysisR)
   library(tools)
-  library(proxy)
-  library(cluster)
-  library(digest)
+  library(markdown)
 })
 
 options(shiny.maxRequestSize = 100 * 1024^2)
@@ -45,8 +39,10 @@ server <- shinyServer(function(input, output, session) {
   gg_to_plotly <- function(gg, tooltip = "text", height = NULL, width = NULL) {
     p <- plotly::ggplotly(gg, tooltip = tooltip, height = height, width = width)
     p %>% plotly::layout(
-      hoverlabel = TextAnalysisR::get_plotly_hover_config()
-    ) %>% plotly::style(hoverinfo = "text")
+      hoverlabel = TextAnalysisR::get_plotly_hover_config(),
+      dragmode = FALSE
+    ) %>% plotly::style(hoverinfo = "text") %>%
+      plotly::config(displayModeBar = FALSE)
   }
 
   # Centralized AI configuration
@@ -16162,7 +16158,7 @@ server <- shinyServer(function(input, output, session) {
       hoverlabel_config <- list(
         bgcolor = hover_bg_colors,
         bordercolor = hover_bg_colors,
-        font = list(family = "Roboto, sans-serif", size = 12, color = "#ffffff"),
+        font = list(family = "Roboto, sans-serif", size = 16, color = "#ffffff"),
         align = "left",
         namelength = -1,
         maxwidth = 450
@@ -16171,7 +16167,7 @@ server <- shinyServer(function(input, output, session) {
       hoverlabel_config <- list(
         bgcolor = "#4338ca",
         bordercolor = "#4338ca",
-        font = list(family = "Roboto, sans-serif", size = 12, color = "#ffffff"),
+        font = list(family = "Roboto, sans-serif", size = 16, color = "#ffffff"),
         align = "left",
         namelength = -1,
         maxwidth = 450

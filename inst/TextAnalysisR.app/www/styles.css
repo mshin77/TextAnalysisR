@@ -577,11 +577,6 @@ button.btn.action-button:active {
   border-color: #337ab7 !important;
 }
 
-/* Hide shinybusy during initial load (loading-overlay handles it) */
-body.app-loading .shinybusy {
-  display: none !important;
-}
-
 /* Shinybusy overlay */
 .shinybusy-overlay {
   background-color: rgba(0, 0, 0, 0.15) !important;
@@ -2361,25 +2356,6 @@ textarea::placeholder {
   display: block;
 }
 
-.loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #337ab7;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 [data-theme="dark"] main:focus,
 [data-theme="dark"] div[role="main"]:focus,
 [data-theme="dark"] [tabindex="-1"]:focus,
@@ -2391,13 +2367,6 @@ textarea::placeholder {
 [data-theme="dark"] .well:focus {
   outline: none !important;
   box-shadow: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loading-spinner {
-    animation: none;
-    border-top-color: transparent;
-  }
 }
 
 @media (max-width: 768px) {
