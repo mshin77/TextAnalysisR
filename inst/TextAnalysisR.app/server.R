@@ -21,6 +21,8 @@ options(shiny.timeout = 300)
 options(digits = 4)
 options(scipen = 999)
 
+source("ui_topic_modeling.R", local = TRUE)
+
 server <- shinyServer(function(input, output, session) {
   options(shiny.error = function() {
     show_error_notification("An unexpected error occurred. Please try again or contact support.")
@@ -31,6 +33,19 @@ server <- shinyServer(function(input, output, session) {
   })
 
   user_requests <- reactiveVal(list())
+
+  # Lazy-load Topic Modeling tab on first visit
+  topic_tab_loaded <- reactiveVal(FALSE)
+  observeEvent(input$main_navbar, {
+    if (input$main_navbar == "Topic Modeling" && !topic_tab_loaded()) {
+      topic_tab_loaded(TRUE)
+    }
+  }, ignoreInit = TRUE)
+
+  output$topic_modeling_ui <- renderUI({
+    req(topic_tab_loaded())
+    topic_modeling_ui_content()
+  })
 
   `%||%` <- function(a, b) if (is.null(a)) b else a
 
@@ -106,13 +121,15 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     if (is_remote) return()
+    shinyjs::delay(10000, {
+      models <- tryCatch({
+        if (TextAnalysisR::check_ollama(verbose = FALSE)) {
+          TextAnalysisR::list_ollama_models(verbose = FALSE)
+        } else NULL
+      }, error = function(e) NULL)
+      available_ollama_models(models)
+    })
     invalidateLater(30000)
-    models <- tryCatch({
-      if (TextAnalysisR::check_ollama(verbose = FALSE)) {
-        TextAnalysisR::list_ollama_models(verbose = FALSE)
-      } else NULL
-    }, error = function(e) NULL)
-    available_ollama_models(models)
   })
 
   ai_usage_log <- reactiveVal(data.frame(
@@ -10167,11 +10184,11 @@ server <- shinyServer(function(input, output, session) {
     req(dispersion_results$analyzed)
     req(dispersion_results$data)
 
-    plot_lexical_dispersion(
+    gg_to_plotly(plot_lexical_dispersion(
       dispersion_data = dispersion_results$data,
       scale = input$dispersion_scale %||% "relative",
       title = "Lexical Dispersion"
-    )
+    ))
   })
 
   # Render dispersion metrics table
