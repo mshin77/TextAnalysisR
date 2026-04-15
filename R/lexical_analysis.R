@@ -766,8 +766,9 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
   }
 
   plot_df <- data.frame(value = metric_values)
+  plot_df$hover_text <- paste(metric, ":", round(plot_df$value, 4))
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(y = value)) +
+  ggplot2::ggplot(plot_df, ggplot2::aes(y = value, text = hover_text)) +
     ggplot2::geom_boxplot(fill = "rgba(139, 92, 246, 0.7)",
                           color = "#0c1f4a", outlier.color = "#8B5CF6") +
     ggplot2::labs(y = metric, x = "", title = title) +
@@ -1300,8 +1301,11 @@ plot_keyword_comparison <- function(tfidf_data,
                stringsAsFactors = FALSE)
   )
   plot_long$Keyword <- factor(plot_long$Keyword, levels = top_keywords$Keyword)
+  plot_long$hover_text <- paste("Keyword:", plot_long$Keyword,
+                                "<br>Metric:", plot_long$Metric,
+                                "<br>Score:", round(plot_long$Score, 4))
 
-  ggplot2::ggplot(plot_long, ggplot2::aes(x = Keyword, y = Score, fill = Metric)) +
+  ggplot2::ggplot(plot_long, ggplot2::aes(x = Keyword, y = Score, fill = Metric, text = hover_text)) +
     ggplot2::geom_col(position = "dodge") +
     ggplot2::scale_fill_manual(values = c("TF-IDF" = "#337ab7", "Frequency" = "#5cb85c")) +
     ggplot2::labs(x = "Keywords", y = "Score", title = title) +
@@ -1373,8 +1377,9 @@ plot_readability_distribution <- function(readability_data,
   }
 
   plot_df <- data.frame(value = metric_values)
+  plot_df$hover_text <- paste(metric, ":", round(plot_df$value, 2))
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(y = value)) +
+  ggplot2::ggplot(plot_df, ggplot2::aes(y = value, text = hover_text)) +
     ggplot2::geom_boxplot(fill = "rgba(74, 144, 226, 0.7)",
                           color = "#0c1f4a", outlier.color = "#4A90E2") +
     ggplot2::labs(y = metric, x = "", title = title) +
@@ -1432,7 +1437,10 @@ plot_readability_by_group <- function(readability_data,
 
   unique_groups <- unique(plot_data$group)
 
-  ggplot2::ggplot(plot_data, ggplot2::aes(x = group, y = metric_value, fill = group)) +
+  plot_data$hover_text <- paste(group_var, ":", plot_data$group,
+                               paste0("<br>", metric, ":"), plot_data$metric_value)
+
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = group, y = metric_value, fill = group, text = hover_text)) +
     ggplot2::geom_boxplot(alpha = 0.7) +
     ggplot2::scale_fill_manual(values = colors[1:length(unique_groups)]) +
     ggplot2::labs(x = group_var, y = metric, title = title) +
@@ -1721,12 +1729,17 @@ plot_term_trends_continuous <- function(term_data,
     title <- paste("Term Frequency by", continuous_var)
   }
 
+  term_data$hover_text <- paste("Term:", term_data$term,
+                               paste0("<br>", continuous_var, ":"), term_data[[continuous_var]],
+                               "<br>Frequency:", term_data$word_frequency)
+
   ggplot2::ggplot(
     term_data,
     ggplot2::aes(
       x = .data[[continuous_var]],
       y = word_frequency,
-      group = term
+      group = term,
+      text = hover_text
     )
   ) +
     ggplot2::geom_point(color = "#337ab7", alpha = 0.6, size = 2.5) +
