@@ -2232,7 +2232,10 @@ plot_sentiment_distribution <- function(sentiment_data,
     count = as.numeric(sentiment_counts)
   )
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$sentiment, y = .data$count, fill = .data$sentiment)) +
+  plot_df$hover_text <- paste("Sentiment:", plot_df$sentiment, "<br>Count:", plot_df$count)
+
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$sentiment, y = .data$count, fill = .data$sentiment,
+                                         text = .data$hover_text)) +
     ggplot2::geom_col() +
     ggplot2::scale_fill_manual(values = colors, guide = "none") +
     ggplot2::labs(title = title, x = "Sentiment", y = "Number of Documents") +
@@ -2295,7 +2298,12 @@ plot_sentiment_by_category <- function(sentiment_data,
 
   bar_position <- if (plot_type == "stacked") "stack" else "dodge"
 
-  ggplot2::ggplot(grouped_data, ggplot2::aes(x = .data$category_var, y = .data$proportion, fill = .data$sentiment)) +
+  grouped_data$hover_text <- paste("Category:", grouped_data$category_var,
+                                   "<br>Sentiment:", grouped_data$sentiment,
+                                   "<br>Proportion:", round(grouped_data$proportion, 3))
+
+  ggplot2::ggplot(grouped_data, ggplot2::aes(x = .data$category_var, y = .data$proportion, fill = .data$sentiment,
+                                              text = .data$hover_text)) +
     ggplot2::geom_col(position = bar_position) +
     ggplot2::scale_fill_manual(values = colors) +
     ggplot2::labs(title = title, x = category_var, y = "Proportion", fill = "Sentiment") +
@@ -2340,7 +2348,10 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
     doc_data$display_id <- paste("Doc", doc_data$document)
   }
 
-  ggplot2::ggplot(doc_data, ggplot2::aes(x = .data$doc_index, y = .data$sentiment_score)) +
+  doc_data$hover_text <- paste("Document:", doc_data$display_id,
+                               "<br>Score:", round(doc_data$sentiment_score, 3))
+
+  ggplot2::ggplot(doc_data, ggplot2::aes(x = .data$doc_index, y = .data$sentiment_score, text = .data$hover_text)) +
     ggplot2::geom_line(color = "#6B7280") +
     ggplot2::geom_point(ggplot2::aes(color = .data$sentiment_score), size = 2) +
     ggplot2::scale_color_gradient2(
@@ -2995,9 +3006,13 @@ plot_emotion_radar <- function(emotion_data,
     }
 
     plot_data$group_col <- plot_data[[group_var]]
+    plot_data$hover_text <- paste("Emotion:", plot_data$emotion,
+                                  "<br>Score:", round(plot_data$total_score, 2),
+                                  paste0("<br>", group_var, ":"), plot_data$group_col)
 
     ggplot2::ggplot(plot_data, ggplot2::aes(x = .data$emotion, y = .data$total_score,
-                                             group = .data$group_col, color = .data$group_col, fill = .data$group_col)) +
+                                             group = .data$group_col, color = .data$group_col, fill = .data$group_col,
+                                             text = .data$hover_text)) +
       ggplot2::geom_polygon(alpha = 0.1) +
       ggplot2::geom_point(size = 2) +
       ggplot2::coord_polar() +
@@ -3020,7 +3035,9 @@ plot_emotion_radar <- function(emotion_data,
       score = scores
     )
 
-    ggplot2::ggplot(radar_df, ggplot2::aes(x = .data$emotion, y = .data$score, group = 1)) +
+    radar_df$hover_text <- paste("Emotion:", radar_df$emotion, "<br>Score:", round(radar_df$score, 2))
+
+    ggplot2::ggplot(radar_df, ggplot2::aes(x = .data$emotion, y = .data$score, group = 1, text = .data$hover_text)) +
       ggplot2::geom_polygon(fill = "#8B5CF6", alpha = 0.1, color = "#8B5CF6") +
       ggplot2::geom_point(color = "#8B5CF6", size = 2) +
       ggplot2::coord_polar() +
@@ -3056,8 +3073,11 @@ plot_sentiment_boxplot <- function(sentiment_data,
     stop("sentiment_score column not found in data")
   }
 
+  sentiment_data$hover_text <- paste(category_var, ":", sentiment_data[[category_var]],
+                                     "<br>Score:", round(sentiment_data$sentiment_score, 3))
+
   ggplot2::ggplot(sentiment_data, ggplot2::aes(x = .data[[category_var]], y = .data$sentiment_score,
-                                                fill = .data[[category_var]])) +
+                                                fill = .data[[category_var]], text = .data$hover_text)) +
     ggplot2::geom_boxplot(show.legend = FALSE) +
     ggplot2::labs(title = title, x = category_var, y = "Sentiment Score") +
     ggplot2::theme_minimal(base_size = 11) +
@@ -3091,8 +3111,11 @@ plot_sentiment_violin <- function(sentiment_data,
     stop("sentiment_score column not found in data")
   }
 
+  sentiment_data$hover_text <- paste(category_var, ":", sentiment_data[[category_var]],
+                                     "<br>Score:", round(sentiment_data$sentiment_score, 3))
+
   ggplot2::ggplot(sentiment_data, ggplot2::aes(x = .data[[category_var]], y = .data$sentiment_score,
-                                                fill = .data[[category_var]])) +
+                                                fill = .data[[category_var]], text = .data$hover_text)) +
     ggplot2::geom_violin(show.legend = FALSE) +
     ggplot2::labs(title = title, x = category_var, y = "Sentiment Score") +
     ggplot2::theme_minimal(base_size = 11) +
@@ -3189,7 +3212,11 @@ plot_semantic_viz <- function(analysis_result = NULL,
         heat_df$x_label <- factor(data_labels[heat_df$x], levels = data_labels)
         heat_df$y_label <- factor(data_labels[heat_df$y], levels = data_labels)
 
-        ggplot2::ggplot(heat_df, ggplot2::aes(x = .data$x_label, y = .data$y_label, fill = .data$similarity)) +
+        heat_df$hover_text <- paste("X:", heat_df$x_label, "<br>Y:", heat_df$y_label,
+                                    "<br>Similarity:", round(heat_df$similarity, 3))
+
+        ggplot2::ggplot(heat_df, ggplot2::aes(x = .data$x_label, y = .data$y_label, fill = .data$similarity,
+                                               text = .data$hover_text)) +
           ggplot2::geom_tile() +
           ggplot2::scale_fill_viridis_c(name = "Similarity") +
           ggplot2::labs(title = plot_title, x = "Documents", y = "Documents") +
@@ -3237,7 +3264,11 @@ plot_semantic_viz <- function(analysis_result = NULL,
                             paste0("(", round(analysis_result$variance_explained[2] * 100, 1), "%)")
                           else "")
 
-        p <- ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y))
+        scatter_df$hover_text <- paste("Document:", scatter_df$label,
+                                       "<br>X:", round(scatter_df$x, 3),
+                                       "<br>Y:", round(scatter_df$y, 3))
+
+        p <- ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, text = .data$hover_text))
 
         if ("color_var" %in% names(scatter_df)) {
           p <- p + ggplot2::geom_point(ggplot2::aes(color = .data$color_var), size = 2, alpha = 0.7)
@@ -3273,8 +3304,9 @@ plot_semantic_viz <- function(analysis_result = NULL,
             cluster = as.factor(cluster_data),
             label = data_labels
           )
+          scatter_df$hover_text <- paste("Document:", scatter_df$label, "<br>Cluster:", scatter_df$cluster)
 
-          ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster)) +
+          ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster, text = .data$hover_text)) +
             ggplot2::geom_point(size = 2, alpha = 0.7) +
             ggplot2::labs(title = plot_title, x = "Document Index", y = "Cluster", color = "Cluster") +
             ggplot2::theme_minimal(base_size = 11)
@@ -3289,8 +3321,9 @@ plot_semantic_viz <- function(analysis_result = NULL,
             cluster = as.factor(cluster_data),
             label = data_labels
           )
+          scatter_df$hover_text <- paste("Document:", scatter_df$label, "<br>Cluster:", scatter_df$cluster)
 
-          ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster)) +
+          ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster, text = .data$hover_text)) +
             ggplot2::geom_point(size = 2, alpha = 0.7) +
             ggplot2::labs(title = plot_title, x = "Component 1", y = "Component 2", color = "Cluster") +
             ggplot2::theme_minimal(base_size = 11)

@@ -3827,8 +3827,11 @@ plot_model_comparison <- function(search_results,
   colors <- grDevices::colorRampPalette(c("#0066CC", "#CC3300"))(length(k_values))
 
   plot_df <- data.frame(x = x_values, y = y_values, k = k_values, sz = marker_sizes)
+  plot_df$hover_text <- paste("K:", plot_df$k,
+                               paste0("<br>", x_label, ":"), round(plot_df$x, 4),
+                               paste0("<br>", y_label, ":"), round(plot_df$y, 4))
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = y)) +
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = y, text = hover_text)) +
     ggplot2::geom_point(size = plot_df$sz, color = colors, alpha = 0.9) +
     ggplot2::geom_text(ggplot2::aes(label = k), color = "white", size = 3.5, fontface = "bold") +
     ggplot2::labs(x = x_label, y = y_label, title = title) +
@@ -4095,7 +4098,12 @@ plot_topic_effects_categorical <- function(effects_data,
   effects_data <- effects_data %>%
     dplyr::mutate(topic_label = paste("Topic", topic))
 
-  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion)) +
+  effects_data$hover_text <- paste("Topic:", effects_data$topic_label,
+                                   "<br>Value:", effects_data$value,
+                                   "<br>Proportion:", sprintf("%.3f", effects_data$proportion),
+                                   "<br>95% CI:", sprintf("[%.3f, %.3f]", effects_data$lower, effects_data$upper))
+
+  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion, text = hover_text)) +
     ggplot2::facet_wrap(~topic_label, ncol = ncol, scales = "free") +
     ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
     ggplot2::xlab("") +
@@ -4156,7 +4164,11 @@ plot_topic_effects_continuous <- function(effects_data,
   effects_data <- effects_data %>%
     dplyr::mutate(topic_label = paste("Topic", topic))
 
-  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion)) +
+  effects_data$hover_text <- paste("Topic:", effects_data$topic_label,
+                                   "<br>Value:", round(effects_data$value, 3),
+                                   "<br>Proportion:", sprintf("%.3f", effects_data$proportion))
+
+  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion, text = hover_text)) +
     ggplot2::facet_wrap(~topic_label, ncol = ncol, scales = "free") +
     ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = "#337ab7", alpha = 0.2) +
@@ -4249,7 +4261,9 @@ plot_cluster_terms <- function(terms,
     frequency = term_values
   )
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(x = frequency, y = term)) +
+  plot_df$hover_text <- paste("Term:", plot_df$term, "<br>Frequency:", plot_df$frequency)
+
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = frequency, y = term, text = hover_text)) +
     ggplot2::geom_col(fill = color) +
     ggplot2::labs(x = "Frequency", y = NULL, title = title) +
     ggplot2::theme_minimal(base_size = 11) +

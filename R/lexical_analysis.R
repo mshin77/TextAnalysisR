@@ -3055,9 +3055,11 @@ plot_weighted_log_odds <- function(weighted_data,
     grp_data <- grp_data[order(grp_data$log_odds_weighted), ]
     grp_data$feature_ordered <- factor(grp_data$feature, levels = grp_data$feature)
     grp_data$direction <- ifelse(grp_data$log_odds_weighted > 0, "positive", "negative")
+    grp_data$hover_text <- paste("Term:", grp_data$feature,
+                                 "<br>Log Odds:", round(grp_data$log_odds_weighted, 3))
 
     ggplot2::ggplot(grp_data, ggplot2::aes(x = log_odds_weighted, y = feature_ordered,
-                                            fill = direction)) +
+                                            fill = direction, text = hover_text)) +
       ggplot2::geom_col() +
       ggplot2::geom_vline(xintercept = 0, linetype = "dotted", color = "#94A3B8") +
       ggplot2::scale_fill_manual(values = c("positive" = color_positive,
