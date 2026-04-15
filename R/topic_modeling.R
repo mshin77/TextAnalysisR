@@ -3749,7 +3749,7 @@ plot_quality_metrics <- function(search_results) {
     )
     plot_df$hover_text <- paste("K:", plot_df$K, "<br>", info$name, ":", round(plot_df$value, 4))
 
-    plots[[metric]] <- ggplot2::ggplot(plot_df, ggplot2::aes(x = K, y = value)) +
+    plots[[metric]] <- ggplot2::ggplot(plot_df, ggplot2::aes(x = K, y = value, text = .data$hover_text)) +
       ggplot2::geom_line(color = info$color, linewidth = 0.8) +
       ggplot2::geom_point(color = info$color, size = 2.5) +
       ggplot2::labs(x = "Number of Topics (K)", y = info$name, title = info$name) +
