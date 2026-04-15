@@ -4806,7 +4806,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$entity_plot <- plotly::renderPlotly({
     req(input$apply_ner_filter)
-    req(!is.null(final_tokens()) || (!is.null(last_clicked()) && last_clicked() %in% c("lemma", "skip")))
+    req(!is.null(final_tokens()) || (!is.null(last_clicked()) && last_clicked() %in% c("lemma", "skip", "skip_stopwords", "remove")))
 
     if (is.null(spacy_parsed())) {
       return(TextAnalysisR::create_empty_plot_message(
@@ -7555,10 +7555,10 @@ server <- shinyServer(function(input, output, session) {
         category_params = category_params,
         width = input$width_word_co_occurrence_network_plot %||% 900,
         height = input$height_word_co_occurrence_network_plot %||% 800,
-        node_label_size = input$node_label_size_cooccur %||% 22,
-        community_method = input$community_method_cooccur %||% "leiden",
-        node_size_by = input$node_size_cooccur %||% "degree",
-        node_color_by = input$node_color_cooccur %||% "community"
+        node_label_size = isolate(input$node_label_size_cooccur %||% 22),
+        community_method = isolate(input$community_method_cooccur %||% "leiden"),
+        node_size_by = isolate(input$node_size_cooccur %||% "degree"),
+        node_color_by = isolate(input$node_color_cooccur %||% "community")
       )
     }, error = function(e) {
       showNotification(paste("Error:", e$message), type = "error")
@@ -7864,10 +7864,10 @@ server <- shinyServer(function(input, output, session) {
         category_params = category_params,
         width = input$width_word_correlation_network_plot %||% 900,
         height = input$height_word_correlation_network_plot %||% 1000,
-        node_label_size = input$node_label_size_corr %||% 22,
-        community_method = input$community_method_corr %||% "leiden",
-        node_size_by = input$node_size_corr %||% "degree",
-        node_color_by = input$node_color_corr %||% "community"
+        node_label_size = isolate(input$node_label_size_corr %||% 22),
+        community_method = isolate(input$community_method_corr %||% "leiden"),
+        node_size_by = isolate(input$node_size_corr %||% "degree"),
+        node_color_by = isolate(input$node_color_corr %||% "community")
       )
     }, error = function(e) {
       showNotification(paste("Error:", e$message), type = "error")

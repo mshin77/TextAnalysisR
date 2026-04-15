@@ -4278,9 +4278,9 @@ word_co_occurrence_network <- function(dfm_object,
     node_data <- layout_df %>%
       dplyr::mutate(
         size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
-        text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
-        alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
+        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(8, 45)),
+        text_size = scales::rescale(log1p(size_metric), to = c(node_label_size - 8, node_label_size)),
+        alpha = scales::rescale(log1p(size_metric), to = c(0.2, 1)),
         hover_text = paste("Word:", label,
                            "<br>Degree:", degree,
                            "<br>Betweenness:", round(betweenness, 2),
@@ -4305,7 +4305,12 @@ word_co_occurrence_network <- function(dfm_object,
     node_data$community <- factor(node_data$community, levels = unique(node_data$community))
     names(palette) <- levels(node_data$community)
 
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+    sort_col <- switch(node_size_by,
+      "betweenness" = "betweenness",
+      "frequency"   = "frequency",
+      "degree"
+    )
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(.data[[sort_col]])) %>% utils::head(effective_top_node_n)
 
     p <- ggplot2::ggplot() +
       ggplot2::geom_segment(data = edge_data,
@@ -4338,21 +4343,12 @@ word_co_occurrence_network <- function(dfm_object,
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
 
     if (nrow(top_nodes) > 0) {
-      if (requireNamespace("ggrepel", quietly = TRUE)) {
-        p <- p + ggrepel::geom_text_repel(
-          data = top_nodes,
-          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
-          size = top_nodes$text_size / 3,
-          max.overlaps = Inf,
-          segment.color = NA
-        )
-      } else {
-        p <- p + ggplot2::geom_text(
-          data = top_nodes,
-          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
-          size = top_nodes$text_size / 3
-        )
-      }
+      p <- p + ggplot2::geom_text(
+        data = top_nodes,
+        ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+        size = top_nodes$text_size / 3,
+        check_overlap = TRUE
+      )
     }
 
     list(plot = p, layout_df = layout_df, graph = graph)
@@ -4684,9 +4680,9 @@ word_correlation_network <- function(dfm_object,
     node_data <- layout_df %>%
       dplyr::mutate(
         size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(12, 30)),
-        text_size = scales::rescale(log1p(degree), to = c(node_label_size - 8, node_label_size)),
-        alpha = scales::rescale(log1p(degree), to = c(0.2, 1)),
+        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(8, 45)),
+        text_size = scales::rescale(log1p(size_metric), to = c(node_label_size - 8, node_label_size)),
+        alpha = scales::rescale(log1p(size_metric), to = c(0.2, 1)),
         hover_text = paste(
           "Word:", label,
           "<br>Degree:", degree,
@@ -4720,7 +4716,12 @@ word_correlation_network <- function(dfm_object,
     node_data$community <- factor(node_data$community, levels = unique(node_data$community))
     names(palette) <- levels(node_data$community)
 
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(degree)) %>% utils::head(effective_top_node_n)
+    sort_col <- switch(node_size_by,
+      "betweenness" = "betweenness",
+      "frequency"   = "frequency",
+      "degree"
+    )
+    top_nodes <- dplyr::arrange(node_data, dplyr::desc(.data[[sort_col]])) %>% utils::head(effective_top_node_n)
 
     p <- ggplot2::ggplot() +
       ggplot2::geom_segment(data = edge_data,
@@ -4753,21 +4754,12 @@ word_correlation_network <- function(dfm_object,
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
 
     if (nrow(top_nodes) > 0) {
-      if (requireNamespace("ggrepel", quietly = TRUE)) {
-        p <- p + ggrepel::geom_text_repel(
-          data = top_nodes,
-          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
-          size = top_nodes$text_size / 3,
-          max.overlaps = Inf,
-          segment.color = NA
-        )
-      } else {
-        p <- p + ggplot2::geom_text(
-          data = top_nodes,
-          ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
-          size = top_nodes$text_size / 3
-        )
-      }
+      p <- p + ggplot2::geom_text(
+        data = top_nodes,
+        ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+        size = top_nodes$text_size / 3,
+        check_overlap = TRUE
+      )
     }
 
     list(plot = p, layout_df = layout_df, graph = graph)
