@@ -22,17 +22,6 @@ ui <- fluidPage(
     height = "100px",
     width = "100px"
   ),
-  # Splash screen shown immediately while Shiny initializes
-  tags$div(
-    id = "loading-splash",
-    style = "position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;",
-    tags$div(
-      style = "width:50px;height:50px;border:4px solid #e5e7eb;border-top:4px solid #337ab7;border-radius:50%;animation:spin 0.8s linear infinite;"
-    ),
-    tags$p("Loading TextAnalysisR...", style = "margin-top:16px;color:#64748b;font-family:Roboto,sans-serif;font-size:14px;"),
-    tags$style(HTML("@keyframes spin{to{transform:rotate(360deg)}}"))
-  ),
-  tags$script(HTML("$(document).on('shiny:connected',function(){$('#loading-splash').fadeOut(300)});")),
   tags$head(
     tags$meta(charset = "UTF-8"),
     tags$meta(name = "viewport", content = "width=device-width, initial-scale=1.0"),

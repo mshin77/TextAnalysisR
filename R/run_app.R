@@ -32,9 +32,5 @@ run_app <- function(launch.browser = interactive()) {
     stop("Error: TextAnalysisR.app directory not found.")
   }
 
-  # Skip blocking Python check — features check lazily via check_feature()
-  message("Launching TextAnalysisR...")
-  message("Tip: PDF tables and AI features require Python. Run setup_python_env() if needed.\n")
-
   shiny::runApp(appDir, display.mode = "normal", launch.browser = launch.browser)
 }
