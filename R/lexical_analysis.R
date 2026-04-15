@@ -765,12 +765,19 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
     )
   }
 
-  plot_df <- data.frame(value = metric_values)
-  plot_df$hover_text <- paste(metric, ":", round(plot_df$value, 4))
+  plot_df <- data.frame(
+    value = metric_values,
+    doc = paste("Doc", seq_along(metric_values))
+  )
+  plot_df$hover_text <- paste("Document:", plot_df$doc,
+                               paste0("<br>", metric, ":"), round(plot_df$value, 4))
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(y = value, text = hover_text)) +
-    ggplot2::geom_boxplot(fill = "rgba(139, 92, 246, 0.7)",
-                          color = "#0c1f4a", outlier.color = "#8B5CF6") +
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = "", y = value)) +
+    ggplot2::geom_violin(fill = "rgba(139, 92, 246, 0.15)", color = "#8B5CF6", linewidth = 0.5) +
+    ggplot2::geom_boxplot(width = 0.15, fill = "rgba(139, 92, 246, 0.4)",
+                          color = "#0c1f4a", outlier.shape = NA) +
+    ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
+                         width = 0.05, size = 1.5, alpha = 0.5, color = "#8B5CF6") +
     ggplot2::labs(y = metric, x = "", title = title) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -1376,12 +1383,19 @@ plot_readability_distribution <- function(readability_data,
     )
   }
 
-  plot_df <- data.frame(value = metric_values)
-  plot_df$hover_text <- paste(metric, ":", round(plot_df$value, 2))
+  plot_df <- data.frame(
+    value = metric_values,
+    doc = paste("Doc", seq_along(metric_values))
+  )
+  plot_df$hover_text <- paste("Document:", plot_df$doc,
+                               paste0("<br>", metric, ":"), round(plot_df$value, 2))
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(y = value, text = hover_text)) +
-    ggplot2::geom_boxplot(fill = "rgba(74, 144, 226, 0.7)",
-                          color = "#0c1f4a", outlier.color = "#4A90E2") +
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = "", y = value)) +
+    ggplot2::geom_violin(fill = "rgba(74, 144, 226, 0.15)", color = "#4A90E2", linewidth = 0.5) +
+    ggplot2::geom_boxplot(width = 0.15, fill = "rgba(74, 144, 226, 0.4)",
+                          color = "#0c1f4a", outlier.shape = NA) +
+    ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
+                         width = 0.05, size = 1.5, alpha = 0.5, color = "#4A90E2") +
     ggplot2::labs(y = metric, x = "", title = title) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -3264,7 +3278,7 @@ plot_lexical_dispersion <- function(dispersion_data,
   p <- ggplot2::ggplot(dispersion_data, ggplot2::aes(x = position, y = term,
                                                       color = term,
                                                       text = hover_text)) +
-    ggplot2::geom_point(shape = "|", size = marker_size / 2) +
+    ggplot2::geom_point(shape = "|", size = marker_size, alpha = 0.7) +
     ggplot2::scale_color_manual(values = colors) +
     ggplot2::labs(x = x_label, y = "", title = title, color = "") +
     ggplot2::theme_minimal(base_size = 11) +
