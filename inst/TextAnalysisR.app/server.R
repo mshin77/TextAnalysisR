@@ -9687,29 +9687,11 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$run_lexdiv_analysis, {
-    tokens_to_use <- NULL
-
-    tryCatch({
-      tokens_to_use <- lemmatized_tokens()
-    }, error = function(e) {
-      tryCatch({
-        tokens_to_use <<- processed_tokens()
-      }, error = function(e2) {
-        tryCatch({
-          tokens_to_use <<- final_tokens()
-        }, error = function(e3) {
-          tryCatch({
-            tokens_to_use <<- dfm_tokens()
-          }, error = function(e4) {
-            tryCatch({
-              tokens_to_use <<- preprocessed_combined()
-            }, error = function(e5) {
-              tokens_to_use <<- NULL
-            })
-          })
-        })
-      })
-    })
+    tokens_to_use <- tryCatch(lemmatized_tokens(), error = function(e) NULL)
+    if (is.null(tokens_to_use)) tokens_to_use <- tryCatch(processed_tokens(), error = function(e) NULL)
+    if (is.null(tokens_to_use)) tokens_to_use <- tryCatch(final_tokens(), error = function(e) NULL)
+    if (is.null(tokens_to_use)) tokens_to_use <- tryCatch(dfm_tokens(), error = function(e) NULL)
+    if (is.null(tokens_to_use)) tokens_to_use <- tryCatch(preprocessed_combined(), error = function(e) NULL)
 
     if (is.null(tokens_to_use)) {
       output$lexdiv_required_message <- renderPrint({
