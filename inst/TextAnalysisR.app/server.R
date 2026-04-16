@@ -4806,7 +4806,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$entity_plot <- plotly::renderPlotly({
     req(input$apply_ner_filter)
-    req(!is.null(final_tokens()) || (!is.null(last_clicked()) && last_clicked() %in% c("lemma", "skip", "skip_stopwords", "remove")))
+    req(spacy_parsed())
 
     if (is.null(spacy_parsed())) {
       return(TextAnalysisR::create_empty_plot_message(
