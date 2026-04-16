@@ -4358,7 +4358,16 @@ word_co_occurrence_network <- function(dfm_object,
       ggplot2::labs(title = "Word Co-occurrence Network") +
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
 
-    list(plot = p, layout_df = layout_df, graph = graph, top_nodes = top_nodes)
+    if (nrow(top_nodes) > 0) {
+      p <- p + ggplot2::geom_text(
+        data = top_nodes,
+        ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+        size = top_nodes$text_size / 3,
+        check_overlap = TRUE
+      )
+    }
+
+    list(plot = p, layout_df = layout_df, graph = graph)
   }
 
   if (!is.null(doc_var) && length(docvar_levels) > 1) {
@@ -4436,7 +4445,6 @@ word_co_occurrence_network <- function(dfm_object,
     }
     return(list(
       plot = net$plot,
-      top_nodes = net$top_nodes,
       table = build_table(net, if (!is.null(doc_var)) paste("Network Centrality Table for", doc_var) else "Network Centrality Table") %>% htmltools::browsable(),
       summary = build_summary(net, if (!is.null(doc_var)) paste("Network Summary for", doc_var) else "Network Summary") %>% htmltools::browsable()
     ))
@@ -4769,7 +4777,16 @@ word_correlation_network <- function(dfm_object,
       ggplot2::labs(title = "Word Correlation Network") +
       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
 
-    list(plot = p, layout_df = layout_df, graph = graph, top_nodes = top_nodes)
+    if (nrow(top_nodes) > 0) {
+      p <- p + ggplot2::geom_text(
+        data = top_nodes,
+        ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+        size = top_nodes$text_size / 3,
+        check_overlap = TRUE
+      )
+    }
+
+    list(plot = p, layout_df = layout_df, graph = graph)
   }
 
   if (!is.null(doc_var) && length(docvar_levels) > 1) {
@@ -4854,7 +4871,6 @@ word_correlation_network <- function(dfm_object,
     }
     return(list(
       plot = net$plot,
-      top_nodes = net$top_nodes,
       table = build_table(net,
                           if (!is.null(doc_var)) paste("Network Centrality Table for", doc_var)
                           else "Network Centrality Table") %>% htmltools::browsable(),
