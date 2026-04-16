@@ -4287,10 +4287,18 @@ word_co_occurrence_network <- function(dfm_object,
                            "<br>Closeness:", round(closeness, 2),
                            "<br>Eigenvector:", round(eigenvector, 2),
                            "<br>Frequency:", frequency,
-                           "<br>Community:", community)
+                           "<br>Community:", community,
+                           if (!is.null(doc_var)) {
+                             if (length(docvar_levels) > 1) {
+                               paste0("<br>", doc_var, ": ", group_level)
+                             } else {
+                               paste0("<br>", doc_var)
+                             }
+                           } else ""
+        )
       )
 
-    # Community palette
+    # Create community palette
     n_communities <- length(unique(node_data$community))
     if (n_communities >= 3 && n_communities <= 8) {
       palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
@@ -4303,7 +4311,15 @@ word_co_occurrence_network <- function(dfm_object,
     }
 
     node_data$community <- factor(node_data$community, levels = unique(node_data$community))
-    names(palette) <- levels(node_data$community)
+    community_levels <- levels(node_data$community)
+    names(palette) <- community_levels
+
+    # Determine node color based on node_color_by parameter
+    if (node_color_by == "frequency") {
+      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
+    } else {
+      node_data$color <- palette[as.character(node_data$community)]
+    }
 
     sort_col <- switch(node_size_by,
       "betweenness" = "betweenness",
@@ -4701,7 +4717,7 @@ word_correlation_network <- function(dfm_object,
         )
       )
 
-    # Community palette
+    # Create community palette
     n_communities <- length(unique(node_data$community))
     if (n_communities >= 3 && n_communities <= 8) {
       palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
@@ -4714,7 +4730,15 @@ word_correlation_network <- function(dfm_object,
     }
 
     node_data$community <- factor(node_data$community, levels = unique(node_data$community))
-    names(palette) <- levels(node_data$community)
+    community_levels <- levels(node_data$community)
+    names(palette) <- community_levels
+
+    # Determine node color based on node_color_by parameter
+    if (node_color_by == "frequency") {
+      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
+    } else {
+      node_data$color <- palette[as.character(node_data$community)]
+    }
 
     sort_col <- switch(node_size_by,
       "betweenness" = "betweenness",

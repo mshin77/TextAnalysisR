@@ -4875,11 +4875,11 @@ server <- shinyServer(function(input, output, session) {
       }
     }
 
-    gg_to_plotly(TextAnalysisR::plot_entity_frequencies(
+    TextAnalysisR::plot_entity_frequencies(
       entity_data = entity_data,
       title = "Named Entity Type Frequency",
       custom_colors = isolate(custom_entity_colors())
-    ))
+    )
   })
 
   custom_entities <- reactiveVal(data.frame())
@@ -6000,48 +6000,89 @@ server <- shinyServer(function(input, output, session) {
     content = function(file) {
       tryCatch({
         parsed_data <- spacy_parsed()
-        if (is.null(parsed_data) || nrow(parsed_data) == 0) {
+        if (is.null(parsed_data) || nrow(parsed_data) == 0 || !"entity" %in% names(parsed_data)) {
           p <- ggplot2::ggplot() +
             ggplot2::theme_void() +
             ggplot2::annotate("text", x = 0.5, y = 0.5, label = "No entity data available")
           ggplot2::ggsave(file, p, width = 10, height = 6, dpi = 150)
-        } else {
-          # Check if entity column exists
-          if (!"entity" %in% names(parsed_data)) {
-            p <- ggplot2::ggplot() +
-              ggplot2::theme_void() +
-              ggplot2::annotate("text", x = 0.5, y = 0.5, label = "No entity column in data")
-            ggplot2::ggsave(file, p, width = 10, height = 6, dpi = 150)
-          } else {
-            # Filter for entities and clean entity types (strip _B, _I suffixes)
-            entity_data <- parsed_data %>%
-              dplyr::filter(!is.na(entity) & entity != "") %>%
-              dplyr::mutate(entity_clean = gsub("_[BI]$", "", entity))
-
-            if (nrow(entity_data) == 0) {
-              p <- ggplot2::ggplot() +
-                ggplot2::theme_void() +
-                ggplot2::annotate("text", x = 0.5, y = 0.5, label = "No entities found")
-              ggplot2::ggsave(file, p, width = 10, height = 6, dpi = 150)
-            } else {
-              top_n <- input$ner_top_n %||% 15
-              plot_data <- entity_data %>%
-                dplyr::count(entity_clean, token) %>%
-                dplyr::arrange(dplyr::desc(n)) %>%
-                head(top_n)
-
-              p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = reorder(token, n), y = n, fill = entity_clean)) +
-                ggplot2::geom_col() +
-                ggplot2::coord_flip() +
-                ggplot2::labs(x = "Entity", y = "Frequency", fill = "Type",
-                             title = "Named Entity Frequencies") +
-                ggplot2::theme_minimal() +
-                ggplot2::theme(legend.position = "bottom")
-
-              ggplot2::ggsave(file, p, width = 10, height = 6, dpi = 150)
-            }
-          }
+          return()
         }
+
+        selected_types <- get_selected_entity_types()
+
+        entity_data <- parsed_data %>%
+          dplyr::filter(!is.na(entity), entity != "") %>%
+          dplyr::mutate(entity_clean = gsub("_[BI]$", "", entity))
+
+        if (length(selected_types) > 0) {
+          entity_data <- entity_data %>%
+            dplyr::filter(entity_clean %in% selected_types)
+        }
+
+        entity_data <- entity_data %>%
+          dplyr::count(entity_clean, sort = TRUE, name = "n") %>%
+          dplyr::rename(entity = entity_clean) %>%
+          dplyr::slice_head(n = 20)
+
+        if (nrow(custom_entities()) > 0) {
+          custom_counts <- custom_entities() %>%
+            dplyr::count(`Variable`, name = "n") %>%
+            dplyr::rename(entity = `Variable`)
+          if (length(selected_types) > 0) {
+            custom_counts <- custom_counts %>%
+              dplyr::filter(entity %in% selected_types)
+          }
+          entity_data <- dplyr::bind_rows(entity_data, custom_counts) %>%
+            dplyr::group_by(entity) %>%
+            dplyr::summarise(n = sum(n), .groups = "drop") %>%
+            dplyr::arrange(dplyr::desc(n)) %>%
+            dplyr::slice_head(n = 20)
+        }
+
+        if (nrow(entity_data) == 0) {
+          p <- ggplot2::ggplot() +
+            ggplot2::theme_void() +
+            ggplot2::annotate("text", x = 0.5, y = 0.5, label = "No entities found")
+          ggplot2::ggsave(file, p, width = 10, height = 6, dpi = 150)
+          return()
+        }
+
+        entity_colors <- c(
+          "PERSON" = "#e91e63", "ORG" = "#2196f3", "GPE" = "#4caf50",
+          "DATE" = "#ff9800", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
+          "ORDINAL" = "#795548", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
+          "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
+          "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
+          "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e",
+          "DISABILITY" = "#E91E63", "PROGRAM" = "#2196F3", "TEST" = "#4CAF50",
+          "CONCEPT" = "#00acc1", "TOOL" = "#FF9800", "METHOD" = "#00BCD4",
+          "THEME" = "#7c4dff", "CODE" = "#546e7a", "CATEGORY" = "#26a69a",
+          "CUSTOM" = "#d81b60"
+        )
+        custom_cols <- custom_entity_colors()
+        if (length(custom_cols) > 0) {
+          entity_colors[names(custom_cols)] <- custom_cols
+        }
+
+        bar_colors <- vapply(entity_data$entity, function(e) {
+          if (e %in% names(entity_colors)) entity_colors[[e]] else "#757575"
+        }, character(1))
+
+        entity_data$entity <- factor(entity_data$entity,
+                                     levels = entity_data$entity[order(entity_data$n)])
+
+        p <- ggplot2::ggplot(entity_data, ggplot2::aes(x = entity, y = n)) +
+          ggplot2::geom_col(fill = bar_colors[order(entity_data$n)]) +
+          ggplot2::labs(x = "", y = "Frequency", title = "Named Entity Type Frequency") +
+          ggplot2::theme_minimal(base_size = 14) +
+          ggplot2::theme(
+            plot.title = ggplot2::element_text(size = 16, color = "#0c1f4a", face = "bold"),
+            axis.text.x = ggplot2::element_text(size = 12, color = "#3B3B3B", angle = -45, hjust = 0),
+            axis.text.y = ggplot2::element_text(size = 12, color = "#3B3B3B"),
+            axis.title = ggplot2::element_text(size = 14, color = "#0c1f4a")
+          )
+
+        ggplot2::ggsave(file, p, width = 10, height = 6, dpi = 150)
       }, error = function(e) {
         png(file, width = 800, height = 400)
         plot.new()

@@ -1887,14 +1887,25 @@ plot_entity_frequencies <- function(entity_data,
                                      width = NULL,
                                      custom_colors = NULL) {
 
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    stop("Package 'plotly' is required. Please install it.")
+  }
+
   if (is.null(entity_data) || nrow(entity_data) == 0) {
-    return(
-      ggplot2::ggplot() +
-        ggplot2::annotate("text", x = 0.5, y = 0.5,
-                          label = "No named entities found",
-                          size = 5, color = "#ef4444") +
-        ggplot2::theme_void()
-    )
+    return(plotly::plot_ly(type = "scatter", mode = "markers") %>%
+      plotly::layout(
+        xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+        annotations = list(
+          list(
+            text = "No named entities found",
+            x = 0.5, y = 0.5,
+            xref = "paper", yref = "paper",
+            showarrow = FALSE,
+            font = list(size = 16, color = "#6B7280", family = "Roboto")
+          )
+        )
+      ))
   }
 
   if (!"n" %in% names(entity_data)) {
@@ -1908,15 +1919,15 @@ plot_entity_frequencies <- function(entity_data,
   }
 
   entity_colors <- c(
-    "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-    "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
-    "ORDINAL" = "#5d4037", "PERCENT" = "#00838f", "PRODUCT" = "#283593",
-    "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
-    "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
-    "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
+    "PERSON" = "#e91e63", "ORG" = "#2196f3", "GPE" = "#4caf50",
+    "DATE" = "#ff9800", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
+    "ORDINAL" = "#795548", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
+    "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
+    "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
+    "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e",
     "DISABILITY" = "#E91E63", "PROGRAM" = "#2196F3", "TEST" = "#4CAF50",
-    "CONCEPT" = "#9C27B0", "TOOL" = "#FF9800", "METHOD" = "#00BCD4",
-    "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#26a69a",
+    "CONCEPT" = "#00acc1", "TOOL" = "#FF9800", "METHOD" = "#00BCD4",
+    "THEME" = "#7c4dff", "CODE" = "#546e7a", "CATEGORY" = "#26a69a",
     "CUSTOM" = "#d81b60"
   )
 
@@ -1924,23 +1935,42 @@ plot_entity_frequencies <- function(entity_data,
     entity_colors[names(custom_colors)] <- custom_colors
   }
 
-  bar_colors <- sapply(entity_freq$entity, function(e) {
+  bar_colors <- vapply(entity_freq$entity, function(e) {
     if (e %in% names(entity_colors)) entity_colors[[e]] else "#757575"
-  })
+  }, character(1))
 
-  entity_freq$entity_ordered <- stats::reorder(entity_freq$entity, entity_freq$n)
-  entity_freq$fill_color <- bar_colors
-
-  ggplot2::ggplot(entity_freq, ggplot2::aes(x = entity_ordered, y = n,
-                                             text = paste0(entity, "\nFrequency: ", n))) +
-    ggplot2::geom_col(fill = entity_freq$fill_color) +
-    ggplot2::labs(x = "", y = "Frequency", title = title) +
-    ggplot2::theme_minimal(base_size = 11) +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
-      axis.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B", angle = -45, hjust = 0),
-      axis.text.y = ggplot2::element_text(size = 11, color = "#3B3B3B"),
-      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
+  plotly::plot_ly(
+    data = entity_freq,
+    x = ~stats::reorder(entity, n),
+    y = ~n,
+    type = "bar",
+    marker = list(color = bar_colors),
+    hoverinfo = "text",
+    hovertext = ~paste0(entity, "\nFrequency: ", n),
+    height = height,
+    width = width
+  ) %>%
+    plotly::layout(
+      title = list(
+        text = title,
+        font = list(size = 18, color = "#0c1f4a", family = "Roboto, sans-serif")
+      ),
+      xaxis = list(
+        title = "",
+        tickangle = -45,
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      yaxis = list(
+        title = "Frequency",
+        titlefont = list(size = 16, color = "#0c1f4a", family = "Roboto, sans-serif"),
+        tickfont = list(size = 16, color = "#3B3B3B", family = "Roboto, sans-serif")
+      ),
+      margin = list(b = 150, l = 60, r = 20, t = 60),
+      hoverlabel = list(
+        align = "left",
+        font = list(size = 16, color = "white", family = "Roboto, sans-serif"),
+        bgcolor = "#0c1f4a"
+      )
     )
 }
 
