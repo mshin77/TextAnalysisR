@@ -5380,6 +5380,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$entity_plot_uiOutput <- renderUI({
+    req(input$apply_ner_filter, input$apply_ner_filter > 0)
     div(
       style = "display: flex; justify-content: center; margin-bottom: 20px;",
       plotly::plotlyOutput("entity_plot", height = 500, width = "100%")
