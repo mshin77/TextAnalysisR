@@ -7628,7 +7628,18 @@ server <- shinyServer(function(input, output, session) {
   output$word_co_occurrence_network_plotly <- plotly::renderPlotly({
     result <- word_co_occurrence_network_results()
     req(result)
-    gg_to_plotly(result$plot)
+    p <- gg_to_plotly(result$plot)
+    top <- result$top_nodes
+    if (!is.null(top) && nrow(top) > 0) {
+      annotations <- lapply(seq_len(nrow(top)), function(i) {
+        list(x = top$x[i], y = top$y[i], text = top$label[i],
+             showarrow = FALSE, font = list(size = top$text_size[i] * 0.75,
+             color = "#0c1f4a", family = "Roboto, sans-serif"),
+             xanchor = "center", yanchor = "bottom", yshift = 8)
+      })
+      p <- p %>% plotly::layout(annotations = annotations)
+    }
+    p
   })
 
   output$word_co_occurrence_network_table_uiOutput <- renderUI({
@@ -7937,7 +7948,18 @@ server <- shinyServer(function(input, output, session) {
   output$word_correlation_network_plotly <- plotly::renderPlotly({
     result <- word_correlation_network_results()
     req(result)
-    gg_to_plotly(result$plot)
+    p <- gg_to_plotly(result$plot)
+    top <- result$top_nodes
+    if (!is.null(top) && nrow(top) > 0) {
+      annotations <- lapply(seq_len(nrow(top)), function(i) {
+        list(x = top$x[i], y = top$y[i], text = top$label[i],
+             showarrow = FALSE, font = list(size = top$text_size[i] * 0.75,
+             color = "#0c1f4a", family = "Roboto, sans-serif"),
+             xanchor = "center", yanchor = "bottom", yshift = 8)
+      })
+      p <- p %>% plotly::layout(annotations = annotations)
+    }
+    p
   })
 
   output$word_correlation_network_table_uiOutput <- renderUI({
