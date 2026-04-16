@@ -1408,7 +1408,6 @@ Supports:
                 "))
               ),
               div(
-                style = "max-height: 300px; overflow-y: auto;",
                 uiOutput("domain_entity_categories"),
                 uiOutput("custom_entities_ui")
               )
