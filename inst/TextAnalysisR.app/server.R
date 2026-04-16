@@ -6068,11 +6068,8 @@ server <- shinyServer(function(input, output, session) {
           if (e %in% names(entity_colors)) entity_colors[[e]] else "#757575"
         }, character(1))
 
-        entity_data$entity <- factor(entity_data$entity,
-                                     levels = entity_data$entity[order(entity_data$n)])
-
-        p <- ggplot2::ggplot(entity_data, ggplot2::aes(x = entity, y = n)) +
-          ggplot2::geom_col(fill = bar_colors[order(entity_data$n)]) +
+        p <- ggplot2::ggplot(entity_data, ggplot2::aes(x = stats::reorder(entity, n), y = n)) +
+          ggplot2::geom_col(fill = bar_colors) +
           ggplot2::labs(x = "", y = "Frequency", title = "Named Entity Type Frequency") +
           ggplot2::theme_minimal(base_size = 14) +
           ggplot2::theme(
