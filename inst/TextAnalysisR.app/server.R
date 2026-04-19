@@ -7585,8 +7585,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   cooccur_result_val <- reactiveVal(NULL)
+  cooccur_initialized <- reactiveVal(FALSE)
 
-  observeEvent(input$plot_word_co_occurrence_network, {
+  run_cooccur_network <- function() {
     dfm_to_use <- try(dfm_final(), silent = TRUE)
     if (is.null(dfm_to_use) || inherits(dfm_to_use, "try-error")) {
       dfm_to_use <- dfm_init()
@@ -7631,6 +7632,32 @@ server <- shinyServer(function(input, output, session) {
       }
       if (elapsed < 0.6) later::later(finish, delay = 0.6 - elapsed) else finish()
     }, delay = 0.1)
+  }
+
+  observeEvent(input$plot_word_co_occurrence_network, {
+    cooccur_initialized(TRUE)
+    run_cooccur_network()
+  }, ignoreInit = TRUE)
+
+  cooccur_slider_inputs <- reactive({
+    list(
+      input$co_occurence_number_global,
+      input$top_node_n_co_occurrence_global,
+      input$node_label_size_cooccur,
+      input$community_method_cooccur,
+      input$node_size_cooccur,
+      input$node_color_cooccur,
+      input$nrows_co_occurrence,
+      input$width_word_co_occurrence_network_plot,
+      input$height_word_co_occurrence_network_plot,
+      input$doc_var_co_occurrence,
+      input$use_category_cooccur
+    )
+  }) %>% debounce(500)
+
+  observeEvent(cooccur_slider_inputs(), {
+    if (!isTRUE(cooccur_initialized())) return()
+    run_cooccur_network()
   }, ignoreInit = TRUE)
 
   word_co_occurrence_network_results <- reactive({
@@ -7657,9 +7684,14 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
+    plot_w <- input$width_word_co_occurrence_network_plot %||% 900
+    plot_h <- input$height_word_co_occurrence_network_plot %||% 800
     tags$div(
-      style = "width: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: auto;",
-      result$plot
+      style = sprintf("width: 100%%; overflow: auto; min-height: %dpx;", plot_h + 60),
+      tags$div(
+        style = sprintf("width: %dpx; min-width: %dpx; height: %dpx; margin: 0 auto;", plot_w, plot_w, plot_h),
+        result$plot
+      )
     )
   })
 
@@ -7891,7 +7923,9 @@ server <- shinyServer(function(input, output, session) {
 
   corr_result_val <- reactiveVal(NULL)
 
-  observeEvent(input$plot_word_correlation_network, {
+  corr_initialized <- reactiveVal(FALSE)
+
+  run_corr_network <- function() {
     dfm_to_use <- try(dfm_outcome(), silent = TRUE)
     if (is.null(dfm_to_use) || inherits(dfm_to_use, "try-error")) {
       dfm_to_use <- try(dfm_final(), silent = TRUE)
@@ -7940,6 +7974,33 @@ server <- shinyServer(function(input, output, session) {
       }
       if (elapsed < 0.6) later::later(finish, delay = 0.6 - elapsed) else finish()
     }, delay = 0.1)
+  }
+
+  observeEvent(input$plot_word_correlation_network, {
+    corr_initialized(TRUE)
+    run_corr_network()
+  }, ignoreInit = TRUE)
+
+  corr_slider_inputs <- reactive({
+    list(
+      input$common_term_n_global,
+      input$corr_n_global,
+      input$top_node_n_correlation_global,
+      input$node_label_size_corr,
+      input$community_method_corr,
+      input$node_size_corr,
+      input$node_color_corr,
+      input$nrows_correlation,
+      input$width_word_correlation_network_plot,
+      input$height_word_correlation_network_plot,
+      input$doc_var_correlation,
+      input$use_category_corr
+    )
+  }) %>% debounce(500)
+
+  observeEvent(corr_slider_inputs(), {
+    if (!isTRUE(corr_initialized())) return()
+    run_corr_network()
   }, ignoreInit = TRUE)
 
   word_correlation_network_results <- reactive({
@@ -7966,9 +8027,14 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
+    plot_w <- input$width_word_correlation_network_plot %||% 900
+    plot_h <- input$height_word_correlation_network_plot %||% 1000
     tags$div(
-      style = "width: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: auto;",
-      result$plot
+      style = sprintf("width: 100%%; overflow: auto; min-height: %dpx;", plot_h + 60),
+      tags$div(
+        style = sprintf("width: %dpx; min-width: %dpx; height: %dpx; margin: 0 auto;", plot_w, plot_w, plot_h),
+        result$plot
+      )
     )
   })
 
