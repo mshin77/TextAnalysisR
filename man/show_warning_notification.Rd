@@ -4,12 +4,14 @@
 \alias{show_warning_notification}
 \title{Show warning notification}
 \usage{
-show_warning_notification(message, duration = 5)
+show_warning_notification(message, duration = 5, session = NULL)
 }
 \arguments{
 \item{message}{Notification text.}
 
 \item{duration}{Seconds until auto-dismiss.}
+
+\item{session}{Shiny session. Defaults to the current reactive domain.}
 }
 \value{
 Invisibly the notification id.

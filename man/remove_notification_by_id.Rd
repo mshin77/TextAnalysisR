@@ -4,10 +4,12 @@
 \alias{remove_notification_by_id}
 \title{Remove Shiny notification by id}
 \usage{
-remove_notification_by_id(id)
+remove_notification_by_id(id, session = NULL)
 }
 \arguments{
 \item{id}{Notification id.}
+
+\item{session}{Shiny session. Defaults to the current reactive domain.}
 }
 \value{
 Invisibly \code{NULL}.

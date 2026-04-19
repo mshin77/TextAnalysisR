@@ -7613,16 +7613,17 @@ server <- shinyServer(function(input, output, session) {
     shinybusy::show_spinner()
     show_loading_notification("Computing co-occurrence network...", id = "cooccur_network_loading")
 
+    session_local <- session
     later::later(function() {
       result <- tryCatch(
         do.call(TextAnalysisR::word_co_occurrence_network, call_args),
         error = function(e) {
-          showNotification(paste("Error:", e$message), type = "error")
+          try(showNotification(paste("Error:", e$message), type = "error", session = session_local), silent = TRUE)
           NULL
         }
       )
       cooccur_result_val(result)
-      remove_notification_by_id("cooccur_network_loading")
+      remove_notification_by_id("cooccur_network_loading", session = session_local)
       shinybusy::hide_spinner()
     }, delay = 0.1)
   }, ignoreInit = TRUE)
@@ -7907,16 +7908,17 @@ server <- shinyServer(function(input, output, session) {
     shinybusy::show_spinner()
     show_loading_notification("Computing correlation network...", id = "corr_network_loading")
 
+    session_local <- session
     later::later(function() {
       result <- tryCatch(
         do.call(TextAnalysisR::word_correlation_network, call_args),
         error = function(e) {
-          showNotification(paste("Error:", e$message), type = "error")
+          try(showNotification(paste("Error:", e$message), type = "error", session = session_local), silent = TRUE)
           NULL
         }
       )
       corr_result_val(result)
-      remove_notification_by_id("corr_network_loading")
+      remove_notification_by_id("corr_network_loading", session = session_local)
       shinybusy::hide_spinner()
     }, delay = 0.1)
   }, ignoreInit = TRUE)

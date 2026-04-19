@@ -3130,19 +3130,21 @@ get_dt_options <- function(scroll_y = "400px",
 #' Show persistent loading notification
 #' @param message Notification text.
 #' @param id Optional unique id for later removal.
+#' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
-show_loading_notification <- function(message, id = NULL) {
+show_loading_notification <- function(message, id = NULL, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
   }
 
-  shiny::showNotification(
-    message,
-    type = "message",
-    duration = NULL,
-    id = id
+  if (is.null(session)) session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session)) return(invisible(NULL))
+
+  tryCatch(
+    shiny::showNotification(message, type = "message", duration = NULL, id = id, session = session),
+    error = function(e) NULL
   )
 
   invisible(NULL)
@@ -3151,18 +3153,21 @@ show_loading_notification <- function(message, id = NULL) {
 #' Show completion notification
 #' @param message Notification text.
 #' @param duration Seconds until auto-dismiss.
+#' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
-show_completion_notification <- function(message, duration = 5) {
+show_completion_notification <- function(message, duration = 5, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
   }
 
-  shiny::showNotification(
-    message,
-    type = "message",
-    duration = duration
+  if (is.null(session)) session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session)) return(invisible(NULL))
+
+  tryCatch(
+    shiny::showNotification(message, type = "message", duration = duration, session = session),
+    error = function(e) NULL
   )
 
   invisible(NULL)
@@ -3171,18 +3176,21 @@ show_completion_notification <- function(message, duration = 5) {
 #' Show error notification
 #' @param message Notification text.
 #' @param duration Seconds until auto-dismiss.
+#' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
-show_error_notification <- function(message, duration = 7) {
+show_error_notification <- function(message, duration = 7, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
   }
 
-  shiny::showNotification(
-    message,
-    type = "error",
-    duration = duration
+  if (is.null(session)) session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session)) return(invisible(NULL))
+
+  tryCatch(
+    shiny::showNotification(message, type = "error", duration = duration, session = session),
+    error = function(e) NULL
   )
 
   invisible(NULL)
@@ -3191,18 +3199,21 @@ show_error_notification <- function(message, duration = 7) {
 #' Show warning notification
 #' @param message Notification text.
 #' @param duration Seconds until auto-dismiss.
+#' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
-show_warning_notification <- function(message, duration = 5) {
+show_warning_notification <- function(message, duration = 5, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
   }
 
-  shiny::showNotification(
-    message,
-    type = "warning",
-    duration = duration
+  if (is.null(session)) session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session)) return(invisible(NULL))
+
+  tryCatch(
+    shiny::showNotification(message, type = "warning", duration = duration, session = session),
+    error = function(e) NULL
   )
 
   invisible(NULL)
@@ -3210,15 +3221,22 @@ show_warning_notification <- function(message, duration = 5) {
 
 #' Remove Shiny notification by id
 #' @param id Notification id.
+#' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly `NULL`.
 #' @keywords internal
 #' @export
-remove_notification_by_id <- function(id) {
+remove_notification_by_id <- function(id, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
   }
 
-  shiny::removeNotification(id)
+  if (is.null(session)) session <- shiny::getDefaultReactiveDomain()
+  if (is.null(session)) return(invisible(NULL))
+
+  tryCatch(
+    shiny::removeNotification(id, session = session),
+    error = function(e) NULL
+  )
 
   invisible(NULL)
 }

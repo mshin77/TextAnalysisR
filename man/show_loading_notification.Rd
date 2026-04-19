@@ -4,12 +4,14 @@
 \alias{show_loading_notification}
 \title{Show persistent loading notification}
 \usage{
-show_loading_notification(message, id = NULL)
+show_loading_notification(message, id = NULL, session = NULL)
 }
 \arguments{
 \item{message}{Notification text.}
 
 \item{id}{Optional unique id for later removal.}
+
+\item{session}{Shiny session. Defaults to the current reactive domain.}
 }
 \value{
 Invisibly the notification id.

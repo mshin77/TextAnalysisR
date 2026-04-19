@@ -4,12 +4,14 @@
 \alias{show_error_notification}
 \title{Show error notification}
 \usage{
-show_error_notification(message, duration = 7)
+show_error_notification(message, duration = 7, session = NULL)
 }
 \arguments{
 \item{message}{Notification text.}
 
 \item{duration}{Seconds until auto-dismiss.}
+
+\item{session}{Shiny session. Defaults to the current reactive domain.}
 }
 \value{
 Invisibly the notification id.
