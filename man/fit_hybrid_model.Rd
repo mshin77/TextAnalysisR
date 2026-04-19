@@ -11,8 +11,13 @@ fit_hybrid_model(
   embedding_model = "all-MiniLM-L6-v2",
   stm_prevalence = NULL,
   stm_init_type = "Spectral",
+  stm_gamma_prior = "Pooled",
+  stm_kappa_prior = "L1",
+  stm_max_em_its = 75,
   compute_quality = TRUE,
   stm_weight = 0.5,
+  n_embedding_dims = 5,
+  precomputed_embeddings = NULL,
   verbose = TRUE,
   seed = 123
 )
@@ -30,9 +35,19 @@ fit_hybrid_model(
 
 \item{stm_init_type}{STM initialization type (default: "Spectral").}
 
+\item{stm_gamma_prior}{Prior for STM topic-covariate coefficients, passed to \code{stm::stm(gamma.prior = ...)} (default: "Pooled").}
+
+\item{stm_kappa_prior}{Prior for STM topic-word distributions, passed to \code{stm::stm(kappa.prior = ...)} (default: "L1").}
+
+\item{stm_max_em_its}{Maximum EM iterations for STM (default: 75).}
+
 \item{compute_quality}{Logical, if TRUE, computes quality metrics (default: TRUE).}
 
 \item{stm_weight}{Weight for STM in keyword combination, 0-1 (default: 0.5).}
+
+\item{n_embedding_dims}{UMAP output dimensions for the embedding pipeline, forwarded to \code{fit_embedding_model(umap_n_components = ...)} (default: 5).}
+
+\item{precomputed_embeddings}{Optional numeric matrix of precomputed document embeddings (one row per text). If provided, skips embedding generation.}
 
 \item{verbose}{Logical, if TRUE, prints progress messages.}
 
