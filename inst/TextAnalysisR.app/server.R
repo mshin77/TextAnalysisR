@@ -21900,7 +21900,7 @@ server <- shinyServer(function(input, output, session) {
       ggplot_obj <- TextAnalysisR::plot_topic_probability(
         gamma_data = topic_prevalence_data,
         top_n = input$topic_number,
-        topic_labels = TRUE,
+        use_topic_labels = TRUE,
         colors = topic_colors
       )
 

@@ -1,12 +1,10 @@
 # TextAnalysisR 0.1.3 (2026-04-18)
 
-## Changes
 - Updated semantic analysis and topic modeling functions
 - Refreshed vignettes and pkgdown reference index
 
 # TextAnalysisR 0.0.3 (2026-02-22)
 
-## Changes
 - Fixed citation and documentation year from 2025 to 2026
 - Updated package title to "A Text Mining Workflow Tool" across documentation
 - Added pkgdown site URL to DESCRIPTION

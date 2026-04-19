@@ -4072,7 +4072,7 @@ plot_word_probability <- function(top_topic_terms,
 #'
 #' @param gamma_data A data frame with gamma values from calculate_topic_probability().
 #' @param top_n The number of topics to display (default: 10).
-#' @param topic_labels Optional topic labels (default: NULL).
+#' @param use_topic_labels Logical. If TRUE, use the `topic_label` column from `gamma_data` for axis labels (falls back to topic number when the column is absent). If FALSE (default), labels are formatted as "Topic N".
 #' @param colors Optional color palette for topics (default: NULL).
 #' @param ylab Y-axis label (default: "Topic Proportion").
 #' @param base_font_size Base font size in points for the plot theme (default: 11). Axis text and strip text will be base_font_size + 2.
@@ -4083,7 +4083,7 @@ plot_word_probability <- function(top_topic_terms,
 #' @export
 plot_topic_probability <- function(gamma_data,
                                    top_n = 10,
-                                   topic_labels = NULL,
+                                   use_topic_labels = FALSE,
                                    colors = NULL,
                                    ylab = "Topic Proportion",
                                    base_font_size = 11) {
@@ -4094,7 +4094,7 @@ plot_topic_probability <- function(gamma_data,
         dplyr::top_n(top_n, gamma)
     }
 
-    if (!is.null(topic_labels)) {
+    if (isTRUE(use_topic_labels)) {
       if ("topic_label" %in% names(gamma_terms)) {
         gamma_terms <- gamma_terms %>%
           dplyr::mutate(topic_display = topic_label)
