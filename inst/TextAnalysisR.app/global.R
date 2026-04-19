@@ -1626,15 +1626,6 @@ Focus on incorporating the most significant keywords while following the guideli
                 uiOutput("topic_term_plot_uiOutput"),
                 br(),
                 uiOutput("topic_term_table_uiOutput"),
-                br(),
-                div(
-                  style = "margin-bottom: 15px;",
-                  downloadButton(
-                    "download_methods_checklist",
-                    "Download Methods Checklist (.md)",
-                    class = "btn-secondary"
-                  )
-                ),
                 br()
               ),
               conditionalPanel(
