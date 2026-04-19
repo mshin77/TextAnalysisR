@@ -7611,7 +7611,7 @@ server <- shinyServer(function(input, output, session) {
       physics_gravity = as.numeric(input$physics_gravity_cooccur %||% -1500),
       physics_spring_length = as.numeric(input$physics_spring_length_cooccur %||% 100),
       physics_avoid_overlap = as.numeric(input$physics_avoid_overlap_cooccur %||% 0.3),
-      seed = as.numeric(input$seed_cooccur %||% 2025),
+      seed = as.numeric(input$seed_cooccur %||% 2026),
       showlegend = isTRUE(input$showlegend_cooccur)
     )
 
@@ -7963,7 +7963,7 @@ server <- shinyServer(function(input, output, session) {
       physics_gravity = as.numeric(input$physics_gravity_corr %||% -1500),
       physics_spring_length = as.numeric(input$physics_spring_length_corr %||% 100),
       physics_avoid_overlap = as.numeric(input$physics_avoid_overlap_corr %||% 0.3),
-      seed = as.numeric(input$seed_corr %||% 2025),
+      seed = as.numeric(input$seed_corr %||% 2026),
       showlegend = isTRUE(input$showlegend_corr)
     )
 
