@@ -57,7 +57,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_topic_probability</span><span class="op">(</span></span>
 <span>  <span class="va">gamma_data</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  topic_labels <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  use_topic_labels <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ylab <span class="op">=</span> <span class="st">"Topic Proportion"</span>,</span>
 <span>  base_font_size <span class="op">=</span> <span class="fl">11</span></span>
@@ -76,8 +76,8 @@
 <dd><p>The number of topics to display (default: 10).</p></dd>
 
 
-<dt id="arg-topic-labels">topic_labels<a class="anchor" aria-label="anchor" href="#arg-topic-labels"></a></dt>
-<dd><p>Optional topic labels (default: NULL).</p></dd>
+<dt id="arg-use-topic-labels">use_topic_labels<a class="anchor" aria-label="anchor" href="#arg-use-topic-labels"></a></dt>
+<dd><p>Logical. If TRUE, use the <code>topic_label</code> column from <code>gamma_data</code> for axis labels (falls back to topic number when the column is absent). If FALSE (default), labels are formatted as "Topic N".</p></dd>
 
 
 <dt id="arg-colors">colors<a class="anchor" aria-label="anchor" href="#arg-colors"></a></dt>
