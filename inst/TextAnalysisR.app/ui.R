@@ -2762,6 +2762,28 @@ Supports:
                 max = 10,
                 step = 1
               ),
+              sliderInput(
+                "physics_gravity_cooccur",
+                "Node repulsion (more negative = stronger)",
+                value = -1500, min = -5000, max = -200, step = 100
+              ),
+              sliderInput(
+                "physics_spring_length_cooccur",
+                "Edge length",
+                value = 100, min = 30, max = 400, step = 10
+              ),
+              sliderInput(
+                "physics_avoid_overlap_cooccur",
+                "Avoid node overlap (0-1)",
+                value = 0.3, min = 0, max = 1, step = 0.05
+              ),
+              numericInput(
+                "seed_cooccur",
+                "Layout seed",
+                value = 2025, min = 1, max = 999999, step = 1
+              ),
+              div(style = "font-size: 16px;",
+                  checkboxInput("showlegend_cooccur", "Show legend", value = TRUE)),
               div(
                 class = "category-toggle",
                 div(style = "font-size: 16px;", checkboxInput("use_category_cooccur",
@@ -2792,7 +2814,7 @@ Supports:
                   id = "trigger_cooccur_png", type = "button",
                   class = "btn btn-default btn-block action-button",
                   style = "margin: 0; flex: 1;",
-                  onclick = "(function(){var c=document.querySelector('#word_co_occurrence_network_plot_uiOutput canvas');if(!c){alert('No plot to download. Click Plot Network first.');return;}var a=document.createElement('a');a.download='co_occurrence_network.png';a.href=c.toDataURL('image/png');document.body.appendChild(a);a.click();document.body.removeChild(a);})();",
+                  onclick = "(function(){var cs=document.querySelectorAll('#word_co_occurrence_network_plot_uiOutput canvas');if(!cs.length){alert('No plot to download. Click Plot Network first.');return;}var main=null,maxA=0;cs.forEach(function(c){var a=c.width*c.height;if(a>maxA){maxA=a;main=c;}});if(!main){alert('No plot canvas found.');return;}var a=document.createElement('a');a.download='co_occurrence_network.png';a.href=main.toDataURL('image/png');document.body.appendChild(a);a.click();document.body.removeChild(a);})();",
                   tags$i(class = "fa fa-download"), " PNG"
                 )
               )
@@ -2876,6 +2898,28 @@ Supports:
                 max = 10,
                 step = 1
               ),
+              sliderInput(
+                "physics_gravity_corr",
+                "Node repulsion (more negative = stronger)",
+                value = -1500, min = -5000, max = -200, step = 100
+              ),
+              sliderInput(
+                "physics_spring_length_corr",
+                "Edge length",
+                value = 100, min = 30, max = 400, step = 10
+              ),
+              sliderInput(
+                "physics_avoid_overlap_corr",
+                "Avoid node overlap (0-1)",
+                value = 0.3, min = 0, max = 1, step = 0.05
+              ),
+              numericInput(
+                "seed_corr",
+                "Layout seed",
+                value = 2025, min = 1, max = 999999, step = 1
+              ),
+              div(style = "font-size: 16px;",
+                  checkboxInput("showlegend_corr", "Show legend", value = TRUE)),
               div(
                 class = "category-toggle",
                 div(style = "font-size: 16px;", checkboxInput("use_category_corr",
@@ -2907,7 +2951,7 @@ Supports:
                   id = "trigger_corr_png", type = "button",
                   class = "btn btn-default btn-block action-button",
                   style = "margin: 0; flex: 1;",
-                  onclick = "(function(){var c=document.querySelector('#word_correlation_network_plot_uiOutput canvas');if(!c){alert('No plot to download. Click Plot Network first.');return;}var a=document.createElement('a');a.download='correlation_network.png';a.href=c.toDataURL('image/png');document.body.appendChild(a);a.click();document.body.removeChild(a);})();",
+                  onclick = "(function(){var cs=document.querySelectorAll('#word_correlation_network_plot_uiOutput canvas');if(!cs.length){alert('No plot to download. Click Plot Network first.');return;}var main=null,maxA=0;cs.forEach(function(c){var a=c.width*c.height;if(a>maxA){maxA=a;main=c;}});if(!main){alert('No plot canvas found.');return;}var a=document.createElement('a');a.download='correlation_network.png';a.href=main.toDataURL('image/png');document.body.appendChild(a);a.click();document.body.removeChild(a);})();",
                   tags$i(class = "fa fa-download"), " PNG"
                 )
               )

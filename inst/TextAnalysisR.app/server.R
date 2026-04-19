@@ -7607,7 +7607,12 @@ server <- shinyServer(function(input, output, session) {
       node_label_size = input$node_label_size_cooccur %||% 22,
       community_method = input$community_method_cooccur %||% "leiden",
       node_size_by = input$node_size_cooccur %||% "degree",
-      node_color_by = input$node_color_cooccur %||% "community"
+      node_color_by = input$node_color_cooccur %||% "community",
+      physics_gravity = as.numeric(input$physics_gravity_cooccur %||% -1500),
+      physics_spring_length = as.numeric(input$physics_spring_length_cooccur %||% 100),
+      physics_avoid_overlap = as.numeric(input$physics_avoid_overlap_cooccur %||% 0.3),
+      seed = as.numeric(input$seed_cooccur %||% 2025),
+      showlegend = isTRUE(input$showlegend_cooccur)
     )
 
     cooccur_result_val(NULL)
@@ -7651,7 +7656,12 @@ server <- shinyServer(function(input, output, session) {
       input$width_word_co_occurrence_network_plot,
       input$height_word_co_occurrence_network_plot,
       input$doc_var_co_occurrence,
-      input$use_category_cooccur
+      input$use_category_cooccur,
+      input$physics_gravity_cooccur,
+      input$physics_spring_length_cooccur,
+      input$physics_avoid_overlap_cooccur,
+      input$seed_cooccur,
+      input$showlegend_cooccur
     )
   }) %>% debounce(500)
 
@@ -7949,7 +7959,12 @@ server <- shinyServer(function(input, output, session) {
       node_label_size = input$node_label_size_corr %||% 22,
       community_method = input$community_method_corr %||% "leiden",
       node_size_by = input$node_size_corr %||% "degree",
-      node_color_by = input$node_color_corr %||% "community"
+      node_color_by = input$node_color_corr %||% "community",
+      physics_gravity = as.numeric(input$physics_gravity_corr %||% -1500),
+      physics_spring_length = as.numeric(input$physics_spring_length_corr %||% 100),
+      physics_avoid_overlap = as.numeric(input$physics_avoid_overlap_corr %||% 0.3),
+      seed = as.numeric(input$seed_corr %||% 2025),
+      showlegend = isTRUE(input$showlegend_corr)
     )
 
     corr_result_val(NULL)
@@ -7994,7 +8009,12 @@ server <- shinyServer(function(input, output, session) {
       input$width_word_correlation_network_plot,
       input$height_word_correlation_network_plot,
       input$doc_var_correlation,
-      input$use_category_corr
+      input$use_category_corr,
+      input$physics_gravity_corr,
+      input$physics_spring_length_corr,
+      input$physics_avoid_overlap_corr,
+      input$seed_corr,
+      input$showlegend_corr
     )
   }) %>% debounce(500)
 
