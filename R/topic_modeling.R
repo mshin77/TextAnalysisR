@@ -2479,8 +2479,13 @@ assess_embedding_stability <- function(
 #' @param embedding_model Embedding model name (default: "all-MiniLM-L6-v2").
 #' @param stm_prevalence Formula for STM prevalence covariates (e.g., ~ category + s(year, df=3)).
 #' @param stm_init_type STM initialization type (default: "Spectral").
+#' @param stm_gamma_prior Prior for STM topic-covariate coefficients, passed to `stm::stm(gamma.prior = ...)` (default: "Pooled").
+#' @param stm_kappa_prior Prior for STM topic-word distributions, passed to `stm::stm(kappa.prior = ...)` (default: "L1").
+#' @param stm_max_em_its Maximum EM iterations for STM (default: 75).
 #' @param compute_quality Logical, if TRUE, computes quality metrics (default: TRUE).
 #' @param stm_weight Weight for STM in keyword combination, 0-1 (default: 0.5).
+#' @param n_embedding_dims UMAP output dimensions for the embedding pipeline, forwarded to `fit_embedding_model(umap_n_components = ...)` (default: 5).
+#' @param precomputed_embeddings Optional numeric matrix of precomputed document embeddings (one row per text). If provided, skips embedding generation.
 #' @param verbose Logical, if TRUE, prints progress messages.
 #' @param seed Random seed for reproducibility.
 #'
@@ -2530,8 +2535,13 @@ fit_hybrid_model <- function(texts,
                            embedding_model = "all-MiniLM-L6-v2",
                            stm_prevalence = NULL,
                            stm_init_type = "Spectral",
+                           stm_gamma_prior = "Pooled",
+                           stm_kappa_prior = "L1",
+                           stm_max_em_its = 75,
                            compute_quality = TRUE,
                            stm_weight = 0.5,
+                           n_embedding_dims = 5,
+                           precomputed_embeddings = NULL,
                            verbose = TRUE,
                            seed = 123) {
 
@@ -2563,6 +2573,9 @@ fit_hybrid_model <- function(texts,
       prevalence = stm_prevalence,
       data = if (!is.null(metadata)) metadata else stm_data$meta,
       init.type = stm_init_type,
+      gamma.prior = stm_gamma_prior,
+      kappa.prior = stm_kappa_prior,
+      max.em.its = stm_max_em_its,
       verbose = FALSE,
       seed = seed
     )
@@ -2576,6 +2589,9 @@ fit_hybrid_model <- function(texts,
         prevalence = stm_prevalence,
         data = if (!is.null(metadata)) metadata else stm_data$meta,
         init.type = "LDA",
+        gamma.prior = stm_gamma_prior,
+        kappa.prior = stm_kappa_prior,
+        max.em.its = stm_max_em_its,
         verbose = FALSE,
         seed = seed
       )
@@ -2600,6 +2616,8 @@ fit_hybrid_model <- function(texts,
       method = "umap_hdbscan",
       n_topics = n_topics_stm,
       embedding_model = embedding_model,
+      umap_n_components = n_embedding_dims,
+      precomputed_embeddings = precomputed_embeddings,
       seed = seed,
       verbose = FALSE
     )
@@ -2612,6 +2630,8 @@ fit_hybrid_model <- function(texts,
         n_topics = n_topics_stm,
         clustering_method = "kmeans",
         embedding_model = embedding_model,
+        umap_n_components = n_embedding_dims,
+        precomputed_embeddings = precomputed_embeddings,
         seed = seed,
         verbose = FALSE
       )
