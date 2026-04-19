@@ -1,7 +1,6 @@
-# Show DFM Setup Instructions Modal
+# Show DFM instructions modal
 
-Displays a modal dialog with console-style instructions for creating a
-DFM. Uses verbatimTextOutput for formatting.
+Show DFM instructions modal
 
 ## Usage
 
@@ -17,28 +16,16 @@ show_dfm_instructions_modal(
 
 - output_id:
 
-  Shiny output ID for the verbatimTextOutput
+  Output id to reset after modal closes.
 
 - feature_name:
 
-  Name of the feature requiring DFM (default: "this feature")
+  Feature description in the instructions.
 
 - session:
 
-  Shiny session object (default: getDefaultReactiveDomain())
+  Shiny session.
 
 ## Value
 
-Displays a Shiny modal dialog. Returns NULL invisibly.
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-output$dfm_instructions <- renderPrint({
-  cat(get_dfm_setup_instructions("keywords"), sep = "\n")
-})
-
-show_dfm_instructions_modal("dfm_instructions", "keywords")
-} # }
-```
+Invisibly `NULL`.

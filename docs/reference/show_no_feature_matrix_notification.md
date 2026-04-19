@@ -1,8 +1,6 @@
-# Show Feature Matrix Notification
+# Show no-feature-matrix notification
 
-Displays error notification when feature matrix is required but not
-available. Similar to show_no_dfm_notification but uses "feature matrix"
-terminology.
+Show no-feature-matrix notification
 
 ## Usage
 
@@ -14,8 +12,8 @@ show_no_feature_matrix_notification(duration = 7)
 
 - duration:
 
-  Duration in seconds (default: 7)
+  Seconds until auto-dismiss.
 
 ## Value
 
-Displays a Shiny notification. Returns NULL invisibly.
+Invisibly the notification id.

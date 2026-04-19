@@ -498,14 +498,16 @@ lexical_diversity_analysis <- function(x,
     stop("Package 'quanteda.textstats' is required. Please install it.")
   }
 
-  quanteda_measures <- c("TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Vm", "Maas", "MSTTR")
+  quanteda_measures <- c("TTR", "C", "R", "CTTR", "U", "S", "K", "I", "D", "Vm", "Maas")
   mtld_requested <- FALSE
   mattr_requested <- FALSE
+  msttr_requested <- FALSE
 
   if ("all" %in% measures) {
     measures_to_use <- quanteda_measures
     mtld_requested <- TRUE
     mattr_requested <- TRUE
+    msttr_requested <- TRUE
   } else {
     if ("MTLD" %in% measures) {
       mtld_requested <- TRUE
@@ -515,19 +517,24 @@ lexical_diversity_analysis <- function(x,
       mattr_requested <- TRUE
       measures <- setdiff(measures, "MATTR")
     }
+    if ("MSTTR" %in% measures) {
+      msttr_requested <- TRUE
+      measures <- setdiff(measures, "MSTTR")
+    }
     measures_to_use <- intersect(measures, quanteda_measures)
   }
 
   is_tokens_input <- inherits(x, "tokens")
   seq_tokens <- NULL
-  if ((mtld_requested || mattr_requested) && !is_tokens_input) {
+  if ((mtld_requested || mattr_requested || msttr_requested) && !is_tokens_input) {
     if (!is.null(texts) && length(texts) == quanteda::ndoc(x)) {
       seq_tokens <- quanteda::tokens(texts, remove_punct = TRUE)
     } else {
-      message("MTLD/MATTR require sequential token order. DFM input loses token order. ",
+      message("MTLD/MATTR/MSTTR require sequential token order. DFM input loses token order. ",
               "Pass a tokens object or provide the 'texts' parameter. Skipping.")
       mtld_requested <- FALSE
       mattr_requested <- FALSE
+      msttr_requested <- FALSE
     }
   }
 
@@ -656,6 +663,30 @@ lexical_diversity_analysis <- function(x,
       })
     }
 
+    if (msttr_requested) {
+      tryCatch({
+        tokens_source <- if (is_tokens_input) x else seq_tokens
+        msttr_segment <- min(50, min(quanteda::ntoken(tokens_source)))
+
+        msttr_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
+          doc_tokens <- as.character(tokens_source[[i]])
+          n <- length(doc_tokens)
+          if (n < msttr_segment) return(NA_real_)
+          n_segments <- n %/% msttr_segment
+          if (n_segments < 1) return(NA_real_)
+          ttrs <- vapply(seq_len(n_segments), function(j) {
+            seg <- doc_tokens[((j - 1) * msttr_segment + 1):(j * msttr_segment)]
+            length(unique(seg)) / msttr_segment
+          }, numeric(1))
+          mean(ttrs)
+        }, numeric(1))
+
+        lexdiv_results$MSTTR <- as.numeric(msttr_values)
+      }, error = function(e) {
+        message("MSTTR calculation failed: ", e$message, ". Skipping MSTTR.")
+      })
+    }
+
     if (!"document" %in% names(lexdiv_results)) {
       lexdiv_results$document <- quanteda::docnames(x)
     }
@@ -767,14 +798,17 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
 
   plot_df <- data.frame(
     value = metric_values,
-    doc = paste("Doc", seq_along(metric_values))
+    doc = paste("Doc", seq_along(metric_values)),
+    x = ""
   )
-  plot_df$hover_text <- paste("Document:", plot_df$doc,
-                               paste0("<br>", metric, ":"), round(plot_df$value, 4))
+  plot_df$hover_text <- paste0("Document: ", plot_df$doc,
+                               "<br>", metric, ": ", round(plot_df$value, 4))
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(y = value, text = hover_text)) +
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = value)) +
     ggplot2::geom_boxplot(fill = "rgba(139, 92, 246, 0.7)",
-                          color = "#0c1f4a", outlier.color = "#8B5CF6") +
+                          color = "#0c1f4a", outlier.shape = NA) +
+    suppressWarnings(ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
+                         width = 0.15, alpha = 0.5, color = "#0c1f4a", size = 1.8)) +
     ggplot2::labs(y = metric, x = "", title = title) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -1045,9 +1079,7 @@ plot_mwe_frequency <- function(mwe_data,
 
 
 
-################################################################################
-# KEYWORD EXTRACTION
-################################################################################
+# Keyword extraction
 
 #' Extract Keywords Using TF-IDF
 #'
@@ -1319,15 +1351,15 @@ plot_keyword_comparison <- function(tfidf_data,
       axis.text.x = ggplot2::element_text(size = 11, color = "#3B3B3B", angle = -45, hjust = 0),
       axis.text.y = ggplot2::element_text(size = 11, color = "#3B3B3B"),
       axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      legend.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      legend.text = ggplot2::element_text(size = 12, color = "#3B3B3B"),
       legend.position = "right"
     )
 }
 
 
 
-################################################################################
-# READABILITY
-################################################################################
+# Readability
 
 # Readability Analysis Functions
 #
@@ -1382,14 +1414,17 @@ plot_readability_distribution <- function(readability_data,
 
   plot_df <- data.frame(
     value = metric_values,
-    doc = paste("Doc", seq_along(metric_values))
+    doc = paste("Doc", seq_along(metric_values)),
+    x = ""
   )
-  plot_df$hover_text <- paste("Document:", plot_df$doc,
-                               paste0("<br>", metric, ":"), round(plot_df$value, 2))
+  plot_df$hover_text <- paste0("Document: ", plot_df$doc,
+                               "<br>", metric, ": ", round(plot_df$value, 2))
 
-  ggplot2::ggplot(plot_df, ggplot2::aes(y = value, text = hover_text)) +
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = value)) +
     ggplot2::geom_boxplot(fill = "rgba(74, 144, 226, 0.7)",
-                          color = "#0c1f4a", outlier.color = "#4A90E2") +
+                          color = "#0c1f4a", outlier.shape = NA) +
+    suppressWarnings(ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
+                         width = 0.15, alpha = 0.5, color = "#0c1f4a", size = 1.8)) +
     ggplot2::labs(y = metric, x = "", title = title) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -1445,11 +1480,13 @@ plot_readability_by_group <- function(readability_data,
 
   unique_groups <- unique(plot_data$group)
 
-  plot_data$hover_text <- paste(group_var, ":", plot_data$group,
-                               paste0("<br>", metric, ":"), plot_data$metric_value)
+  plot_data$hover_text <- paste0(group_var, ": ", plot_data$group,
+                                 "<br>", metric, ": ", plot_data$metric_value)
 
-  ggplot2::ggplot(plot_data, ggplot2::aes(x = group, y = metric_value, fill = group, text = hover_text)) +
-    ggplot2::geom_boxplot(alpha = 0.7) +
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = group, y = metric_value, fill = group)) +
+    ggplot2::geom_boxplot(alpha = 0.7, outlier.shape = NA) +
+    suppressWarnings(ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
+                         width = 0.15, alpha = 0.5, color = "#0c1f4a", size = 1.8)) +
     ggplot2::scale_fill_manual(values = colors[1:length(unique_groups)]) +
     ggplot2::labs(x = group_var, y = metric, title = title) +
     ggplot2::theme_minimal(base_size = 11) +
@@ -2649,9 +2686,7 @@ parse_morphology_string <- function(data, features = NULL) {
 }
 
 
-################################################################################
-# LOG ODDS RATIO ANALYSIS
-################################################################################
+# Log odds ratio analysis
 
 #' Calculate Log Odds Ratio Between Categories
 #'
@@ -3084,53 +3119,39 @@ plot_weighted_log_odds <- function(weighted_data,
     )
   }
 
-  groups <- unique(weighted_data[[group_col]])
+  plot_data <- weighted_data %>%
+    dplyr::group_by(.data[[group_col]]) %>%
+    dplyr::slice_max(abs(log_odds_weighted), n = top_n, with_ties = FALSE) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      direction = ifelse(log_odds_weighted > 0, "positive", "negative"),
+      hover_text = paste0("Term: ", feature,
+                          "<br>Log Odds: ", round(log_odds_weighted, 3),
+                          "<br>", group_col, ": ", .data[[group_col]]),
+      feature = tidytext::reorder_within(feature, log_odds_weighted, .data[[group_col]])
+    )
 
-  plot_list <- lapply(groups, function(grp) {
-    grp_data <- weighted_data[weighted_data[[group_col]] == grp, ]
-    grp_data <- grp_data[order(abs(grp_data$log_odds_weighted), decreasing = TRUE), ]
-    grp_data <- utils::head(grp_data, top_n)
-    grp_data <- grp_data[order(grp_data$log_odds_weighted), ]
-    grp_data$feature_ordered <- factor(grp_data$feature, levels = grp_data$feature)
-    grp_data$direction <- ifelse(grp_data$log_odds_weighted > 0, "positive", "negative")
-    grp_data$hover_text <- paste("Term:", grp_data$feature,
-                                 "<br>Log Odds:", round(grp_data$log_odds_weighted, 3))
-
-    ggplot2::ggplot(grp_data, ggplot2::aes(x = log_odds_weighted, y = feature_ordered,
-                                            fill = direction, text = hover_text)) +
-      ggplot2::geom_col() +
-      ggplot2::geom_vline(xintercept = 0, linetype = "dotted", color = "#94A3B8") +
-      ggplot2::scale_fill_manual(values = c("positive" = color_positive,
-                                             "negative" = color_negative),
-                                  guide = "none") +
-      ggplot2::labs(x = "", y = "", title = as.character(grp)) +
-      ggplot2::theme_minimal(base_size = 11) +
-      ggplot2::theme(
-        plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a", hjust = 0.5),
-        axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
-        axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
-      )
-  })
-
-  if (requireNamespace("patchwork", quietly = TRUE)) {
-    n_groups <- length(groups)
-    n_cols <- min(2, n_groups)
-    combined <- patchwork::wrap_plots(plot_list, ncol = n_cols) +
-      patchwork::plot_annotation(title = title,
-                                  theme = ggplot2::theme(
-                                    plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a",
-                                                                       hjust = 0.5)
-                                  ))
-    return(combined)
-  }
-
-  plot_list[[1]] + ggplot2::ggtitle(title)
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = log_odds_weighted, y = feature,
+                                          fill = direction, text = hover_text)) +
+    ggplot2::geom_col() +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dotted", color = "#94A3B8") +
+    ggplot2::facet_wrap(stats::as.formula(paste("~", group_col)), scales = "free_y") +
+    tidytext::scale_y_reordered() +
+    ggplot2::scale_fill_manual(values = c("positive" = color_positive,
+                                          "negative" = color_negative),
+                               guide = "none") +
+    ggplot2::labs(x = "Log Odds (Weighted)", y = "", title = title) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a", hjust = 0.5),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      strip.text = ggplot2::element_text(size = 12, color = "#0c1f4a")
+    )
 }
 
 
-################################################################################
-# LEXICAL DISPERSION ANALYSIS
-################################################################################
+# Lexical dispersion analysis
 
 #' Calculate Lexical Dispersion
 #'
@@ -3287,9 +3308,9 @@ plot_lexical_dispersion <- function(dispersion_data,
   dispersion_data$term <- factor(dispersion_data$term, levels = rev(unique_terms))
 
   dispersion_data$hover_text <- paste0(
-    dispersion_data$term,
-    "\nDocument: ", dispersion_data$doc_id,
-    "\nPosition: ", round(dispersion_data$position, 3),
+    "Term: ", dispersion_data$term,
+    "<br>Document: ", dispersion_data$doc_id,
+    "<br>Position: ", round(dispersion_data$position, 3),
     if (scale == "relative") " (relative)" else ""
   )
 
@@ -3302,10 +3323,13 @@ plot_lexical_dispersion <- function(dispersion_data,
   term_levels <- levels(dispersion_data$term)
   dispersion_data$term_num <- as.numeric(dispersion_data$term)
 
-  p <- ggplot2::ggplot(dispersion_data, ggplot2::aes(color = term, text = hover_text)) +
-    ggplot2::geom_segment(ggplot2::aes(x = position, xend = position,
-                                        y = term_num - 0.4, yend = term_num + 0.4),
-                          linewidth = 0.3, alpha = 0.7) +
+  p <- ggplot2::ggplot(dispersion_data, ggplot2::aes(color = term)) +
+    suppressWarnings(ggplot2::geom_segment(ggplot2::aes(x = position, xend = position,
+                                        y = term_num - 0.4, yend = term_num + 0.4,
+                                        text = hover_text),
+                          linewidth = 0.3, alpha = 0.7)) +
+    suppressWarnings(ggplot2::geom_point(ggplot2::aes(x = position, y = term_num, text = hover_text),
+                        size = 4, alpha = 0)) +
     ggplot2::scale_y_continuous(breaks = seq_along(term_levels), labels = term_levels) +
     ggplot2::scale_color_manual(values = colors) +
     ggplot2::labs(x = x_label, y = "", title = title, color = "") +
@@ -3314,6 +3338,8 @@ plot_lexical_dispersion <- function(dispersion_data,
       plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
       axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
       axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      legend.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      legend.text = ggplot2::element_text(size = 12, color = "#3B3B3B"),
       legend.position = "bottom"
     )
 

@@ -1,7 +1,6 @@
-# Show Generic Preprocessing Required Modal
+# Show preprocessing-required modal
 
-Displays a simple modal indicating preprocessing is required.
-Lightweight alternative when detailed steps aren't needed.
+Show preprocessing-required modal
 
 ## Usage
 
@@ -16,23 +15,12 @@ show_preprocessing_required_modal(
 
 - message:
 
-  Custom message (default: "Please complete preprocessing steps first.")
+  Modal body message.
 
 - title:
 
-  Modal title (default: "Preprocessing Required")
+  Modal title.
 
 ## Value
 
-Displays a Shiny modal dialog. Returns NULL invisibly.
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-if (!preprocessing_complete()) {
-  show_preprocessing_required_modal()
-  return()
-}
-} # }
-```
+Invisibly `NULL`.

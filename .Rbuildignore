@@ -18,5 +18,4 @@ inst/TextAnalysisR\.app/\.claude$
 ^run_checks\.R$
 ^\.Renviron$
 ^check_package\.R$
-^vignettes$
 ^\.env\.example$

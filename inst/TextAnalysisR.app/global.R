@@ -714,7 +714,9 @@ Focus on incorporating the most significant keywords while following the guideli
                 choices = c(
                   "all-MiniLM-L6-v2 (Fast)" = "all-MiniLM-L6-v2",
                   "all-mpnet-base-v2 (Higher Quality)" = "all-mpnet-base-v2",
+                  "BGE Small EN v1.5 (Fast + Strong Retrieval)" = "BAAI/bge-small-en-v1.5",
                   "BGE Base EN v1.5 (BERTopic Optimized)" = "BAAI/bge-base-en-v1.5",
+                  "E5 Base v2 (Instructor-tuned)" = "intfloat/e5-base-v2",
                   "Nomic Embed Text v2 (Multilingual)" = "nomic-ai/nomic-embed-text-v2-moe",
                   "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                 ),
@@ -1040,6 +1042,16 @@ Focus on incorporating the most significant keywords while following the guideli
               value = 5,
               min = 3,
               max = 15
+            ),
+            sliderInput(
+              "hybrid_stm_weight",
+              "STM weight in combined keywords",
+              value = 0.5, min = 0, max = 1, step = 0.05,
+              ticks = FALSE
+            ),
+            tags$p(
+              style = "font-size: 13px; color: #666; margin-top: -8px; margin-bottom: 12px;",
+              "0 = favor embedding keywords, 1 = favor STM FREX terms, 0.5 = balanced"
             ),
             div(
               style = "margin-bottom: 15px;",
@@ -1476,6 +1488,14 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "input.topic_modeling_path == 'hybrid' && output.has_hybrid_search_k_results == true",
+                div(
+                  style = "background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 15px; line-height: 1.6; color: #78350F;",
+                  tags$i(class = "fa fa-exclamation-triangle", style = "margin-right: 8px; color: #D97706;"),
+                  tags$strong("Exploratory, not confirmatory. "),
+                  "Covariate regressions on hybrid or embedding-derived topics risk ",
+                  tags$em("double-dipping"),
+                  " (topics are derived from the same documents used for inference), which inflates Type-I error. Treat these effects as hypothesis-generating and validate on held-out data before reporting as causal."
+                ),
                 tabsetPanel(
                   id = "hybridSearchKSubtabs",
                   tabPanel(
@@ -1606,6 +1626,15 @@ Focus on incorporating the most significant keywords while following the guideli
                 uiOutput("topic_term_plot_uiOutput"),
                 br(),
                 uiOutput("topic_term_table_uiOutput"),
+                br(),
+                div(
+                  style = "margin-bottom: 15px;",
+                  downloadButton(
+                    "download_methods_checklist",
+                    "Download Methods Checklist (.md)",
+                    class = "btn-secondary"
+                  )
+                ),
                 br()
               ),
               conditionalPanel(

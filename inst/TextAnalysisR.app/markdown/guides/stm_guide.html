@@ -16,9 +16,12 @@
   <hr>
 
   <h4 style="font-family: 'Montserrat', sans-serif; color: #337ab7; margin-top: 20px;">Quality Metrics</h4>
+  <p><strong>Choosing K:</strong> Prefer models in the upper-right of the semantic-coherence vs. exclusivity scatter (high on both).</p>
   <ul>
     <li><strong>Semantic Coherence:</strong> Measures word co-occurrence within topics (Mimno et al., 2011)</li>
     <li><strong>Exclusivity:</strong> Measures how unique words are to each topic</li>
+    <li><strong>NPMI:</strong> Normalized Pointwise Mutual Information on top terms; alternative coherence axis less sensitive to rare words.</li>
+    <li><strong>Topic Diversity:</strong> Proportion of unique words across topics' top-K terms (higher = less topic overlap).</li>
     <li><strong>Held-out Likelihood:</strong> Predictive performance on unseen documents</li>
     <li><strong>Residuals:</strong> Model fit diagnostic</li>
   </ul>
@@ -29,6 +32,8 @@
     <li>Roberts, M. E., Stewart, B. M., & Tingley, D. (2019). stm: An R package for structural topic models. <em>Journal of Statistical Software</em>, 91(2), 1-40.</li>
     <li>Roberts, M. E., Stewart, B. M., Tingley, D., et al. (2014). Structural topic models for open-ended survey responses. <em>American Journal of Political Science</em>, 58(4), 1064-1082.</li>
     <li>Mimno, D., Wallach, H., Talley, E., Leenders, M., & McCallum, A. (2011). Optimizing semantic coherence in topic models. <em>EMNLP 2011</em>.</li>
+    <li>Hoyle, A., Goel, P., Hian-Cheong, A., Peskov, D., Boyd-Graber, J., & Resnik, P. (2021). Is automated topic model evaluation broken? The incoherence of coherence. <em>NeurIPS 2021</em>. <a href="https://arxiv.org/abs/2107.02173" target="_blank">arXiv:2107.02173</a></li>
+    <li>Dieng, A. B., Ruiz, F. J. R., & Blei, D. M. (2020). Topic modeling in embedding spaces. <em>Transactions of the Association for Computational Linguistics</em>, 8, 439–453. <a href="https://aclanthology.org/2020.tacl-1.29/" target="_blank">https://aclanthology.org/2020.tacl-1.29/</a></li>
   </ul>
   <hr style="margin-top: 20px; margin-bottom: 15px;">
 

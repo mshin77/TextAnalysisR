@@ -1,8 +1,6 @@
-# Show Preprocessing Steps Modal
+# Show preprocessing-steps modal
 
-Displays a modal dialog listing required preprocessing steps for a
-feature. Generic version that works for any feature requiring
-preprocessing.
+Show preprocessing-steps modal
 
 ## Usage
 
@@ -20,36 +18,24 @@ show_preprocessing_steps_modal(
 
 - title:
 
-  Modal title (default: "Preprocessing Required")
+  Modal title.
 
 - message:
 
-  Main message to display
+  Lead message.
 
 - required_steps:
 
-  Character vector of required preprocessing steps
+  Character vector of required step labels.
 
 - optional_steps:
 
-  Character vector of optional preprocessing steps (default: NULL)
+  Character vector of optional step labels.
 
 - additional_note:
 
-  Optional additional note to display (default: NULL)
+  Optional note appended to the body.
 
 ## Value
 
-Displays a Shiny modal dialog. Returns NULL invisibly.
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-show_preprocessing_steps_modal(
-  message = "Please complete preprocessing to generate tokens.",
-  required_steps = c("Step 1: Unite Texts", "Step 4: Document-Feature Matrix"),
-  optional_steps = c("Steps 2, 3, 5, and 6")
-)
-} # }
-```
+Invisibly `NULL`.

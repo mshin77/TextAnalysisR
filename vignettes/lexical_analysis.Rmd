@@ -78,10 +78,11 @@ N-grams are sequences of consecutive words that frequently appear together. They
 - **Trigrams:** 3-word sequences (e.g., "natural language processing")
 - **4-grams & 5-grams:** Longer phrases (e.g., "statistical significance test results")
 
-**Usage:** Set minimum frequency (how often phrases appear) and lambda (collocation strength) to detect meaningful multi-word expressions.
+**Usage:** Set minimum frequency (how often phrases appear) and lambda (collocation strength) to detect meaningful multi-word expressions. The function returns a collocations table; pass it to `quanteda::tokens_compound()` to merge phrases into the tokens object.
 
 ```{r}
-tokens <- detect_multi_words(tokens, min_count = 10)
+compounds <- detect_multi_words(tokens, min_count = 10)
+tokens <- quanteda::tokens_compound(tokens, compounds)
 ```
 
 **Learn More:** [Text Mining with R - N-grams Chapter](https://www.tidytextmining.com/ngrams.html)
@@ -126,7 +127,7 @@ Morphological analysis extracts grammatical features from words. Uses Python spa
 | Case | Grammatical case | Nom, Acc, Dat, Gen |
 
 ```{r}
-parsed <- extract_pos_tags(texts)  # Uses spacy_parse_full
+parsed <- extract_pos_tags(united_tbl$united_texts)
 # Returns columns: doc_id, token, lemma, pos, tag
 ```
 
@@ -183,7 +184,7 @@ Log odds ratio compares word frequencies between categories to identify distinct
 ```{r}
 log_odds <- calculate_log_odds_ratio(
   dfm_object,
-  group_var = "category",
+  group_var = "reference_type",
   comparison_mode = "binary",
   top_n = 15
 )
@@ -198,7 +199,7 @@ For publication-quality analysis, use the weighted log odds method which account
 # Requires tidylo package: install.packages("tidylo")
 weighted_odds <- calculate_weighted_log_odds(
   dfm_object,
-  group_var = "category",
+  group_var = "reference_type",
   top_n = 15
 )
 ```

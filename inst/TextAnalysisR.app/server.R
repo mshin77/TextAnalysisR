@@ -21,8 +21,6 @@ options(shiny.timeout = 300)
 options(digits = 4)
 options(scipen = 999)
 
-source("ui_topic_modeling.R", local = TRUE)
-
 server <- shinyServer(function(input, output, session) {
   options(shiny.error = function() {
     show_error_notification("An unexpected error occurred. Please try again or contact support.")
@@ -54,13 +52,26 @@ server <- shinyServer(function(input, output, session) {
   gg_to_plotly <- function(gg, tooltip = "text", height = NULL, width = NULL) {
     suppressWarnings({
       p <- plotly::ggplotly(gg, tooltip = tooltip, height = height, width = width)
-      p %>% plotly::layout(
+      p <- p %>% plotly::layout(
         hoverlabel = list(
           font = list(family = "Roboto, sans-serif", size = 16),
           align = "left",
           namelength = -1
         )
-      ) %>% plotly::style(hoverinfo = "text")
+      )
+      built <- plotly::plotly_build(p)
+      has_text <- vapply(built$x$data, function(tr) {
+        !is.null(tr$text) && any(nzchar(as.character(tr$text)))
+      }, logical(1))
+      text_traces <- which(has_text)
+      skip_traces <- which(!has_text)
+      if (length(text_traces) > 0) {
+        p <- plotly::style(p, hoverinfo = "text", traces = text_traces)
+      }
+      if (length(skip_traces) > 0) {
+        p <- plotly::style(p, hoverinfo = "skip", traces = skip_traces)
+      }
+      p
     })
   }
 
@@ -5923,22 +5934,41 @@ server <- shinyServer(function(input, output, session) {
     parsed <- spacy_parsed()
     req(parsed, nrow(parsed) > 0)
 
-    doc_id <- input$dep_viz_doc
-    if (is.null(doc_id) || doc_id == "") {
-      doc_id <- unique(parsed$doc_id)[1]
+    selected_doc <- input$dep_viz_doc
+    if (is.null(selected_doc) || selected_doc == "") {
+      selected_doc <- unique(parsed$doc_id)[1]
     }
 
-    doc_data <- parsed %>% dplyr::filter(doc_id == !!doc_id)
+    doc_data <- parsed %>% dplyr::filter(doc_id == !!selected_doc)
     req(nrow(doc_data) > 0)
 
-    base_cols <- c("doc_id", "sentence_id", "token_id", "token", "lemma", "pos")
-    dep_cols <- c("head_token_id", "dep_rel")
-    available <- intersect(c(base_cols, dep_cols), names(doc_data))
+    tokens_obj <- .get_tokens_obj()
+    all_doc_ids <- if (!is.null(tokens_obj)) quanteda::docnames(tokens_obj) else unique(parsed$doc_id)
+    doc_position <- match(selected_doc, all_doc_ids)
 
-    display_df <- doc_data %>% dplyr::select(dplyr::all_of(available))
+    display_df <- doc_data %>%
+      dplyr::mutate(Document = paste0("Doc ", doc_position))
+
+    has_doc_id <- !is.null(input$dep_doc_id_var) && input$dep_doc_id_var != "" &&
+                  input$dep_doc_id_var != "None" && !is.null(tokens_obj)
+    if (has_doc_id) {
+      doc_vars <- quanteda::docvars(tokens_obj)
+      if (!is.null(doc_vars) && input$dep_doc_id_var %in% names(doc_vars) &&
+          !is.na(doc_position)) {
+        display_df$`Document ID` <- as.character(doc_vars[[input$dep_doc_id_var]][doc_position])
+      } else {
+        has_doc_id <- FALSE
+      }
+    }
+
+    leading_cols <- if (has_doc_id) c("Document", "Document ID") else "Document"
+    src_cols <- c("sentence_id", "token_id", "token", "lemma", "pos", "head_token_id", "dep_rel")
+    src_available <- intersect(src_cols, names(display_df))
+    display_df <- display_df %>%
+      dplyr::select(dplyr::all_of(c(leading_cols, src_available)))
 
     col_rename <- c(
-      "doc_id" = "Document", "sentence_id" = "Sentence", "token_id" = "Token ID",
+      "sentence_id" = "Sentence", "token_id" = "Token ID",
       "token" = "Token", "lemma" = "Lemma", "pos" = "POS",
       "head_token_id" = "Head", "dep_rel" = "Relation"
     )
@@ -7554,60 +7584,51 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  # Co-occurrence network using v2 Plotly-based visualization
-  # Direct button watch pattern (like working v0.0.2)
-  word_co_occurrence_network_results <- reactive({
-    req(input$plot_word_co_occurrence_network)  # Direct button dependency
+  cooccur_result_val <- reactiveVal(NULL)
 
+  observeEvent(input$plot_word_co_occurrence_network, {
     dfm_to_use <- try(dfm_final(), silent = TRUE)
     if (is.null(dfm_to_use) || inherits(dfm_to_use, "try-error")) {
       dfm_to_use <- dfm_init()
     }
     req(dfm_to_use)
 
-    # Get category-specific or global parameters
     params <- get_cooccur_params()
-    doc_var <- params$doc_var
+    call_args <- list(
+      dfm_object = dfm_to_use,
+      doc_var = params$doc_var,
+      co_occur_n = floor(as.numeric(input$co_occurence_number_global)),
+      top_node_n = as.numeric(input$top_node_n_co_occurrence_global),
+      nrows = as.numeric(input$nrows_co_occurrence),
+      category_params = if (isTRUE(params$use_category_specific)) params$category_params else NULL,
+      width = input$width_word_co_occurrence_network_plot %||% 900,
+      height = input$height_word_co_occurrence_network_plot %||% 800,
+      node_label_size = input$node_label_size_cooccur %||% 22,
+      community_method = input$community_method_cooccur %||% "leiden",
+      node_size_by = input$node_size_cooccur %||% "degree",
+      node_color_by = input$node_color_cooccur %||% "community"
+    )
 
-    # Use global sliders if not using category-specific
-    co_occur_n <- floor(as.numeric(input$co_occurence_number_global))
-    top_node_n <- as.numeric(input$top_node_n_co_occurrence_global)
-    nrows <- as.numeric(input$nrows_co_occurrence)
-
-    # Get category_params if category-specific sliders are enabled
-    category_params <- NULL
-    if (isTRUE(params$use_category_specific) && !is.null(params$category_params)) {
-      category_params <- params$category_params
-      message("Using category-specific params for co-occurrence: ", paste(names(category_params), collapse = ", "))
-    }
-
+    cooccur_result_val(NULL)
     shinybusy::show_spinner()
     show_loading_notification("Computing co-occurrence network...", id = "cooccur_network_loading")
 
-    result <- tryCatch({
-      TextAnalysisR::word_co_occurrence_network(
-        dfm_object = dfm_to_use,
-        doc_var = doc_var,
-        co_occur_n = co_occur_n,
-        top_node_n = top_node_n,
-        nrows = nrows,
-        category_params = category_params,
-        width = input$width_word_co_occurrence_network_plot %||% 900,
-        height = input$height_word_co_occurrence_network_plot %||% 800,
-        node_label_size = isolate(input$node_label_size_cooccur %||% 22),
-        community_method = isolate(input$community_method_cooccur %||% "leiden"),
-        node_size_by = isolate(input$node_size_cooccur %||% "degree"),
-        node_color_by = isolate(input$node_color_cooccur %||% "community")
+    later::later(function() {
+      result <- tryCatch(
+        do.call(TextAnalysisR::word_co_occurrence_network, call_args),
+        error = function(e) {
+          showNotification(paste("Error:", e$message), type = "error")
+          NULL
+        }
       )
-    }, error = function(e) {
-      showNotification(paste("Error:", e$message), type = "error")
-      NULL
-    })
+      cooccur_result_val(result)
+      remove_notification_by_id("cooccur_network_loading")
+      shinybusy::hide_spinner()
+    }, delay = 0.1)
+  }, ignoreInit = TRUE)
 
-    remove_notification_by_id("cooccur_network_loading")
-    shinybusy::hide_spinner()
-
-    result
+  word_co_occurrence_network_results <- reactive({
+    cooccur_result_val()
   })
 
   output$word_co_occurrence_network_plot_uiOutput <- renderUI({
@@ -7621,26 +7642,10 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
-    w <- input$width_word_co_occurrence_network_plot %||% 900
-    h <- input$height_word_co_occurrence_network_plot %||% 800
-    plotly::plotlyOutput("word_co_occurrence_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
-  })
-
-  output$word_co_occurrence_network_plotly <- plotly::renderPlotly({
-    result <- word_co_occurrence_network_results()
-    req(result)
-    p <- gg_to_plotly(result$plot)
-    top <- result$top_nodes
-    if (!is.null(top) && nrow(top) > 0) {
-      annotations <- lapply(seq_len(nrow(top)), function(i) {
-        list(x = top$x[i], y = top$y[i], text = top$label[i],
-             showarrow = FALSE, font = list(size = top$text_size[i] * 0.75,
-             color = "#0c1f4a", family = "Roboto, sans-serif"),
-             xanchor = "center", yanchor = "bottom", yshift = 8)
-      })
-      p <- p %>% plotly::layout(annotations = annotations)
-    }
-    p
+    tags$div(
+      style = "width: 100%; margin: 0 auto;",
+      result$plot
+    )
   })
 
   output$word_co_occurrence_network_table_uiOutput <- renderUI({
@@ -7869,11 +7874,9 @@ server <- shinyServer(function(input, output, session) {
                ignoreInit = TRUE
   )
 
-  # Correlation network using v2 Plotly-based visualization
-  # Direct button watch pattern (like working v0.0.2)
-  word_correlation_network_results <- reactive({
-    req(input$plot_word_correlation_network)  # Direct button dependency
+  corr_result_val <- reactiveVal(NULL)
 
+  observeEvent(input$plot_word_correlation_network, {
     dfm_to_use <- try(dfm_outcome(), silent = TRUE)
     if (is.null(dfm_to_use) || inherits(dfm_to_use, "try-error")) {
       dfm_to_use <- try(dfm_final(), silent = TRUE)
@@ -7883,51 +7886,43 @@ server <- shinyServer(function(input, output, session) {
     }
     req(dfm_to_use)
 
-    # Get category-specific or global parameters
     params <- get_corr_params()
-    doc_var <- params$doc_var
+    call_args <- list(
+      dfm_object = dfm_to_use,
+      doc_var = params$doc_var,
+      common_term_n = as.numeric(input$common_term_n_global),
+      corr_n = as.numeric(input$corr_n_global),
+      top_node_n = as.numeric(input$top_node_n_correlation_global),
+      nrows = as.numeric(input$nrows_correlation),
+      category_params = if (isTRUE(params$use_category_specific)) params$category_params else NULL,
+      width = input$width_word_correlation_network_plot %||% 900,
+      height = input$height_word_correlation_network_plot %||% 1000,
+      node_label_size = input$node_label_size_corr %||% 22,
+      community_method = input$community_method_corr %||% "leiden",
+      node_size_by = input$node_size_corr %||% "degree",
+      node_color_by = input$node_color_corr %||% "community"
+    )
 
-    # Use global sliders if not using category-specific
-    common_term_n <- as.numeric(input$common_term_n_global)
-    corr_n <- as.numeric(input$corr_n_global)
-    top_node_n <- as.numeric(input$top_node_n_correlation_global)
-    nrows <- as.numeric(input$nrows_correlation)
-
-    # Get category_params if category-specific sliders are enabled
-    category_params <- NULL
-    if (isTRUE(params$use_category_specific) && !is.null(params$category_params)) {
-      category_params <- params$category_params
-      message("Using category-specific params for correlation: ", paste(names(category_params), collapse = ", "))
-    }
-
+    corr_result_val(NULL)
     shinybusy::show_spinner()
     show_loading_notification("Computing correlation network...", id = "corr_network_loading")
 
-    result <- tryCatch({
-      TextAnalysisR::word_correlation_network(
-        dfm_object = dfm_to_use,
-        doc_var = doc_var,
-        common_term_n = common_term_n,
-        corr_n = corr_n,
-        top_node_n = top_node_n,
-        nrows = nrows,
-        category_params = category_params,
-        width = input$width_word_correlation_network_plot %||% 900,
-        height = input$height_word_correlation_network_plot %||% 1000,
-        node_label_size = isolate(input$node_label_size_corr %||% 22),
-        community_method = isolate(input$community_method_corr %||% "leiden"),
-        node_size_by = isolate(input$node_size_corr %||% "degree"),
-        node_color_by = isolate(input$node_color_corr %||% "community")
+    later::later(function() {
+      result <- tryCatch(
+        do.call(TextAnalysisR::word_correlation_network, call_args),
+        error = function(e) {
+          showNotification(paste("Error:", e$message), type = "error")
+          NULL
+        }
       )
-    }, error = function(e) {
-      showNotification(paste("Error:", e$message), type = "error")
-      NULL
-    })
+      corr_result_val(result)
+      remove_notification_by_id("corr_network_loading")
+      shinybusy::hide_spinner()
+    }, delay = 0.1)
+  }, ignoreInit = TRUE)
 
-    remove_notification_by_id("corr_network_loading")
-    shinybusy::hide_spinner()
-
-    result
+  word_correlation_network_results <- reactive({
+    corr_result_val()
   })
 
   output$word_correlation_network_plot_uiOutput <- renderUI({
@@ -7941,15 +7936,10 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
-    w <- input$width_word_correlation_network_plot %||% 900
-    h <- input$height_word_correlation_network_plot %||% 800
-    plotly::plotlyOutput("word_correlation_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
-  })
-
-  output$word_correlation_network_plotly <- plotly::renderPlotly({
-    result <- word_correlation_network_results()
-    req(result)
-    gg_to_plotly(result$plot)
+    tags$div(
+      style = "width: 100%; margin: 0 auto;",
+      result$plot
+    )
   })
 
   output$word_correlation_network_table_uiOutput <- renderUI({
@@ -9835,20 +9825,23 @@ server <- shinyServer(function(input, output, session) {
 
     lex_data <- lexical_diversity_results$data
 
-    # Add Document ID if selected
+    if ("document" %in% names(lex_data)) {
+      names(lex_data)[names(lex_data) == "document"] <- "Document"
+    }
+    lex_data$Document <- paste0("Doc ", seq_len(nrow(lex_data)))
+
     if (!is.null(input$lexdiv_doc_id_var) && input$lexdiv_doc_id_var != "" &&
         input$lexdiv_doc_id_var != "None" && !is.null(lexical_diversity_results$original_data) &&
         input$lexdiv_doc_id_var %in% names(lexical_diversity_results$original_data)) {
-      doc_ids <- as.character(lexical_diversity_results$original_data[[input$lexdiv_doc_id_var]])
-      lex_data$`Document ID` <- doc_ids
-      # Reorder columns to put Document ID after document
-      col_order <- c("document", "Document ID", setdiff(names(lex_data), c("document", "Document ID")))
-      lex_data <- lex_data[, col_order, drop = FALSE]
-    }
-
-    # Rename 'document' column to 'Document' for consistency with Readability
-    if ("document" %in% names(lex_data)) {
-      names(lex_data)[names(lex_data) == "document"] <- "Document"
+      lex_data$`Document ID` <- as.character(
+        lexical_diversity_results$original_data[[input$lexdiv_doc_id_var]]
+      )
+      lex_data <- lex_data[, c("Document", "Document ID",
+                               setdiff(names(lex_data), c("Document", "Document ID"))),
+                           drop = FALSE]
+    } else {
+      lex_data <- lex_data[, c("Document", setdiff(names(lex_data), "Document")),
+                           drop = FALSE]
     }
 
     numeric_cols <- names(lex_data)[!names(lex_data) %in% c("Document", "Document ID")]
@@ -14603,6 +14596,95 @@ server <- shinyServer(function(input, output, session) {
     }
   )
 
+  # Methods-checklist export (markdown) summarizing settings, quality metrics, and labels
+  output$download_methods_checklist <- downloadHandler(
+    filename = function() {
+      paste0("topic_methods_checklist_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".md")
+    },
+    content = function(file) {
+      model <- topic_model_result()
+      path  <- topic_model_type() %||% input$topic_modeling_path %||% "unknown"
+      hybrid_attr <- if (!is.null(model)) attr(model, "hybrid_result") else NULL
+
+      lines <- c(
+        "# Topic Modeling Methods Checklist",
+        paste0("_Generated: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "_"),
+        "",
+        "## Model",
+        paste0("- **Path:** ", path),
+        paste0("- **K (number of topics):** ", if (!is.null(model$settings$dim$K)) model$settings$dim$K
+                                               else input$K_number %||% input$embedding_topic_count %||% input$hybrid_K_number %||% "(not set)"),
+        paste0("- **Seed:** ", if (!is.null(model$settings$seed)) model$settings$seed else 123),
+        ""
+      )
+
+      if (path == "probability" && !is.null(model)) {
+        init_type <- tryCatch(model$settings$init$mode, error = function(e) NA)
+        max_its <- tryCatch(model$settings$convergence$max.em.its, error = function(e) NA)
+        lines <- c(lines,
+          "## STM settings",
+          paste0("- **Init type:** ", init_type %||% "Spectral"),
+          paste0("- **Max EM iterations:** ", max_its %||% "75"),
+          paste0("- **Prevalence:** ", deparse(model$settings$covariates$formula) %||% "(none)"),
+          "")
+      }
+
+      if (path == "embedding") {
+        lines <- c(lines,
+          "## Embedding settings",
+          paste0("- **Embedding model:** ", input$topic_embedding_st_model %||% "(not set)"),
+          paste0("- **UMAP n_neighbors:** ", input$embedding_umap_neighbors %||% 15),
+          paste0("- **UMAP n_components:** ", input$embedding_umap_components %||% 5),
+          paste0("- **HDBSCAN min_cluster_size:** ", input$embedding_min_cluster_size %||% 10),
+          "")
+      }
+
+      if (path == "hybrid") {
+        lines <- c(lines,
+          "## Hybrid settings",
+          paste0("- **Embedding model:** ", input$hybrid_embedding_model %||% "(not set)"),
+          paste0("- **STM weight in combined keywords:** ", input$hybrid_stm_weight %||% 0.5),
+          "",
+          "> **Note:** Covariate regressions on hybrid/embedding-derived topics are exploratory, not confirmatory (double-dipping risk). Validate on held-out data before reporting as causal.",
+          "")
+      }
+
+      quality_bits <- c()
+      if (!is.null(hybrid_attr$quality_metrics)) {
+        q <- hybrid_attr$quality_metrics
+        if (!is.null(q$stm_coherence_mean))    quality_bits <- c(quality_bits, paste0("- **Semantic coherence (mean):** ", round(q$stm_coherence_mean, 3)))
+        if (!is.null(q$stm_exclusivity_mean))  quality_bits <- c(quality_bits, paste0("- **Exclusivity (mean):** ", round(q$stm_exclusivity_mean, 3)))
+        if (!is.null(q$npmi_mean))             quality_bits <- c(quality_bits, paste0("- **NPMI (mean, top-10):** ", round(q$npmi_mean, 3)))
+        if (!is.null(q$topic_diversity))       quality_bits <- c(quality_bits, paste0("- **Topic diversity (top-25):** ", round(q$topic_diversity, 3)))
+        if (!is.null(q$embedding_silhouette_mean)) quality_bits <- c(quality_bits, paste0("- **Silhouette (mean):** ", round(q$embedding_silhouette_mean, 3)))
+      }
+      if (length(quality_bits) > 0) {
+        lines <- c(lines, "## Quality metrics", quality_bits, "")
+      }
+
+      labels_df <- tryCatch(generated_labels(), error = function(e) NULL)
+      if (!is.null(labels_df) && nrow(labels_df) > 0) {
+        lbl_lines <- paste0("- **Topic ", labels_df$topic, ":** ", labels_df$topic_label)
+        lines <- c(lines, "## Topic labels (LLM-generated)", lbl_lines, "")
+      }
+
+      lines <- c(lines,
+        "## Reporting checklist",
+        "- [ ] Corpus size and sampling frame",
+        "- [ ] Tokenizer, lowercasing, stopword list, min/max doc-freq",
+        "- [ ] K, seed, iterations, convergence tolerance",
+        "- [ ] Coherence + exclusivity (STM) or NPMI + diversity (BERTopic)",
+        "- [ ] Top-10 FREX / c-TF-IDF terms per topic",
+        "- [ ] 2-3 exemplar documents per topic",
+        "- [ ] Covariate specification with uncertainty method",
+        "- [ ] Human-validated labels on a random subsample",
+        "")
+
+      writeLines(lines, file)
+      showNotification("Methods checklist downloaded", type = "message", duration = 3)
+    }
+  )
+
   get_similarity_data_for_plot <- function(feature_type) {
     if (!is.null(comparison_results$results[[feature_type]])) {
       return(list(
@@ -15615,7 +15697,8 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch({
       display_results <- data.frame(
-        Rank = 1:nrow(results),
+        Document = paste0("Doc ", results$Document_Index),
+        Rank = seq_len(nrow(results)),
         Similarity_Score = round(results$Similarity_Score, 4),
         Document_Text = sapply(results$Document_Text, function(text) {
           if (is.null(text) || is.na(text)) {
@@ -15628,8 +15711,22 @@ server <- shinyServer(function(input, output, session) {
             text
           }
         }),
-        stringsAsFactors = FALSE
+        stringsAsFactors = FALSE,
+        check.names = FALSE
       )
+
+      if (!is.null(input$doc_id_var) && input$doc_id_var != "" && input$doc_id_var != "None" &&
+          !is.null(united_tbl()) && input$doc_id_var %in% names(united_tbl())) {
+        doc_ids <- as.character(united_tbl()[[input$doc_id_var]])
+        valid_idx <- results$Document_Index >= 1 & results$Document_Index <= length(doc_ids)
+        doc_id_col <- rep(NA_character_, nrow(results))
+        doc_id_col[valid_idx] <- doc_ids[results$Document_Index[valid_idx]]
+        display_results <- cbind(
+          display_results[, "Document", drop = FALSE],
+          `Document ID` = doc_id_col,
+          display_results[, setdiff(names(display_results), "Document"), drop = FALSE]
+        )
+      }
 
       return(DT::datatable(
         display_results,
@@ -18411,7 +18508,7 @@ server <- shinyServer(function(input, output, session) {
     req(K_search())
     gg_to_plotly(TextAnalysisR::plot_model_comparison(
       K_search(),
-      title = "Model Comparison",
+      title = "Coherence-Exclusivity Frontier (choose K in the upper-right)",
       height = input$height_search_k,
       width = input$width_search_k
     ))
@@ -19688,6 +19785,7 @@ server <- shinyServer(function(input, output, session) {
         stm_gamma_prior = input$hybrid_gamma_prior_K %||% "Pooled",
         stm_kappa_prior = input$hybrid_kappa_prior_K %||% "L1",
         stm_max_em_its = input$hybrid_max_em_its_K %||% 75,
+        stm_weight = input$hybrid_stm_weight %||% 0.5,
         verbose = TRUE,
         seed = 123,
         precomputed_embeddings = cached_embeddings
@@ -22130,27 +22228,7 @@ server <- shinyServer(function(input, output, session) {
       stm_model <- hybrid_result$stm_result$model
       n_terms <- input$hybrid_top_term_number_labeling %||% 7
 
-      # Get topic terms using labelTopics
-      label_result <- stm::labelTopics(stm_model, n = n_terms)
-      frex_terms <- label_result$frex
-
-      # Get beta values for ranking
-      beta_matrix <- exp(stm_model$beta$logbeta[[1]])
-
-      topic_terms <- data.frame()
-      for (i in 1:nrow(frex_terms)) {
-        terms <- as.character(frex_terms[i, ])
-        vocab_indices <- match(terms, stm_model$vocab)
-        term_probs <- beta_matrix[i, vocab_indices]
-
-        topic_data <- data.frame(
-          topic = i,
-          term = terms,
-          beta = term_probs,
-          stringsAsFactors = FALSE
-        )
-        topic_terms <- rbind(topic_terms, topic_data)
-      }
+      topic_terms <- TextAnalysisR::extract_topic_terms_df(stm_model, n = n_terms)
 
       new_labels_td <- TextAnalysisR::generate_topic_labels(
         topic_terms,

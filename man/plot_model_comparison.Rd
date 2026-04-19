@@ -6,7 +6,7 @@
 \usage{
 plot_model_comparison(
   search_results,
-  title = "Model Comparison",
+  title = "Coherence-Exclusivity Frontier (choose K in the upper-right)",
   height = 600,
   width = 800
 )
@@ -35,9 +35,12 @@ Other topic-modeling:
 \code{\link{auto_tune_embedding_topics}()},
 \code{\link{calculate_assignment_consistency}()},
 \code{\link{calculate_keyword_stability}()},
+\code{\link{calculate_npmi}()},
 \code{\link{calculate_semantic_drift}()},
+\code{\link{calculate_topic_diversity}()},
 \code{\link{calculate_topic_probability}()},
 \code{\link{calculate_topic_stability}()},
+\code{\link{extract_topic_terms_df}()},
 \code{\link{find_optimal_k}()},
 \code{\link{find_topic_matches}()},
 \code{\link{fit_embedding_model}()},

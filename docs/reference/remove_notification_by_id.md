@@ -1,6 +1,6 @@
-# Remove Notification by ID
+# Remove Shiny notification by id
 
-Removes a notification with a specific ID.
+Remove Shiny notification by id
 
 ## Usage
 
@@ -12,8 +12,8 @@ remove_notification_by_id(id)
 
 - id:
 
-  The notification ID to remove
+  Notification id.
 
 ## Value
 
-Removes a Shiny notification. Returns NULL invisibly.
+Invisibly `NULL`.

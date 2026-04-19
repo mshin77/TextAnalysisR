@@ -93,10 +93,11 @@
 <span></span>
 <span><span class="co"># 1. Load data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">)</span></span>
-<span><span class="va">texts</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">abstract</span></span>
+<span><span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">SpecialEduTech</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 2. Preprocess</span></span>
-<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">texts</span>, remove_punct <span class="op">=</span> <span class="cn">TRUE</span>, remove_numbers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united_tbl</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span>,</span>
+<span>                     remove_punct <span class="op">=</span> <span class="cn">TRUE</span>, remove_numbers <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 3. Analyze keywords</span></span>
@@ -104,11 +105,12 @@
 <span><span class="fu"><a href="../reference/plot_tfidf_keywords.html">plot_tfidf_keywords</a></span><span class="op">(</span><span class="va">keywords</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 4. Topic modeling (embedding-based)</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span><span class="va">texts</span>, n_topics <span class="op">=</span> <span class="fl">5</span>, backend <span class="op">=</span> <span class="st">"r"</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
+<span>                             method <span class="op">=</span> <span class="st">"umap_dbscan"</span>,</span>
+<span>                             n_topics <span class="op">=</span> <span class="fl">5</span>, backend <span class="op">=</span> <span class="st">"r"</span><span class="op">)</span></span>
 <span><span class="va">model</span><span class="op">$</span><span class="va">topic_keywords</span></span>
 <span></span>
 <span><span class="co"># 5. Sentiment analysis</span></span>
-<span><span class="va">dfm</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span>
 <span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sentiment_lexicon_analysis.html">sentiment_lexicon_analysis</a></span><span class="op">(</span><span class="va">dfm</span>, lexicon <span class="op">=</span> <span class="st">"bing"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_sentiment_distribution.html">plot_sentiment_distribution</a></span><span class="op">(</span><span class="va">sentiment</span><span class="op">$</span><span class="va">document_sentiment</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -117,7 +119,7 @@
 </h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Auto-detect best available provider</span></span>
-<span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_best_embeddings.html">get_best_embeddings</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span>
+<span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_best_embeddings.html">get_best_embeddings</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Reduce dimensions for visualization</span></span>
 <span><span class="va">reduced</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/reduce_dimensions.html">reduce_dimensions</a></span><span class="op">(</span><span class="va">embeddings</span>, method <span class="op">=</span> <span class="st">"UMAP"</span>, n_components <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>

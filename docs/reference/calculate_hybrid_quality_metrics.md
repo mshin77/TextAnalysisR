@@ -12,7 +12,8 @@ calculate_hybrid_quality_metrics(
   stm_model,
   stm_documents,
   embedding_result,
-  embeddings = NULL
+  embeddings = NULL,
+  dfm = NULL
 )
 ```
 
@@ -33,6 +34,10 @@ calculate_hybrid_quality_metrics(
 - embeddings:
 
   Document embeddings matrix (optional, for silhouette).
+
+- dfm:
+
+  Optional quanteda dfm for reference frequencies.
 
 ## Value
 

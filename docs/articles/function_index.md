@@ -12,10 +12,11 @@ library(TextAnalysisR)
 
 # 1. Load data
 data(SpecialEduTech)
-texts <- SpecialEduTech$abstract
+united_tbl <- unite_cols(SpecialEduTech, listed_vars = c("title", "keyword", "abstract"))
 
 # 2. Preprocess
-tokens <- prep_texts(texts, remove_punct = TRUE, remove_numbers = TRUE)
+tokens <- prep_texts(united_tbl, text_field = "united_texts",
+                     remove_punct = TRUE, remove_numbers = TRUE)
 dfm <- quanteda::dfm(tokens)
 
 # 3. Analyze keywords
@@ -23,11 +24,12 @@ keywords <- extract_keywords_tfidf(dfm, top_n = 20)
 plot_tfidf_keywords(keywords)
 
 # 4. Topic modeling (embedding-based)
-model <- fit_embedding_model(texts, n_topics = 5, backend = "r")
+model <- fit_embedding_model(united_tbl$united_texts,
+                             method = "umap_dbscan",
+                             n_topics = 5, backend = "r")
 model$topic_keywords
 
 # 5. Sentiment analysis
-dfm <- quanteda::dfm(tokens)
 sentiment <- sentiment_lexicon_analysis(dfm, lexicon = "bing")
 plot_sentiment_distribution(sentiment$document_sentiment)
 ```
@@ -37,7 +39,7 @@ plot_sentiment_distribution(sentiment$document_sentiment)
 ``` r
 
 # Auto-detect best available provider
-embeddings <- get_best_embeddings(texts)
+embeddings <- get_best_embeddings(united_tbl$united_texts)
 
 # Reduce dimensions for visualization
 reduced <- reduce_dimensions(embeddings, method = "UMAP", n_components = 2)

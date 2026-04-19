@@ -71,11 +71,15 @@ together. They capture multi-word expressions like “machine learning” or
   test results”)
 
 **Usage:** Set minimum frequency (how often phrases appear) and lambda
-(collocation strength) to detect meaningful multi-word expressions.
+(collocation strength) to detect meaningful multi-word expressions. The
+function returns a collocations table; pass it to
+[`quanteda::tokens_compound()`](https://quanteda.io/reference/tokens_compound.html)
+to merge phrases into the tokens object.
 
 ``` r
 
-tokens <- detect_multi_words(tokens, min_count = 10)
+compounds <- detect_multi_words(tokens, min_count = 10)
+tokens <- quanteda::tokens_compound(tokens, compounds)
 ```
 
 **Learn More:** [Text Mining with R - N-grams
@@ -120,7 +124,7 @@ Python spaCy via reticulate.
 
 ``` r
 
-parsed <- extract_pos_tags(texts)  # Uses spacy_parse_full
+parsed <- extract_pos_tags(united_tbl$united_texts)
 # Returns columns: doc_id, token, lemma, pos, tag
 ```
 
@@ -180,7 +184,7 @@ distinctive vocabulary.
 
 log_odds <- calculate_log_odds_ratio(
   dfm_object,
-  group_var = "category",
+  group_var = "reference_type",
   comparison_mode = "binary",
   top_n = 15
 )
@@ -199,7 +203,7 @@ not just rare words with extreme ratios.
 # Requires tidylo package: install.packages("tidylo")
 weighted_odds <- calculate_weighted_log_odds(
   dfm_object,
-  group_var = "category",
+  group_var = "reference_type",
   top_n = 15
 )
 ```

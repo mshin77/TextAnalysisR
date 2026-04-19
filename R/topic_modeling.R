@@ -315,6 +315,64 @@ get_topic_texts <- function(top_terms_df,
 }
 
 
+#' Build a topic-term data frame from any supported topic model
+#'
+#' Unified helper that produces the long-format `data.frame(topic, term, beta)`
+#' expected by [generate_topic_labels()] from an STM model, an embedding result,
+#' or a hybrid result. Dispatches on the object's structure:
+#' - STM model (has `$beta$logbeta` and `$vocab`) -> top terms via [stm::labelTopics()] FREX
+#' - Embedding result (has `$topic_keywords`) -> c-TF-IDF keywords with rank-derived pseudo-beta
+#' - Hybrid result (has `$combined_topics`) -> weighted combined keywords
+#'
+#' @param model A topic model object (STM fit, embedding result, or hybrid result).
+#' @param n Number of top terms per topic (default 7).
+#' @return `data.frame(topic, term, beta)` in long format.
+#' @family topic-modeling
+#' @export
+extract_topic_terms_df <- function(model, n = 7) {
+  if (is.null(model)) return(data.frame(topic = integer(0), term = character(0), beta = numeric(0)))
+
+  # STM model
+  if (!is.null(model$beta) && !is.null(model$vocab)) {
+    label_result <- stm::labelTopics(model, n = n)
+    frex_terms <- label_result$frex
+    beta_matrix <- exp(model$beta$logbeta[[1]])
+    rows <- lapply(seq_len(nrow(frex_terms)), function(i) {
+      terms <- as.character(frex_terms[i, ])
+      vocab_idx <- match(terms, model$vocab)
+      data.frame(topic = i, term = terms, beta = beta_matrix[i, vocab_idx],
+                 stringsAsFactors = FALSE)
+    })
+    return(do.call(rbind, rows))
+  }
+
+  # Hybrid result: combined_topics with $combined_keywords / $word_scores
+  if (!is.null(model$combined_topics)) {
+    rows <- lapply(seq_along(model$combined_topics), function(i) {
+      ct <- model$combined_topics[[i]]
+      words <- utils::head(ct$combined_keywords %||% ct$combined_words, n)
+      scores <- utils::head(ct$word_scores %||% seq_len(length(words)), n)
+      data.frame(topic = i, term = words, beta = as.numeric(scores),
+                 stringsAsFactors = FALSE)
+    })
+    return(do.call(rbind, rows))
+  }
+
+  # Embedding result: topic_keywords list of character vectors
+  if (!is.null(model$topic_keywords)) {
+    rows <- lapply(seq_along(model$topic_keywords), function(i) {
+      words <- utils::head(as.character(model$topic_keywords[[i]]), n)
+      data.frame(topic = i, term = words,
+                 beta = seq(length(words), 1) / length(words),
+                 stringsAsFactors = FALSE)
+    })
+    return(do.call(rbind, rows))
+  }
+
+  data.frame(topic = integer(0), term = character(0), beta = numeric(0))
+}
+
+
 #' Generate Topic Labels Using AI
 #'
 #' This function generates descriptive labels for each topic based on their
@@ -435,72 +493,18 @@ generate_topic_labels <- function(top_topic_terms,
             " topics using ", provider, " (", model, ")...")
   }
 
-  system_prompt <- "
-You are a highly skilled data scientist specializing in generating concise and
-descriptive topic labels based on provided top terms for each topic.
-Each topic consists of a list of terms ordered from most to least significant (by beta scores).
+  system_prompt <- "You generate short, descriptive topic labels from keyword lists.
 
-Your objective is to create precise labels that capture the essence of each
-topic by following these guidelines:
-
-1. Use Person-First Language
-   - Prioritize respectful and inclusive language.
-   - Avoid terms that may be considered offensive or stigmatizing.
-   - For example, use 'students with learning disabilities' instead of 'disabled students'.
-   - Use 'students with visual impairments' instead of 'impaired students'
-   - Use 'students with blindness' instead of 'blind students'.
-
-2. Analyze Top Terms' Significance
-   - Primary Focus: Emphasize high beta-score terms as they strongly define the topic.
-   - Secondary Consideration: Include lower-scoring terms if they add essential context.
-
-3. Synthesize the Topic Label
-   - Clarity: Make sure the label is clear and easily understandable.
-   - Conciseness: Aim for a short phrase of about 5-7 words.
-   - Relevance: Reflect the collective meaning of the most influential terms.
-   - Intelligent interpretation: Use your understanding to create meaningful
-     labels that capture the topic's essence.
-
-4. Maintain Consistency
-   - Capitalize the first word of all topic labels.
-   - Keep formatting and terminology uniform across all labels.
-   - Avoid ambiguity or generic wording that does not fit the provided top terms.
-
-5. Adhere to Style Guidelines
-   - Capitalization: Use title case for labels.
-   - Avoid Jargon: Maintain accessibility; only use technical terms if absolutely necessary.
-   - Uniqueness: Ensure each label is distinct and does not overlap significantly with others.
-
-6. Handle Edge Cases
-   - Conflicting Top Terms: If the terms suggest different directions,
-     prioritize those with higher beta scores.
-   - Low-Scoring Terms: Include them only if they add meaningful context.
-
-7. Iterative Improvement
-   - If the generated label is insufficiently representative, re-check term
-     significance and revise accordingly.
-   - Always adhere to these guidelines.
+Rules:
+- Max 5 words per label. Title Case. No trailing punctuation.
+- Prioritize the keywords listed earliest (they have the highest weight).
+- Use person-first language (e.g., 'students with learning disabilities', not 'disabled students').
+- Each label must be distinct from other labels in the same model.
+- Return ONLY the label text. No quotes, numbering, or explanations.
 
 Example
-----------
-Top Terms (highest to lowest beta score):
-virtual manipulatives (.035)
-manipulatives (.022)
-mathematical (.014)
-app (.013)
-solving (.013)
-learning disability (.012)
-algebra (.012)
-area (.011)
-tool (.010)
-concrete manipulatives (.010)
-
-Generated Topic Label:
-Mathematical learning tools for students with disabilities
-
-Focus on incorporating the most significant keywords while following the
-guidelines above to produce a concise, descriptive topic label.
-"
+Keywords: virtual manipulatives, manipulatives, mathematical, app, solving, learning disability, algebra
+Label: Virtual Math Tools for Students with Disabilities"
 
   # Use custom system prompt if provided
   if (!is.null(system)) {
@@ -538,12 +542,9 @@ guidelines above to produce a concise, descriptive topic label.
       dplyr::pull(term)
 
     user_prompt <- paste0(
-      "You have a topic with keywords listed from most to least significant: ",
+      "I have a topic described by the following keywords (highest weight first): '",
       paste(selected_terms, collapse = ", "),
-      ". Please create a concise and descriptive label (5-7 words) that:",
-      " 1. Reflects the collective meaning of these keywords.",
-      " 2. Gives higher priority to the most significant terms.",
-      " 3. Adheres to the style guidelines provided in the system message."
+      "'. Based on the keywords, create a short label (max 5 words). Return only the label."
     )
 
     # Use custom user prompt if provided
@@ -1765,6 +1766,72 @@ calculate_topic_alignment <- function(stm_model, embedding_result, stm_vocab, te
 }
 
 
+#' @title Calculate NPMI for Topic Top-Terms
+#'
+#' @description
+#' NPMI (Normalized Pointwise Mutual Information) measures coherence of top-K
+#' terms per topic using internal document co-occurrence from the supplied DFM
+#' (boolean presence).
+#'
+#' @param top_terms_list Named or unnamed list of character vectors, one per topic.
+#' @param dfm A quanteda dfm providing the reference doc-term frequencies.
+#' @param top_k Number of top terms per topic to include (default 10).
+#' @param epsilon Numerical stabilizer (default 1e-12).
+#' @return list with `mean_npmi` (scalar) and `per_topic_npmi` (numeric vector).
+#' @importFrom methods as
+#' @family topic-modeling
+#' @keywords internal
+calculate_npmi <- function(top_terms_list, dfm, top_k = 10, epsilon = 1e-12) {
+  if (is.null(top_terms_list) || length(top_terms_list) == 0 || is.null(dfm)) {
+    return(list(mean_npmi = NA_real_, per_topic_npmi = numeric(0)))
+  }
+  dtm <- methods::as(dfm > 0, "CsparseMatrix")
+  n_docs <- nrow(dtm)
+  if (n_docs < 2) return(list(mean_npmi = NA_real_, per_topic_npmi = numeric(0)))
+  vocab <- colnames(dtm)
+
+  per_topic <- vapply(top_terms_list, function(terms) {
+    terms <- utils::head(as.character(terms), top_k)
+    terms <- terms[terms %in% vocab]
+    if (length(terms) < 2) return(NA_real_)
+    sub_dtm <- dtm[, terms, drop = FALSE]
+    doc_freq <- Matrix::colSums(sub_dtm)
+    pairs <- utils::combn(seq_along(terms), 2)
+    npmis <- vapply(seq_len(ncol(pairs)), function(k) {
+      i <- pairs[1, k]; j <- pairs[2, k]
+      p_i <- doc_freq[i] / n_docs
+      p_j <- doc_freq[j] / n_docs
+      co <- sum(sub_dtm[, i] * sub_dtm[, j])
+      p_ij <- co / n_docs
+      if (p_ij < epsilon) return(0)
+      pmi <- log(p_ij / (p_i * p_j + epsilon))
+      pmi / (-log(p_ij + epsilon))
+    }, numeric(1))
+    mean(npmis, na.rm = TRUE)
+  }, numeric(1))
+
+  list(mean_npmi = mean(per_topic, na.rm = TRUE), per_topic_npmi = per_topic)
+}
+
+#' Calculate Topic Diversity (Unique-Word Proportion)
+#'
+#' Diversity = unique top-K terms across all topics / (n_topics * top_k).
+#' Range 0 (all topics identical) to 1 (fully disjoint). Complementary to NPMI
+#' coherence: a good model scores high on both.
+#'
+#' @param top_terms_list Named or unnamed list of character vectors, one per topic.
+#' @param top_k Number of top terms per topic to include (default 25).
+#' @return Numeric between 0 and 1, or NA if input empty.
+#' @family topic-modeling
+#' @keywords internal
+calculate_topic_diversity <- function(top_terms_list, top_k = 25) {
+  if (is.null(top_terms_list) || length(top_terms_list) == 0) return(NA_real_)
+  terms_per_topic <- lapply(top_terms_list, function(t) utils::head(as.character(t), top_k))
+  actual_total <- sum(lengths(terms_per_topic))
+  if (actual_total == 0) return(NA_real_)
+  length(unique(unlist(terms_per_topic))) / actual_total
+}
+
 #' @title Compute Hybrid Model Quality Metrics
 #'
 #' @description
@@ -1776,6 +1843,7 @@ calculate_topic_alignment <- function(stm_model, embedding_result, stm_vocab, te
 #' @param stm_documents STM-formatted documents.
 #' @param embedding_result Result from fit_embedding_model().
 #' @param embeddings Document embeddings matrix (optional, for silhouette).
+#' @param dfm Optional quanteda dfm for reference frequencies.
 #'
 #' @return A list containing quality metrics:
 #'   - stm_coherence: Semantic coherence per STM topic
@@ -1788,7 +1856,8 @@ calculate_topic_alignment <- function(stm_model, embedding_result, stm_vocab, te
 #'
 #' @keywords internal
 calculate_hybrid_quality_metrics <- function(stm_model, stm_documents,
-                                            embedding_result, embeddings = NULL) {
+                                            embedding_result, embeddings = NULL,
+                                            dfm = NULL) {
   metrics <- list()
 
   # 1. STM Quality Metrics
@@ -1874,6 +1943,26 @@ calculate_hybrid_quality_metrics <- function(stm_model, stm_documents,
     metrics$combined_quality <- sum(quality_components * weights)
   } else {
     metrics$combined_quality <- NA
+  }
+
+  # NPMI + topic diversity on union of top-term lists (complementary axes)
+  top_terms_list <- list()
+  if (!is.null(stm_model) && !is.null(dfm)) {
+    stm_labels <- tryCatch(stm::labelTopics(stm_model, n = 10)$prob, error = function(e) NULL)
+    if (!is.null(stm_labels)) {
+      top_terms_list <- c(top_terms_list, split(stm_labels, seq_len(nrow(stm_labels))))
+    }
+  }
+  if (!is.null(embedding_result) && !is.null(embedding_result$topic_keywords)) {
+    top_terms_list <- c(top_terms_list, embedding_result$topic_keywords)
+  }
+  if (length(top_terms_list) > 0 && !is.null(dfm)) {
+    npmi_res <- calculate_npmi(top_terms_list, dfm, top_k = 10)
+    metrics$npmi_mean <- npmi_res$mean_npmi
+    metrics$npmi_per_topic <- npmi_res$per_topic_npmi
+  }
+  if (length(top_terms_list) > 0) {
+    metrics$topic_diversity <- calculate_topic_diversity(top_terms_list, top_k = 25)
   }
 
   metrics
@@ -2582,7 +2671,8 @@ fit_hybrid_model <- function(texts,
       stm_model = stm_model,
       stm_documents = stm_data$documents,
       embedding_result = embedding_result,
-      embeddings = embedding_result$embeddings
+      embeddings = embedding_result$embeddings,
+      dfm = processed
     )
 
     if (verbose) {
@@ -3784,7 +3874,7 @@ plot_quality_metrics <- function(search_results) {
 #' @family topic-modeling
 #' @export
 plot_model_comparison <- function(search_results,
-                                  title = "Model Comparison",
+                                  title = "Coherence-Exclusivity Frontier (choose K in the upper-right)",
                                   height = 600,
                                   width = 800) {
 
@@ -3846,9 +3936,7 @@ plot_model_comparison <- function(search_results,
 }
 
 
-################################################################################
-# TOPIC MODELING VISUALIZATION FUNCTIONS
-################################################################################
+# Topic modeling visualization functions
 
 #' @title Plot Word Probabilities by Topic
 #'
@@ -4277,9 +4365,7 @@ plot_cluster_terms <- function(terms,
 }
 
 
-################################################################################
-# TOPIC-BASED CONTENT GENERATION
-################################################################################
+# Topic-based content generation
 
 #' Get Default System Prompt for Content Type
 #'

@@ -1,17 +1,12 @@
 # Plot Topic Model Quality Metrics
 
-Creates a faceted plot showing diagnostic metrics across different K
-values from stm::searchK results.
+Creates individual diagnostic metric plots across different K values
+from stm::searchK results.
 
 ## Usage
 
 ``` r
-plot_quality_metrics(
-  search_results,
-  title = "Diagnostic Plots",
-  height = 600,
-  width = 800
-)
+plot_quality_metrics(search_results)
 ```
 
 ## Arguments
@@ -20,21 +15,10 @@ plot_quality_metrics(
 
   Results from stm::searchK or find_optimal_k()
 
-- title:
-
-  Plot title (default: "Diagnostic Plots")
-
-- height:
-
-  Plot height in pixels (default: 600)
-
-- width:
-
-  Plot width in pixels (default: 800)
-
 ## Value
 
-A plotly object with faceted diagnostic plots
+A named list of ggplot objects, one per available metric (possible keys:
+semcoh, residual, heldout, lbound).
 
 ## See also
 
@@ -45,9 +29,12 @@ Other topic-modeling:
 [`auto_tune_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/auto_tune_embedding_topics.md),
 [`calculate_assignment_consistency()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_assignment_consistency.md),
 [`calculate_keyword_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_keyword_stability.md),
+[`calculate_npmi()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_npmi.md),
 [`calculate_semantic_drift()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_semantic_drift.md),
+[`calculate_topic_diversity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_diversity.md),
 [`calculate_topic_probability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_probability.md),
 [`calculate_topic_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_stability.md),
+[`extract_topic_terms_df()`](https://mshin77.github.io/TextAnalysisR/reference/extract_topic_terms_df.md),
 [`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md),
 [`find_topic_matches()`](https://mshin77.github.io/TextAnalysisR/reference/find_topic_matches.md),
 [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md),

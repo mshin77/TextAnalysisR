@@ -104,47 +104,8 @@ This ensures all plots have uniform fonts, colors, margins, and interactive feat
     <p>Design standards applied:</p><ul><li><p>Title: 14px Roboto, #0c1f4a</p></li>
 <li><p>Axis titles: 13px Roboto, #0c1f4a</p></li>
 <li><p>Axis tick labels: 12px Roboto, #3B3B3B</p></li>
-<li><p>Hover tooltips: 12px Roboto, #0c1f4a on #ffffff</p></li>
-<li><p>WCAG AA compliant colors</p></li>
 </ul></div>
-    <div class="section level2">
-    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Other visualization:
-<code><a href="create_empty_plot_message.html">create_empty_plot_message()</a></code>,
-<code><a href="create_message_table.html">create_message_table()</a></code>,
-<code><a href="create_standard_ggplot_theme.html">create_standard_ggplot_theme()</a></code>,
-<code><a href="get_dt_options.html">get_dt_options()</a></code>,
-<code><a href="get_plotly_hover_config.html">get_plotly_hover_config()</a></code>,
-<code><a href="get_sentiment_color.html">get_sentiment_color()</a></code>,
-<code><a href="get_sentiment_colors.html">get_sentiment_colors()</a></code>,
-<code><a href="plot_cluster_terms.html">plot_cluster_terms()</a></code>,
-<code><a href="plot_cross_category_heatmap.html">plot_cross_category_heatmap()</a></code>,
-<code><a href="plot_entity_frequencies.html">plot_entity_frequencies()</a></code>,
-<code><a href="plot_lexical_dispersion.html">plot_lexical_dispersion()</a></code>,
-<code><a href="plot_log_odds_ratio.html">plot_log_odds_ratio()</a></code>,
-<code><a href="plot_mwe_frequency.html">plot_mwe_frequency()</a></code>,
-<code><a href="plot_ngram_frequency.html">plot_ngram_frequency()</a></code>,
-<code><a href="plot_pos_frequencies.html">plot_pos_frequencies()</a></code>,
-<code><a href="plot_semantic_viz.html">plot_semantic_viz()</a></code>,
-<code><a href="plot_similarity_heatmap.html">plot_similarity_heatmap()</a></code>,
-<code><a href="plot_term_trends_continuous.html">plot_term_trends_continuous()</a></code>,
-<code><a href="plot_weighted_log_odds.html">plot_weighted_log_odds()</a></code>,
-<code><a href="plot_word_frequency.html">plot_word_frequency()</a></code></p></div>
-    </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://plotly-r.com" class="external-link">plotly</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/plotly/man/plot_ly.html" class="external-link">plot_ly</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"scatter"</span>, mode <span class="op">=</span> <span class="st">"markers"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> <span class="fu">apply_standard_plotly_layout</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  title <span class="op">=</span> <span class="st">"My Plot"</span>,</span></span>
-<span class="r-in"><span>  xaxis_title <span class="op">=</span> <span class="st">"X Values"</span>,</span></span>
-<span class="r-in"><span>  yaxis_title <span class="op">=</span> <span class="st">"Y Values"</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

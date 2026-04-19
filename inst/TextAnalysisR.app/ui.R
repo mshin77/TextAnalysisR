@@ -13,6 +13,7 @@ is_docker <- tryCatch({
 }, error = function(e) FALSE)
 is_remote_ui <- is_web || is_docker
 
+
 ui <- fluidPage(
   useShinyjs(),
   shinybusy::add_busy_spinner(
@@ -2005,7 +2006,9 @@ Supports:
                   choices = c(
                     "all-MiniLM-L6-v2 (Fast)" = "all-MiniLM-L6-v2",
                     "all-mpnet-base-v2 (Higher Quality)" = "all-mpnet-base-v2",
+                    "BGE Small EN v1.5 (Fast + Strong Retrieval)" = "BAAI/bge-small-en-v1.5",
                     "BGE Base EN v1.5 (BERTopic Optimized)" = "BAAI/bge-base-en-v1.5",
+                    "E5 Base v2 (Instructor-tuned)" = "intfloat/e5-base-v2",
                     "Nomic Embed Text v2 (Multilingual)" = "nomic-ai/nomic-embed-text-v2-moe",
                     "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                   ),
@@ -2189,7 +2192,9 @@ Supports:
                   choices = c(
                     "all-MiniLM-L6-v2 (Fast)" = "all-MiniLM-L6-v2",
                     "all-mpnet-base-v2 (Higher Quality)" = "all-mpnet-base-v2",
+                    "BGE Small EN v1.5 (Fast + Strong Retrieval)" = "BAAI/bge-small-en-v1.5",
                     "BGE Base EN v1.5 (BERTopic Optimized)" = "BAAI/bge-base-en-v1.5",
+                    "E5 Base v2 (Instructor-tuned)" = "intfloat/e5-base-v2",
                     "Nomic Embed Text v2 (Multilingual)" = "nomic-ai/nomic-embed-text-v2-moe",
                     "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                   ),
@@ -2717,9 +2722,9 @@ Supports:
               ),
               sliderInput(
                 "node_label_size_cooccur",
-                "Node label size",
+                "Node label size (0 hides labels)",
                 value = 22,
-                min = 12,
+                min = 0,
                 max = 40,
                 step = 2
               ),
@@ -2815,9 +2820,9 @@ Supports:
               ),
               sliderInput(
                 "node_label_size_corr",
-                "Node label size",
+                "Node label size (0 hides labels)",
                 value = 22,
-                min = 12,
+                min = 0,
                 max = 40,
                 step = 2
               ),

@@ -8,7 +8,8 @@ calculate_hybrid_quality_metrics(
   stm_model,
   stm_documents,
   embedding_result,
-  embeddings = NULL
+  embeddings = NULL,
+  dfm = NULL
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ calculate_hybrid_quality_metrics(
 \item{embedding_result}{Result from fit_embedding_model().}
 
 \item{embeddings}{Document embeddings matrix (optional, for silhouette).}
+
+\item{dfm}{Optional quanteda dfm for reference frequencies.}
 }
 \value{
 A list containing quality metrics:

@@ -1,8 +1,6 @@
-# Show DFM Requirement Modal
+# Show DFM-required modal
 
-Displays a standardized modal dialog informing users they need to
-complete preprocessing steps before using a feature that requires a
-document-feature matrix.
+Show DFM-required modal
 
 ## Usage
 
@@ -17,24 +15,12 @@ show_dfm_required_modal(
 
 - feature_name:
 
-  Name of the feature requiring DFM (e.g., "topic modeling", "keyword
-  extraction")
+  Feature description in the message.
 
 - additional_message:
 
-  Optional additional message to display (default: NULL)
+  Optional extra context appended to the body.
 
 ## Value
 
-Displays a Shiny modal dialog. Returns NULL invisibly.
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-if (is.null(dfm_init())) {
-  show_dfm_required_modal("topic modeling")
-  return(NULL)
-}
-} # }
-```
+Invisibly `NULL`.

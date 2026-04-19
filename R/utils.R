@@ -1,7 +1,3 @@
-################################################################################
-# PIPE OPERATOR
-################################################################################
-
 #' Pipe operator
 #'
 #' See \code{magrittr::\link[magrittr:pipe]{\%>\%}} for details.
@@ -18,10 +14,6 @@
 NULL
 
 
-
-################################################################################
-# GLOBAL VARIABLES (for R CMD check)
-################################################################################
 
 globalVariables(names = c(
   ".", ".max_idx", ".row_idx", "categorical_var", "centrality", "col_idx",
@@ -44,7 +36,7 @@ globalVariables(names = c(
   "Percentage", "Score", "TF_IDF_Score", "Value", "collocation_ordered",
   "direction", "doc_ordered", "entity_ordered", "feature_ordered", "k",
   "log_odds_ratio", "log_odds_weighted", "metric_val", "pos_ordered",
-  "position", "term_ordered"
+  "position", "term_ordered", "count", "term_num"
 ))
 
 
@@ -52,6 +44,21 @@ globalVariables(names = c(
 #' @importFrom utils modifyList
 #' @importFrom stats cor
 NULL
+
+.onLoad <- function(libname, pkgname) {
+  if (!nzchar(Sys.getenv("TORCHINDUCTOR_CACHE_DIR"))) {
+    Sys.setenv(TORCHINDUCTOR_CACHE_DIR = file.path(tempdir(), "torchinductor"))
+  }
+}
+
+.onUnload <- function(libpath) {
+  cache_dir <- Sys.getenv("TORCHINDUCTOR_CACHE_DIR")
+  if (nzchar(cache_dir) && dir.exists(cache_dir) &&
+      startsWith(normalizePath(cache_dir, mustWork = FALSE),
+                 normalizePath(tempdir(), mustWork = FALSE))) {
+    unlink(cache_dir, recursive = TRUE, force = TRUE)
+  }
+}
 
 # Utility and Helper Functions
 # General-purpose utility functions for analysis and visualization
@@ -836,9 +843,7 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
 }
 
 
-################################################################################
-# PYTHON ENVIRONMENT SETUP AND UTILITIES
-################################################################################
+# Python environment setup and utilities
 
 #' Setup Python Environment
 #'
@@ -1062,9 +1067,7 @@ check_python_env <- function(envname = "textanalysisr-env") {
 
 
 
-################################################################################
-# OLLAMA LOCAL LLM UTILITIES
-################################################################################
+# Ollama local LLM utilities
 
 .ollama_base_url <- function() {
   Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -1316,9 +1319,7 @@ get_recommended_ollama_model <- function(preferred_models = c("tinyllama", "gemm
 }
 
 
-################################################################################
-# CLOUD LLM API UTILITIES (OpenAI, Gemini)
-################################################################################
+# Cloud LLM API utilities (OpenAI, Gemini)
 
 #' Call OpenAI Chat Completion API
 #'
@@ -2172,9 +2173,7 @@ get_best_embeddings <- function(texts,
 }
 
 
-################################################################################
-# SECURITY AND VALIDATION UTILITIES
-################################################################################
+# Security and validation utilities
 
 #' Cybersecurity Utility Functions
 #'
@@ -2563,9 +2562,7 @@ validate_column_name <- function(col_name) {
 }
 
 
-################################################################################
-# WEB ACCESSIBILITY UTILITIES
-################################################################################
+# Web accessibility utilities
 
 #' Web Accessibility Utility Functions
 #'
@@ -2793,9 +2790,7 @@ check_alt_text <- function(alt_text, element_type = "image", decorative = FALSE)
 }
 
 
-################################################################################
-# PLOT HELPER FUNCTIONS
-################################################################################
+# Plot helper functions
 
 #' Apply Standard Plotly Layout
 #'
@@ -2874,6 +2869,10 @@ apply_standard_plotly_layout <- function(plot,
 }
 
 
+#' Plotly hover tooltip config
+#' @param bgcolor Tooltip background color.
+#' @param fontcolor Tooltip text color.
+#' @return A list for `plotly::layout(hoverlabel = ...)`.
 #' @keywords internal
 #' @export
 get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") {
@@ -3008,6 +3007,11 @@ get_sentiment_color <- function(score) {
 }
 
 
+#' Single-cell message DT table
+#' @param message Character message to display.
+#' @param font_size CSS font size.
+#' @param color CSS color.
+#' @return A `DT::datatable` htmlwidget.
 #' @keywords internal
 #' @export
 create_message_table <- function(message,
@@ -3047,6 +3051,11 @@ create_message_table <- function(message,
 }
 
 
+#' Empty plotly placeholder
+#' @param message Message to display.
+#' @param color Text color.
+#' @param font_size Font size in px.
+#' @return A `plotly` htmlwidget.
 #' @keywords internal
 #' @export
 create_empty_plot_message <- function(message,
@@ -3091,6 +3100,11 @@ create_empty_plot_message <- function(message,
 }
 
 
+#' Default DT datatable options
+#' @param scroll_y CSS height for vertical scrolling.
+#' @param page_length Default page length.
+#' @param show_buttons Include copy/csv/excel/pdf/print buttons.
+#' @return A list for `DT::datatable(options = ...)`.
 #' @keywords internal
 #' @export
 get_dt_options <- function(scroll_y = "400px",
@@ -3111,10 +3125,12 @@ get_dt_options <- function(scroll_y = "400px",
 }
 
 
-################################################################################
-# SHINY UI HELPER FUNCTIONS
-################################################################################
+# Shiny UI helper functions
 
+#' Show persistent loading notification
+#' @param message Notification text.
+#' @param id Optional unique id for later removal.
+#' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
 show_loading_notification <- function(message, id = NULL) {
@@ -3132,6 +3148,10 @@ show_loading_notification <- function(message, id = NULL) {
   invisible(NULL)
 }
 
+#' Show completion notification
+#' @param message Notification text.
+#' @param duration Seconds until auto-dismiss.
+#' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
 show_completion_notification <- function(message, duration = 5) {
@@ -3148,6 +3168,10 @@ show_completion_notification <- function(message, duration = 5) {
   invisible(NULL)
 }
 
+#' Show error notification
+#' @param message Notification text.
+#' @param duration Seconds until auto-dismiss.
+#' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
 show_error_notification <- function(message, duration = 7) {
@@ -3164,6 +3188,10 @@ show_error_notification <- function(message, duration = 7) {
   invisible(NULL)
 }
 
+#' Show warning notification
+#' @param message Notification text.
+#' @param duration Seconds until auto-dismiss.
+#' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
 show_warning_notification <- function(message, duration = 5) {
@@ -3180,6 +3208,9 @@ show_warning_notification <- function(message, duration = 5) {
   invisible(NULL)
 }
 
+#' Remove Shiny notification by id
+#' @param id Notification id.
+#' @return Invisibly `NULL`.
 #' @keywords internal
 #' @export
 remove_notification_by_id <- function(id) {
@@ -3192,6 +3223,10 @@ remove_notification_by_id <- function(id) {
   invisible(NULL)
 }
 
+#' Show no-DFM notification
+#' @param feature_name Feature description in the message.
+#' @param duration Seconds until auto-dismiss.
+#' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
 show_no_dfm_notification <- function(feature_name = "this feature", duration = 7) {
@@ -3213,6 +3248,9 @@ show_no_dfm_notification <- function(feature_name = "this feature", duration = 7
   invisible(NULL)
 }
 
+#' Show no-feature-matrix notification
+#' @param duration Seconds until auto-dismiss.
+#' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
 show_no_feature_matrix_notification <- function(duration = 7) {
@@ -3229,6 +3267,9 @@ show_no_feature_matrix_notification <- function(duration = 7) {
   invisible(NULL)
 }
 
+#' Show united-texts-required notification
+#' @param duration Seconds until auto-dismiss.
+#' @return Invisibly the notification id.
 #' @keywords internal
 #' @export
 show_unite_texts_required_notification <- function(duration = 5) {
@@ -3245,6 +3286,11 @@ show_unite_texts_required_notification <- function(duration = 5) {
   invisible(NULL)
 }
 
+#' Show guide modal
+#' @param guide_name Guide identifier (filename stem).
+#' @param title Modal title.
+#' @param size Modal size ("s", "m", "l", "xl").
+#' @return Invisibly `NULL`.
 #' @keywords internal
 #' @export
 show_guide_modal <- function(guide_name, title, size = "l") {
@@ -3298,6 +3344,10 @@ show_guide_modal <- function(guide_name, title, size = "l") {
   invisible(NULL)
 }
 
+#' Show DFM-required modal
+#' @param feature_name Feature description in the message.
+#' @param additional_message Optional extra context appended to the body.
+#' @return Invisibly `NULL`.
 #' @keywords internal
 #' @export
 show_dfm_required_modal <- function(feature_name = "this feature", additional_message = NULL) {
@@ -3348,6 +3398,13 @@ show_dfm_required_modal <- function(feature_name = "this feature", additional_me
   invisible(NULL)
 }
 
+#' Show preprocessing-steps modal
+#' @param title Modal title.
+#' @param message Lead message.
+#' @param required_steps Character vector of required step labels.
+#' @param optional_steps Character vector of optional step labels.
+#' @param additional_note Optional note appended to the body.
+#' @return Invisibly `NULL`.
 #' @keywords internal
 #' @export
 show_preprocessing_steps_modal <- function(title = "Preprocessing Required",
@@ -3430,6 +3487,11 @@ get_dfm_setup_instructions <- function(feature_name = "this feature") {
   )
 }
 
+#' Show DFM instructions modal
+#' @param output_id Output id to reset after modal closes.
+#' @param feature_name Feature description in the instructions.
+#' @param session Shiny session.
+#' @return Invisibly `NULL`.
 #' @keywords internal
 #' @export
 show_dfm_instructions_modal <- function(output_id, feature_name = "this feature", session = NULL) {
@@ -3453,6 +3515,10 @@ show_dfm_instructions_modal <- function(output_id, feature_name = "this feature"
   invisible(NULL)
 }
 
+#' Show preprocessing-required modal
+#' @param message Modal body message.
+#' @param title Modal title.
+#' @return Invisibly `NULL`.
 #' @keywords internal
 #' @export
 show_preprocessing_required_modal <- function(message = "Please complete preprocessing steps first.",
@@ -3597,6 +3663,12 @@ wrap_long_text <- function(text, chars_per_line = 50, max_lines = 3) {
   paste(lines[1:min(length(lines), max_lines)], collapse = "\n")
 }
 
+#' Wrap text for tooltip display
+#' @param text Input string.
+#' @param max_words Maximum words to keep.
+#' @param chars_per_line Approximate line width.
+#' @param max_lines Maximum lines.
+#' @return A string with HTML `<br>` breaks.
 #' @keywords internal
 #' @export
 wrap_text_for_tooltip <- function(text, max_words = 150, chars_per_line = 50, max_lines = 3) {

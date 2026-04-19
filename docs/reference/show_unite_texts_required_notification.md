@@ -1,6 +1,6 @@
-# Show Unite Texts Required Notification
+# Show united-texts-required notification
 
-Displays error notification when Step 1 (Unite Texts) is required.
+Show united-texts-required notification
 
 ## Usage
 
@@ -12,8 +12,8 @@ show_unite_texts_required_notification(duration = 5)
 
 - duration:
 
-  Duration in seconds (default: 5)
+  Seconds until auto-dismiss.
 
 ## Value
 
-Displays a Shiny notification. Returns NULL invisibly.
+Invisibly the notification id.

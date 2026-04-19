@@ -1,6 +1,6 @@
-# Show Error Notification
+# Show error notification
 
-Displays an error notification to the user.
+Show error notification
 
 ## Usage
 
@@ -12,12 +12,12 @@ show_error_notification(message, duration = 7)
 
 - message:
 
-  The error message to display
+  Notification text.
 
 - duration:
 
-  Duration in seconds (default: 7)
+  Seconds until auto-dismiss.
 
 ## Value
 
-Displays a Shiny notification. Returns NULL invisibly.
+Invisibly the notification id.

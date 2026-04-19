@@ -2131,9 +2131,7 @@ analyze_similarity_gaps <- function(similarity_data,
 }
 
 
-################################################################################
-# SENTIMENT ANALYSIS
-################################################################################
+# Sentiment analysis
 
 #' Analyze Text Sentiment
 #'
@@ -3123,9 +3121,7 @@ plot_sentiment_violin <- function(sentiment_data,
 }
 
 
-################################################################################
-# SEMANTIC NETWORK ANALYSIS (Co-occurrence and Correlation)
-################################################################################
+# Semantic network analysis (co-occurrence and correlation)
 
 #' @importFrom utils modifyList
 #' @importFrom stats cor
@@ -4036,10 +4032,124 @@ run_rag_search <- function(
 }
 
 
-# ============================================================================
 # Network Analysis Functions
-# Moved from network_analysis.R
-# ============================================================================
+
+.network_dt <- function(df, group_label) {
+  df <- df %>% dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
+  tbl <- DT::datatable(df, rownames = FALSE, extensions = "Buttons",
+                       options = list(scrollX = TRUE, width = "80%", dom = "Bfrtip",
+                                      buttons = c("copy", "csv", "excel", "pdf", "print"))) %>%
+    DT::formatStyle(columns = colnames(df), `font-size` = "16px")
+  htmltools::tagList(
+    htmltools::tags$div(style = "margin-bottom: 20px;",
+                        htmltools::tags$p(group_label,
+                                          style = "font-weight: bold; text-align: center; font-size: 16px;")),
+    tbl
+  )
+}
+
+.network_summary_html <- function(graph, group_label) {
+  df <- data.frame(
+    Metric = c("Nodes", "Edges", "Density", "Diameter",
+               "Global Clustering", "Mean Local Clustering",
+               "Modularity", "Assortativity", "Mean Geodesic Distance"),
+    Value = round(c(
+      igraph::vcount(graph), igraph::ecount(graph), igraph::edge_density(graph),
+      igraph::diameter(graph), igraph::transitivity(graph, type = "global"),
+      mean(igraph::transitivity(graph, type = "local"), na.rm = TRUE),
+      igraph::modularity(graph, membership = igraph::V(graph)$community),
+      igraph::assortativity_degree(graph),
+      mean(igraph::distances(graph)[igraph::distances(graph) != Inf], na.rm = TRUE)
+    ), 3)
+  )
+  .network_dt(df, group_label)
+}
+
+.network_centrality <- function(graph, community_method = "leiden") {
+  igraph::V(graph)$degree      <- igraph::degree(graph)
+  igraph::V(graph)$betweenness <- igraph::betweenness(graph)
+  igraph::V(graph)$closeness   <- igraph::closeness(graph)
+  igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
+  cluster_fn <- switch(community_method,
+    "louvain" = igraph::cluster_louvain,
+    igraph::cluster_leiden)
+  igraph::V(graph)$community <- cluster_fn(graph)$membership
+  graph
+}
+
+.node_metric_vec <- function(graph, by) {
+  switch(by,
+    "betweenness" = igraph::V(graph)$betweenness,
+    "closeness"   = igraph::V(graph)$closeness,
+    "eigenvector" = igraph::V(graph)$eigenvector,
+    "frequency"   = igraph::V(graph)$frequency,
+    igraph::V(graph)$degree)
+}
+
+.community_palette <- function(n) {
+  if (n <= 8) RColorBrewer::brewer.pal(max(3, n), "Set2")[seq_len(n)]
+  else grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n)
+}
+
+.safe_rescale <- function(vals, to, fallback) {
+  if (length(unique(vals)) <= 1) rep(fallback, length(vals))
+  else scales::rescale(vals, to = to)
+}
+
+.visnet_widget <- function(nodes, edges, group_level, width, height, node_label_size,
+                           physics_gravity, physics_spring_length, physics_avoid_overlap,
+                           seed, showlegend, node_color_by, community_colors) {
+  main_cfg <- if (is.null(group_level)) NULL else list(
+    text = as.character(group_level),
+    style = "font-family:Roboto, sans-serif; font-size:16px; color:#0c1f4a; font-weight:bold;"
+  )
+  widget <- visNetwork::visNetwork(nodes, edges, width = width, height = height, main = main_cfg) %>%
+    visNetwork::visNodes(font = list(color = "black", size = node_label_size, vadjust = 0)) %>%
+    visNetwork::visOptions(
+      highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE, algorithm = "hierarchical"),
+      nodesIdSelection = TRUE,
+      selectedBy = list(variable = "group", multiple = FALSE, style = "width: 150px; height: 26px;")
+    ) %>%
+    visNetwork::visPhysics(
+      solver = "barnesHut",
+      barnesHut = list(gravitationalConstant = physics_gravity, centralGravity = 0.4,
+                       springLength = physics_spring_length, springConstant = 0.05,
+                       avoidOverlap = physics_avoid_overlap),
+      stabilization = list(enabled = TRUE, iterations = 1000)
+    ) %>%
+    visNetwork::visInteraction(hover = TRUE, tooltipDelay = 0, tooltipStay = 1000,
+                               zoomView = TRUE, dragView = TRUE) %>%
+    visNetwork::visLayout(randomSeed = seed %||% 2025)
+
+  n_communities <- length(community_colors)
+  if (isTRUE(showlegend) && node_color_by == "community" && n_communities > 0) {
+    legend_df <- data.frame(
+      label = paste0("Community ", seq_len(n_communities),
+                     " (", tabulate(nodes$group, nbins = n_communities), ")"),
+      color = community_colors[as.character(seq_len(n_communities))],
+      shape = "dot",
+      stringsAsFactors = FALSE
+    )
+    widget <- widget %>% visNetwork::visLegend(addNodes = legend_df, useGroups = FALSE,
+                                               position = "right", width = 0.2, zoom = FALSE)
+  }
+  widget
+}
+
+.facet_widgets_html <- function(per_level, nrows) {
+  cols_per_row <- max(ceiling(length(per_level) / max(nrows, 1)), 1)
+  panel_pct <- floor(100 / cols_per_row)
+  widgets <- lapply(names(per_level), function(nm) {
+    htmltools::tags$div(
+      style = sprintf("flex: 1 1 %d%%; min-width: 350px; padding: 10px; box-sizing: border-box;", panel_pct),
+      per_level[[nm]]$plot
+    )
+  })
+  htmltools::tags$div(
+    style = "display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;",
+    widgets
+  )
+}
 
 #' @title Analyze and Visualize Word Co-occurrence Networks
 #'
@@ -4058,21 +4168,23 @@ run_rag_search <- function(
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `co_occur_n` and `top_node_n` values for that category (default: NULL).
+#' @param pattern Optional regex (case-insensitive). If provided, keeps only edges whose `item1` or `item2` matches (default: NULL).
+#' @param seed Integer RNG seed for reproducible layout (default: 2025).
+#' @param physics_gravity barnesHut `gravitationalConstant`. More negative = nodes spread further apart (default: -1500).
+#' @param physics_spring_length barnesHut spring length. Higher = longer edges (default: 100).
+#' @param physics_avoid_overlap barnesHut overlap avoidance, 0 to 1. Higher = more node separation (default: 0.3).
+#' @param showlegend Whether to display the community legend (default: TRUE).
 #'
-#' @return A list containing the ggplot2 plot, a table, and a summary.
+#' @return A list containing the visNetwork widget (or flex-layout HTML for faceted), a DT table, and a summary.
 #'
-#' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
-#' @importFrom ggplot2 ggplot aes geom_segment geom_point scale_size_identity theme_void labs
-#' @importFrom patchwork wrap_plots
-#' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
-#' @importFrom tibble as_tibble
+#' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
+#' @importFrom dplyr count filter mutate group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tidytext tidy
 #' @importFrom widyr pairwise_count
-#' @importFrom scales rescale
+#' @importFrom scales rescale alpha col_numeric
 #' @importFrom stats quantile setNames
 #' @importFrom DT datatable formatStyle
 #' @importFrom rlang sym
-#' @importFrom utils head
 #' @importFrom grDevices colorRampPalette
 #' @importFrom htmltools tagList tags browsable
 #' @importFrom RColorBrewer brewer.pal
@@ -4114,13 +4226,20 @@ word_co_occurrence_network <- function(dfm_object,
                                        community_method = "leiden",
                                        node_size_by = "degree",
                                        node_color_by = "community",
-                                       category_params = NULL) {
+                                       category_params = NULL,
+                                       pattern = NULL,
+                                       seed = 2025,
+                                       physics_gravity = -1500,
+                                       physics_spring_length = 100,
+                                       physics_avoid_overlap = 0.3,
+                                       showlegend = TRUE) {
 
-  if (!requireNamespace("htmltools", quietly = TRUE) ||
+  if (!requireNamespace("visNetwork", quietly = TRUE) ||
+      !requireNamespace("htmltools", quietly = TRUE) ||
       !requireNamespace("RColorBrewer", quietly = TRUE)) {
     stop(
-      "The 'htmltools' and 'RColorBrewer' packages are required for this functionality. ",
-      "Please install them using install.packages(c('htmltools', 'RColorBrewer'))."
+      "Packages 'visNetwork', 'htmltools', and 'RColorBrewer' are required. ",
+      "Install with install.packages(c('visNetwork', 'htmltools', 'RColorBrewer'))."
     )
   }
 
@@ -4141,305 +4260,160 @@ word_co_occurrence_network <- function(dfm_object,
     docvar_levels <- NULL
   }
 
-  build_table <- function(net, group_label) {
-    layout_dff <- net$layout_df %>%
-      dplyr::select(-c("x", "y")) %>%
-      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
+  build_network_plot <- function(data, group_level = NULL, local_co_occur_n = NULL,
+                                 local_top_node_n = NULL, panel_width = NULL, panel_height = NULL) {
+    if (!is.null(seed)) set.seed(seed)
+    eff_co_occur_n <- local_co_occur_n %||% co_occur_n
+    eff_top_node_n <- local_top_node_n %||% top_node_n
 
-    table <- DT::datatable(layout_dff, rownames = FALSE,
-                           extensions = 'Buttons',
-                           options = list(scrollX = TRUE,
-                                          width = "80%",
-                                          dom = 'Bfrtip',
-                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
-      DT::formatStyle(columns = colnames(layout_dff), `font-size` = "16px")
+    data <- data %>%
+      dplyr::group_by(term) %>%
+      dplyr::filter(dplyr::n_distinct(document) >= eff_co_occur_n) %>%
+      dplyr::ungroup()
 
-    htmltools::tagList(
-      htmltools::tags$div(
-        style = "margin-bottom: 20px;",
-        htmltools::tags$p(
-          group_label,
-          style = "font-weight: bold; text-align: center; font-size: 16px;"
-        )
-      ),
-      table
-    )
-  }
-
-  build_summary <- function(net, group_label) {
-    g <- net$graph
-    summary_df <- data.frame(
-      Metric = c("Nodes", "Edges", "Density", "Diameter",
-                 "Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
-                 "Modularity", "Assortativity", "Geodesic Distance (Mean)"),
-      Value = c(
-        igraph::vcount(g),
-        igraph::ecount(g),
-        igraph::edge_density(g),
-        igraph::diameter(g),
-        igraph::transitivity(g, type = "global"),
-        mean(igraph::transitivity(g, type = "local"), na.rm = TRUE),
-        igraph::modularity(g, membership = igraph::V(g)$community),
-        igraph::assortativity_degree(g),
-        mean(igraph::distances(g)[igraph::distances(g) != Inf], na.rm = TRUE)
-      )
-    ) %>%
-      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
-
-    summary_table <- DT::datatable(summary_df, rownames = FALSE,
-                                   extensions = 'Buttons',
-                                   options = list(scrollX = TRUE,
-                                                  width = "80%",
-                                                  dom = 'Bfrtip',
-                                                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
-      DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
-
-    htmltools::tagList(
-      htmltools::tags$div(
-        style = "margin-bottom: 20px;",
-        htmltools::tags$p(
-          group_label,
-          style = "font-weight: bold; text-align: center; font-size: 16px;"
-        )
-      ),
-      summary_table
-    )
-  }
-
-  build_network_plot <- function(data, group_level = NULL, local_co_occur_n = NULL, local_top_node_n = NULL) {
-    # Use category-specific params if provided, otherwise fall back to global params
-    effective_co_occur_n <- if (!is.null(local_co_occur_n)) local_co_occur_n else co_occur_n
-    effective_top_node_n <- if (!is.null(local_top_node_n)) local_top_node_n else top_node_n
+    if (nrow(data) == 0) {
+      message("No terms meet the co-occurrence threshold.")
+      return(NULL)
+    }
 
     term_co_occur <- data %>%
       widyr::pairwise_count(term, document, sort = TRUE) %>%
-      dplyr::filter(n >= effective_co_occur_n)
+      dplyr::filter(n >= eff_co_occur_n)
 
-    graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
-    if (igraph::vcount(graph) == 0) {
+    if (!is.null(pattern) && nzchar(pattern)) {
+      term_co_occur <- term_co_occur %>%
+        dplyr::filter(grepl(pattern, item1, ignore.case = TRUE) |
+                      grepl(pattern, item2, ignore.case = TRUE))
+    }
+
+    if (nrow(term_co_occur) == 0) {
       message("No co-occurrence relationships meet the threshold.")
       return(NULL)
     }
-    igraph::V(graph)$degree      <- igraph::degree(graph)
-    igraph::V(graph)$betweenness <- igraph::betweenness(graph)
-    igraph::V(graph)$closeness   <- igraph::closeness(graph)
-    igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
 
-    # Community detection based on method
-    community_result <- if (community_method == "louvain") {
-      igraph::cluster_louvain(graph)
-    } else {
-      igraph::cluster_leiden(graph)
-    }
-    igraph::V(graph)$community <- community_result$membership
+    graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
+    if (igraph::vcount(graph) == 0) return(NULL)
 
-    layout_mat <- igraph::layout_with_fr(graph)
-    layout_df <- as.data.frame(layout_mat) %>% stats::setNames(c("x", "y"))
-    layout_df <- layout_df %>%
-      dplyr::mutate(label       = igraph::V(graph)$name,
-                    degree      = igraph::V(graph)$degree,
-                    betweenness = igraph::V(graph)$betweenness,
-                    closeness   = igraph::V(graph)$closeness,
-                    eigenvector = igraph::V(graph)$eigenvector,
-                    community   = igraph::V(graph)$community)
+    graph <- .network_centrality(graph, community_method)
 
-    # Calculate word frequency from the original data
-    word_freq <- data %>%
+    freq_df <- data %>%
       dplyr::group_by(term) %>%
-      dplyr::summarise(frequency = sum(count), .groups = "drop")
-    layout_df <- layout_df %>%
-      dplyr::left_join(word_freq, by = c("label" = "term")) %>%
-      dplyr::mutate(frequency = ifelse(is.na(frequency), 1, frequency))
+      dplyr::summarise(frequency = sum(count, na.rm = TRUE), .groups = "drop")
+    igraph::V(graph)$frequency <- freq_df$frequency[match(igraph::V(graph)$name, freq_df$term)]
+    igraph::V(graph)$frequency[is.na(igraph::V(graph)$frequency)] <- 1
 
-    edge_data <- igraph::as_data_frame(graph, what = "edges") %>%
-      dplyr::mutate(x    = layout_df$x[match(from, layout_df$label)],
-                    y    = layout_df$y[match(from, layout_df$label)],
-                    xend = layout_df$x[match(to, layout_df$label)],
-                    yend = layout_df$y[match(to, layout_df$label)],
-                    cooccur_count = n) %>%
-      dplyr::select(from, to, x, y, xend, yend, cooccur_count) %>%
-      dplyr::mutate(line_group = as.integer({
-        b <- unique(stats::quantile(cooccur_count, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
-        if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
-        cut(cooccur_count, breaks = b, include.lowest = TRUE)
-      }),
-      line_width = scales::rescale(line_group, to = c(1, 5)),
-      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
+    sort_metric <- .node_metric_vec(graph, node_size_by)
+    names(sort_metric) <- igraph::V(graph)$name
+    top_n <- min(eff_top_node_n, length(sort_metric))
+    top_nodes <- names(sort(sort_metric, decreasing = TRUE))[seq_len(top_n)]
 
-    # Node size
-    size_metric <- switch(node_size_by,
-      "degree" = layout_df$degree,
-      "betweenness" = layout_df$betweenness,
-      "frequency" = layout_df$frequency,
-      "fixed" = rep(20, nrow(layout_df)),
-      layout_df$degree
+    size_vals <- if (node_size_by == "fixed") rep(10, igraph::vcount(graph)) else sort_metric
+    cap_vals <- pmin(size_vals, stats::quantile(size_vals, 0.95, na.rm = TRUE))
+    node_values <- .safe_rescale(sqrt(cap_vals), to = c(10, 40), fallback = 20)
+
+    communities <- igraph::V(graph)$community
+    unique_communities <- sort(unique(communities))
+    n_communities <- length(unique_communities)
+    palette <- .community_palette(n_communities)
+    community_map <- stats::setNames(seq_along(unique_communities), as.character(unique_communities))
+    community_colors <- stats::setNames(palette, as.character(seq_len(n_communities)))
+
+    freq_vec <- igraph::V(graph)$frequency
+    node_colors <- if (node_color_by == "frequency") {
+      scales::col_numeric("viridis", domain = range(freq_vec, na.rm = TRUE))(freq_vec)
+    } else {
+      community_colors[as.character(community_map[as.character(communities)])]
+    }
+
+    nodes <- data.frame(
+      id = igraph::V(graph)$name,
+      label = ifelse(igraph::V(graph)$name %in% top_nodes, igraph::V(graph)$name, ""),
+      group = community_map[as.character(communities)],
+      value = node_values,
+      color = node_colors,
+      title = paste0(
+        "<b style='color:black;'>", igraph::V(graph)$name, "</b><br>",
+        "<span style='color:black;'>Degree: ", igraph::V(graph)$degree, "<br>",
+        "Betweenness: ", round(igraph::V(graph)$betweenness, 2), "<br>",
+        "Closeness: ", round(igraph::V(graph)$closeness, 3), "<br>",
+        "Eigenvector: ", round(igraph::V(graph)$eigenvector, 3), "<br>",
+        "Frequency: ", freq_vec, "<br>",
+        "Community: ", communities, "</span>"
+      ),
+      stringsAsFactors = FALSE
     )
 
-    node_data <- layout_df %>%
-      dplyr::mutate(
-        size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(8, 45)),
-        text_size = scales::rescale(log1p(size_metric), to = c(node_label_size - 8, node_label_size)),
-        alpha = scales::rescale(log1p(size_metric), to = c(0.2, 1)),
-        hover_text = paste("Word:", label,
-                           "<br>Degree:", degree,
-                           "<br>Betweenness:", round(betweenness, 2),
-                           "<br>Closeness:", round(closeness, 2),
-                           "<br>Eigenvector:", round(eigenvector, 2),
-                           "<br>Frequency:", frequency,
-                           "<br>Community:", community,
-                           if (!is.null(doc_var)) {
-                             if (length(docvar_levels) > 1) {
-                               paste0("<br>", doc_var, ": ", group_level)
-                             } else {
-                               paste0("<br>", doc_var)
-                             }
-                           } else ""
-        )
-      )
+    edges <- igraph::as_data_frame(graph, what = "edges")
+    edges$weight <- term_co_occur$n[match(paste(edges$from, edges$to),
+                                          paste(term_co_occur$item1, term_co_occur$item2))]
+    edges$width <- .safe_rescale(edges$weight, to = c(1, 8), fallback = 2)
+    edge_alphas <- .safe_rescale(edges$weight, to = c(0.3, 1), fallback = 0.7)
+    edges$color <- scales::alpha("#5C5CFF", edge_alphas)
+    edges$title <- paste0("<span style='color:black;'>Co-occurrences: ", edges$weight,
+                          "<br>From: ", edges$from, "<br>To: ", edges$to, "</span>")
 
-    # Create community palette
-    n_communities <- length(unique(node_data$community))
-    if (n_communities >= 3 && n_communities <= 8) {
-      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
-    } else if (n_communities > 8) {
-      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-    } else if (n_communities > 0 && n_communities < 3) {
-      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
-    } else {
-      palette <- rep("#000000", n_communities)
-    }
+    widget <- .visnet_widget(nodes, edges, group_level,
+                             width = panel_width %||% width,
+                             height = panel_height %||% height,
+                             node_label_size = node_label_size,
+                             physics_gravity = physics_gravity,
+                             physics_spring_length = physics_spring_length,
+                             physics_avoid_overlap = physics_avoid_overlap,
+                             seed = seed, showlegend = showlegend,
+                             node_color_by = node_color_by,
+                             community_colors = community_colors)
 
-    node_data$community <- factor(node_data$community, levels = unique(node_data$community))
-    community_levels <- levels(node_data$community)
-    names(palette) <- community_levels
-
-    # Determine node color based on node_color_by parameter
-    if (node_color_by == "frequency") {
-      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
-    } else {
-      node_data$color <- palette[as.character(node_data$community)]
-    }
-
-    sort_col <- switch(node_size_by,
-      "betweenness" = "betweenness",
-      "frequency"   = "frequency",
-      "degree"
+    layout_df <- data.frame(
+      term = igraph::V(graph)$name,
+      frequency = freq_vec,
+      degree = igraph::V(graph)$degree,
+      betweenness = igraph::V(graph)$betweenness,
+      closeness = igraph::V(graph)$closeness,
+      eigenvector = igraph::V(graph)$eigenvector,
+      community = communities,
+      stringsAsFactors = FALSE
     )
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(.data[[sort_col]])) %>% utils::head(effective_top_node_n)
 
-    p <- ggplot2::ggplot() +
-      ggplot2::geom_segment(data = edge_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
-                                         linewidth = .data$line_width, alpha = .data$alpha),
-                            color = "#5C5CFF", show.legend = FALSE) +
-      ggplot2::scale_linewidth_identity() +
-      ggplot2::scale_alpha_identity()
-
-    if (node_color_by == "frequency") {
-      p <- p +
-        ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency,
-                                         text = .data$hover_text),
-                            stroke = 0.5) +
-        ggplot2::scale_color_viridis_c(name = "Frequency")
-    } else {
-      p <- p +
-        ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community,
-                                         text = .data$hover_text),
-                            shape = 21, color = "white", stroke = 1) +
-        ggplot2::scale_fill_manual(values = palette, name = "Community")
-    }
-
-    p <- p +
-      ggplot2::scale_size_identity() +
-      ggplot2::theme_void(base_size = 11) +
-      ggplot2::labs(title = "Word Co-occurrence Network") +
-      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
-
-    list(plot = p, layout_df = layout_df, graph = graph, top_nodes = top_nodes)
+    list(plot = widget, graph = graph, layout_df = layout_df, top_nodes = top_nodes)
   }
 
   if (!is.null(doc_var) && length(docvar_levels) > 1) {
-    plots_list <- dfm_td %>%
-      dplyr::ungroup() %>%
-      dplyr::group_by(!!rlang::sym(doc_var)) %>%
-      dplyr::group_map(~ {
-        group_level <- .y[[doc_var]]
-        message(paste("Processing group level:", group_level))
+    width_num <- if (is.numeric(width)) width else 1200
+    cols_per_row <- max(ceiling(length(docvar_levels) / max(nrows, 1)), 1)
+    panel_w <- floor(width_num / cols_per_row)
+    panel_h <- floor(height / max(nrows, 1))
 
-        if (is.null(group_level)) {
-          stop("doc_var is missing or not found in the current group")
-        }
-
-        local_co_occur_n <- NULL
-        local_top_node_n <- NULL
-        if (!is.null(category_params) && group_level %in% names(category_params)) {
-          cat_params <- category_params[[group_level]]
-          if (!is.null(cat_params$co_occur_n)) local_co_occur_n <- cat_params$co_occur_n
-          if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
-          message(paste("  Using category-specific params - co_occur_n:", local_co_occur_n, ", top_node_n:", local_top_node_n))
-        }
-
-        net <- build_network_plot(.x, group_level, local_co_occur_n, local_top_node_n)
-        if (!is.null(net)) {
-          net$plot + ggplot2::labs(title = group_level)
-        } else {
-          NULL
-        }
-      })
-
-    plots_list <- Filter(Negate(is.null), plots_list)
-    combined_plot <- patchwork::wrap_plots(plots_list, nrow = nrows)
-
-    table_list <- lapply(docvar_levels, function(level) {
-      message(paste("Generating table for level:", level))
+    per_level <- lapply(docvar_levels, function(level) {
       group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      # Look up category-specific parameters
-      local_co_occur_n <- NULL
-      local_top_node_n <- NULL
-      if (!is.null(category_params) && level %in% names(category_params)) {
-        cat_params <- category_params[[level]]
-        if (!is.null(cat_params$co_occur_n)) local_co_occur_n <- cat_params$co_occur_n
-        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
-      }
-      net <- build_network_plot(group_data, level, local_co_occur_n, local_top_node_n)
-      if (!is.null(net)) build_table(net, level) else NULL
+      cat_p <- category_params[[level]] %||% list()
+      build_network_plot(group_data, level, cat_p$co_occur_n, cat_p$top_node_n,
+                         panel_width = panel_w, panel_height = panel_h)
     })
+    names(per_level) <- as.character(docvar_levels)
+    per_level <- Filter(Negate(is.null), per_level)
 
-    summary_list <- lapply(docvar_levels, function(level) {
-      message(paste("Generating summary for level:", level))
-      group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      # Look up category-specific parameters
-      local_co_occur_n <- NULL
-      local_top_node_n <- NULL
-      if (!is.null(category_params) && level %in% names(category_params)) {
-        cat_params <- category_params[[level]]
-        if (!is.null(cat_params$co_occur_n)) local_co_occur_n <- cat_params$co_occur_n
-        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
-      }
-      net <- build_network_plot(group_data, level, local_co_occur_n, local_top_node_n)
-      if (!is.null(net)) build_summary(net, level) else NULL
-    })
+    tables <- htmltools::tagList(lapply(names(per_level), function(nm) {
+      .network_dt(per_level[[nm]]$layout_df, nm)
+    })) %>% htmltools::browsable()
 
-    return(list(
-      plot = combined_plot,
-      table = table_list %>% htmltools::tagList() %>% htmltools::browsable(),
-      summary = summary_list %>% htmltools::tagList() %>% htmltools::browsable()
-    ))
+    summaries <- htmltools::tagList(lapply(names(per_level), function(nm) {
+      .network_summary_html(per_level[[nm]]$graph, paste("Network Summary:", nm))
+    })) %>% htmltools::browsable()
+
+    list(plot = .facet_widgets_html(per_level, nrows), table = tables, summary = summaries)
   } else {
-    net <- build_network_plot(dfm_td)
-    if (is.null(net)) {
-      message("No network generated.")
-      return(NULL)
-    }
-    return(list(
+    net <- build_network_plot(dfm_td, panel_width = "100%")
+    if (is.null(net)) return(NULL)
+    table_label <- if (is.null(doc_var)) "Network Centrality Table"
+                   else paste("Network Centrality Table for", doc_var)
+    summary_label <- if (is.null(doc_var)) "Network Summary"
+                     else paste("Network Summary for", doc_var)
+    list(
       plot = net$plot,
       top_nodes = net$top_nodes,
-      table = build_table(net, if (!is.null(doc_var)) paste("Network Centrality Table for", doc_var) else "Network Centrality Table") %>% htmltools::browsable(),
-      summary = build_summary(net, if (!is.null(doc_var)) paste("Network Summary for", doc_var) else "Network Summary") %>% htmltools::browsable()
-    ))
+      table = .network_dt(net$layout_df, table_label) %>% htmltools::browsable(),
+      summary = .network_summary_html(net$graph, summary_label) %>% htmltools::browsable()
+    )
   }
 }
 
@@ -4462,21 +4436,23 @@ word_co_occurrence_network <- function(dfm_object,
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `common_term_n`, `corr_n`, and `top_node_n` values for that category (default: NULL).
+#' @param pattern Optional regex (case-insensitive). If provided, keeps only edges whose `item1` or `item2` matches (default: NULL).
+#' @param seed Integer RNG seed for reproducible layout (default: 2025).
+#' @param physics_gravity barnesHut `gravitationalConstant`. More negative = nodes spread further apart (default: -1500).
+#' @param physics_spring_length barnesHut spring length. Higher = longer edges (default: 100).
+#' @param physics_avoid_overlap barnesHut overlap avoidance, 0 to 1. Higher = more node separation (default: 0.3).
+#' @param showlegend Whether to display the community legend (default: TRUE).
 #'
-#' @return A list containing the ggplot2 plot, a table, and a summary.
+#' @return A list containing the visNetwork widget (or flex-layout HTML for faceted), a DT table, and a summary.
 #'
-#' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality layout_with_fr cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
-#' @importFrom ggplot2 ggplot aes geom_segment geom_point scale_size_identity theme_void labs
-#' @importFrom patchwork wrap_plots
-#' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
-#' @importFrom tibble as_tibble
+#' @importFrom igraph graph_from_data_frame V vcount ecount degree betweenness closeness eigen_centrality cluster_leiden cluster_louvain edge_density diameter transitivity modularity assortativity_degree distances
+#' @importFrom dplyr count filter mutate group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tidytext tidy
 #' @importFrom widyr pairwise_cor
-#' @importFrom scales rescale
+#' @importFrom scales rescale alpha col_numeric
 #' @importFrom stats quantile setNames
 #' @importFrom DT datatable formatStyle
 #' @importFrom rlang sym
-#' @importFrom utils head
 #' @importFrom grDevices colorRampPalette
 #' @importFrom htmltools tagList tags browsable
 #' @importFrom RColorBrewer brewer.pal
@@ -4520,13 +4496,20 @@ word_correlation_network <- function(dfm_object,
                                      community_method = "leiden",
                                      node_size_by = "degree",
                                      node_color_by = "community",
-                                     category_params = NULL) {
+                                     category_params = NULL,
+                                     pattern = NULL,
+                                     seed = 2025,
+                                     physics_gravity = -1500,
+                                     physics_spring_length = 100,
+                                     physics_avoid_overlap = 0.3,
+                                     showlegend = TRUE) {
 
-  if (!requireNamespace("htmltools", quietly = TRUE) ||
+  if (!requireNamespace("visNetwork", quietly = TRUE) ||
+      !requireNamespace("htmltools", quietly = TRUE) ||
       !requireNamespace("RColorBrewer", quietly = TRUE)) {
     stop(
-      "The 'htmltools' and 'RColorBrewer' packages are required for this functionality. ",
-      "Please install them using install.packages(c('htmltools', 'RColorBrewer'))."
+      "Packages 'visNetwork', 'htmltools', and 'RColorBrewer' are required. ",
+      "Install with install.packages(c('visNetwork', 'htmltools', 'RColorBrewer'))."
     )
   }
 
@@ -4547,320 +4530,154 @@ word_correlation_network <- function(dfm_object,
     docvar_levels <- NULL
   }
 
-  build_table <- function(net, group_label) {
-    layout_dff <- net$layout_df %>%
-      dplyr::select(-c("x", "y")) %>%
-      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
-
-    table <- DT::datatable(layout_dff, rownames = FALSE,
-                           extensions = 'Buttons',
-                           options = list(scrollX = TRUE,
-                                          width = "80%",
-                                          dom = 'Bfrtip',
-                                          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
-      DT::formatStyle(columns = colnames(layout_dff), `font-size` = "16px")
-
-    htmltools::tagList(
-      htmltools::tags$div(
-        style = "margin-bottom: 20px;",
-        htmltools::tags$p(
-          group_label,
-          style = "font-weight: bold; text-align: center; font-size: 16px;"
-        )
-      ),
-      table
-    )
-  }
-
-  build_summary <- function(net, group_label) {
-    g <- net$graph
-    summary_df <- data.frame(
-      Metric = c("Nodes", "Edges", "Density", "Diameter",
-                 "Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
-                 "Modularity", "Assortativity", "Geodesic Distance (Mean)"),
-      Value = c(
-        igraph::vcount(g),
-        igraph::ecount(g),
-        igraph::edge_density(g),
-        igraph::diameter(g),
-        igraph::transitivity(g, type = "global"),
-        mean(igraph::transitivity(g, type = "local"), na.rm = TRUE),
-        igraph::modularity(g, membership = igraph::V(g)$community),
-        igraph::assortativity_degree(g),
-        mean(igraph::distances(g)[igraph::distances(g) != Inf], na.rm = TRUE)
-      )
-    ) %>%
-      dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
-
-    summary_table <- DT::datatable(summary_df, rownames = FALSE,
-                                   extensions = 'Buttons',
-                                   options = list(scrollX = TRUE,
-                                                  width = "80%",
-                                                  dom = 'Bfrtip',
-                                                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))) %>%
-      DT::formatStyle(columns = colnames(summary_df), `font-size` = "16px")
-
-    htmltools::tagList(
-      htmltools::tags$div(
-        style = "margin-bottom: 20px;",
-        htmltools::tags$p(
-          group_label,
-          style = "font-weight: bold; text-align: center; font-size: 16px;"
-        )
-      ),
-      summary_table
-    )
-  }
-
-  build_network_plot <- function(data, group_level = NULL, local_common_term_n = NULL, local_corr_n = NULL, local_top_node_n = NULL) {
-    # Use category-specific params if provided, otherwise fall back to global params
-    effective_common_term_n <- if (!is.null(local_common_term_n)) local_common_term_n else common_term_n
-    effective_corr_n <- if (!is.null(local_corr_n)) local_corr_n else corr_n
-    effective_top_node_n <- if (!is.null(local_top_node_n)) local_top_node_n else top_node_n
+  build_network_plot <- function(data, group_level = NULL, local_common_term_n = NULL,
+                                 local_corr_n = NULL, local_top_node_n = NULL,
+                                 panel_width = NULL, panel_height = NULL) {
+    if (!is.null(seed)) set.seed(seed)
+    eff_common_term_n <- local_common_term_n %||% common_term_n
+    eff_corr_n <- local_corr_n %||% corr_n
+    eff_top_node_n <- local_top_node_n %||% top_node_n
 
     term_cor <- data %>%
       dplyr::group_by(term) %>%
-      dplyr::filter(dplyr::n() >= effective_common_term_n) %>%
+      dplyr::filter(dplyr::n() >= eff_common_term_n) %>%
       widyr::pairwise_cor(term, document, sort = TRUE) %>%
       dplyr::ungroup() %>%
-      dplyr::filter(correlation > effective_corr_n)
+      dplyr::filter(correlation > eff_corr_n)
 
-    graph <- igraph::graph_from_data_frame(term_cor, directed = FALSE)
-    if(igraph::vcount(graph) == 0) {
+    if (!is.null(pattern) && nzchar(pattern)) {
+      term_cor <- term_cor %>%
+        dplyr::filter(grepl(pattern, item1, ignore.case = TRUE) |
+                      grepl(pattern, item2, ignore.case = TRUE))
+    }
+
+    if (nrow(term_cor) == 0) {
       message("No correlation relationships meet the threshold.")
       return(NULL)
     }
-    igraph::V(graph)$degree      <- igraph::degree(graph)
-    igraph::V(graph)$betweenness <- igraph::betweenness(graph)
-    igraph::V(graph)$closeness   <- igraph::closeness(graph)
-    igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
 
-    # Community detection based on method
-    community_result <- if (community_method == "louvain") {
-      igraph::cluster_louvain(graph)
-    } else {
-      igraph::cluster_leiden(graph)
-    }
-    igraph::V(graph)$community <- community_result$membership
+    graph <- igraph::graph_from_data_frame(term_cor, directed = FALSE)
+    if (igraph::vcount(graph) == 0) return(NULL)
 
-    layout_mat <- igraph::layout_with_fr(graph)
-    layout_df <- as.data.frame(layout_mat) %>% stats::setNames(c("x", "y"))
-    layout_df <- layout_df %>%
-      dplyr::mutate(label       = igraph::V(graph)$name,
-                    degree      = igraph::V(graph)$degree,
-                    betweenness = igraph::V(graph)$betweenness,
-                    closeness   = igraph::V(graph)$closeness,
-                    eigenvector = igraph::V(graph)$eigenvector,
-                    community   = igraph::V(graph)$community)
+    graph <- .network_centrality(graph, community_method)
 
-    # Calculate word frequency from the original data
-    word_freq <- data %>%
+    freq_df <- data %>%
       dplyr::group_by(term) %>%
-      dplyr::summarise(frequency = sum(count), .groups = "drop")
-    layout_df <- layout_df %>%
-      dplyr::left_join(word_freq, by = c("label" = "term")) %>%
-      dplyr::mutate(frequency = ifelse(is.na(frequency), 1, frequency))
+      dplyr::summarise(frequency = sum(count, na.rm = TRUE), .groups = "drop")
+    igraph::V(graph)$frequency <- freq_df$frequency[match(igraph::V(graph)$name, freq_df$term)]
+    igraph::V(graph)$frequency[is.na(igraph::V(graph)$frequency)] <- 1
 
-    edge_data <- igraph::as_data_frame(graph, what = "edges") %>%
-      dplyr::mutate(x    = layout_df$x[match(from, layout_df$label)],
-                    y    = layout_df$y[match(from, layout_df$label)],
-                    xend = layout_df$x[match(to, layout_df$label)],
-                    yend = layout_df$y[match(to, layout_df$label)],
-                    correlation = correlation) %>%
-      dplyr::select(from, to, x, y, xend, yend, correlation) %>%
-      dplyr::mutate(line_group = as.integer({
-        b <- unique(stats::quantile(correlation, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
-        if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
-        cut(correlation, breaks = b, include.lowest = TRUE)
-      }),
-      line_width = scales::rescale(line_group, to = c(1, 5)),
-      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
+    sort_metric <- .node_metric_vec(graph, node_size_by)
+    names(sort_metric) <- igraph::V(graph)$name
+    top_n <- min(eff_top_node_n, length(sort_metric))
+    top_nodes <- names(sort(sort_metric, decreasing = TRUE))[seq_len(top_n)]
 
-    # Node size
-    size_metric <- switch(node_size_by,
-      "degree" = layout_df$degree,
-      "betweenness" = layout_df$betweenness,
-      "frequency" = layout_df$frequency,
-      "fixed" = rep(20, nrow(layout_df)),
-      layout_df$degree
+    size_vals <- if (node_size_by == "fixed") rep(10, igraph::vcount(graph)) else sort_metric
+    cap_vals <- pmin(size_vals, stats::quantile(size_vals, 0.95, na.rm = TRUE))
+    node_values <- .safe_rescale(sqrt(cap_vals), to = c(10, 40), fallback = 20)
+
+    communities <- igraph::V(graph)$community
+    unique_communities <- sort(unique(communities))
+    n_communities <- length(unique_communities)
+    palette <- .community_palette(n_communities)
+    community_map <- stats::setNames(seq_along(unique_communities), as.character(unique_communities))
+    community_colors <- stats::setNames(palette, as.character(seq_len(n_communities)))
+
+    freq_vec <- igraph::V(graph)$frequency
+    node_colors <- if (node_color_by == "frequency") {
+      scales::col_numeric("viridis", domain = range(freq_vec, na.rm = TRUE))(freq_vec)
+    } else {
+      community_colors[as.character(community_map[as.character(communities)])]
+    }
+
+    nodes <- data.frame(
+      id = igraph::V(graph)$name,
+      label = ifelse(igraph::V(graph)$name %in% top_nodes, igraph::V(graph)$name, ""),
+      group = community_map[as.character(communities)],
+      value = node_values,
+      color = node_colors,
+      title = paste0(
+        "<b style='color:black;'>", igraph::V(graph)$name, "</b><br>",
+        "<span style='color:black;'>Degree: ", igraph::V(graph)$degree, "<br>",
+        "Betweenness: ", round(igraph::V(graph)$betweenness, 2), "<br>",
+        "Closeness: ", round(igraph::V(graph)$closeness, 3), "<br>",
+        "Eigenvector: ", round(igraph::V(graph)$eigenvector, 3), "<br>",
+        "Frequency: ", freq_vec, "<br>",
+        "Community: ", communities, "</span>"
+      ),
+      stringsAsFactors = FALSE
     )
 
-    node_data <- layout_df %>%
-      dplyr::mutate(
-        size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(8, 45)),
-        text_size = scales::rescale(log1p(size_metric), to = c(node_label_size - 8, node_label_size)),
-        alpha = scales::rescale(log1p(size_metric), to = c(0.2, 1)),
-        hover_text = paste(
-          "Word:", label,
-          "<br>Degree:", degree,
-          "<br>Betweenness:", round(betweenness, 2),
-          "<br>Closeness:", round(closeness, 2),
-          "<br>Eigenvector:", round(eigenvector, 2),
-          "<br>Frequency:", frequency,
-          "<br>Community:", community,
-          if (!is.null(doc_var)) {
-            if (length(docvar_levels) > 1) {
-              paste0("<br>", doc_var, ": ", group_level)
-            } else {
-              paste0("<br>", doc_var)
-            }
-          } else ""
-        )
-      )
+    edges <- igraph::as_data_frame(graph, what = "edges")
+    edges$correlation <- term_cor$correlation[match(paste(edges$from, edges$to),
+                                                    paste(term_cor$item1, term_cor$item2))]
+    edges$width <- .safe_rescale(edges$correlation, to = c(1, 8), fallback = 2)
+    edge_alphas <- .safe_rescale(abs(edges$correlation), to = c(0.3, 1), fallback = 0.7)
+    edges$color <- scales::alpha("#5C5CFF", edge_alphas)
+    edges$title <- paste0("<span style='color:black;'>Correlation: ", round(edges$correlation, 3),
+                          "<br>From: ", edges$from, "<br>To: ", edges$to, "</span>")
 
-    # Create community palette
-    n_communities <- length(unique(node_data$community))
-    if (n_communities >= 3 && n_communities <= 8) {
-      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
-    } else if (n_communities > 8) {
-      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-    } else if (n_communities > 0 && n_communities < 3) {
-      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
-    } else {
-      palette <- rep("#000000", n_communities)
-    }
+    widget <- .visnet_widget(nodes, edges, group_level,
+                             width = panel_width %||% width,
+                             height = panel_height %||% height,
+                             node_label_size = node_label_size,
+                             physics_gravity = physics_gravity,
+                             physics_spring_length = physics_spring_length,
+                             physics_avoid_overlap = physics_avoid_overlap,
+                             seed = seed, showlegend = showlegend,
+                             node_color_by = node_color_by,
+                             community_colors = community_colors)
 
-    node_data$community <- factor(node_data$community, levels = unique(node_data$community))
-    community_levels <- levels(node_data$community)
-    names(palette) <- community_levels
-
-    # Determine node color based on node_color_by parameter
-    if (node_color_by == "frequency") {
-      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
-    } else {
-      node_data$color <- palette[as.character(node_data$community)]
-    }
-
-    sort_col <- switch(node_size_by,
-      "betweenness" = "betweenness",
-      "frequency"   = "frequency",
-      "degree"
+    layout_df <- data.frame(
+      term = igraph::V(graph)$name,
+      frequency = freq_vec,
+      degree = igraph::V(graph)$degree,
+      betweenness = igraph::V(graph)$betweenness,
+      closeness = igraph::V(graph)$closeness,
+      eigenvector = igraph::V(graph)$eigenvector,
+      community = communities,
+      stringsAsFactors = FALSE
     )
-    top_nodes <- dplyr::arrange(node_data, dplyr::desc(.data[[sort_col]])) %>% utils::head(effective_top_node_n)
 
-    p <- ggplot2::ggplot() +
-      ggplot2::geom_segment(data = edge_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
-                                         linewidth = .data$line_width, alpha = .data$alpha),
-                            color = "#5C5CFF", show.legend = FALSE) +
-      ggplot2::scale_linewidth_identity() +
-      ggplot2::scale_alpha_identity()
-
-    if (node_color_by == "frequency") {
-      p <- p +
-        ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency,
-                                         text = .data$hover_text),
-                            stroke = 0.5) +
-        ggplot2::scale_color_viridis_c(name = "Frequency")
-    } else {
-      p <- p +
-        ggplot2::geom_point(data = node_data,
-                            ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, fill = .data$community,
-                                         text = .data$hover_text),
-                            shape = 21, color = "white", stroke = 1) +
-        ggplot2::scale_fill_manual(values = palette, name = "Community")
-    }
-
-    p <- p +
-      ggplot2::scale_size_identity() +
-      ggplot2::theme_void(base_size = 11) +
-      ggplot2::labs(title = "Word Correlation Network") +
-      ggplot2::theme(plot.title = ggplot2::element_text(face = "bold", hjust = 0.5))
-
-    list(plot = p, layout_df = layout_df, graph = graph, top_nodes = top_nodes)
+    list(plot = widget, graph = graph, layout_df = layout_df, top_nodes = top_nodes)
   }
 
   if (!is.null(doc_var) && length(docvar_levels) > 1) {
-    plots_list <- dfm_td %>%
-      dplyr::ungroup() %>%
-      dplyr::group_by(!!rlang::sym(doc_var)) %>%
-      dplyr::group_map(~ {
-        group_level <- .y[[doc_var]]
-        message(paste("Processing group level:", group_level))
+    width_num <- if (is.numeric(width)) width else 1200
+    cols_per_row <- max(ceiling(length(docvar_levels) / max(nrows, 1)), 1)
+    panel_w <- floor(width_num / cols_per_row)
+    panel_h <- floor(height / max(nrows, 1))
 
-        if (is.null(group_level)) {
-          stop("doc_var is missing or not found in the current group")
-        }
-
-        local_common_term_n <- NULL
-        local_corr_n <- NULL
-        local_top_node_n <- NULL
-        if (!is.null(category_params) && group_level %in% names(category_params)) {
-          cat_params <- category_params[[group_level]]
-          if (!is.null(cat_params$common_term_n)) local_common_term_n <- cat_params$common_term_n
-          if (!is.null(cat_params$corr_n)) local_corr_n <- cat_params$corr_n
-          if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
-          message(paste("  Using category-specific params - common_term_n:", local_common_term_n,
-                        ", corr_n:", local_corr_n, ", top_node_n:", local_top_node_n))
-        }
-
-        net <- build_network_plot(.x, group_level, local_common_term_n, local_corr_n, local_top_node_n)
-        if (!is.null(net)) {
-          net$plot + ggplot2::labs(title = group_level)
-        } else {
-          NULL
-        }
-      })
-
-    plots_list <- Filter(Negate(is.null), plots_list)
-    combined_plot <- patchwork::wrap_plots(plots_list, nrow = nrows)
-
-    table_list <- lapply(docvar_levels, function(level) {
-      message(paste("Generating table for level:", level))
+    per_level <- lapply(docvar_levels, function(level) {
       group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      # Look up category-specific parameters
-      local_common_term_n <- NULL
-      local_corr_n <- NULL
-      local_top_node_n <- NULL
-      if (!is.null(category_params) && level %in% names(category_params)) {
-        cat_params <- category_params[[level]]
-        if (!is.null(cat_params$common_term_n)) local_common_term_n <- cat_params$common_term_n
-        if (!is.null(cat_params$corr_n)) local_corr_n <- cat_params$corr_n
-        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
-      }
-      net <- build_network_plot(group_data, level, local_common_term_n, local_corr_n, local_top_node_n)
-      if (!is.null(net)) build_table(net, level) else NULL
+      cat_p <- category_params[[level]] %||% list()
+      build_network_plot(group_data, level, cat_p$common_term_n, cat_p$corr_n, cat_p$top_node_n,
+                         panel_width = panel_w, panel_height = panel_h)
     })
+    names(per_level) <- as.character(docvar_levels)
+    per_level <- Filter(Negate(is.null), per_level)
 
-    summary_list <- lapply(docvar_levels, function(level) {
-      message(paste("Generating summary for level:", level))
-      group_data <- dplyr::filter(dfm_td, !!rlang::sym(doc_var) == level)
-      # Look up category-specific parameters
-      local_common_term_n <- NULL
-      local_corr_n <- NULL
-      local_top_node_n <- NULL
-      if (!is.null(category_params) && level %in% names(category_params)) {
-        cat_params <- category_params[[level]]
-        if (!is.null(cat_params$common_term_n)) local_common_term_n <- cat_params$common_term_n
-        if (!is.null(cat_params$corr_n)) local_corr_n <- cat_params$corr_n
-        if (!is.null(cat_params$top_node_n)) local_top_node_n <- cat_params$top_node_n
-      }
-      net <- build_network_plot(group_data, level, local_common_term_n, local_corr_n, local_top_node_n)
-      if (!is.null(net)) build_summary(net, level) else NULL
-    })
+    tables <- htmltools::tagList(lapply(names(per_level), function(nm) {
+      .network_dt(per_level[[nm]]$layout_df, nm)
+    })) %>% htmltools::browsable()
 
-    return(list(
-      plot = combined_plot,
-      table = table_list %>% htmltools::tagList() %>% htmltools::browsable(),
-      summary = summary_list %>% htmltools::tagList() %>% htmltools::browsable()
-    ))
+    summaries <- htmltools::tagList(lapply(names(per_level), function(nm) {
+      .network_summary_html(per_level[[nm]]$graph, paste("Network Summary:", nm))
+    })) %>% htmltools::browsable()
+
+    list(plot = .facet_widgets_html(per_level, nrows), table = tables, summary = summaries)
   } else {
-    net <- build_network_plot(dfm_td)
-    if (is.null(net)) {
-      message("No network generated.")
-      return(NULL)
-    }
-    return(list(
+    net <- build_network_plot(dfm_td, panel_width = "100%")
+    if (is.null(net)) return(NULL)
+    table_label <- if (is.null(doc_var)) "Network Centrality Table"
+                   else paste("Network Centrality Table for", doc_var)
+    summary_label <- if (is.null(doc_var)) "Network Summary"
+                     else paste("Network Summary for", doc_var)
+    list(
       plot = net$plot,
       top_nodes = net$top_nodes,
-      table = build_table(net,
-                          if (!is.null(doc_var)) paste("Network Centrality Table for", doc_var)
-                          else "Network Centrality Table") %>% htmltools::browsable(),
-      summary = build_summary(net,
-                              if (!is.null(doc_var)) paste("Network Summary for", doc_var)
-                              else "Network Summary") %>% htmltools::browsable()
-    ))
+      table = .network_dt(net$layout_df, table_label) %>% htmltools::browsable(),
+      summary = .network_summary_html(net$graph, summary_label) %>% htmltools::browsable()
+    )
   }
 }

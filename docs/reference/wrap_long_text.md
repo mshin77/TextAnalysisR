@@ -31,5 +31,4 @@ Text with line breaks inserted.
 
 Other text-utilities:
 [`truncate_text_to_words()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_to_words.md),
-[`truncate_text_with_ellipsis()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_with_ellipsis.md),
-[`wrap_text_for_tooltip()`](https://mshin77.github.io/TextAnalysisR/reference/wrap_text_for_tooltip.md)
+[`truncate_text_with_ellipsis()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_with_ellipsis.md)

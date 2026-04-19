@@ -1,6 +1,6 @@
-# Show Completion Notification
+# Show completion notification
 
-Displays a temporary success notification when a task completes.
+Show completion notification
 
 ## Usage
 
@@ -12,12 +12,12 @@ show_completion_notification(message, duration = 5)
 
 - message:
 
-  The completion message to display
+  Notification text.
 
 - duration:
 
-  Duration in seconds (default: 5)
+  Seconds until auto-dismiss.
 
 ## Value
 
-Displays a Shiny notification. Returns NULL invisibly.
+Invisibly the notification id.

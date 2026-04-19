@@ -1,6 +1,6 @@
-# Show Warning Notification
+# Show warning notification
 
-Displays a warning notification to the user.
+Show warning notification
 
 ## Usage
 
@@ -12,12 +12,12 @@ show_warning_notification(message, duration = 5)
 
 - message:
 
-  The warning message to display
+  Notification text.
 
 - duration:
 
-  Duration in seconds (default: 5)
+  Seconds until auto-dismiss.
 
 ## Value
 
-Displays a Shiny notification. Returns NULL invisibly.
+Invisibly the notification id.

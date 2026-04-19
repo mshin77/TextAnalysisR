@@ -1,8 +1,6 @@
-# Show No DFM Notification
+# Show no-DFM notification
 
-Displays a standardized error notification when DFM is required but not
-available. Shorter alternative to the modal dialog for simple error
-messages.
+Show no-DFM notification
 
 ## Usage
 
@@ -14,12 +12,12 @@ show_no_dfm_notification(feature_name = "this feature", duration = 7)
 
 - feature_name:
 
-  Name of the feature requiring DFM (default: "this feature")
+  Feature description in the message.
 
 - duration:
 
-  Duration in seconds (default: 7)
+  Seconds until auto-dismiss.
 
 ## Value
 
-Displays a Shiny notification. Returns NULL invisibly.
+Invisibly the notification id.

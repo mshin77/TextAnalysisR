@@ -137,9 +137,12 @@ processing”)</li>
 </ul>
 <p><strong>Usage:</strong> Set minimum frequency (how often phrases
 appear) and lambda (collocation strength) to detect meaningful
-multi-word expressions.</p>
+multi-word expressions. The function returns a collocations table; pass
+it to <code><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">quanteda::tokens_compound()</a></code> to merge phrases into the
+tokens object.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">compounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">tokens_compound</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="va">compounds</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://www.tidytextmining.com/ngrams.html" class="external-link">Text Mining with R -
 N-grams Chapter</a></p>
 </details><hr>
@@ -201,7 +204,7 @@ Python spaCy via reticulate.</p>
 </tbody>
 </table>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pos_tags.html">extract_pos_tags</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span>  <span class="co"># Uses spacy_parse_full</span></span>
+<code class="sourceCode R"><span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pos_tags.html">extract_pos_tags</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span>
 <span><span class="co"># Returns columns: doc_id, token, lemma, pos, tag</span></span></code></pre></div>
 <p><strong>Usage:</strong> Analyze verb tenses for temporal patterns,
 number agreement, or grammatical complexity.</p>
@@ -249,7 +252,7 @@ identify distinctive vocabulary.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">log_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
-<span>  group_var <span class="op">=</span> <span class="st">"category"</span>,</span>
+<span>  group_var <span class="op">=</span> <span class="st">"reference_type"</span>,</span>
 <span>  comparison_mode <span class="op">=</span> <span class="st">"binary"</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span>
@@ -263,7 +266,7 @@ groups, not just rare words with extreme ratios.</p>
 <code class="sourceCode R"><span><span class="co"># Requires tidylo package: install.packages("tidylo")</span></span>
 <span><span class="va">weighted_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_weighted_log_odds.html">calculate_weighted_log_odds</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
-<span>  group_var <span class="op">=</span> <span class="st">"category"</span>,</span>
+<span>  group_var <span class="op">=</span> <span class="st">"reference_type"</span>,</span>
 <span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://juliasilge.github.io/tidylo/" class="external-link">tidylo: Weighted Log

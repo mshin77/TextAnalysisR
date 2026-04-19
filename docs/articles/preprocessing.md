@@ -165,11 +165,13 @@ Documentation](https://quanteda.io/reference/dfm.html)
 
 ## Multi-word Expressions
 
-Detect phrases like “machine learning”:
+Detect phrases like “machine learning” and compound them in the tokens
+object:
 
 ``` r
 
-tokens <- detect_multi_words(tokens, min_count = 10)
+compounds <- detect_multi_words(tokens, min_count = 10)
+tokens <- quanteda::tokens_compound(tokens, compounds)
 ```
 
 ## Next Steps

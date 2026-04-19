@@ -17,10 +17,18 @@
 
   <h4 style="font-family: 'Montserrat', sans-serif; color: #337ab7; margin-top: 20px;">Key Components</h4>
   <ul>
-    <li><strong>Sentence Transformers:</strong> Generate contextual embeddings (e.g., all-MiniLM-L6-v2)</li>
+    <li><strong>Sentence Transformers:</strong> Generate contextual embeddings. Selectable: MiniLM (fast), MPNet (higher quality), BGE small/base v1.5, E5 base v2, Nomic v2 (multilingual), GTE multilingual.</li>
     <li><strong>UMAP:</strong> Dimensionality reduction preserving local structure</li>
     <li><strong>HDBSCAN:</strong> Density-based clustering for topic discovery</li>
     <li><strong>c-TF-IDF:</strong> Class-based TF-IDF for topic keyword extraction</li>
+  </ul>
+  <hr>
+
+  <h4 style="font-family: 'Montserrat', sans-serif; color: #337ab7; margin-top: 20px;">Quality Metrics</h4>
+  <ul>
+    <li><strong>NPMI:</strong> Normalized Pointwise Mutual Information on top terms; coherence axis less sensitive to rare words.</li>
+    <li><strong>Topic Diversity:</strong> Proportion of unique words across topics' top-K terms (higher = less topic overlap).</li>
+    <li><strong>Silhouette Score:</strong> Embedding-space cluster separation (-1 to 1; higher is better).</li>
   </ul>
   <hr>
 
@@ -30,6 +38,7 @@
     <li>Reimers, N., & Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. In <em>Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing</em> (pp. 3982–3992). <a href="https://arxiv.org/abs/1908.10084" target="_blank">https://arxiv.org/abs/1908.10084</a></li>
     <li>McInnes, L., Healy, J., & Melville, J. (2018). UMAP: Uniform manifold approximation and projection for dimension reduction. <em>arXiv preprint arXiv:1802.03426</em>. <a href="https://arxiv.org/abs/1802.03426" target="_blank">https://arxiv.org/abs/1802.03426</a></li>
     <li>Campello, R. J. G. B., Moulavi, D., & Sander, J. (2013). Density-based clustering based on hierarchical density estimates. In <em>PAKDD 2013, Lecture Notes in Computer Science</em> (Vol. 7819, pp. 160–172). Springer. <a href="https://doi.org/10.1007/978-3-642-37456-2_14" target="_blank">https://doi.org/10.1007/978-3-642-37456-2_14</a></li>
+    <li>Hoyle, A., Goel, P., Hian-Cheong, A., Peskov, D., Boyd-Graber, J., & Resnik, P. (2021). Is automated topic model evaluation broken? The incoherence of coherence. <em>NeurIPS 2021</em>. <a href="https://arxiv.org/abs/2107.02173" target="_blank">arXiv:2107.02173</a></li>
   </ul>
   <hr style="margin-top: 20px; margin-bottom: 15px;">
 

@@ -27,5 +27,4 @@ Truncated text with "..." appended if truncated.
 
 Other text-utilities:
 [`truncate_text_with_ellipsis()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_with_ellipsis.md),
-[`wrap_long_text()`](https://mshin77.github.io/TextAnalysisR/reference/wrap_long_text.md),
-[`wrap_text_for_tooltip()`](https://mshin77.github.io/TextAnalysisR/reference/wrap_text_for_tooltip.md)
+[`wrap_long_text()`](https://mshin77.github.io/TextAnalysisR/reference/wrap_long_text.md)

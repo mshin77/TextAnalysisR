@@ -265,6 +265,8 @@ STM, embedding-based, and hybrid models
   : Get Topic Prevalence (Gamma) from STM Model
 - [`get_topic_texts()`](https://mshin77.github.io/TextAnalysisR/reference/get_topic_texts.md)
   : Convert Topic Terms to Text Strings
+- [`extract_topic_terms_df()`](https://mshin77.github.io/TextAnalysisR/reference/extract_topic_terms_df.md)
+  : Build a topic-term data frame from any supported topic model
 - [`calculate_topic_probability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_probability.md)
   : Calculate Topic Probabilities
 - [`calculate_topic_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_stability.md)

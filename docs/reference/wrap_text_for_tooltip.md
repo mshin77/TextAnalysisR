@@ -1,6 +1,6 @@
-# Wrap Text for Tooltip Display
+# Wrap text for tooltip display
 
-Formats text for tooltip display with size limits and line wrapping.
+Wrap text for tooltip display
 
 ## Usage
 
@@ -17,27 +17,20 @@ wrap_text_for_tooltip(
 
 - text:
 
-  Character string to format.
+  Input string.
 
 - max_words:
 
-  Maximum words (not currently used, kept for compatibility).
+  Maximum words to keep.
 
 - chars_per_line:
 
-  Maximum characters per line (default: 50).
+  Approximate line width.
 
 - max_lines:
 
-  Maximum number of lines (default: 3).
+  Maximum lines.
 
 ## Value
 
-Formatted text suitable for tooltip display.
-
-## See also
-
-Other text-utilities:
-[`truncate_text_to_words()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_to_words.md),
-[`truncate_text_with_ellipsis()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_with_ellipsis.md),
-[`wrap_long_text()`](https://mshin77.github.io/TextAnalysisR/reference/wrap_long_text.md)
+A string with HTML `<br>` breaks.

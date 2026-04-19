@@ -263,9 +263,11 @@ Documentation</a></p>
 <div class="section level2">
 <h2 id="multi-word-expressions">Multi-word Expressions<a class="anchor" aria-label="anchor" href="#multi-word-expressions"></a>
 </h2>
-<p>Detect phrases like “machine learning”:</p>
+<p>Detect phrases like “machine learning” and compound them in the
+tokens object:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">compounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">tokens_compound</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="va">compounds</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

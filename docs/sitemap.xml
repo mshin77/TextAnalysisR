@@ -41,11 +41,13 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_lexical_dispersion.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_log_odds_ratio.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_metrics.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_npmi.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_semantic_drift.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_similarity_robust.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_text_readability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_alignment.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_cluster_correspondence.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_diversity.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_probability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_quality.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_stability.html</loc></url>
@@ -97,6 +99,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_tables_from_pdf_py.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf_py.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/extract_topic_terms_df.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/find_similar_words.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/find_topic_matches.html</loc></url>

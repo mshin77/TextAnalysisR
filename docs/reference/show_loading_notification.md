@@ -1,7 +1,6 @@
-# Show Loading/Progress Notification
+# Show persistent loading notification
 
-Displays a persistent loading notification with a specific ID that can
-be removed later.
+Show persistent loading notification
 
 ## Usage
 
@@ -13,12 +12,12 @@ show_loading_notification(message, id = NULL)
 
 - message:
 
-  The loading message to display
+  Notification text.
 
 - id:
 
-  Notification ID for later removal (optional)
+  Optional unique id for later removal.
 
 ## Value
 
-Displays a Shiny notification. Returns NULL invisibly.
+Invisibly the notification id.

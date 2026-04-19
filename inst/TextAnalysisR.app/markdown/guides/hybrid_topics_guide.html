@@ -14,6 +14,7 @@
 
   <h4 style="font-family: 'Montserrat', sans-serif; color: #337ab7; margin-top: 20px;">Usage</h4>
   <p>Initializes STM with semantic embeddings rather than traditional bag-of-words, maintains interpretability of probabilistic models, incorporates covariate effects, and provides cross-validation between methods. Computationally intensive but offers methodological rigor for high-stakes research.</p>
+  <p><strong>STM-weight slider (0–1):</strong> Controls how much the combined keyword list favors STM FREX terms vs. embedding c-TF-IDF terms. 0.5 is balanced; 1 favors STM, 0 favors embeddings.</p>
   <hr style="margin-top: 20px; margin-bottom: 15px;">
 
   <h4 style="font-family: 'Montserrat', sans-serif; color: #337ab7; margin-top: 20px;">Quality Metrics</h4>
@@ -21,10 +22,16 @@
   <ul>
     <li><strong>Semantic Coherence:</strong> Measures how often top words co-occur in documents (higher is better)</li>
     <li><strong>Exclusivity:</strong> Measures how unique words are to each topic (higher is better)</li>
+    <li><strong>NPMI:</strong> Normalized Pointwise Mutual Information on top terms; alternative coherence axis less sensitive to rare words.</li>
+    <li><strong>Topic Diversity:</strong> Proportion of unique words across topics' top-K terms (higher = less topic overlap).</li>
     <li><strong>Silhouette Score:</strong> Measures cluster separation for embedding topics (-1 to 1, higher is better)</li>
     <li><strong>Alignment Score:</strong> Agreement between STM and embedding topic assignments</li>
     <li><strong>Adjusted Rand Index:</strong> Clustering agreement corrected for chance</li>
   </ul>
+  <hr>
+
+  <h4 style="font-family: 'Montserrat', sans-serif; color: #DC2626; margin-top: 20px;">Interpretation Caution</h4>
+  <p>Covariate regressions on hybrid or embedding-derived topics risk <em>double-dipping</em>: topics are derived from the same documents used for inference, which inflates Type-I error. Treat these effects as hypothesis-generating and validate on held-out data before reporting as causal.</p>
   <hr>
 
   <h4 style="font-family: 'Montserrat', sans-serif; color: #337ab7; margin-top: 20px;">References</h4>
@@ -33,6 +40,7 @@
     <li>Grootendorst, M. (2022). BERTopic: Neural topic modeling with a class-based TF-IDF procedure. <em>arXiv preprint arXiv:2203.05794</em>. <a href="https://arxiv.org/abs/2203.05794" target="_blank">https://arxiv.org/abs/2203.05794</a></li>
     <li>Mimno, D., Wallach, H., Talley, E., Leenders, M., & McCallum, A. (2011). Optimizing semantic coherence in topic models. In <em>Proceedings of EMNLP 2011</em> (pp. 262–272). <a href="https://aclanthology.org/D11-1024/" target="_blank">https://aclanthology.org/D11-1024/</a></li>
     <li>Hubert, L., & Arabie, P. (1985). Comparing partitions. <em>Journal of Classification</em>, <em>2</em>(1), 193–218. <a href="https://doi.org/10.1007/BF01908075" target="_blank">https://doi.org/10.1007/BF01908075</a></li>
+    <li>Hoyle, A., Goel, P., Hian-Cheong, A., Peskov, D., Boyd-Graber, J., & Resnik, P. (2021). Is automated topic model evaluation broken? The incoherence of coherence. <em>NeurIPS 2021</em>. <a href="https://arxiv.org/abs/2107.02173" target="_blank">arXiv:2107.02173</a></li>
   </ul>
   <hr style="margin-top: 20px; margin-bottom: 15px;">
 
