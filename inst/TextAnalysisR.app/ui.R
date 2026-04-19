@@ -2770,7 +2770,7 @@ Supports:
               sliderInput(
                 "physics_spring_length_cooccur",
                 "Edge length",
-                value = 100, min = 30, max = 400, step = 10
+                value = 100, min = 10, max = 300, step = 50
               ),
               sliderInput(
                 "physics_avoid_overlap_cooccur",
@@ -2780,7 +2780,7 @@ Supports:
               numericInput(
                 "seed_cooccur",
                 "Layout seed",
-                value = 2025, min = 1, max = 999999, step = 1
+                value = 2026, min = 1, max = 999999, step = 1
               ),
               div(style = "font-size: 16px;",
                   checkboxInput("showlegend_cooccur", "Show legend", value = TRUE)),
@@ -2906,7 +2906,7 @@ Supports:
               sliderInput(
                 "physics_spring_length_corr",
                 "Edge length",
-                value = 100, min = 30, max = 400, step = 10
+                value = 100, min = 10, max = 300, step = 50
               ),
               sliderInput(
                 "physics_avoid_overlap_corr",
@@ -2916,7 +2916,7 @@ Supports:
               numericInput(
                 "seed_corr",
                 "Layout seed",
-                value = 2025, min = 1, max = 999999, step = 1
+                value = 2026, min = 1, max = 999999, step = 1
               ),
               div(style = "font-size: 16px;",
                   checkboxInput("showlegend_corr", "Show legend", value = TRUE)),
