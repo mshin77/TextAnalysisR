@@ -7624,7 +7624,7 @@ server <- shinyServer(function(input, output, session) {
       )
       cooccur_result_val(result)
       remove_notification_by_id("cooccur_network_loading", session = session_local)
-      shinybusy::hide_spinner()
+      try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
     }, delay = 0.1)
   }, ignoreInit = TRUE)
 
@@ -7919,7 +7919,7 @@ server <- shinyServer(function(input, output, session) {
       )
       corr_result_val(result)
       remove_notification_by_id("corr_network_loading", session = session_local)
-      shinybusy::hide_spinner()
+      try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
     }, delay = 0.1)
   }, ignoreInit = TRUE)
 
