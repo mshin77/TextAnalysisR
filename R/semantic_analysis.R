@@ -4118,7 +4118,8 @@ run_rag_search <- function(
       stabilization = list(enabled = TRUE, iterations = 1000)
     ) %>%
     visNetwork::visInteraction(hover = TRUE, tooltipDelay = 0, tooltipStay = 1000,
-                               zoomView = TRUE, dragView = TRUE) %>%
+                               zoomView = TRUE, dragView = TRUE,
+                               navigationButtons = TRUE, keyboard = TRUE) %>%
     visNetwork::visLayout(randomSeed = seed %||% 2025)
 
   n_communities <- length(community_colors)

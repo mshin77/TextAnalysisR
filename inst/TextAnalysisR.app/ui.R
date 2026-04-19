@@ -2780,7 +2780,23 @@ Supports:
               uiOutput("category_selector_cooccur"),
               uiOutput("category_cooccur_controls")
             ),
-            actionButton("plot_word_co_occurrence_network", "Plot Network", class = "btn-primary btn-block")
+            actionButton("plot_word_co_occurrence_network", "Plot Network", class = "btn-primary btn-block"),
+            conditionalPanel(
+              condition = "output.has_cooccurrence_plot == true",
+              tags$div(
+                style = "margin-top: 8px; display: flex; gap: 6px;",
+                downloadButton("download_cooccur_html", "HTML",
+                               class = "btn-default btn-block",
+                               style = "margin: 0; flex: 1;"),
+                tags$button(
+                  id = "trigger_cooccur_png", type = "button",
+                  class = "btn btn-default btn-block action-button",
+                  style = "margin: 0; flex: 1;",
+                  onclick = "(function(){var c=document.querySelector('#word_co_occurrence_network_plot_uiOutput canvas');if(!c){alert('No plot to download. Click Plot Network first.');return;}var a=document.createElement('a');a.download='co_occurrence_network.png';a.href=c.toDataURL('image/png');document.body.appendChild(a);a.click();document.body.removeChild(a);})();",
+                  tags$i(class = "fa fa-download"), " PNG"
+                )
+              )
+            )
           ),
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'correlation'",
@@ -2879,7 +2895,23 @@ Supports:
               uiOutput("category_selector_corr"),
               uiOutput("category_corr_controls")
             ),
-            actionButton("plot_word_correlation_network", "Plot Network", class = "btn-primary btn-block")
+            actionButton("plot_word_correlation_network", "Plot Network", class = "btn-primary btn-block"),
+            conditionalPanel(
+              condition = "output.has_correlation_plot == true",
+              tags$div(
+                style = "margin-top: 8px; display: flex; gap: 6px;",
+                downloadButton("download_corr_html", "HTML",
+                               class = "btn-default btn-block",
+                               style = "margin: 0; flex: 1;"),
+                tags$button(
+                  id = "trigger_corr_png", type = "button",
+                  class = "btn btn-default btn-block action-button",
+                  style = "margin: 0; flex: 1;",
+                  onclick = "(function(){var c=document.querySelector('#word_correlation_network_plot_uiOutput canvas');if(!c){alert('No plot to download. Click Plot Network first.');return;}var a=document.createElement('a');a.download='correlation_network.png';a.href=c.toDataURL('image/png');document.body.appendChild(a);a.click();document.body.removeChild(a);})();",
+                  tags$i(class = "fa fa-download"), " PNG"
+                )
+              )
+            )
           )
         ),
         mainPanel(

@@ -7614,6 +7614,7 @@ server <- shinyServer(function(input, output, session) {
     show_loading_notification("Computing co-occurrence network...", id = "cooccur_network_loading")
 
     session_local <- session
+    start_time <- Sys.time()
     later::later(function() {
       result <- tryCatch(
         do.call(TextAnalysisR::word_co_occurrence_network, call_args),
@@ -7623,14 +7624,27 @@ server <- shinyServer(function(input, output, session) {
         }
       )
       cooccur_result_val(result)
-      remove_notification_by_id("cooccur_network_loading", session = session_local)
-      try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
+      elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+      finish <- function() {
+        remove_notification_by_id("cooccur_network_loading", session = session_local)
+        try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
+      }
+      if (elapsed < 0.6) later::later(finish, delay = 0.6 - elapsed) else finish()
     }, delay = 0.1)
   }, ignoreInit = TRUE)
 
   word_co_occurrence_network_results <- reactive({
     cooccur_result_val()
   })
+
+  output$download_cooccur_html <- downloadHandler(
+    filename = function() paste0("co_occurrence_network_", Sys.Date(), ".html"),
+    content = function(file) {
+      result <- word_co_occurrence_network_results()
+      req(result, result$plot)
+      htmlwidgets::saveWidget(result$plot, file, selfcontained = TRUE)
+    }
+  )
 
   output$word_co_occurrence_network_plot_uiOutput <- renderUI({
     result <- word_co_occurrence_network_results()
@@ -7644,7 +7658,7 @@ server <- shinyServer(function(input, output, session) {
       ))
     }
     tags$div(
-      style = "width: 100%; margin: 0 auto;",
+      style = "width: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: auto;",
       result$plot
     )
   })
@@ -7909,6 +7923,7 @@ server <- shinyServer(function(input, output, session) {
     show_loading_notification("Computing correlation network...", id = "corr_network_loading")
 
     session_local <- session
+    start_time <- Sys.time()
     later::later(function() {
       result <- tryCatch(
         do.call(TextAnalysisR::word_correlation_network, call_args),
@@ -7918,14 +7933,27 @@ server <- shinyServer(function(input, output, session) {
         }
       )
       corr_result_val(result)
-      remove_notification_by_id("corr_network_loading", session = session_local)
-      try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
+      elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+      finish <- function() {
+        remove_notification_by_id("corr_network_loading", session = session_local)
+        try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
+      }
+      if (elapsed < 0.6) later::later(finish, delay = 0.6 - elapsed) else finish()
     }, delay = 0.1)
   }, ignoreInit = TRUE)
 
   word_correlation_network_results <- reactive({
     corr_result_val()
   })
+
+  output$download_corr_html <- downloadHandler(
+    filename = function() paste0("correlation_network_", Sys.Date(), ".html"),
+    content = function(file) {
+      result <- word_correlation_network_results()
+      req(result, result$plot)
+      htmlwidgets::saveWidget(result$plot, file, selfcontained = TRUE)
+    }
+  )
 
   output$word_correlation_network_plot_uiOutput <- renderUI({
     result <- word_correlation_network_results()
@@ -7939,7 +7967,7 @@ server <- shinyServer(function(input, output, session) {
       ))
     }
     tags$div(
-      style = "width: 100%; margin: 0 auto;",
+      style = "width: 100%; display: flex; justify-content: center; align-items: flex-start; overflow: auto;",
       result$plot
     )
   })
