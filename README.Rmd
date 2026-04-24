@@ -29,6 +29,23 @@ install.packages("devtools")
 devtools::install_github("mshin77/TextAnalysisR")
 ```
 
+## First-Time Python Setup
+
+Several functions (`lemmatize_tokens()`, `generate_embeddings()`,
+`cluster_embeddings()`, PDF extraction, transformer-based analyses)
+require Python packages. Run this **once** after installing TextAnalysisR:
+
+```r
+library(TextAnalysisR)
+setup_python_env()
+```
+
+This creates a dedicated virtualenv (`textanalysisr-env`), installs the
+packages listed in `inst/python/requirements.txt` (spaCy, pandas,
+pdfplumber, sentence-transformers, torch, umap-learn, hdbscan,
+scikit-learn, numba), and downloads the `en_core_web_sm` spaCy model.
+Restart R afterward. Check status anytime with `check_python_env()`.
+
 ## Load the TextAnalysisR Package
 
 ```r
