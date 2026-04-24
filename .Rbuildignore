@@ -19,3 +19,4 @@ inst/TextAnalysisR\.app/\.claude$
 ^\.Renviron$
 ^check_package\.R$
 ^\.env\.example$
+^\.positai$
