@@ -19,7 +19,7 @@ Character string: "tabular", "text", or "unknown"
 Analyzes PDF to determine if it contains primarily tabular data or text.
 }
 \examples{
-\dontrun{
+if (interactive()) {
 setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
@@ -28,15 +28,16 @@ print(content_type)
 }
 }
 \seealso{
-Other pdf: 
-\code{\link{check_vision_models}()},
-\code{\link{detect_pdf_content_type}()},
-\code{\link{extract_pdf_multimodal}()},
-\code{\link{extract_pdf_smart}()},
-\code{\link{extract_tables_from_pdf_py}()},
-\code{\link{extract_text_from_pdf}()},
-\code{\link{extract_text_from_pdf_py}()},
-\code{\link{process_pdf_file}()},
-\code{\link{process_pdf_file_py}()}
+Other pdf:
+\code{\link[=check_vision_models]{check_vision_models()}},
+\code{\link[=detect_pdf_content_type]{detect_pdf_content_type()}},
+\code{\link[=extract_pdf_multimodal]{extract_pdf_multimodal()}},
+\code{\link[=extract_pdf_smart]{extract_pdf_smart()}},
+\code{\link[=extract_tables_from_pdf_py]{extract_tables_from_pdf_py()}},
+\code{\link[=extract_text_from_pdf]{extract_text_from_pdf()}},
+\code{\link[=extract_text_from_pdf_py]{extract_text_from_pdf_py()}},
+\code{\link[=process_pdf_file]{process_pdf_file()}},
+\code{\link[=process_pdf_file_py]{process_pdf_file_py()}}
 }
 \concept{pdf}
+\keyword{internal}

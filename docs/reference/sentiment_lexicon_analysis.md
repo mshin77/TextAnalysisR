@@ -1,9 +1,9 @@
 # Analyze Sentiment Using Tidytext Lexicons
 
 Performs lexicon-based sentiment analysis on a DFM object using tidytext
-lexicons. Supports AFINN, Bing, and NRC lexicons with comprehensive
-scoring and emotion analysis. Now supports n-grams for improved negation
-and intensifier handling.
+lexicons. Supports AFINN, Bing, and NRC lexicons with scoring and
+emotion analysis. Now supports n-grams for improved negation and
+intensifier handling.
 
 ## Usage
 
@@ -80,12 +80,22 @@ Other sentiment:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-data(SpecialEduTech)
-texts <- SpecialEduTech$abstract[1:10]
-corp <- quanteda::corpus(texts)
-dfm_obj <- quanteda::dfm(quanteda::tokens(corp))
-results <- sentiment_lexicon_analysis(dfm_obj, lexicon = "afinn")
-print(results$document_sentiment)
-} # }
+# \donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+corpus <- quanteda::corpus(abstracts)
+dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
+lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+print(lexicon_results$document_sentiment)
+#> # A tibble: 8 × 5
+#>   document sentiment_score n_words avg_sentiment sentiment
+#>   <chr>              <dbl>   <dbl>         <dbl> <chr>    
+#> 1 text1                  2       1         2     positive 
+#> 2 text10                 0       3         0     neutral  
+#> 3 text3                  1       1         1     positive 
+#> 4 text4                  2       1         2     positive 
+#> 5 text5                  2       1         2     positive 
+#> 6 text6                  8      16         0.5   neutral  
+#> 7 text8                  5       6         0.833 positive 
+#> 8 text9                  0       2         0     neutral  
+# }
 ```

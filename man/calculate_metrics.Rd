@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{calculate_metrics}
 \alias{calculate_metrics}
-\title{Calculate Comprehensive Metrics}
+\title{Calculate Similarity Metrics}
 \usage{
 calculate_metrics(similarity_matrix, labels = NULL, method_info = NULL)
 }
@@ -14,10 +14,10 @@ calculate_metrics(similarity_matrix, labels = NULL, method_info = NULL)
 \item{method_info}{Optional method information.}
 }
 \value{
-A list of comprehensive metrics.
+A list of metrics.
 }
 \description{
-Calculates comprehensive similarity metrics including statistical measures
+Calculates similarity metrics including statistical measures
 and network properties.
 Internal function used by document_similarity_analysis.
 }

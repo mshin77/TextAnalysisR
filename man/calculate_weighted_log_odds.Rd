@@ -26,8 +26,14 @@ weights log odds by variance (z-score) to identify words that reliably
 distinguish between groups, accounting for sampling variability.
 }
 \examples{
-\dontrun{
-weighted_odds <- calculate_weighted_log_odds(dfm, "party", top_n = 15)
+\donttest{
+if (requireNamespace("tidylo", quietly = TRUE)) {
+  articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+  dfm_object <- quanteda::dfm(quanteda::tokens(articles$abstract))
+  quanteda::docvars(dfm_object, "reference_type") <- articles$reference_type
+  weighted_odds <- calculate_weighted_log_odds(dfm_object, "reference_type",
+                                                top_n = 5)
+}
 }
 }
 \references{

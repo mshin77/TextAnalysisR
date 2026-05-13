@@ -70,7 +70,7 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
@@ -81,5 +81,5 @@ if (result$success) {
 } else {
   print(result$message)
 }
-} # }
+}
 ```

@@ -35,19 +35,19 @@ Unified dispatcher for image description using vision LLMs.
 Routes to the appropriate provider (Ollama, OpenAI, or Gemini).
 }
 \seealso{
-Other ai: 
-\code{\link{call_gemini_chat}()},
-\code{\link{call_llm_api}()},
-\code{\link{call_ollama}()},
-\code{\link{call_openai_chat}()},
-\code{\link{check_ollama}()},
-\code{\link{generate_topic_content}()},
-\code{\link{get_api_embeddings}()},
-\code{\link{get_best_embeddings}()},
-\code{\link{get_content_type_prompt}()},
-\code{\link{get_content_type_user_template}()},
-\code{\link{get_recommended_ollama_model}()},
-\code{\link{list_ollama_models}()},
-\code{\link{run_rag_search}()}
+Other ai:
+\code{\link[=call_gemini_chat]{call_gemini_chat()}},
+\code{\link[=call_llm_api]{call_llm_api()}},
+\code{\link[=call_ollama]{call_ollama()}},
+\code{\link[=call_openai_chat]{call_openai_chat()}},
+\code{\link[=check_ollama]{check_ollama()}},
+\code{\link[=generate_topic_content]{generate_topic_content()}},
+\code{\link[=get_api_embeddings]{get_api_embeddings()}},
+\code{\link[=get_best_embeddings]{get_best_embeddings()}},
+\code{\link[=get_content_type_prompt]{get_content_type_prompt()}},
+\code{\link[=get_content_type_user_template]{get_content_type_user_template()}},
+\code{\link[=get_recommended_ollama_model]{get_recommended_ollama_model()}},
+\code{\link[=list_ollama_models]{list_ollama_models()}},
+\code{\link[=run_rag_search]{run_rag_search()}}
 }
 \concept{ai}

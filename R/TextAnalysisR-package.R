@@ -10,7 +10,7 @@ NULL
 #' @title TextAnalysisR: A Text Mining Workflow Tool
 #'
 #' @description
-#' TextAnalysisR provides a comprehensive suite of text analysis tools including:
+#' TextAnalysisR provides a set of text analysis tools including:
 #' - Text preprocessing and corpus preparation
 #' - Structural topic modeling
 #' - Word networks and co-occurrence analysis
@@ -20,7 +20,7 @@ NULL
 #' - Shiny web application interface
 #'
 #' The package is designed to work both as a standalone R package and as the backend
-#' for a comprehensive Shiny web application, providing flexibility for different user needs.
+#' for a Shiny web application, providing flexibility for different user needs.
 #'
 #' @section Main Functions:
 #' 
@@ -44,7 +44,7 @@ NULL
 #' **Semantic Analysis:**
 #' - `semantic_similarity_analysis()`: Multi-method document similarity analysis
 #' - `reduce_dimensions()`: PCA, t-SNE, UMAP dimensionality reduction
-#' - `cluster_embeddings()`: Advanced clustering with k-means, hierarchical, DBSCAN
+#' - `cluster_embeddings()`: Clustering with k-means, hierarchical, DBSCAN
 #' - `plot_semantic_viz()`: Interactive semantic analysis visualizations
 #'
 #' **Workflow Functions:**
@@ -145,7 +145,7 @@ NULL
 #' - Text files
 #' - Copy-paste text input
 #' 
-#' **Advanced Text Analysis:**
+#' **Text Analysis:**
 #' - Multi-method similarity analysis (words, n-grams, topics, embeddings)
 #' - Dimensionality reduction (PCA, t-SNE, UMAP)
 #' - Multiple clustering algorithms (k-means, hierarchical, UMAP+DBSCAN)
@@ -162,7 +162,7 @@ NULL
 #' **Integration Capabilities:**
 #' - OpenAI API integration for topic labeling
 #' - Python integration for embeddings (sentence-transformers)
-#' - Comprehensive export options
+#' - Export options
 #' - Memory-efficient processing
 #'
 #' @section Getting Started:
@@ -170,7 +170,7 @@ NULL
 #' 1. **For Text Preprocessing:** Use `run_text_workflow()` for end-to-end preprocessing
 #' 2. **For Interactive Use:** Launch the Shiny app with `run_app()`
 #' 3. **For Custom Workflows:** Use individual functions as building blocks
-#' 4. **For Advanced Users:** Combine with your own R code and other packages
+#' 4. **For Power Users:** Combine with your own R code and other packages
 #'
 #' @author Shin Mikyung 
 #' @docType package

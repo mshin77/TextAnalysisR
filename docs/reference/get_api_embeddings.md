@@ -67,7 +67,7 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 data(SpecialEduTech)
 texts <- SpecialEduTech$abstract[1:5]
 
@@ -78,5 +78,5 @@ embeddings <- get_api_embeddings(texts, provider = "ollama")
 embeddings <- get_api_embeddings(texts, provider = "openai")
 
 dim(embeddings)
-} # }
+}
 ```

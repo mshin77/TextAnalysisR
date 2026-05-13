@@ -22,9 +22,15 @@ Character vector of instruction lines
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-output$instructions <- renderPrint({
-  cat(get_dfm_setup_instructions("keyword extraction"), sep = "\n")
-})
-} # }
+instructions <- get_dfm_setup_instructions("keyword extraction")
+cat(instructions, sep = "\n")
+#> Warning: DFM Processing Required
+#> 
+#> Please complete the following steps first:
+#> 
+#> 1. Go to the 'Preprocess' tab
+#> 2. Navigate to Step 4: Document-Feature Matrix
+#> 3. Click the 'Process' button
+#> 
+#> Once the DFM is created, you can return here to use keyword extraction.
 ```

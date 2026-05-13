@@ -57,7 +57,7 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 pdf_path <- "path/to/document.pdf"
 result <- process_pdf_file(pdf_path)
 
@@ -66,5 +66,6 @@ if (result$success) {
 } else {
   print(result$message)
 }
-} # }
+#> [1] "File not found"
+# }
 ```

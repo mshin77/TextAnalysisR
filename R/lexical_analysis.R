@@ -1,7 +1,7 @@
 #' @title Lexical Analysis Functions
 #'
 #' @description
-#' Comprehensive functions for lexical analysis including:
+#' Functions for lexical analysis including:
 #' - Linguistic Annotation (POS tagging, NER)
 #' - Frequency Analysis (word frequency, n-grams, MWEs)
 #' - Keywords (TF-IDF, keyness)
@@ -103,10 +103,10 @@ detect_multi_words <- function(tokens, size = 2:5, min_count = 2) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' tokens <- quanteda::tokens("The quick brown fox jumps over the lazy dog.")
-#' pos_data <- extract_pos_tags(tokens)
-#' print(pos_data)
+#' if (interactive()) {
+#'   tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+#'   pos_data <- extract_pos_tags(tokens)
+#'   print(pos_data)
 #' }
 extract_pos_tags <- function(tokens,
                              include_lemma = TRUE,
@@ -131,7 +131,7 @@ extract_pos_tags <- function(tokens,
 #' Extract Morphological Features
 #'
 #' @description
-#' Uses spaCy to extract comprehensive morphological features from text.
+#' Uses spaCy to extract morphological features from text.
 #' Returns data with Number, Tense, VerbForm, Person, Case, Mood, Aspect, etc.
 #'
 #' @param tokens A quanteda tokens object or character vector of texts.
@@ -161,10 +161,10 @@ extract_pos_tags <- function(tokens,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' tokens <- quanteda::tokens("The cats are running quickly.")
-#' morph_data <- extract_morphology(tokens)
-#' print(morph_data)
+#' if (interactive()) {
+#'   tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+#'   morphology_data <- extract_morphology(tokens)
+#'   print(morphology_data)
 #' }
 extract_morphology <- function(tokens,
                                features = c("Number", "Tense", "VerbForm",
@@ -211,9 +211,10 @@ extract_morphology <- function(tokens,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' morph_data <- extract_morphology(tokens)
-#' plot_morphology_feature(morph_data, "Tense")
+#' if (interactive()) {
+#'   tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+#'   morphology_data <- extract_morphology(tokens)
+#'   plot_morphology_feature(morphology_data, "Tense")
 #' }
 plot_morphology_feature <- function(data,
                                     feature,
@@ -308,10 +309,11 @@ plot_morphology_feature <- function(data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' morph_data <- extract_morphology(tokens)
-#' summary_df <- summarize_morphology(morph_data)
-#' print(summary_df)
+#' if (interactive()) {
+#'   tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+#'   morphology_data <- extract_morphology(tokens)
+#'   summary_table <- summarize_morphology(morphology_data)
+#'   print(summary_table)
 #' }
 summarize_morphology <- function(data, features = NULL) {
   morph_cols <- grep("^morph_", names(data), value = TRUE)
@@ -389,10 +391,10 @@ summarize_morphology <- function(data, features = NULL) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' tokens <- quanteda::tokens("Apple Inc. was founded by Steve Jobs in California.")
-#' entity_data <- extract_named_entities(tokens)
-#' print(entity_data)
+#' if (interactive()) {
+#'   tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+#'   entity_data <- extract_named_entities(tokens)
+#'   print(entity_data)
 #' }
 extract_named_entities <- function(tokens,
                                    include_pos = TRUE,
@@ -462,7 +464,7 @@ extract_named_entities <- function(tokens,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(SpecialEduTech)
 #' texts <- SpecialEduTech$abstract[1:10]
 #' corp <- quanteda::corpus(texts)
@@ -761,15 +763,14 @@ lexical_diversity_analysis <- function(x,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(SpecialEduTech)
-#' texts <- SpecialEduTech$abstract[1:10]
-#' corp <- quanteda::corpus(texts)
-#' toks <- quanteda::tokens(corp)
-#' dfm_obj <- quanteda::dfm(toks)
-#' result <- lexical_diversity_analysis(dfm_obj)
-#' plot <- plot_lexical_diversity_distribution(result$lexical_diversity, "MTLD")
-#' print(plot)
+#' \donttest{
+#' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+#' tokens <- quanteda::tokens(quanteda::corpus(abstracts))
+#' diversity_result <- lexical_diversity_analysis(tokens, texts = abstracts)
+#' diversity_plot <- plot_lexical_diversity_distribution(
+#'   diversity_result$lexical_diversity, "MTLD"
+#' )
+#' print(diversity_plot)
 #' }
 plot_lexical_diversity_distribution <- function(lexdiv_data,
                                                metric,
@@ -805,7 +806,7 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
                                "<br>", metric, ": ", round(plot_df$value, 4))
 
   ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = value)) +
-    ggplot2::geom_boxplot(fill = "rgba(139, 92, 246, 0.7)",
+    ggplot2::geom_boxplot(fill = "#8B5CF6", alpha = 0.7,
                           color = "#0c1f4a", outlier.shape = NA) +
     suppressWarnings(ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
                          width = 0.15, alpha = 0.5, color = "#0c1f4a", size = 1.8)) +
@@ -1096,13 +1097,11 @@ plot_mwe_frequency <- function(mwe_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' library(quanteda)
 #' corp <- corpus(c("text analysis", "data mining", "text mining"))
 #' dfm_obj <- dfm(tokens(corp))
 #' keywords <- extract_keywords_tfidf(dfm_obj, top_n = 5)
 #' print(keywords)
-#' }
 extract_keywords_tfidf <- function(dfm,
                                    top_n = 20,
                                    normalize = FALSE) {
@@ -1151,12 +1150,10 @@ extract_keywords_tfidf <- function(dfm,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' library(quanteda)
-#' corp <- corpus(c("positive text", "negative text", "positive words"))
-#' dfm_obj <- dfm(tokens(corp))
-#' # Compare first document vs rest
-#' keywords <- extract_keywords_keyness(dfm_obj, target = 1)
+#' \donttest{
+#' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+#' dfm_object <- quanteda::dfm(quanteda::tokens(quanteda::corpus(abstracts)))
+#' keywords <- extract_keywords_keyness(dfm_object, target = 1)
 #' print(keywords)
 #' }
 extract_keywords_keyness <- function(dfm,
@@ -1380,7 +1377,7 @@ plot_keyword_comparison <- function(tfidf_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(SpecialEduTech, package = "TextAnalysisR")
 #' texts <- SpecialEduTech$abstract[1:20]
 #' readability <- calculate_text_readability(texts)
@@ -1421,7 +1418,7 @@ plot_readability_distribution <- function(readability_data,
                                "<br>", metric, ": ", round(plot_df$value, 2))
 
   ggplot2::ggplot(plot_df, ggplot2::aes(x = x, y = value)) +
-    ggplot2::geom_boxplot(fill = "rgba(74, 144, 226, 0.7)",
+    ggplot2::geom_boxplot(fill = "#4A90E2", alpha = 0.7,
                           color = "#0c1f4a", outlier.shape = NA) +
     suppressWarnings(ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
                          width = 0.15, alpha = 0.5, color = "#0c1f4a", size = 1.8)) +
@@ -1577,7 +1574,7 @@ plot_top_readability_documents <- function(readability_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data(SpecialEduTech, package = "TextAnalysisR")
 #' texts <- SpecialEduTech$abstract[1:10]
 #' readability <- calculate_text_readability(texts)
@@ -1644,12 +1641,11 @@ calculate_text_readability <- function(texts,
     for (i in seq_along(valid_metrics)) {
       metric <- valid_metrics[i]
       measure_name <- mapped_metrics[i]
-      tryCatch({
-        score <- quanteda.textstats::textstat_readability(corp, measure = measure_name)
-        all_scores[[metric]] <<- score[[2]]
+      all_scores[[metric]] <- tryCatch({
+        quanteda.textstats::textstat_readability(corp, measure = measure_name)[[2]]
       }, error = function(e2) {
         warning(paste("Could not calculate", metric, ":", e2$message))
-        all_scores[[metric]] <<- rep(NA, length(texts))
+        rep(NA, length(texts))
       })
     }
   })
@@ -1683,8 +1679,6 @@ calculate_text_readability <- function(texts,
       }
     }, error = function(e) {
       warning("Could not calculate lexical diversity: ", e$message)
-      readability_scores$`Lexical Diversity (TTR)` <<- NA
-      readability_scores$`Lexical Diversity (MTLD)` <<- NA
     })
   }
 
@@ -1725,7 +1719,7 @@ calculate_text_readability <- function(texts,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' term_df <- data.frame(
 #'   year = rep(2010:2020, each = 3),
 #'   term = rep(c("learning", "education", "technology"), 11),
@@ -2130,10 +2124,11 @@ render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") 
 #' }
 #'
 #' @family lexical
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' init_spacy_nlp("en_core_web_sm")
 #' }
 init_spacy_nlp <- function(model = "en_core_web_sm", force = FALSE) {
@@ -2249,7 +2244,7 @@ get_spacy_model_info <- function() {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' # From SpecialEduTech dataset
 #' texts <- TextAnalysisR::SpecialEduTech$abstract[1:5]
 #' parsed <- spacy_parse_full(texts, morph = TRUE)
@@ -2267,6 +2262,11 @@ spacy_parse_full <- function(x,
                              dependency = FALSE,
                              morph = FALSE,
                              model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for spaCy-backed features. ",
+         "Install with: install.packages('reticulate')")
+  }
+
 
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
@@ -2333,6 +2333,11 @@ spacy_parse_full <- function(x,
 #' @family lexical
 #' @export
 spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for spaCy-backed features. ",
+         "Install with: install.packages('reticulate')")
+  }
+
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
@@ -2394,6 +2399,11 @@ spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 spacy_extract_entities <- function(x, model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for spaCy-backed features. ",
+         "Install with: install.packages('reticulate')")
+  }
+
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
@@ -2441,6 +2451,11 @@ spacy_extract_entities <- function(x, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 extract_noun_chunks <- function(x, model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for spaCy-backed features. ",
+         "Install with: install.packages('reticulate')")
+  }
+
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
@@ -2486,6 +2501,11 @@ extract_noun_chunks <- function(x, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 extract_subjects_objects <- function(x, model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for spaCy-backed features. ",
+         "Install with: install.packages('reticulate')")
+  }
+
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
@@ -2530,6 +2550,11 @@ extract_subjects_objects <- function(x, model = "en_core_web_sm") {
 #' @family lexical
 #' @export
 get_sentences <- function(x, model = "en_core_web_sm") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for spaCy-backed features. ",
+         "Install with: install.packages('reticulate')")
+  }
+
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
@@ -2599,6 +2624,11 @@ get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
 #' @family lexical
 #' @export
 find_similar_words <- function(word, top_n = 10L, model = "en_core_web_md") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required for spaCy-backed features. ",
+         "Install with: install.packages('reticulate')")
+  }
+
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }
@@ -2661,6 +2691,7 @@ get_spacy_embeddings <- function(texts, model = "en_core_web_md") {
 #' @return Data frame with additional morph_* columns for each feature.
 #'
 #' @family lexical
+#' @keywords internal
 #' @export
 parse_morphology_string <- function(data, features = NULL) {
   # Always extract all common morphology features
@@ -2725,13 +2756,14 @@ parse_morphology_string <- function(data, features = NULL) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' library(quanteda)
-#' corp <- corpus(c("The cat runs fast", "Dogs are loyal pets",
-#'                  "Cats sleep all day", "My dog loves walks"),
-#'                docvars = data.frame(animal = c("cat", "dog", "cat", "dog")))
-#' dfm <- tokens(corp) %>% dfm()
-#' log_odds <- calculate_log_odds_ratio(dfm, "animal")
+#' \donttest{
+#' articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+#' corpus <- quanteda::corpus(
+#'   articles$abstract,
+#'   docvars = data.frame(reference_type = articles$reference_type)
+#' )
+#' dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
+#' log_odds <- calculate_log_odds_ratio(dfm_object, "reference_type")
 #' }
 calculate_log_odds_ratio <- function(dfm_object,
                                       group_var,
@@ -2898,8 +2930,14 @@ calculate_log_odds_ratio <- function(dfm_object,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' weighted_odds <- calculate_weighted_log_odds(dfm, "party", top_n = 15)
+#' \donttest{
+#' if (requireNamespace("tidylo", quietly = TRUE)) {
+#'   articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+#'   dfm_object <- quanteda::dfm(quanteda::tokens(articles$abstract))
+#'   quanteda::docvars(dfm_object, "reference_type") <- articles$reference_type
+#'   weighted_odds <- calculate_weighted_log_odds(dfm_object, "reference_type",
+#'                                                 top_n = 5)
+#' }
 #' }
 calculate_weighted_log_odds <- function(dfm_object,
                                         group_var,
@@ -2988,9 +3026,16 @@ calculate_weighted_log_odds <- function(dfm_object,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' log_odds <- calculate_log_odds_ratio(dfm, "category", comparison_mode = "binary")
-#' plot_log_odds_ratio(log_odds, top_n = 15)
+#' \donttest{
+#' articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+#' corpus <- quanteda::corpus(
+#'   articles$abstract,
+#'   docvars = data.frame(reference_type = articles$reference_type)
+#' )
+#' dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
+#' log_odds <- calculate_log_odds_ratio(dfm_object, "reference_type",
+#'                                       comparison_mode = "binary")
+#' plot_log_odds_ratio(log_odds, top_n = 5)
 #' }
 plot_log_odds_ratio <- function(log_odds_data,
                                  top_n = 10,
@@ -3085,9 +3130,15 @@ plot_log_odds_ratio <- function(log_odds_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' weighted_odds <- calculate_weighted_log_odds(dfm, "party", top_n = 15)
-#' plot_weighted_log_odds(weighted_odds)
+#' \donttest{
+#' if (requireNamespace("tidylo", quietly = TRUE)) {
+#'   articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+#'   dfm_object <- quanteda::dfm(quanteda::tokens(articles$abstract))
+#'   quanteda::docvars(dfm_object, "reference_type") <- articles$reference_type
+#'   weighted_odds <- calculate_weighted_log_odds(dfm_object, "reference_type",
+#'                                                 top_n = 5)
+#'   plot_weighted_log_odds(weighted_odds)
+#' }
 #' }
 plot_weighted_log_odds <- function(weighted_data,
                                    top_n = 10,
@@ -3176,10 +3227,9 @@ plot_weighted_log_odds <- function(weighted_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' library(quanteda)
-#' toks <- tokens(c("The cat sat on the mat", "The dog ran in the park"))
-#' dispersion <- calculate_lexical_dispersion(toks, c("the", "cat", "dog"))
+#' \donttest{
+#' tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1:5])
+#' dispersion <- calculate_lexical_dispersion(tokens, c("learning", "instruction"))
 #' }
 calculate_lexical_dispersion <- function(tokens_object,
                                           terms,
@@ -3272,8 +3322,9 @@ calculate_lexical_dispersion <- function(tokens_object,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' dispersion <- calculate_lexical_dispersion(tokens, c("education", "technology"))
+#' \donttest{
+#' tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1:5])
+#' dispersion <- calculate_lexical_dispersion(tokens, c("learning", "instruction"))
 #' plot_lexical_dispersion(dispersion)
 #' }
 plot_lexical_dispersion <- function(dispersion_data,

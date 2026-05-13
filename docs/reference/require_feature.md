@@ -25,7 +25,7 @@ Logical TRUE if available, FALSE if not
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 if (!require_feature("embeddings", session)) return()
-} # }
+}
 ```

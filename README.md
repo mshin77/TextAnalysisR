@@ -6,7 +6,7 @@ Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repost
 [![License:
 GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Comprehensive toolkit for text mining and natural language processing
+Workflow tool for text mining and natural language processing
 with an interactive `Shiny` interface. Import documents from multiple
 formats (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`) using
 [Marker](https://github.com/VikParuchuri/marker) for PDF extraction,
@@ -19,8 +19,7 @@ sentiment analysis, and network visualization with
 generation via local ([Ollama](https://ollama.com)) and web-based
 ([OpenAI](https://platform.openai.com/),
 [Gemini](https://ai.google.dev/)) APIs, `WCAG 2.1 AA` accessibility,
-multi-language support, and enterprise security for production
-deployment.
+multi-language support.
 
 ## Installation
 

@@ -9,7 +9,7 @@ documents.
 plot_topic_probability(
   gamma_data,
   top_n = 10,
-  topic_labels = NULL,
+  use_topic_labels = FALSE,
   colors = NULL,
   ylab = "Topic Proportion",
   base_font_size = 11
@@ -26,9 +26,11 @@ plot_topic_probability(
 
   The number of topics to display (default: 10).
 
-- topic_labels:
+- use_topic_labels:
 
-  Optional topic labels (default: NULL).
+  Logical. If TRUE, use the `topic_label` column from `gamma_data` for
+  axis labels (falls back to topic number when the column is absent). If
+  FALSE (default), labels are formatted as "Topic N".
 
 - colors:
 

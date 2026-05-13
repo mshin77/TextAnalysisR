@@ -18,7 +18,8 @@ Logical TRUE if available, FALSE if not
 Checks feature availability and shows notification if unavailable.
 }
 \examples{
-\dontrun{
+if (interactive()) {
 if (!require_feature("embeddings", session)) return()
 }
 }
+\keyword{internal}

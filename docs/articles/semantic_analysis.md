@@ -160,7 +160,7 @@ networks for each category, displayed in a tabbed interface.
 
 **Network Statistics (9 Metrics)**
 
-Each network returns comprehensive statistics:
+Each network returns statistics:
 
 | Metric | Description |
 |----|----|
@@ -189,20 +189,6 @@ Community detection identifies clusters of semantically related nodes.
 
 **Learn More:** [igraph Community
 Detection](https://igraph.org/r/doc/communities.html)
-
-------------------------------------------------------------------------
-
-## Temporal Analysis
-
-Track themes over time:
-
-``` r
-
-temporal <- temporal_semantic_analysis(
-  texts = united_tbl$united_texts,
-  dates = united_tbl$year
-)
-```
 
 ------------------------------------------------------------------------
 

@@ -78,7 +78,7 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 init_spacy_nlp("en_core_web_sm")
-} # }
+}
 ```

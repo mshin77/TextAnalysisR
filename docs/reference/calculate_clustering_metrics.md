@@ -77,7 +77,6 @@ Other semantic:
 [`calculate_document_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_document_similarity.md),
 [`calculate_similarity_robust()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_similarity_robust.md),
 [`cluster_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.md),
-[`cross_analysis_validation()`](https://mshin77.github.io/TextAnalysisR/reference/cross_analysis_validation.md),
 [`export_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/export_document_clustering.md),
 [`extract_cross_category_similarities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.md),
 [`fit_semantic_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.md),
@@ -87,7 +86,6 @@ Other semantic:
 [`reduce_dimensions()`](https://mshin77.github.io/TextAnalysisR/reference/reduce_dimensions.md),
 [`semantic_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_document_clustering.md),
 [`semantic_similarity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_similarity_analysis.md),
-[`temporal_semantic_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.md),
 [`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md),
 [`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md),
 [`word_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_correlation_network.md)
@@ -95,16 +93,28 @@ Other semantic:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Generate sample data
-set.seed(123)
-data <- rbind(
-  matrix(rnorm(100, mean = 0), ncol = 2),
-  matrix(rnorm(100, mean = 3), ncol = 2)
-)
-clusters <- c(rep(1, 50), rep(2, 50))
-
-metrics <- calculate_clustering_metrics(clusters, data)
+# \donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:20]
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(abstracts)))
+kmeans_result <- stats::kmeans(term_matrix, centers = 2)
+metrics <- calculate_clustering_metrics(kmeans_result$cluster, term_matrix)
 print(metrics)
-} # }
+#> $n_clusters
+#> [1] 2
+#> 
+#> $cluster_sizes
+#> clusters
+#>  1  2 
+#> 14  6 
+#> 
+#> $silhouette
+#> [1] 0.4675644
+#> 
+#> $davies_bouldin
+#> [1] 1.024449
+#> 
+#> $calinski_harabasz
+#> [1] 16.50688
+#> 
+# }
 ```

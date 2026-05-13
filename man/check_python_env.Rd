@@ -22,8 +22,9 @@ List with status information:
 Checks if Python environment is available and properly configured.
 }
 \examples{
-\dontrun{
+if (interactive()) {
 status <- check_python_env()
 print(status)
 }
 }
+\keyword{internal}

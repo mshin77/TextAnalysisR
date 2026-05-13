@@ -54,11 +54,11 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 setup_python_env()
 
 pdf_path <- "path/to/table_document.pdf"
 table_data <- extract_tables_from_pdf_py(pdf_path)
 head(table_data)
-} # }
+}
 ```

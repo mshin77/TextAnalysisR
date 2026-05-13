@@ -17,9 +17,7 @@ Generates standardized text instructions for creating a DFM.
 Used in console output or verbatim text displays.
 }
 \examples{
-\dontrun{
-output$instructions <- renderPrint({
-  cat(get_dfm_setup_instructions("keyword extraction"), sep = "\n")
-})
+instructions <- get_dfm_setup_instructions("keyword extraction")
+cat(instructions, sep = "\n")
 }
-}
+\keyword{internal}

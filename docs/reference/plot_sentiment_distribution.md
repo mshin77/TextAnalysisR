@@ -39,11 +39,11 @@ Other sentiment:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-data(SpecialEduTech)
-texts <- SpecialEduTech$abstract[1:10]
-sentiment_data <- analyze_sentiment(texts)
-plot <- plot_sentiment_distribution(sentiment_data)
-print(plot)
-} # }
+# \donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+sentiment_data <- analyze_sentiment(abstracts)
+sentiment_plot <- plot_sentiment_distribution(sentiment_data)
+print(sentiment_plot)
+
+# }
 ```

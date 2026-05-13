@@ -106,7 +106,7 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 top_topic_terms <- get_topic_terms(stm_model, top_term_n = 10)
 
 # Auto-detect provider (tries Ollama -> OpenAI -> Gemini)
@@ -116,5 +116,5 @@ labels <- generate_topic_labels(top_topic_terms)
 labels_ollama <- generate_topic_labels(top_topic_terms, provider = "ollama")
 labels_openai <- generate_topic_labels(top_topic_terms, provider = "openai")
 labels_gemini <- generate_topic_labels(top_topic_terms, provider = "gemini")
-} # }
+}
 ```

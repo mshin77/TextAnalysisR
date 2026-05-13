@@ -37,20 +37,17 @@ Priority order (highest to lowest):
 }
 }
 \examples{
-\dontrun{
-tokens <- get_available_tokens(
-  final_tokens = my_final_tokens,
-  processed_tokens = my_processed_tokens
-)
-}
+toks <- quanteda::tokens("assistive technology supports learning")
+result <- get_available_tokens(processed_tokens = toks)
 }
 \seealso{
-Other preprocessing: 
-\code{\link{get_available_dfm}()},
-\code{\link{import_files}()},
-\code{\link{lemmatize_tokens}()},
-\code{\link{prep_texts}()},
-\code{\link{process_pdf_unified}()},
-\code{\link{unite_cols}()}
+Other preprocessing:
+\code{\link[=get_available_dfm]{get_available_dfm()}},
+\code{\link[=import_files]{import_files()}},
+\code{\link[=lemmatize_tokens]{lemmatize_tokens()}},
+\code{\link[=prep_texts]{prep_texts()}},
+\code{\link[=process_pdf_unified]{process_pdf_unified()}},
+\code{\link[=unite_cols]{unite_cols()}}
 }
 \concept{preprocessing}
+\keyword{internal}

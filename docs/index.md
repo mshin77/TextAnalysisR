@@ -6,9 +6,9 @@ Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repost
 [![License:
 GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Comprehensive toolkit for text mining and natural language processing
-with an interactive `Shiny` interface. Import documents from multiple
-formats (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`) using
+Workflow tool for text mining and natural language processing with an
+interactive `Shiny` interface. Import documents from multiple formats
+(`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`) using
 [Marker](https://github.com/VikParuchuri/marker) for PDF extraction,
 preprocess with [quanteda](https://github.com/quanteda/quanteda), and
 perform linguistic analysis via [spaCy](https://spacy.io/), topic
@@ -19,8 +19,7 @@ sentiment analysis, and network visualization with
 generation via local ([Ollama](https://ollama.com)) and web-based
 ([OpenAI](https://platform.openai.com/),
 [Gemini](https://ai.google.dev/)) APIs, `WCAG 2.1 AA` accessibility,
-multi-language support, and enterprise security for production
-deployment.
+multi-language support.
 
 ## Installation
 
@@ -31,6 +30,27 @@ The development version from
 install.packages("devtools")
 devtools::install_github("mshin77/TextAnalysisR")
 ```
+
+## First-Time Python Setup
+
+Several functions
+([`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md),
+[`generate_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/generate_embeddings.md),
+[`cluster_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.md),
+PDF extraction, transformer-based analyses) require Python packages. Run
+this **once** after installing TextAnalysisR:
+
+``` R
+library(TextAnalysisR)
+setup_python_env()
+```
+
+This creates a dedicated virtualenv (`textanalysisr-env`), installs the
+packages listed in `inst/python/requirements.txt` (spaCy, pandas,
+pdfplumber, sentence-transformers, torch, umap-learn, hdbscan,
+scikit-learn, numba), and downloads the `en_core_web_sm` spaCy model.
+Restart R afterward. Check status anytime with
+[`check_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/check_python_env.md).
 
 ## Load the TextAnalysisR Package
 

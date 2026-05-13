@@ -76,8 +76,9 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-morph_data <- extract_morphology(tokens)
-plot_morphology_feature(morph_data, "Tense")
-} # }
+if (interactive()) {
+  tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+  morphology_data <- extract_morphology(tokens)
+  plot_morphology_feature(morphology_data, "Tense")
+}
 ```

@@ -57,7 +57,7 @@ and vision LLM APIs. No Python required.
 }
 }
 \examples{
-\dontrun{
+if (interactive()) {
 result <- extract_pdf_multimodal("research_paper.pdf")
 text_for_analysis <- result$combined_text
 
@@ -69,15 +69,15 @@ result <- extract_pdf_multimodal(
 }
 }
 \seealso{
-Other pdf: 
-\code{\link{check_vision_models}()},
-\code{\link{detect_pdf_content_type}()},
-\code{\link{detect_pdf_content_type_py}()},
-\code{\link{extract_pdf_smart}()},
-\code{\link{extract_tables_from_pdf_py}()},
-\code{\link{extract_text_from_pdf}()},
-\code{\link{extract_text_from_pdf_py}()},
-\code{\link{process_pdf_file}()},
-\code{\link{process_pdf_file_py}()}
+Other pdf:
+\code{\link[=check_vision_models]{check_vision_models()}},
+\code{\link[=detect_pdf_content_type]{detect_pdf_content_type()}},
+\code{\link[=detect_pdf_content_type_py]{detect_pdf_content_type_py()}},
+\code{\link[=extract_pdf_smart]{extract_pdf_smart()}},
+\code{\link[=extract_tables_from_pdf_py]{extract_tables_from_pdf_py()}},
+\code{\link[=extract_text_from_pdf]{extract_text_from_pdf()}},
+\code{\link[=extract_text_from_pdf_py]{extract_text_from_pdf_py()}},
+\code{\link[=process_pdf_file]{process_pdf_file()}},
+\code{\link[=process_pdf_file_py]{process_pdf_file_py()}}
 }
 \concept{pdf}

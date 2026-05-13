@@ -2,7 +2,7 @@
 
 Evaluates the stability of embedding-based topic modeling by running
 multiple models with different random seeds and comparing their results.
-High stability (high ARI, consistent keywords) indicates robust topic
+High stability (high ARI, consistent keywords) indicates stable topic
 structure in the data.
 
 ## Usage
@@ -112,7 +112,7 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
   texts <- c("Machine learning for image recognition",
              "Deep learning neural networks",
              "Natural language processing models")
@@ -129,5 +129,5 @@ if (FALSE) { # \dontrun{
 
   # Use the best model
   best_model <- stability$best_model
-} # }
+}
 ```

@@ -18,24 +18,23 @@ A ggplot2 bar chart
 Creates a bar plot showing the distribution of sentiment classifications.
 }
 \examples{
-\dontrun{
-data(SpecialEduTech)
-texts <- SpecialEduTech$abstract[1:10]
-sentiment_data <- analyze_sentiment(texts)
-plot <- plot_sentiment_distribution(sentiment_data)
-print(plot)
+\donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+sentiment_data <- analyze_sentiment(abstracts)
+sentiment_plot <- plot_sentiment_distribution(sentiment_data)
+print(sentiment_plot)
 }
 }
 \seealso{
-Other sentiment: 
-\code{\link{analyze_sentiment}()},
-\code{\link{analyze_sentiment_llm}()},
-\code{\link{plot_document_sentiment_trajectory}()},
-\code{\link{plot_emotion_radar}()},
-\code{\link{plot_sentiment_boxplot}()},
-\code{\link{plot_sentiment_by_category}()},
-\code{\link{plot_sentiment_violin}()},
-\code{\link{sentiment_embedding_analysis}()},
-\code{\link{sentiment_lexicon_analysis}()}
+Other sentiment:
+\code{\link[=analyze_sentiment]{analyze_sentiment()}},
+\code{\link[=analyze_sentiment_llm]{analyze_sentiment_llm()}},
+\code{\link[=plot_document_sentiment_trajectory]{plot_document_sentiment_trajectory()}},
+\code{\link[=plot_emotion_radar]{plot_emotion_radar()}},
+\code{\link[=plot_sentiment_boxplot]{plot_sentiment_boxplot()}},
+\code{\link[=plot_sentiment_by_category]{plot_sentiment_by_category()}},
+\code{\link[=plot_sentiment_violin]{plot_sentiment_violin()}},
+\code{\link[=sentiment_embedding_analysis]{sentiment_embedding_analysis()}},
+\code{\link[=sentiment_lexicon_analysis]{sentiment_lexicon_analysis()}}
 }
 \concept{sentiment}

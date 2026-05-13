@@ -1133,22 +1133,16 @@ server <- shinyServer(function(input, output, session) {
         {
           segment_options <- input$segment_options %||% character(0)
           math_mode_enabled <- isTRUE(input$math_mode)
-
-          if (math_mode_enabled) {
-            segment_options <- setdiff(segment_options, c("remove_numbers", "remove_symbols"))
-            math_mode_used(TRUE)
-          } else {
-            math_mode_used(FALSE)
-          }
+          math_mode_used(math_mode_enabled)
 
           toks_processed <- TextAnalysisR::prep_texts(
             united_tbl(),
             text_field = "united_texts",
             min_char = input$min_char %||% 2,
             lowercase = "lowercase" %in% segment_options,
-            remove_punct = "remove_punct" %in% segment_options && !math_mode_enabled,
-            remove_symbols = "remove_symbols" %in% segment_options && !math_mode_enabled,
-            remove_numbers = "remove_numbers" %in% segment_options && !math_mode_enabled,
+            remove_punct = "remove_punct" %in% segment_options,
+            remove_symbols = "remove_symbols" %in% segment_options,
+            remove_numbers = "remove_numbers" %in% segment_options,
             remove_url = "remove_url" %in% segment_options,
             remove_separators = "remove_separators" %in% segment_options,
             split_hyphens = "split_hyphens" %in% segment_options,
@@ -1156,6 +1150,7 @@ server <- shinyServer(function(input, output, session) {
             include_docvars = "include_docvars" %in% segment_options,
             keep_acronyms = "keep_acronyms" %in% segment_options,
             padding = "padding" %in% segment_options,
+            math_mode = math_mode_enabled,
             verbose = TRUE
           )
         },
@@ -11852,18 +11847,18 @@ server <- shinyServer(function(input, output, session) {
 
         if (method == "silhouette") {
           if (requireNamespace("cluster", quietly = TRUE)) {
-            set.seed(123)
+            set.seed(input$semantic_cluster_seed %||% 2026)
             km_result <- kmeans(data_matrix, centers = k, nstart = 10)
             sil <- cluster::silhouette(km_result$cluster, dist(data_matrix))
             scores[i] <- mean(sil[, 3])
           }
         } else if (method == "elbow") {
-          set.seed(123)
+          set.seed(input$semantic_cluster_seed %||% 2026)
           km_result <- kmeans(data_matrix, centers = k, nstart = 10)
           scores[i] <- km_result$tot.withinss
         } else if (method == "gap") {
           if (requireNamespace("cluster", quietly = TRUE)) {
-            set.seed(123)
+            set.seed(input$semantic_cluster_seed %||% 2026)
             gap_result <- cluster::clusGap(data_matrix, FUN = kmeans, nstart = 10, K.max = k)
             scores[i] <- gap_result$Tab[gap_result$Tab[, "k"] == k, "gap"]
           }
@@ -13559,7 +13554,7 @@ server <- shinyServer(function(input, output, session) {
         pca_result <- prcomp(feature_matrix, center = TRUE, scale. = TRUE)
         coords <- pca_result$x[, 1:2]
       } else if (method == "t-SNE") {
-        set.seed(123)
+        set.seed(input$semantic_cluster_seed %||% 2026)
         tsne_result <- Rtsne::Rtsne(feature_matrix,
                                     dims = 2,
                                     perplexity = input$semantic_tsne_perplexity %||% 30,
@@ -13567,7 +13562,7 @@ server <- shinyServer(function(input, output, session) {
                                     check_duplicates = FALSE)
         coords <- tsne_result$Y
       } else if (method == "UMAP") {
-        set.seed(123)
+        set.seed(input$semantic_cluster_seed %||% 2026)
         umap_result <- umap::umap(feature_matrix,
                                   n_neighbors = input$semantic_umap_neighbors %||% 15,
                                   min_dist = input$semantic_umap_min_dist %||% 0.1)
@@ -13745,7 +13740,7 @@ server <- shinyServer(function(input, output, session) {
         pca_result <- prcomp(feature_matrix, center = TRUE, scale. = TRUE)
         coords <- pca_result$x[, 1:2]
       } else if (method == "t-SNE") {
-        set.seed(123)
+        set.seed(input$semantic_cluster_seed %||% 2026)
         tsne_result <- Rtsne::Rtsne(feature_matrix,
                                     dims = 2,
                                     perplexity = input$semantic_tsne_perplexity %||% 30,
@@ -13753,7 +13748,7 @@ server <- shinyServer(function(input, output, session) {
                                     check_duplicates = FALSE)
         coords <- tsne_result$Y
       } else if (method == "UMAP") {
-        set.seed(123)
+        set.seed(input$semantic_cluster_seed %||% 2026)
         umap_result <- umap::umap(feature_matrix,
                                   n_neighbors = input$semantic_umap_neighbors %||% 15,
                                   min_dist = input$semantic_umap_min_dist %||% 0.1)

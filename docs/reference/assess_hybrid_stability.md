@@ -1,7 +1,7 @@
 # Assess Hybrid Model Stability via Bootstrap
 
 Evaluates the stability of a hybrid topic model by running bootstrap
-resampling. This helps identify which topics are robust and which may be
+resampling. This helps identify which topics are stable and which may be
 artifacts of the specific sample. Based on research recommendations for
 topic model validation.
 
@@ -100,7 +100,7 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
   stability <- assess_hybrid_stability(
     texts = my_texts,
     n_topics = 10,
@@ -110,5 +110,5 @@ if (FALSE) { # \dontrun{
 
   # View topic stability scores
   stability$topic_stability
-} # }
+}
 ```

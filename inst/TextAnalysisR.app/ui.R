@@ -27,6 +27,12 @@ ui <- fluidPage(
     tags$meta(charset = "UTF-8"),
     tags$meta(name = "viewport", content = "width=device-width, initial-scale=1.0"),
     tags$meta(name = "description", content = "TextAnalysisR: A text mining workflow tool"),
+    tags$script(HTML(
+      "document.documentElement.lang = 'en';
+       document.querySelectorAll('title').forEach(function(t, i) {
+         if (i > 0 || !t.textContent.trim()) t.remove();
+       });"
+    )),
     tags$meta(name = "keywords", content = "text mining, topic modeling, semantic analysis, R Shiny"),
 
     tags$meta(
@@ -193,7 +199,8 @@ ui <- fluidPage(
     class = "sr-only"
   ),
 
-  titlePanel("TextAnalysisR",
+  titlePanel(
+    tags$h1("TextAnalysisR", style = "margin: 0; font-size: inherit;"),
     windowTitle = "TextAnalysisR: A Text Mining Workflow Tool"
   ),
   tags$main(

@@ -88,11 +88,10 @@ Other sentiment:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-data(SpecialEduTech)
-texts <- SpecialEduTech$abstract[1:10]
-result <- sentiment_embedding_analysis(texts)
-print(result$document_sentiment)
-print(result$summary_stats)
-} # }
+if (interactive()) {
+  abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+  embedding_sentiment <- sentiment_embedding_analysis(abstracts)
+  print(embedding_sentiment$document_sentiment)
+  print(embedding_sentiment$summary_stats)
+}
 ```

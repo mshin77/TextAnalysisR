@@ -118,12 +118,13 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-library(quanteda)
-corp <- corpus(c("The cat runs fast", "Dogs are loyal pets",
-                 "Cats sleep all day", "My dog loves walks"),
-               docvars = data.frame(animal = c("cat", "dog", "cat", "dog")))
-dfm <- tokens(corp) %>% dfm()
-log_odds <- calculate_log_odds_ratio(dfm, "animal")
-} # }
+# \donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+corpus <- quanteda::corpus(
+  articles$abstract,
+  docvars = data.frame(reference_type = articles$reference_type)
+)
+dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
+log_odds <- calculate_log_odds_ratio(dfm_object, "reference_type")
+# }
 ```

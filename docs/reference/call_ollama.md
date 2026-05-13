@@ -70,11 +70,11 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 response <- call_ollama(
   prompt = "Summarize these keywords: machine learning, neural networks, AI",
   model = "tinyllama"
 )
 print(response)
-} # }
+}
 ```

@@ -73,34 +73,48 @@ comparison. Accepts either a pre-built long-format data frame or extracts
 from a similarity matrix.
 }
 \examples{
-\dontrun{
-# With pre-built long-format data
+\donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:7, ]
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+similarity_matrix <- normalized_matrix \%*\% t(normalized_matrix)
+thesis_rows <- which(articles$reference_type == "thesis")[1:3]
+article_cols <- which(articles$reference_type == "journal_article")[1:4]
+similarity_data <- expand.grid(
+  ld_doc_name    = paste("Thesis", seq_along(thesis_rows)),
+  other_doc_name = paste("Article", seq_along(article_cols)),
+  stringsAsFactors = FALSE
+)
+similarity_data$cosine_similarity <- as.vector(
+  similarity_matrix[thesis_rows, article_cols]
+)
+similarity_data$other_category <- articles$reference_type[article_cols]
 plot_cross_category_heatmap(
-  similarity_data = ld_similarities,
+  similarity_data = similarity_data,
   row_var = "ld_doc_name",
   col_var = "other_doc_name",
   value_var = "cosine_similarity",
   category_var = "other_category",
-  row_label = "SLD Documents"
+  row_label = "Theses"
 )
 }
 }
 \seealso{
-Other visualization: 
-\code{\link{create_standard_ggplot_theme}()},
-\code{\link{get_sentiment_color}()},
-\code{\link{get_sentiment_colors}()},
-\code{\link{plot_cluster_terms}()},
-\code{\link{plot_entity_frequencies}()},
-\code{\link{plot_lexical_dispersion}()},
-\code{\link{plot_log_odds_ratio}()},
-\code{\link{plot_mwe_frequency}()},
-\code{\link{plot_ngram_frequency}()},
-\code{\link{plot_pos_frequencies}()},
-\code{\link{plot_semantic_viz}()},
-\code{\link{plot_similarity_heatmap}()},
-\code{\link{plot_term_trends_continuous}()},
-\code{\link{plot_weighted_log_odds}()},
-\code{\link{plot_word_frequency}()}
+Other visualization:
+\code{\link[=create_standard_ggplot_theme]{create_standard_ggplot_theme()}},
+\code{\link[=get_sentiment_color]{get_sentiment_color()}},
+\code{\link[=get_sentiment_colors]{get_sentiment_colors()}},
+\code{\link[=plot_cluster_terms]{plot_cluster_terms()}},
+\code{\link[=plot_entity_frequencies]{plot_entity_frequencies()}},
+\code{\link[=plot_lexical_dispersion]{plot_lexical_dispersion()}},
+\code{\link[=plot_log_odds_ratio]{plot_log_odds_ratio()}},
+\code{\link[=plot_mwe_frequency]{plot_mwe_frequency()}},
+\code{\link[=plot_ngram_frequency]{plot_ngram_frequency()}},
+\code{\link[=plot_pos_frequencies]{plot_pos_frequencies()}},
+\code{\link[=plot_semantic_viz]{plot_semantic_viz()}},
+\code{\link[=plot_similarity_heatmap]{plot_similarity_heatmap()}},
+\code{\link[=plot_term_trends_continuous]{plot_term_trends_continuous()}},
+\code{\link[=plot_weighted_log_odds]{plot_weighted_log_odds()}},
+\code{\link[=plot_word_frequency]{plot_word_frequency()}}
 }
 \concept{visualization}

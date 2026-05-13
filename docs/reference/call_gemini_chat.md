@@ -66,11 +66,11 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 response <- call_gemini_chat(
   system_prompt = "You are a helpful assistant.",
   user_prompt = "Generate a topic label for: education, student, learning",
   api_key = Sys.getenv("GEMINI_API_KEY")
 )
-} # }
+}
 ```

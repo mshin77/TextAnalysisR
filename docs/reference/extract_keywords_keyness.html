@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">TextAnalysisR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,14 +126,33 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://quanteda.io" class="external-link">quanteda</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">corp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://quanteda.io/reference/corpus.html" class="external-link">corpus</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"positive text"</span>, <span class="st">"negative text"</span>, <span class="st">"positive words"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dfm_obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="fu"><a href="https://quanteda.io/reference/tokens.html" class="external-link">tokens</a></span><span class="op">(</span><span class="va">corp</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Compare first document vs rest</span></span></span>
-<span class="r-in"><span><span class="va">keywords</span> <span class="op">&lt;-</span> <span class="fu">extract_keywords_keyness</span><span class="op">(</span><span class="va">dfm_obj</span>, target <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">abstracts</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span><span class="op">$</span><span class="va">abstract</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens.html" class="external-link">tokens</a></span><span class="op">(</span><span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/corpus.html" class="external-link">corpus</a></span><span class="op">(</span><span class="va">abstracts</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">keywords</span> <span class="op">&lt;-</span> <span class="fu">extract_keywords_keyness</span><span class="op">(</span><span class="va">dfm_object</span>, target <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">keywords</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Keyword Keyness_Score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           approach      8.225973</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                alp      5.789556</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  learning-disabled      5.789556</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4               when      2.364533</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         advantages      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6            advised      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7           although      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8            caution      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9           choosing      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10     circumstances      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11          clinical      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12          concepts      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13          deficits      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14       demonstrate      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15         fractions      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16               has      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17              have      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18       instigation      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19               its      1.337108</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20            memory      1.337108</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

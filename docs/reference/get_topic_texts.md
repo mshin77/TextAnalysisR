@@ -88,14 +88,15 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Get topic terms from STM model
-top_terms <- TextAnalysisR::get_topic_terms(stm_model, top_term_n = 10)
-
-# Convert to text strings for embedding
-topic_texts <- get_topic_texts(top_terms)
-
-# Generate embeddings
-topic_embeddings <- TextAnalysisR::generate_embeddings(topic_texts)
-} # }
+# Topic-term frame as produced by get_topic_terms()
+top_terms <- data.frame(
+  topic = c(1, 1, 1, 2, 2, 2),
+  term  = c("calculator", "arithmetic", "elementary",
+            "computer", "instruction", "multiplication"),
+  prob  = c(0.10, 0.08, 0.07, 0.12, 0.09, 0.06)
+)
+get_topic_texts(top_terms)
+#> [1] "calculator arithmetic elementary"    "computer instruction multiplication"
+get_topic_texts(top_terms, weight_var = "prob", top_n = 2)
+#> [1] "calculator arithmetic" "computer instruction" 
 ```

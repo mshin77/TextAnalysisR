@@ -275,7 +275,6 @@ Requires Python. Run `setup_python_env()` first.
 
 | Function | Purpose |
 |----------|---------|
-| `cross_analysis_validation()` | Cross-validate analysis |
 | `validate_semantic_coherence()` | Check semantic coherence |
 | `calculate_clustering_metrics()` | Clustering quality metrics |
 

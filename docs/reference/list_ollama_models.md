@@ -38,8 +38,8 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 models <- list_ollama_models()
 print(models)
-} # }
+}
 ```

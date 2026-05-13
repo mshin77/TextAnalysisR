@@ -65,11 +65,11 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 response <- call_openai_chat(
   system_prompt = "You are a helpful assistant.",
   user_prompt = "Generate a topic label for: education, student, learning",
   api_key = Sys.getenv("OPENAI_API_KEY")
 )
-} # }
+}
 ```

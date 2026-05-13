@@ -59,8 +59,8 @@ Level AA:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 calculate_contrast_ratio("#111827", "#ffffff")  # Returns ~16:1 (Pass)
+#> [1] 17.74
 calculate_contrast_ratio("#6b7280", "#4a5568")  # Returns ~2.8:1 (Fail)
-} # }
+#> [1] 1.56
 ```

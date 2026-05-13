@@ -110,7 +110,6 @@ Other semantic:
 [`calculate_document_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_document_similarity.md),
 [`calculate_similarity_robust()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_similarity_robust.md),
 [`cluster_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.md),
-[`cross_analysis_validation()`](https://mshin77.github.io/TextAnalysisR/reference/cross_analysis_validation.md),
 [`export_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/export_document_clustering.md),
 [`extract_cross_category_similarities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.md),
 [`fit_semantic_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.md),
@@ -120,7 +119,6 @@ Other semantic:
 [`reduce_dimensions()`](https://mshin77.github.io/TextAnalysisR/reference/reduce_dimensions.md),
 [`semantic_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_document_clustering.md),
 [`semantic_similarity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_similarity_analysis.md),
-[`temporal_semantic_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.md),
 [`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md),
 [`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md),
 [`word_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_correlation_network.md)
@@ -128,19 +126,34 @@ Other semantic:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# After extracting cross-category similarities
+# \donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:6, ]
+articles$display_name <- paste0("d", seq_len(nrow(articles)))
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+similarity_matrix <- normalized_matrix %*% t(normalized_matrix)
+dimnames(similarity_matrix) <- list(articles$display_name, articles$display_name)
+cross_similarities <- extract_cross_category_similarities(
+  similarity_matrix  = similarity_matrix,
+  docs_data          = articles,
+  reference_category = "thesis",
+  compare_categories = "journal_article",
+  category_var       = "reference_type",
+  id_var             = "display_name"
+)
 gap_analysis <- analyze_similarity_gaps(
-  similarity_data = cross_sims,
+  similarity_data = cross_similarities,
   ref_var = "ref_id",
   other_var = "other_id",
   similarity_var = "similarity",
   category_var = "other_category",
   unique_threshold = 0.6
 )
-
-print(gap_analysis$unique_items)
-print(gap_analysis$missing_items)
 print(gap_analysis$summary_stats)
-} # }
+#> # A tibble: 1 × 7
+#>   other_category  mean_similarity median_similarity sd_similarity min_similarity
+#>   <fct>                     <dbl>             <dbl>         <dbl>          <dbl>
+#> 1 journal_article           0.386             0.336         0.146          0.184
+#> # ℹ 2 more variables: max_similarity <dbl>, n_pairs <int>
+# }
 ```

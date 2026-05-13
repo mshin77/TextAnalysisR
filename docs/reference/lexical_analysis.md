@@ -1,6 +1,6 @@
 # Lexical Analysis Functions
 
-Comprehensive functions for lexical analysis including:
+Functions for lexical analysis including:
 
 - Linguistic Annotation (POS tagging, NER)
 

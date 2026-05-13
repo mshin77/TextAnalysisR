@@ -49,45 +49,43 @@ similarities between a reference category and other categories into a long-forma
 data frame suitable for visualization and analysis.
 }
 \examples{
-\dontrun{
-# After calculating full similarity matrix
-similarity_result <- TextAnalysisR::calculate_document_similarity(
-  texts = docs$text,
-  document_feature_type = "embeddings"
-)
-
-cross_sims <- extract_cross_category_similarities(
-  similarity_matrix = similarity_result$similarity_matrix,
-  docs_data = docs,
-  reference_category = "SLD",
-  compare_categories = c("Other Disability", "General"),
-  category_var = "category",
-  id_var = "display_name",
-  name_var = "doc_name"
+\donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:6, ]
+articles$display_name <- paste0("d", seq_len(nrow(articles)))
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+similarity_matrix <- normalized_matrix \%*\% t(normalized_matrix)
+dimnames(similarity_matrix) <- list(articles$display_name, articles$display_name)
+cross_similarities <- extract_cross_category_similarities(
+  similarity_matrix  = similarity_matrix,
+  docs_data          = articles,
+  reference_category = "thesis",
+  compare_categories = "journal_article",
+  category_var       = "reference_type",
+  id_var             = "display_name",
+  name_var           = "title"
 )
 }
 }
 \seealso{
-Other semantic: 
-\code{\link{analyze_document_clustering}()},
-\code{\link{analyze_similarity_gaps}()},
-\code{\link{calculate_clustering_metrics}()},
-\code{\link{calculate_cross_similarity}()},
-\code{\link{calculate_document_similarity}()},
-\code{\link{calculate_similarity_robust}()},
-\code{\link{cluster_embeddings}()},
-\code{\link{cross_analysis_validation}()},
-\code{\link{export_document_clustering}()},
-\code{\link{fit_semantic_model}()},
-\code{\link{generate_cluster_labels}()},
-\code{\link{generate_cluster_labels_auto}()},
-\code{\link{generate_embeddings}()},
-\code{\link{reduce_dimensions}()},
-\code{\link{semantic_document_clustering}()},
-\code{\link{semantic_similarity_analysis}()},
-\code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()},
-\code{\link{word_co_occurrence_network}()},
-\code{\link{word_correlation_network}()}
+Other semantic:
+\code{\link[=analyze_document_clustering]{analyze_document_clustering()}},
+\code{\link[=analyze_similarity_gaps]{analyze_similarity_gaps()}},
+\code{\link[=calculate_clustering_metrics]{calculate_clustering_metrics()}},
+\code{\link[=calculate_cross_similarity]{calculate_cross_similarity()}},
+\code{\link[=calculate_document_similarity]{calculate_document_similarity()}},
+\code{\link[=calculate_similarity_robust]{calculate_similarity_robust()}},
+\code{\link[=cluster_embeddings]{cluster_embeddings()}},
+\code{\link[=export_document_clustering]{export_document_clustering()}},
+\code{\link[=fit_semantic_model]{fit_semantic_model()}},
+\code{\link[=generate_cluster_labels]{generate_cluster_labels()}},
+\code{\link[=generate_cluster_labels_auto]{generate_cluster_labels_auto()}},
+\code{\link[=generate_embeddings]{generate_embeddings()}},
+\code{\link[=reduce_dimensions]{reduce_dimensions()}},
+\code{\link[=semantic_document_clustering]{semantic_document_clustering()}},
+\code{\link[=semantic_similarity_analysis]{semantic_similarity_analysis()}},
+\code{\link[=validate_cross_models]{validate_cross_models()}},
+\code{\link[=word_co_occurrence_network]{word_co_occurrence_network()}},
+\code{\link[=word_correlation_network]{word_correlation_network()}}
 }
 \concept{semantic}

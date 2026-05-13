@@ -61,11 +61,11 @@ After setup, restart R session to activate enhanced features.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 # First time setup (auto-detects Python)
 setup_python_env()
 
 # Recreate environment
 setup_python_env(force = TRUE)
-} # }
+}
 ```

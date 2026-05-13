@@ -85,7 +85,6 @@ reference:
   - analyze_document_clustering
   - export_document_clustering
   - starts_with("generate_cluster")
-  - temporal_semantic_analysis
   - analyze_semantic_evolution
   - word_co_occurrence_network
   - word_correlation_network
@@ -157,7 +156,6 @@ reference:
 - title: "Validation"
   desc: "Quality metrics and cross-validation"
   contents:
-  - cross_analysis_validation
   - validate_cross_models
   - validate_semantic_coherence
   - calculate_clustering_metrics

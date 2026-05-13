@@ -37,29 +37,28 @@ A list containing:
 }
 \description{
 Performs lexicon-based sentiment analysis on a DFM object using tidytext lexicons.
-Supports AFINN, Bing, and NRC lexicons with comprehensive scoring and emotion analysis.
+Supports AFINN, Bing, and NRC lexicons with scoring and emotion analysis.
 Now supports n-grams for improved negation and intensifier handling.
 }
 \examples{
-\dontrun{
-data(SpecialEduTech)
-texts <- SpecialEduTech$abstract[1:10]
-corp <- quanteda::corpus(texts)
-dfm_obj <- quanteda::dfm(quanteda::tokens(corp))
-results <- sentiment_lexicon_analysis(dfm_obj, lexicon = "afinn")
-print(results$document_sentiment)
+\donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+corpus <- quanteda::corpus(abstracts)
+dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
+lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+print(lexicon_results$document_sentiment)
 }
 }
 \seealso{
-Other sentiment: 
-\code{\link{analyze_sentiment}()},
-\code{\link{analyze_sentiment_llm}()},
-\code{\link{plot_document_sentiment_trajectory}()},
-\code{\link{plot_emotion_radar}()},
-\code{\link{plot_sentiment_boxplot}()},
-\code{\link{plot_sentiment_by_category}()},
-\code{\link{plot_sentiment_distribution}()},
-\code{\link{plot_sentiment_violin}()},
-\code{\link{sentiment_embedding_analysis}()}
+Other sentiment:
+\code{\link[=analyze_sentiment]{analyze_sentiment()}},
+\code{\link[=analyze_sentiment_llm]{analyze_sentiment_llm()}},
+\code{\link[=plot_document_sentiment_trajectory]{plot_document_sentiment_trajectory()}},
+\code{\link[=plot_emotion_radar]{plot_emotion_radar()}},
+\code{\link[=plot_sentiment_boxplot]{plot_sentiment_boxplot()}},
+\code{\link[=plot_sentiment_by_category]{plot_sentiment_by_category()}},
+\code{\link[=plot_sentiment_distribution]{plot_sentiment_distribution()}},
+\code{\link[=plot_sentiment_violin]{plot_sentiment_violin()}},
+\code{\link[=sentiment_embedding_analysis]{sentiment_embedding_analysis()}}
 }
 \concept{sentiment}

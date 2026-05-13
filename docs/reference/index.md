@@ -140,7 +140,7 @@ Similarity, clustering, and networks
 - [`calculate_document_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_document_similarity.md)
   : Calculate Document Similarity
 - [`calculate_similarity_robust()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_similarity_robust.md)
-  : Calculate Similarity Robust
+  : Calculate Document Similarity with Fallbacks
 - [`calculate_cosine_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_cosine_similarity.md)
   : Calculate Cosine Similarity Matrix
 - [`semantic_similarity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_similarity_analysis.md)
@@ -157,8 +157,6 @@ Similarity, clustering, and networks
   : Generate Cluster Label Suggestions (Human-in-the-Loop)
 - [`generate_cluster_labels_auto()`](https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels_auto.md)
   : Generate Cluster Labels
-- [`temporal_semantic_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.md)
-  : Temporal Semantic Analysis
 - [`analyze_semantic_evolution()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_semantic_evolution.md)
   : Analyze Semantic Evolution
 - [`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md)
@@ -235,22 +233,14 @@ Text extraction from PDFs with optional vision AI
   : Process PDF File (Unified Entry Point)
 - [`process_pdf_file()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_file.md)
   : Process PDF File
-- [`process_pdf_file_py()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_file_py.md)
-  : Process PDF File using Python
 - [`extract_text_from_pdf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf.md)
   : Extract Text from PDF
-- [`extract_text_from_pdf_py()`](https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf_py.md)
-  : Extract Text from PDF using Python
-- [`extract_tables_from_pdf_py()`](https://mshin77.github.io/TextAnalysisR/reference/extract_tables_from_pdf_py.md)
-  : Extract Tables from PDF using Python
 - [`extract_pdf_multimodal()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.md)
   : Extract PDF with Multimodal Analysis
 - [`extract_pdf_smart()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_smart.md)
   : Smart PDF Extraction with Auto-Detection
 - [`detect_pdf_content_type()`](https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.md)
   : Detect PDF Content Type
-- [`detect_pdf_content_type_py()`](https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type_py.md)
-  : Detect PDF Content Type using Python
 
 ## AI Integration
 
@@ -302,8 +292,6 @@ Python environment setup
 
 Quality metrics and cross-validation
 
-- [`cross_analysis_validation()`](https://mshin77.github.io/TextAnalysisR/reference/cross_analysis_validation.md)
-  : Cross Analysis Validation
 - [`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md)
   : Cross-Analysis Validation
 - [`validate_semantic_coherence()`](https://mshin77.github.io/TextAnalysisR/reference/validate_semantic_coherence.md)

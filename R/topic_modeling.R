@@ -207,15 +207,16 @@ get_topic_terms <- function(stm_model,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Fit STM model
-#' topic_model <- stm::stm(documents, vocab, K = 10)
-#'
-#' # Get topic prevalence
-#' prevalence <- get_topic_prevalence(topic_model)
-#'
-#' # With category label
-#' prevalence_sld <- get_topic_prevalence(topic_model, category = "SLD")
+#' if (interactive() && requireNamespace("stm", quietly = TRUE)) {
+#'   # Requires fitting an STM model first; uses 'stm::gadarian' for demo
+#'   data("gadarian", package = "stm")
+#'   proc <- stm::textProcessor(gadarian$open.ended.response, metadata = gadarian)
+#'   prep <- stm::prepDocuments(proc$documents, proc$vocab, proc$meta)
+#'   topic_model <- stm::stm(prep$documents, prep$vocab, K = 3,
+#'                            data = prep$meta, max.em.its = 5,
+#'                            verbose = FALSE)
+#'   prevalence <- get_topic_prevalence(topic_model)
+#'   prevalence_label <- get_topic_prevalence(topic_model, category = "demo")
 #' }
 get_topic_prevalence <- function(stm_model,
                                   category = NULL,
@@ -266,16 +267,15 @@ get_topic_prevalence <- function(stm_model,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Get topic terms from STM model
-#' top_terms <- TextAnalysisR::get_topic_terms(stm_model, top_term_n = 10)
-#'
-#' # Convert to text strings for embedding
-#' topic_texts <- get_topic_texts(top_terms)
-#'
-#' # Generate embeddings
-#' topic_embeddings <- TextAnalysisR::generate_embeddings(topic_texts)
-#' }
+#' # Topic-term frame as produced by get_topic_terms()
+#' top_terms <- data.frame(
+#'   topic = c(1, 1, 1, 2, 2, 2),
+#'   term  = c("calculator", "arithmetic", "elementary",
+#'             "computer", "instruction", "multiplication"),
+#'   prob  = c(0.10, 0.08, 0.07, 0.12, 0.09, 0.06)
+#' )
+#' get_topic_texts(top_terms)
+#' get_topic_texts(top_terms, weight_var = "prob", top_n = 2)
 get_topic_texts <- function(top_terms_df,
                              topic_var = "topic",
                              term_var = "term",
@@ -400,7 +400,7 @@ extract_topic_terms_df <- function(model, n = 7) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' top_topic_terms <- get_topic_terms(stm_model, top_term_n = 10)
 #'
 #' # Auto-detect provider (tries Ollama -> OpenAI -> Gemini)
@@ -649,6 +649,7 @@ calculate_topic_probability <- function(stm_model,
 #'
 #' @return List containing neural topic model and diagnostics
 #' @family topic-modeling
+#' @keywords internal
 #' @export
 run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
                                            hidden_units = 100, dropout_rate = 0.2,
@@ -2105,7 +2106,7 @@ combine_keywords_weighted <- function(stm_words, stm_probs = NULL,
 #' @family topic-modeling
 #' @export
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #'   texts <- c("Machine learning for image recognition",
 #'              "Deep learning neural networks",
 #'              "Natural language processing models",
@@ -2262,7 +2263,7 @@ auto_tune_embedding_topics <- function(
 #' @description
 #' Evaluates the stability of embedding-based topic modeling by running multiple models
 #' with different random seeds and comparing their results. High stability (high ARI,
-#' consistent keywords) indicates robust topic structure in the data.
+#' consistent keywords) indicates stable topic structure in the data.
 #'
 #' @param texts Character vector of documents to analyze.
 #' @param n_runs Number of model runs with different seeds (default: 5).
@@ -2288,7 +2289,7 @@ auto_tune_embedding_topics <- function(
 #' @family topic-modeling
 #' @export
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #'   texts <- c("Machine learning for image recognition",
 #'              "Deep learning neural networks",
 #'              "Natural language processing models")
@@ -2492,7 +2493,7 @@ assess_embedding_stability <- function(
 #' @return A list containing:
 #'   - stm_result: The STM model output (use this for effect estimation)
 #'   - embedding_result: The embedding-based topic model output
-#'   - alignment: Comprehensive alignment metrics including cosine similarity,
+#'   - alignment: Alignment metrics including cosine similarity,
 #'       assignment agreement, correlation, and Adjusted Rand Index
 #'   - quality_metrics: Quality metrics including coherence, exclusivity,
 #'       silhouette scores, and combined quality score
@@ -2506,7 +2507,7 @@ assess_embedding_stability <- function(
 #' @family topic-modeling
 #' @export
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #'   texts <- c("Computer-assisted instruction improves math skills for students with disabilities",
 #'              "Assistive technology supports reading comprehension for learning disabled students",
 #'              "Mobile devices enhance communication for students with autism spectrum disorder")
@@ -2783,7 +2784,7 @@ fit_hybrid_model <- function(texts,
   if (verbose) message("\nHybrid topic modeling completed in ", round(elapsed_time, 1), " seconds")
 
   # ============================================================================
-  # Return comprehensive results
+  # Return results
   # ============================================================================
   result <- list(
     stm_result = list(
@@ -2818,7 +2819,7 @@ fit_hybrid_model <- function(texts,
 #'
 #' @description
 #' Evaluates the stability of a hybrid topic model by running bootstrap resampling.
-#' This helps identify which topics are robust and which may be artifacts of the
+#' This helps identify which topics are stable and which may be artifacts of the
 #' specific sample. Based on research recommendations for topic model validation.
 #'
 #' @param texts A character vector of texts to analyze.
@@ -2839,7 +2840,7 @@ fit_hybrid_model <- function(texts,
 #' @family topic-modeling
 #' @export
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #'   stability <- assess_hybrid_stability(
 #'     texts = my_texts,
 #'     n_topics = 10,
@@ -4434,7 +4435,7 @@ Guidelines:
 1. Write in third person, academic style
 2. Describe what the theme encompasses
 3. Use language like 'This theme captures...', 'Participants discussed...'
-4. Be concise but comprehensive
+4. Be concise but complete
 5. Avoid interpretation - focus on description
 
 Return ONLY the theme description, without numbering, quotes, or explanations.",
@@ -4589,7 +4590,7 @@ Content:"
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' # Generate survey items
 #' survey_items <- generate_topic_content(
 #'   topic_terms_df = top_terms,

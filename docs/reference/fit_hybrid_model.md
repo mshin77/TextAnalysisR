@@ -22,8 +22,13 @@ fit_hybrid_model(
   embedding_model = "all-MiniLM-L6-v2",
   stm_prevalence = NULL,
   stm_init_type = "Spectral",
+  stm_gamma_prior = "Pooled",
+  stm_kappa_prior = "L1",
+  stm_max_em_its = 75,
   compute_quality = TRUE,
   stm_weight = 0.5,
+  n_embedding_dims = 5,
+  precomputed_embeddings = NULL,
   verbose = TRUE,
   seed = 123
 )
@@ -56,6 +61,20 @@ fit_hybrid_model(
 
   STM initialization type (default: "Spectral").
 
+- stm_gamma_prior:
+
+  Prior for STM topic-covariate coefficients, passed to
+  `stm::stm(gamma.prior = ...)` (default: "Pooled").
+
+- stm_kappa_prior:
+
+  Prior for STM topic-word distributions, passed to
+  `stm::stm(kappa.prior = ...)` (default: "L1").
+
+- stm_max_em_its:
+
+  Maximum EM iterations for STM (default: 75).
+
 - compute_quality:
 
   Logical, if TRUE, computes quality metrics (default: TRUE).
@@ -63,6 +82,16 @@ fit_hybrid_model(
 - stm_weight:
 
   Weight for STM in keyword combination, 0-1 (default: 0.5).
+
+- n_embedding_dims:
+
+  UMAP output dimensions for the embedding pipeline, forwarded to
+  `fit_embedding_model(umap_n_components = ...)` (default: 5).
+
+- precomputed_embeddings:
+
+  Optional numeric matrix of precomputed document embeddings (one row
+  per text). If provided, skips embedding generation.
 
 - verbose:
 
@@ -80,8 +109,8 @@ A list containing:
 
 - embedding_result: The embedding-based topic model output
 
-- alignment: Comprehensive alignment metrics including cosine
-  similarity, assignment agreement, correlation, and Adjusted Rand Index
+- alignment: Alignment metrics including cosine similarity, assignment
+  agreement, correlation, and Adjusted Rand Index
 
 - quality_metrics: Quality metrics including coherence, exclusivity,
   silhouette scores, and combined quality score
@@ -137,7 +166,7 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
   texts <- c("Computer-assisted instruction improves math skills for students with disabilities",
              "Assistive technology supports reading comprehension for learning disabled students",
              "Mobile devices enhance communication for students with autism spectrum disorder")
@@ -159,5 +188,5 @@ if (FALSE) { # \dontrun{
 
   # View combined keywords with source attribution
   hybrid_model$combined_topics[[1]]$combined_keywords
-} # }
+}
 ```

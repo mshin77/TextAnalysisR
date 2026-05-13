@@ -76,14 +76,15 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Fit STM model
-topic_model <- stm::stm(documents, vocab, K = 10)
-
-# Get topic prevalence
-prevalence <- get_topic_prevalence(topic_model)
-
-# With category label
-prevalence_sld <- get_topic_prevalence(topic_model, category = "SLD")
-} # }
+if (interactive() && requireNamespace("stm", quietly = TRUE)) {
+  # Requires fitting an STM model first; uses 'stm::gadarian' for demo
+  data("gadarian", package = "stm")
+  proc <- stm::textProcessor(gadarian$open.ended.response, metadata = gadarian)
+  prep <- stm::prepDocuments(proc$documents, proc$vocab, proc$meta)
+  topic_model <- stm::stm(prep$documents, prep$vocab, K = 3,
+                           data = prep$meta, max.em.its = 5,
+                           verbose = FALSE)
+  prevalence <- get_topic_prevalence(topic_model)
+  prevalence_label <- get_topic_prevalence(topic_model, category = "demo")
+}
 ```

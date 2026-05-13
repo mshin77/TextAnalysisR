@@ -42,9 +42,11 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 pdf_path <- "path/to/document.pdf"
 text_data <- extract_text_from_pdf(pdf_path)
+#> Warning: Error extracting text from PDF: path[1]="path/to/document.pdf": The system cannot find the path specified
 head(text_data)
-} # }
+#> NULL
+# }
 ```

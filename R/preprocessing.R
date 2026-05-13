@@ -25,13 +25,12 @@ NULL
 #' 4. dfm_init - Initial unprocessed tokens
 #'
 #' @family preprocessing
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
 #' result <- get_available_dfm(dfm_init = dfm1)
-#' }
 get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = NULL, dfm_init = NULL) {
   if (!is.null(dfm_lemma)) {
     return(dfm_lemma)
@@ -73,15 +72,12 @@ get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = 
 #' 4. united_tbl - Raw text (will be tokenized if used)
 #'
 #' @family preprocessing
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' tokens <- get_available_tokens(
-#'   final_tokens = my_final_tokens,
-#'   processed_tokens = my_processed_tokens
-#' )
-#' }
+#' toks <- quanteda::tokens("assistive technology supports learning")
+#' result <- get_available_tokens(processed_tokens = toks)
 get_available_tokens <- function(final_tokens = NULL,
                                   processed_tokens = NULL,
                                   preprocessed_tokens = NULL,
@@ -250,19 +246,16 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
   n_pages <- pdftools::pdf_info(file_path)$pages
   if (n_pages == 0) return(list())
 
-  pages <- vector("list", n_pages)
-  for (i in seq_len(n_pages)) {
+  pages <- lapply(seq_len(n_pages), function(i) {
     tryCatch({
       tmp <- tempfile(fileext = ".png")
       pdftools::pdf_convert(file_path, format = "png", pages = i,
                             dpi = dpi, filenames = tmp, verbose = FALSE)
       raw_bytes <- readBin(tmp, "raw", file.info(tmp)$size)
       unlink(tmp)
-      pages[[i]] <- jsonlite::base64_enc(raw_bytes)
-    }, error = function(e) {
-      pages[[i]] <<- NULL
-    })
-  }
+      jsonlite::base64_enc(raw_bytes)
+    }, error = function(e) NULL)
+  })
   Filter(Negate(is.null), pages)
 }
 
@@ -532,6 +525,7 @@ unite_cols <- function(df, listed_vars) {
 #' @param stopwords_language Character; language for stopwords (default: "en").
 #' @param custom_stopwords Character vector; additional words to remove (default: NULL).
 #' @param custom_valuetype Character; valuetype for custom_stopwords pattern matching, one of "glob", "regex", or "fixed" (default: "glob").
+#' @param math_mode Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE} and \code{min_char} to 1 (so single-character tokens such as \code{+ - = x 3} survive), then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. Use for math or STEM corpora where operators and numerals carry meaning (default: FALSE).
 #' @param verbose Logical; print verbose output (default: FALSE).
 #' @param ... Additional arguments passed to \code{quanteda::tokens}.
 #'
@@ -587,8 +581,16 @@ prep_texts <- function(united_tbl,
                              stopwords_language = "en",
                              custom_stopwords = NULL,
                              custom_valuetype = "glob",
+                             math_mode = FALSE,
                              verbose = FALSE,
                              ...) {
+
+  if (math_mode) {
+    remove_punct   <- FALSE
+    remove_symbols <- FALSE
+    remove_numbers <- FALSE
+    min_char       <- 1L
+  }
 
   start_time <- Sys.time()
 
@@ -636,6 +638,15 @@ prep_texts <- function(united_tbl,
                                         valuetype = custom_valuetype, verbose = FALSE)
     }
 
+    if (math_mode) {
+      if (verbose) message("Math mode: stripping sentence-end punctuation (keeping math operators)...")
+      sentence_punct <- c(".", ",", "?", "!", ":", ";", "(", ")", "[", "]",
+                          "{", "}", "\"", "'", "`", "''", "``", "...",
+                          "\u2014", "\u2013")
+      tokens <- quanteda::tokens_remove(tokens, pattern = sentence_punct,
+                                        valuetype = "fixed", verbose = FALSE)
+    }
+
     processing_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
     if (verbose) {
@@ -674,7 +685,7 @@ prep_texts <- function(united_tbl,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' tokens <- quanteda::tokens(c("The studies showed better results"))
 #' lemmatized <- lemmatize_tokens(tokens, batch_size = 50)
 #' }
@@ -761,7 +772,7 @@ lemmatize_tokens <- function(tokens,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' pdf_path <- "path/to/document.pdf"
 #' text_data <- extract_text_from_pdf(pdf_path)
 #' head(text_data)
@@ -828,7 +839,7 @@ extract_text_from_pdf <- function(file_path) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' pdf_path <- "path/to/document.pdf"
 #' content_type <- detect_pdf_content_type(pdf_path)
 #' print(content_type)
@@ -877,7 +888,7 @@ detect_pdf_content_type <- function(file_path) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' pdf_path <- "path/to/document.pdf"
 #' result <- process_pdf_file(pdf_path)
 #'
@@ -936,10 +947,11 @@ process_pdf_file <- function(file_path, content_type = "auto") {
 #' Requires Python environment setup. See \code{setup_python_env()}.
 #'
 #' @family pdf
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' setup_python_env()
 #'
 #' pdf_path <- "path/to/document.pdf"
@@ -1007,10 +1019,11 @@ extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
 #' Works with complex table layouts without Java dependency.
 #'
 #' @family pdf
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' setup_python_env()
 #'
 #' pdf_path <- "path/to/table_document.pdf"
@@ -1076,10 +1089,11 @@ extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "texta
 #' @return Character string: "tabular", "text", or "unknown"
 #'
 #' @family pdf
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' setup_python_env()
 #'
 #' pdf_path <- "path/to/document.pdf"
@@ -1141,10 +1155,11 @@ detect_pdf_content_type_py <- function(file_path, envname = "textanalysisr-env")
 #' - Uses TextAnalysisR Python environment
 #'
 #' @family pdf
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' setup_python_env()
 #'
 #' pdf_path <- "path/to/document.pdf"
@@ -1365,7 +1380,7 @@ check_multimodal_prerequisites <- function(
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' result <- extract_pdf_multimodal("research_paper.pdf")
 #' text_for_analysis <- result$combined_text
 #'
@@ -1486,7 +1501,7 @@ extract_pdf_multimodal <- function(
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' result <- extract_pdf_smart("document.pdf")
 #' corpus <- prep_texts(result$combined_text)
 #' }
@@ -1523,10 +1538,11 @@ extract_pdf_smart <- function(
 #' @return List with availability status and recommendations
 #'
 #' @family pdf
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' status <- check_vision_models("ollama")
 #' status <- check_vision_models("gemini", api_key = Sys.getenv("GEMINI_API_KEY"))
 #' }

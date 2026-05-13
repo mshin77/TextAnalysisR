@@ -153,7 +153,7 @@ Enable per-category networks in the Shiny app to generate separate networks for 
 <details>
 <summary><strong>Network Statistics (9 Metrics)</strong></summary>
 
-Each network returns comprehensive statistics:
+Each network returns statistics:
 
 | Metric | Description |
 |--------|-------------|
@@ -186,19 +186,6 @@ Community detection identifies clusters of semantically related nodes.
 **Learn More:** [igraph Community Detection](https://igraph.org/r/doc/communities.html)
 
 </details>
-
----
-
-## Temporal Analysis
-
-Track themes over time:
-
-```{r}
-temporal <- temporal_semantic_analysis(
-  texts = united_tbl$united_texts,
-  dates = united_tbl$year
-)
-```
 
 ---
 

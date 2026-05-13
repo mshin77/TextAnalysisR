@@ -69,9 +69,10 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-morph_data <- extract_morphology(tokens)
-summary_df <- summarize_morphology(morph_data)
-print(summary_df)
-} # }
+if (interactive()) {
+  tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+  morphology_data <- extract_morphology(tokens)
+  summary_table <- summarize_morphology(morphology_data)
+  print(summary_table)
+}
 ```

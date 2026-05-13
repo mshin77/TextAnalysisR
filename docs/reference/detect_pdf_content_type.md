@@ -42,9 +42,10 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 pdf_path <- "path/to/document.pdf"
 content_type <- detect_pdf_content_type(pdf_path)
 print(content_type)
-} # }
+#> [1] "unknown"
+# }
 ```

@@ -17,7 +17,8 @@ Cleans a similarity matrix by handling NA/Inf values,
 ensuring symmetry, and setting diagonal to 1.
 }
 \seealso{
-Other matrix-utilities: 
-\code{\link{renumber_clusters_sequentially}()}
+Other matrix-utilities:
+\code{\link[=renumber_clusters_sequentially]{renumber_clusters_sequentially()}}
 }
 \concept{matrix-utilities}
+\keyword{internal}

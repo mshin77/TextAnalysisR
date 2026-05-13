@@ -85,9 +85,8 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-library(quanteda)
-toks <- tokens(c("The cat sat on the mat", "The dog ran in the park"))
-dispersion <- calculate_lexical_dispersion(toks, c("the", "cat", "dog"))
-} # }
+# \donttest{
+tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1:5])
+dispersion <- calculate_lexical_dispersion(tokens, c("learning", "instruction"))
+# }
 ```

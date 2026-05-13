@@ -58,7 +58,7 @@ Simple RAG workflow:
 }
 }
 \examples{
-\dontrun{
+if (interactive()) {
 documents <- c(
   "Assistive technology helps students with disabilities access curriculum.",
   "Universal Design for Learning provides multiple means of engagement.",
@@ -86,19 +86,19 @@ if (result$success) {
 }
 }
 \seealso{
-Other ai: 
-\code{\link{call_gemini_chat}()},
-\code{\link{call_llm_api}()},
-\code{\link{call_ollama}()},
-\code{\link{call_openai_chat}()},
-\code{\link{check_ollama}()},
-\code{\link{describe_image}()},
-\code{\link{generate_topic_content}()},
-\code{\link{get_api_embeddings}()},
-\code{\link{get_best_embeddings}()},
-\code{\link{get_content_type_prompt}()},
-\code{\link{get_content_type_user_template}()},
-\code{\link{get_recommended_ollama_model}()},
-\code{\link{list_ollama_models}()}
+Other ai:
+\code{\link[=call_gemini_chat]{call_gemini_chat()}},
+\code{\link[=call_llm_api]{call_llm_api()}},
+\code{\link[=call_ollama]{call_ollama()}},
+\code{\link[=call_openai_chat]{call_openai_chat()}},
+\code{\link[=check_ollama]{check_ollama()}},
+\code{\link[=describe_image]{describe_image()}},
+\code{\link[=generate_topic_content]{generate_topic_content()}},
+\code{\link[=get_api_embeddings]{get_api_embeddings()}},
+\code{\link[=get_best_embeddings]{get_best_embeddings()}},
+\code{\link[=get_content_type_prompt]{get_content_type_prompt()}},
+\code{\link[=get_content_type_user_template]{get_content_type_user_template()}},
+\code{\link[=get_recommended_ollama_model]{get_recommended_ollama_model()}},
+\code{\link[=list_ollama_models]{list_ollama_models()}}
 }
 \concept{ai}

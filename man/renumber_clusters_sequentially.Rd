@@ -17,7 +17,8 @@ Renumbers cluster assignments to sequential integers
 starting from 1.
 }
 \seealso{
-Other matrix-utilities: 
-\code{\link{clean_similarity_matrix}()}
+Other matrix-utilities:
+\code{\link[=clean_similarity_matrix]{clean_similarity_matrix()}}
 }
 \concept{matrix-utilities}
+\keyword{internal}

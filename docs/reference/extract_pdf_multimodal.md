@@ -94,7 +94,7 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 result <- extract_pdf_multimodal("research_paper.pdf")
 text_for_analysis <- result$combined_text
 
@@ -103,5 +103,5 @@ result <- extract_pdf_multimodal(
   vision_provider = "gemini",
   api_key = Sys.getenv("GEMINI_API_KEY")
 )
-} # }
+}
 ```

@@ -35,7 +35,7 @@ Creates a faceted line plot showing how term frequencies vary across
 a continuous variable (e.g., year, time period).
 }
 \examples{
-\dontrun{
+\donttest{
 term_df <- data.frame(
   year = rep(2010:2020, each = 3),
   term = rep(c("learning", "education", "technology"), 11),
@@ -45,21 +45,21 @@ plot_term_trends_continuous(term_df, "year", c("learning", "education"))
 }
 }
 \seealso{
-Other visualization: 
-\code{\link{create_standard_ggplot_theme}()},
-\code{\link{get_sentiment_color}()},
-\code{\link{get_sentiment_colors}()},
-\code{\link{plot_cluster_terms}()},
-\code{\link{plot_cross_category_heatmap}()},
-\code{\link{plot_entity_frequencies}()},
-\code{\link{plot_lexical_dispersion}()},
-\code{\link{plot_log_odds_ratio}()},
-\code{\link{plot_mwe_frequency}()},
-\code{\link{plot_ngram_frequency}()},
-\code{\link{plot_pos_frequencies}()},
-\code{\link{plot_semantic_viz}()},
-\code{\link{plot_similarity_heatmap}()},
-\code{\link{plot_weighted_log_odds}()},
-\code{\link{plot_word_frequency}()}
+Other visualization:
+\code{\link[=create_standard_ggplot_theme]{create_standard_ggplot_theme()}},
+\code{\link[=get_sentiment_color]{get_sentiment_color()}},
+\code{\link[=get_sentiment_colors]{get_sentiment_colors()}},
+\code{\link[=plot_cluster_terms]{plot_cluster_terms()}},
+\code{\link[=plot_cross_category_heatmap]{plot_cross_category_heatmap()}},
+\code{\link[=plot_entity_frequencies]{plot_entity_frequencies()}},
+\code{\link[=plot_lexical_dispersion]{plot_lexical_dispersion()}},
+\code{\link[=plot_log_odds_ratio]{plot_log_odds_ratio()}},
+\code{\link[=plot_mwe_frequency]{plot_mwe_frequency()}},
+\code{\link[=plot_ngram_frequency]{plot_ngram_frequency()}},
+\code{\link[=plot_pos_frequencies]{plot_pos_frequencies()}},
+\code{\link[=plot_semantic_viz]{plot_semantic_viz()}},
+\code{\link[=plot_similarity_heatmap]{plot_similarity_heatmap()}},
+\code{\link[=plot_weighted_log_odds]{plot_weighted_log_odds()}},
+\code{\link[=plot_word_frequency]{plot_word_frequency()}}
 }
 \concept{visualization}

@@ -251,7 +251,6 @@ first.
 
 | Function | Purpose |
 |----|----|
-| [`cross_analysis_validation()`](https://mshin77.github.io/TextAnalysisR/reference/cross_analysis_validation.md) | Cross-validate analysis |
 | [`validate_semantic_coherence()`](https://mshin77.github.io/TextAnalysisR/reference/validate_semantic_coherence.md) | Check semantic coherence |
 | [`calculate_clustering_metrics()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_clustering_metrics.md) | Clustering quality metrics |
 

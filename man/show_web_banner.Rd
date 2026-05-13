@@ -6,6 +6,15 @@
 \usage{
 show_web_banner(disabled = NULL)
 }
+\arguments{
+\item{disabled}{Optional character vector naming features to mark as
+disabled in the banner; \code{NULL} (default) shows the standard set.}
+}
+\value{
+A \code{shiny.tag} object containing the banner HTML for
+inclusion in a Shiny UI, or \code{NULL} when not running in a web
+deployment context.
+}
 \description{
 Show Web Deployment Banner
 }

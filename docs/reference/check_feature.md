@@ -14,7 +14,7 @@ check_feature(feature)
 - feature:
 
   Character: "python", "ollama", "pdf_tables", "embeddings",
-  "sentiment_deep"
+  "sentiment_transformer"
 
 ## Value
 

@@ -41,7 +41,6 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 library(ggplot2)
 data(SpecialEduTech, package = "TextAnalysisR")
 # Create a simple plot using text lengths
@@ -52,5 +51,6 @@ df <- data.frame(
 ggplot(df, aes(title_length, abstract_length)) +
   geom_point() +
   create_standard_ggplot_theme()
-} # }
+#> Warning: Removed 2 rows containing missing values or values outside the scale range
+#> (`geom_point()`).
 ```

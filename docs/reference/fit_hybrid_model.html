@@ -21,7 +21,7 @@ modeling."><meta property="og:image" content="https://mshin77.github.io/TextAnal
 
     <a class="navbar-brand me-2" href="../index.html">TextAnalysisR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,8 +82,13 @@ modeling.</p>
 <span>  embedding_model <span class="op">=</span> <span class="st">"all-MiniLM-L6-v2"</span>,</span>
 <span>  stm_prevalence <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stm_init_type <span class="op">=</span> <span class="st">"Spectral"</span>,</span>
+<span>  stm_gamma_prior <span class="op">=</span> <span class="st">"Pooled"</span>,</span>
+<span>  stm_kappa_prior <span class="op">=</span> <span class="st">"L1"</span>,</span>
+<span>  stm_max_em_its <span class="op">=</span> <span class="fl">75</span>,</span>
 <span>  compute_quality <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  stm_weight <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  n_embedding_dims <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  precomputed_embeddings <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">123</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -117,12 +122,32 @@ modeling.</p>
 <dd><p>STM initialization type (default: "Spectral").</p></dd>
 
 
+<dt id="arg-stm-gamma-prior">stm_gamma_prior<a class="anchor" aria-label="anchor" href="#arg-stm-gamma-prior"></a></dt>
+<dd><p>Prior for STM topic-covariate coefficients, passed to <code>stm::stm(gamma.prior = ...)</code> (default: "Pooled").</p></dd>
+
+
+<dt id="arg-stm-kappa-prior">stm_kappa_prior<a class="anchor" aria-label="anchor" href="#arg-stm-kappa-prior"></a></dt>
+<dd><p>Prior for STM topic-word distributions, passed to <code>stm::stm(kappa.prior = ...)</code> (default: "L1").</p></dd>
+
+
+<dt id="arg-stm-max-em-its">stm_max_em_its<a class="anchor" aria-label="anchor" href="#arg-stm-max-em-its"></a></dt>
+<dd><p>Maximum EM iterations for STM (default: 75).</p></dd>
+
+
 <dt id="arg-compute-quality">compute_quality<a class="anchor" aria-label="anchor" href="#arg-compute-quality"></a></dt>
 <dd><p>Logical, if TRUE, computes quality metrics (default: TRUE).</p></dd>
 
 
 <dt id="arg-stm-weight">stm_weight<a class="anchor" aria-label="anchor" href="#arg-stm-weight"></a></dt>
 <dd><p>Weight for STM in keyword combination, 0-1 (default: 0.5).</p></dd>
+
+
+<dt id="arg-n-embedding-dims">n_embedding_dims<a class="anchor" aria-label="anchor" href="#arg-n-embedding-dims"></a></dt>
+<dd><p>UMAP output dimensions for the embedding pipeline, forwarded to <code>fit_embedding_model(umap_n_components = ...)</code> (default: 5).</p></dd>
+
+
+<dt id="arg-precomputed-embeddings">precomputed_embeddings<a class="anchor" aria-label="anchor" href="#arg-precomputed-embeddings"></a></dt>
+<dd><p>Optional numeric matrix of precomputed document embeddings (one row per text). If provided, skips embedding generation.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -137,7 +162,7 @@ modeling.</p>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list containing:</p><ul><li><p>stm_result: The STM model output (use this for effect estimation)</p></li>
 <li><p>embedding_result: The embedding-based topic model output</p></li>
-<li><p>alignment: Comprehensive alignment metrics including cosine similarity,
+<li><p>alignment: Alignment metrics including cosine similarity,
 assignment agreement, correlation, and Adjusted Rand Index</p></li>
 <li><p>quality_metrics: Quality metrics including coherence, exclusivity,
 silhouette scores, and combined quality score</p></li>
@@ -187,7 +212,7 @@ silhouette scores, and combined quality score</p></li>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">texts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Computer-assisted instruction improves math skills for students with disabilities"</span>,</span></span>
 <span class="r-in"><span>             <span class="st">"Assistive technology supports reading comprehension for learning disabled students"</span>,</span></span>
 <span class="r-in"><span>             <span class="st">"Mobile devices enhance communication for students with autism spectrum disorder"</span><span class="op">)</span></span></span>
@@ -209,7 +234,7 @@ silhouette scores, and combined quality score</p></li>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co"># View combined keywords with source attribution</span></span></span>
 <span class="r-in"><span>  <span class="va">hybrid_model</span><span class="op">$</span><span class="va">combined_topics</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">combined_keywords</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

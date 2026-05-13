@@ -46,7 +46,7 @@ The virtual environment approach means:
 After setup, restart R session to activate enhanced features.
 }
 \examples{
-\dontrun{
+if (interactive()) {
 # First time setup (auto-detects Python)
 setup_python_env()
 

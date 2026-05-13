@@ -41,6 +41,7 @@ prep_texts(
   stopwords_language = "en",
   custom_stopwords = NULL,
   custom_valuetype = "glob",
+  math_mode = FALSE,
   verbose = FALSE,
   ...
 )
@@ -128,6 +129,17 @@ prep_texts(
 
   Character; valuetype for custom_stopwords pattern matching, one of
   "glob", "regex", or "fixed" (default: "glob").
+
+- math_mode:
+
+  Logical; if `TRUE`, preserve math content (numbers, operators,
+  symbols) by forcing `remove_punct`, `remove_symbols`, and
+  `remove_numbers` all to `FALSE` and `min_char` to 1 (so
+  single-character tokens such as `+ - = x 3` survive), then strip only
+  sentence-end punctuation such as periods, commas, question marks,
+  exclamation marks, colons, semicolons, parentheses, brackets, braces,
+  quotation marks, em dashes, and en dashes. Use for math or STEM
+  corpora where operators and numerals carry meaning (default: FALSE).
 
 - verbose:
 

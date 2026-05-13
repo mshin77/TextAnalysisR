@@ -27,23 +27,22 @@ Performs sentiment analysis on text data using the syuzhet package.
 Returns sentiment scores and classifications.
 }
 \examples{
-\dontrun{
-data(SpecialEduTech)
-texts <- SpecialEduTech$abstract[1:10]
-results <- analyze_sentiment(texts)
-print(results)
+\donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+sentiment_results <- analyze_sentiment(abstracts)
+print(sentiment_results)
 }
 }
 \seealso{
-Other sentiment: 
-\code{\link{analyze_sentiment_llm}()},
-\code{\link{plot_document_sentiment_trajectory}()},
-\code{\link{plot_emotion_radar}()},
-\code{\link{plot_sentiment_boxplot}()},
-\code{\link{plot_sentiment_by_category}()},
-\code{\link{plot_sentiment_distribution}()},
-\code{\link{plot_sentiment_violin}()},
-\code{\link{sentiment_embedding_analysis}()},
-\code{\link{sentiment_lexicon_analysis}()}
+Other sentiment:
+\code{\link[=analyze_sentiment_llm]{analyze_sentiment_llm()}},
+\code{\link[=plot_document_sentiment_trajectory]{plot_document_sentiment_trajectory()}},
+\code{\link[=plot_emotion_radar]{plot_emotion_radar()}},
+\code{\link[=plot_sentiment_boxplot]{plot_sentiment_boxplot()}},
+\code{\link[=plot_sentiment_by_category]{plot_sentiment_by_category()}},
+\code{\link[=plot_sentiment_distribution]{plot_sentiment_distribution()}},
+\code{\link[=plot_sentiment_violin]{plot_sentiment_violin()}},
+\code{\link[=sentiment_embedding_analysis]{sentiment_embedding_analysis()}},
+\code{\link[=sentiment_lexicon_analysis]{sentiment_lexicon_analysis()}}
 }
 \concept{sentiment}

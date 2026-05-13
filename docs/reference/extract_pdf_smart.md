@@ -63,8 +63,8 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 result <- extract_pdf_smart("document.pdf")
 corpus <- prep_texts(result$combined_text)
-} # }
+}
 ```

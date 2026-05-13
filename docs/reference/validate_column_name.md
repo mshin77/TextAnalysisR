@@ -29,8 +29,8 @@ SI-10 input validation.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 validate_column_name("age")
+#> [1] TRUE
 validate_column_name("my_variable")
-} # }
+#> [1] TRUE
 ```

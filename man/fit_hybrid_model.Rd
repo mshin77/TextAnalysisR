@@ -58,7 +58,7 @@ A list containing:
 \itemize{
 \item stm_result: The STM model output (use this for effect estimation)
 \item embedding_result: The embedding-based topic model output
-\item alignment: Comprehensive alignment metrics including cosine similarity,
+\item alignment: Alignment metrics including cosine similarity,
 assignment agreement, correlation, and Adjusted Rand Index
 \item quality_metrics: Quality metrics including coherence, exclusivity,
 silhouette scores, and combined quality score
@@ -83,7 +83,7 @@ For covariate effect estimation, use \code{stm::estimateEffect()} on the
 \code{stm_result$model} component with \code{stm_data$meta} as the metadata.
 }
 \examples{
-\dontrun{
+if (interactive()) {
   texts <- c("Computer-assisted instruction improves math skills for students with disabilities",
              "Assistive technology supports reading comprehension for learning disabled students",
              "Mobile devices enhance communication for students with autism spectrum disorder")
@@ -108,36 +108,36 @@ For covariate effect estimation, use \code{stm::estimateEffect()} on the
 }
 }
 \seealso{
-Other topic-modeling: 
-\code{\link{analyze_semantic_evolution}()},
-\code{\link{assess_embedding_stability}()},
-\code{\link{assess_hybrid_stability}()},
-\code{\link{auto_tune_embedding_topics}()},
-\code{\link{calculate_assignment_consistency}()},
-\code{\link{calculate_keyword_stability}()},
-\code{\link{calculate_npmi}()},
-\code{\link{calculate_semantic_drift}()},
-\code{\link{calculate_topic_diversity}()},
-\code{\link{calculate_topic_probability}()},
-\code{\link{calculate_topic_stability}()},
-\code{\link{extract_topic_terms_df}()},
-\code{\link{find_optimal_k}()},
-\code{\link{find_topic_matches}()},
-\code{\link{fit_embedding_model}()},
-\code{\link{fit_temporal_model}()},
-\code{\link{fit_topic_prevalence_model}()},
-\code{\link{generate_topic_labels}()},
-\code{\link{get_topic_prevalence}()},
-\code{\link{get_topic_terms}()},
-\code{\link{get_topic_texts}()},
-\code{\link{identify_topic_trends}()},
-\code{\link{plot_model_comparison}()},
-\code{\link{plot_quality_metrics}()},
-\code{\link{plot_topic_effects_categorical}()},
-\code{\link{plot_topic_effects_continuous}()},
-\code{\link{plot_topic_probability}()},
-\code{\link{plot_word_probability}()},
-\code{\link{run_neural_topics_internal}()},
-\code{\link{validate_semantic_coherence}()}
+Other topic-modeling:
+\code{\link[=analyze_semantic_evolution]{analyze_semantic_evolution()}},
+\code{\link[=assess_embedding_stability]{assess_embedding_stability()}},
+\code{\link[=assess_hybrid_stability]{assess_hybrid_stability()}},
+\code{\link[=auto_tune_embedding_topics]{auto_tune_embedding_topics()}},
+\code{\link[=calculate_assignment_consistency]{calculate_assignment_consistency()}},
+\code{\link[=calculate_keyword_stability]{calculate_keyword_stability()}},
+\code{\link[=calculate_npmi]{calculate_npmi()}},
+\code{\link[=calculate_semantic_drift]{calculate_semantic_drift()}},
+\code{\link[=calculate_topic_diversity]{calculate_topic_diversity()}},
+\code{\link[=calculate_topic_probability]{calculate_topic_probability()}},
+\code{\link[=calculate_topic_stability]{calculate_topic_stability()}},
+\code{\link[=extract_topic_terms_df]{extract_topic_terms_df()}},
+\code{\link[=find_optimal_k]{find_optimal_k()}},
+\code{\link[=find_topic_matches]{find_topic_matches()}},
+\code{\link[=fit_embedding_model]{fit_embedding_model()}},
+\code{\link[=fit_temporal_model]{fit_temporal_model()}},
+\code{\link[=fit_topic_prevalence_model]{fit_topic_prevalence_model()}},
+\code{\link[=generate_topic_labels]{generate_topic_labels()}},
+\code{\link[=get_topic_prevalence]{get_topic_prevalence()}},
+\code{\link[=get_topic_terms]{get_topic_terms()}},
+\code{\link[=get_topic_texts]{get_topic_texts()}},
+\code{\link[=identify_topic_trends]{identify_topic_trends()}},
+\code{\link[=plot_model_comparison]{plot_model_comparison()}},
+\code{\link[=plot_quality_metrics]{plot_quality_metrics()}},
+\code{\link[=plot_topic_effects_categorical]{plot_topic_effects_categorical()}},
+\code{\link[=plot_topic_effects_continuous]{plot_topic_effects_continuous()}},
+\code{\link[=plot_topic_probability]{plot_topic_probability()}},
+\code{\link[=plot_word_probability]{plot_word_probability()}},
+\code{\link[=run_neural_topics_internal]{run_neural_topics_internal()}},
+\code{\link[=validate_semantic_coherence]{validate_semantic_coherence()}}
 }
 \concept{topic-modeling}

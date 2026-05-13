@@ -63,7 +63,6 @@ Other semantic:
 [`calculate_document_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_document_similarity.md),
 [`calculate_similarity_robust()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_similarity_robust.md),
 [`cluster_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.md),
-[`cross_analysis_validation()`](https://mshin77.github.io/TextAnalysisR/reference/cross_analysis_validation.md),
 [`export_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/export_document_clustering.md),
 [`extract_cross_category_similarities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.md),
 [`fit_semantic_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.md),
@@ -73,7 +72,6 @@ Other semantic:
 [`reduce_dimensions()`](https://mshin77.github.io/TextAnalysisR/reference/reduce_dimensions.md),
 [`semantic_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_document_clustering.md),
 [`semantic_similarity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_similarity_analysis.md),
-[`temporal_semantic_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.md),
 [`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md),
 [`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md),
 [`word_correlation_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_correlation_network.md)
@@ -81,19 +79,19 @@ Other semantic:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-data(SpecialEduTech)
-# Generate embeddings for two groups
-emb1 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[1:3], verbose = FALSE)
-emb2 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[4:6], verbose = FALSE)
-
-# Calculate cross-similarity
-result <- calculate_cross_similarity(
-  emb1, emb2,
-  labels1 = SpecialEduTech$title[1:3],
-  labels2 = SpecialEduTech$title[4:6]
+# \donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:6]
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(abstracts)))
+similarity_result <- calculate_cross_similarity(
+  term_matrix[1:3, ], term_matrix[4:6, ],
+  labels1 = paste("Doc", 1:3),
+  labels2 = paste("Doc", 4:6)
 )
-print(result$similarity_matrix)
-print(result$similarity_df)
-} # }
+similarity_result$similarity_matrix
+#>        docs
+#> docs        text4     text5     text6
+#>   text1 0.3947055 0.4779596 0.6083902
+#>   text2 0.1842614 0.3396613 0.3482887
+#>   text3 0.1362998 0.2680007 0.2795068
+# }
 ```

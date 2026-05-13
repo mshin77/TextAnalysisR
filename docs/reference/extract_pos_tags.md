@@ -114,9 +114,9 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-tokens <- quanteda::tokens("The quick brown fox jumps over the lazy dog.")
-pos_data <- extract_pos_tags(tokens)
-print(pos_data)
-} # }
+if (interactive()) {
+  tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+  pos_data <- extract_pos_tags(tokens)
+  print(pos_data)
+}
 ```

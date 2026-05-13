@@ -55,8 +55,8 @@ Other preprocessing:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 tokens <- quanteda::tokens(c("The studies showed better results"))
 lemmatized <- lemmatize_tokens(tokens, batch_size = 50)
-} # }
+}
 ```

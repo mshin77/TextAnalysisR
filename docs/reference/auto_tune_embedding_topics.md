@@ -111,7 +111,7 @@ Other topic-modeling:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
   texts <- c("Machine learning for image recognition",
              "Deep learning neural networks",
              "Natural language processing models",
@@ -129,5 +129,5 @@ if (FALSE) { # \dontrun{
 
   # Use the best model
   best_model <- tuning_result$best_model
-} # }
+}
 ```

@@ -69,12 +69,13 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 term_df <- data.frame(
   year = rep(2010:2020, each = 3),
   term = rep(c("learning", "education", "technology"), 11),
   word_frequency = sample(10:100, 33, replace = TRUE)
 )
 plot_term_trends_continuous(term_df, "year", c("learning", "education"))
-} # }
+
+# }
 ```

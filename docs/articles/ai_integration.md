@@ -1,7 +1,7 @@
 # AI Integration
 
-TextAnalysisR provides comprehensive AI/NLP capabilities via local and
-web-based providers.
+TextAnalysisR provides AI and NLP features via local and web-based
+providers.
 
 ## Supported Providers
 

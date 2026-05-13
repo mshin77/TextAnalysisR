@@ -148,7 +148,7 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 # Generate survey items
 survey_items <- generate_topic_content(
   topic_terms_df = top_terms,
@@ -172,5 +172,5 @@ custom_content <- generate_topic_content(
   system_prompt = "You are an expert in educational policy...",
   user_prompt_template = "Based on {terms}, generate a learning objective:"
 )
-} # }
+}
 ```

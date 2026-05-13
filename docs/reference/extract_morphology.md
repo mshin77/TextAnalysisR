@@ -1,8 +1,7 @@
 # Extract Morphological Features
 
-Uses spaCy to extract comprehensive morphological features from text.
-Returns data with Number, Tense, VerbForm, Person, Case, Mood, Aspect,
-etc.
+Uses spaCy to extract morphological features from text. Returns data
+with Number, Tense, VerbForm, Person, Case, Mood, Aspect, etc.
 
 ## Usage
 
@@ -110,9 +109,9 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-tokens <- quanteda::tokens("The cats are running quickly.")
-morph_data <- extract_morphology(tokens)
-print(morph_data)
-} # }
+if (interactive()) {
+  tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+  morphology_data <- extract_morphology(tokens)
+  print(morphology_data)
+}
 ```

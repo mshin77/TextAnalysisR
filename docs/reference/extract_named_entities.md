@@ -97,9 +97,9 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-tokens <- quanteda::tokens("Apple Inc. was founded by Steve Jobs in California.")
-entity_data <- extract_named_entities(tokens)
-print(entity_data)
-} # }
+if (interactive()) {
+  tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1])
+  entity_data <- extract_named_entities(tokens)
+  print(entity_data)
+}
 ```

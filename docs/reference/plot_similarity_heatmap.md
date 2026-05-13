@@ -134,27 +134,31 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Simple usage with matrix only
-sim_matrix <- matrix(runif(25), nrow = 5)
-plot_similarity_heatmap(sim_matrix)
+# \donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:5, ]
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+similarity_matrix <- normalized_matrix %*% t(normalized_matrix)
+plot_similarity_heatmap(similarity_matrix)
 
-# With document metadata
-docs <- data.frame(
-  document_number = paste("Doc", 1:5),
-  document_id_display = c("Paper A", "Paper B", "Paper C", "Paper D", "Paper E"),
-  category_display = c("Science", "Science", "Tech", "Tech", "Health")
+
+document_metadata <- data.frame(
+  document_number     = paste("Doc", 1:5),
+  document_id_display = articles$title,
+  category_display    = articles$reference_type
 )
-plot_similarity_heatmap(sim_matrix, docs_data = docs, feature_type = "embeddings")
+plot_similarity_heatmap(similarity_matrix, docs_data = document_metadata,
+                        feature_type = "embeddings")
 
-# Cross-category comparison with faceting
+
 plot_similarity_heatmap(
-  sim_matrix,
-  docs_data = docs,
-  row_category = "Science",
-  col_categories = c("Tech", "Health"),
-  show_values = TRUE,
-  facet = TRUE
+  similarity_matrix,
+  docs_data      = document_metadata,
+  row_category   = "thesis",
+  col_categories = "journal_article",
+  show_values    = TRUE,
+  facet          = TRUE
 )
-} # }
+
+# }
 ```

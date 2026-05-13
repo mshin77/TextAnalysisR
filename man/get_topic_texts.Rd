@@ -37,48 +37,47 @@ embedding generation. Useful for creating topic representations for
 semantic similarity analysis.
 }
 \examples{
-\dontrun{
-# Get topic terms from STM model
-top_terms <- TextAnalysisR::get_topic_terms(stm_model, top_term_n = 10)
-
-# Convert to text strings for embedding
-topic_texts <- get_topic_texts(top_terms)
-
-# Generate embeddings
-topic_embeddings <- TextAnalysisR::generate_embeddings(topic_texts)
-}
+# Topic-term frame as produced by get_topic_terms()
+top_terms <- data.frame(
+  topic = c(1, 1, 1, 2, 2, 2),
+  term  = c("calculator", "arithmetic", "elementary",
+            "computer", "instruction", "multiplication"),
+  prob  = c(0.10, 0.08, 0.07, 0.12, 0.09, 0.06)
+)
+get_topic_texts(top_terms)
+get_topic_texts(top_terms, weight_var = "prob", top_n = 2)
 }
 \seealso{
-Other topic-modeling: 
-\code{\link{analyze_semantic_evolution}()},
-\code{\link{assess_embedding_stability}()},
-\code{\link{assess_hybrid_stability}()},
-\code{\link{auto_tune_embedding_topics}()},
-\code{\link{calculate_assignment_consistency}()},
-\code{\link{calculate_keyword_stability}()},
-\code{\link{calculate_npmi}()},
-\code{\link{calculate_semantic_drift}()},
-\code{\link{calculate_topic_diversity}()},
-\code{\link{calculate_topic_probability}()},
-\code{\link{calculate_topic_stability}()},
-\code{\link{extract_topic_terms_df}()},
-\code{\link{find_optimal_k}()},
-\code{\link{find_topic_matches}()},
-\code{\link{fit_embedding_model}()},
-\code{\link{fit_hybrid_model}()},
-\code{\link{fit_temporal_model}()},
-\code{\link{fit_topic_prevalence_model}()},
-\code{\link{generate_topic_labels}()},
-\code{\link{get_topic_prevalence}()},
-\code{\link{get_topic_terms}()},
-\code{\link{identify_topic_trends}()},
-\code{\link{plot_model_comparison}()},
-\code{\link{plot_quality_metrics}()},
-\code{\link{plot_topic_effects_categorical}()},
-\code{\link{plot_topic_effects_continuous}()},
-\code{\link{plot_topic_probability}()},
-\code{\link{plot_word_probability}()},
-\code{\link{run_neural_topics_internal}()},
-\code{\link{validate_semantic_coherence}()}
+Other topic-modeling:
+\code{\link[=analyze_semantic_evolution]{analyze_semantic_evolution()}},
+\code{\link[=assess_embedding_stability]{assess_embedding_stability()}},
+\code{\link[=assess_hybrid_stability]{assess_hybrid_stability()}},
+\code{\link[=auto_tune_embedding_topics]{auto_tune_embedding_topics()}},
+\code{\link[=calculate_assignment_consistency]{calculate_assignment_consistency()}},
+\code{\link[=calculate_keyword_stability]{calculate_keyword_stability()}},
+\code{\link[=calculate_npmi]{calculate_npmi()}},
+\code{\link[=calculate_semantic_drift]{calculate_semantic_drift()}},
+\code{\link[=calculate_topic_diversity]{calculate_topic_diversity()}},
+\code{\link[=calculate_topic_probability]{calculate_topic_probability()}},
+\code{\link[=calculate_topic_stability]{calculate_topic_stability()}},
+\code{\link[=extract_topic_terms_df]{extract_topic_terms_df()}},
+\code{\link[=find_optimal_k]{find_optimal_k()}},
+\code{\link[=find_topic_matches]{find_topic_matches()}},
+\code{\link[=fit_embedding_model]{fit_embedding_model()}},
+\code{\link[=fit_hybrid_model]{fit_hybrid_model()}},
+\code{\link[=fit_temporal_model]{fit_temporal_model()}},
+\code{\link[=fit_topic_prevalence_model]{fit_topic_prevalence_model()}},
+\code{\link[=generate_topic_labels]{generate_topic_labels()}},
+\code{\link[=get_topic_prevalence]{get_topic_prevalence()}},
+\code{\link[=get_topic_terms]{get_topic_terms()}},
+\code{\link[=identify_topic_trends]{identify_topic_trends()}},
+\code{\link[=plot_model_comparison]{plot_model_comparison()}},
+\code{\link[=plot_quality_metrics]{plot_quality_metrics()}},
+\code{\link[=plot_topic_effects_categorical]{plot_topic_effects_categorical()}},
+\code{\link[=plot_topic_effects_continuous]{plot_topic_effects_continuous()}},
+\code{\link[=plot_topic_probability]{plot_topic_probability()}},
+\code{\link[=plot_word_probability]{plot_word_probability()}},
+\code{\link[=run_neural_topics_internal]{run_neural_topics_internal()}},
+\code{\link[=validate_semantic_coherence]{validate_semantic_coherence()}}
 }
 \concept{topic-modeling}

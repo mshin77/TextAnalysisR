@@ -25,9 +25,7 @@ Validates format, length, and character composition to prevent weak or malformed
 }
 
 \examples{
-\dontrun{
 result <- validate_api_key("sk-proj...")
 if (result$valid) cat("Provider:", result$provider)
-}
 }
 \keyword{internal}

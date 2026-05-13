@@ -21,7 +21,6 @@ HTML span with sr-only class
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 create_sr_text("Loading results, please wait")
-} # }
+#> [1] "<span class=\"sr-only\" role=\"status\" aria-live=\"polite\">Loading results, please wait</span>"
 ```

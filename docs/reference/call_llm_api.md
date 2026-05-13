@@ -73,7 +73,7 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 # Using OpenAI
 response <- call_llm_api(
   provider = "openai",
@@ -89,5 +89,5 @@ response <- call_llm_api(
   user_prompt = "Generate a topic label",
   api_key = Sys.getenv("GEMINI_API_KEY")
 )
-} # }
+}
 ```

@@ -1,6 +1,6 @@
 # Python Environment
 
-Python enables advanced features: NLP with spaCy, embeddings, and neural
+Python enables features: NLP with spaCy, embeddings, and neural
 sentiment analysis.
 
 ## Quick Setup

@@ -28,7 +28,7 @@ calculate_document_similarity(
 
 \item{embedding_model}{Sentence transformer model name (default: "all-MiniLM-L6-v2").}
 
-\item{calculate_metrics}{Logical, compute comprehensive similarity metrics (default: TRUE).}
+\item{calculate_metrics}{Logical, compute similarity metrics (default: TRUE).}
 
 \item{verbose}{Logical, if TRUE, prints progress messages.}
 }
@@ -38,13 +38,13 @@ A list containing:
 \item{similarity_matrix}{N x N similarity matrix}
 \item{feature_matrix}{Document feature matrix used for calculation}
 \item{method_info}{Information about the method used}
-\item{metrics}{Comprehensive similarity metrics (if calculate_metrics = TRUE)}
+\item{metrics}{Similarity metrics (if calculate_metrics = TRUE)}
 \item{execution_time}{Time taken for analysis}
 }
 }
 \description{
 Calculates similarity between documents using traditional NLP methods or
-modern embedding-based approaches. Comprehensive metrics are automatically
+modern embedding-based approaches. Metrics are automatically
 computed unless disabled.
 }
 \examples{
@@ -63,26 +63,25 @@ if (interactive()) {
 }
 }
 \seealso{
-Other semantic: 
-\code{\link{analyze_document_clustering}()},
-\code{\link{analyze_similarity_gaps}()},
-\code{\link{calculate_clustering_metrics}()},
-\code{\link{calculate_cross_similarity}()},
-\code{\link{calculate_similarity_robust}()},
-\code{\link{cluster_embeddings}()},
-\code{\link{cross_analysis_validation}()},
-\code{\link{export_document_clustering}()},
-\code{\link{extract_cross_category_similarities}()},
-\code{\link{fit_semantic_model}()},
-\code{\link{generate_cluster_labels}()},
-\code{\link{generate_cluster_labels_auto}()},
-\code{\link{generate_embeddings}()},
-\code{\link{reduce_dimensions}()},
-\code{\link{semantic_document_clustering}()},
-\code{\link{semantic_similarity_analysis}()},
-\code{\link{temporal_semantic_analysis}()},
-\code{\link{validate_cross_models}()},
-\code{\link{word_co_occurrence_network}()},
-\code{\link{word_correlation_network}()}
+Other semantic:
+\code{\link[=analyze_document_clustering]{analyze_document_clustering()}},
+\code{\link[=analyze_similarity_gaps]{analyze_similarity_gaps()}},
+\code{\link[=calculate_clustering_metrics]{calculate_clustering_metrics()}},
+\code{\link[=calculate_cross_similarity]{calculate_cross_similarity()}},
+\code{\link[=calculate_similarity_robust]{calculate_similarity_robust()}},
+\code{\link[=cluster_embeddings]{cluster_embeddings()}},
+\code{\link[=export_document_clustering]{export_document_clustering()}},
+\code{\link[=extract_cross_category_similarities]{extract_cross_category_similarities()}},
+\code{\link[=fit_semantic_model]{fit_semantic_model()}},
+\code{\link[=generate_cluster_labels]{generate_cluster_labels()}},
+\code{\link[=generate_cluster_labels_auto]{generate_cluster_labels_auto()}},
+\code{\link[=generate_embeddings]{generate_embeddings()}},
+\code{\link[=reduce_dimensions]{reduce_dimensions()}},
+\code{\link[=semantic_document_clustering]{semantic_document_clustering()}},
+\code{\link[=semantic_similarity_analysis]{semantic_similarity_analysis()}},
+\code{\link[=validate_cross_models]{validate_cross_models()}},
+\code{\link[=word_co_occurrence_network]{word_co_occurrence_network()}},
+\code{\link[=word_correlation_network]{word_correlation_network()}}
 }
 \concept{semantic}
+\keyword{internal}

@@ -99,7 +99,7 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 documents <- c(
   "Assistive technology helps students with disabilities access curriculum.",
   "Universal Design for Learning provides multiple means of engagement.",
@@ -124,5 +124,5 @@ if (result$success) {
   cat("Answer:", result$answer, "\n")
   cat("Sources:", paste(result$sources, collapse = ", "), "\n")
 }
-} # }
+}
 ```

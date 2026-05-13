@@ -80,8 +80,16 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-log_odds <- calculate_log_odds_ratio(dfm, "category", comparison_mode = "binary")
-plot_log_odds_ratio(log_odds, top_n = 15)
-} # }
+# \donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+corpus <- quanteda::corpus(
+  articles$abstract,
+  docvars = data.frame(reference_type = articles$reference_type)
+)
+dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
+log_odds <- calculate_log_odds_ratio(dfm_object, "reference_type",
+                                      comparison_mode = "binary")
+plot_log_odds_ratio(log_odds, top_n = 5)
+
+# }
 ```

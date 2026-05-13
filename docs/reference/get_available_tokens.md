@@ -64,10 +64,6 @@ Other preprocessing:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-tokens <- get_available_tokens(
-  final_tokens = my_final_tokens,
-  processed_tokens = my_processed_tokens
-)
-} # }
+toks <- quanteda::tokens("assistive technology supports learning")
+result <- get_available_tokens(processed_tokens = toks)
 ```

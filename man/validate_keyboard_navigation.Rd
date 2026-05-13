@@ -17,9 +17,7 @@ Checks if interactive elements have proper tabindex and keyboard handlers.
 Used for WCAG 2.1.1 (Keyboard) compliance.
 }
 \examples{
-\dontrun{
 validate_keyboard_navigation(0)   # TRUE
 validate_keyboard_navigation(999) # FALSE (too high)
-}
 }
 \keyword{internal}

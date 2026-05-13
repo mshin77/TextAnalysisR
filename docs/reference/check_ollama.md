@@ -38,9 +38,9 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 if (check_ollama()) {
   message("Ollama is ready!")
 }
-} # }
+}
 ```

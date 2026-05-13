@@ -60,38 +60,28 @@ LLM-based sentiment analysis offers several advantages over lexicon methods:
 }
 }
 \examples{
-\dontrun{
-# Using OpenAI
-result <- analyze_sentiment_llm(
-  texts = c("This product is amazing!", "Worst experience ever."),
-  provider = "openai"
-)
+if (interactive()) {
+  abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:5]
 
-# Using Gemini with explanations
-result <- analyze_sentiment_llm(
-  texts = my_texts,
-  provider = "gemini",
-  include_explanation = TRUE
-)
+  sentiment_openai <- analyze_sentiment_llm(abstracts, provider = "openai")
 
-# Using local Ollama (free, no API key)
-result <- analyze_sentiment_llm(
-  texts = my_texts,
-  provider = "ollama",
-  model = "llama3"
-)
+  sentiment_gemini <- analyze_sentiment_llm(abstracts, provider = "gemini",
+                                             include_explanation = TRUE)
+
+  sentiment_ollama <- analyze_sentiment_llm(abstracts, provider = "ollama",
+                                             model = "llama3")
 }
 }
 \seealso{
-Other sentiment: 
-\code{\link{analyze_sentiment}()},
-\code{\link{plot_document_sentiment_trajectory}()},
-\code{\link{plot_emotion_radar}()},
-\code{\link{plot_sentiment_boxplot}()},
-\code{\link{plot_sentiment_by_category}()},
-\code{\link{plot_sentiment_distribution}()},
-\code{\link{plot_sentiment_violin}()},
-\code{\link{sentiment_embedding_analysis}()},
-\code{\link{sentiment_lexicon_analysis}()}
+Other sentiment:
+\code{\link[=analyze_sentiment]{analyze_sentiment()}},
+\code{\link[=plot_document_sentiment_trajectory]{plot_document_sentiment_trajectory()}},
+\code{\link[=plot_emotion_radar]{plot_emotion_radar()}},
+\code{\link[=plot_sentiment_boxplot]{plot_sentiment_boxplot()}},
+\code{\link[=plot_sentiment_by_category]{plot_sentiment_by_category()}},
+\code{\link[=plot_sentiment_distribution]{plot_sentiment_distribution()}},
+\code{\link[=plot_sentiment_violin]{plot_sentiment_violin()}},
+\code{\link[=sentiment_embedding_analysis]{sentiment_embedding_analysis()}},
+\code{\link[=sentiment_lexicon_analysis]{sentiment_lexicon_analysis()}}
 }
 \concept{sentiment}

@@ -73,11 +73,19 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 library(quanteda)
+#> Package version: 4.4
+#> Unicode version: 15.1
+#> ICU version: 74.1
+#> Parallel computing: 8 of 8 threads used.
+#> See https://quanteda.io for tutorials and examples.
 corp <- corpus(c("text analysis", "data mining", "text mining"))
 dfm_obj <- dfm(tokens(corp))
 keywords <- extract_keywords_tfidf(dfm_obj, top_n = 5)
 print(keywords)
-} # }
+#>    Keyword TF_IDF_Score Frequency
+#> 1 analysis    0.4771213         1
+#> 2     data    0.4771213         1
+#> 3     text    0.3521825         2
+#> 4   mining    0.3521825         2
 ```

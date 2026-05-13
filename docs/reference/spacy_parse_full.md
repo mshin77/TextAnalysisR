@@ -124,7 +124,7 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 # From SpecialEduTech dataset
 texts <- TextAnalysisR::SpecialEduTech$abstract[1:5]
 parsed <- spacy_parse_full(texts, morph = TRUE)
@@ -133,5 +133,5 @@ parsed <- spacy_parse_full(texts, morph = TRUE)
 united <- unite_cols(TextAnalysisR::SpecialEduTech, c("title", "abstract"))
 tokens <- prep_texts(united, text_field = "united_texts")
 parsed <- spacy_parse_full(tokens, morph = TRUE)
-} # }
+}
 ```

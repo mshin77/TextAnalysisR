@@ -19,8 +19,9 @@ Truncates text to a maximum number of characters and adds
 ellipsis if truncated.
 }
 \seealso{
-Other text-utilities: 
-\code{\link{truncate_text_to_words}()},
-\code{\link{wrap_long_text}()}
+Other text-utilities:
+\code{\link[=truncate_text_to_words]{truncate_text_to_words()}},
+\code{\link[=wrap_long_text]{wrap_long_text()}}
 }
 \concept{text-utilities}
+\keyword{internal}

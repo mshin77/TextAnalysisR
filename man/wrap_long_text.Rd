@@ -21,8 +21,9 @@ Wraps long text by inserting line breaks at word boundaries.
 Handles both spaced text and continuous text (like URLs).
 }
 \seealso{
-Other text-utilities: 
-\code{\link{truncate_text_to_words}()},
-\code{\link{truncate_text_with_ellipsis}()}
+Other text-utilities:
+\code{\link[=truncate_text_to_words]{truncate_text_to_words()}},
+\code{\link[=truncate_text_with_ellipsis]{truncate_text_with_ellipsis()}}
 }
 \concept{text-utilities}
+\keyword{internal}

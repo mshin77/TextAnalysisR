@@ -27,8 +27,8 @@ globalVariables(names = c(
   "p.value", "percent", "policy_recommendation", "pos", "positive", "proportion",
   "ref_id", "ref_idx", "ref_name", "research_question", "row_idx", "score",
   "sentiment", "sentiment_score", "similarity", "statistic", "std.error",
-  "std.error (odds ratio)", "stopwords", "survey_item", "term", "term_proportion",
-  "terms", "text", "theme_description", "to", "tokens_remove", "tokens_select",
+  "std.error (odds ratio)", "survey_item", "term", "term_proportion",
+  "terms", "text", "theme_description", "to",
   "topic", "topic_display", "topic_label", "total_count", "total_score", "tt",
   "united_texts", "upper", "value", "word", "word_frequency", "x", "xend",
   "y", "yend",
@@ -92,6 +92,7 @@ check_docker_deployment <- function() {
 #'
 #' @return Logical TRUE if running on web server, FALSE if local
 #'
+#' @keywords internal
 #' @export
 #'
 #' @examples
@@ -117,7 +118,7 @@ check_web_deployment <- function() {
 #' @description
 #' Checks if a specific optional feature is available in the current environment.
 #'
-#' @param feature Character: "python", "ollama", "pdf_tables", "embeddings", "sentiment_deep"
+#' @param feature Character: "python", "ollama", "pdf_tables", "embeddings", "sentiment_transformer"
 #'
 #' @return Logical TRUE if feature is available
 #'
@@ -150,7 +151,7 @@ check_feature <- function(feature) {
       requireNamespace("reticulate", quietly = TRUE) &&
         reticulate::py_module_available("sentence_transformers")
     }, error = function(e) FALSE),
-    "sentiment_deep" = tryCatch({
+    "sentiment_transformer" = tryCatch({
       requireNamespace("reticulate", quietly = TRUE) &&
         reticulate::py_module_available("transformers")
     }, error = function(e) FALSE),
@@ -168,12 +169,12 @@ check_feature <- function(feature) {
 #' @export
 #'
 #' @examples
-#' \donttest{
-#' status <- get_feature_status()
-#' print(status)
+#' if (interactive()) {
+#'   status <- get_feature_status()
+#'   print(status)
 #' }
 get_feature_status <- function() {
-  features <- c("python", "ollama", "pdf_tables", "embeddings", "sentiment_deep")
+  features <- c("python", "ollama", "pdf_tables", "embeddings", "sentiment_transformer")
   result <- lapply(features, function(f) {
     tryCatch(check_feature(f), error = function(e) FALSE)
   })
@@ -184,6 +185,12 @@ get_feature_status <- function() {
 }
 
 #' Show Web Deployment Banner
+#'
+#' @param disabled Optional character vector naming features to mark as
+#'   disabled in the banner; \code{NULL} (default) shows the standard set.
+#' @return A \code{shiny.tag} object containing the banner HTML for
+#'   inclusion in a Shiny UI, or \code{NULL} when not running in a web
+#'   deployment context.
 #' @keywords internal
 #' @export
 show_web_banner <- function(disabled = NULL) {
@@ -231,10 +238,11 @@ show_web_banner <- function(disabled = NULL) {
 #'
 #' @return Logical TRUE if available, FALSE if not
 #'
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' if (!require_feature("embeddings", session)) return()
 #' }
 require_feature <- function(feature, session = NULL) {
@@ -245,7 +253,7 @@ require_feature <- function(feature, session = NULL) {
     "ollama" = "Ollama not available. Install from ollama.com.",
     "pdf_tables" = "PDF tables require Python. Run setup_python_env().",
     "embeddings" = "Embeddings require sentence-transformers. Run: pip install sentence-transformers torch",
-    "sentiment_deep" = "Neural sentiment requires transformers. Run: pip install transformers torch",
+    "sentiment_transformer" = "Neural sentiment requires transformers. Run: pip install transformers torch",
     paste0("Feature '", feature, "' not available.")
   )
 
@@ -277,10 +285,11 @@ require_feature <- function(feature, session = NULL) {
 #'
 #' @return A DT::datatable object
 #'
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' df <- data.frame(term = c("word1", "word2"), score = c(0.123456, 0.789012))
 #' create_analysis_datatable(df, numeric_cols = "score", digits = 3)
 #' }
@@ -322,6 +331,7 @@ create_analysis_datatable <- function(data,
 #' @description Calculates the cosine similarity between all pairs of rows in a matrix.
 #' @param matrix_data A numeric matrix where rows represent documents/observations
 #' @return A square similarity matrix with values between -1 and 1
+#' @keywords internal
 #' @export
 calculate_cosine_similarity <- function(matrix_data) {
   if (is.null(matrix_data) || nrow(matrix_data) == 0 || ncol(matrix_data) == 0) {
@@ -766,10 +776,10 @@ calculate_word_frequency <- function(dfm_object,
 }
 
 
-#' @title Calculate Comprehensive Metrics
+#' @title Calculate Similarity Metrics
 #'
 #' @description
-#' Calculates comprehensive similarity metrics including statistical measures
+#' Calculates similarity metrics including statistical measures
 #' and network properties.
 #' Internal function used by document_similarity_analysis.
 #'
@@ -777,7 +787,7 @@ calculate_word_frequency <- function(dfm_object,
 #' @param labels Optional vector of labels for clustering metrics.
 #' @param method_info Optional method information.
 #'
-#' @return A list of comprehensive metrics.
+#' @return A list of metrics.
 #'
 #' @keywords internal
 calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NULL) {
@@ -880,7 +890,7 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' # First time setup (auto-detects Python)
 #' setup_python_env()
 #'
@@ -902,6 +912,10 @@ setup_python_env <- function(envname = "textanalysisr-env", force = FALSE) {
   }, error = function(e) FALSE)
 
   if (!python_available) {
+    if (!interactive()) {
+      stop("Python not found. Install Python (e.g. from python.org) and rerun ",
+           "setup_python_env() in an interactive R session.")
+    }
     message("No Python found. Install Miniconda? (y/n): ")
     response <- readline(prompt = "")
 
@@ -1010,10 +1024,11 @@ except OSError:
 #'   - active: Logical, TRUE if environment is currently active
 #'   - packages: List of installed package versions
 #'
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' status <- check_python_env()
 #' print(status)
 #' }
@@ -1069,6 +1084,7 @@ check_python_env <- function(envname = "textanalysisr-env") {
 
 # Ollama local LLM utilities
 
+#' @keywords internal
 .ollama_base_url <- function() {
   Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 }
@@ -1085,7 +1101,7 @@ check_python_env <- function(envname = "textanalysisr-env") {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' if (check_ollama()) {
 #'   message("Ollama is ready!")
 #' }
@@ -1130,7 +1146,7 @@ check_ollama <- function(verbose = FALSE) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' models <- list_ollama_models()
 #' print(models)
 #' }
@@ -1197,7 +1213,7 @@ list_ollama_models <- function(verbose = FALSE) {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' response <- call_ollama(
 #'   prompt = "Summarize these keywords: machine learning, neural networks, AI",
 #'   model = "tinyllama"
@@ -1283,7 +1299,7 @@ call_ollama <- function(prompt,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' model <- get_recommended_ollama_model()
 #' print(model)
 #' }
@@ -1339,7 +1355,7 @@ get_recommended_ollama_model <- function(preferred_models = c("tinyllama", "gemm
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' response <- call_openai_chat(
 #'   system_prompt = "You are a helpful assistant.",
 #'   user_prompt = "Generate a topic label for: education, student, learning",
@@ -1412,7 +1428,7 @@ call_openai_chat <- function(system_prompt,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' response <- call_gemini_chat(
 #'   system_prompt = "You are a helpful assistant.",
 #'   user_prompt = "Generate a topic label for: education, student, learning",
@@ -1521,7 +1537,7 @@ call_gemini_chat <- function(system_prompt,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' # Using OpenAI
 #' response <- call_llm_api(
 #'   provider = "openai",
@@ -1863,7 +1879,7 @@ describe_image <- function(image_base64,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' data(SpecialEduTech)
 #' texts <- SpecialEduTech$abstract[1:5]
 #'
@@ -2095,7 +2111,7 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' data(SpecialEduTech)
 #' texts <- SpecialEduTech$abstract[1:5]
 #'
@@ -2357,12 +2373,15 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
     "Details: ", details
   )
 
-  log_file <- "security.log"
-  tryCatch({
-    cat(log_message, "\n", file = log_file, append = TRUE)
-  }, error = function(e) {
-    warning("Failed to write security log: ", e$message)
-  })
+  log_dir <- Sys.getenv("TEXTANALYSISR_LOG_DIR", unset = "")
+  if (nzchar(log_dir) && dir.exists(log_dir)) {
+    log_file <- file.path(log_dir, "security.log")
+    tryCatch({
+      cat(log_message, "\n", file = log_file, append = TRUE)
+    }, error = function(e) {
+      warning("Failed to write security log: ", e$message)
+    })
+  }
 
   if (Sys.getenv("ENVIRONMENT") != "production") {
     message(log_message)
@@ -2437,6 +2456,7 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
 }
 
 
+#' @keywords internal
 .missing_api_key_message <- function(provider, context = "package") {
   env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
   provider_label <- if (provider == "openai") "OpenAI" else "Gemini"
@@ -2466,6 +2486,7 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
 #' @param strict Logical, if TRUE performs additional validation checks
 #'
 #' @return List with valid (logical), provider (character), and error (character if invalid)
+#' @export
 #' @keywords internal
 #'
 #' @section NIST Compliance:
@@ -2473,10 +2494,8 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
 #' Validates format, length, and character composition to prevent weak or malformed keys.
 #'
 #' @examples
-#' \dontrun{
 #' result <- validate_api_key("sk-proj...")
 #' if (result$valid) cat("Provider:", result$provider)
-#' }
 validate_api_key <- function(api_key, strict = TRUE) {
   if (is.null(api_key) || !is.character(api_key) || !nzchar(api_key)) {
     return(list(valid = FALSE, provider = NULL, error = "API key is NULL, empty, or not a character string"))
@@ -2525,6 +2544,7 @@ validate_api_key <- function(api_key, strict = TRUE) {
 #' @param col_name Character string containing the column name
 #'
 #' @return TRUE if valid, stops with error if invalid
+#' @export
 #' @keywords internal
 #'
 #' @section Security:
@@ -2532,10 +2552,8 @@ validate_api_key <- function(api_key, strict = TRUE) {
 #' execute arbitrary code when used in model formulas. Part of NIST SI-10 input validation.
 #'
 #' @examples
-#' \dontrun{
 #' validate_column_name("age")
 #' validate_column_name("my_variable")
-#' }
 validate_column_name <- function(col_name) {
   if (is.null(col_name) || !is.character(col_name) || !nzchar(col_name)) {
     stop("Column name is NULL, empty, or not a character string")
@@ -2588,6 +2606,7 @@ validate_column_name <- function(col_name) {
 #' @param background Background color (hex format, e.g., "#ffffff")
 #'
 #' @return Numeric contrast ratio (1-21)
+#' @export
 #' @keywords internal
 #'
 #' @section WCAG Requirements:
@@ -2596,10 +2615,8 @@ validate_column_name <- function(col_name) {
 #' - UI components and graphics: Minimum 3:1 (Level AA)
 #'
 #' @examples
-#' \dontrun{
 #' calculate_contrast_ratio("#111827", "#ffffff")  # Returns ~16:1 (Pass)
 #' calculate_contrast_ratio("#6b7280", "#4a5568")  # Returns ~2.8:1 (Fail)
-#' }
 calculate_contrast_ratio <- function(foreground, background) {
   hex_to_rgb <- function(hex) {
     hex <- gsub("#", "", hex)
@@ -2646,13 +2663,12 @@ calculate_contrast_ratio <- function(foreground, background) {
 #' @param large_text Logical, TRUE if text is large (18pt+ or 14pt+ bold)
 #'
 #' @return Logical TRUE if compliant, FALSE if not
+#' @export
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
 #' check_wcag_contrast("#111827", "#ffffff")  # TRUE (16:1 ratio)
 #' check_wcag_contrast("#6b7280", "#4a5568")  # FALSE (2.8:1 ratio)
-#' }
 check_wcag_contrast <- function(foreground, background, large_text = FALSE) {
   ratio <- calculate_contrast_ratio(foreground, background)
   min_ratio <- if (large_text) 3.0 else 4.5
@@ -2679,13 +2695,12 @@ check_wcag_contrast <- function(foreground, background, large_text = FALSE) {
 #' @param context Additional context (optional)
 #'
 #' @return Character string with ARIA label
+#' @export
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
 #' create_aria_label("button", "analyze", "readability")
 #' # Returns: "Analyze readability button"
-#' }
 create_aria_label <- function(element_type, action, context = NULL) {
   if (!is.null(context)) {
     label <- paste(tools::toTitleCase(action), context, element_type)
@@ -2703,12 +2718,11 @@ create_aria_label <- function(element_type, action, context = NULL) {
 #' @param text Text to be read by screen readers
 #'
 #' @return HTML span with sr-only class
+#' @export
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
 #' create_sr_text("Loading results, please wait")
-#' }
 create_sr_text <- function(text) {
   return(
     paste0(
@@ -2728,13 +2742,12 @@ create_sr_text <- function(text) {
 #' @param tabindex Integer, tab order (-1 for no tab, 0 for natural order, 1+ for specific order)
 #'
 #' @return Logical TRUE if valid, FALSE with warning if invalid
+#' @export
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
 #' validate_keyboard_navigation(0)   # TRUE
 #' validate_keyboard_navigation(999) # FALSE (too high)
-#' }
 validate_keyboard_navigation <- function(tabindex = 0) {
   if (!is.numeric(tabindex)) {
     warning("Tabindex must be numeric")
@@ -2763,14 +2776,13 @@ validate_keyboard_navigation <- function(tabindex = 0) {
 #' @param decorative Logical, TRUE if element is purely decorative
 #'
 #' @return Logical TRUE if valid, FALSE with warning if missing/inadequate
+#' @export
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
 #' check_alt_text("Bar chart showing word frequency", "plot")  # TRUE
 #' check_alt_text("", "plot")  # FALSE (informative content needs alt text)
 #' check_alt_text("", "icon", decorative = TRUE)  # TRUE (decorative is OK)
-#' }
 check_alt_text <- function(alt_text, element_type = "image", decorative = FALSE) {
   if (decorative) {
     return(TRUE)
@@ -2900,10 +2912,10 @@ get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") 
 #' @return A ggplot2 theme object
 #'
 #' @family visualization
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' library(ggplot2)
 #' data(SpecialEduTech, package = "TextAnalysisR")
 #' # Create a simple plot using text lengths
@@ -2914,7 +2926,6 @@ get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") 
 #' ggplot(df, aes(title_length, abstract_length)) +
 #'   geom_point() +
 #'   create_standard_ggplot_theme()
-#' }
 create_standard_ggplot_theme <- function(base_size = 11) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
@@ -2960,6 +2971,7 @@ create_standard_ggplot_theme <- function(base_size = 11) {
 #' @return Named vector of colors
 #'
 #' @family visualization
+#' @keywords internal
 #' @export
 get_sentiment_colors <- function() {
   c(
@@ -2981,6 +2993,7 @@ get_sentiment_colors <- function() {
 #' @return Hex color string
 #'
 #' @family visualization
+#' @keywords internal
 #' @export
 #'
 #' @examples
@@ -3486,14 +3499,12 @@ show_preprocessing_steps_modal <- function(title = "Preprocessing Required",
 #'
 #' @return Character vector of instruction lines
 #'
+#' @keywords internal
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' output$instructions <- renderPrint({
-#'   cat(get_dfm_setup_instructions("keyword extraction"), sep = "\n")
-#' })
-#' }
+#' instructions <- get_dfm_setup_instructions("keyword extraction")
+#' cat(instructions, sep = "\n")
 get_dfm_setup_instructions <- function(feature_name = "this feature") {
   c(
     "Warning: DFM Processing Required\n",
@@ -3571,6 +3582,7 @@ show_preprocessing_required_modal <- function(message = "Please complete preproc
 #' @return Truncated text with "..." appended if truncated.
 #'
 #' @family text-utilities
+#' @keywords internal
 #' @export
 truncate_text_with_ellipsis <- function(text, max_chars = 50) {
   text <- as.character(text)
@@ -3591,6 +3603,7 @@ truncate_text_with_ellipsis <- function(text, max_chars = 50) {
 #' @return Truncated text with "..." appended if truncated.
 #'
 #' @family text-utilities
+#' @keywords internal
 #' @export
 truncate_text_to_words <- function(text, max_words = 150) {
   text <- as.character(text)
@@ -3616,6 +3629,7 @@ truncate_text_to_words <- function(text, max_words = 150) {
 #' @return Text with line breaks inserted.
 #'
 #' @family text-utilities
+#' @keywords internal
 #' @export
 wrap_long_text <- function(text, chars_per_line = 50, max_lines = 3) {
   text <- as.character(text)
@@ -3751,6 +3765,7 @@ wrap_text_for_tooltip <- function(text, max_words = 150, chars_per_line = 50, ma
 #' @return Cleaned similarity matrix.
 #'
 #' @family matrix-utilities
+#' @keywords internal
 #' @export
 clean_similarity_matrix <- function(similarity_matrix) {
   # Replace non-finite values with 0
@@ -3779,6 +3794,7 @@ clean_similarity_matrix <- function(similarity_matrix) {
 #' @return Vector with clusters renumbered sequentially (1, 2, 3, ...).
 #'
 #' @family matrix-utilities
+#' @keywords internal
 #' @export
 renumber_clusters_sequentially <- function(clusters) {
   if (is.null(clusters) || length(clusters) == 0) {

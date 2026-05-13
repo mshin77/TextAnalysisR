@@ -38,27 +38,33 @@ word usage across categories using the Fightin' Words method (Monroe et al. 2008
 Each group is displayed in a separate facet showing its most distinctive terms.
 }
 \examples{
-\dontrun{
-weighted_odds <- calculate_weighted_log_odds(dfm, "party", top_n = 15)
-plot_weighted_log_odds(weighted_odds)
+\donttest{
+if (requireNamespace("tidylo", quietly = TRUE)) {
+  articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+  dfm_object <- quanteda::dfm(quanteda::tokens(articles$abstract))
+  quanteda::docvars(dfm_object, "reference_type") <- articles$reference_type
+  weighted_odds <- calculate_weighted_log_odds(dfm_object, "reference_type",
+                                                top_n = 5)
+  plot_weighted_log_odds(weighted_odds)
+}
 }
 }
 \seealso{
-Other visualization: 
-\code{\link{create_standard_ggplot_theme}()},
-\code{\link{get_sentiment_color}()},
-\code{\link{get_sentiment_colors}()},
-\code{\link{plot_cluster_terms}()},
-\code{\link{plot_cross_category_heatmap}()},
-\code{\link{plot_entity_frequencies}()},
-\code{\link{plot_lexical_dispersion}()},
-\code{\link{plot_log_odds_ratio}()},
-\code{\link{plot_mwe_frequency}()},
-\code{\link{plot_ngram_frequency}()},
-\code{\link{plot_pos_frequencies}()},
-\code{\link{plot_semantic_viz}()},
-\code{\link{plot_similarity_heatmap}()},
-\code{\link{plot_term_trends_continuous}()},
-\code{\link{plot_word_frequency}()}
+Other visualization:
+\code{\link[=create_standard_ggplot_theme]{create_standard_ggplot_theme()}},
+\code{\link[=get_sentiment_color]{get_sentiment_color()}},
+\code{\link[=get_sentiment_colors]{get_sentiment_colors()}},
+\code{\link[=plot_cluster_terms]{plot_cluster_terms()}},
+\code{\link[=plot_cross_category_heatmap]{plot_cross_category_heatmap()}},
+\code{\link[=plot_entity_frequencies]{plot_entity_frequencies()}},
+\code{\link[=plot_lexical_dispersion]{plot_lexical_dispersion()}},
+\code{\link[=plot_log_odds_ratio]{plot_log_odds_ratio()}},
+\code{\link[=plot_mwe_frequency]{plot_mwe_frequency()}},
+\code{\link[=plot_ngram_frequency]{plot_ngram_frequency()}},
+\code{\link[=plot_pos_frequencies]{plot_pos_frequencies()}},
+\code{\link[=plot_semantic_viz]{plot_semantic_viz()}},
+\code{\link[=plot_similarity_heatmap]{plot_similarity_heatmap()}},
+\code{\link[=plot_term_trends_continuous]{plot_term_trends_continuous()}},
+\code{\link[=plot_word_frequency]{plot_word_frequency()}}
 }
 \concept{visualization}

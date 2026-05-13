@@ -15,3 +15,4 @@ A square similarity matrix with values between -1 and 1
 \description{
 Calculates the cosine similarity between all pairs of rows in a matrix.
 }
+\keyword{internal}

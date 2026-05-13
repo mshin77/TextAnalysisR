@@ -39,11 +39,11 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 content_type <- detect_pdf_content_type_py(pdf_path)
 print(content_type)
-} # }
+}
 ```

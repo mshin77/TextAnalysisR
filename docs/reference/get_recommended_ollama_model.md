@@ -45,8 +45,8 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 model <- get_recommended_ollama_model()
 print(model)
-} # }
+}
 ```

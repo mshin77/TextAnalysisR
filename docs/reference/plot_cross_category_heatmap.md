@@ -135,15 +135,32 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# With pre-built long-format data
+# \donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:7, ]
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+similarity_matrix <- normalized_matrix %*% t(normalized_matrix)
+thesis_rows <- which(articles$reference_type == "thesis")[1:3]
+article_cols <- which(articles$reference_type == "journal_article")[1:4]
+similarity_data <- expand.grid(
+  ld_doc_name    = paste("Thesis", seq_along(thesis_rows)),
+  other_doc_name = paste("Article", seq_along(article_cols)),
+  stringsAsFactors = FALSE
+)
+similarity_data$cosine_similarity <- as.vector(
+  similarity_matrix[thesis_rows, article_cols]
+)
+similarity_data$other_category <- articles$reference_type[article_cols]
 plot_cross_category_heatmap(
-  similarity_data = ld_similarities,
+  similarity_data = similarity_data,
   row_var = "ld_doc_name",
   col_var = "other_doc_name",
   value_var = "cosine_similarity",
   category_var = "other_category",
-  row_label = "SLD Documents"
+  row_label = "Theses"
 )
-} # }
+#> Warning: Removed 4 rows containing missing values or values outside the scale range
+#> (`geom_text()`).
+
+# }
 ```

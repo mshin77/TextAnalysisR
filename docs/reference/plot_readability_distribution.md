@@ -72,11 +72,12 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 data(SpecialEduTech, package = "TextAnalysisR")
 texts <- SpecialEduTech$abstract[1:20]
 readability <- calculate_text_readability(texts)
 plot <- plot_readability_distribution(readability, "flesch")
 print(plot)
-} # }
+
+# }
 ```

@@ -73,8 +73,10 @@ Other visualization:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-dispersion <- calculate_lexical_dispersion(tokens, c("education", "technology"))
+# \donttest{
+tokens <- quanteda::tokens(TextAnalysisR::SpecialEduTech$abstract[1:5])
+dispersion <- calculate_lexical_dispersion(tokens, c("learning", "instruction"))
 plot_lexical_dispersion(dispersion)
-} # }
+
+# }
 ```

@@ -73,14 +73,14 @@ Other lexical:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-data(SpecialEduTech)
-texts <- SpecialEduTech$abstract[1:10]
-corp <- quanteda::corpus(texts)
-toks <- quanteda::tokens(corp)
-dfm_obj <- quanteda::dfm(toks)
-result <- lexical_diversity_analysis(dfm_obj)
-plot <- plot_lexical_diversity_distribution(result$lexical_diversity, "MTLD")
-print(plot)
-} # }
+# \donttest{
+abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+tokens <- quanteda::tokens(quanteda::corpus(abstracts))
+diversity_result <- lexical_diversity_analysis(tokens, texts = abstracts)
+diversity_plot <- plot_lexical_diversity_distribution(
+  diversity_result$lexical_diversity, "MTLD"
+)
+print(diversity_plot)
+
+# }
 ```

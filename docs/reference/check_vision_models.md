@@ -38,8 +38,8 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 status <- check_vision_models("ollama")
 status <- check_vision_models("gemini", api_key = Sys.getenv("GEMINI_API_KEY"))
-} # }
+}
 ```

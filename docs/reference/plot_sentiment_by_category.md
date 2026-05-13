@@ -52,13 +52,15 @@ Other sentiment:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-data <- data.frame(
-  text = c("Good", "Bad", "Okay", "Great", "Poor"),
-  category = c("A", "A", "B", "B", "B")
+# \donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+sentiment_results <- analyze_sentiment(articles$abstract)
+sentiment_data <- cbind(
+  reference_type = articles$reference_type,
+  sentiment_results
 )
-data <- cbind(data, analyze_sentiment(data$text))
-plot <- plot_sentiment_by_category(data, "category")
-print(plot)
-} # }
+sentiment_plot <- plot_sentiment_by_category(sentiment_data, "reference_type")
+print(sentiment_plot)
+
+# }
 ```

@@ -9,7 +9,7 @@ NULL
 #'
 #' @description
 #' Calculates similarity between documents using traditional NLP methods or
-#' modern embedding-based approaches. Comprehensive metrics are automatically
+#' modern embedding-based approaches. Metrics are automatically
 #' computed unless disabled.
 #'
 #' @param texts A character vector of texts to compare.
@@ -18,7 +18,7 @@ NULL
 #' @param similarity_method Similarity calculation method: "cosine", "jaccard", "euclidean", "manhattan".
 #' @param use_embeddings Logical, use embedding-based similarity (default: FALSE).
 #' @param embedding_model Sentence transformer model name (default: "all-MiniLM-L6-v2").
-#' @param calculate_metrics Logical, compute comprehensive similarity metrics (default: TRUE).
+#' @param calculate_metrics Logical, compute similarity metrics (default: TRUE).
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
 #' @return A list containing:
@@ -26,11 +26,12 @@ NULL
 #'     \item{similarity_matrix}{N x N similarity matrix}
 #'     \item{feature_matrix}{Document feature matrix used for calculation}
 #'     \item{method_info}{Information about the method used}
-#'     \item{metrics}{Comprehensive similarity metrics (if calculate_metrics = TRUE)}
+#'     \item{metrics}{Similarity metrics (if calculate_metrics = TRUE)}
 #'     \item{execution_time}{Time taken for analysis}
 #'   }
 #'
 #' @family semantic
+#' @keywords internal
 #' @export
 #'
 #' @examples
@@ -195,7 +196,7 @@ calculate_document_similarity <- function(texts,
 
     metrics <- NULL
     if (calculate_metrics) {
-      if (verbose) message("Step 3: Calculating comprehensive metrics...")
+      if (verbose) message("Step 3: Calculating metrics...")
       metrics <- calculate_metrics(similarity_matrix, method_info = method_info)
     }
 
@@ -229,7 +230,7 @@ calculate_document_similarity <- function(texts,
 #' @title Fit Semantic Model
 #'
 #' @description
-#' Performs comprehensive semantic analysis including similarity, dimensionality reduction,
+#' Performs semantic analysis including similarity, dimensionality reduction,
 #' and clustering. This is a high-level wrapper function.
 #'
 #' @param texts A character vector of texts to analyze.
@@ -277,7 +278,7 @@ fit_semantic_model <- function(texts,
                              verbose = TRUE) {
 
   if (verbose) {
-    message("Starting comprehensive semantic analysis...")
+    message("Starting semantic analysis...")
     message("Analysis types: ", paste(analysis_types, collapse = ", "))
   }
 
@@ -361,7 +362,7 @@ fit_semantic_model <- function(texts,
   execution_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
   if (verbose) {
-    message("Comprehensive semantic analysis completed in ", round(execution_time, 2), " seconds")
+    message("Semantic analysis completed in ", round(execution_time, 2), " seconds")
   }
 
   results$execution_time <- execution_time
@@ -596,9 +597,9 @@ reduce_dimensions <- function(data_matrix,
 #'
 #' @description
 #' This function performs clustering analysis using various methods, ordered
-#' from simple to comprehensive:
+#' from simple to detailed:
 #' k-means (simplest), hierarchical (intermediate), and UMAP+DBSCAN
-#' (most comprehensive).
+#' (most detailed).
 #'
 #' @param data_matrix A numeric matrix where rows represent documents and
 #'   columns represent features.
@@ -1104,11 +1105,14 @@ generate_cluster_labels_auto <- function(feature_matrix,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' keywords <- list("1" = c("machine", "learning", "neural"), "2" = c("data", "analysis"))
-#' labels_ollama <- generate_cluster_labels(keywords, provider = "ollama")
-#' labels_openai <- generate_cluster_labels(keywords, provider = "openai")
-#' labels_gemini <- generate_cluster_labels(keywords, provider = "gemini")
+#' if (interactive()) {
+#'   cluster_keywords <- list(
+#'     "1" = c("calculator", "arithmetic", "elementary", "remedial"),
+#'     "2" = c("computer", "instruction", "multiplication", "drill")
+#'   )
+#'   labels_ollama <- generate_cluster_labels(cluster_keywords, provider = "ollama")
+#'   labels_openai <- generate_cluster_labels(cluster_keywords, provider = "openai")
+#'   labels_gemini <- generate_cluster_labels(cluster_keywords, provider = "gemini")
 #' }
 generate_cluster_labels <- function(cluster_keywords,
                                    provider = "auto",
@@ -1307,61 +1311,6 @@ export_document_clustering <- function(coordinates,
   invisible(export_data)
 }
 
-#' @title Cross Analysis Validation
-#' @description Performs cross-validation on text analysis results
-#' @param results Analysis results object to validate
-#' @param verbose Logical indicating whether to print progress messages
-#' @param ... Additional parameters
-#' @return List containing validation status and metrics
-#' @family semantic
-#' @export
-cross_analysis_validation <- function(results, verbose = FALSE, ...) {
-  if (verbose) message("Performing cross-validation...")
-
-  validation_results <- list(
-    status = "completed",
-    metrics = list(
-      coherence = runif(1, 0.7, 0.9),
-      consistency = runif(1, 0.8, 0.95)
-    )
-  )
-
-  return(validation_results)
-}
-
-#' @title Temporal Semantic Analysis
-#' @description Analyzes semantic patterns over time
-#' @param texts Character vector of texts to analyze
-#' @param dates Date vector corresponding to texts
-#' @param time_windows Time window size for grouping (default: "month")
-#' @param embeddings Optional pre-computed embeddings
-#' @param verbose Logical indicating whether to print progress messages
-#' @param ... Additional parameters
-#' @return List containing temporal analysis results
-#' @family semantic
-#' @export
-temporal_semantic_analysis <- function(texts, dates, time_windows = "month", embeddings = NULL, verbose = FALSE, ...) {
-  if (verbose) message("Performing temporal semantic analysis...")
-
-  if (!is.null(dates)) {
-    date_groups <- cut(dates, breaks = time_windows)
-
-    temporal_results <- lapply(unique(date_groups), function(period) {
-      period_texts <- texts[date_groups == period]
-      list(
-        period = period,
-        n_docs = length(period_texts),
-        topics = runif(10)
-      )
-    })
-
-    names(temporal_results) <- as.character(unique(date_groups))
-  } else {
-    temporal_results <- list(message = "No dates provided")
-  }
-
-  return(temporal_results)
-}
 
 #' @title Cross-Analysis Validation
 #'
@@ -1425,7 +1374,7 @@ validate_cross_models <- function(semantic_results,
   return(validation_results)
 }
 
-#' @title Calculate Similarity Robust
+#' @title Calculate Document Similarity with Fallbacks
 #'
 #' @description
 #' Calculates document similarity with fallback methods and diagnostics.
@@ -1444,13 +1393,11 @@ validate_cross_models <- function(semantic_results,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(SpecialEduTech)
-#' texts <- SpecialEduTech$abstract[1:5]
-#'
-#' result <- calculate_similarity_robust(texts)
-#' print(result$similarity_matrix)
-#' print(result$diagnostics)
+#' if (interactive()) {
+#'   abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:5]
+#'   similarity_result <- calculate_similarity_robust(abstracts)
+#'   print(similarity_result$similarity_matrix)
+#'   print(similarity_result$diagnostics)
 #' }
 calculate_similarity_robust <- function(texts,
                                        method = "embeddings",
@@ -1495,10 +1442,13 @@ calculate_similarity_robust <- function(texts,
         method = "embeddings"
       )
     }, error = function(e) {
-      diagnostics$warnings <<- c(diagnostics$warnings,
-                                paste("Embeddings failed:", e$message))
       list(success = FALSE, error = e$message)
     })
+
+    if (!embedding_result$success) {
+      diagnostics$warnings <- c(diagnostics$warnings,
+                                paste("Embeddings failed:", embedding_result$error))
+    }
 
     if (embedding_result$success) {
       diagnostics$computation_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
@@ -1594,16 +1544,11 @@ calculate_similarity_robust <- function(texts,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Generate sample data
-#' set.seed(123)
-#' data <- rbind(
-#'   matrix(rnorm(100, mean = 0), ncol = 2),
-#'   matrix(rnorm(100, mean = 3), ncol = 2)
-#' )
-#' clusters <- c(rep(1, 50), rep(2, 50))
-#'
-#' metrics <- calculate_clustering_metrics(clusters, data)
+#' \donttest{
+#' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:20]
+#' term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(abstracts)))
+#' kmeans_result <- stats::kmeans(term_matrix, centers = 2)
+#' metrics <- calculate_clustering_metrics(kmeans_result$cluster, term_matrix)
 #' print(metrics)
 #' }
 calculate_clustering_metrics <- function(clusters,
@@ -1772,20 +1717,15 @@ calculate_clustering_metrics <- function(clusters,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(SpecialEduTech)
-#' # Generate embeddings for two groups
-#' emb1 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[1:3], verbose = FALSE)
-#' emb2 <- TextAnalysisR::generate_embeddings(SpecialEduTech$abstract[4:6], verbose = FALSE)
-#'
-#' # Calculate cross-similarity
-#' result <- calculate_cross_similarity(
-#'   emb1, emb2,
-#'   labels1 = SpecialEduTech$title[1:3],
-#'   labels2 = SpecialEduTech$title[4:6]
+#' \donttest{
+#' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:6]
+#' term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(abstracts)))
+#' similarity_result <- calculate_cross_similarity(
+#'   term_matrix[1:3, ], term_matrix[4:6, ],
+#'   labels1 = paste("Doc", 1:3),
+#'   labels2 = paste("Doc", 4:6)
 #' )
-#' print(result$similarity_matrix)
-#' print(result$similarity_df)
+#' similarity_result$similarity_matrix
 #' }
 calculate_cross_similarity <- function(embeddings1,
                                         embeddings2,
@@ -1879,21 +1819,21 @@ calculate_cross_similarity <- function(embeddings1,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # After calculating full similarity matrix
-#' similarity_result <- TextAnalysisR::calculate_document_similarity(
-#'   texts = docs$text,
-#'   document_feature_type = "embeddings"
-#' )
-#'
-#' cross_sims <- extract_cross_category_similarities(
-#'   similarity_matrix = similarity_result$similarity_matrix,
-#'   docs_data = docs,
-#'   reference_category = "SLD",
-#'   compare_categories = c("Other Disability", "General"),
-#'   category_var = "category",
-#'   id_var = "display_name",
-#'   name_var = "doc_name"
+#' \donttest{
+#' articles <- TextAnalysisR::SpecialEduTech[1:6, ]
+#' articles$display_name <- paste0("d", seq_len(nrow(articles)))
+#' term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+#' normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+#' similarity_matrix <- normalized_matrix %*% t(normalized_matrix)
+#' dimnames(similarity_matrix) <- list(articles$display_name, articles$display_name)
+#' cross_similarities <- extract_cross_category_similarities(
+#'   similarity_matrix  = similarity_matrix,
+#'   docs_data          = articles,
+#'   reference_category = "thesis",
+#'   compare_categories = "journal_article",
+#'   category_var       = "reference_type",
+#'   id_var             = "display_name",
+#'   name_var           = "title"
 #' )
 #' }
 extract_cross_category_similarities <- function(similarity_matrix,
@@ -2024,19 +1964,29 @@ extract_cross_category_similarities <- function(similarity_matrix,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # After extracting cross-category similarities
+#' \donttest{
+#' articles <- TextAnalysisR::SpecialEduTech[1:6, ]
+#' articles$display_name <- paste0("d", seq_len(nrow(articles)))
+#' term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+#' normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+#' similarity_matrix <- normalized_matrix %*% t(normalized_matrix)
+#' dimnames(similarity_matrix) <- list(articles$display_name, articles$display_name)
+#' cross_similarities <- extract_cross_category_similarities(
+#'   similarity_matrix  = similarity_matrix,
+#'   docs_data          = articles,
+#'   reference_category = "thesis",
+#'   compare_categories = "journal_article",
+#'   category_var       = "reference_type",
+#'   id_var             = "display_name"
+#' )
 #' gap_analysis <- analyze_similarity_gaps(
-#'   similarity_data = cross_sims,
+#'   similarity_data = cross_similarities,
 #'   ref_var = "ref_id",
 #'   other_var = "other_id",
 #'   similarity_var = "similarity",
 #'   category_var = "other_category",
 #'   unique_threshold = 0.6
 #' )
-#'
-#' print(gap_analysis$unique_items)
-#' print(gap_analysis$missing_items)
 #' print(gap_analysis$summary_stats)
 #' }
 analyze_similarity_gaps <- function(similarity_data,
@@ -2155,11 +2105,10 @@ analyze_similarity_gaps <- function(similarity_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(SpecialEduTech)
-#' texts <- SpecialEduTech$abstract[1:10]
-#' results <- analyze_sentiment(texts)
-#' print(results)
+#' \donttest{
+#' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+#' sentiment_results <- analyze_sentiment(abstracts)
+#' print(sentiment_results)
 #' }
 analyze_sentiment <- function(texts,
                               method = "syuzhet",
@@ -2204,12 +2153,11 @@ analyze_sentiment <- function(texts,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(SpecialEduTech)
-#' texts <- SpecialEduTech$abstract[1:10]
-#' sentiment_data <- analyze_sentiment(texts)
-#' plot <- plot_sentiment_distribution(sentiment_data)
-#' print(plot)
+#' \donttest{
+#' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+#' sentiment_data <- analyze_sentiment(abstracts)
+#' sentiment_plot <- plot_sentiment_distribution(sentiment_data)
+#' print(sentiment_plot)
 #' }
 plot_sentiment_distribution <- function(sentiment_data,
                                         title = "Sentiment Distribution") {
@@ -2257,14 +2205,15 @@ plot_sentiment_distribution <- function(sentiment_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data <- data.frame(
-#'   text = c("Good", "Bad", "Okay", "Great", "Poor"),
-#'   category = c("A", "A", "B", "B", "B")
+#' \donttest{
+#' articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+#' sentiment_results <- analyze_sentiment(articles$abstract)
+#' sentiment_data <- cbind(
+#'   reference_type = articles$reference_type,
+#'   sentiment_results
 #' )
-#' data <- cbind(data, analyze_sentiment(data$text))
-#' plot <- plot_sentiment_by_category(data, "category")
-#' print(plot)
+#' sentiment_plot <- plot_sentiment_by_category(sentiment_data, "reference_type")
+#' print(sentiment_plot)
 #' }
 plot_sentiment_by_category <- function(sentiment_data,
                                        category_var,
@@ -2365,7 +2314,7 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #'
 #' @description
 #' Performs lexicon-based sentiment analysis on a DFM object using tidytext lexicons.
-#' Supports AFINN, Bing, and NRC lexicons with comprehensive scoring and emotion analysis.
+#' Supports AFINN, Bing, and NRC lexicons with scoring and emotion analysis.
 #' Now supports n-grams for improved negation and intensifier handling.
 #'
 #' @param dfm_object A quanteda DFM object (unigram or n-gram)
@@ -2390,13 +2339,12 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(SpecialEduTech)
-#' texts <- SpecialEduTech$abstract[1:10]
-#' corp <- quanteda::corpus(texts)
-#' dfm_obj <- quanteda::dfm(quanteda::tokens(corp))
-#' results <- sentiment_lexicon_analysis(dfm_obj, lexicon = "afinn")
-#' print(results$document_sentiment)
+#' \donttest{
+#' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+#' corpus <- quanteda::corpus(abstracts)
+#' dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
+#' lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+#' print(lexicon_results$document_sentiment)
 #' }
 sentiment_lexicon_analysis <- function(dfm_object,
                                        lexicon = "afinn",
@@ -2561,12 +2509,11 @@ sentiment_lexicon_analysis <- function(dfm_object,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' data(SpecialEduTech)
-#' texts <- SpecialEduTech$abstract[1:10]
-#' result <- sentiment_embedding_analysis(texts)
-#' print(result$document_sentiment)
-#' print(result$summary_stats)
+#' if (interactive()) {
+#'   abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
+#'   embedding_sentiment <- sentiment_embedding_analysis(abstracts)
+#'   print(embedding_sentiment$document_sentiment)
+#'   print(embedding_sentiment$summary_stats)
 #' }
 sentiment_embedding_analysis <- function(texts,
                                         embeddings = NULL,
@@ -2700,26 +2647,16 @@ sentiment_embedding_analysis <- function(texts,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Using OpenAI
-#' result <- analyze_sentiment_llm(
-#'   texts = c("This product is amazing!", "Worst experience ever."),
-#'   provider = "openai"
-#' )
+#' if (interactive()) {
+#'   abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:5]
 #'
-#' # Using Gemini with explanations
-#' result <- analyze_sentiment_llm(
-#'   texts = my_texts,
-#'   provider = "gemini",
-#'   include_explanation = TRUE
-#' )
+#'   sentiment_openai <- analyze_sentiment_llm(abstracts, provider = "openai")
 #'
-#' # Using local Ollama (free, no API key)
-#' result <- analyze_sentiment_llm(
-#'   texts = my_texts,
-#'   provider = "ollama",
-#'   model = "llama3"
-#' )
+#'   sentiment_gemini <- analyze_sentiment_llm(abstracts, provider = "gemini",
+#'                                              include_explanation = TRUE)
+#'
+#'   sentiment_ollama <- analyze_sentiment_llm(abstracts, provider = "ollama",
+#'                                              model = "llama3")
 #' }
 analyze_sentiment_llm <- function(texts,
                                   doc_names = NULL,
@@ -3125,8 +3062,7 @@ plot_sentiment_violin <- function(sentiment_data,
 
 #' @importFrom utils modifyList
 #' @importFrom stats cor
-#' @importFrom igraph graph_from_data_frame V vcount degree betweenness
-#'   closeness eigen_centrality layout_with_fr
+#' @importFrom igraph graph_from_data_frame V vcount degree betweenness closeness eigen_centrality layout_with_fr
 #' @importFrom dplyr count filter mutate select group_by summarise ungroup
 #' @importFrom tibble as_tibble
 #' @importFrom tidytext tidy
@@ -3370,15 +3306,29 @@ plot_semantic_viz <- function(analysis_result = NULL,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # With pre-built long-format data
+#' \donttest{
+#' articles <- TextAnalysisR::SpecialEduTech[1:7, ]
+#' term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+#' normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+#' similarity_matrix <- normalized_matrix %*% t(normalized_matrix)
+#' thesis_rows <- which(articles$reference_type == "thesis")[1:3]
+#' article_cols <- which(articles$reference_type == "journal_article")[1:4]
+#' similarity_data <- expand.grid(
+#'   ld_doc_name    = paste("Thesis", seq_along(thesis_rows)),
+#'   other_doc_name = paste("Article", seq_along(article_cols)),
+#'   stringsAsFactors = FALSE
+#' )
+#' similarity_data$cosine_similarity <- as.vector(
+#'   similarity_matrix[thesis_rows, article_cols]
+#' )
+#' similarity_data$other_category <- articles$reference_type[article_cols]
 #' plot_cross_category_heatmap(
-#'   similarity_data = ld_similarities,
+#'   similarity_data = similarity_data,
 #'   row_var = "ld_doc_name",
 #'   col_var = "other_doc_name",
 #'   value_var = "cosine_similarity",
 #'   category_var = "other_category",
-#'   row_label = "SLD Documents"
+#'   row_label = "Theses"
 #' )
 #' }
 plot_cross_category_heatmap <- function(similarity_data,
@@ -3633,27 +3583,28 @@ plot_cross_category_heatmap <- function(similarity_data,
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Simple usage with matrix only
-#' sim_matrix <- matrix(runif(25), nrow = 5)
-#' plot_similarity_heatmap(sim_matrix)
+#' \donttest{
+#' articles <- TextAnalysisR::SpecialEduTech[1:5, ]
+#' term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+#' normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+#' similarity_matrix <- normalized_matrix %*% t(normalized_matrix)
+#' plot_similarity_heatmap(similarity_matrix)
 #'
-#' # With document metadata
-#' docs <- data.frame(
-#'   document_number = paste("Doc", 1:5),
-#'   document_id_display = c("Paper A", "Paper B", "Paper C", "Paper D", "Paper E"),
-#'   category_display = c("Science", "Science", "Tech", "Tech", "Health")
+#' document_metadata <- data.frame(
+#'   document_number     = paste("Doc", 1:5),
+#'   document_id_display = articles$title,
+#'   category_display    = articles$reference_type
 #' )
-#' plot_similarity_heatmap(sim_matrix, docs_data = docs, feature_type = "embeddings")
+#' plot_similarity_heatmap(similarity_matrix, docs_data = document_metadata,
+#'                         feature_type = "embeddings")
 #'
-#' # Cross-category comparison with faceting
 #' plot_similarity_heatmap(
-#'   sim_matrix,
-#'   docs_data = docs,
-#'   row_category = "Science",
-#'   col_categories = c("Tech", "Health"),
-#'   show_values = TRUE,
-#'   facet = TRUE
+#'   similarity_matrix,
+#'   docs_data      = document_metadata,
+#'   row_category   = "thesis",
+#'   col_categories = "journal_article",
+#'   show_values    = TRUE,
+#'   facet          = TRUE
 #' )
 #' }
 plot_similarity_heatmap <- function(similarity_matrix,
@@ -3807,7 +3758,7 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if (interactive()) {
 #' documents <- c(
 #'   "Assistive technology helps students with disabilities access curriculum.",
 #'   "Universal Design for Learning provides multiple means of engagement.",

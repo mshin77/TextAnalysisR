@@ -29,8 +29,7 @@ Character string with ARIA label
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 create_aria_label("button", "analyze", "readability")
+#> [1] "Analyze readability button"
 # Returns: "Analyze readability button"
-} # }
 ```

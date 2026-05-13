@@ -28,8 +28,8 @@ List with status information:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 status <- check_python_env()
 print(status)
-} # }
+}
 ```

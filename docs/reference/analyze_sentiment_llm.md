@@ -108,25 +108,15 @@ Other sentiment:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Using OpenAI
-result <- analyze_sentiment_llm(
-  texts = c("This product is amazing!", "Worst experience ever."),
-  provider = "openai"
-)
+if (interactive()) {
+  abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:5]
 
-# Using Gemini with explanations
-result <- analyze_sentiment_llm(
-  texts = my_texts,
-  provider = "gemini",
-  include_explanation = TRUE
-)
+  sentiment_openai <- analyze_sentiment_llm(abstracts, provider = "openai")
 
-# Using local Ollama (free, no API key)
-result <- analyze_sentiment_llm(
-  texts = my_texts,
-  provider = "ollama",
-  model = "llama3"
-)
-} # }
+  sentiment_gemini <- analyze_sentiment_llm(abstracts, provider = "gemini",
+                                             include_explanation = TRUE)
+
+  sentiment_ollama <- analyze_sentiment_llm(abstracts, provider = "ollama",
+                                             model = "llama3")
+}
 ```

@@ -5,7 +5,7 @@ Show persistent loading notification
 ## Usage
 
 ``` r
-show_loading_notification(message, id = NULL)
+show_loading_notification(message, id = NULL, session = NULL)
 ```
 
 ## Arguments
@@ -17,6 +17,10 @@ show_loading_notification(message, id = NULL)
 - id:
 
   Optional unique id for later removal.
+
+- session:
+
+  Shiny session. Defaults to the current reactive domain.
 
 ## Value
 

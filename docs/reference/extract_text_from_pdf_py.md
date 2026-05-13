@@ -47,11 +47,11 @@ Other pdf:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 setup_python_env()
 
 pdf_path <- "path/to/document.pdf"
 text_data <- extract_text_from_pdf_py(pdf_path)
 head(text_data)
-} # }
+}
 ```

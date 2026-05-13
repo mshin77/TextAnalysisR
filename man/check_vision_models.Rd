@@ -18,21 +18,22 @@ List with availability status and recommendations
 Check if required vision models are available for multimodal processing.
 }
 \examples{
-\dontrun{
+if (interactive()) {
 status <- check_vision_models("ollama")
 status <- check_vision_models("gemini", api_key = Sys.getenv("GEMINI_API_KEY"))
 }
 }
 \seealso{
-Other pdf: 
-\code{\link{detect_pdf_content_type}()},
-\code{\link{detect_pdf_content_type_py}()},
-\code{\link{extract_pdf_multimodal}()},
-\code{\link{extract_pdf_smart}()},
-\code{\link{extract_tables_from_pdf_py}()},
-\code{\link{extract_text_from_pdf}()},
-\code{\link{extract_text_from_pdf_py}()},
-\code{\link{process_pdf_file}()},
-\code{\link{process_pdf_file_py}()}
+Other pdf:
+\code{\link[=detect_pdf_content_type]{detect_pdf_content_type()}},
+\code{\link[=detect_pdf_content_type_py]{detect_pdf_content_type_py()}},
+\code{\link[=extract_pdf_multimodal]{extract_pdf_multimodal()}},
+\code{\link[=extract_pdf_smart]{extract_pdf_smart()}},
+\code{\link[=extract_tables_from_pdf_py]{extract_tables_from_pdf_py()}},
+\code{\link[=extract_text_from_pdf]{extract_text_from_pdf()}},
+\code{\link[=extract_text_from_pdf_py]{extract_text_from_pdf_py()}},
+\code{\link[=process_pdf_file]{process_pdf_file()}},
+\code{\link[=process_pdf_file_py]{process_pdf_file_py()}}
 }
 \concept{pdf}
+\keyword{internal}

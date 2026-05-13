@@ -73,7 +73,7 @@ Other ai:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 data(SpecialEduTech)
 texts <- SpecialEduTech$abstract[1:5]
 
@@ -84,5 +84,5 @@ embeddings <- get_best_embeddings(texts)
 embeddings <- get_best_embeddings(texts, provider = "ollama")
 
 dim(embeddings)
-} # }
+}
 ```

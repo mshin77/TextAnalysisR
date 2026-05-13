@@ -33,8 +33,6 @@ prevent weak or malformed keys.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 result <- validate_api_key("sk-proj...")
 if (result$valid) cat("Provider:", result$provider)
-} # }
 ```

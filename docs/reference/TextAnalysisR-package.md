@@ -1,15 +1,17 @@
 # TextAnalysisR: A Text Mining Workflow Tool
 
-Comprehensive toolkit for text mining and natural language processing
-with an interactive 'Shiny' interface. Import documents from multiple
-formats (PDF, DOCX, XLSX, CSV, TXT) using 'Marker' for PDF extraction,
-preprocess with 'quanteda', and perform linguistic analysis via 'spaCy',
-topic modeling ('stm', 'BERTopic'), semantic analysis, sentiment
-analysis, and network visualization with 'ggplot2'. Features
-topic-grounded content generation and AI-suggested labeling via local
-('Ollama', 'spaCy', transformers) and web-based ('OpenAI', 'Gemini')
-APIs, WCAG 2.1 AA accessibility, multi-language support, and enterprise
-security for production deployment.
+Provides a set of tools for text mining and natural language processing.
+Functions are provided for document import (PDF, DOCX, XLSX, CSV, TXT)
+and preprocessing via 'quanteda', for lexical analysis (term
+frequency-inverse document frequency, log-odds ratios, lexical
+diversity) via 'tidytext', for topic modeling via 'stm' and the
+'BERTopic' approach, and for semantic similarity and document clustering
+on transformer embeddings, as described in Shin et al. (2026)
+[doi:10.1177/07319487251412879](https://doi.org/10.1177/07319487251412879)
+. Includes an interactive 'Shiny' interface with 'ggplot2'
+visualization, optional 'spaCy' lemmatization, and local ('Ollama',
+'sentence-transformers') or web-based ('OpenAI', 'Gemini') model
+providers for retrieval-augmented generation.
 
 ## See also
 
@@ -24,5 +26,9 @@ Useful links:
 ## Author
 
 **Maintainer**: Mikyung Shin <shin.mikyung@gmail.com>
-([ORCID](https://orcid.org/0000-0001-7907-9193)) (Illinois State
-University)
+([ORCID](https://orcid.org/0000-0001-7907-9193))
+
+Authors:
+
+- Mikyung Shin <shin.mikyung@gmail.com>
+  ([ORCID](https://orcid.org/0000-0001-7907-9193))

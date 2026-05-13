@@ -27,26 +27,27 @@ A ggplot2 grouped/stacked bar chart
 Creates a grouped or stacked bar plot showing sentiment distribution across categories.
 }
 \examples{
-\dontrun{
-data <- data.frame(
-  text = c("Good", "Bad", "Okay", "Great", "Poor"),
-  category = c("A", "A", "B", "B", "B")
+\donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:20, ]
+sentiment_results <- analyze_sentiment(articles$abstract)
+sentiment_data <- cbind(
+  reference_type = articles$reference_type,
+  sentiment_results
 )
-data <- cbind(data, analyze_sentiment(data$text))
-plot <- plot_sentiment_by_category(data, "category")
-print(plot)
+sentiment_plot <- plot_sentiment_by_category(sentiment_data, "reference_type")
+print(sentiment_plot)
 }
 }
 \seealso{
-Other sentiment: 
-\code{\link{analyze_sentiment}()},
-\code{\link{analyze_sentiment_llm}()},
-\code{\link{plot_document_sentiment_trajectory}()},
-\code{\link{plot_emotion_radar}()},
-\code{\link{plot_sentiment_boxplot}()},
-\code{\link{plot_sentiment_distribution}()},
-\code{\link{plot_sentiment_violin}()},
-\code{\link{sentiment_embedding_analysis}()},
-\code{\link{sentiment_lexicon_analysis}()}
+Other sentiment:
+\code{\link[=analyze_sentiment]{analyze_sentiment()}},
+\code{\link[=analyze_sentiment_llm]{analyze_sentiment_llm()}},
+\code{\link[=plot_document_sentiment_trajectory]{plot_document_sentiment_trajectory()}},
+\code{\link[=plot_emotion_radar]{plot_emotion_radar()}},
+\code{\link[=plot_sentiment_boxplot]{plot_sentiment_boxplot()}},
+\code{\link[=plot_sentiment_distribution]{plot_sentiment_distribution()}},
+\code{\link[=plot_sentiment_violin]{plot_sentiment_violin()}},
+\code{\link[=sentiment_embedding_analysis]{sentiment_embedding_analysis()}},
+\code{\link[=sentiment_lexicon_analysis]{sentiment_lexicon_analysis()}}
 }
 \concept{sentiment}

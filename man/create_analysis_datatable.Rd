@@ -37,8 +37,9 @@ Creates a consistently formatted DT::datatable for analysis results with
 export buttons and optional numeric formatting.
 }
 \examples{
-\dontrun{
+\donttest{
 df <- data.frame(term = c("word1", "word2"), score = c(0.123456, 0.789012))
 create_analysis_datatable(df, numeric_cols = "score", digits = 3)
 }
 }
+\keyword{internal}

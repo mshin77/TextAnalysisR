@@ -22,22 +22,22 @@ Preserves page structure and cleans whitespace.
 Works best with text-based PDFs (not scanned images).
 }
 \examples{
-\dontrun{
+\donttest{
 pdf_path <- "path/to/document.pdf"
 text_data <- extract_text_from_pdf(pdf_path)
 head(text_data)
 }
 }
 \seealso{
-Other pdf: 
-\code{\link{check_vision_models}()},
-\code{\link{detect_pdf_content_type}()},
-\code{\link{detect_pdf_content_type_py}()},
-\code{\link{extract_pdf_multimodal}()},
-\code{\link{extract_pdf_smart}()},
-\code{\link{extract_tables_from_pdf_py}()},
-\code{\link{extract_text_from_pdf_py}()},
-\code{\link{process_pdf_file}()},
-\code{\link{process_pdf_file_py}()}
+Other pdf:
+\code{\link[=check_vision_models]{check_vision_models()}},
+\code{\link[=detect_pdf_content_type]{detect_pdf_content_type()}},
+\code{\link[=detect_pdf_content_type_py]{detect_pdf_content_type_py()}},
+\code{\link[=extract_pdf_multimodal]{extract_pdf_multimodal()}},
+\code{\link[=extract_pdf_smart]{extract_pdf_smart()}},
+\code{\link[=extract_tables_from_pdf_py]{extract_tables_from_pdf_py()}},
+\code{\link[=extract_text_from_pdf_py]{extract_text_from_pdf_py()}},
+\code{\link[=process_pdf_file]{process_pdf_file()}},
+\code{\link[=process_pdf_file_py]{process_pdf_file_py()}}
 }
 \concept{pdf}

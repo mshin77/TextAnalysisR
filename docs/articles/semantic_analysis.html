@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">TextAnalysisR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -239,7 +239,7 @@ detection.</p>
 networks for each category, displayed in a tabbed interface.</p>
 <hr>
 <details><summary><strong>Network Statistics (9 Metrics)</strong>
-</summary><p>Each network returns comprehensive statistics:</p>
+</summary><p>Each network returns statistics:</p>
 <table class="table">
 <colgroup>
 <col width="38%">
@@ -328,18 +328,6 @@ nodes.</p>
 <p><strong>Learn More:</strong> <a href="https://igraph.org/r/doc/communities.html" class="external-link">igraph Community
 Detection</a></p>
 </details><hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="temporal-analysis">Temporal Analysis<a class="anchor" aria-label="anchor" href="#temporal-analysis"></a>
-</h2>
-<p>Track themes over time:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">temporal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/temporal_semantic_analysis.html">temporal_semantic_analysis</a></span><span class="op">(</span></span>
-<span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
-<span>  dates <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">year</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<hr>
 <details><summary><strong>Embedding Providers</strong>
 </summary><p>Document-to-document similarity using vector embeddings. Multiple
 providers are available:</p>
@@ -383,6 +371,7 @@ model.</p>
 <p><strong>Learn More:</strong> <a href="https://www.sbert.net/" class="external-link">Sentence Transformers</a> | <a href="https://ollama.com/blog/embedding-models" class="external-link">Ollama Embedding
 Models</a></p>
 </details><hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>

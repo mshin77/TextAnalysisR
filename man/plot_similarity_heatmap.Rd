@@ -74,46 +74,47 @@ with support for document metadata, feature-specific colorscales, and rich toolt
 Supports both symmetric (all-vs-all) and cross-category comparison modes.
 }
 \examples{
-\dontrun{
-# Simple usage with matrix only
-sim_matrix <- matrix(runif(25), nrow = 5)
-plot_similarity_heatmap(sim_matrix)
+\donttest{
+articles <- TextAnalysisR::SpecialEduTech[1:5, ]
+term_matrix <- as.matrix(quanteda::dfm(quanteda::tokens(articles$abstract)))
+normalized_matrix <- term_matrix / sqrt(rowSums(term_matrix ^ 2))
+similarity_matrix <- normalized_matrix \%*\% t(normalized_matrix)
+plot_similarity_heatmap(similarity_matrix)
 
-# With document metadata
-docs <- data.frame(
-  document_number = paste("Doc", 1:5),
-  document_id_display = c("Paper A", "Paper B", "Paper C", "Paper D", "Paper E"),
-  category_display = c("Science", "Science", "Tech", "Tech", "Health")
+document_metadata <- data.frame(
+  document_number     = paste("Doc", 1:5),
+  document_id_display = articles$title,
+  category_display    = articles$reference_type
 )
-plot_similarity_heatmap(sim_matrix, docs_data = docs, feature_type = "embeddings")
+plot_similarity_heatmap(similarity_matrix, docs_data = document_metadata,
+                        feature_type = "embeddings")
 
-# Cross-category comparison with faceting
 plot_similarity_heatmap(
-  sim_matrix,
-  docs_data = docs,
-  row_category = "Science",
-  col_categories = c("Tech", "Health"),
-  show_values = TRUE,
-  facet = TRUE
+  similarity_matrix,
+  docs_data      = document_metadata,
+  row_category   = "thesis",
+  col_categories = "journal_article",
+  show_values    = TRUE,
+  facet          = TRUE
 )
 }
 }
 \seealso{
-Other visualization: 
-\code{\link{create_standard_ggplot_theme}()},
-\code{\link{get_sentiment_color}()},
-\code{\link{get_sentiment_colors}()},
-\code{\link{plot_cluster_terms}()},
-\code{\link{plot_cross_category_heatmap}()},
-\code{\link{plot_entity_frequencies}()},
-\code{\link{plot_lexical_dispersion}()},
-\code{\link{plot_log_odds_ratio}()},
-\code{\link{plot_mwe_frequency}()},
-\code{\link{plot_ngram_frequency}()},
-\code{\link{plot_pos_frequencies}()},
-\code{\link{plot_semantic_viz}()},
-\code{\link{plot_term_trends_continuous}()},
-\code{\link{plot_weighted_log_odds}()},
-\code{\link{plot_word_frequency}()}
+Other visualization:
+\code{\link[=create_standard_ggplot_theme]{create_standard_ggplot_theme()}},
+\code{\link[=get_sentiment_color]{get_sentiment_color()}},
+\code{\link[=get_sentiment_colors]{get_sentiment_colors()}},
+\code{\link[=plot_cluster_terms]{plot_cluster_terms()}},
+\code{\link[=plot_cross_category_heatmap]{plot_cross_category_heatmap()}},
+\code{\link[=plot_entity_frequencies]{plot_entity_frequencies()}},
+\code{\link[=plot_lexical_dispersion]{plot_lexical_dispersion()}},
+\code{\link[=plot_log_odds_ratio]{plot_log_odds_ratio()}},
+\code{\link[=plot_mwe_frequency]{plot_mwe_frequency()}},
+\code{\link[=plot_ngram_frequency]{plot_ngram_frequency()}},
+\code{\link[=plot_pos_frequencies]{plot_pos_frequencies()}},
+\code{\link[=plot_semantic_viz]{plot_semantic_viz()}},
+\code{\link[=plot_term_trends_continuous]{plot_term_trends_continuous()}},
+\code{\link[=plot_weighted_log_odds]{plot_weighted_log_odds()}},
+\code{\link[=plot_word_frequency]{plot_word_frequency()}}
 }
 \concept{visualization}

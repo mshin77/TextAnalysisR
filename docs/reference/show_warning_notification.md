@@ -5,7 +5,7 @@ Show warning notification
 ## Usage
 
 ``` r
-show_warning_notification(message, duration = 5)
+show_warning_notification(message, duration = 5, session = NULL)
 ```
 
 ## Arguments
@@ -17,6 +17,10 @@ show_warning_notification(message, duration = 5)
 - duration:
 
   Seconds until auto-dismiss.
+
+- session:
+
+  Shiny session. Defaults to the current reactive domain.
 
 ## Value
 

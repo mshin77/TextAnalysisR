@@ -5,7 +5,7 @@ Show error notification
 ## Usage
 
 ``` r
-show_error_notification(message, duration = 7)
+show_error_notification(message, duration = 7, session = NULL)
 ```
 
 ## Arguments
@@ -17,6 +17,10 @@ show_error_notification(message, duration = 7)
 - duration:
 
   Seconds until auto-dismiss.
+
+- session:
+
+  Shiny session. Defaults to the current reactive domain.
 
 ## Value
 

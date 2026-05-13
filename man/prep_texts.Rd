@@ -24,6 +24,7 @@ prep_texts(
   stopwords_language = "en",
   custom_stopwords = NULL,
   custom_valuetype = "glob",
+  math_mode = FALSE,
   verbose = FALSE,
   ...
 )
@@ -66,6 +67,8 @@ prep_texts(
 \item{custom_stopwords}{Character vector; additional words to remove (default: NULL).}
 
 \item{custom_valuetype}{Character; valuetype for custom_stopwords pattern matching, one of "glob", "regex", or "fixed" (default: "glob").}
+
+\item{math_mode}{Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE} and \code{min_char} to 1 (so single-character tokens such as \code{+ - = x 3} survive), then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. Use for math or STEM corpora where operators and numerals carry meaning (default: FALSE).}
 
 \item{verbose}{Logical; print verbose output (default: FALSE).}
 
@@ -115,12 +118,12 @@ print(tokens)
 }
 }
 \seealso{
-Other preprocessing: 
-\code{\link{get_available_dfm}()},
-\code{\link{get_available_tokens}()},
-\code{\link{import_files}()},
-\code{\link{lemmatize_tokens}()},
-\code{\link{process_pdf_unified}()},
-\code{\link{unite_cols}()}
+Other preprocessing:
+\code{\link[=get_available_dfm]{get_available_dfm()}},
+\code{\link[=get_available_tokens]{get_available_tokens()}},
+\code{\link[=import_files]{import_files()}},
+\code{\link[=lemmatize_tokens]{lemmatize_tokens()}},
+\code{\link[=process_pdf_unified]{process_pdf_unified()}},
+\code{\link[=unite_cols]{unite_cols()}}
 }
 \concept{preprocessing}

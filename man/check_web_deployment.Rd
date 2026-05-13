@@ -18,3 +18,4 @@ if (check_web_deployment()) {
   message("Running on web - some features disabled")
 }
 }
+\keyword{internal}

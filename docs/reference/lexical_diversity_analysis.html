@@ -13,7 +13,7 @@ according to McCarthy &amp;amp; Jarvis (2010) for being independent of text leng
 
     <a class="navbar-brand me-2" href="../index.html">TextAnalysisR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -158,7 +158,7 @@ Behavior Research Methods, 42(2), 381-392.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">texts</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">abstract</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">corp</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/corpus.html" class="external-link">corpus</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span></span>
@@ -172,7 +172,208 @@ Behavior Research Methods, 42(2), 381-392.</p>
 <span class="r-in"><span><span class="va">dfm_obj</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">toks</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">lex_div</span> <span class="op">&lt;-</span> <span class="fu">lexical_diversity_analysis</span><span class="op">(</span><span class="va">dfm_obj</span>, texts <span class="op">=</span> <span class="va">texts</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">lex_div</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lexical_diversity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    document       TTR         C        R     CTTR        U         S         K</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     Doc 1 0.7831325 0.9446793 7.134677 5.044978 34.69006 0.9126943  92.90173</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     Doc 2 0.9166667 0.9726212 4.490731 3.175426 50.41163 0.9138502  69.44444</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     Doc 3 0.7812500 0.9287712 4.419417 3.125000 21.13121 0.8192855 156.25000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     Doc 4 0.9069767 0.9740406 5.947444 4.205478 62.92399 0.9463991  43.26663</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     Doc 5 0.5757576 0.8798576 5.728716 4.050814 16.61059 0.8147581 155.08622</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     Doc 6 0.4415205 0.8598873 8.165145 5.773629 18.08563 0.8376507 163.46910</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     Doc 7 0.8823529 0.9681667 6.301260 4.455664 53.64094 0.9395388  53.82545</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     Doc 8 0.4392157 0.8515204 7.013712 4.959443 16.20788 0.8169738 190.38831</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     Doc 9 0.5882353 0.8919875 6.859943 4.850713 19.75270 0.8491609 149.22145</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10   Doc 10 0.8510638 0.9581138 5.834600 4.125685 39.91999 0.9167662  90.53871</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             I           D         Vm      Maas     lgV0     lgeV0      MTLD</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   51.524390 0.009403468 0.07716055 0.1697843 5.527252 12.726967 107.16222</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   80.666667 0.007246377 0.05618332 0.1408428 5.776437 13.300738  80.64000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   27.173913 0.016129032 0.08291562 0.2175393 3.771555  8.684327  40.96000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  126.750000 0.004429679 0.04406190 0.1260642 7.028498 16.183714 172.57333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   16.747423 0.015666873 0.08980964 0.2453621 3.694732  8.507436  57.53291</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   10.842130 0.016394848 0.11246497 0.2351436 4.268454  9.828479  65.30157</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  101.250000 0.005490196 0.05261336 0.1365375 6.604754 15.208008 121.38000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8    9.083273 0.019113787 0.11845602 0.2483916 3.908323  8.999247  64.44045</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9   19.277108 0.015032680 0.09886904 0.2250022 4.209816  9.693460  73.67553</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10  59.259259 0.009250694 0.07301004 0.1582722 5.594022 12.880713 123.70400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        MATTR     MSTTR Avg Sentence Length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.9319444 0.9166667            27.33333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.9166667 0.9166667            24.00000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.7962963 0.7500000            16.00000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.9520833 0.9583333            21.50000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.9144737 0.8854167            24.75000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.8797582 0.8541667            21.68750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  0.9553571 0.9583333            17.00000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  0.8915975 0.8977273            18.85714</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  0.8727876 0.8750000            22.50000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 0.9392361 1.0000000            23.50000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$n_documents</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$measures_calculated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "TTR"                 "C"                   "R"                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "CTTR"                "U"                   "S"                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "K"                   "I"                   "D"                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "Vm"                  "Maas"                "lgV0"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "lgeV0"               "MTLD"                "MATTR"              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "MSTTR"               "Avg Sentence Length"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$TTR_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7166172</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$TTR_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7821913</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$TTR_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1883719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$C_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9229646</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$C_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9367253</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$C_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.04802694</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$R_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6.189565</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$R_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6.124352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$R_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.171595</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$CTTR_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4.376683</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$CTTR_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4.330571</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$CTTR_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8284429</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$U_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 33.33746</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$U_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 27.91063</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$U_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 17.52347</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$S_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8767078</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$S_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8809276</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$S_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.05382214</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$K_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 116.4392</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$K_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 121.0616</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$K_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 52.2191</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$I_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 50.25742</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$I_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 39.34915</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$I_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 41.26223</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$D_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.01181576</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$D_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.01221807</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$D_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.005226621</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$Vm_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.08055445</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$Vm_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.08003808</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$Vm_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.02506939</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$Maas_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.190294</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$Maas_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1936618</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$Maas_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.04861752</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$lgV0_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5.038384</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$lgV0_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4.897853</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$lgV0_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.223525</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$lgeV0_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 11.60131</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$lgeV0_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 11.27772</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$lgeV0_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.817271</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MTLD_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 90.737</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MTLD_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 77.15776</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MTLD_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 39.86723</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MATTR_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9050201</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MATTR_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9155702</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MATTR_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.0477814</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MSTTR_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9012311</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MSTTR_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.907197</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MSTTR_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.06895207</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$`Avg Sentence Length_mean`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 21.7128</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$`Avg Sentence Length_median`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 22.09375</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$`Avg Sentence Length_sd`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.541928</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -1,8 +1,7 @@
-# Calculate Comprehensive Metrics
+# Calculate Similarity Metrics
 
-Calculates comprehensive similarity metrics including statistical
-measures and network properties. Internal function used by
-document_similarity_analysis.
+Calculates similarity metrics including statistical measures and network
+properties. Internal function used by document_similarity_analysis.
 
 ## Usage
 
@@ -26,4 +25,4 @@ calculate_metrics(similarity_matrix, labels = NULL, method_info = NULL)
 
 ## Value
 
-A list of comprehensive metrics.
+A list of metrics.

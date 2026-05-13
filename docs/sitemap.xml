@@ -15,8 +15,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/web_accessibility.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/authors.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/index.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/LICENSE-text.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/LICENSE.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/news/index.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/acronym.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_document_clustering.html</loc></url>
@@ -77,7 +75,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_message_table.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_sr_text.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_standard_ggplot_theme.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/cross_analysis_validation.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image_gemini.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image_ollama.html</loc></url>
@@ -229,7 +226,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stm_15.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/stopwords_list.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/summarize_morphology.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/temporal_semantic_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/TextAnalysisR-package.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/truncate_text_to_words.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/truncate_text_with_ellipsis.html</loc></url>

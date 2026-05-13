@@ -20,9 +20,7 @@ Character string with ARIA label
 Creates accessible ARIA label for UI elements.
 }
 \examples{
-\dontrun{
 create_aria_label("button", "analyze", "readability")
 # Returns: "Analyze readability button"
-}
 }
 \keyword{internal}
