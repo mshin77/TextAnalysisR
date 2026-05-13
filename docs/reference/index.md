@@ -2,12 +2,16 @@
 
 ## Getting Started
 
-Launch the app and import data
+Launch the app, import data, and configure Python
 
 - [`run_app()`](https://mshin77.github.io/TextAnalysisR/reference/run_app.md)
   : Launch the TextAnalysisR app
 - [`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md)
   : Process Files
+- [`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md)
+  : Setup Python Environment
+- [`check_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/check_python_env.md)
+  : Check Python Environment Status
 
 ## Preprocessing
 
@@ -174,14 +178,12 @@ Similarity, clustering, and networks
 
 ## Topic Modeling
 
-STM, embedding-based, and hybrid models
+STM and embedding-based models, validation, and quality metrics
 
 - [`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md)
   : Find Optimal Number of Topics
 - [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md)
   : Fit Embedding-based Topic Model
-- [`fit_hybrid_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_hybrid_model.md)
-  : Fit Hybrid Topic Model
 - [`fit_semantic_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.md)
   : Fit Semantic Model
 - [`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md)
@@ -224,27 +226,22 @@ STM, embedding-based, and hybrid models
   : Plot Topic Model Quality Metrics
 - [`plot_term_trends_continuous()`](https://mshin77.github.io/TextAnalysisR/reference/plot_term_trends_continuous.md)
   : Plot Term Frequency Trends by Continuous Variable
+- [`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md)
+  : Cross-Analysis Validation
+- [`validate_semantic_coherence()`](https://mshin77.github.io/TextAnalysisR/reference/validate_semantic_coherence.md)
+  : Validate Semantic Coherence
+- [`calculate_clustering_metrics()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_clustering_metrics.md)
+  : Calculate Clustering Quality Metrics
+- [`calculate_cross_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_cross_similarity.md)
+  : Calculate Cross-Matrix Cosine Similarity
+- [`analyze_similarity_gaps()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_similarity_gaps.md)
+  : Analyze Similarity Gaps Between Categories
+- [`extract_cross_category_similarities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.md)
+  : Extract Cross-Category Similarities from Full Similarity Matrix
 
-## PDF & Multimodal
+## AI & Multimodal
 
-Text extraction from PDFs with optional vision AI
-
-- [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md)
-  : Process PDF File (Unified Entry Point)
-- [`process_pdf_file()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_file.md)
-  : Process PDF File
-- [`extract_text_from_pdf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf.md)
-  : Extract Text from PDF
-- [`extract_pdf_multimodal()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.md)
-  : Extract PDF with Multimodal Analysis
-- [`extract_pdf_smart()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_smart.md)
-  : Smart PDF Extraction with Auto-Detection
-- [`detect_pdf_content_type()`](https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.md)
-  : Detect PDF Content Type
-
-## AI Integration
-
-Topic-grounded content generation via local and web-based APIs
+LLM integration, embeddings, PDF extraction, and vision AI
 
 - [`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md)
   : Check if Ollama is Available
@@ -278,32 +275,18 @@ Topic-grounded content generation via local and web-based APIs
   : Get Default System Prompt for Content Type
 - [`get_content_type_user_template()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_user_template.md)
   : Get Default User Prompt Template for Content Type
-
-## Python Environment
-
-Python environment setup
-
-- [`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md)
-  : Setup Python Environment
-- [`check_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/check_python_env.md)
-  : Check Python Environment Status
-
-## Validation
-
-Quality metrics and cross-validation
-
-- [`validate_cross_models()`](https://mshin77.github.io/TextAnalysisR/reference/validate_cross_models.md)
-  : Cross-Analysis Validation
-- [`validate_semantic_coherence()`](https://mshin77.github.io/TextAnalysisR/reference/validate_semantic_coherence.md)
-  : Validate Semantic Coherence
-- [`calculate_clustering_metrics()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_clustering_metrics.md)
-  : Calculate Clustering Quality Metrics
-- [`calculate_cross_similarity()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_cross_similarity.md)
-  : Calculate Cross-Matrix Cosine Similarity
-- [`analyze_similarity_gaps()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_similarity_gaps.md)
-  : Analyze Similarity Gaps Between Categories
-- [`extract_cross_category_similarities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.md)
-  : Extract Cross-Category Similarities from Full Similarity Matrix
+- [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md)
+  : Process PDF File (Unified Entry Point)
+- [`process_pdf_file()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_file.md)
+  : Process PDF File
+- [`extract_text_from_pdf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf.md)
+  : Extract Text from PDF
+- [`extract_pdf_multimodal()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.md)
+  : Extract PDF with Multimodal Analysis
+- [`extract_pdf_smart()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_smart.md)
+  : Smart PDF Extraction with Auto-Detection
+- [`detect_pdf_content_type()`](https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.md)
+  : Detect PDF Content Type
 
 ## Data
 

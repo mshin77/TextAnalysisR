@@ -30,10 +30,7 @@ dfm_object <- quanteda::dfm(tokens)
 find_optimal_k(dfm_object, topic_range = 5:30)
 ```
 
----
-
-<details>
-<summary><strong>STM (Structural Topic Model)</strong></summary>
+**STM (Structural Topic Model)**
 
 STM discovers latent topics using probabilistic modeling while incorporating document metadata as covariates. It models how topics vary across documents based on metadata like time, author, or category.
 
@@ -65,12 +62,7 @@ terms <- get_topic_terms(model, top_term_n = 10)
 
 **Learn More:** [Structural Topic Model](https://www.structuraltopicmodel.com/) | [STM Vignette](https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf)
 
-</details>
-
----
-
-<details>
-<summary><strong>Embedding-based Topics</strong></summary>
+**Embedding-based Topics**
 
 Uses transformer embeddings with dimensionality reduction and clustering. Best for short texts, multilingual content, and semantic similarity.
 
@@ -119,43 +111,6 @@ results <- fit_embedding_model(
 **R Backend Methods:** Format is `{dimred}_{clustering}` (e.g., `"umap_dbscan"`, `"tsne_kmeans"`, `"pca_hierarchical"`).
 
 **Learn More:** [BERTopic](https://maartengr.github.io/BERTopic/) | [Sentence-BERT](https://www.sbert.net/)
-
-</details>
-
----
-
-<details>
-<summary><strong>Hybrid Topic Modeling</strong></summary>
-
-Combines the strengths of both STM and embedding-based approaches. Uses transformer embeddings for semantic understanding while maintaining STM's ability to model covariate relationships and provide probabilistic topic assignments.
-
-**Best For:**
-
-- Best of both worlds: Need semantic coherence AND covariate modeling
-- Complex research: Testing hypotheses about how metadata affects semantically-defined topics
-- Validation: Compare and validate findings across different methodological approaches
-
-**Quality Metrics:**
-
-- **Semantic Coherence:** How often top words co-occur in documents (higher is better)
-- **Exclusivity:** How unique words are to each topic (higher is better)
-- **Silhouette Score:** Cluster separation for embedding topics (-1 to 1, higher is better)
-- **Alignment Score:** Agreement between STM and embedding topic assignments
-- **Adjusted Rand Index:** Clustering agreement corrected for chance
-
-```{r}
-results <- fit_hybrid_model(
-  texts = united_tbl$united_texts,
-  metadata = united_tbl[, c("reference_type", "year")],
-  n_topics_stm = 15
-)
-```
-
-**Learn More:** [Structural Topic Model](https://www.structuraltopicmodel.com/) | [BERTopic](https://maartengr.github.io/BERTopic/)
-
-</details>
-
----
 
 ## AI Topic Labels
 
@@ -218,10 +173,7 @@ content <- generate_topic_content(
 print(content)
 ```
 
----
-
-<details>
-<summary><strong>Prompt Format</strong></summary>
+**Prompt Format**
 
 The LLM receives structured prompts with your topic data:
 
@@ -254,8 +206,6 @@ content <- generate_topic_content(
 )
 ```
 
-</details>
-
 ## Topic Prevalence Modeling
 
 Model how topic prevalence varies with document-level covariates using count regression. Auto-selects between Poisson, Negative Binomial, and Zero-Inflated Negative Binomial based on data diagnostics (dispersion ratio and zero proportion).
@@ -277,29 +227,17 @@ prevalence_result$summary          # Tidy coefficients with odds ratios
 prevalence_result$diagnostics      # Zero proportion, dispersion ratio
 ```
 
----
+**Methods Comparison**
 
-<details>
-<summary><strong>Methods Comparison</strong></summary>
-
-| Feature | STM | Embedding | Hybrid |
-|---------|-----|-----------|--------|
-| Speed | Fast | Medium | Slow |
-| Metadata Support | Yes | No | Yes |
-| Short Texts | Poor | Good | Good |
-| Multilingual | No | Yes | Yes |
+| Feature | STM | Embedding |
+|---------|-----|-----------|
+| Speed | Fast | Medium |
+| Metadata Support | Yes | No |
+| Short Texts | Poor | Good |
+| Multilingual | No | Yes |
 
 **When to Use:**
 
 - **STM:** Metadata analysis, covariate effects
 - **Embedding:** Short texts, semantic similarity (use `backend = "r"` if no BERTopic)
-- **Hybrid:** Combine both approaches
 
-</details>
-
----
-
-## Next Steps
-
-- [Semantic Analysis](semantic_analysis.html)
-- [Python Environment](python_environment.html) (for embedding-based methods)

@@ -21,8 +21,6 @@ dfm_object <- quanteda::dfm(tokens)
 find_optimal_k(dfm_object, topic_range = 5:30)
 ```
 
-------------------------------------------------------------------------
-
 **STM (Structural Topic Model)**
 
 STM discovers latent topics using probabilistic modeling while
@@ -59,8 +57,6 @@ terms <- get_topic_terms(model, top_term_n = 10)
 **Learn More:** [Structural Topic
 Model](https://www.structuraltopicmodel.com/) \| [STM
 Vignette](https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf)
-
-------------------------------------------------------------------------
 
 **Embedding-based Topics**
 
@@ -117,49 +113,6 @@ results <- fit_embedding_model(
 
 **Learn More:** [BERTopic](https://maartengr.github.io/BERTopic/) \|
 [Sentence-BERT](https://www.sbert.net/)
-
-------------------------------------------------------------------------
-
-**Hybrid Topic Modeling**
-
-Combines the strengths of both STM and embedding-based approaches. Uses
-transformer embeddings for semantic understanding while maintaining
-STM’s ability to model covariate relationships and provide probabilistic
-topic assignments.
-
-**Best For:**
-
-- Best of both worlds: Need semantic coherence AND covariate modeling
-- Complex research: Testing hypotheses about how metadata affects
-  semantically-defined topics
-- Validation: Compare and validate findings across different
-  methodological approaches
-
-**Quality Metrics:**
-
-- **Semantic Coherence:** How often top words co-occur in documents
-  (higher is better)
-- **Exclusivity:** How unique words are to each topic (higher is better)
-- **Silhouette Score:** Cluster separation for embedding topics (-1 to
-  1, higher is better)
-- **Alignment Score:** Agreement between STM and embedding topic
-  assignments
-- **Adjusted Rand Index:** Clustering agreement corrected for chance
-
-``` r
-
-results <- fit_hybrid_model(
-  texts = united_tbl$united_texts,
-  metadata = united_tbl[, c("reference_type", "year")],
-  n_topics_stm = 15
-)
-```
-
-**Learn More:** [Structural Topic
-Model](https://www.structuraltopicmodel.com/) \|
-[BERTopic](https://maartengr.github.io/BERTopic/)
-
-------------------------------------------------------------------------
 
 ## AI Topic Labels
 
@@ -229,8 +182,6 @@ content <- generate_topic_content(
 print(content)
 ```
 
-------------------------------------------------------------------------
-
 **Prompt Format**
 
 The LLM receives structured prompts with your topic data:
@@ -291,30 +242,17 @@ prevalence_result$summary          # Tidy coefficients with odds ratios
 prevalence_result$diagnostics      # Zero proportion, dispersion ratio
 ```
 
-------------------------------------------------------------------------
-
 **Methods Comparison**
 
-| Feature          | STM  | Embedding | Hybrid |
-|------------------|------|-----------|--------|
-| Speed            | Fast | Medium    | Slow   |
-| Metadata Support | Yes  | No        | Yes    |
-| Short Texts      | Poor | Good      | Good   |
-| Multilingual     | No   | Yes       | Yes    |
+| Feature          | STM  | Embedding |
+|------------------|------|-----------|
+| Speed            | Fast | Medium    |
+| Metadata Support | Yes  | No        |
+| Short Texts      | Poor | Good      |
+| Multilingual     | No   | Yes       |
 
 **When to Use:**
 
 - **STM:** Metadata analysis, covariate effects
 - **Embedding:** Short texts, semantic similarity (use `backend = "r"`
   if no BERTopic)
-- **Hybrid:** Combine both approaches
-
-------------------------------------------------------------------------
-
-## Next Steps
-
-- [Semantic
-  Analysis](https://mshin77.github.io/TextAnalysisR/articles/semantic_analysis.md)
-- [Python
-  Environment](https://mshin77.github.io/TextAnalysisR/articles/python_environment.md)
-  (for embedding-based methods)

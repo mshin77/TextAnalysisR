@@ -448,6 +448,8 @@ reduce_dimensions <- function(data_matrix,
     message("Starting dimensionality reduction with method: ", method)
   }
 
+  old_seed <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv) else NULL
+  on.exit(if (!is.null(old_seed)) assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
   set.seed(seed)
   start_time <- Sys.time()
 
@@ -680,6 +682,8 @@ cluster_embeddings <- function(data_matrix,
     message("Starting clustering analysis with method: ", method)
   }
 
+  old_seed <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv) else NULL
+  on.exit(if (!is.null(old_seed)) assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
   set.seed(seed)
   start_time <- Sys.time()
 
@@ -1476,8 +1480,8 @@ calculate_similarity_robust <- function(texts,
   n_docs <- length(texts)
   similarity_matrix <- matrix(0, nrow = n_docs, ncol = n_docs)
 
-  for (i in 1:n_docs) {
-    for (j in 1:n_docs) {
+  for (i in seq_len(n_docs)) {
+    for (j in seq_len(n_docs)) {
       if (i == j) {
         similarity_matrix[i, j] <- 1.0
       } else {

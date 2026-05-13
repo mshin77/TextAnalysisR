@@ -14,7 +14,7 @@ fit_embedding_topics(
   embedding_model = "all-MiniLM-L6-v2",
   clustering_method = "kmeans",
   similarity_threshold = 0.7,
-  min_topic_size = 3,
+  min_topic_size = 10,
   cluster_selection_method = "eom",
   umap_neighbors = 15,
   umap_min_dist = 0,

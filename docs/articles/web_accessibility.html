@@ -15,7 +15,8 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Accessibility">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Accessibility">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -36,21 +37,24 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/quickstart.html">Getting Started</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Workflow</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-workflow">
+<li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
     <li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
+  </ul>
+</li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-extensions">
+<li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
+    <li><a class="dropdown-item" href="../articles/cybersecurity.html">Cybersecurity</a></li>
+    <li><a class="dropdown-item" href="../articles/web_accessibility.html">Web Accessibility</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -132,6 +136,18 @@
 <li>100+ languages via Google Translate</li>
 <li>Auto-detected text-to-speech</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="palette-audit-developers">Palette Audit (developers)<a class="anchor" aria-label="anchor" href="#palette-audit-developers"></a>
+</h2>
+<p>Run a WCAG AA contrast audit against the app’s light and dark
+backgrounds. Requires the <a href="https://github.com/mshin77/a11yviz" class="external-link">a11yviz</a> package.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install once: remotes::install_github("mshin77/a11yviz")</span></span>
+<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>dev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><code>dev = TRUE</code> scans the Shiny source for inline hex colors
+and reports any color-background pairs that fail 4.5:1 contrast before
+launching the app.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -4,10 +4,12 @@ template:
 
 reference:
 - title: "Getting Started"
-  desc: "Launch the app and import data"
+  desc: "Launch the app, import data, and configure Python"
   contents:
   - run_app
   - import_files
+  - setup_python_env
+  - check_python_env
 
 - title: "Preprocessing"
   desc: "Text preparation and feature extraction"
@@ -94,7 +96,7 @@ reference:
   - plot_cluster_terms
 
 - title: "Topic Modeling"
-  desc: "STM, embedding-based, and hybrid models"
+  desc: "STM and embedding-based models, validation, and quality metrics"
   contents:
   - find_optimal_k
   - starts_with("fit_")
@@ -116,19 +118,15 @@ reference:
   - plot_model_comparison
   - plot_quality_metrics
   - plot_term_trends_continuous
+  - validate_cross_models
+  - validate_semantic_coherence
+  - calculate_clustering_metrics
+  - calculate_cross_similarity
+  - analyze_similarity_gaps
+  - extract_cross_category_similarities
 
-- title: "PDF & Multimodal"
-  desc: "Text extraction from PDFs with optional vision AI"
-  contents:
-  - process_pdf_unified
-  - starts_with("process_pdf")
-  - starts_with("extract_text")
-  - starts_with("extract_tables")
-  - starts_with("extract_pdf")
-  - starts_with("detect_pdf")
-
-- title: "AI Integration"
-  desc: "Topic-grounded content generation via local and web-based APIs"
+- title: "AI & Multimodal"
+  desc: "LLM integration, embeddings, PDF extraction, and vision AI"
   contents:
   - check_ollama
   - list_ollama_models
@@ -146,22 +144,12 @@ reference:
   - analyze_sentiment_llm
   - get_content_type_prompt
   - get_content_type_user_template
-
-- title: "Python Environment"
-  desc: "Python environment setup"
-  contents:
-  - setup_python_env
-  - check_python_env
-
-- title: "Validation"
-  desc: "Quality metrics and cross-validation"
-  contents:
-  - validate_cross_models
-  - validate_semantic_coherence
-  - calculate_clustering_metrics
-  - calculate_cross_similarity
-  - analyze_similarity_gaps
-  - extract_cross_category_similarities
+  - process_pdf_unified
+  - starts_with("process_pdf")
+  - starts_with("extract_text")
+  - starts_with("extract_tables")
+  - starts_with("extract_pdf")
+  - starts_with("detect_pdf")
 
 - title: "Data"
   desc: "Example datasets"
@@ -193,7 +181,6 @@ reference:
   - find_similar_words
   - find_topic_matches
   - calculate_semantic_drift
-  - assess_hybrid_stability
   - calculate_assignment_consistency
   - calculate_keyword_stability
   - starts_with("show_")
@@ -219,9 +206,7 @@ reference:
   - wrap_text_for_tooltip
   - calculate_coherence
   - calculate_contrast_ratio
-  - calculate_hybrid_quality_metrics
   - calculate_metrics
-  - calculate_topic_alignment
   - calculate_topic_cluster_correspondence
   - calculate_topic_quality
   - check_alt_text
@@ -229,7 +214,6 @@ reference:
   - check_multimodal_prerequisites
   - check_rate_limit
   - check_wcag_contrast
-  - combine_keywords_weighted
   - create_aria_label
   - create_sr_text
   - describe_image_gemini
@@ -250,20 +234,18 @@ reference:
   - validate_keyboard_navigation
 
 articles:
-- title: "Getting Started"
+- title: "Workflow"
   navbar: ~
   contents:
   - quickstart
   - installation
-
-- title: "Core Workflows"
-  contents:
   - preprocessing
   - lexical_analysis
   - semantic_analysis
   - topic_modeling
 
-- title: "Advanced Topics"
+- title: "Extensions"
+  navbar: ~
   contents:
   - ai_integration
   - python_environment
@@ -271,26 +253,18 @@ articles:
   - cybersecurity
   - web_accessibility
 
-- title: "Reference"
-  contents:
-  - function_index
-
 navbar:
   structure:
-    left: [intro, reference, articles, news]
+    left: [intro, reference, workflow, extensions, news]
     right: [search, github]
   components:
-    reference:
-      text: Reference
-      href: reference/index.html
-    articles:
-      text: Articles
+    workflow:
+      text: Workflow
       menu:
-      - text: Getting Started
+      - text: Quickstart
         href: articles/quickstart.html
       - text: Installation
         href: articles/installation.html
-      - text: "---"
       - text: Preprocessing
         href: articles/preprocessing.html
       - text: Lexical Analysis
@@ -299,13 +273,16 @@ navbar:
         href: articles/semantic_analysis.html
       - text: Topic Modeling
         href: articles/topic_modeling.html
-      - text: "---"
+    extensions:
+      text: Extensions
+      menu:
       - text: AI Integration
         href: articles/ai_integration.html
       - text: Python Environment
         href: articles/python_environment.html
       - text: Multimodal Analysis
         href: articles/multimodal_analysis.html
-      - text: "---"
-      - text: Function Index
-        href: articles/function_index.html
+      - text: Cybersecurity
+        href: articles/cybersecurity.html
+      - text: Web Accessibility
+        href: articles/web_accessibility.html

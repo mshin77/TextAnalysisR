@@ -48,20 +48,4 @@ plot_word_frequency(dfm_object, n = 20)
 |----------------|------------------------------------|
 | Lexical        | Word frequency, keywords, networks |
 | Semantic       | Similarity, clustering, sentiment  |
-| Topic Modeling | STM, BERTopic, hybrid              |
-
-## Next Steps
-
-- [Installation](https://mshin77.github.io/TextAnalysisR/articles/installation.md) -
-  Full setup guide
-- [Preprocessing](https://mshin77.github.io/TextAnalysisR/articles/preprocessing.md) -
-  Prepare text data
-- [Lexical
-  Analysis](https://mshin77.github.io/TextAnalysisR/articles/lexical_analysis.md) -
-  Word patterns
-- [Semantic
-  Analysis](https://mshin77.github.io/TextAnalysisR/articles/semantic_analysis.md) -
-  Meaning and similarity
-- [Topic
-  Modeling](https://mshin77.github.io/TextAnalysisR/articles/topic_modeling.md) -
-  Discover themes
+| Topic Modeling | STM and BERTopic                   |

@@ -119,7 +119,7 @@ ui <- fluidPage(
       id = "tts_toggle",
       href = "#",
       tabindex = "2",
-      style = "cursor: pointer; text-decoration: none; color: #475569; font-size: 26px; user-select: none;",
+      style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 26px; user-select: none;",
       `aria-label` = "Text to speech",
       title = "Text to Speech (Alt+S)",
       tags$i(class = "fa fa-volume-up", id = "tts_icon", `aria-hidden` = "true", style = "pointer-events: none;")
@@ -129,7 +129,7 @@ ui <- fluidPage(
       href = "javascript:void(0);",
       onclick = "toggleDarkMode()",
       tabindex = "3",
-      style = "cursor: pointer; text-decoration: none; color: #475569; font-size: 30px;",
+      style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 30px;",
       `aria-label` = "Toggle dark mode",
       title = "Toggle dark mode",
       tags$i(class = "fa fa-moon", `aria-hidden` = "true")
@@ -140,7 +140,7 @@ ui <- fluidPage(
         id = "translate_icon",
         href = "#",
         tabindex = "4",
-        style = "cursor: pointer; text-decoration: none; color: #475569; font-size: 26px; user-select: none;",
+        style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 26px; user-select: none;",
         `aria-label` = "Select language",
         title = "Select Language",
         tags$i(class = "fa fa-globe", `aria-hidden` = "true", style = "pointer-events: none;")
@@ -254,7 +254,7 @@ ui <- fluidPage(
           tags$h5(
             HTML("<strong>AI Configuration</strong>"),
             tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;"),
-            style = "color: #0c1f4a; margin-bottom: 10px;"
+            style = "color: #4269BF; margin-bottom: 10px;"
           ),
           tags$p(style = "font-size: 16px; color: #666;", "API keys entered here apply to all AI features. You can also enter keys per-feature."),
           passwordInput("global_openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
@@ -263,14 +263,14 @@ ui <- fluidPage(
           if (!is_remote_ui) tagList(
             tags$h5(
               HTML("<strong>Ollama Status</strong>"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             uiOutput("global_ollama_status"),
             tags$hr()
           ),
           tags$h5(
             HTML("<strong>Usage Log</strong>"),
-            style = "color: #0c1f4a; margin-bottom: 10px;"
+            style = "color: #4269BF; margin-bottom: 10px;"
           ),
           tags$p(style = "font-size: 16px; color: #666;", "Track which AI models were used (for reproducibility reporting)."),
           downloadButton("download_ai_log", "Download Log as CSV", class = "btn-secondary btn-block")
@@ -285,7 +285,7 @@ ui <- fluidPage(
             condition = "!output.has_ai_usage_log",
             div(
               style = "padding: 30px 20px;",
-              tags$h5(HTML("<strong>AI Features Overview</strong>"), style = "color: #0c1f4a; margin-bottom: 16px;"),
+              tags$h5(HTML("<strong>AI Features Overview</strong>"), style = "color: #4269BF; margin-bottom: 16px;"),
               tags$p(style = "font-size: 16px; color: #64748B; margin-bottom: 20px;",
                 "Configure API keys in the sidebar, then use AI features across the app. Usage is logged here for reproducibility."),
               tags$table(
@@ -338,14 +338,14 @@ ui <- fluidPage(
               ),
               tags$div(
                 style = "margin-top: 20px; padding: 12px 16px; background-color: #F1F5F9; border-radius: 6px;",
-                tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #334155;",
+                tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("Ollama"), " \u2014 Free, private, runs locally. Install from ",
                   tags$a(href = "https://ollama.com", target = "_blank", "ollama.com"), "."),
-                tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #334155;",
+                tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("Sentence Transformers"), " \u2014 Free, runs locally. Requires Python + sentence-transformers."),
-                tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #334155;",
+                tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("OpenAI"), " \u2014 Cloud API. Enter key above or set ", tags$code("OPENAI_API_KEY"), " in .Renviron."),
-                tags$p(style = "margin: 0; font-size: 16px; color: #334155;",
+                tags$p(style = "margin: 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("Gemini"), " \u2014 Cloud API. Enter key above or set ", tags$code("GEMINI_API_KEY"), " in .Renviron.")
               )
             )
@@ -420,7 +420,7 @@ Supports:
             tags$h5(
               HTML("<strong>Select columns</strong> <a href='https://tidyr.tidyverse.org/reference/unite.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
               tags$span("REQUIRED", style = "background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             div(class = "checkbox-margin", checkboxGroupInput("show_vars",
               label = NULL,
@@ -433,7 +433,7 @@ Supports:
             tags$h5(
               HTML("<strong>Segment corpus into tokens</strong> <a href='https://quanteda.io/reference/tokens.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
               tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             tags$div(
               class = "warning-box status-sidebar-warning",
@@ -486,7 +486,7 @@ Supports:
             tags$h5(
               HTML("<strong>Detect multi-words</strong> <a href='https://www.tidytextmining.com/ngrams' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
               tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             checkboxGroupInput(
               "ngram_sizes",
@@ -527,7 +527,7 @@ Supports:
               )
             ),
             tags$hr(),
-            tags$h5(strong("Compound selected n-grams"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Compound selected n-grams"), style = "color: #4269BF; margin-bottom: 10px;"),
             selectizeInput(
               "multi_word_expressions",
               label = "N-grams to compound",
@@ -565,7 +565,7 @@ Supports:
               tags$h5(
                 HTML("<strong>Document-feature matrix</strong> <a href='https://quanteda.io/reference/dfm.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
                 tags$span("REQUIRED", style = "background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;"),
-                style = "color: #0c1f4a; margin: 0;"
+                style = "color: #4269BF; margin: 0;"
               ),
               actionLink("showDFMInfo", tags$i(class = "fas fa-info-circle"),
                         style = "color: #337ab7; font-size: 16px;",
@@ -588,7 +588,7 @@ Supports:
             tags$h5(
               strong("Remove stopwords"),
               tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             selectizeInput(
               "common_words",
@@ -647,7 +647,7 @@ Supports:
                     tags$i(class = "fa fa-columns", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Select columns and click ",
-                      tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                      tags$strong("'Apply'", style = "color: #4269BF;"),
                       " to unite text columns",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -671,7 +671,7 @@ Supports:
                     tags$i(class = "fa fa-cut", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Configure options and click ",
-                      tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                      tags$strong("'Apply'", style = "color: #4269BF;"),
                       " to tokenize texts",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -714,7 +714,7 @@ Supports:
                     tags$i(class = "fa fa-filter", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Select stopwords and click ",
-                      tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                      tags$strong("'Apply'", style = "color: #4269BF;"),
                       " to remove common words",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -746,7 +746,7 @@ Supports:
                         tags$i(class = "fa fa-search", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                         tags$p(
                           "Configure settings and click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " to detect multi-words",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -785,7 +785,7 @@ Supports:
                         tags$i(class = "fa fa-link", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                         tags$p(
                           "Select n-grams and click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " to compound multi-words",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -830,7 +830,7 @@ Supports:
                     tags$i(class = "fa fa-table", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Click ",
-                      tags$strong("'Process'", style = "color: #0c1f4a;"),
+                      tags$strong("'Process'", style = "color: #4269BF;"),
                       " to create document-feature matrix",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -853,7 +853,7 @@ Supports:
             tags$h5(
               HTML("<strong>Linguistic Analysis</strong> <a href='https://spacy.io/usage/linguistic-features#lemmatization' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
               tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             div(
               style = "display: flex; gap: 10px; margin-bottom: 15px;",
@@ -871,7 +871,7 @@ Supports:
             condition = "input.conditioned2 == 1 && input.linguistic_subtabs == 'pos'",
             tags$div(
               style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;",
-              tags$h5(HTML("<strong>Part-of-Speech Configuration</strong> <a href='https://universaldependencies.org/u/pos/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin: 0;"),
+              tags$h5(HTML("<strong>Part-of-Speech Configuration</strong> <a href='https://universaldependencies.org/u/pos/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin: 0;"),
               actionLink("showPOSInfo", icon("info-circle"),
                         style = "color: #337ab7; font-size: 16px;",
                         title = "Click for POS tags guide")
@@ -917,7 +917,7 @@ Supports:
             condition = "input.conditioned2 == 1 && input.linguistic_subtabs == 'morphology'",
             div(
               style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;",
-              tags$h5(HTML("<strong>Morphology Analysis</strong>"), style = "color: #0c1f4a; margin: 0;"),
+              tags$h5(HTML("<strong>Morphology Analysis</strong>"), style = "color: #4269BF; margin: 0;"),
               actionLink("showMorphInfo", icon("info-circle"),
                          style = "color: #337ab7; font-size: 16px;",
                          title = "Click for morphology guide")
@@ -953,7 +953,7 @@ Supports:
             condition = "input.conditioned2 == 1 && input.linguistic_subtabs == 'dependencies'",
             div(
               style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;",
-              tags$h5(HTML("<strong>Dependency Parsing</strong> <a href='https://universaldependencies.org/u/dep/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin: 0;"),
+              tags$h5(HTML("<strong>Dependency Parsing</strong> <a href='https://universaldependencies.org/u/dep/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin: 0;"),
               actionLink("showDepInfo", icon("info-circle"),
                          style = "color: #337ab7; font-size: 16px;",
                          title = "Click for dependency relations guide")
@@ -961,7 +961,7 @@ Supports:
           ),
           conditionalPanel(
             condition = "input.conditioned2 == 2",
-            tags$h5(strong("Word Frequency by Variable"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Word Frequency by Variable"), style = "color: #4269BF; margin-bottom: 10px;"),
             selectizeInput(
               "continuous_var_3",
               "Continuous variable",
@@ -996,7 +996,7 @@ Supports:
             condition = "input.conditioned2 == 4",
             tags$div(
               style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;",
-              tags$h5(HTML("<strong>Lexical Diversity Analysis</strong> <a href='https://github.com/quanteda/quanteda.textstats' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px; color: #337ab7;'>Source</a>"), style = "color: #0c1f4a; margin: 0;"),
+              tags$h5(HTML("<strong>Lexical Diversity Analysis</strong> <a href='https://github.com/quanteda/quanteda.textstats' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px; color: #337ab7;'>Source</a>"), style = "color: #4269BF; margin: 0;"),
               actionLink("showLexDivMetricsInfo", icon("info-circle"),
                         style = "color: #337ab7; font-size: 16px;",
                         title = "Click for detailed metric descriptions")
@@ -1036,7 +1036,7 @@ Supports:
             condition = "input.conditioned2 == 5",
             tags$div(
               style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;",
-              tags$h5(HTML("<strong>Readability Analysis</strong> <a href='https://github.com/quanteda/quanteda.textstats' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin: 0;"),
+              tags$h5(HTML("<strong>Readability Analysis</strong> <a href='https://github.com/quanteda/quanteda.textstats' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin: 0;"),
               actionLink("showReadabilityMetricsInfo", icon("info-circle"),
                         style = "color: #337ab7; font-size: 16px;",
                         title = "Click for detailed metric descriptions")
@@ -1067,7 +1067,7 @@ Supports:
               selected = c("flesch", "flesch_kincaid", "gunning_fog")
             ),
             tags$hr(),
-            tags$h5(strong("Visualization Options"), style = "color: #0c1f4a; margin-top: 10px; margin-bottom: 10px;"),
+            tags$h5(strong("Visualization Options"), style = "color: #4269BF; margin-top: 10px; margin-bottom: 10px;"),
             radioButtons(
               "readability_view_type",
               "View:",
@@ -1103,7 +1103,7 @@ Supports:
           ),
           conditionalPanel(
             condition = "input.conditioned2 == 3",
-            tags$h5(HTML("<strong>Keyword Extraction</strong> <a href='https://quanteda.io/reference/dfm_tfidf.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Keyword Extraction</strong> <a href='https://quanteda.io/reference/dfm_tfidf.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin-bottom: 10px;"),
             conditionalPanel(
               condition = "input.keywords_subtabs == 'tfidf'",
               sliderInput(
@@ -1162,7 +1162,7 @@ Supports:
           # Log Odds Ratio Analysis sidebar
           conditionalPanel(
             condition = "input.conditioned2 == 6",
-            tags$h5(HTML("<strong>Log Odds Ratio Analysis</strong>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Log Odds Ratio Analysis</strong>"), style = "color: #4269BF; margin-bottom: 10px;"),
             tags$p(
               "Compare word frequencies between categories to identify distinctive terms.",
               style = "font-size: 16px; color: #64748B; margin-bottom: 10px;"
@@ -1226,7 +1226,7 @@ Supports:
           # Lexical Dispersion sidebar
           conditionalPanel(
             condition = "input.conditioned2 == 7",
-            tags$h5(HTML("<strong>Lexical Dispersion</strong>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Lexical Dispersion</strong>"), style = "color: #4269BF; margin-bottom: 10px;"),
             tags$p(
               "Visualize where selected terms appear across documents in your corpus.",
               style = "font-size: 16px; color: #64748B; margin-bottom: 10px;"
@@ -1295,7 +1295,7 @@ Supports:
                 actionLink("showNERInfo", icon("info-circle"),
                           style = "color: #337ab7; font-size: 16px; margin-left: 8px;",
                           title = "Click for NER guide"),
-                style = "color: #0c1f4a; margin-bottom: 10px;"
+                style = "color: #4269BF; margin-bottom: 10px;"
               ),
               div(
                 style = "max-height: 300px; overflow-y: auto;",
@@ -1325,10 +1325,10 @@ Supports:
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_objects", NULL, inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' data-entity='PRODUCT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#283593;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PRODUCT</span> <span style='color:#64748B;'>- Objects, vehicles, foods, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='PRODUCT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5060D5;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PRODUCT</span> <span style='color:#64748B;'>- Objects, vehicles, foods, etc.</span>"),
                         HTML("<span class='sidebar-color-picker' data-entity='EVENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c62828;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>EVENT</span> <span style='color:#64748B;'>- Named hurricanes, battles, wars, sports</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#4527a0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#64748B;'>- Titles of books, songs, etc.</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00695c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#64748B;'>- Named documents made into laws</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#734FE2;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#64748B;'>- Titles of books, songs, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#03786A;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#64748B;'>- Named documents made into laws</span>"),
                         HTML("<span class='sidebar-color-picker' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#558b2f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#64748B;'>- Any named language</span>")
                       ),
                       choiceValues = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE"),
@@ -1345,10 +1345,10 @@ Supports:
                       choiceNames = list(
                         HTML("<span class='sidebar-color-picker' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ef6c00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#64748B;'>- Absolute or relative dates/periods</span>"),
                         HTML("<span class='sidebar-color-picker' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#d84315;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#64748B;'>- Times smaller than a day</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#6a1b9a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#64748B;'>- Monetary values including unit</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9C3AD7;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#64748B;'>- Monetary values including unit</span>"),
                         HTML("<span class='sidebar-color-picker' data-entity='PERCENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00838f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERCENT</span> <span style='color:#64748B;'>- Percentage including %</span>"),
                         HTML("<span class='sidebar-color-picker' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#78909c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#64748B;'>- Measurements (weight, distance)</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5d4037;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#64748B;'>- first, second, third, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#866358;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#64748B;'>- first, second, third, etc.</span>"),
                         HTML("<span class='sidebar-color-picker' data-entity='CARDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#546e7a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>CARDINAL</span> <span style='color:#64748B;'>- Numerals not in other category</span>")
                       ),
                       choiceValues = c("DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL"),
@@ -1366,7 +1366,7 @@ Supports:
               style = "margin-bottom: 15px;",
               tags$h5(
                 HTML("<strong>Domain Entities</strong>"),
-                style = "color: #0c1f4a; margin-bottom: 10px;"
+                style = "color: #4269BF; margin-bottom: 10px;"
               ),
               selectizeInput(
                 "ner_domain_preset",
@@ -1425,7 +1425,7 @@ Supports:
               style = "margin-bottom: 15px;",
               tags$h5(
                 HTML("<strong>Add Custom Entity</strong>"),
-                style = "color: #0c1f4a; margin-bottom: 10px;"
+                style = "color: #4269BF; margin-bottom: 10px;"
               ),
               div(
                 style = "display: flex; gap: 8px; align-items: flex-end;",
@@ -1557,9 +1557,9 @@ Supports:
                         tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                         tags$p(
                           "Click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " to run spaCy linguistic analysis, or ",
-                          tags$strong("'Skip'", style = "color: #0c1f4a;"),
+                          tags$strong("'Skip'", style = "color: #4269BF;"),
                           " to use standard tokenization.",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -1589,9 +1589,9 @@ Supports:
                         tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                         tags$p(
                           "First, click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " on the Word Forms tab to run spaCy analysis. Then configure and click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " here to view POS tags.",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -1618,7 +1618,7 @@ Supports:
                         tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                         tags$p(
                           "First, run POS tagging on the Word Forms tab. Then select morphological features in the sidebar and click ",
-                          tags$strong("'Analyze Morphology'", style = "color: #0c1f4a;"),
+                          tags$strong("'Analyze Morphology'", style = "color: #4269BF;"),
                           " to extract features.",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -1694,7 +1694,7 @@ Supports:
                         tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                         tags$p(
                           "Click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " on the Word Forms tab to run spaCy analysis and extract dependency parsing data.",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -1733,7 +1733,7 @@ Supports:
                         tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                         tags$p(
                           "Click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " on the Word Forms tab to run spaCy analysis.",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -1749,7 +1749,7 @@ Supports:
                         tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                         tags$p(
                           "Click ",
-                          tags$strong("'Apply'", style = "color: #0c1f4a;"),
+                          tags$strong("'Apply'", style = "color: #4269BF;"),
                           " to extract named entities.",
                           style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                         )
@@ -1806,7 +1806,7 @@ Supports:
                     tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Select terms, continuous variable, and click ",
-                      tags$strong("'Plot Terms'", style = "color: #0c1f4a;"),
+                      tags$strong("'Plot Terms'", style = "color: #4269BF;"),
                       " to analyze frequency trends",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -1862,7 +1862,7 @@ Supports:
                     tags$i(class = "fa fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Select a grouping variable and click ",
-                      tags$strong("'Calculate'", style = "color: #0c1f4a;"),
+                      tags$strong("'Calculate'", style = "color: #4269BF;"),
                       " to compare word usage between categories.",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     ),
@@ -1890,7 +1890,7 @@ Supports:
                     tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Select terms in the sidebar and click ",
-                      tags$strong("'Analyze'", style = "color: #0c1f4a;"),
+                      tags$strong("'Analyze'", style = "color: #4269BF;"),
                       " to visualize their dispersion across documents.",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     ),
@@ -1906,7 +1906,7 @@ Supports:
                   br(),
                   div(
                     style = "margin-top: 20px;",
-                    tags$h5("Dispersion Metrics", style = "color: #0c1f4a; margin-bottom: 10px;"),
+                    tags$h5("Dispersion Metrics", style = "color: #4269BF; margin-bottom: 10px;"),
                     DT::dataTableOutput("dispersion_metrics_table")
                   )
                 )
@@ -1942,7 +1942,7 @@ Supports:
           ),
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'summary'",
-            tags$h5(strong("Configure document metadata"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Configure document metadata"), style = "color: #4269BF; margin-bottom: 10px;"),
             div(class = "checkbox-margin",
               selectizeInput(
                 "doc_id_var",
@@ -1972,11 +1972,11 @@ Supports:
 
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'similarity'",
-            tags$h5(HTML("<strong>Document Similarity</strong> <a href='https://www.sbert.net/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Document Similarity</strong> <a href='https://www.sbert.net/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin-bottom: 10px;"),
 
             conditionalPanel(
               condition = "input.semantic_feature_space == 'embeddings'",
-              tags$label("Embedding Configuration", style = "font-weight: 600; margin-bottom: 8px; display: block; color: #0c1f4a;"),
+              tags$label("Embedding Configuration", style = "font-weight: 600; margin-bottom: 8px; display: block; color: #4269BF;"),
               tags$p(style = "font-size: 16px; color: #666; margin-bottom: 10px;", "Document-to-document similarity using vector embeddings."),
               uiOutput("embedding_status_ui"),
               radioButtons(
@@ -2037,7 +2037,7 @@ Supports:
                 passwordInput("embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
-                  tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -2052,7 +2052,7 @@ Supports:
                 passwordInput("embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
-                  tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -2226,7 +2226,7 @@ Supports:
                 passwordInput("search_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
-                  tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -2241,7 +2241,7 @@ Supports:
                 passwordInput("search_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
-                  tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               )
@@ -2285,7 +2285,7 @@ Supports:
                 passwordInput("rag_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
-                  tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -2301,7 +2301,7 @@ Supports:
                 passwordInput("rag_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
-                  tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               )
@@ -2327,7 +2327,7 @@ Supports:
             condition = "false",
             tags$div(
               style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;",
-              tags$h5(HTML("<strong>Find Document Groups</strong> <a href='https://scikit-learn.org/stable/modules/clustering.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin: 0;"),
+              tags$h5(HTML("<strong>Find Document Groups</strong> <a href='https://scikit-learn.org/stable/modules/clustering.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin: 0;"),
               actionLink("showClusteringInfo", icon("info-circle"),
                         style = "color: #337ab7; font-size: 16px;",
                         title = "Learn about document grouping")
@@ -2337,7 +2337,7 @@ Supports:
 
             wellPanel(
               style = "padding: 15px; margin-bottom: 15px;",
-              tags$h5(strong("Configuration"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+              tags$h5(strong("Configuration"), style = "color: #4269BF; margin-bottom: 10px;"),
               radioButtons(
                 "clustering_approach",
                 "Discovery mode",
@@ -2446,7 +2446,7 @@ Supports:
             tags$details(
               style = "margin-top: 15px; margin-bottom: 15px;",
               tags$summary(
-                style = "cursor: pointer; color: #495057; font-weight: 600;",
+                style = "cursor: pointer; color: #596D80; font-weight: 600;",
                 "Advanced Settings"
               ),
               div(
@@ -2485,7 +2485,7 @@ Supports:
               condition = "output.has_clustering_results",
             wellPanel(
               style = "padding: 12px; margin-top: 15px; background-color: #f8f9fa;",
-            tags$h5(strong("AI-Powered Cluster Labels"), style = "color: #0c1f4a; margin-bottom: 15px;"),
+            tags$h5(strong("AI-Powered Cluster Labels"), style = "color: #4269BF; margin-bottom: 15px;"),
             uiOutput("cluster_labeling_status"),
 
             radioButtons(
@@ -2526,7 +2526,7 @@ Supports:
               passwordInput("cluster_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -2542,7 +2542,7 @@ Supports:
               passwordInput("cluster_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -2566,7 +2566,7 @@ Supports:
           ),
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'sentiment'",
-            tags$h5(HTML("<strong>Sentiment & Emotion Analysis</strong> <a href='https://github.com/juliasilge/tidytext' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Sentiment & Emotion Analysis</strong> <a href='https://github.com/juliasilge/tidytext' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin-bottom: 10px;"),
 
             uiOutput("sentiment_status_message"),
             conditionalPanel(
@@ -2701,7 +2701,7 @@ Supports:
           ),
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'cooccurrence'",
-            tags$h5(HTML("<strong>Word Co-occurrence Networks</strong> <a href='https://igraph.org/r/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Word Co-occurrence Networks</strong> <a href='https://igraph.org/r/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin-bottom: 10px;"),
             selectizeInput(
               "doc_var_co_occurrence",
               "Categorical variable",
@@ -2829,7 +2829,7 @@ Supports:
           ),
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'correlation'",
-            tags$h5(HTML("<strong>Word Correlation Networks</strong> <a href='https://igraph.org/r/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Word Correlation Networks</strong> <a href='https://igraph.org/r/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin-bottom: 10px;"),
             selectizeInput(
               "doc_var_correlation",
               "Categorical variable",
@@ -2986,7 +2986,7 @@ Supports:
                     tags$i(class = "fa fa-upload", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Load data and process documents in the ",
-                      tags$strong("1. Setup", style = "color: #0c1f4a;"),
+                      tags$strong("1. Setup", style = "color: #4269BF;"),
                       " tab first",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -3067,7 +3067,7 @@ Supports:
                     tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Configure settings and click ",
-                      tags$strong("'Plot Network'", style = "color: #0c1f4a;"),
+                      tags$strong("'Plot Network'", style = "color: #4269BF;"),
                       " to visualize word co-occurrence",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -3148,7 +3148,7 @@ Supports:
                     tags$i(class = "fa fa-share-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Configure settings and click ",
-                      tags$strong("'Plot Network'", style = "color: #0c1f4a;"),
+                      tags$strong("'Plot Network'", style = "color: #4269BF;"),
                       " to visualize word correlation",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -3168,7 +3168,7 @@ Supports:
                     tags$i(class = "fa fa-cog", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Process documents in the ",
-                      tags$strong("1. Setup", style = "color: #0c1f4a;"),
+                      tags$strong("1. Setup", style = "color: #4269BF;"),
                       " tab first",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -3184,7 +3184,7 @@ Supports:
                     tags$i(class = "fa fa-calculator", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Configure settings and click ",
-                      tags$strong("'Calculate'", style = "color: #0c1f4a;"),
+                      tags$strong("'Calculate'", style = "color: #4269BF;"),
                       " to begin analysis",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -3238,7 +3238,7 @@ Supports:
               ),
               conditionalPanel(
                 condition = "output.has_documents == true && output.has_gap_analysis == true",
-                tags$h5(HTML("<strong>Comparative Analysis Results</strong>"), style = "color: #0c1f4a; margin-bottom: 15px;"),
+                tags$h5(HTML("<strong>Comparative Analysis Results</strong>"), style = "color: #4269BF; margin-bottom: 15px;"),
                 uiOutput("gap_reference_category_label"),
                 tabsetPanel(
                   id = "gap_analysis_tabs",
@@ -3290,7 +3290,7 @@ Supports:
                     tags$i(class = "fa fa-cog", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Process documents in the ",
-                      tags$strong("1. Setup", style = "color: #0c1f4a;"),
+                      tags$strong("1. Setup", style = "color: #4269BF;"),
                       " tab first",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -3306,7 +3306,7 @@ Supports:
                     tags$i(class = "fa fa-search", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Enter a search query and click ",
-                      tags$strong("'Search'", style = "color: #0c1f4a;"),
+                      tags$strong("'Search'", style = "color: #4269BF;"),
                       " to see results",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )

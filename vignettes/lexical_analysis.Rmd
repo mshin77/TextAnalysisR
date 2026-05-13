@@ -30,10 +30,7 @@ dfm_object <- quanteda::dfm(tokens)
 plot_word_frequency(dfm_object, n = 20)
 ```
 
----
-
-<details>
-<summary><strong>TF-IDF Keyword Extraction</strong></summary>
+**TF-IDF Keyword Extraction**
 
 Find distinctive words per document using Term Frequency-Inverse Document Frequency:
 
@@ -44,12 +41,7 @@ plot_tfidf_keywords(keywords)
 
 TF-IDF weights terms that are frequent in a document but rare across the corpus, identifying distinctive vocabulary.
 
-</details>
-
----
-
-<details>
-<summary><strong>Keyness Analysis</strong></summary>
+**Keyness Analysis**
 
 Compare word usage between groups:
 
@@ -63,12 +55,7 @@ plot_keyness_keywords(keyness)
 
 Keyness analysis identifies statistically significant differences in word usage between groups.
 
-</details>
-
----
-
-<details>
-<summary><strong>N-gram Analysis</strong></summary>
+**N-gram Analysis**
 
 N-grams are sequences of consecutive words that frequently appear together. They capture multi-word expressions like "machine learning" or "New York City" that carry meaning as complete phrases.
 
@@ -87,12 +74,7 @@ tokens <- quanteda::tokens_compound(tokens, compounds)
 
 **Learn More:** [Text Mining with R - N-grams Chapter](https://www.tidytextmining.com/ngrams.html)
 
-</details>
-
----
-
-<details>
-<summary><strong>Part-of-Speech Tagging</strong></summary>
+**Part-of-Speech Tagging**
 
 Part-of-speech (POS) tagging identifies the grammatical category of each word. Requires Python with spaCy.
 
@@ -107,12 +89,7 @@ Part-of-speech (POS) tagging identifies the grammatical category of each word. R
 
 **Learn More:** [Universal Dependencies POS Tags](https://universaldependencies.org/u/pos/)
 
-</details>
-
----
-
-<details>
-<summary><strong>Morphological Analysis</strong></summary>
+**Morphological Analysis**
 
 Morphological analysis extracts grammatical features from words. Uses Python spaCy via reticulate.
 
@@ -135,12 +112,7 @@ parsed <- extract_pos_tags(united_tbl$united_texts)
 
 **Learn More:** [spaCy Morphology](https://spacy.io/usage/linguistic-features#morphology)
 
-</details>
-
----
-
-<details>
-<summary><strong>Named Entity Recognition</strong></summary>
+**Named Entity Recognition**
 
 Named Entity Recognition (NER) identifies and classifies named entities in text. Requires Python with spaCy.
 
@@ -153,10 +125,6 @@ Named Entity Recognition (NER) identifies and classifies named entities in text.
 **Usage:** Filter by entity type. Add custom entities for qualitative coding.
 
 **Learn More:** [spaCy Named Entity Recognition](https://spacy.io/usage/linguistic-features#named-entities)
-
-</details>
-
----
 
 ## Word Networks
 
@@ -172,10 +140,7 @@ word_co_occurrence_network(dfm_object, co_occur_n = 10)
 word_correlation_network(dfm_object, corr_n = 0.3)
 ```
 
----
-
-<details>
-<summary><strong>Log Odds Ratio Analysis</strong></summary>
+**Log Odds Ratio Analysis**
 
 Log odds ratio compares word frequencies between categories to identify distinctive vocabulary.
 
@@ -206,12 +171,7 @@ weighted_odds <- calculate_weighted_log_odds(
 
 **Learn More:** [tidylo: Weighted Log Odds](https://juliasilge.github.io/tidylo/)
 
-</details>
-
----
-
-<details>
-<summary><strong>Lexical Dispersion</strong></summary>
+**Lexical Dispersion**
 
 Lexical dispersion (X-ray plot) shows where terms appear across documents.
 
@@ -220,12 +180,7 @@ dispersion <- calculate_lexical_dispersion(tokens, terms = c("education", "techn
 plot_lexical_dispersion(dispersion)
 ```
 
-</details>
-
----
-
-<details>
-<summary><strong>Readability Metrics</strong></summary>
+**Readability Metrics**
 
 Readability metrics quantify text complexity using statistical measures of sentence structure and word characteristics.
 
@@ -253,12 +208,7 @@ plot_readability_distribution(readability)
 
 **Learn More:** [quanteda textstat_readability Documentation](https://quanteda.io/reference/textstat_readability.html)
 
-</details>
-
----
-
-<details>
-<summary><strong>Lexical Diversity Metrics</strong></summary>
+**Lexical Diversity Metrics**
 
 Lexical diversity measures vocabulary richness by quantifying the relationship between unique words (types) and total words (tokens).
 
@@ -286,11 +236,3 @@ plot_lexical_diversity_distribution(diversity)
 
 **Learn More:** [quanteda textstat_lexdiv Documentation](https://quanteda.io/reference/textstat_lexdiv.html)
 
-</details>
-
----
-
-## Next Steps
-
-- [Semantic Analysis](semantic_analysis.html)
-- [Topic Modeling](topic_modeling.html)

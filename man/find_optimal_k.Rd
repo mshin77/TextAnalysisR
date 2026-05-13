@@ -54,7 +54,6 @@ Produces diagnostic plots to help select the best K value.
 Other topic-modeling:
 \code{\link[=analyze_semantic_evolution]{analyze_semantic_evolution()}},
 \code{\link[=assess_embedding_stability]{assess_embedding_stability()}},
-\code{\link[=assess_hybrid_stability]{assess_hybrid_stability()}},
 \code{\link[=auto_tune_embedding_topics]{auto_tune_embedding_topics()}},
 \code{\link[=calculate_assignment_consistency]{calculate_assignment_consistency()}},
 \code{\link[=calculate_keyword_stability]{calculate_keyword_stability()}},
@@ -66,7 +65,6 @@ Other topic-modeling:
 \code{\link[=extract_topic_terms_df]{extract_topic_terms_df()}},
 \code{\link[=find_topic_matches]{find_topic_matches()}},
 \code{\link[=fit_embedding_model]{fit_embedding_model()}},
-\code{\link[=fit_hybrid_model]{fit_hybrid_model()}},
 \code{\link[=fit_temporal_model]{fit_temporal_model()}},
 \code{\link[=fit_topic_prevalence_model]{fit_topic_prevalence_model()}},
 \code{\link[=generate_topic_labels]{generate_topic_labels()}},

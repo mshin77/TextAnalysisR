@@ -33,10 +33,7 @@ similarity <- semantic_similarity_analysis(
 )
 ```
 
----
-
-<details>
-<summary><strong>Similarity Methods</strong></summary>
+**Similarity Methods**
 
 Semantic analysis measures document similarity using different approaches to capture meaning, from simple vocabulary matching to deep neural representations.
 
@@ -52,10 +49,6 @@ Semantic analysis measures document similarity using different approaches to cap
 
 **Learn More:** [Sentence Transformers Documentation](https://www.sbert.net/)
 
-</details>
-
----
-
 ## Sentiment Analysis
 
 ### Lexicon-based (no Python)
@@ -70,8 +63,6 @@ plot_sentiment_distribution(sentiment$document_sentiment)
 ```{r}
 sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
 ```
-
----
 
 ## Document Clustering
 
@@ -100,18 +91,11 @@ labels <- generate_cluster_labels(
 )
 ```
 
----
-
-<details>
-<summary><strong>Algorithms Reference</strong></summary>
+**Algorithms Reference**
 
 **Clustering:** K-means (spherical), Hierarchical (nested), DBSCAN (density-based), HDBSCAN (auto-detect K)
 
 **Dimensionality Reduction:** PCA (fast, linear), t-SNE (local structure), UMAP (balanced)
-
-</details>
-
----
 
 ## Network Analysis
 
@@ -148,10 +132,7 @@ corr_network <- word_correlation_network(
 
 Enable per-category networks in the Shiny app to generate separate networks for each category, displayed in a tabbed interface.
 
----
-
-<details>
-<summary><strong>Network Statistics (9 Metrics)</strong></summary>
+**Network Statistics (9 Metrics)**
 
 Each network returns statistics:
 
@@ -167,12 +148,7 @@ Each network returns statistics:
 | Assortativity | Tendency of similar nodes to connect |
 | Avg Path Length | Average distance between nodes |
 
-</details>
-
----
-
-<details>
-<summary><strong>Community Detection Methods</strong></summary>
+**Community Detection Methods**
 
 Community detection identifies clusters of semantically related nodes.
 
@@ -185,12 +161,7 @@ Community detection identifies clusters of semantically related nodes.
 
 **Learn More:** [igraph Community Detection](https://igraph.org/r/doc/communities.html)
 
-</details>
-
----
-
-<details>
-<summary><strong>Embedding Providers</strong></summary>
+**Embedding Providers**
 
 Document-to-document similarity using vector embeddings. Multiple providers are available:
 
@@ -205,10 +176,3 @@ Embeddings are cached and shared across Document Similarity, Topic Modeling, and
 
 **Learn More:** [Sentence Transformers](https://www.sbert.net/) | [Ollama Embedding Models](https://ollama.com/blog/embedding-models)
 
-</details>
-
----
-
-## Next Steps
-
-- [Topic Modeling](topic_modeling.html)

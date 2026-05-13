@@ -4,7 +4,7 @@ topic_modeling_ui_content <- function() {
           width = 3,
           class = "sidebar-panel",
 
-          tags$h5(HTML("<strong>Topic modeling approach</strong>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+          tags$h5(HTML("<strong>Topic modeling approach</strong>"), style = "color: #4269BF; margin-bottom: 10px;"),
           tags$div(
             id = "topic_modeling_path",
             class = "shiny-input-radiogroup shiny-input-container",
@@ -41,22 +41,6 @@ topic_modeling_ui_content <- function() {
                           style = "color: #337ab7; font-size: 16px; margin-left: 8px;",
                           title = "Learn about Embedding-based Topics")
               )
-            ),
-            tags$div(
-              class = "radio",
-              style = "display: flex; align-items: center; margin-bottom: 8px;",
-              tags$label(
-                style = "margin-bottom: 0; display: flex; align-items: center; width: 100%;",
-                tags$input(
-                  type = "radio",
-                  name = "topic_modeling_path",
-                  value = "hybrid"
-                ),
-                tags$span("Hybrid (STM + Embeddings)", style = "margin-left: 5px;"),
-                actionLink("showHybridTopicsInfo", icon("info-circle"),
-                          style = "color: #337ab7; font-size: 16px; margin-left: 8px;",
-                          title = "Learn about Hybrid Topics")
-              )
             )
           ),
           hr(),
@@ -65,7 +49,7 @@ topic_modeling_ui_content <- function() {
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 4 && input.searchKSubtabs != 'ai_rec'",
             tags$h5(
               HTML("<strong>Evaluate optimal topic number (K)</strong> <a href='https://github.com/bstewart/stm' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             sliderInput(
               "stm_K_range",
@@ -110,7 +94,7 @@ topic_modeling_ui_content <- function() {
           ),
           conditionalPanel(
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 5",
-            tags$h5(strong("Structural topic model"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Structural topic model"), style = "color: #4269BF; margin-bottom: 10px;"),
             uiOutput("stm_k_selector_uiOutput"),
             selectInput(
               "stm_topic_measure",
@@ -204,7 +188,7 @@ topic_modeling_ui_content <- function() {
               actionButton("stm_run", "Display", class = "btn-primary btn-block")
             ),
             tags$hr(),
-            tags$h5(strong("Generate topic labels using AI"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Generate topic labels using AI"), style = "color: #4269BF; margin-bottom: 10px;"),
             sliderInput(
               "stm_top_term_number_labeling",
               "Top terms for labeling",
@@ -248,7 +232,7 @@ topic_modeling_ui_content <- function() {
               passwordInput("stm_label_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -263,7 +247,7 @@ topic_modeling_ui_content <- function() {
               passwordInput("stm_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -366,7 +350,7 @@ Focus on incorporating the most significant keywords while following the guideli
           ),
           conditionalPanel(
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 7",
-            tags$h5(strong("Explore example documents"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Explore example documents"), style = "color: #4269BF; margin-bottom: 10px;"),
             uiOutput("quote_topic_number_uiOutput"),
             selectInput("stm_topic_texts", "Example quotes to display", choices = NULL),
             actionButton("stm_quote", "Quote", class = "btn-primary btn-block")
@@ -375,7 +359,7 @@ Focus on incorporating the most significant keywords while following the guideli
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 8",
             tags$h5(
               strong("Estimate Covariate Effects on Topics"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
+              style = "color: #4269BF; margin-bottom: 10px;"
             ),
             tags$div(
               class = "status-step-purple",
@@ -397,7 +381,7 @@ Focus on incorporating the most significant keywords while following the guideli
           ),
           conditionalPanel(
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 4 && input.searchKSubtabs == 'ai_rec'",
-            tags$h5(strong("AI Configuration for K Selection"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("AI Configuration for K Selection"), style = "color: #4269BF; margin-bottom: 10px;"),
 
             # AI Provider selection
             radioButtons(
@@ -441,7 +425,7 @@ Focus on incorporating the most significant keywords while following the guideli
               passwordInput("k_rec_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -461,7 +445,7 @@ Focus on incorporating the most significant keywords while following the guideli
               passwordInput("k_rec_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -486,7 +470,7 @@ Focus on incorporating the most significant keywords while following the guideli
           ),
           conditionalPanel(
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 9",
-            tags$h5(strong("Plot Topic Effects by Categorical Covariates"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Plot Topic Effects by Categorical Covariates"), style = "color: #4269BF; margin-bottom: 10px;"),
             tags$div(
               class = "status-step-purple",
               tags$i(class = "fa fa-check-circle status-icon status-icon-purple"),
@@ -514,7 +498,7 @@ Focus on incorporating the most significant keywords while following the guideli
           ),
           conditionalPanel(
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 10",
-            tags$h5(strong("Plot Topic Effects by Continuous Covariates"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(strong("Plot Topic Effects by Continuous Covariates"), style = "color: #4269BF; margin-bottom: 10px;"),
             tags$div(
               class = "status-step-purple",
               tags$i(class = "fa fa-check-circle status-icon status-icon-purple"),
@@ -543,7 +527,7 @@ Focus on incorporating the most significant keywords while following the guideli
 
           conditionalPanel(
             condition = "input.conditioned3 == 'ai_content'",
-            tags$h5(HTML("<strong>Generate content using AI</strong>"), style = "color: #0c1f4a; margin-bottom: 15px;"),
+            tags$h5(HTML("<strong>Generate content using AI</strong>"), style = "color: #4269BF; margin-bottom: 15px;"),
             tags$div(
               class = "status-main-info",
               tags$i(class = "fas fa-robot status-icon status-icon-info"),
@@ -610,7 +594,7 @@ Focus on incorporating the most significant keywords while following the guideli
               passwordInput("content_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -625,7 +609,7 @@ Focus on incorporating the most significant keywords while following the guideli
               passwordInput("content_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -655,7 +639,7 @@ Focus on incorporating the most significant keywords while following the guideli
           ),
           conditionalPanel(
             condition = "input.topic_modeling_path == 'embedding' && input.conditioned3 == 4",
-            tags$h5(HTML("<strong>Configure Embedding-based Topic Modeling</strong>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
+            tags$h5(HTML("<strong>Configure Embedding-based Topic Modeling</strong>"), style = "color: #4269BF; margin-bottom: 10px;"),
 
             selectInput(
               "embedding_backend",
@@ -742,7 +726,7 @@ Focus on incorporating the most significant keywords while following the guideli
               passwordInput("topic_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -758,7 +742,7 @@ Focus on incorporating the most significant keywords while following the guideli
               passwordInput("topic_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -985,380 +969,11 @@ Focus on incorporating the most significant keywords while following the guideli
             actionButton("embedding_quote", "Quote", class = "btn-primary btn-block")
           ),
 
-          conditionalPanel(
-            condition = "input.topic_modeling_path == 'hybrid' && input.conditioned3 == 4",
-            tags$h5(HTML("<strong>Evaluate optimal topic number (K) for hybrid model</strong> <a href='https://github.com/bstewart/stm' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #0c1f4a; margin-bottom: 10px;"),
-            sliderInput(
-              "hybrid_K_range",
-              "Range of topic numbers",
-              value = c(5, 10),
-              min = 2,
-              max = 50
-            ),
-            selectizeInput(
-              "hybrid_categorical_var",
-              "Categorical covariate(s)",
-              choices = NULL,
-              multiple = TRUE,
-              options = list(placeholder = "Optional")
-            ),
-            selectizeInput(
-              "hybrid_continuous_var",
-              "Continuous covariate(s)",
-              choices = NULL,
-              multiple = TRUE,
-              options = list(placeholder = "Optional")
-            ),
-            selectInput("hybrid_init_type", "Initialization type",
-              choices = c("Spectral", "LDA", "Random", "Custom"),
-              selected = "Spectral"
-            ),
-            radioButtons("hybrid_gamma_prior", "Gamma prior",
-              choices = c("Pooled", "L1"),
-              selected = "Pooled"
-            ),
-            radioButtons("hybrid_kappa_prior", "Kappa prior",
-              choices = c("L1", "Jeffreys"),
-              selected = "L1"
-            ),
-            numericInput("hybrid_max_em_its", "Max EM iterations",
-              value = 500, min = 100, max = 2000, step = 50
-            ),
-            selectInput(
-              "hybrid_embedding_model",
-              "Embedding model",
-              choices = c(
-                "all-MiniLM-L6-v2 (Fast)" = "all-MiniLM-L6-v2",
-                "all-mpnet-base-v2 (Higher Quality)" = "all-mpnet-base-v2",
-                "BGE Base EN v1.5 (BERTopic Optimized)" = "BAAI/bge-base-en-v1.5",
-                "Nomic Embed Text v2 (Multilingual)" = "nomic-ai/nomic-embed-text-v2-moe",
-                "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
-              ),
-              selected = "all-MiniLM-L6-v2"
-            ),
-            sliderInput(
-              "hybrid_n_embedding_dims",
-              "Embedding dimensions for STM",
-              value = 5,
-              min = 3,
-              max = 15
-            ),
-            sliderInput(
-              "hybrid_stm_weight",
-              "STM weight in combined keywords",
-              value = 0.5, min = 0, max = 1, step = 0.05,
-              ticks = FALSE
-            ),
-            tags$p(
-              style = "font-size: 13px; color: #666; margin-top: -8px; margin-bottom: 12px;",
-              "0 = favor embedding keywords, 1 = favor STM FREX terms, 0.5 = balanced"
-            ),
-            div(
-              style = "margin-bottom: 15px;",
-              actionButton("hybrid_search", "Search K", class = "btn-primary btn-block")
-            )
-          ),
 
-          conditionalPanel(
-            condition = "input.topic_modeling_path == 'hybrid' && input.conditioned3 == 5",
-            tags$h5(strong("Estimate hybrid topic model"), style = "color: #0c1f4a; margin-bottom: 10px;"),
-            uiOutput("hybrid_K_number_uiOutput"),
-            selectInput(
-              "hybrid_topic_measure",
-              "Topic term measure",
-              choices = c(
-                "FREX" = "frex",
-                "Lift" = "lift",
-                "Score" = "score",
-                "Probability" = "beta"
-              ),
-              selected = "frex"
-            ),
-            conditionalPanel(
-              condition = "input.hybrid_topic_measure == 'frex'",
-              sliderInput(
-                "hybrid_top_term_number_frex",
-                "Top terms (FREX)",
-                value = 5,
-                min = 0,
-                max = 50
-              )
-            ),
-            conditionalPanel(
-              condition = "input.hybrid_topic_measure == 'lift'",
-              sliderInput(
-                "hybrid_top_term_number_lift",
-                "Top terms (Lift)",
-                value = 5,
-                min = 0,
-                max = 50
-              )
-            ),
-            conditionalPanel(
-              condition = "input.hybrid_topic_measure == 'score'",
-              sliderInput(
-                "hybrid_top_term_number_score",
-                "Top terms (Score)",
-                value = 5,
-                min = 0,
-                max = 50
-              )
-            ),
-            conditionalPanel(
-              condition = "input.hybrid_topic_measure == 'beta'",
-              sliderInput(
-                "hybrid_top_term_number_beta",
-                "Top terms (Probability)",
-                value = 5,
-                min = 0,
-                max = 50
-              )
-            ),
-            sliderInput(
-              "hybrid_ncol_top_terms",
-              "Column numbers",
-              value = 2,
-              min = 1,
-              max = 10
-            ),
-            selectizeInput(
-              "hybrid_categorical_var_2",
-              "Categorical covariate(s)",
-              choices = NULL,
-              multiple = TRUE,
-              options = list(placeholder = "Optional")
-            ),
-            selectizeInput(
-              "hybrid_continuous_var_2",
-              "Continuous covariate(s)",
-              choices = NULL,
-              multiple = TRUE,
-              options = list(placeholder = "Optional")
-            ),
-            selectInput("hybrid_init_type_K", "Initialization type",
-              choices = c("Spectral", "LDA", "Random", "Custom"),
-              selected = "Spectral"
-            ),
-            radioButtons("hybrid_gamma_prior_K", "Gamma prior",
-              choices = c("Pooled", "L1"),
-              selected = "Pooled"
-            ),
-            radioButtons("hybrid_kappa_prior_K", "Kappa prior",
-              choices = c("L1", "Jeffreys"),
-              selected = "L1"
-            ),
-            numericInput("hybrid_max_em_its_K", "Max EM iterations",
-              value = 500, min = 100, max = 2000, step = 50
-            ),
-            div(
-              style = "margin-bottom: 15px;",
-              actionButton("hybrid_run", "Display", class = "btn-primary btn-block")
-            ),
-            tags$hr(),
-            tags$h5(strong("Generate topic labels using AI"), style = "color: #0c1f4a; margin-bottom: 10px;"),
-            sliderInput(
-              "hybrid_top_term_number_labeling",
-              "Top terms for labeling",
-              value = 7,
-              min = 3,
-              max = 15
-            ),
-            radioButtons(
-              "hybrid_label_provider",
-              "AI Provider:",
-              choices = c(
-                "Local (Ollama - Free, Private)" = "ollama",
-                "OpenAI (API Key Required)" = "openai",
-                "Gemini (API Key Required)" = "gemini"
-              ),
-              selected = "ollama",
-              inline = FALSE
-            ),
-            conditionalPanel(
-              condition = "input.hybrid_label_provider == 'ollama'",
-              selectInput(
-                "hybrid_label_ollama_model",
-                "Ollama Model:",
-                choices = c("TinyLlama (Default)" = "tinyllama", "Llama 3.2" = "llama3.2", "Mistral" = "mistral", "Gemma 3" = "gemma3"),
-                selected = "tinyllama"
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Requires Ollama. Get it from ",
-                tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
-              )
-            ),
-            conditionalPanel(
-              condition = "input.hybrid_label_provider == 'openai'",
-              selectInput(
-                "hybrid_label_openai_model",
-                "OpenAI Model:",
-                choices = c("GPT-4.1 Mini (Fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1"),
-                selected = "gpt-4.1-mini"
-              ),
-              passwordInput("hybrid_label_openai_api_key", "API Key:", placeholder = "sk-..."),
-              conditionalPanel(
-                condition = "output.has_openai_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
-                  icon("check-circle"), " Key stored. Enter new key to override.")
-              )
-            ),
-            conditionalPanel(
-              condition = "input.hybrid_label_provider == 'gemini'",
-              selectInput(
-                "hybrid_label_gemini_model",
-                "Gemini Model:",
-                choices = c("Gemini 2.5 Flash (Fast)" = "gemini-2.5-flash", "Gemini 2.5 Flash Lite (Economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
-                selected = "gemini-2.5-flash"
-              ),
-              passwordInput("hybrid_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
-              conditionalPanel(
-                condition = "output.has_gemini_key",
-                tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
-                  icon("check-circle"), " Key stored. Enter new key to override.")
-              )
-            ),
-            textAreaInput(
-              "hybrid_system_prompt",
-              "System prompt",
-              value = "You are a highly skilled data scientist specializing in generating concise and descriptive topic labels for hybrid topic models that combine STM probabilistic topics with semantic embeddings. Each topic consists of terms ordered from most to least significant. Create precise labels (5-7 words) that capture the essence of each topic using person-first language and avoiding stigmatizing terms.",
-              rows = 5
-            ),
-            textAreaInput(
-              "hybrid_user_prompt",
-              "User prompt",
-              value = "You have a hybrid topic model topic with keywords listed from most to least significant: [terms will be inserted here]. Please create a concise and descriptive label (5-7 words) that reflects the collective meaning of these keywords, giving higher priority to the most significant terms.",
-              rows = 3
-            ),
-            sliderInput(
-              "hybrid_temperature",
-              "Temperature (creativity level)",
-              min = 0, max = 1, value = 0.5, step = 0.1
-            ),
-            actionButton("hybrid_generate_labels", HTML('<i class="fas fa-wand-magic-sparkles"></i> Generate Labels'), class = "btn-primary btn-block"),
-            tags$hr(),
-            textInput(
-              "hybrid_label_topics",
-              "Manually label topics",
-              value = "",
-              placeholder = "Type labels, use comma to separate"
-            )
-          ),
 
-          conditionalPanel(
-            condition = "input.topic_modeling_path == 'hybrid' && input.conditioned3 == 6",
-            uiOutput("hybrid_topic_number_uiOutput"),
-            sliderInput(
-              "hybrid_top_term_number_2",
-              "Top terms per topic",
-              value = 5,
-              min = 1,
-              max = 20
-            ),
-            actionButton("hybrid_display", "Display", class = "btn-primary btn-block")
-          ),
 
-          conditionalPanel(
-            condition = "input.topic_modeling_path == 'hybrid' && input.conditioned3 == 8",
-            tags$h5(
-              strong("Estimate Covariate Effects on Topics"),
-              style = "color: #0c1f4a; margin-bottom: 10px;"
-            ),
-            tags$div(
-              class = "status-step-purple",
-              style = "margin-bottom: 15px;",
-              tags$i(class = "fa fa-check-circle status-icon status-icon-purple"),
-              "Choose covariates in the Word-Topic tab"
-            ),
-            div(
-              style = "display: flex; gap: 10px; margin-bottom: 15px;",
-              div(
-                style = "flex: 1;",
-                actionButton("hybrid_effect", "Estimate", class = "btn-primary btn-block")
-              ),
-              div(
-                style = "flex: 1;",
-                downloadButton("hybrid_effect_download_table", class = "btn-secondary btn-block")
-              )
-            )
-          ),
 
-          conditionalPanel(
-            condition = "input.topic_modeling_path == 'hybrid' && input.conditioned3 == 7",
-            tags$h5(strong("Explore example documents for each topic."), style = "color: #0c1f4a; margin-bottom: 10px;"),
-            uiOutput("hybrid_quote_topic_number_uiOutput"),
-            selectInput("hybrid_topic_texts", "Example quotes to display", choices = NULL),
-            actionButton("hybrid_quote", "Quote", class = "btn-primary btn-block")
-          ),
 
-          conditionalPanel(
-            condition = "input.topic_modeling_path == 'hybrid' && input.conditioned3 == 9",
-            tags$h5(strong("Plot Topic Effects by Categorical Covariates"), style = "color: #0c1f4a; margin-bottom: 10px;"),
-            tags$div(
-              class = "status-step-purple",
-              tags$i(class = "fa fa-check-circle status-icon status-icon-purple"),
-              tags$strong("Step 1:"), " Select categorical covariates in Word-Topic tab"
-            ),
-            tags$div(
-              class = "status-step-blue",
-              style = "margin-bottom: 10px;",
-              tags$i(class = "fa fa-check-circle status-icon status-icon-info"),
-              tags$strong("Step 2:"), " Estimate coefficients in Estimated Effects tab"
-            ),
-            tags$div(
-              class = "status-step-green",
-              tags$i(class = "fa fa-info-circle status-icon status-icon-green-alt"),
-              "Hybrid model includes both metadata and embedding dimension covariates"
-            ),
-            selectizeInput(
-              "hybrid_effect_cat_btn",
-              "Categorical covariate",
-              choices = NULL,
-              multiple = FALSE
-            ),
-            sliderInput(
-              "hybrid_ncol_cat",
-              "Column numbers",
-              value = 2,
-              min = 1,
-              max = 10
-            ),
-            actionButton("hybrid_display_cat", "Display", class = "btn-primary btn-block")
-          ),
-          conditionalPanel(
-            condition = "input.topic_modeling_path == 'hybrid' && input.conditioned3 == 10",
-            tags$h5(strong("Plot Topic Effects by Continuous Covariates"), style = "color: #0c1f4a; margin-bottom: 10px;"),
-            tags$div(
-              class = "status-step-purple",
-              tags$i(class = "fa fa-check-circle status-icon status-icon-purple"),
-              tags$strong("Step 1:"), " Select continuous covariates in Word-Topic tab"
-            ),
-            tags$div(
-              class = "status-step-blue",
-              style = "margin-bottom: 10px;",
-              tags$i(class = "fa fa-check-circle status-icon status-icon-info"),
-              tags$strong("Step 2:"), " Estimate coefficients in Estimated Effects tab"
-            ),
-            tags$div(
-              class = "status-step-green",
-              tags$i(class = "fa fa-info-circle status-icon status-icon-green-alt"),
-              "Hybrid model includes both metadata and embedding dimension covariates"
-            ),
-            selectizeInput(
-              "hybrid_effect_con_btn",
-              "Continuous covariate",
-              choices = NULL,
-              multiple = FALSE
-            ),
-            sliderInput(
-              "hybrid_ncol_con",
-              "Column numbers",
-              value = 2,
-              min = 1,
-              max = 10
-            ),
-            actionButton("hybrid_display_con", "Display", class = "btn-primary btn-block")
-          )
         ),
         mainPanel(
           width = 9,
@@ -1463,7 +1078,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-search-plus", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Configure K range and click ",
-                      tags$strong("'Search K'", style = "color: #0c1f4a;"),
+                      tags$strong("'Search K'", style = "color: #4269BF;"),
                       " to find optimal topic numbers",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -1479,100 +1094,13 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-cogs", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Configure settings and click ",
-                      tags$strong("'Run Model'", style = "color: #0c1f4a;"),
+                      tags$strong("'Run Model'", style = "color: #4269BF;"),
                       " to discover topics",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
                   )
                 )
               ),
-              conditionalPanel(
-                condition = "input.topic_modeling_path == 'hybrid' && output.has_hybrid_search_k_results == true",
-                div(
-                  style = "background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 15px; line-height: 1.6; color: #78350F;",
-                  tags$i(class = "fa fa-exclamation-triangle", style = "margin-right: 8px; color: #D97706;"),
-                  tags$strong("Exploratory, not confirmatory. "),
-                  "Covariate regressions on hybrid or embedding-derived topics risk ",
-                  tags$em("double-dipping"),
-                  " (topics are derived from the same documents used for inference), which inflates Type-I error. Treat these effects as hypothesis-generating and validate on held-out data before reporting as causal."
-                ),
-                tabsetPanel(
-                  id = "hybridSearchKSubtabs",
-                  tabPanel(
-                    "Diagnostic Plots",
-                    value = "diagnostic",
-                    br(),
-                    uiOutput("hybrid_topic_search_message"),
-                    br(),
-                    fluidRow(
-                      column(6, uiOutput("hybrid_quality_metrics_semcoh_uiOutput")),
-                      column(6, uiOutput("hybrid_quality_metrics_residual_uiOutput"))
-                    ),
-                    fluidRow(
-                      column(6, uiOutput("hybrid_quality_metrics_heldout_uiOutput")),
-                      column(6, uiOutput("hybrid_quality_metrics_lbound_uiOutput"))
-                    )
-                  ),
-                  tabPanel(
-                    "Quality Comparison",
-                    value = "quality",
-                    br(),
-                    wellPanel(
-                      style = "background-color: #f0f8ff; border: 1px solid #4682b4;",
-                      p("Hybrid model combines STM probabilistic topics with semantic embeddings",
-                        style = "font-family: monospace; font-size: 16px; font-weight: bold;"),
-                      tags$div(
-                        style = "font-size: 16px; margin-top: 10px; line-height: 1.6;",
-                        p(tags$b("STM Metrics:"), " Based on statistical topic modeling", style = "margin: 5px 0;"),
-                        p(tags$b("Coherence:"), " How interpretable topics are", style = "margin: 5px 0;"),
-                        p(tags$b("Exclusivity:"), " How distinctive topics are", style = "margin: 5px 0;"),
-                        p(tags$b("Heldout Likelihood:"), " Generalization performance", style = "margin: 5px 0;")
-                      )
-                    ),
-                    br(),
-                    DT::dataTableOutput("hybrid_quality_summary_table")
-                  ),
-                  tabPanel(
-                    "Coherence vs Exclusivity",
-                    value = "comparison",
-                    br(),
-                    uiOutput("hybrid_model_comparison_plot_uiOutput")
-                  ),
-                  tabPanel(
-                    "Topic Alignment",
-                    value = "alignment",
-                    br(),
-                    wellPanel(
-                      style = "background-color: #f0f8ff; border: 1px solid #4682b4;",
-                      tags$div(
-                        style = "font-size: 16px; line-height: 1.6;",
-                        p(tags$b("STM vs Embedding Topic Alignment"), style = "font-family: monospace; font-size: 16px; font-weight: bold; margin-bottom: 8px;"),
-                        p("Shows how STM probabilistic topics correspond to embedding-based clusters. Higher alignment indicates convergent validity between the two approaches.", style = "margin: 5px 0;")
-                      )
-                    ),
-                    br(),
-                    uiOutput("hybrid_alignment_plot_uiOutput"),
-                    br(),
-                    DT::dataTableOutput("hybrid_alignment_table")
-                  )
-                )
-              ),
-              conditionalPanel(
-                condition = "input.topic_modeling_path == 'hybrid' && output.has_hybrid_search_k_results == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-search-plus", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Configure K range and click ",
-                      tags$strong("'Search K'", style = "color: #0c1f4a;"),
-                      " to find optimal topic numbers",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
-                    )
-                  )
-                )
-              )
             ),
             tabPanel(
               "2. Word-Topic",
@@ -1637,7 +1165,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Search K, and then click ",
-                      tags$strong("'Display'", style = "color: #0c1f4a;"),
+                      tags$strong("'Display'", style = "color: #4269BF;"),
                       " to view word-topic distributions",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -1653,29 +1181,13 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Run model, then click ",
-                      tags$strong("'Display'", style = "color: #0c1f4a;"),
+                      tags$strong("'Display'", style = "color: #4269BF;"),
                       " to view topic keywords",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
                   )
                 )
               ),
-              conditionalPanel(
-                condition = "output.has_word_topic_results == false && input.topic_modeling_path == 'hybrid'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Search K, and then click ",
-                      tags$strong("'Display'", style = "color: #0c1f4a;"),
-                      " to view word-topic distributions",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
-                    )
-                  )
-                )
-              )
             ),
             tabPanel(
               "3. Content Generation",
@@ -1694,7 +1206,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fas fa-file-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Run topic modeling first, then configure settings in the sidebar and click ",
-                      tags$strong("'Generate Content'", style = "color: #0c1f4a;"),
+                      tags$strong("'Generate Content'", style = "color: #4269BF;"),
                       " to create content from your topics.",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -1764,7 +1276,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-file-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Complete ",
-                      tags$strong("Word-Topic tab", style = "color: #0c1f4a;"),
+                      tags$strong("Word-Topic tab", style = "color: #4269BF;"),
                       " to view document-topic distributions",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -1780,29 +1292,13 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-file-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Complete ",
-                      tags$strong("Word-Topic tab", style = "color: #0c1f4a;"),
+                      tags$strong("Word-Topic tab", style = "color: #4269BF;"),
                       " to view document-topic distributions",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
                   )
                 )
               ),
-              conditionalPanel(
-                condition = "output.has_document_topic_results == false && input.topic_modeling_path == 'hybrid'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-file-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Complete ",
-                      tags$strong("Word-Topic tab", style = "color: #0c1f4a;"),
-                      " to view document-topic distributions enhanced with semantic embeddings",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
-                    )
-                  )
-                )
-              )
             ),
             tabPanel(
               "5. Quotes",
@@ -1820,7 +1316,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-quote-right", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Run topic model and select a topic to view ",
-                      tags$strong("representative quotes", style = "color: #0c1f4a;"),
+                      tags$strong("representative quotes", style = "color: #4269BF;"),
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
                   )
@@ -1843,7 +1339,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-calculator", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Click ",
-                      tags$strong("'Estimate'", style = "color: #0c1f4a;"),
+                      tags$strong("'Estimate'", style = "color: #4269BF;"),
                       " button to generate effect estimates",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -1912,7 +1408,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-chart-bar", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Estimate effects, select categorical covariate, then click ",
-                      tags$strong("'Display'", style = "color: #0c1f4a;"),
+                      tags$strong("'Display'", style = "color: #4269BF;"),
                       " to visualize topic prevalence by categories",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )
@@ -1981,7 +1477,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
                     tags$p(
                       "Estimate effects, select continuous covariate, then click ",
-                      tags$strong("'Display'", style = "color: #0c1f4a;"),
+                      tags$strong("'Display'", style = "color: #4269BF;"),
                       " to visualize topic prevalence trends",
                       style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
                     )

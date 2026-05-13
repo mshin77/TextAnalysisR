@@ -15,7 +15,8 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Lexical Analysis">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Lexical Analysis">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -36,21 +37,24 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/quickstart.html">Getting Started</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Workflow</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-workflow">
+<li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
     <li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-extensions">
+<li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
+    <li><a class="dropdown-item" href="../articles/cybersecurity.html">Cybersecurity</a></li>
+    <li><a class="dropdown-item" href="../articles/web_accessibility.html">Web Accessibility</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -98,18 +102,16 @@
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span><span class="va">dfm_object</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
-<hr>
-<details><summary><strong>TF-IDF Keyword Extraction</strong>
-</summary><p>Find distinctive words per document using Term Frequency-Inverse
+<p><strong>TF-IDF Keyword Extraction</strong></p>
+<p>Find distinctive words per document using Term Frequency-Inverse
 Document Frequency:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">keywords</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_tfidf.html">extract_keywords_tfidf</a></span><span class="op">(</span><span class="va">dfm_object</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_tfidf_keywords.html">plot_tfidf_keywords</a></span><span class="op">(</span><span class="va">keywords</span><span class="op">)</span></span></code></pre></div>
 <p>TF-IDF weights terms that are frequent in a document but rare across
 the corpus, identifying distinctive vocabulary.</p>
-</details><hr>
-<details><summary><strong>Keyness Analysis</strong>
-</summary><p>Compare word usage between groups:</p>
+<p><strong>Keyness Analysis</strong></p>
+<p>Compare word usage between groups:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">keyness</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_keyness.html">extract_keywords_keyness</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
@@ -118,9 +120,8 @@ the corpus, identifying distinctive vocabulary.</p>
 <span><span class="fu"><a href="../reference/plot_keyness_keywords.html">plot_keyness_keywords</a></span><span class="op">(</span><span class="va">keyness</span><span class="op">)</span></span></code></pre></div>
 <p>Keyness analysis identifies statistically significant differences in
 word usage between groups.</p>
-</details><hr>
-<details><summary><strong>N-gram Analysis</strong>
-</summary><p>N-grams are sequences of consecutive words that frequently appear
+<p><strong>N-gram Analysis</strong></p>
+<p>N-grams are sequences of consecutive words that frequently appear
 together. They capture multi-word expressions like “machine learning” or
 “New York City” that carry meaning as complete phrases.</p>
 <p><strong>Types:</strong></p>
@@ -145,9 +146,8 @@ tokens object.</p>
 <span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">tokens_compound</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="va">compounds</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://www.tidytextmining.com/ngrams.html" class="external-link">Text Mining with R -
 N-grams Chapter</a></p>
-</details><hr>
-<details><summary><strong>Part-of-Speech Tagging</strong>
-</summary><p>Part-of-speech (POS) tagging identifies the grammatical category of
+<p><strong>Part-of-Speech Tagging</strong></p>
+<p>Part-of-speech (POS) tagging identifies the grammatical category of
 each word. Requires Python with spaCy.</p>
 <p><strong>Tags (Universal Dependencies):</strong></p>
 <ul>
@@ -164,9 +164,8 @@ each word. Requires Python with spaCy.</p>
 types (e.g., nouns and verbs for content analysis).</p>
 <p><strong>Learn More:</strong> <a href="https://universaldependencies.org/u/pos/" class="external-link">Universal Dependencies
 POS Tags</a></p>
-</details><hr>
-<details><summary><strong>Morphological Analysis</strong>
-</summary><p>Morphological analysis extracts grammatical features from words. Uses
+<p><strong>Morphological Analysis</strong></p>
+<p>Morphological analysis extracts grammatical features from words. Uses
 Python spaCy via reticulate.</p>
 <p><strong>Features:</strong></p>
 <table class="table">
@@ -210,9 +209,8 @@ Python spaCy via reticulate.</p>
 number agreement, or grammatical complexity.</p>
 <p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#morphology" class="external-link">spaCy
 Morphology</a></p>
-</details><hr>
-<details><summary><strong>Named Entity Recognition</strong>
-</summary><p>Named Entity Recognition (NER) identifies and classifies named
+<p><strong>Named Entity Recognition</strong></p>
+<p>Named Entity Recognition (NER) identifies and classifies named
 entities in text. Requires Python with spaCy.</p>
 <p><strong>Entity Types:</strong></p>
 <ul>
@@ -228,7 +226,6 @@ values</li>
 for qualitative coding.</p>
 <p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#named-entities" class="external-link">spaCy
 Named Entity Recognition</a></p>
-</details><hr>
 </div>
 <div class="section level2">
 <h2 id="word-networks">Word Networks<a class="anchor" aria-label="anchor" href="#word-networks"></a>
@@ -244,9 +241,8 @@ Named Entity Recognition</a></p>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/word_correlation_network.html">word_correlation_network</a></span><span class="op">(</span><span class="va">dfm_object</span>, corr_n <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></code></pre></div>
-<hr>
-<details><summary><strong>Log Odds Ratio Analysis</strong>
-</summary><p>Log odds ratio compares word frequencies between categories to
+<p><strong>Log Odds Ratio Analysis</strong></p>
+<p>Log odds ratio compares word frequencies between categories to
 identify distinctive vocabulary.</p>
 <p><strong>Simple Log Odds Ratio:</strong></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -271,16 +267,14 @@ groups, not just rare words with extreme ratios.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://juliasilge.github.io/tidylo/" class="external-link">tidylo: Weighted Log
 Odds</a></p>
-</details><hr>
-<details><summary><strong>Lexical Dispersion</strong>
-</summary><p>Lexical dispersion (X-ray plot) shows where terms appear across
+<p><strong>Lexical Dispersion</strong></p>
+<p>Lexical dispersion (X-ray plot) shows where terms appear across
 documents.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dispersion</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_lexical_dispersion.html">calculate_lexical_dispersion</a></span><span class="op">(</span><span class="va">tokens</span>, terms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"education"</span>, <span class="st">"technology"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_lexical_dispersion.html">plot_lexical_dispersion</a></span><span class="op">(</span><span class="va">dispersion</span><span class="op">)</span></span></code></pre></div>
-</details><hr>
-<details><summary><strong>Readability Metrics</strong>
-</summary><p>Readability metrics quantify text complexity using statistical
+<p><strong>Readability Metrics</strong></p>
+<p>Readability metrics quantify text complexity using statistical
 measures of sentence structure and word characteristics.</p>
 <p><strong>Available Metrics:</strong></p>
 <table class="table">
@@ -340,9 +334,8 @@ sentence length)</li>
 <span><span class="fu"><a href="../reference/plot_readability_distribution.html">plot_readability_distribution</a></span><span class="op">(</span><span class="va">readability</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_readability.html" class="external-link">quanteda
 textstat_readability Documentation</a></p>
-</details><hr>
-<details><summary><strong>Lexical Diversity Metrics</strong>
-</summary><p>Lexical diversity measures vocabulary richness by quantifying the
+<p><strong>Lexical Diversity Metrics</strong></p>
+<p>Lexical diversity measures vocabulary richness by quantifying the
 relationship between unique words (types) and total words (tokens).</p>
 <p><strong>Available Metrics:</strong></p>
 <table class="table">
@@ -397,16 +390,7 @@ diverse)</li>
 <span><span class="fu"><a href="../reference/plot_lexical_diversity_distribution.html">plot_lexical_diversity_distribution</a></span><span class="op">(</span><span class="va">diversity</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_lexdiv.html" class="external-link">quanteda
 textstat_lexdiv Documentation</a></p>
-</details><hr>
 </div>
-</div>
-<div class="section level2">
-<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
-</h2>
-<ul>
-<li><a href="semantic_analysis.html">Semantic Analysis</a></li>
-<li><a href="topic_modeling.html">Topic Modeling</a></li>
-</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

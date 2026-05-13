@@ -25,8 +25,6 @@ similarity <- semantic_similarity_analysis(
 )
 ```
 
-------------------------------------------------------------------------
-
 **Similarity Methods**
 
 Semantic analysis measures document similarity using different
@@ -49,8 +47,6 @@ comparison.
 **Learn More:** [Sentence Transformers
 Documentation](https://www.sbert.net/)
 
-------------------------------------------------------------------------
-
 ## Sentiment Analysis
 
 ### Lexicon-based (no Python)
@@ -67,8 +63,6 @@ plot_sentiment_distribution(sentiment$document_sentiment)
 
 sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
 ```
-
-------------------------------------------------------------------------
 
 ## Document Clustering
 
@@ -105,8 +99,6 @@ labels <- generate_cluster_labels(
 )
 ```
 
-------------------------------------------------------------------------
-
 **Algorithms Reference**
 
 **Clustering:** K-means (spherical), Hierarchical (nested), DBSCAN
@@ -114,8 +106,6 @@ labels <- generate_cluster_labels(
 
 **Dimensionality Reduction:** PCA (fast, linear), t-SNE (local
 structure), UMAP (balanced)
-
-------------------------------------------------------------------------
 
 ## Network Analysis
 
@@ -156,8 +146,6 @@ corr_network <- word_correlation_network(
 Enable per-category networks in the Shiny app to generate separate
 networks for each category, displayed in a tabbed interface.
 
-------------------------------------------------------------------------
-
 **Network Statistics (9 Metrics)**
 
 Each network returns statistics:
@@ -174,8 +162,6 @@ Each network returns statistics:
 | Assortativity | Tendency of similar nodes to connect |
 | Avg Path Length | Average distance between nodes |
 
-------------------------------------------------------------------------
-
 **Community Detection Methods**
 
 Community detection identifies clusters of semantically related nodes.
@@ -189,8 +175,6 @@ Community detection identifies clusters of semantically related nodes.
 
 **Learn More:** [igraph Community
 Detection](https://igraph.org/r/doc/communities.html)
-
-------------------------------------------------------------------------
 
 **Embedding Providers**
 
@@ -209,10 +193,3 @@ Modeling, and Semantic Search when using the same provider and model.
 
 **Learn More:** [Sentence Transformers](https://www.sbert.net/) \|
 [Ollama Embedding Models](https://ollama.com/blog/embedding-models)
-
-------------------------------------------------------------------------
-
-## Next Steps
-
-- [Topic
-  Modeling](https://mshin77.github.io/TextAnalysisR/articles/topic_modeling.md)

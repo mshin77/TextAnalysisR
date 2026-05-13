@@ -1,0 +1,26 @@
+.template-reference-index hr {
+  display: none;
+}
+
+.template-home main > p:first-of-type img {
+  margin-top: 1rem;
+}
+
+.template-reference-index .section.level2 {
+  margin-top: 2.5rem;
+}
+
+.page-header img.logo {
+  display: none;
+}
+
+.table > :not(caption) > * > * {
+  border-bottom-width: 0;
+  box-shadow: none;
+}
+
+main a,
+main a:hover,
+main a:focus {
+  text-decoration: none;
+}

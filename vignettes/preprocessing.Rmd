@@ -39,10 +39,7 @@ tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
 dfm_object <- quanteda::dfm(tokens_clean)
 ```
 
----
-
-<details>
-<summary><strong>Unite Text Columns</strong></summary>
+**Unite Text Columns**
 
 Unite combines multiple text columns into a single column for analysis. Useful when text content is spread across multiple fields that should be analyzed together.
 
@@ -56,12 +53,7 @@ Unite combines multiple text columns into a single column for analysis. Useful w
 
 **Learn More:** [tidyr Unite Function](https://tidyr.tidyverse.org/reference/unite.html)
 
-</details>
-
----
-
-<details>
-<summary><strong>Tokenization Options</strong></summary>
+**Tokenization Options**
 
 Tokenization segments continuous text into individual units (tokens), typically words, converting unstructured text into structured format for computational analysis.
 
@@ -83,12 +75,7 @@ Tokenization segments continuous text into individual units (tokens), typically 
 
 **Learn More:** [quanteda Tokens Documentation](https://quanteda.io/reference/tokens.html)
 
-</details>
-
----
-
-<details>
-<summary><strong>Stopword Removal</strong></summary>
+**Stopword Removal**
 
 Stopwords are common words (e.g., "the", "is", "and") that appear frequently but carry little meaningful content for analysis. Removing them reduces noise and improves focus on content-bearing words.
 
@@ -106,12 +93,7 @@ tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
 
 **Learn More:** [stopwords Package Documentation](https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html)
 
-</details>
-
----
-
-<details>
-<summary><strong>Lemmatization</strong></summary>
+**Lemmatization**
 
 Lemmatization reduces words to their base or dictionary form (lemma). For example, "running", "ran", and "runs" all become "run". This groups related word forms together for more meaningful analysis.
 
@@ -125,12 +107,7 @@ Lemmatization reduces words to their base or dictionary form (lemma). For exampl
 
 **Learn More:** [spaCy Lemmatization Guide](https://spacy.io/usage/linguistic-features#lemmatization)
 
-</details>
-
----
-
-<details>
-<summary><strong>Document-Feature Matrix (DFM)</strong></summary>
+**Document-Feature Matrix (DFM)**
 
 A Document-Feature Matrix (DFM) is a mathematical representation where rows are documents, columns are unique tokens (features), and cells contain frequency counts. It converts unstructured text into structured numerical format for computational analysis.
 
@@ -149,10 +126,6 @@ dfm_object <- quanteda::dfm(tokens_clean)
 
 **Learn More:** [quanteda DFM Documentation](https://quanteda.io/reference/dfm.html)
 
-</details>
-
----
-
 ## Multi-word Expressions
 
 Detect phrases like "machine learning" and compound them in the tokens object:
@@ -161,9 +134,3 @@ Detect phrases like "machine learning" and compound them in the tokens object:
 compounds <- detect_multi_words(tokens, min_count = 10)
 tokens <- quanteda::tokens_compound(tokens, compounds)
 ```
-
-## Next Steps
-
-- [Lexical Analysis](lexical_analysis.html)
-- [Semantic Analysis](semantic_analysis.html)
-- [Topic Modeling](topic_modeling.html)

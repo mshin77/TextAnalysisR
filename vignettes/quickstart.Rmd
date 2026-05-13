@@ -54,12 +54,4 @@ plot_word_frequency(dfm_object, n = 20)
 |----------|----------|
 | Lexical | Word frequency, keywords, networks |
 | Semantic | Similarity, clustering, sentiment |
-| Topic Modeling | STM, BERTopic, hybrid |
-
-## Next Steps
-
-- [Installation](installation.html) - Full setup guide
-- [Preprocessing](preprocessing.html) - Prepare text data
-- [Lexical Analysis](lexical_analysis.html) - Word patterns
-- [Semantic Analysis](semantic_analysis.html) - Meaning and similarity
-- [Topic Modeling](topic_modeling.html) - Discover themes
+| Topic Modeling | STM and BERTopic |

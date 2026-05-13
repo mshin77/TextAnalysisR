@@ -103,7 +103,7 @@ server <- shinyServer(function(input, output, session) {
       input$embedding_openai_api_key, input$rag_openai_api_key,
       input$cluster_openai_api_key, input$llm_sentiment_openai_api_key,
       input$stm_label_openai_api_key, input$k_rec_openai_api_key,
-      input$content_openai_api_key, input$hybrid_label_openai_api_key,
+      input$content_openai_api_key,
       input$topic_embedding_openai_api_key, input$openai_api_key, input$global_openai_api_key
     )
     valid <- keys[!is.null(keys) & nzchar(keys)]
@@ -115,7 +115,7 @@ server <- shinyServer(function(input, output, session) {
       input$embedding_gemini_api_key, input$rag_gemini_api_key,
       input$cluster_gemini_api_key, input$llm_sentiment_gemini_api_key,
       input$stm_label_gemini_api_key, input$k_rec_gemini_api_key,
-      input$content_gemini_api_key, input$hybrid_label_gemini_api_key,
+      input$content_gemini_api_key,
       input$topic_embedding_gemini_api_key, input$global_gemini_api_key,
       input$gemini_vision_api_key
     )
@@ -182,7 +182,6 @@ server <- shinyServer(function(input, output, session) {
     updateRadioButtons(session, "stm_label_provider", choices = llm_providers, selected = "openai")
     updateRadioButtons(session, "k_rec_provider", choices = llm_providers, selected = "openai")
     updateRadioButtons(session, "content_provider", choices = llm_providers, selected = "openai")
-    updateRadioButtons(session, "hybrid_label_provider", choices = llm_providers, selected = "openai")
   })
 
   # spaCy initialization status
@@ -304,7 +303,7 @@ server <- shinyServer(function(input, output, session) {
       style = "margin-top: 8px; margin-bottom: 10px;",
       tags$div(
         style = "margin-bottom: 10px;",
-        tags$strong("PDF with Charts/Diagrams?", style = "color: #0c1f4a; font-size: 16px;")
+        tags$strong("PDF with Charts/Diagrams?", style = "color: #4269BF; font-size: 16px;")
       ),
       checkboxInput("enable_multimodal",
         "Enable image/chart extraction",
@@ -340,7 +339,7 @@ server <- shinyServer(function(input, output, session) {
           passwordInput("openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
-            tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
           selectInput("openai_vision_model",
@@ -354,7 +353,7 @@ server <- shinyServer(function(input, output, session) {
           passwordInput("gemini_vision_api_key", "Gemini API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
-            tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
           selectInput("gemini_vision_model",
@@ -3297,7 +3296,7 @@ server <- shinyServer(function(input, output, session) {
             tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
           ),
           tags$hr(),
-          tags$p(style = "color: #92400E; font-size: 16px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
+          tags$p(style = "color: #B15319; font-size: 16px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
             "Note: spaCy provides POS, NER, and morphology features.")
         ),
         easyClose = TRUE,
@@ -3430,7 +3429,7 @@ server <- shinyServer(function(input, output, session) {
   # Morphology Info Modal
   observeEvent(input$showMorphInfo, {
     showModal(modalDialog(
-      title = tags$div(style = "color: #0c1f4a;", "Morphological Features Guide"),
+      title = tags$div(style = "color: #4269BF;", "Morphological Features Guide"),
       tags$div(
         style = "font-size: 16px;",
         tags$p("Morphological analysis extracts grammatical properties of words:"),
@@ -4086,7 +4085,7 @@ server <- shinyServer(function(input, output, session) {
             tags$li("Install spaCy model: ", tags$code("python -m spacy download en_core_web_sm"))
           ),
           tags$hr(),
-          tags$p(style = "color: #92400E; font-size: 16px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
+          tags$p(style = "color: #B15319; font-size: 16px; background-color: #FEF3C7; padding: 8px 12px; border-radius: 4px; margin-top: 10px;",
             "Note: spaCy provides POS, NER, and morphology features.")
         ),
         easyClose = TRUE,
@@ -4323,7 +4322,7 @@ server <- shinyServer(function(input, output, session) {
 
 
   default_category_colors <- c("#E91E63", "#2196F3", "#4CAF50", "#9C27B0", "#FF9800", "#00BCD4",
-                                "#795548", "#607D8B", "#FF5722", "#3F51B5", "#009688", "#CDDC39")
+                                "#886254", "#607D8B", "#FF5722", "#3F51B5", "#009688", "#CDDC39")
 
   domain_entity_colors <- reactiveVal(list(
     disability = "#E91E63",
@@ -4918,9 +4917,9 @@ server <- shinyServer(function(input, output, session) {
 
   spacy_default_colors <- c(
     "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-    "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
-    "ORDINAL" = "#5d4037", "PERCENT" = "#00838f", "PRODUCT" = "#283593",
-    "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
+    "DATE" = "#ef6c00", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
+    "ORDINAL" = "#866358", "PERCENT" = "#00838f", "PRODUCT" = "#5060D5",
+    "EVENT" = "#c62828", "WORK_OF_ART" = "#734FE2", "LAW" = "#03786A",
     "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
     "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c"
   )
@@ -5446,9 +5445,9 @@ server <- shinyServer(function(input, output, session) {
                 "  if (!data || data === '') return '';",
                 "  var colors = {",
                 "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-                "    'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a',",
-                "    'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593',",
-                "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
+                "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
+                "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
+                "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
                 "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
                 "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
                 "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
@@ -5500,9 +5499,9 @@ server <- shinyServer(function(input, output, session) {
                   "  if (!data || data === '') return '';",
                   "  var colors = {",
                   "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-                  "    'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a',",
-                  "    'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593',",
-                  "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
+                  "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
+                  "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
+                  "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
                   "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
                   "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
                   "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
@@ -5636,9 +5635,9 @@ server <- shinyServer(function(input, output, session) {
     # Full color map with standard + domain-specific + custom colors
     color_map_js <- paste0(
       "'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32', ",
-      "'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a', ",
-      "'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593', ",
-      "'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c', ",
+      "'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a', ",
+      "'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5', ",
+      "'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A', ",
       "'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24', ",
       "'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c', ",
       "'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50', ",
@@ -5671,9 +5670,9 @@ server <- shinyServer(function(input, output, session) {
               "  if (!data || data === '') return '';",
               "  var colors = {",
               "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-              "    'DATE': '#ef6c00', 'MONEY': '#6a1b9a', 'CARDINAL': '#546e7a',",
-              "    'ORDINAL': '#5d4037', 'PERCENT': '#00838f', 'PRODUCT': '#283593',",
-              "    'EVENT': '#c62828', 'WORK_OF_ART': '#4527a0', 'LAW': '#00695c',",
+              "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
+              "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
+              "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
               "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
               "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
               "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
@@ -5801,9 +5800,9 @@ server <- shinyServer(function(input, output, session) {
 
     entity_colors <- c(
       "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-      "DATE" = "#ef6c00", "MONEY" = "#6a1b9a", "CARDINAL" = "#546e7a",
-      "ORDINAL" = "#5d4037", "PERCENT" = "#00838f", "PRODUCT" = "#283593",
-      "EVENT" = "#c62828", "WORK_OF_ART" = "#4527a0", "LAW" = "#00695c",
+      "DATE" = "#ef6c00", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
+      "ORDINAL" = "#866358", "PERCENT" = "#00838f", "PRODUCT" = "#5060D5",
+      "EVENT" = "#c62828", "WORK_OF_ART" = "#734FE2", "LAW" = "#03786A",
       "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
       "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
       "DISABILITY" = "#E91E63", "MATHEMATICS" = "#4CAF50",
@@ -5835,7 +5834,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     paste0(
-      '<div style="line-height: 2.5; direction: ltr; font-family: Roboto, sans-serif; font-size: 16px; color: #0c1f4a; padding: 15px; background: #fafafa; border-radius: 8px; max-height: 400px; overflow-y: auto;">',
+      '<div style="line-height: 2.5; direction: ltr; font-family: Roboto, sans-serif; font-size: 16px; color: #4269BF; padding: 15px; background: #fafafa; border-radius: 8px; max-height: 400px; overflow-y: auto;">',
       paste(html_parts, collapse = " "),
       '</div>'
     )
@@ -5907,7 +5906,7 @@ server <- shinyServer(function(input, output, session) {
     text <- paste(doc_data$token, collapse = " ")
 
     if (is_web) {
-      return(list(type = "warning", content = '<div style="background-color: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;"><i class="fa fa-info-circle" style="margin-right: 8px; color: #F59E0B;"></i>
+      return(list(type = "warning", content = '<div style="background-color: #FEF3C7; border: 1px solid #F59E0B; color: #B15319; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;"><i class="fa fa-info-circle" style="margin-right: 8px; color: #F59E0B;"></i>
               Dependency visualization is only available in desktop/Docker mode with Python.
               </div>'))
     }
@@ -5917,7 +5916,7 @@ server <- shinyServer(function(input, output, session) {
       list(type = "svg", content = svg)
     }, error = function(e) {
       list(type = "error", content = paste0(
-        '<div style="background-color: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;"><i class="fa fa-info-circle" style="margin-right: 8px; color: #F59E0B;"></i>',
+        '<div style="background-color: #FEF3C7; border: 1px solid #F59E0B; color: #B15319; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;"><i class="fa fa-info-circle" style="margin-right: 8px; color: #F59E0B;"></i>',
         'Visualization unavailable: ', htmltools::htmlEscape(e$message),
         '</div>'
       ))
@@ -6076,7 +6075,7 @@ server <- shinyServer(function(input, output, session) {
         entity_colors <- c(
           "PERSON" = "#e91e63", "ORG" = "#2196f3", "GPE" = "#4caf50",
           "DATE" = "#ff9800", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
-          "ORDINAL" = "#795548", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
+          "ORDINAL" = "#886254", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
           "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
           "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
           "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e",
@@ -6099,10 +6098,10 @@ server <- shinyServer(function(input, output, session) {
           ggplot2::labs(x = "", y = "Frequency", title = "Named Entity Type Frequency") +
           ggplot2::theme_minimal(base_size = 14) +
           ggplot2::theme(
-            plot.title = ggplot2::element_text(size = 16, color = "#0c1f4a", face = "bold"),
-            axis.text.x = ggplot2::element_text(size = 12, color = "#3B3B3B", angle = -45, hjust = 0),
-            axis.text.y = ggplot2::element_text(size = 12, color = "#3B3B3B"),
-            axis.title = ggplot2::element_text(size = 14, color = "#0c1f4a")
+            plot.title = ggplot2::element_text(size = 16, color = "#4269BF", face = "bold"),
+            axis.text.x = ggplot2::element_text(size = 12, color = "#8D6262", angle = -45, hjust = 0),
+            axis.text.y = ggplot2::element_text(size = 12, color = "#8D6262"),
+            axis.title = ggplot2::element_text(size = 14, color = "#4269BF")
           )
 
         ggplot2::ggsave(file, p, width = 10, height = 6, dpi = 150)
@@ -8339,7 +8338,7 @@ server <- shinyServer(function(input, output, session) {
                       style = "margin-top: 20px; margin-bottom: 20px;",
                       htmltools::tags$p(
                         .y$word,
-                        style = "font-weight: bold; text-align: center; font-size: 16px; font-family: 'Roboto', sans-serif; color: #0c1f4a;"
+                        style = "font-weight: bold; text-align: center; font-size: 16px; font-family: 'Roboto', sans-serif; color: #4269BF;"
                       )
                     ),
                     DT::datatable(
@@ -8561,7 +8560,7 @@ server <- shinyServer(function(input, output, session) {
       title = "Sentiment Analysis Setup",
       size = "m",
       tags$div(
-        tags$h4("First-time Setup", style = "color: #0c1f4a;"),
+        tags$h4("First-time Setup", style = "color: #4269BF;"),
         tags$p("To use sentiment analysis, you need to install the textdata package and download the lexicons:"),
         tags$br(),
         tags$h5("Step 1: Install textdata package"),
@@ -8859,7 +8858,7 @@ server <- shinyServer(function(input, output, session) {
           passwordInput("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
-            tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         )
@@ -8879,7 +8878,7 @@ server <- shinyServer(function(input, output, session) {
           passwordInput("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
-            tags$div(style = "color: #065F46; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         )
@@ -9114,7 +9113,7 @@ server <- shinyServer(function(input, output, session) {
           ),
           color = styleEqual(
             c("Sentiment Distribution (of analyzed):"),
-            c("#0c1f4a")
+            c("#4269BF")
           )
         ) %>%
         DT::formatStyle(columns = names(combined_data), `font-size` = "16px")
@@ -9306,14 +9305,14 @@ server <- shinyServer(function(input, output, session) {
     if (sentiment_results$analyzed) {
       tagList(
         br(),
-        tags$h5(strong("Overall Sentiment Distribution"), style = "color: #0c1f4a;"),
+        tags$h5(strong("Overall Sentiment Distribution"), style = "color: #4269BF;"),
         fluidRow(
           column(12,
             plotly::plotlyOutput("sentiment_distribution_plot", height = "400px", width = "100%")
           )
         ),
         br(),
-        tags$h5(strong("Summary Statistics"), style = "color: #0c1f4a;"),
+        tags$h5(strong("Summary Statistics"), style = "color: #4269BF;"),
         DT::dataTableOutput("sentiment_summary_table")
       )
     } else {
@@ -9324,7 +9323,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-chart-bar", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Configure settings and click ",
-            tags$strong("'Analyze Sentiment'", style = "color: #0c1f4a;"),
+            tags$strong("'Analyze Sentiment'", style = "color: #4269BF;"),
             " to generate results",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -9337,14 +9336,14 @@ server <- shinyServer(function(input, output, session) {
     if (sentiment_results$analyzed && !is.null(input$sentiment_category_var) && input$sentiment_category_var != "None") {
       tagList(
         br(),
-        tags$h5(strong("Sentiment by Category"), style = "color: #0c1f4a;"),
+        tags$h5(strong("Sentiment by Category"), style = "color: #4269BF;"),
         fluidRow(
           column(12,
             plotly::plotlyOutput("sentiment_by_category_plot", height = "400px", width = "100%")
           )
         ),
         br(),
-        tags$h5(strong("Category Comparison Table"), style = "color: #0c1f4a;"),
+        tags$h5(strong("Category Comparison Table"), style = "color: #4269BF;"),
         DT::dataTableOutput("sentiment_category_table")
       )
     } else if (sentiment_results$analyzed) {
@@ -9367,7 +9366,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-arrow-left", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Run sentiment analysis from the ",
-            tags$strong("Overall Sentiment", style = "color: #0c1f4a;"),
+            tags$strong("Overall Sentiment", style = "color: #4269BF;"),
             " tab first",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -9392,7 +9391,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-arrow-left", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Run sentiment analysis from the ",
-            tags$strong("Overall Sentiment", style = "color: #0c1f4a;"),
+            tags$strong("Overall Sentiment", style = "color: #4269BF;"),
             " tab first",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -9456,7 +9455,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-book", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "See ",
-            tags$strong("NRC Lexicon", style = "color: #0c1f4a;"),
+            tags$strong("NRC Lexicon", style = "color: #4269BF;"),
             " setup instructions in the sidebar",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -9470,7 +9469,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-arrow-left", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Run sentiment analysis from the ",
-            tags$strong("Overall Sentiment", style = "color: #0c1f4a;"),
+            tags$strong("Overall Sentiment", style = "color: #4269BF;"),
             " tab first",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -9511,9 +9510,6 @@ server <- shinyServer(function(input, output, session) {
     show_guide_modal("embedding_topics_guide", "Embedding-based Topic Modeling Guide")
   })
 
-  observeEvent(input$showHybridTopicsInfo, {
-    show_guide_modal("hybrid_topics_guide", "Hybrid Topic Modeling Guide")
-  })
 
   readability_results <- reactiveValues(
     analyzed = FALSE,
@@ -9756,7 +9752,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-book-reader", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Configure settings and click ",
-            tags$strong("'Analyze'", style = "color: #0c1f4a;"),
+            tags$strong("'Analyze'", style = "color: #4269BF;"),
             " button to generate results",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -9827,7 +9823,7 @@ server <- shinyServer(function(input, output, session) {
             tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
             tags$p(
               "Click ",
-              tags$strong("'Analyze'", style = "color: #0c1f4a;"),
+              tags$strong("'Analyze'", style = "color: #4269BF;"),
               " in the sidebar to calculate lexical diversity metrics",
               style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
             )
@@ -10535,7 +10531,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-key", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Configure settings and click ",
-            tags$strong("'Extract'", style = "color: #0c1f4a;"),
+            tags$strong("'Extract'", style = "color: #4269BF;"),
             " button to generate results",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -10560,7 +10556,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-key", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Configure settings and click ",
-            tags$strong("'Extract'", style = "color: #0c1f4a;"),
+            tags$strong("'Extract'", style = "color: #4269BF;"),
             " button to generate results",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -10619,7 +10615,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-key", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Configure settings and click ",
-            tags$strong("'Extract'", style = "color: #0c1f4a;"),
+            tags$strong("'Extract'", style = "color: #4269BF;"),
             " button to generate results",
             style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
           )
@@ -12525,22 +12521,6 @@ server <- shinyServer(function(input, output, session) {
     )
   }
 
-  calculate_topics_similarity <- function() {
-    tryCatch(
-      {
-        model <- topic_model_result()
-        if (is.null(model)) return(NULL)
-        # Only STM and hybrid (which stores the STM object) have $theta
-        if (!"theta" %in% names(model)) return(NULL)
-        similarity_matrix <- TextAnalysisR::calculate_cosine_similarity(model$theta)
-        list(similarity_matrix = similarity_matrix, method = "topics_cosine", embeddings = NULL)
-      },
-      error = function(e) {
-        showNotification(paste("Topics similarity error:", e$message), type = "error")
-        NULL
-      }
-    )
-  }
 
   store_similarity_results <- function(feature_type, similarity_result, category_labels, start_time, cache_key) {
     metrics <- calculate_comprehensive_metrics(similarity_result$similarity_matrix, category_labels, similarity_result)
@@ -14997,7 +14977,7 @@ server <- shinyServer(function(input, output, session) {
     categories <- unique(docs_data$category_display)
     if (length(categories) < 2) {
       return(tags$div(
-        style = "background-color: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 8px 12px; font-size: 16px; border-radius: 4px;",
+        style = "background-color: #FEF3C7; border: 1px solid #F59E0B; color: #B15319; padding: 8px 12px; font-size: 16px; border-radius: 4px;",
         tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
         "Need at least 2 categories."
       ))
@@ -15018,7 +14998,7 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(ref_cat)) {
       tags$p(
         tags$strong("Reference: "), ref_cat,
-        style = "color: #0c1f4a; margin-bottom: 10px; font-size: 16px;"
+        style = "color: #4269BF; margin-bottom: 10px; font-size: 16px;"
       )
     }
   })
@@ -15301,7 +15281,7 @@ server <- shinyServer(function(input, output, session) {
 
     description <- switch(method,
       "words" = tagList(
-        tags$h5(tags$strong("Words: Lexical Semantic Analysis"), style = "color: #0c1f4a; margin-top: 0;"),
+        tags$h5(tags$strong("Words: Lexical Semantic Analysis"), style = "color: #4269BF; margin-top: 0;"),
         tags$p(style = "margin-bottom: 8px;",
           tags$strong("What it does:"), " Analyzes meaning through vocabulary usage. Documents using similar words are considered semantically similar."
         ),
@@ -15314,7 +15294,7 @@ server <- shinyServer(function(input, output, session) {
       ),
 
       "ngrams" = tagList(
-        tags$h5(tags$strong("N-grams: Phrasal Semantic Analysis"), style = "color: #0c1f4a; margin-top: 0;"),
+        tags$h5(tags$strong("N-grams: Phrasal Semantic Analysis"), style = "color: #4269BF; margin-top: 0;"),
         tags$p(style = "margin-bottom: 8px;",
           tags$strong("What it does:"), " Captures meaning through word sequences and phrases. Preserves local context that individual words miss."
         ),
@@ -15327,7 +15307,7 @@ server <- shinyServer(function(input, output, session) {
       ),
 
       "embeddings" = tagList(
-        tags$h5(tags$strong("Embeddings: Deep Semantic Analysis"), style = "color: #0c1f4a; margin-top: 0;"),
+        tags$h5(tags$strong("Embeddings: Deep Semantic Analysis"), style = "color: #4269BF; margin-top: 0;"),
         tags$p(style = "margin-bottom: 8px;",
           tags$strong("What it does:"), " Captures deep semantic meaning using AI. Understands context, synonyms, and complex relationships between concepts."
         ),
@@ -15676,7 +15656,7 @@ server <- shinyServer(function(input, output, session) {
       tags$div(
         style = "padding: 10px; background: white; border-radius: 4px; border: 1px solid #e5e7eb;",
         tags$i(class = paste("fa", icon_class), style = paste(color_style, "margin-right: 8px;")),
-        tags$strong("Method Used: ", style = "color: #374151;"),
+        tags$strong("Method Used: ", style = "color: #5C6C84;"),
         tags$span(method_label, style = color_style)
       )
     }
@@ -15973,121 +15953,12 @@ server <- shinyServer(function(input, output, session) {
   })
   outputOptions(output, "has_search_k_results", suspendWhenHidden = FALSE)
 
-  output$has_hybrid_search_k_results <- reactive({
-    tryCatch({
-      input$topic_modeling_path == "hybrid" &&
-        !is.null(hybrid_K_search()) && length(hybrid_K_search()) > 0
-    }, error = function(e) {
-      FALSE
-    })
-  })
-  outputOptions(output, "has_hybrid_search_k_results", suspendWhenHidden = FALSE)
 
-  output$hybrid_topic_search_message <- renderUI({
-    search_result <- hybrid_K_search()
-    if (!is.null(search_result) && !is.null(search_result$results)) {
-      HTML(paste0(
-        "<div style='background-color: #f0f8ff; border: 1px solid #4682b4; padding: 10px; border-radius: 5px;'>",
-        "<h5><strong style='color: #2c5aa0;'>Hybrid Model Search K Results</strong></h5>",
-        "<p><b>Searched K range:</b> ", min(search_result$results$K), " to ", max(search_result$results$K), "</p>",
-        "<p><b>Total models evaluated:</b> ", nrow(search_result$results), "</p>",
-        "<p style='color: #6b7280; font-size: 16px;'>",
-        "Diagnostic metrics shown below are based on the STM component. ",
-        "Select optimal K in the Word-Topic tab to run the full hybrid model with embeddings.",
-        "</p>",
-        "</div>"
-      ))
-    }
-  })
 
-  hybrid_quality_metric_plots <- reactive({
-    req(hybrid_K_search())
-    search_result <- hybrid_K_search()
-    if (is.null(search_result$results)) return(NULL)
-    suppressWarnings(TextAnalysisR::plot_quality_metrics(search_result))
-  })
 
-  local({
-    metrics <- c("semcoh", "residual", "heldout", "lbound")
-    for (m in metrics) {
-      local({
-        metric <- m
-        output_id <- paste0("hybrid_quality_metrics_", metric)
-        ui_output_id <- paste0(output_id, "_uiOutput")
 
-        output[[output_id]] <- plotly::renderPlotly({
-          plots <- hybrid_quality_metric_plots()
-          req(plots[[metric]])
-          suppressWarnings(gg_to_plotly(plots[[metric]]))
-        })
 
-        output[[ui_output_id]] <- renderUI({
-          req(hybrid_K_search())
-          plots <- hybrid_quality_metric_plots()
-          if (is.null(plots) || is.null(plots[[metric]])) return(NULL)
-          height_val <- (input$height_search_k %||% 600) / 2
-          div(
-            style = "margin-bottom: 10px;",
-            plotly::plotlyOutput(
-              output_id,
-              height = paste0(height_val, "px"),
-              width = "100%"
-            )
-          )
-        })
-      })
-    }
-  })
 
-  output$hybrid_quality_summary_table <- DT::renderDataTable({
-    req(hybrid_K_search())
-    search_result <- hybrid_K_search()
-    if (is.null(search_result$results)) return(NULL)
-
-    df <- search_result$results
-    df$heldout <- as.numeric(df$heldout)
-    df$residual <- as.numeric(df$residual)
-    df$semcoh <- as.numeric(df$semcoh)
-    df$exclus <- as.numeric(df$exclus)
-
-    df <- df %>%
-      dplyr::mutate(
-        heldout_z = scale(heldout)[,1],
-        semcoh_z = scale(semcoh)[,1],
-        exclus_z = scale(exclus)[,1],
-        residual_z = -scale(residual)[,1],
-        overall_score = round((semcoh_z + exclus_z + heldout_z + residual_z) / 4, 3)
-      ) %>%
-      dplyr::select(K, heldout, semcoh, exclus, residual, overall_score) %>%
-      dplyr::mutate(across(where(is.numeric), ~ round(., 3)))
-
-    DT::datatable(df, options = list(pageLength = 10, scrollX = TRUE))
-  })
-
-  output$hybrid_model_comparison_plot_uiOutput <- renderUI({
-    search_result <- hybrid_K_search()
-    if (!is.null(search_result) && !is.null(search_result$results)) {
-      height_val <- input$height_search_k %||% 600
-      width_val <- input$width_search_k %||% 1000
-      plotly::plotlyOutput("hybrid_model_comparison_plot", height = paste0(height_val, "px"), width = paste0(width_val, "px"))
-    }
-  })
-
-  output$hybrid_model_comparison_plot <- plotly::renderPlotly({
-    req(hybrid_K_search())
-    search_result <- hybrid_K_search()
-    if (is.null(search_result$results)) return(NULL)
-
-    width_val <- if (!is.null(input$width_search_k)) input$width_search_k else 1000
-    height_val <- if (!is.null(input$height_search_k)) input$height_search_k else 600
-
-    gg_to_plotly(TextAnalysisR::plot_model_comparison(
-      search_results = search_result,
-      title = "Hybrid Model: Coherence vs Exclusivity",
-      height = height_val,
-      width = width_val
-    ))
-  })
 
   output$has_word_topic_results <- reactive({
     tryCatch({
@@ -16114,7 +15985,7 @@ server <- shinyServer(function(input, output, session) {
     method <- document_clustering_results$method %||% "UMAP"
 
     tags$div(
-      tags$h6(strong("Analysis configuration"), style = "color: #0c1f4a;"),
+      tags$h6(strong("Analysis configuration"), style = "color: #4269BF;"),
       tags$p(paste("Feature space:", feature_space)),
       tags$p(paste("Reduction method:", method))
     )
@@ -16129,7 +16000,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     tags$div(
-      tags$h6(strong("Quality Metrics"), style = "color: #0c1f4a;"),
+      tags$h6(strong("Quality Metrics"), style = "color: #4269BF;"),
       if (!is.null(metrics$silhouette)) tags$p(paste("Silhouette Score:", round(metrics$silhouette, 3))),
       if (!is.null(metrics$n_clusters)) tags$p(paste("Number of Clusters:", metrics$n_clusters)),
       if (!is.null(metrics$outlier_pct)) tags$p(paste("Outliers:", round(metrics$outlier_pct, 1), "%"))
@@ -16239,22 +16110,22 @@ server <- shinyServer(function(input, output, session) {
       plotly::layout(
         title = list(
           text = "Labeled Document Clustering",
-          font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+          font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
           x = 0.5,
           xref = "paper",
           xanchor = "center"
         ),
         xaxis = list(
           title = list(text = "Dimension 1"),
-          titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif"),
-          tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+          titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif"),
+          tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
         ),
         yaxis = list(
           title = list(text = "Dimension 2"),
-          titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif"),
-          tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+          titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif"),
+          tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
         ),
-        font = list(family = "Roboto, sans-serif", size = 12, color = "#3B3B3B"),
+        font = list(family = "Roboto, sans-serif", size = 12, color = "#8D6262"),
         hovermode = "closest",
         hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left"),
         legend = list(
@@ -16320,8 +16191,8 @@ server <- shinyServer(function(input, output, session) {
       hover_text <- paste0(hover_text, "\n<b>Cluster:</b> ", clusters)
 
       cluster_colors <- c(
-        "#1e40af", "#b91c1c", "#337ab7", "#d97706", "#6b21a8",
-        "#be185d", "#0f766e", "#c2410c", "#4338ca", "#65a30d"
+        "#3960E2", "#b91c1c", "#337ab7", "#d97706", "#6b21a8",
+        "#be185d", "#0f766e", "#c2410c", "#5F53F3", "#65a30d"
       )
       cluster_indices <- as.numeric(as.factor(clusters))
       hover_bg_colors <- cluster_colors[(cluster_indices - 1) %% length(cluster_colors) + 1]
@@ -16336,8 +16207,8 @@ server <- shinyServer(function(input, output, session) {
       )
     } else {
       hoverlabel_config <- list(
-        bgcolor = "#4338ca",
-        bordercolor = "#4338ca",
+        bgcolor = "#5F53F3",
+        bordercolor = "#5F53F3",
         font = list(family = "Roboto, sans-serif", size = 16, color = "#ffffff"),
         align = "left",
         namelength = -1,
@@ -16614,20 +16485,20 @@ server <- shinyServer(function(input, output, session) {
 
     htmltools::tags$div(
       style = "border: 1px solid #dee2e6; padding: 12px; margin-bottom: 15px; border-radius: 4px; background: white;",
-      htmltools::tags$h5(strong("Feature space information"), style = "color: #0c1f4a; margin: 0 0 8px 0;"),
+      htmltools::tags$h5(strong("Feature space information"), style = "color: #4269BF; margin: 0 0 8px 0;"),
       htmltools::tags$table(
         style = "width: 100%; margin-top: 8px; margin-bottom: 8px; font-size: 16px;",
         htmltools::tags$tr(
-          htmltools::tags$th("Property", style = "text-align: left; padding: 4px 20px 4px 0; color: #4b5563; font-weight: 500;"),
-          htmltools::tags$th("Value", style = "text-align: left; padding: 4px 0; color: #4b5563; font-weight: 500;")
+          htmltools::tags$th("Property", style = "text-align: left; padding: 4px 20px 4px 0; color: #5E6F87; font-weight: 500;"),
+          htmltools::tags$th("Value", style = "text-align: left; padding: 4px 0; color: #5E6F87; font-weight: 500;")
         ),
         htmltools::tags$tr(
           htmltools::tags$td("Feature space", style = "padding: 4px 20px 4px 0;"),
-          htmltools::tags$td(feature_space_display, style = "padding: 4px 0; font-weight: 600; color: #0c1f4a;")
+          htmltools::tags$td(feature_space_display, style = "padding: 4px 0; font-weight: 600; color: #4269BF;")
         ),
         htmltools::tags$tr(
           htmltools::tags$td("Method", style = "padding: 4px 20px 4px 0;"),
-          htmltools::tags$td(method_info, style = "padding: 4px 0; font-weight: 600; color: #0c1f4a;")
+          htmltools::tags$td(method_info, style = "padding: 4px 0; font-weight: 600; color: #4269BF;")
         )
       )
     )
@@ -17101,7 +16972,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 10px; background: #F8FAFC; border-radius: 4px;",
         tags$p(
           paste("This group contains", n_docs, "documents"),
-          style = "margin: 0; color: #475569;"
+          style = "margin: 0; color: #5F7088;"
         )
       )
     }
@@ -17174,7 +17045,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 15px; background: #F0F9FF; border: 1px solid #3B82F6; margin-bottom: 20px; border-radius: 4px;",
         tags$h4(
           paste("Found", n_clusters, "document groups"),
-          style = "margin-top: 0; color: #1E40AF;"
+          style = "margin-top: 0; color: #3960E2;"
         ),
         if (!is.na(quality_score)) {
           tags$p(
@@ -17292,9 +17163,9 @@ server <- shinyServer(function(input, output, session) {
     htmltools::tags$table(
       style = "width: 100%; margin-top: 8px; margin-bottom: 8px; font-size: 16px;",
       htmltools::tags$tr(
-        htmltools::tags$th("Metric", style = "text-align: left; padding: 4px 20px 4px 0; color: #4b5563; font-weight: 500;"),
-        htmltools::tags$th("Value", style = "text-align: left; padding: 4px 20px 4px 0; color: #4b5563; font-weight: 500;"),
-        htmltools::tags$th("Interpretation", style = "text-align: left; padding: 4px 0; color: #4b5563; font-weight: 500;")
+        htmltools::tags$th("Metric", style = "text-align: left; padding: 4px 20px 4px 0; color: #5E6F87; font-weight: 500;"),
+        htmltools::tags$th("Value", style = "text-align: left; padding: 4px 20px 4px 0; color: #5E6F87; font-weight: 500;"),
+        htmltools::tags$th("Interpretation", style = "text-align: left; padding: 4px 0; color: #5E6F87; font-weight: 500;")
       ),
       htmltools::tags$tr(
         htmltools::tags$td("Silhouette Score", style = "padding: 4px 20px 4px 0;"),
@@ -17304,7 +17175,7 @@ server <- shinyServer(function(input, output, session) {
           } else {
             "N/A"
           },
-          style = "padding: 4px 20px 4px 0; font-weight: 600; color: #0c1f4a;"
+          style = "padding: 4px 20px 4px 0; font-weight: 600; color: #4269BF;"
         ),
         htmltools::tags$td("Higher is better", style = "padding: 4px 0; color: #6b7280;")
       ),
@@ -17316,7 +17187,7 @@ server <- shinyServer(function(input, output, session) {
           } else {
             "N/A"
           },
-          style = "padding: 4px 20px 4px 0; font-weight: 600; color: #0c1f4a;"
+          style = "padding: 4px 20px 4px 0; font-weight: 600; color: #4269BF;"
         ),
         htmltools::tags$td("Lower is better", style = "padding: 4px 0; color: #6b7280;")
       ),
@@ -17328,7 +17199,7 @@ server <- shinyServer(function(input, output, session) {
           } else {
             "N/A"
           },
-          style = "padding: 4px 20px 4px 0; font-weight: 600; color: #0c1f4a;"
+          style = "padding: 4px 20px 4px 0; font-weight: 600; color: #4269BF;"
         ),
         htmltools::tags$td("Higher is better", style = "padding: 4px 0; color: #6b7280;")
       )
@@ -17444,25 +17315,25 @@ server <- shinyServer(function(input, output, session) {
       plotly::layout(
         title = list(
           text = paste("Outlier Reduction Results -", stringr::str_to_title(clustering_result$outlier_reduction_method)),
-          font = list(size = 14, color = "#0c1f4a", family = "Roboto"),
+          font = list(size = 14, color = "#4269BF", family = "Roboto"),
           x = 0.5,
           xref = "paper",
           xanchor = "center"
         ),
         xaxis = list(
           title = paste(coord_method, "1"),
-          titlefont = list(size = 13, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+          titlefont = list(size = 13, color = "#8D6262", family = "Roboto, sans-serif"),
+          tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
         ),
         yaxis = list(
           title = paste(coord_method, "2"),
-          titlefont = list(size = 13, color = "#3B3B3B", family = "Roboto, sans-serif"),
-          tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+          titlefont = list(size = 13, color = "#8D6262", family = "Roboto, sans-serif"),
+          tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
         ),
         showlegend = TRUE,
         legend = list(
-          title = list(text = "Clusters", font = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")),
-          font = list(size = 12, color = "#3B3B3B"),
+          title = list(text = "Clusters", font = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")),
+          font = list(size = 12, color = "#8D6262"),
           orientation = "v",
           x = 1.05,
           y = 0.5
@@ -17656,20 +17527,20 @@ server <- shinyServer(function(input, output, session) {
         plotly::layout(
           title = list(
             text = "Semantic Evolution Over Time",
-            font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+            font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
             x = 0.5,
             xref = "paper",
             xanchor = "center"
           ),
           xaxis = list(
             title = list(text = "Time Period"),
-            tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-            titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+            tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+            titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
           ),
           yaxis = list(
             title = list(text = "Semantic Drift Score"),
-            tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-            titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+            tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+            titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
           ),
           margin = list(t = 60, b = 60, l = 80, r = 40),
           hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
@@ -17786,25 +17657,25 @@ server <- shinyServer(function(input, output, session) {
         plotly::layout(
           title = list(
             text = "Method Comparison Results",
-            font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+            font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
             x = 0.5,
             xref = "paper",
             xanchor = "center"
           ),
           xaxis = list(
             title = list(text = "Analysis Method"),
-            tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-            titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+            tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+            titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
           ),
           yaxis = list(
             title = list(text = "Score"),
-            tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-            titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+            tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+            titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
           ),
           barmode = "group",
           legend = list(
-            title = list(text = "Metric", font = list(size = 12, color = "#0c1f4a", family = "Roboto, sans-serif")),
-            font = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+            title = list(text = "Metric", font = list(size = 12, color = "#4269BF", family = "Roboto, sans-serif")),
+            font = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
           ),
           margin = list(t = 60, b = 60, l = 80, r = 40),
           hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
@@ -17864,7 +17735,7 @@ server <- shinyServer(function(input, output, session) {
         tags$div(
           style = "background-color: #D1FAE5; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
           tags$small(
-            style = "color: #065F46;",
+            style = "color: #0C795A;",
             icon("check-circle"), " Ollama is available with ", length(models), " model(s)"
           )
         )
@@ -17872,7 +17743,7 @@ server <- shinyServer(function(input, output, session) {
         tags$div(
           style = "background-color: #FEF3C7; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
           tags$small(
-            style = "color: #92400E;",
+            style = "color: #B15319;",
             icon("exclamation-triangle"), " Ollama running but no models found. Run: ollama pull tinyllama"
           )
         )
@@ -18354,7 +18225,7 @@ server <- shinyServer(function(input, output, session) {
     HTML(
       paste0(
         "<div style='background-color: #f0f8ff; border: 1px solid #4682b4; padding: 10px; border-radius: 5px; margin-bottom: 20px;'>",
-        "<h5><strong style='color: #2c5aa0;'>Model Information</strong></h5>",
+        "<h5><strong style='color: #3A6DBA;'>Model Information</strong></h5>",
         "<p style='white-space: normal;'>",
         "<b>Prevalence formula = </b> ", formula_text,
         "</p>",
@@ -18846,8 +18717,8 @@ server <- shinyServer(function(input, output, session) {
     }
 
     wellPanel(
-      style = "background-color: #e8f4f8; border: 1px solid #0c1f4a;",
-      h4("AI Recommendation", style = "color: #0c1f4a;"),
+      style = "background-color: #e8f4f8; border: 1px solid #4269BF;",
+      h4("AI Recommendation", style = "color: #4269BF;"),
       if (!is.na(rec$recommended_k)) {
         tags$div(
           tags$h5(paste("Recommended K:", rec$recommended_k),
@@ -18940,12 +18811,8 @@ server <- shinyServer(function(input, output, session) {
     input$K_number
   })
 
-  # Note: hybrid_K_number_uiOutput is defined after hybrid_K_search() at line ~16801
   # to use search results for the selectInput choices
 
-  hybrid_K_number <- eventReactive(input$hybrid_K_number, {
-    input$hybrid_K_number
-  })
 
   observe({
     req(colnames_cat())
@@ -18967,7 +18834,6 @@ server <- shinyServer(function(input, output, session) {
   })
 
   topic_model_result <- reactiveVal(NULL)
-  topic_model_type <- reactiveVal(NULL)  # "stm", "embedding", or "hybrid"
   previous_K_number <- reactiveVal(NULL)
   previous_categorical_var_2 <- reactiveVal(NULL)
   previous_continuous_var_2 <- reactiveVal(NULL)
@@ -19053,7 +18919,7 @@ server <- shinyServer(function(input, output, session) {
     HTML(
       paste0(
         "<div style='background-color: #f0f8ff; border: 1px solid #4682b4; padding: 10px; border-radius: 5px;'>",
-        "<h5><strong style='color: #2c5aa0;'>Model Information</strong></h5>",
+        "<h5><strong style='color: #3A6DBA;'>Model Information</strong></h5>",
         "<p style='white-space: normal;'>",
         "<b>Prevalence formula = </b> ", formula_text,
         "</p>",
@@ -19108,7 +18974,7 @@ server <- shinyServer(function(input, output, session) {
           ),
           tags$p(
             tags$strong("Recommendations:"),
-            style = "margin-bottom: 5px; color: #0c1f4a;"
+            style = "margin-bottom: 5px; color: #4269BF;"
           ),
           tags$ul(
             tags$li("Upload a larger dataset with more documents"),
@@ -19564,7 +19430,7 @@ server <- shinyServer(function(input, output, session) {
             tags$h5(
               icon("check-circle", style = "color: #0ea5e9;"),
               " Model Complete",
-              style = "color: #0c4a6e; margin: 0 0 10px 0;"
+              style = "color: #1E71A1; margin: 0 0 10px 0;"
             ),
             tags$table(
               style = "width: 100%; font-size: 16px;",
@@ -19606,246 +19472,8 @@ server <- shinyServer(function(input, output, session) {
     })
   })
 
-  hybrid_K_search <- eventReactive(input$hybrid_search, {
-    tryCatch({
-      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
-    }, error = function(e) {
-      TextAnalysisR:::log_security_event(
-        "RATE_LIMIT_EXCEEDED",
-        "Hybrid search rate limit exceeded",
-        session,
-        "WARNING"
-      )
-      TextAnalysisR::show_error_notification(
-        "You have made too many search requests. Please wait before trying again."
-      )
-      return(NULL)
-    })
 
-    dfm_obj <- get_available_dfm()
 
-    if (is.null(dfm_obj)) {
-      show_dfm_required_modal()
-      return(NULL)
-    }
-
-    if (!is.null(input$hybrid_K_range)) {
-      if (input$hybrid_K_range[1] < 2) {
-        shiny::showModal(shiny::modalDialog(
-          title = "Invalid K Range",
-          p("The minimum number of topics (K) must be at least 2."),
-          p("Please adjust the range slider to start from 2 or higher."),
-          easyClose = TRUE,
-          footer = shiny::modalButton("OK")
-        ))
-        return(NULL)
-      }
-    }
-
-    showNotification(HTML("Searching for optimal K for hybrid model...<br>This may take several minutes."),
-                     type = "message", duration = NULL, id = "hybrid_search_k_notification")
-
-    tryCatch({
-      categorical_var <- if (!is.null(input$hybrid_categorical_var)) unlist(strsplit(as.character(input$hybrid_categorical_var), ",\\s*")) else NULL
-      continuous_var <- if (!is.null(input$hybrid_continuous_var)) unlist(strsplit(as.character(input$hybrid_continuous_var), ",\\s*")) else NULL
-
-      terms <- c()
-      if (!is.null(categorical_var) && length(categorical_var) > 0) {
-        terms <- c(terms, categorical_var)
-      }
-      if (!is.null(continuous_var) && length(continuous_var) > 0) {
-        for (var in continuous_var) {
-          unique_values <- length(unique(out()$meta[[var]]))
-          df <- max(3, min(4, unique_values - 1))
-          terms <- c(terms, paste0("s(", var, ", df = ", df, ")"))
-        }
-      }
-
-      prevalence_formula <- if (length(terms) > 0) {
-        as.formula(paste("~", paste(terms, collapse = " + ")))
-      } else {
-        NULL
-      }
-
-      result <- tryCatch({
-        if (is.null(prevalence_formula)) {
-          TextAnalysisR::find_optimal_k(
-            dfm_object = dfm_obj,
-            topic_range = input$hybrid_K_range,
-            max.em.its = input$hybrid_max_em_its,
-            verbose = TRUE
-          )
-        } else {
-          stm::searchK(
-            data = out()$meta,
-            documents = out()$documents,
-            vocab = out()$vocab,
-            init.type = input$hybrid_init_type,
-            K = input$hybrid_K_range,
-            prevalence = prevalence_formula,
-            verbose = TRUE,
-            gamma.prior = input$hybrid_gamma_prior,
-            sigma.prior = 0,
-            kappa.prior = input$hybrid_kappa_prior,
-            max.em.its = input$hybrid_max_em_its,
-            control = list(alpha = 1)
-          )
-        }
-      }, error = function(search_error) {
-        if (grepl("chol|decomposition|singular", search_error$message, ignore.case = TRUE)) {
-          showNotification("Spectral initialization failed. Using LDA initialization...", type = "warning")
-          stm::searchK(
-            data = out()$meta,
-            documents = out()$documents,
-            vocab = out()$vocab,
-            init.type = "LDA",
-            K = input$hybrid_K_range,
-            prevalence = prevalence_formula,
-            verbose = TRUE,
-            gamma.prior = input$hybrid_gamma_prior,
-            sigma.prior = 0,
-            kappa.prior = input$hybrid_kappa_prior,
-            max.em.its = input$hybrid_max_em_its,
-            control = list(alpha = 1)
-          )
-        } else {
-          stop(search_error)
-        }
-      })
-
-      removeNotification(id = "hybrid_search_k_notification")
-      show_completion_notification("Hybrid search K completed successfully!", duration = 3)
-      return(result)
-    }, error = function(e) {
-      tryCatch(removeNotification(id = "hybrid_search_k_notification"), error = function(e) {})
-      error_msg <- paste("Error in hybrid search K:", e$message)
-      shiny::showModal(shiny::modalDialog(
-        title = "Hybrid Search K Failed",
-        p(error_msg),
-        easyClose = TRUE,
-        footer = shiny::modalButton("Close")
-      ))
-      return(NULL)
-    })
-  })
-
-  output$hybrid_K_number_uiOutput <- renderUI({
-    search_result <- hybrid_K_search()
-    if (!is.null(search_result) && !is.null(search_result$results)) {
-      K_values <- search_result$results$K
-      selectInput("hybrid_K_number",
-                  "Select K (number of topics) based on search results:",
-                  choices = K_values,
-                  selected = K_values[length(K_values)])
-    }
-  })
-
-  observeEvent(input$hybrid_run, {
-    req(input$hybrid_K_number)
-    dfm_obj <- get_available_dfm()
-
-    if (is.null(united_tbl()) || is.null(dfm_obj)) {
-      shiny::showModal(shiny::modalDialog(
-        title = "Preprocessing Required",
-        p("No document-feature matrix (DFM) found."),
-        easyClose = TRUE,
-        footer = shiny::modalButton("OK")
-      ))
-      return()
-    }
-
-    show_loading_notification(HTML(paste("Running hybrid topic modeling with K =", input$hybrid_K_number, "topics...<br>This may take several minutes.")),
-                              id = "hybrid_model_notification")
-
-    tryCatch({
-      texts <- united_tbl()$united_texts
-
-      metadata <- NULL
-      if (!is.null(input$hybrid_categorical_var_2) || !is.null(input$hybrid_continuous_var_2)) {
-        metadata <- out()$meta
-        selected_cols <- c(input$hybrid_categorical_var_2, input$hybrid_continuous_var_2)
-        if (length(selected_cols) > 0) {
-          metadata <- metadata[, selected_cols, drop = FALSE]
-        }
-      }
-
-      prevalence_formula <- NULL
-      if (!is.null(metadata) && ncol(metadata) > 0) {
-        covariate_names <- names(metadata)
-        for (var in covariate_names) {
-          tryCatch({
-            TextAnalysisR:::validate_column_name(var)
-          }, error = function(e) {
-            TextAnalysisR:::log_security_event(
-              "INVALID_COLUMN_NAME",
-              paste("Invalid metadata column name:", var),
-              session,
-              "WARNING"
-            )
-            stop("Invalid column name format in metadata")
-          })
-        }
-        prevalence_formula <- as.formula(paste("~", paste(covariate_names, collapse = " + ")))
-      }
-
-      # Reuse cached embeddings if available and compatible
-      cached_embeddings <- NULL
-      if (!is.null(embeddings_cache$embeddings) &&
-          nrow(embeddings_cache$embeddings) == length(texts)) {
-        cached_embeddings <- embeddings_cache$embeddings
-        showNotification("Using cached embeddings for hybrid model", type = "message", duration = 2)
-      }
-
-      hybrid_result <- TextAnalysisR::fit_hybrid_model(
-        texts = texts,
-        metadata = metadata,
-        n_topics_stm = as.numeric(input$hybrid_K_number),
-        embedding_model = input$hybrid_embedding_model,
-        n_embedding_dims = input$hybrid_n_embedding_dims %||% 5,
-        stm_prevalence = prevalence_formula,
-        stm_init_type = input$hybrid_init_type_K %||% "Spectral",
-        stm_gamma_prior = input$hybrid_gamma_prior_K %||% "Pooled",
-        stm_kappa_prior = input$hybrid_kappa_prior_K %||% "L1",
-        stm_max_em_its = input$hybrid_max_em_its_K %||% 75,
-        stm_weight = input$hybrid_stm_weight %||% 0.5,
-        verbose = TRUE,
-        seed = 123,
-        precomputed_embeddings = cached_embeddings
-      )
-
-      # Store embeddings in cache if newly generated
-      if (is.null(cached_embeddings) && !is.null(hybrid_result$embedding_result$embeddings)) {
-        embeddings_cache$embeddings <- hybrid_result$embedding_result$embeddings
-        embeddings_cache$model <- input$hybrid_embedding_model
-        embeddings_cache$texts_hash <- digest::digest(texts, algo = "md5")
-        embeddings_cache$timestamp <- Sys.time()
-        embeddings_cache$source <- "topic_modeling_hybrid"
-        embeddings_cache$n_docs <- nrow(hybrid_result$embedding_result$embeddings)
-      }
-
-      topic_model_result(hybrid_result$stm_result$model)
-      topic_model_type("hybrid")
-
-      attr(topic_model_result(), "hybrid_result") <- hybrid_result
-
-      tryCatch(removeNotification(id = "hybrid_model_notification"), error = function(e) {})
-      show_completion_notification("Hybrid model completed successfully!", duration = 3)
-
-    }, error = function(e) {
-      tryCatch(removeNotification(id = "hybrid_model_notification"), error = function(e) {})
-      error_msg <- if (!is.null(e$message) && nchar(e$message) > 0) {
-        e$message
-      } else {
-        "An error occurred while running the hybrid model. Please check your data and parameters."
-      }
-      shiny::showModal(shiny::modalDialog(
-        title = "Error Running Hybrid Model",
-        p(error_msg),
-        easyClose = TRUE,
-        footer = shiny::modalButton("Close")
-      ))
-    })
-  })
 
   observeEvent(input$embedding_display, {
     if (is.null(topic_model_result())) {
@@ -19935,20 +19563,20 @@ server <- shinyServer(function(input, output, session) {
             plotly::layout(
               title = list(
                 text = "Topic Distribution",
-                font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+                font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
                 x = 0.5,
                 xref = "paper",
                 xanchor = "center"
               ),
               xaxis = list(
                 title = list(text = "Topic/Cluster (-1 = outliers)"),
-                tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-                titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+                tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+                titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
               ),
               yaxis = list(
                 title = list(text = "Proportion"),
-                tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-                titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+                tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+                titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
               ),
               margin = list(t = 60, b = 60, l = 80, r = 40),
               hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
@@ -19970,25 +19598,25 @@ server <- shinyServer(function(input, output, session) {
             plotly::layout(
               title = list(
                 text = "Document Embeddings by Topic",
-                font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+                font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
                 x = 0.5,
                 xref = "paper",
                 xanchor = "center"
               ),
               xaxis = list(
                 title = list(text = "UMAP 1"),
-                tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-                titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+                tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+                titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
               ),
               yaxis = list(
                 title = list(text = "UMAP 2"),
-                tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-                titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+                tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+                titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
               ),
               showlegend = TRUE,
               legend = list(
-                title = list(text = "Topic", font = list(size = 12, color = "#0c1f4a", family = "Roboto, sans-serif")),
-                font = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+                title = list(text = "Topic", font = list(size = 12, color = "#4269BF", family = "Roboto, sans-serif")),
+                font = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
               ),
               margin = list(t = 60, b = 60, l = 80, r = 40),
               hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
@@ -20017,18 +19645,18 @@ server <- shinyServer(function(input, output, session) {
               plotly::layout(
                 title = list(
                   text = "Topic Similarity Heatmap",
-                  font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+                  font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
                   x = 0.5,
                   xref = "paper",
                   xanchor = "center"
                 ),
                 xaxis = list(
                   title = list(text = ""),
-                  tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+                  tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
                 ),
                 yaxis = list(
                   title = list(text = ""),
-                  tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif")
+                  tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
                 ),
                 margin = list(t = 60, b = 60, l = 100, r = 40),
                 hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
@@ -20069,20 +19697,20 @@ server <- shinyServer(function(input, output, session) {
               plotly::layout(
                 title = list(
                   text = "Intertopic Distance Map",
-                  font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
+                  font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
                   x = 0.5,
                   xref = "paper",
                   xanchor = "center"
                 ),
                 xaxis = list(
                   title = list(text = "PC1"),
-                  tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-                  titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+                  tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+                  titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
                 ),
                 yaxis = list(
                   title = list(text = "PC2"),
-                  tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-                  titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
+                  tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif"),
+                  titlefont = list(size = 13, color = "#4269BF", family = "Roboto, sans-serif")
                 ),
                 showlegend = FALSE,
                 margin = list(t = 60, b = 60, l = 80, r = 40),
@@ -20187,420 +19815,28 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  observeEvent(input$hybrid_display, {
-    if (is.null(topic_model_result()) || is.null(attr(topic_model_result(), "hybrid_result"))) {
-      showNotification("Please run the hybrid model first.", type = "warning", duration = 3)
-      return()
-    }
 
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
 
-    output$topic_prevalence_plot_uiOutput <- renderUI({
-      div(
-        style = "margin-bottom: 20px; overflow: hidden;",
-        plotly::plotlyOutput("hybrid_topic_plot", height = 500, width = "100%")
-      )
-    })
 
-    output$hybrid_topic_plot <- plotly::renderPlotly({
-      theta <- hybrid_result$stm_result$model$theta
-      topic_props <- colMeans(theta)
 
-      plotly::plot_ly(
-        x = paste0("Topic ", 1:length(topic_props)),
-        y = topic_props,
-        type = "bar",
-        marker = list(color = "#337ab7"),
-        hovertemplate = "Topic %{x}<br>Proportion: %{y:.3f}<extra></extra>"
-      ) %>%
-        plotly::layout(
-          title = list(
-            text = "Topic Prevalence",
-            font = list(size = 14, color = "#0c1f4a", family = "Roboto, sans-serif"),
-            x = 0.5,
-            xref = "paper",
-            xanchor = "center"
-          ),
-          xaxis = list(
-            title = list(text = "Topic"),
-            tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-            titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
-          ),
-          yaxis = list(
-            title = list(text = "Average Proportion"),
-            tickfont = list(size = 12, color = "#3B3B3B", family = "Roboto, sans-serif"),
-            titlefont = list(size = 13, color = "#0c1f4a", family = "Roboto, sans-serif")
-          ),
-          margin = list(t = 60, b = 60, l = 80, r = 40),
-          hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
-        )
-    })
 
-    output$topic_prevalence_table_uiOutput <- renderUI({
-      DT::dataTableOutput("hybrid_topic_table", width = "100%")
-    })
 
-    output$hybrid_topic_table <- DT::renderDataTable({
-      if ("topic_keywords" %in% names(hybrid_result)) {
-        n_terms <- input$hybrid_top_term_number_2 %||% 5
-        topic_df <- data.frame(
-          Topic = names(hybrid_result$topic_keywords),
-          Keywords = sapply(hybrid_result$topic_keywords, function(x) paste(head(x, n_terms), collapse = ", ")),
-          Coherence = round(hybrid_result$quality_metrics$semantic_coherence, 3),
-          Exclusivity = round(hybrid_result$quality_metrics$exclusivity, 3),
-          stringsAsFactors = FALSE
-        )
-        DT::datatable(topic_df, options = list(pageLength = 10))
-      }
-    })
-  })
 
-  # Hybrid topic alignment: STM vs Embedding cluster comparison
-  output$hybrid_alignment_plot_uiOutput <- renderUI({
-    req(topic_model_result())
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
-    req(hybrid_result, hybrid_result$alignment)
-    plotly::plotlyOutput("hybrid_alignment_plot", height = 500, width = "100%")
-  })
 
-  output$hybrid_alignment_plot <- plotly::renderPlotly({
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
-    req(hybrid_result, hybrid_result$alignment, hybrid_result$alignment$alignment_matrix)
 
-    am <- hybrid_result$alignment$alignment_matrix
-    n_stm <- nrow(am)
-    n_embed <- ncol(am)
 
-    plotly::plot_ly(
-      z = am,
-      x = paste0("Embed ", seq_len(n_embed)),
-      y = paste0("STM ", seq_len(n_stm)),
-      type = "heatmap",
-      colorscale = "Blues",
-      hovertemplate = "STM Topic %{y}<br>Embedding Cluster %{x}<br>Cosine Similarity: %{z:.3f}<extra></extra>"
-    ) %>%
-      plotly::layout(
-        title = list(
-          text = sprintf("STM vs Embedding Topic Alignment (Overall: %.3f, ARI: %.3f)",
-                         hybrid_result$alignment$overall_alignment %||% 0,
-                         hybrid_result$alignment$adjusted_rand_index %||% 0),
-          font = list(size = 14, color = "#0c1f4a")
-        ),
-        xaxis = list(title = "Embedding Cluster"),
-        yaxis = list(title = "STM Topic"),
-        margin = list(t = 80, b = 60, l = 80, r = 40),
-        hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
-      )
-  })
 
-  output$hybrid_alignment_table <- DT::renderDataTable({
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
-    req(hybrid_result, hybrid_result$alignment)
 
-    alignment <- hybrid_result$alignment
-    qm <- hybrid_result$quality_metrics
 
-    # Per-topic alignment + overall metrics
-    n_topics <- alignment$n_stm_topics %||% length(alignment$alignment_scores)
-    topic_df <- data.frame(
-      `STM Topic` = paste0("Topic ", seq_len(n_topics)),
-      `Best Embedding Match` = paste0("Cluster ", alignment$best_matches),
-      `Alignment Score` = round(alignment$alignment_scores, 4),
-      stringsAsFactors = FALSE,
-      check.names = FALSE
-    )
 
-    # Add quality metrics per topic if available
-    if (!is.null(qm$semantic_coherence) && length(qm$semantic_coherence) == n_topics) {
-      topic_df$`Coherence (STM)` <- round(qm$semantic_coherence, 4)
-    }
-    if (!is.null(qm$exclusivity) && length(qm$exclusivity) == n_topics) {
-      topic_df$`Exclusivity (STM)` <- round(qm$exclusivity, 4)
-    }
 
-    # Add summary row
-    summary_row <- data.frame(
-      `STM Topic` = "Overall",
-      `Best Embedding Match` = "",
-      `Alignment Score` = round(alignment$overall_alignment %||% mean(alignment$alignment_scores, na.rm = TRUE), 4),
-      stringsAsFactors = FALSE,
-      check.names = FALSE
-    )
-    if ("Coherence (STM)" %in% names(topic_df)) summary_row$`Coherence (STM)` <- round(mean(qm$semantic_coherence), 4)
-    if ("Exclusivity (STM)" %in% names(topic_df)) summary_row$`Exclusivity (STM)` <- round(mean(qm$exclusivity), 4)
-    topic_df <- rbind(topic_df, summary_row)
 
-    DT::datatable(
-      topic_df,
-      rownames = FALSE,
-      extensions = "Buttons",
-      options = list(
-        dom = "Bfrtip",
-        buttons = c("copy", "csv"),
-        pageLength = 20,
-        columnDefs = list(list(targets = "_all", className = "dt-center"))
-      ),
-      class = "cell-border stripe hover compact"
-    )
-  })
 
-  hybrid_effect_result <- eventReactive(input$hybrid_effect, {
-    if (is.null(topic_model_result()) || is.null(attr(topic_model_result(), "hybrid_result"))) {
-      showNotification("Please run the hybrid model first.", type = "warning", duration = 3)
-      return(NULL)
-    }
 
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
 
-    showNotification("Estimating effects for hybrid model...", type = "message", duration = NULL, id = "hybrid_effect_notification")
 
-    tryCatch({
-      categorical_var <- if (!is.null(input$hybrid_categorical_var_2)) unlist(strsplit(as.character(input$hybrid_categorical_var_2), ",\\s*")) else NULL
-      continuous_var <- if (!is.null(input$hybrid_continuous_var_2)) unlist(strsplit(as.character(input$hybrid_continuous_var_2), ",\\s*")) else NULL
 
-      terms <- c()
-      if (!is.null(categorical_var) && length(categorical_var) > 0) {
-        terms <- c(terms, categorical_var)
-      }
-      if (!is.null(continuous_var) && length(continuous_var) > 0) {
-        for (var in continuous_var) {
-          if (var %in% names(hybrid_result$metadata)) {
-            unique_values <- length(unique(hybrid_result$metadata[[var]]))
-            df <- max(3, min(4, unique_values - 1))
-            terms <- c(terms, paste0("s(", var, ", df = ", df, ")"))
-          }
-        }
-      }
 
-      prevalence_formula <- if (length(terms) > 0) {
-        as.formula(paste("~", paste(terms, collapse = " + ")))
-      } else {
-        hybrid_result$prevalence_formula
-      }
-
-      if (!is.null(prevalence_formula)) {
-        effect_result <- stm::estimateEffect(
-          formula = prevalence_formula,
-          stmobj = hybrid_result$stm_result$model,
-          metadata = hybrid_result$metadata,
-          uncertainty = "Global"
-        )
-
-        tryCatch(removeNotification(id = "hybrid_effect_notification"), error = function(e) {})
-        show_completion_notification("Hybrid model effects estimated successfully!", duration = 3)
-
-        return(effect_result)
-      } else {
-        tryCatch(removeNotification(id = "hybrid_effect_notification"), error = function(e) {})
-        showNotification("No covariates selected for effect estimation.", type = "warning", duration = 3)
-        return(NULL)
-      }
-
-    }, error = function(e) {
-      tryCatch(removeNotification(id = "hybrid_effect_notification"), error = function(e) {})
-      showNotification(paste("Error estimating effects:", e$message), type = "error", duration = 5)
-      return(NULL)
-    })
-  })
-
-  observe({
-    effect_result <- hybrid_effect_result()
-    if (!is.null(effect_result)) {
-      output$effect_table <- DT::renderDataTable({
-        td <- tidytext::tidy(effect_result) %>%
-          dplyr::mutate(across(where(is.numeric), ~ round(., 3)))
-        DT::datatable(td, options = list(pageLength = 15))
-      })
-    }
-  })
-
-  output$hybrid_effect_download_table <- downloadHandler(
-    filename = function() {
-      paste0("hybrid_effect_estimates_", Sys.Date(), ".xlsx")
-    },
-    content = function(file) {
-      if (is.null(hybrid_effect_result())) {
-        showNotification("No effect estimates available for download. Please run the effect estimation first.", type = "error")
-        return()
-      }
-      td <- tidytext::tidy(hybrid_effect_result()) %>%
-        dplyr::mutate(across(where(is.numeric), ~ round(., 3)))
-      openxlsx::write.xlsx(td, file)
-    }
-  )
-
-  # Update Hybrid Effects categorical selector from selected covariates
-  observe({
-    selected_cat <- input$hybrid_categorical_var_2
-    updateSelectizeInput(session,
-                         "hybrid_effect_cat_btn",
-                         choices = selected_cat,
-                         selected = if (!is.null(selected_cat) && length(selected_cat) > 0) selected_cat[1] else NULL
-    )
-  })
-
-  # Update Hybrid Effects continuous selector from selected covariates
-  observe({
-    selected_con <- input$hybrid_continuous_var_2
-    updateSelectizeInput(session,
-                         "hybrid_effect_con_btn",
-                         choices = selected_con,
-                         selected = if (!is.null(selected_con) && length(selected_con) > 0) selected_con[1] else NULL
-    )
-  })
-
-  # Hybrid effects categorical reactive
-  hybrid_effects_categorical_var <- reactive({
-    if (is.null(hybrid_effect_result()) || is.null(input$hybrid_effect_cat_btn)) {
-      return(NULL)
-    }
-    tryCatch(
-      {
-        stminsights::get_effects(
-          estimates = hybrid_effect_result(),
-          variable = input$hybrid_effect_cat_btn,
-          type = "pointestimate"
-        )
-      },
-      error = function(e) {
-        showNotification(paste("Error calculating hybrid categorical effects:", e$message), type = "error")
-        return(NULL)
-      }
-    )
-  })
-
-  # Hybrid effects continuous reactive
-  hybrid_effects_continuous_var <- reactive({
-    if (is.null(hybrid_effect_result()) || is.null(input$hybrid_effect_con_btn)) {
-      return(NULL)
-    }
-    tryCatch(
-      {
-        stminsights::get_effects(
-          estimates = hybrid_effect_result(),
-          variable = input$hybrid_effect_con_btn,
-          type = "continuous"
-        )
-      },
-      error = function(e) {
-        showNotification(paste("Error calculating hybrid continuous effects:", e$message), type = "error")
-        return(NULL)
-      }
-    )
-  })
-
-  # Hybrid categorical effects plot handler
-  observeEvent(input$hybrid_display_cat, {
-    output$hybrid_cat_plot <- plotly::renderPlotly({
-      gg_to_plotly(plot_topic_effects_categorical(
-        effects_data = hybrid_effects_categorical_var(),
-        ncol = input$hybrid_ncol_cat,
-        height = 600,
-        width = 1000
-      ))
-    })
-  })
-
-  output$hybrid_cat_plot_uiOutput <- renderUI({
-    req(input$hybrid_effect_cat_btn)
-    req(input$hybrid_display_cat)
-    plotly::plotlyOutput(
-      "hybrid_cat_plot",
-      height = 600,
-      width = "100%"
-    )
-  })
-
-  observeEvent(input$hybrid_display_cat, {
-    req(input$hybrid_effect_cat_btn)
-    output$hybrid_cat_table <- DT::renderDataTable({
-      if (is.null(hybrid_effects_categorical_var()) || nrow(hybrid_effects_categorical_var()) == 0) {
-        return(DT::datatable(
-          data.frame(Message = "No categorical effects available. Please run the effect estimation first."),
-          rownames = FALSE,
-          options = list(dom = "t", ordering = FALSE)
-        ))
-      }
-      hybrid_effects_categorical_var() %>%
-        dplyr::select(topic, value, proportion, lower, upper) %>%
-        dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
-        DT::datatable(
-          rownames = FALSE,
-          extensions = "Buttons",
-          options = list(
-            scrollX = TRUE,
-            width = "100%",
-            dom = "Bfrtip",
-            buttons = c("copy", "csv", "excel", "pdf", "print")
-          )
-        )
-    })
-  })
-
-  output$hybrid_cat_table_uiOutput <- renderUI({
-    req(input$hybrid_effect_cat_btn)
-    req(input$hybrid_display_cat)
-    htmltools::tags$div(
-      style = "margin-top: 20px;",
-      DT::dataTableOutput("hybrid_cat_table", width = "100%")
-    )
-  })
-
-  # Hybrid continuous effects plot handler
-  observeEvent(input$hybrid_display_con, {
-    output$hybrid_con_plot <- plotly::renderPlotly({
-      gg_to_plotly(plot_topic_effects_continuous(
-        effects_data = hybrid_effects_continuous_var(),
-        ncol = input$hybrid_ncol_con,
-        height = 600,
-        width = 1000
-      ))
-    })
-  })
-
-  output$hybrid_con_plot_uiOutput <- renderUI({
-    req(input$hybrid_effect_con_btn)
-    req(input$hybrid_display_con)
-    plotly::plotlyOutput(
-      "hybrid_con_plot",
-      height = 600,
-      width = "100%"
-    )
-  })
-
-  observeEvent(input$hybrid_display_con, {
-    req(input$hybrid_effect_con_btn)
-    output$hybrid_con_table <- DT::renderDataTable({
-      if (is.null(hybrid_effects_continuous_var()) || nrow(hybrid_effects_continuous_var()) == 0) {
-        return(DT::datatable(
-          data.frame(Message = "No continuous effects available. Please run the effect estimation first."),
-          rownames = FALSE,
-          options = list(dom = "t", ordering = FALSE)
-        ))
-      }
-      hybrid_effects_continuous_var() %>%
-        dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
-        DT::datatable(
-          rownames = FALSE,
-          extensions = "Buttons",
-          options = list(
-            scrollX = TRUE,
-            width = "100%",
-            dom = "Bfrtip",
-            buttons = c("copy", "csv", "excel", "pdf", "print")
-          )
-        )
-    })
-  })
-
-  output$hybrid_con_table_uiOutput <- renderUI({
-    req(input$hybrid_effect_con_btn)
-    req(input$hybrid_display_con)
-    htmltools::tags$div(
-      style = "margin-top: 20px;",
-      DT::dataTableOutput("hybrid_con_table", width = "100%")
-    )
-  })
 
   observe({
     if (!is.null(topic_model_result()) && "topic_assignments" %in% names(topic_model_result())) {
@@ -20615,39 +19851,9 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  observe({
-    if (!is.null(colnames_cat())) {
-      updateSelectizeInput(session, "hybrid_categorical_var",
-                          choices = colnames_cat(),
-                          selected = NULL)
-    }
-  })
 
-  observe({
-    if (!is.null(colnames_con())) {
-      updateSelectizeInput(session, "hybrid_continuous_var",
-                          choices = colnames_con(),
-                          selected = NULL)
-    }
-  })
 
-  # Update Hybrid Display K covariates (var_2)
-  observe({
-    req(colnames_cat())
-    updateSelectizeInput(session,
-                         "hybrid_categorical_var_2",
-                         choices = colnames_cat(),
-                         selected = NULL,
-                         server = TRUE)
-  })
 
-  observe({
-    updateSelectizeInput(session,
-                         "hybrid_continuous_var_2",
-                         choices = colnames_con(),
-                         selected = NULL,
-                         server = TRUE)
-  })
 
   output$text_output <- renderText({
     output_message()
@@ -20657,48 +19863,10 @@ server <- shinyServer(function(input, output, session) {
 
   previous_topic_measure <- reactiveVal(NULL)
 
-  # Get current topic measure based on modeling path (STM or Hybrid)
-  get_topic_measure <- reactive({
-    is_hybrid <- !is.null(input$topic_modeling_path) && input$topic_modeling_path == "hybrid"
-    if (is_hybrid) {
-      input$hybrid_topic_measure %||% "frex"
-    } else {
-      input$stm_topic_measure %||% "frex"
-    }
-  })
 
   # Get number of columns for topic term display based on modeling path
-  get_ncol_top_terms <- reactive({
-    is_hybrid <- !is.null(input$topic_modeling_path) && input$topic_modeling_path == "hybrid"
-    if (is_hybrid) {
-      input$hybrid_ncol_top_terms %||% 2
-    } else {
-      input$stm_ncol_top_terms %||% 2
-    }
-  })
 
   # Get top term number based on current measure and modeling path
-  get_top_term_number <- reactive({
-    is_hybrid <- !is.null(input$topic_modeling_path) && input$topic_modeling_path == "hybrid"
-
-    if (is_hybrid) {
-      measure <- input$hybrid_topic_measure %||% "frex"
-      switch(measure,
-             "frex" = input$hybrid_top_term_number_frex %||% 5,
-             "lift" = input$hybrid_top_term_number_lift %||% 5,
-             "score" = input$hybrid_top_term_number_score %||% 5,
-             "beta" = input$hybrid_top_term_number_beta %||% 5,
-             5)
-    } else {
-      measure <- input$stm_topic_measure %||% "frex"
-      switch(measure,
-             "frex" = input$stm_top_term_number_frex %||% 5,
-             "lift" = input$stm_top_term_number_lift %||% 5,
-             "score" = input$stm_top_term_number_score %||% 5,
-             "beta" = input$stm_top_term_number_beta %||% 5,
-             5)
-    }
-  })
 
   stm_topic_terms <- reactive({
     if (is.null(topic_model_result())) {
@@ -22066,216 +21234,12 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  # Hybrid model topic number UI output
-  output$hybrid_topic_number_uiOutput <- renderUI({
-    sliderInput(
-      "hybrid_topic_number",
-      "Select topics:",
-      value = hybrid_K_number(),
-      min = 0,
-      step = 1,
-      max = hybrid_K_number()
-    )
-  })
-
-  # Hybrid model quote UI outputs
-  hybrid_print_K_number_from_1 <- eventReactive(input$hybrid_K_number, {
-    1:input$hybrid_K_number
-  })
-
-  output$hybrid_quote_topic_number_uiOutput <- renderUI({
-    req(hybrid_print_K_number_from_1())
-    selectInput(
-      "hybrid_topic_number_quote",
-      "Topic number",
-      choices = hybrid_print_K_number_from_1(),
-      selected = " "
-    )
-  })
 
 
-  # Update hybrid_topic_texts choices when hybrid model is fitted
-  observe({
-    req(topic_model_result())
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
-    req(hybrid_result)
-    req(mydata())
 
-    choices <- names(mydata())
-    if (length(choices) > 0) {
-      updateSelectizeInput(session,
-                           "hybrid_topic_texts",
-                           choices = choices,
-                           selected = choices[1])
-    } else {
-      updateSelectizeInput(session,
-                           "hybrid_topic_texts",
-                           choices = character(0),
-                           selected = NULL)
-    }
-  })
 
-  # Hybrid quote handler
-  observeEvent(input$hybrid_quote, {
-    if (is.null(topic_model_result())) {
-      showNotification("Please run the hybrid model first.", type = "warning", duration = 3)
-      return()
-    }
 
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
-    if (is.null(hybrid_result)) {
-      showNotification("Please run the hybrid model first.", type = "warning", duration = 3)
-      return()
-    }
 
-    selected_topic <- as.numeric(input$hybrid_topic_number_quote)
-    if (is.na(selected_topic)) {
-      showNotification("Please select a topic first.", type = "warning")
-      return()
-    }
-
-    showNotification(
-      "Finding representative documents...",
-      type = "message", duration = NULL, id = "hybrid_quote_notification"
-    )
-    tryCatch({
-      stm_model <- hybrid_result$stm_result$model
-      if (is.null(stm_model)) {
-        showNotification("STM model not found in hybrid result.", type = "error")
-        return()
-      }
-
-      # Get texts from metadata or mydata
-      text_col <- input$hybrid_topic_texts
-      if (!is.null(text_col) && text_col %in% names(hybrid_result$metadata)) {
-        texts <- as.character(hybrid_result$metadata[[text_col]])
-      } else if (!is.null(text_col) && text_col %in% names(mydata())) {
-        texts <- as.character(mydata()[[text_col]])
-      } else if ("united_texts" %in% names(hybrid_result$metadata)) {
-        texts <- as.character(hybrid_result$metadata$united_texts)
-      } else {
-        text_cols <- names(hybrid_result$metadata)[sapply(hybrid_result$metadata, is.character)]
-        if (length(text_cols) > 0) {
-          texts <- as.character(hybrid_result$metadata[[text_cols[1]]])
-        } else {
-          showNotification("No text column found in hybrid metadata.", type = "error")
-          return()
-        }
-      }
-
-      thoughts_result <- stm::findThoughts(
-        stm_model,
-        texts = texts,
-        n = 3,
-        topics = selected_topic
-      )
-
-      if (!is.null(thoughts_result$docs[[1]]) && length(thoughts_result$docs[[1]]) > 0) {
-        doc_indices <- thoughts_result$index[[1]]
-        result_df <- data.frame(
-          `Document Index` = doc_indices,
-          `Example Text` = thoughts_result$docs[[1]],
-          stringsAsFactors = FALSE,
-          check.names = FALSE
-        )
-
-        output$quote_table <- DT::renderDataTable({
-          DT::datatable(result_df, options = list(pageLength = 5))
-        })
-      } else {
-        showNotification("No documents found for this topic.", type = "warning")
-      }
-    }, error = function(e) {
-      tryCatch(removeNotification(id = "hybrid_quote_notification"), error = function(e) {})
-      showNotification(paste("Error finding topic quotes:", e$message), type = "error")
-    }, finally = {
-      tryCatch(removeNotification(id = "hybrid_quote_notification"), error = function(e) {})
-    })
-  })
-
-  # Hybrid topic label generation handler
-  shiny::observeEvent(input$hybrid_generate_labels, {
-    hybrid_result <- attr(topic_model_result(), "hybrid_result")
-    if (is.null(hybrid_result) || is.null(hybrid_result$stm_result$model)) {
-      showNotification("Please run the hybrid model first.", type = "warning")
-      return()
-    }
-
-    provider <- input$hybrid_label_provider %||% "ollama"
-    api_key <- NULL
-
-    if (provider == "ollama") {
-      if (is_remote) {
-        showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning")
-        return()
-      }
-      if (!TextAnalysisR::check_ollama(verbose = FALSE)) {
-        showModal(modalDialog(
-          title = "Ollama Required",
-          HTML("<p>Topic labeling with Ollama requires Ollama to be running locally.</p>
-               <p><strong>Setup:</strong></p>
-               <ol>
-                 <li>Download Ollama from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>
-                 <li>Run: <code>ollama pull tinyllama</code></li>
-                 <li>Start Ollama and try again</li>
-               </ol>"),
-          easyClose = TRUE,
-          footer = modalButton("Close")
-        ))
-        return()
-      }
-      model <- input$hybrid_label_ollama_model %||% "tinyllama"
-
-    } else if (provider == "openai") {
-      api_key <- get_api_key("openai", input$hybrid_label_openai_api_key)
-      if (!nzchar(api_key)) {
-        showNotification(TextAnalysisR:::.missing_api_key_message("openai", "shiny"), type = "error")
-        return()
-      }
-      model <- input$hybrid_label_openai_model %||% "gpt-4.1-mini"
-
-    } else if (provider == "gemini") {
-      api_key <- get_api_key("gemini", input$hybrid_label_gemini_api_key)
-      if (!nzchar(api_key)) {
-        showNotification(TextAnalysisR:::.missing_api_key_message("gemini", "shiny"), type = "error")
-        return()
-      }
-      model <- input$hybrid_label_gemini_model %||% "gemini-2.5-flash"
-    }
-
-    log_ai_usage("Hybrid Labels", provider, model)
-    shiny::showNotification("Generating hybrid topic labels...", type = "message", duration = NULL, id = "hybrid_label_gen_notification")
-
-    tryCatch({
-      stm_model <- hybrid_result$stm_result$model
-      n_terms <- input$hybrid_top_term_number_labeling %||% 7
-
-      topic_terms <- TextAnalysisR::extract_topic_terms_df(stm_model, n = n_terms)
-
-      new_labels_td <- TextAnalysisR::generate_topic_labels(
-        topic_terms,
-        provider = provider,
-        model = model,
-        system = if(nzchar(input$hybrid_system_prompt)) input$hybrid_system_prompt else NULL,
-        user = if(nzchar(input$hybrid_user_prompt)) input$hybrid_user_prompt else NULL,
-        temperature = input$hybrid_temperature,
-        api_key = api_key,
-        verbose = FALSE
-      )
-
-      if (!is.null(new_labels_td) && nrow(new_labels_td) > 0) {
-        labels_text <- paste(new_labels_td$topic_label, collapse = ", ")
-        updateTextInput(session, "hybrid_label_topics", value = labels_text)
-      }
-
-      tryCatch(removeNotification(id = "hybrid_label_gen_notification"), error = function(e) {})
-      show_completion_notification("Hybrid topic labels generated successfully!", duration = 3)
-
-    }, error = function(e) {
-      tryCatch(removeNotification(id = "hybrid_label_gen_notification"), error = function(e) {})
-      showNotification(paste("Label generation failed:", e$message), type = "error", duration = 8)
-    })
-  })
   stm_effect_estimates <- eventReactive(eventExpr = input$stm_effect, {
     if (is.null(topic_model_result()) || is.null(out()) || !"theta" %in% names(topic_model_result())) {
       showNotification("No STM model available. Please run topic modeling first.", type = "warning")
@@ -22604,24 +21568,6 @@ server <- shinyServer(function(input, output, session) {
 
   # Dynamic Ollama model list updates
 
-  observe({
-    models <- available_ollama_models()
-    if (!is.null(models) && length(models) > 0) {
-      llm_default <- if ("tinyllama" %in% models) "tinyllama" else models[1]
-      llm_ids <- c("cluster_ollama_model", "rag_ollama_model",
-                   "stm_label_ollama_model", "k_rec_ollama_model",
-                   "content_ollama_model", "hybrid_label_ollama_model")
-      for (id in llm_ids) {
-        updateSelectInput(session, id, choices = models, selected = llm_default)
-      }
-
-      embed_models <- grep("embed|nomic|minilm|mxbai", models, value = TRUE, ignore.case = TRUE)
-      if (length(embed_models) > 0) {
-        embed_default <- if ("nomic-embed-text" %in% embed_models) "nomic-embed-text" else embed_models[1]
-        updateSelectInput(session, "embedding_ollama_model", choices = embed_models, selected = embed_default)
-      }
-    }
-  })
 
   # AI settings panel
 

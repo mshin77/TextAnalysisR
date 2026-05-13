@@ -43,6 +43,7 @@ Imports:
     visNetwork,
     widyr
 Suggests:
+    a11yviz,
     aricode,
     tidylo,
     broom,

@@ -2,7 +2,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/404.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/ai_integration.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/cybersecurity.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/articles/function_index.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/index.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/installation.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/lexical_analysis.html</loc></url>
@@ -24,7 +23,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_similarity_gaps.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/apply_standard_plotly_layout.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/assess_embedding_stability.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/assess_hybrid_stability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/auto_tune_embedding_topics.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_assignment_consistency.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_clustering_metrics.html</loc></url>
@@ -34,7 +32,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_cross_similarity.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_dispersion_metrics.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_document_similarity.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_hybrid_quality_metrics.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_keyword_stability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_lexical_dispersion.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_log_odds_ratio.html</loc></url>
@@ -43,7 +40,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_semantic_drift.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_similarity_robust.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_text_readability.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_alignment.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_cluster_correspondence.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_diversity.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_topic_probability.html</loc></url>
@@ -68,7 +64,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/clean_similarity_matrix.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/clear_lexdiv_cache.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/combine_keywords_weighted.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_analysis_datatable.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_aria_label.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_empty_plot_message.html</loc></url>
@@ -102,7 +97,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/find_topic_matches.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_topics.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_hybrid_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/fit_topic_prevalence_model.html</loc></url>

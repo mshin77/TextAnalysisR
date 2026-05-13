@@ -29,8 +29,6 @@ tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
 dfm_object <- quanteda::dfm(tokens_clean)
 ```
 
-------------------------------------------------------------------------
-
 **Unite Text Columns**
 
 Unite combines multiple text columns into a single column for analysis.
@@ -49,8 +47,6 @@ text source for all subsequent preprocessing and analysis steps.
 
 **Learn More:** [tidyr Unite
 Function](https://tidyr.tidyverse.org/reference/unite.html)
-
-------------------------------------------------------------------------
 
 **Tokenization Options**
 
@@ -82,8 +78,6 @@ when sentence structure is important (e.g., sentiment analysis).
 **Learn More:** [quanteda Tokens
 Documentation](https://quanteda.io/reference/tokens.html)
 
-------------------------------------------------------------------------
-
 **Stopword Removal**
 
 Stopwords are common words (e.g., “the”, “is”, “and”) that appear
@@ -109,8 +103,6 @@ tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
 **Learn More:** [stopwords Package
 Documentation](https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html)
 
-------------------------------------------------------------------------
-
 **Lemmatization**
 
 Lemmatization reduces words to their base or dictionary form (lemma).
@@ -131,8 +123,6 @@ with spaCy.
 
 **Learn More:** [spaCy Lemmatization
 Guide](https://spacy.io/usage/linguistic-features#lemmatization)
-
-------------------------------------------------------------------------
 
 **Document-Feature Matrix (DFM)**
 
@@ -161,8 +151,6 @@ dfm_object <- quanteda::dfm(tokens_clean)
 **Learn More:** [quanteda DFM
 Documentation](https://quanteda.io/reference/dfm.html)
 
-------------------------------------------------------------------------
-
 ## Multi-word Expressions
 
 Detect phrases like “machine learning” and compound them in the tokens
@@ -173,12 +161,3 @@ object:
 compounds <- detect_multi_words(tokens, min_count = 10)
 tokens <- quanteda::tokens_compound(tokens, compounds)
 ```
-
-## Next Steps
-
-- [Lexical
-  Analysis](https://mshin77.github.io/TextAnalysisR/articles/lexical_analysis.md)
-- [Semantic
-  Analysis](https://mshin77.github.io/TextAnalysisR/articles/semantic_analysis.md)
-- [Topic
-  Modeling](https://mshin77.github.io/TextAnalysisR/articles/topic_modeling.md)

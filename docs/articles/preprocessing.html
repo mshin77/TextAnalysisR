@@ -15,7 +15,8 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Preprocessing">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Preprocessing">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -36,21 +37,24 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/quickstart.html">Getting Started</a></li>
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Workflow</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-workflow">
+<li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
     <li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
-    <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-extensions">
+<li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
     <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
-    <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/function_index.html">Function Index</a></li>
+    <li><a class="dropdown-item" href="../articles/cybersecurity.html">Cybersecurity</a></li>
+    <li><a class="dropdown-item" href="../articles/web_accessibility.html">Web Accessibility</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -107,9 +111,8 @@
 <span></span>
 <span><span class="co"># 5. Create document-feature matrix</span></span>
 <span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens_clean</span><span class="op">)</span></span></code></pre></div>
-<hr>
-<details><summary><strong>Unite Text Columns</strong>
-</summary><p>Unite combines multiple text columns into a single column for
+<p><strong>Unite Text Columns</strong></p>
+<p>Unite combines multiple text columns into a single column for
 analysis. Useful when text content is spread across multiple fields that
 should be analyzed together.</p>
 <p><strong>Examples:</strong></p>
@@ -130,9 +133,8 @@ column becomes the text source for all subsequent preprocessing and
 analysis steps.</p>
 <p><strong>Learn More:</strong> <a href="https://tidyr.tidyverse.org/reference/unite.html" class="external-link">tidyr Unite
 Function</a></p>
-</details><hr>
-<details><summary><strong>Tokenization Options</strong>
-</summary><p>Tokenization segments continuous text into individual units (tokens),
+<p><strong>Tokenization Options</strong></p>
+<p>Tokenization segments continuous text into individual units (tokens),
 typically words, converting unstructured text into structured format for
 computational analysis.</p>
 <p><strong>Options:</strong></p>
@@ -182,9 +184,8 @@ tokenization when sentence structure is important (e.g., sentiment
 analysis).</p>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/tokens.html" class="external-link">quanteda Tokens
 Documentation</a></p>
-</details><hr>
-<details><summary><strong>Stopword Removal</strong>
-</summary><p>Stopwords are common words (e.g., “the”, “is”, “and”) that appear
+<p><strong>Stopword Removal</strong></p>
+<p>Stopwords are common words (e.g., “the”, “is”, “and”) that appear
 frequently but carry little meaningful content for analysis. Removing
 them reduces noise and improves focus on content-bearing words.</p>
 <p><strong>When to Remove:</strong></p>
@@ -207,9 +208,8 @@ meaning.</p>
 <code class="sourceCode R"><span><span class="va">tokens_clean</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_select.html" class="external-link">tokens_remove</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/stopwords/man/stopwords.html" class="external-link">stopwords</a></span><span class="op">(</span><span class="st">"en"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html" class="external-link">stopwords
 Package Documentation</a></p>
-</details><hr>
-<details><summary><strong>Lemmatization</strong>
-</summary><p>Lemmatization reduces words to their base or dictionary form (lemma).
+<p><strong>Lemmatization</strong></p>
+<p>Lemmatization reduces words to their base or dictionary form (lemma).
 For example, “running”, “ran”, and “runs” all become “run”. This groups
 related word forms together for more meaningful analysis.</p>
 <p><strong>Comparison:</strong></p>
@@ -230,9 +230,8 @@ keyword extraction where grouping related forms improves
 interpretability. Requires Python with spaCy.</p>
 <p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#lemmatization" class="external-link">spaCy
 Lemmatization Guide</a></p>
-</details><hr>
-<details><summary><strong>Document-Feature Matrix (DFM)</strong>
-</summary><p>A Document-Feature Matrix (DFM) is a mathematical representation
+<p><strong>Document-Feature Matrix (DFM)</strong></p>
+<p>A Document-Feature Matrix (DFM) is a mathematical representation
 where rows are documents, columns are unique tokens (features), and
 cells contain frequency counts. It converts unstructured text into
 structured numerical format for computational analysis.</p>
@@ -258,7 +257,6 @@ lemmatization).</p>
 <code class="sourceCode R"><span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens_clean</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/dfm.html" class="external-link">quanteda DFM
 Documentation</a></p>
-</details><hr>
 </div>
 <div class="section level2">
 <h2 id="multi-word-expressions">Multi-word Expressions<a class="anchor" aria-label="anchor" href="#multi-word-expressions"></a>
@@ -268,15 +266,6 @@ tokens object:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">compounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">tokens_compound</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="va">compounds</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
-</h2>
-<ul>
-<li><a href="lexical_analysis.html">Lexical Analysis</a></li>
-<li><a href="semantic_analysis.html">Semantic Analysis</a></li>
-<li><a href="topic_modeling.html">Topic Modeling</a></li>
-</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

@@ -4,15 +4,21 @@
 \alias{run_app}
 \title{Launch the TextAnalysisR app}
 \usage{
-run_app(launch.browser = interactive())
+run_app(launch.browser = interactive(), dev = FALSE)
 }
 \arguments{
 \item{launch.browser}{Logical. Whether to open the app in a browser.
 Defaults to \code{interactive()}, which is FALSE in non-interactive sessions
 (e.g., Docker containers, servers).}
+
+\item{dev}{Logical. If \code{TRUE}, runs an accessibility palette audit
+(via \code{a11yviz::a11y_check_palette()}) on inline hex colors found in the
+Shiny source files and prints any pairs that fail WCAG 2.1 AA contrast
+against the app's light (\verb{#ffffff}) and dark (\verb{#0d1117}) backgrounds.
+Requires the \code{a11yviz} package.}
 }
 \value{
-No return value, called for side effects (launching Shiny app)
+No return value, called for side effects (launching Shiny app).
 }
 \description{
 Launch the TextAnalysisR Shiny application.

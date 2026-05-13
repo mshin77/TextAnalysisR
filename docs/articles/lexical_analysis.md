@@ -21,8 +21,6 @@ dfm_object <- quanteda::dfm(tokens)
 plot_word_frequency(dfm_object, n = 20)
 ```
 
-------------------------------------------------------------------------
-
 **TF-IDF Keyword Extraction**
 
 Find distinctive words per document using Term Frequency-Inverse
@@ -36,8 +34,6 @@ plot_tfidf_keywords(keywords)
 
 TF-IDF weights terms that are frequent in a document but rare across the
 corpus, identifying distinctive vocabulary.
-
-------------------------------------------------------------------------
 
 **Keyness Analysis**
 
@@ -54,8 +50,6 @@ plot_keyness_keywords(keyness)
 
 Keyness analysis identifies statistically significant differences in
 word usage between groups.
-
-------------------------------------------------------------------------
 
 **N-gram Analysis**
 
@@ -85,8 +79,6 @@ tokens <- quanteda::tokens_compound(tokens, compounds)
 **Learn More:** [Text Mining with R - N-grams
 Chapter](https://www.tidytextmining.com/ngrams.html)
 
-------------------------------------------------------------------------
-
 **Part-of-Speech Tagging**
 
 Part-of-speech (POS) tagging identifies the grammatical category of each
@@ -104,8 +96,6 @@ and verbs for content analysis).
 
 **Learn More:** [Universal Dependencies POS
 Tags](https://universaldependencies.org/u/pos/)
-
-------------------------------------------------------------------------
 
 **Morphological Analysis**
 
@@ -134,8 +124,6 @@ or grammatical complexity.
 **Learn More:** [spaCy
 Morphology](https://spacy.io/usage/linguistic-features#morphology)
 
-------------------------------------------------------------------------
-
 **Named Entity Recognition**
 
 Named Entity Recognition (NER) identifies and classifies named entities
@@ -153,8 +141,6 @@ coding.
 **Learn More:** [spaCy Named Entity
 Recognition](https://spacy.io/usage/linguistic-features#named-entities)
 
-------------------------------------------------------------------------
-
 ## Word Networks
 
 ### Co-occurrence
@@ -170,8 +156,6 @@ word_co_occurrence_network(dfm_object, co_occur_n = 10)
 
 word_correlation_network(dfm_object, corr_n = 0.3)
 ```
-
-------------------------------------------------------------------------
 
 **Log Odds Ratio Analysis**
 
@@ -211,8 +195,6 @@ weighted_odds <- calculate_weighted_log_odds(
 **Learn More:** [tidylo: Weighted Log
 Odds](https://juliasilge.github.io/tidylo/)
 
-------------------------------------------------------------------------
-
 **Lexical Dispersion**
 
 Lexical dispersion (X-ray plot) shows where terms appear across
@@ -223,8 +205,6 @@ documents.
 dispersion <- calculate_lexical_dispersion(tokens, terms = c("education", "technology"))
 plot_lexical_dispersion(dispersion)
 ```
-
-------------------------------------------------------------------------
 
 **Readability Metrics**
 
@@ -259,8 +239,6 @@ plot_readability_distribution(readability)
 **Learn More:** [quanteda textstat_readability
 Documentation](https://quanteda.io/reference/textstat_readability.html)
 
-------------------------------------------------------------------------
-
 **Lexical Diversity Metrics**
 
 Lexical diversity measures vocabulary richness by quantifying the
@@ -291,12 +269,3 @@ plot_lexical_diversity_distribution(diversity)
 
 **Learn More:** [quanteda textstat_lexdiv
 Documentation](https://quanteda.io/reference/textstat_lexdiv.html)
-
-------------------------------------------------------------------------
-
-## Next Steps
-
-- [Semantic
-  Analysis](https://mshin77.github.io/TextAnalysisR/articles/semantic_analysis.md)
-- [Topic
-  Modeling](https://mshin77.github.io/TextAnalysisR/articles/topic_modeling.md)

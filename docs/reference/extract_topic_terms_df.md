@@ -3,8 +3,8 @@
 Unified helper that produces the long-format
 `data.frame(topic, term, beta)` expected by
 [`generate_topic_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.md)
-from an STM model, an embedding result, or a hybrid result. Dispatches
-on the object's structure:
+from an STM model or an embedding result. Dispatches on the object's
+structure:
 
 - STM model (has `$beta$logbeta` and `$vocab`) -\> top terms via
   [`stm::labelTopics()`](https://rdrr.io/pkg/stm/man/labelTopics.html)
@@ -12,8 +12,6 @@ on the object's structure:
 
 - Embedding result (has `$topic_keywords`) -\> c-TF-IDF keywords with
   rank-derived pseudo-beta
-
-- Hybrid result (has `$combined_topics`) -\> weighted combined keywords
 
 ## Usage
 
@@ -25,7 +23,7 @@ extract_topic_terms_df(model, n = 7)
 
 - model:
 
-  A topic model object (STM fit, embedding result, or hybrid result).
+  A topic model object (STM fit or embedding result).
 
 - n:
 
@@ -40,7 +38,6 @@ extract_topic_terms_df(model, n = 7)
 Other topic-modeling:
 [`analyze_semantic_evolution()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_semantic_evolution.md),
 [`assess_embedding_stability()`](https://mshin77.github.io/TextAnalysisR/reference/assess_embedding_stability.md),
-[`assess_hybrid_stability()`](https://mshin77.github.io/TextAnalysisR/reference/assess_hybrid_stability.md),
 [`auto_tune_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/auto_tune_embedding_topics.md),
 [`calculate_assignment_consistency()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_assignment_consistency.md),
 [`calculate_keyword_stability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_keyword_stability.md),
@@ -52,7 +49,6 @@ Other topic-modeling:
 [`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md),
 [`find_topic_matches()`](https://mshin77.github.io/TextAnalysisR/reference/find_topic_matches.md),
 [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md),
-[`fit_hybrid_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_hybrid_model.md),
 [`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md),
 [`fit_topic_prevalence_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_topic_prevalence_model.md),
 [`generate_topic_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_labels.md),

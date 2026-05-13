@@ -7,7 +7,7 @@
 extract_topic_terms_df(model, n = 7)
 }
 \arguments{
-\item{model}{A topic model object (STM fit, embedding result, or hybrid result).}
+\item{model}{A topic model object (STM fit or embedding result).}
 
 \item{n}{Number of top terms per topic (default 7).}
 }
@@ -16,19 +16,17 @@ extract_topic_terms_df(model, n = 7)
 }
 \description{
 Unified helper that produces the long-format \code{data.frame(topic, term, beta)}
-expected by \code{\link[=generate_topic_labels]{generate_topic_labels()}} from an STM model, an embedding result,
-or a hybrid result. Dispatches on the object's structure:
+expected by \code{\link[=generate_topic_labels]{generate_topic_labels()}} from an STM model or an embedding result.
+Dispatches on the object's structure:
 \itemize{
 \item STM model (has \verb{$beta$logbeta} and \verb{$vocab}) -> top terms via \code{\link[stm:labelTopics]{stm::labelTopics()}} FREX
 \item Embedding result (has \verb{$topic_keywords}) -> c-TF-IDF keywords with rank-derived pseudo-beta
-\item Hybrid result (has \verb{$combined_topics}) -> weighted combined keywords
 }
 }
 \seealso{
 Other topic-modeling:
 \code{\link[=analyze_semantic_evolution]{analyze_semantic_evolution()}},
 \code{\link[=assess_embedding_stability]{assess_embedding_stability()}},
-\code{\link[=assess_hybrid_stability]{assess_hybrid_stability()}},
 \code{\link[=auto_tune_embedding_topics]{auto_tune_embedding_topics()}},
 \code{\link[=calculate_assignment_consistency]{calculate_assignment_consistency()}},
 \code{\link[=calculate_keyword_stability]{calculate_keyword_stability()}},
@@ -40,7 +38,6 @@ Other topic-modeling:
 \code{\link[=find_optimal_k]{find_optimal_k()}},
 \code{\link[=find_topic_matches]{find_topic_matches()}},
 \code{\link[=fit_embedding_model]{fit_embedding_model()}},
-\code{\link[=fit_hybrid_model]{fit_hybrid_model()}},
 \code{\link[=fit_temporal_model]{fit_temporal_model()}},
 \code{\link[=fit_topic_prevalence_model]{fit_topic_prevalence_model()}},
 \code{\link[=generate_topic_labels]{generate_topic_labels()}},
