@@ -6,7 +6,7 @@ and preprocessing via 'quanteda', for lexical analysis (term
 frequency-inverse document frequency, log-odds ratios, lexical
 diversity) via 'tidytext', for topic modeling via 'stm' and the
 'BERTopic' approach, and for semantic similarity and document clustering
-on transformer embeddings, as described in Shin et al. (2026)
+on transformer embeddings, as employed in Shin et al. (2026)
 [doi:10.1177/07319487251412879](https://doi.org/10.1177/07319487251412879)
 . Includes an interactive 'Shiny' interface with 'ggplot2'
 visualization, optional 'spaCy' lemmatization, and local ('Ollama',
