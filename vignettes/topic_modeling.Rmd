@@ -132,13 +132,13 @@ labels <- generate_topic_labels(
 
 ## Topic-Grounded Content Generation
 
-Generate draft content grounded in your topic model results rather than AI parametric knowledge. The LLM receives topic labels and term probabilities (beta scores), ensuring outputs are anchored to your data.
+Generate draft content grounded in the topic model results rather than AI parametric knowledge. The LLM receives topic labels and term probabilities (beta scores), ensuring outputs are anchored to the input data.
 
 ### Workflow
 
 1. **Run topic modeling** and optionally generate/edit topic labels
 2. **Select content type**: survey items, research questions, theme descriptions, policy recommendations, or interview questions
-3. **Generate drafts**: AI creates content using your top terms ordered by beta scores
+3. **Generate drafts**: AI creates content using the top terms ordered by beta scores
 4. **Review and edit**: Examine all outputs before use
 5. **Export**: Download as CSV or Excel
 
@@ -175,7 +175,7 @@ print(content)
 
 **Prompt Format**
 
-The LLM receives structured prompts with your topic data:
+The LLM receives structured prompts with the topic data:
 
 ```
 Topic: Digital Learning Tools
@@ -188,7 +188,7 @@ solving (.013)
 learning (.012)
 ```
 
-This "topic-grounded" approach ensures content reflects your actual topic model results, not generic AI knowledge. Prompts include guidelines for person-first language and content-specific best practices.
+This "topic-grounded" approach ensures content reflects the actual topic model results, not generic AI knowledge. Prompts include guidelines for person-first language and content-specific best practices.
 
 **Customizing Prompts:**
 

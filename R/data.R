@@ -12,8 +12,9 @@
 #' Contains 15 topics, topic prevalences, and etc. from \code{stm::stm}.
 #'
 #' @examples
+#' \donttest{
 #' stm_15
-#'
+#' }
 "stm_15"
 
 #' Acronym List

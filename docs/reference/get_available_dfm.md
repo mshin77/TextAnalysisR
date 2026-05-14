@@ -1,8 +1,8 @@
 # Get Available Document-Feature Matrix with Fallback
 
 Returns the first non-NULL DFM from a priority fallback chain. Useful
-when multiple DFM processing stages exist and you need the most
-processed available version.
+when multiple DFM processing stages exist and the most processed
+available version is needed.
 
 ## Usage
 

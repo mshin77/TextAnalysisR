@@ -137,18 +137,6 @@
 <li>Auto-detected text-to-speech</li>
 </ul>
 </div>
-<div class="section level2">
-<h2 id="palette-audit-developers">Palette Audit (developers)<a class="anchor" aria-label="anchor" href="#palette-audit-developers"></a>
-</h2>
-<p>Run a WCAG AA contrast audit against the app’s light and dark
-backgrounds. Requires the <a href="https://github.com/mshin77/a11yviz" class="external-link">a11yviz</a> package.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install once: remotes::install_github("mshin77/a11yviz")</span></span>
-<span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span>dev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><code>dev = TRUE</code> scans the Shiny source for inline hex colors
-and reports any color-background pairs that fail 4.5:1 contrast before
-launching the app.</p>
-</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>

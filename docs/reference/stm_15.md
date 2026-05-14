@@ -16,6 +16,8 @@ An object of class `STM` of length 11.
 ## Examples
 
 ``` r
+# \donttest{
 stm_15
 #> A topic model with 15 topics, 488 documents and a 4511 word dictionary.
+# }
 ```

@@ -866,7 +866,6 @@ fit_embedding_model <- function(texts,
       if (!python_available) {
         stop("Python not available. Please install Python and sentence-transformers: pip install sentence-transformers")
       }
-
       sentence_transformers <- reticulate::import("sentence_transformers")
       model <- sentence_transformers$SentenceTransformer(embedding_model)
 
@@ -1190,7 +1189,6 @@ fit_embedding_model <- function(texts,
       if (!python_available) {
         stop("Python not available. Please install Python and sentence-transformers: pip install sentence-transformers")
       }
-
       sentence_transformers <- reticulate::import("sentence_transformers")
       model <- sentence_transformers$SentenceTransformer(embedding_model)
 
@@ -1494,7 +1492,6 @@ find_topic_matches <- function(topic_model,
     if (!requireNamespace("reticulate", quietly = TRUE)) {
       stop("reticulate package is required for topic similarity")
     }
-
     sentence_transformers <- reticulate::import("sentence_transformers")
     model <- sentence_transformers$SentenceTransformer(embedding_model)
     query_embedding <- model$encode(query, show_progress_bar = FALSE)

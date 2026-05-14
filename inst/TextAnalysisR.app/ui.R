@@ -199,9 +199,8 @@ ui <- fluidPage(
     class = "sr-only"
   ),
 
-  titlePanel(
-    tags$h1("TextAnalysisR", style = "margin: 0; font-size: inherit;"),
-    windowTitle = "TextAnalysisR: A Text Mining Workflow Tool"
+  tags$head(
+    tags$title("TextAnalysisR")
   ),
   tags$main(
     id = "main-content",
@@ -340,7 +339,7 @@ ui <- fluidPage(
                 style = "margin-top: 20px; padding: 12px 16px; background-color: #F1F5F9; border-radius: 6px;",
                 tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("Ollama"), " \u2014 Free, private, runs locally. Install from ",
-                  tags$a(href = "https://ollama.com", target = "_blank", "ollama.com"), "."),
+                  tags$a(href = "https://ollama.com", target = "_blank", rel = "noopener noreferrer", "ollama.com"), "."),
                 tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("Sentence Transformers"), " \u2014 Free, runs locally. Requires Python + sentence-transformers."),
                 tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
@@ -2002,7 +2001,7 @@ Supports:
                 tags$p(
                   style = "font-size: 16px; color: #666;",
                   "Requires Ollama. Get it from ",
-                  tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
+                  tags$a(href = "https://ollama.com", target = "_blank", rel = "noopener noreferrer", "ollama.com")
                 )
               ),
               conditionalPanel(
@@ -2188,7 +2187,7 @@ Supports:
                 tags$p(
                   style = "font-size: 16px; color: #666;",
                   "Requires Ollama. Get it from ",
-                  tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
+                  tags$a(href = "https://ollama.com", target = "_blank", rel = "noopener noreferrer", "ollama.com")
                 )
               ),
               conditionalPanel(
@@ -2270,7 +2269,7 @@ Supports:
                 tags$p(
                   style = "font-size: 16px; color: #666; margin-top: 5px;",
                   "Requires Ollama. Get it from ",
-                  tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
+                  tags$a(href = "https://ollama.com", target = "_blank", rel = "noopener noreferrer", "ollama.com")
                 )
               ),
               # OpenAI settings
@@ -2511,7 +2510,7 @@ Supports:
               tags$p(
                 style = "font-size: 16px; color: #666;",
                 "Requires Ollama. Get it from ",
-                tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
+                tags$a(href = "https://ollama.com", target = "_blank", rel = "noopener noreferrer", "ollama.com")
               )
             ),
 

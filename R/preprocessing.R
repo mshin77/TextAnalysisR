@@ -8,7 +8,7 @@ NULL
 #' Get Available Document-Feature Matrix with Fallback
 #'
 #' @description Returns the first non-NULL DFM from a priority fallback chain.
-#' Useful when multiple DFM processing stages exist and you need the most processed available version.
+#' Useful when multiple DFM processing stages exist and the most processed available version is needed.
 #'
 #' @param dfm_lemma Optional lemmatized DFM (highest priority)
 #' @param dfm_outcome Optional preprocessed DFM (medium priority)
@@ -55,7 +55,7 @@ get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = 
 #' Get Available Tokens with Fallback
 #'
 #' @description Returns the first non-NULL tokens object from a priority fallback chain.
-#' Useful when multiple token processing stages exist and you need the most processed available version.
+#' Useful when multiple token processing stages exist and the most processed available version is needed.
 #'
 #' @param final_tokens Optional fully processed tokens (highest priority)
 #' @param processed_tokens Optional partially processed tokens

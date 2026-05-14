@@ -1,8 +1,8 @@
 # Get Available Tokens with Fallback
 
 Returns the first non-NULL tokens object from a priority fallback chain.
-Useful when multiple token processing stages exist and you need the most
-processed available version.
+Useful when multiple token processing stages exist and the most
+processed available version is needed.
 
 ## Usage
 

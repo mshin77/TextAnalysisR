@@ -36,7 +36,7 @@ ollama pull llava-phi3     # Lightweight option
 
 ```{r}
 Sys.setenv(OPENAI_API_KEY = "sk-...")
-Sys.setenv(GEMINI_API_KEY = "your-gemini-key")
+Sys.setenv(GEMINI_API_KEY = "<gemini-api-key>")
 ```
 
 ## Usage

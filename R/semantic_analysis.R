@@ -123,7 +123,6 @@ calculate_document_similarity <- function(texts,
           stop("Python not available. Please install Python and sentence-transformers: ",
                "pip install sentence-transformers")
         }
-
         sentence_transformers <- reticulate::import("sentence_transformers")
         model <- sentence_transformers$SentenceTransformer(embedding_model)
 
@@ -3453,7 +3452,8 @@ plot_cross_category_heatmap <- function(similarity_data,
     }
 
     row_docs <- docs_data[row_indices, ]
-    row_labels <- row_docs$document_id_display %||% row_docs$document_number %||% paste("Doc", row_indices)
+    row_short_labels <- row_docs$document_number %||% paste("Doc", row_indices)
+    row_full_ids <- row_docs$document_id_display %||% row_short_labels
 
     plot_data_list <- list()
 
@@ -3462,17 +3462,18 @@ plot_cross_category_heatmap <- function(similarity_data,
       if (length(col_indices) == 0) next
 
       col_docs <- docs_data[col_indices, ]
-      col_labels <- col_docs$document_id_display %||% col_docs$document_number %||% paste("Doc", col_indices)
+      col_short_labels <- col_docs$document_number %||% paste("Doc", col_indices)
+      col_full_ids <- col_docs$document_id_display %||% col_short_labels
 
       sub_matrix <- similarity_data[row_indices, col_indices, drop = FALSE]
 
       for (i in seq_along(row_indices)) {
         for (j in seq_along(col_indices)) {
           plot_data_list[[length(plot_data_list) + 1]] <- data.frame(
-            row_label_trunc = stringr::str_trunc(row_labels[i], label_max_chars),
-            col_label_trunc = stringr::str_trunc(col_labels[j], label_max_chars),
-            row_display = row_docs$document_id_display[i] %||% row_labels[i],
-            col_display = col_docs$document_id_display[j] %||% col_labels[j],
+            row_label_trunc = row_short_labels[i],
+            col_label_trunc = col_short_labels[j],
+            row_display = row_full_ids[i],
+            col_display = col_full_ids[j],
             similarity = sub_matrix[i, j],
             col_category = col_cat,
             stringsAsFactors = FALSE
@@ -3496,8 +3497,9 @@ plot_cross_category_heatmap <- function(similarity_data,
         col_label_trunc = factor(.data$col_label_trunc, levels = col_order),
         col_category = factor(.data$col_category, levels = col_categories),
         tooltip_text = paste0(
-          row_category, ": ", .data$row_display,
-          "<br>", .data$col_category, ": ", .data$col_display,
+          as.character(.data$row_label_trunc), ": ", .data$row_display,
+          "<br>", as.character(.data$col_label_trunc), ": ", .data$col_display,
+          "<br>Category: ", row_category, " / ", .data$col_category,
           "<br>", method_name, " Similarity: ", round(.data$similarity, 3)
         )
       )
@@ -3697,14 +3699,14 @@ plot_similarity_heatmap <- function(similarity_matrix,
     doc_ids <- docs_data$document_id_display %||% x_labels
     cats <- docs_data$category_display %||% rep("", n_docs)
     heat_df$tooltip_text <- paste0(
-      "Row: ", doc_ids[heat_df$row_idx],
-      "\nCol: ", doc_ids[heat_df$col_idx],
+      y_labels[heat_df$row_idx], ": ", doc_ids[heat_df$row_idx],
+      "\n", x_labels[heat_df$col_idx], ": ", doc_ids[heat_df$col_idx],
       "\nCategory: ", cats[heat_df$row_idx], " / ", cats[heat_df$col_idx],
       "\n", method_name, " Similarity: ", round(heat_df$similarity, 3)
     )
   } else {
     heat_df$tooltip_text <- paste0(
-      x_labels[heat_df$row_idx], " vs ", x_labels[heat_df$col_idx],
+      y_labels[heat_df$row_idx], " vs ", x_labels[heat_df$col_idx],
       "\nSimilarity: ", round(heat_df$similarity, 3)
     )
   }
@@ -4059,7 +4061,8 @@ run_rag_search <- function(
     style = "font-family:Roboto, sans-serif; font-size:16px; color:#0c1f4a; font-weight:bold;"
   )
   widget <- visNetwork::visNetwork(nodes, edges, width = width, height = height, main = main_cfg) %>%
-    visNetwork::visNodes(font = list(color = "black", size = node_label_size, vadjust = 0)) %>%
+    visNetwork::visNodes(font = list(color = "black", size = node_label_size, vadjust = 0,
+                                     strokeWidth = 3, strokeColor = "#ffffff")) %>%
     visNetwork::visOptions(
       highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE, algorithm = "hierarchical"),
       nodesIdSelection = TRUE,
@@ -4089,7 +4092,39 @@ run_rag_search <- function(
     widget <- widget %>% visNetwork::visLegend(addNodes = legend_df, useGroups = FALSE,
                                                position = "right", width = 0.2, zoom = FALSE)
   }
-  widget
+
+  scale_js <- sprintf(
+    "function(el, x) {
+      var network = this;
+      var baseSize = %d;
+      var refWidth = 1200;
+      var minSize = 16;
+      var maxSize = 36;
+      function compute() {
+        var w = el && el.clientWidth ? el.clientWidth : refWidth;
+        var s = Math.round(baseSize * (w / refWidth));
+        if (s < minSize) s = minSize;
+        if (s > maxSize) s = maxSize;
+        return s;
+      }
+      function apply() {
+        var s = compute();
+        try {
+          network.setOptions({ nodes: { font: { size: s } } });
+        } catch (e) {}
+      }
+      setTimeout(apply, 80);
+      if (typeof ResizeObserver !== 'undefined') {
+        var ro = new ResizeObserver(function() { apply(); });
+        ro.observe(el);
+      } else {
+        window.addEventListener('resize', apply);
+      }
+    }",
+    as.integer(node_label_size)
+  )
+
+  htmlwidgets::onRender(widget, scale_js)
 }
 
 .facet_widgets_html <- function(per_level, nrows) {

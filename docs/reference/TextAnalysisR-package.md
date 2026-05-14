@@ -17,7 +17,7 @@ providers for retrieval-augmented generation.
 
 Useful links:
 
-- <https://mshin77.github.io/TextAnalysisR>
+- <https://mshin77.github.io/TextAnalysisR/>
 
 - <https://github.com/mshin77/TextAnalysisR>
 

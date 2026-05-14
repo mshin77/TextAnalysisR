@@ -1,7 +1,7 @@
 # Clear Lexical Diversity Cache
 
 Clears the internal cache used for lexical diversity calculations. Call
-this function if you need to free memory or ensure fresh calculations.
+this function to free memory or force fresh calculations.
 
 ## Usage
 

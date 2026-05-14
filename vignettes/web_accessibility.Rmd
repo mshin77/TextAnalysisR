@@ -38,16 +38,3 @@ TextAnalysisR meets WCAG 2.1 Level AA standards.
 
 - 100+ languages via Google Translate
 - Auto-detected text-to-speech
-
-## Palette Audit (developers)
-
-Run a WCAG AA contrast audit against the app's light and dark backgrounds.
-Requires the [a11yviz](https://github.com/mshin77/a11yviz) package.
-
-```{r}
-# Install once: remotes::install_github("mshin77/a11yviz")
-run_app(dev = TRUE)
-```
-
-`dev = TRUE` scans the Shiny source for inline hex colors and reports any
-color-background pairs that fail 4.5:1 contrast before launching the app.

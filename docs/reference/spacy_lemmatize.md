@@ -30,8 +30,7 @@ A data frame with columns: doc_id, token_id, token, lemma.
 ## Details
 
 This function disables NER, entity_ruler, and parser components to speed
-up lemmatization. Use this when you need lemmas without other
-annotations.
+up lemmatization. Use this for lemmas without other annotations.
 
 ## See also
 

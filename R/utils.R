@@ -45,20 +45,6 @@ globalVariables(names = c(
 #' @importFrom stats cor
 NULL
 
-.onLoad <- function(libname, pkgname) {
-  if (!nzchar(Sys.getenv("TORCHINDUCTOR_CACHE_DIR"))) {
-    Sys.setenv(TORCHINDUCTOR_CACHE_DIR = file.path(tempdir(), "torchinductor"))
-  }
-}
-
-.onUnload <- function(libpath) {
-  cache_dir <- Sys.getenv("TORCHINDUCTOR_CACHE_DIR")
-  if (nzchar(cache_dir) && dir.exists(cache_dir) &&
-      startsWith(normalizePath(cache_dir, mustWork = FALSE),
-                 normalizePath(tempdir(), mustWork = FALSE))) {
-    unlink(cache_dir, recursive = TRUE, force = TRUE)
-  }
-}
 
 # Utility and Helper Functions
 # General-purpose utility functions for analysis and visualization
@@ -433,7 +419,7 @@ plot_error <- function(message, color = "#ef4444") {
 #'   )
 #'
 #'   # Using file upload
-#'   file_info <- data.frame(filepath = "path/to/your/file.xlsx")
+#'   file_info <- data.frame(filepath = "path/to/file.xlsx")
 #'   workflow_result <- TextAnalysisR::run_text_workflow(
 #'     dataset_choice = "Upload Your File",
 #'     file_info = file_info,
@@ -885,7 +871,7 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
 #' - System Python remains untouched
 #' - Much smaller download (~100MB vs 5GB+)
 #'
-#' After setup, restart R session to activate enhanced features.
+#' After setup, restart R session to activate Python-backed features.
 #'
 #' @export
 #'

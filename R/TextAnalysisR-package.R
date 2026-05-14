@@ -170,7 +170,7 @@ NULL
 #' 1. **For Text Preprocessing:** Use `run_text_workflow()` for end-to-end preprocessing
 #' 2. **For Interactive Use:** Launch the Shiny app with `run_app()`
 #' 3. **For Custom Workflows:** Use individual functions as building blocks
-#' 4. **For Power Users:** Combine with your own R code and other packages
+#' 4. **For Power Users:** Combine with custom R code and other packages
 #'
 #' @author Shin Mikyung 
 #' @docType package

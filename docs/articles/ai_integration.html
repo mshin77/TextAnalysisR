@@ -143,8 +143,8 @@ providers.</p>
 <div class="section level3">
 <h3 id="topic-grounded-content-generation">1. Topic-Grounded Content Generation<a class="anchor" aria-label="anchor" href="#topic-grounded-content-generation"></a>
 </h3>
-<p>Generate content grounded in your validated topic terms (not generic
-AI knowledge):</p>
+<p>Generate content grounded in validated topic terms (not generic AI
+knowledge):</p>
 <table class="table">
 <colgroup>
 <col width="52%">
@@ -215,7 +215,7 @@ prompts</li>
 </tr>
 <tr class="even">
 <td><code><a href="../reference/run_rag_search.html">run_rag_search()</a></code></td>
-<td>Question-answering over your corpus (RAG)</td>
+<td>Question-answering over the document corpus (RAG)</td>
 </tr>
 <tr class="odd">
 <td><code><a href="../reference/describe_image.html">describe_image()</a></code></td>
@@ -238,7 +238,7 @@ prompts</li>
 <span> provider <span class="op">=</span> <span class="st">"auto"</span>  <span class="co"># Tries Ollama first, then web-based APIs</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># RAG search over your documents</span></span>
+<span><span class="co"># RAG search over a document corpus</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_rag_search.html">run_rag_search</a></span><span class="op">(</span></span>
 <span> query <span class="op">=</span> <span class="st">"What are the main findings?"</span>,</span>
 <span> documents <span class="op">=</span> <span class="va">my_docs</span>,</span>
@@ -412,7 +412,7 @@ Risk Management Framework</a> principles:</p>
 <tbody>
 <tr class="odd">
 <td>Human oversight</td>
-<td>AI suggests, you review and approve</td>
+<td>AI suggests; review and approve</td>
 </tr>
 <tr class="even">
 <td>User control</td>
@@ -428,7 +428,7 @@ Risk Management Framework</a> principles:</p>
 </tr>
 <tr class="odd">
 <td>Grounding</td>
-<td>Content based on your data, not generic knowledge</td>
+<td>Content based on input data, not generic knowledge</td>
 </tr>
 </tbody>
 </table>
@@ -454,12 +454,12 @@ Risk Management Framework</a> principles:</p>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Set API keys (choose one or both)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"your-openai-key"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"your-gemini-key"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"&lt;openai-api-key&gt;"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"&lt;gemini-api-key&gt;"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Or use .env file in project root</span></span>
-<span><span class="co"># OPENAI_API_KEY=your-key</span></span>
-<span><span class="co"># GEMINI_API_KEY=your-key</span></span></code></pre></div>
+<span><span class="co"># OPENAI_API_KEY=&lt;openai-api-key&gt;</span></span>
+<span><span class="co"># GEMINI_API_KEY=&lt;gemini-api-key&gt;</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="linguistic-analysis-spacy-1">Linguistic Analysis (spaCy)<a class="anchor" aria-label="anchor" href="#linguistic-analysis-spacy-1"></a>

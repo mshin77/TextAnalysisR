@@ -25,7 +25,7 @@ The first non-NULL tokens from the priority chain, or NULL if all are NULL
 }
 \description{
 Returns the first non-NULL tokens object from a priority fallback chain.
-Useful when multiple token processing stages exist and you need the most processed available version.
+Useful when multiple token processing stages exist and the most processed available version is needed.
 }
 \details{
 Priority order (highest to lowest):

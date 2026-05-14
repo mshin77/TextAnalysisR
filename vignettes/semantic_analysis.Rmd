@@ -45,7 +45,7 @@ Semantic analysis measures document similarity using different approaches to cap
 | N-grams | Phrase-based analysis capturing word sequences | Detecting similar phraseology |
 | Embeddings | Deep semantic analysis using transformer models | Conceptual similarity, handles synonyms |
 
-**Usage:** Choose method based on your analysis goals. Words and n-grams are faster and interpretable. Embeddings capture deeper meaning but require more computation. All methods use cosine similarity for comparison.
+**Usage:** Choose method based on analysis goals. Words and n-grams are faster and interpretable. Embeddings capture deeper meaning but require more computation. All methods use cosine similarity for comparison.
 
 **Learn More:** [Sentence Transformers Documentation](https://www.sbert.net/)
 

@@ -1,5 +1,5 @@
 test_that("run_rag_search validates document input", {
-  # This test doesn't need API key - just validates empty document handling
+  skip_on_cran()
   result <- run_rag_search(
     query = "Test question?",
     documents = character(0),
@@ -11,7 +11,7 @@ test_that("run_rag_search validates document input", {
 })
 
 test_that("run_rag_search requires API key", {
-  # Test that missing API key returns appropriate error
+  skip_on_cran()
   result <- run_rag_search(
     query = "What is assistive technology?",
     documents = c("Assistive tech helps students", "Technology supports learning"),
@@ -22,13 +22,13 @@ test_that("run_rag_search requires API key", {
   expect_type(result, "list")
   expect_true("success" %in% names(result))
 
-  # Should fail without API key
   if (!result$success) {
     expect_match(result$error, "API key|No documents provided")
   }
 })
 
 test_that("run_rag_search returns expected structure", {
+  skip_on_cran()
   skip_if(
     !nzchar(Sys.getenv("OPENAI_API_KEY")),
     "OPENAI_API_KEY not set"

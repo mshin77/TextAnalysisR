@@ -36,7 +36,7 @@ TextAnalysisR provides AI/NLP capabilities via local and web-based providers.
 - **Topic Labels**: AI-suggested labels from topic model terms
 - **Content Generation**: Survey items, research questions, themes
 - **Cluster Labels**: AI-suggested names for document clusters
-- **RAG Search**: Question-answering over your corpus
+- **RAG Search**: Question-answering over the document corpus
 - **Vision AI**: PDF image/chart extraction via Ollama, OpenAI, or Gemini
 - **Sentiment Analysis**: LLM-based or local transformer models
 - **Linguistic Analysis**: POS, NER, dependency parsing via spaCy
@@ -49,13 +49,13 @@ TextAnalysisR provides AI/NLP capabilities via local and web-based providers.
 # Then: ollama pull tinyllama
 
 # Web-based AI
-Sys.setenv(OPENAI_API_KEY = "your-key")
+Sys.setenv(OPENAI_API_KEY = "<openai-api-key>")
 # or
-Sys.setenv(GEMINI_API_KEY = "your-key")
+Sys.setenv(GEMINI_API_KEY = "<gemini-api-key>")
 ```
 
 ### Responsible AI
 
-All AI features follow human-in-the-loop design: AI suggests, you review and approve.
+All AI features follow human-in-the-loop design: AI suggests; review and approve.
 
 See [AI Integration vignette](https://mshin77.github.io/TextAnalysisR/articles/ai_integration.html) for detailed documentation.

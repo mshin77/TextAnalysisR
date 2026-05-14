@@ -9,7 +9,7 @@ GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.
 Workflow tool for text mining and natural language processing with an
 interactive `Shiny` interface. Import documents from multiple formats
 (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`) using
-[Marker](https://github.com/VikParuchuri/marker) for PDF extraction,
+[Marker](https://github.com/datalab-to/marker) for PDF extraction,
 preprocess with [quanteda](https://github.com/quanteda/quanteda), and
 perform linguistic analysis via [spaCy](https://spacy.io/), topic
 modeling ([stm](https://github.com/bstewart/stm),
@@ -71,14 +71,14 @@ run_app()
 ## Getting Started
 
 See [Quick
-Start](https://mshin77.github.io/TextAnalysisR/articles/quickstart.html)
+Start](https://mshin77.github.io/TextAnalysisR//articles/quickstart.html)
 for tutorials.
 
 ## Citation
 
 - Shin, M. (2026). *TextAnalysisR: A text mining workflow tool* (R
   package version 0.1.3) \[Computer software\].
-  <https://mshin77.github.io/TextAnalysisR>
+  <https://mshin77.github.io/TextAnalysisR/>
 
 - Shin, M. (2026). *TextAnalysisR: A text mining workflow tool* \[Web
   application\]. <https://www.textanalysisr.org>

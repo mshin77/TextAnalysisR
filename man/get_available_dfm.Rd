@@ -25,7 +25,7 @@ The first non-NULL DFM from the priority chain, or NULL if all are NULL
 }
 \description{
 Returns the first non-NULL DFM from a priority fallback chain.
-Useful when multiple DFM processing stages exist and you need the most processed available version.
+Useful when multiple DFM processing stages exist and the most processed available version is needed.
 }
 \details{
 Priority order (highest to lowest):

@@ -71,7 +71,7 @@ Tokenization segments continuous text into individual units (tokens), typically 
 | `remove_numbers` | TRUE | FALSE for quantitative text |
 | `lowercase` | TRUE | FALSE to preserve case |
 
-**Usage:** Select preprocessing options based on your analysis goals. Sentence segmentation splits text into sentences before tokenization when sentence structure is important (e.g., sentiment analysis).
+**Usage:** Select preprocessing options based on the analysis goals. Sentence segmentation splits text into sentences before tokenization when sentence structure is important (e.g., sentiment analysis).
 
 **Learn More:** [quanteda Tokens Documentation](https://quanteda.io/reference/tokens.html)
 

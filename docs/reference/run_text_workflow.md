@@ -96,7 +96,7 @@ if (interactive()) {
   )
 
   # Using file upload
-  file_info <- data.frame(filepath = "path/to/your/file.xlsx")
+  file_info <- data.frame(filepath = "path/to/file.xlsx")
   workflow_result <- TextAnalysisR::run_text_workflow(
     dataset_choice = "Upload Your File",
     file_info = file_info,

@@ -90,7 +90,7 @@
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR">TextAnalysisR</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span></span>
 <span><span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">mydata</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span>
@@ -256,9 +256,9 @@ suggestions</li>
 <div class="section level2">
 <h2 id="topic-grounded-content-generation">Topic-Grounded Content Generation<a class="anchor" aria-label="anchor" href="#topic-grounded-content-generation"></a>
 </h2>
-<p>Generate draft content grounded in your topic model results rather
+<p>Generate draft content grounded in the topic model results rather
 than AI parametric knowledge. The LLM receives topic labels and term
-probabilities (beta scores), ensuring outputs are anchored to your
+probabilities (beta scores), ensuring outputs are anchored to the input
 data.</p>
 <div class="section level3">
 <h3 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
@@ -272,7 +272,7 @@ topic labels</li>
 questions, theme descriptions, policy recommendations, or interview
 questions</li>
 <li>
-<strong>Generate drafts</strong>: AI creates content using your top
+<strong>Generate drafts</strong>: AI creates content using the top
 terms ordered by beta scores</li>
 <li>
 <strong>Review and edit</strong>: Examine all outputs before
@@ -340,7 +340,7 @@ use</li>
 <span><span class="co"># Review before use</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">content</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Prompt Format</strong></p>
-<p>The LLM receives structured prompts with your topic data:</p>
+<p>The LLM receives structured prompts with the topic data:</p>
 <pre><code>Topic: Digital Learning Tools
 
 Top Terms (highest to lowest beta score):
@@ -349,7 +349,7 @@ manipulatives (.022)
 mathematical (.014)
 solving (.013)
 learning (.012)</code></pre>
-<p>This “topic-grounded” approach ensures content reflects your actual
+<p>This “topic-grounded” approach ensures content reflects the actual
 topic model results, not generic AI knowledge. Prompts include
 guidelines for person-first language and content-specific best
 practices.</p>

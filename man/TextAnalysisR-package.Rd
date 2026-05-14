@@ -13,7 +13,7 @@ Provides a set of tools for text mining and natural language processing. Functio
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://mshin77.github.io/TextAnalysisR}
+  \item \url{https://mshin77.github.io/TextAnalysisR/}
   \item \url{https://github.com/mshin77/TextAnalysisR}
   \item Report bugs at \url{https://github.com/mshin77/TextAnalysisR/issues}
 }

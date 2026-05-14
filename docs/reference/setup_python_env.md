@@ -56,7 +56,7 @@ The virtual environment approach means:
 
 - Much smaller download (~100MB vs 5GB+)
 
-After setup, restart R session to activate enhanced features.
+After setup, restart R session to activate Python-backed features.
 
 ## Examples
 

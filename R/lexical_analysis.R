@@ -19,7 +19,7 @@ NULL
 #'
 #' @description
 #' Clears the internal cache used for lexical diversity calculations.
-#' Call this function if you need to free memory or ensure fresh calculations.
+#' Call this function to free memory or force fresh calculations.
 #'
 #' @return Invisible NULL
 #' @family lexical
@@ -2328,7 +2328,7 @@ spacy_parse_full <- function(x,
 #'
 #' @details
 #' This function disables NER, entity_ruler, and parser components to speed up
-#' lemmatization. Use this when you need lemmas without other annotations.
+#' lemmatization. Use this for lemmas without other annotations.
 #'
 #' @family lexical
 #' @export

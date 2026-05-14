@@ -53,8 +53,9 @@ server <- shinyServer(function(input, output, session) {
     suppressWarnings({
       p <- plotly::ggplotly(gg, tooltip = tooltip, height = height, width = width)
       p <- p %>% plotly::layout(
+        font = list(family = "Roboto, sans-serif", size = 12, color = "#3B3B3B"),
         hoverlabel = list(
-          font = list(family = "Roboto, sans-serif", size = 16),
+          font = list(family = "Roboto, sans-serif", size = 14, color = "#FFFFFF"),
           align = "left",
           namelength = -1
         )
@@ -610,7 +611,7 @@ server <- shinyServer(function(input, output, session) {
                 "The API call may have failed. Check your API key and try again."
               )),
               type = "warning",
-              duration = 10
+              duration = 5
             )
           } else {
             showNotification(
@@ -637,7 +638,7 @@ server <- shinyServer(function(input, output, session) {
               if (chars_per_page < 200 && page_count > 0) {
                 showNotification(
                   "This PDF has limited text per page and may contain charts or images. Enable 'Image/chart extraction' for better results.",
-                  type = "warning", duration = 10
+                  type = "warning", duration = 5
                 )
               }
             }, error = function(e) NULL)
@@ -2784,7 +2785,7 @@ server <- shinyServer(function(input, output, session) {
     showNotification(
       "All preprocessing reset. Your united text is preserved. Start from Step 2 (Segment Texts) or Step 3 (Remove Stopwords).",
       type = "warning",
-      duration = 8,
+      duration = 5,
       closeButton = TRUE
     )
   })
@@ -4397,12 +4398,12 @@ server <- shinyServer(function(input, output, session) {
     do.call(tagList, category_ui_list)
   })
 
-  get_uncategorized_tokens <- function(parsed) {
+  get_uncategorized_tokens <- function(parsed, only_uncategorized = TRUE) {
     if (is.null(parsed) || !"token" %in% names(parsed)) return(character(0))
 
     col <- if ("lemma" %in% names(parsed)) "lemma" else "token"
 
-    if ("entity" %in% names(parsed)) {
+    if (only_uncategorized && "entity" %in% names(parsed)) {
       token_freq <- parsed %>%
         dplyr::filter(is.na(.data$entity) | .data$entity == "") %>%
         dplyr::count(.data[[col]], sort = TRUE) %>%
@@ -4421,7 +4422,6 @@ server <- shinyServer(function(input, output, session) {
     token_freq
   }
 
-  # Update domain preset when dropdown changes
   observeEvent(input$ner_domain_preset, {
     preset_id <- input$ner_domain_preset
     current_domain_preset(preset_id)
@@ -4449,7 +4449,6 @@ server <- shinyServer(function(input, output, session) {
     }
   }, ignoreInit = FALSE, priority = 10)
 
-  # Track last populated categories and preset to detect changes
   last_populated_categories <- reactiveVal(character(0))
   last_populated_preset <- reactiveVal("")
 
@@ -4497,18 +4496,24 @@ server <- shinyServer(function(input, output, session) {
         )
       }
       sidebar_initialized(TRUE)
-
-      all_selected <- unlist(selected, use.names = FALSE)
-      uncategorized <- all_tokens[!tolower(all_tokens) %in% tolower(all_selected)]
-      updateSelectizeInput(session, "uncategorized_tokens",
-        choices = uncategorized,
-        selected = NULL,
-        server = TRUE
-      )
     }
   })
 
-  # Update entity labels when domain category inputs change (user-driven only)
+  all_lemmas_for_dropdown <- reactive({
+    parsed <- spacy_parsed()
+    req(parsed)
+    get_uncategorized_tokens(parsed, only_uncategorized = FALSE)
+  }) %>% debounce(400)
+
+  observeEvent(all_lemmas_for_dropdown(), {
+    current_sel <- isolate(input$uncategorized_tokens) %||% character(0)
+    updateSelectizeInput(session, "uncategorized_tokens",
+      choices = unique(c(current_sel, all_lemmas_for_dropdown())),
+      selected = current_sel,
+      server = TRUE
+    )
+  })
+
   domain_input_trigger <- reactive({
     categories <- current_categories()
     lapply(categories, function(cat) input[[paste0("domain_", cat)]])
@@ -4564,7 +4569,6 @@ server <- shinyServer(function(input, output, session) {
     }
   }, ignoreInit = TRUE)
 
-  # Update entity labels when custom entity inputs change (user-driven only)
   custom_entity_input_trigger <- reactive({
     entities <- user_custom_entities()
     if (length(entities) == 0) return(NULL)
@@ -4598,7 +4602,6 @@ server <- shinyServer(function(input, output, session) {
 
     all_selected_terms_lower <- tolower(unlist(custom_selections, use.names = FALSE))
 
-    # Remove custom entity labels from tokens no longer selected
     updated_parsed <- parsed %>%
       dplyr::mutate(
         entity = dplyr::if_else(
@@ -4610,7 +4613,6 @@ server <- shinyServer(function(input, output, session) {
         )
       )
 
-    # Assign entity labels to selected tokens
     for (entity_name in names(custom_selections)) {
       terms <- custom_selections[[entity_name]]
       if (length(terms) > 0) {
@@ -4630,7 +4632,6 @@ server <- shinyServer(function(input, output, session) {
       entity_table_refresh(entity_table_refresh() + 1)
     }
 
-    # Sync selections back to user_custom_entities
     updated_entities <- entities
     for (name in entity_names) {
       sel <- custom_selections[[name]]
@@ -4739,9 +4740,11 @@ server <- shinyServer(function(input, output, session) {
       parsed <- spacy_parsed()
       req(parsed)
 
+      selected_lower <- tolower(selected_tokens)
       parsed <- parsed %>%
         dplyr::mutate(entity = ifelse(
-          token %in% selected_tokens & (is.na(entity) | entity == ""),
+          (tolower(token) %in% selected_lower | tolower(lemma) %in% selected_lower) &
+            (is.na(entity) | entity == ""),
           entity_name,
           entity
         ))
@@ -4889,30 +4892,19 @@ server <- shinyServer(function(input, output, session) {
 
   custom_entities <- reactiveVal(data.frame())
 
-  # Store entity type modifications from dropdown changes
-  # Key: "doc_id|token|original_entity" -> new_entity_type
   entity_type_modifications <- reactiveVal(list())
   entity_table_refresh <- reactiveVal(0)
 
-  # Refresh entity table when entity type checkboxes change
   observeEvent(list(input$ner_named, input$ner_objects, input$ner_numeric), {
     if (!is.null(input$apply_ner_filter) && input$apply_ner_filter > 0) {
       entity_table_refresh(entity_table_refresh() + 1)
     }
   }, ignoreInit = TRUE)
 
-  # Store custom entity types with colors
-  # Format: list(ENTITY_NAME = "#hexcolor", ...)
   custom_entity_colors <- reactiveVal(list())
-
-  # Track which entity is being edited for color
   editing_entity_color <- reactiveVal(NULL)
   editing_entity_lemma <- reactiveVal(NULL)
-
-  # Sidebar color picker
   editing_sidebar_entity <- reactiveVal(NULL)
-
-  # Store the intended display color to guard against stale colourpicker values
   editing_entity_display_color <- reactiveVal(NULL)
 
   spacy_default_colors <- c(
@@ -4962,21 +4954,6 @@ server <- shinyServer(function(input, output, session) {
 
     editing_entity_display_color(current_color)
 
-    if (requireNamespace("colourpicker", quietly = TRUE)) {
-      colourpicker::updateColourInput(session, "sidebar_new_color", value = current_color)
-    } else {
-      updateTextInput(session, "sidebar_new_color", value = current_color)
-    }
-
-    shinyjs::runjs(
-      "Shiny.setInputValue('_color_user_picked', null, {priority: 'event'});
-       setTimeout(function(){
-         $('#sidebar_new_color').off('change.track').on('change.track', function(){
-           Shiny.setInputValue('_color_user_picked', $(this).val());
-         });
-       }, 400);"
-    )
-
     editing_sidebar_entity(list(entity = entity_name, source = source, category = category))
   })
 
@@ -4984,7 +4961,7 @@ server <- shinyServer(function(input, output, session) {
     info <- editing_sidebar_entity()
     if (is.null(info)) return()
 
-    new_color <- input[["_color_user_picked"]]
+    new_color <- input$sidebar_new_color
     if (is.null(new_color) || !nzchar(new_color)) {
       new_color <- editing_entity_display_color()
     }
@@ -5041,7 +5018,6 @@ server <- shinyServer(function(input, output, session) {
   })
 
 
-  # Remove custom entity type
   observeEvent(input$remove_custom_entity, {
     entity_name <- input$remove_custom_entity
     if (!is.null(entity_name)) {
@@ -5129,7 +5105,6 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  # Edit entity color from table badge click
   observeEvent(input$edit_entity_color, {
     info <- input$edit_entity_color
     if (is.null(info)) return()
@@ -5162,21 +5137,6 @@ server <- shinyServer(function(input, output, session) {
 
     editing_entity_display_color(current_color)
 
-    if (requireNamespace("colourpicker", quietly = TRUE)) {
-      colourpicker::updateColourInput(session, "modal_entity_color", value = current_color)
-    } else {
-      updateTextInput(session, "modal_entity_color", value = current_color)
-    }
-
-    shinyjs::runjs(
-      "Shiny.setInputValue('_color_user_picked', null, {priority: 'event'});
-       setTimeout(function(){
-         $('#modal_entity_color').off('change.track').on('change.track', function(){
-           Shiny.setInputValue('_color_user_picked', $(this).val());
-         });
-       }, 400);"
-    )
-
     editing_entity_color(entity_name)
     editing_entity_lemma(lemma_name)
   })
@@ -5186,14 +5146,22 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(old_name)) return()
 
     new_name <- toupper(trimws(input$modal_entity_name))
-    new_color <- input[["_color_user_picked"]]
+    original_color <- editing_entity_display_color()
+    new_color <- input$modal_entity_color
     if (is.null(new_color) || !nzchar(new_color)) {
-      new_color <- editing_entity_display_color()
+      new_color <- original_color
     }
 
     if (nchar(new_name) == 0) new_name <- old_name
 
     name_changed <- new_name != old_name
+    color_changed <- !is.null(original_color) &&
+                     !identical(tolower(new_color), tolower(original_color))
+
+    target_is_existing_domain <- tolower(new_name) %in% current_categories()
+    target_has_existing_color <- new_name %in% names(custom_entity_colors()) ||
+                                  new_name %in% names(spacy_default_colors) ||
+                                  target_is_existing_domain
 
     current_colors <- custom_entity_colors()
 
@@ -5213,22 +5181,15 @@ server <- shinyServer(function(input, output, session) {
           parsed <- parsed %>%
             dplyr::mutate(entity = dplyr::if_else(
               gsub("_[BI]$", "", entity) == old_name,
-              gsub(old_name, new_name, entity),
+              gsub(old_name, new_name, entity, fixed = TRUE),
               entity
             ))
         }
         spacy_parsed(parsed)
       }
 
-      if (old_name %in% names(current_colors)) {
-        current_colors[[new_name]] <- current_colors[[old_name]]
-        if (is.null(target_lemma) || !nzchar(target_lemma)) {
-          current_colors[[old_name]] <- NULL
-        }
-      }
-
       entities <- user_custom_entities()
-      if (old_name %in% names(entities)) {
+      if (old_name %in% names(entities) && !(new_name %in% names(entities))) {
         entities[[new_name]] <- entities[[old_name]]
         if (is.null(target_lemma) || !nzchar(target_lemma)) {
           entities[[old_name]] <- NULL
@@ -5237,27 +5198,39 @@ server <- shinyServer(function(input, output, session) {
       }
     }
 
-    current_colors[[new_name]] <- new_color
-    custom_entity_colors(current_colors)
+    effective_color <- if (color_changed) {
+      new_color
+    } else if (name_changed && !target_has_existing_color) {
+      existing_colors <- unlist(c(domain_entity_colors(), custom_entity_colors()))
+      available <- default_category_colors[!default_category_colors %in% existing_colors]
+      if (length(available) > 0) available[1] else sprintf("#%06X", sample(0:16777215, 1))
+    } else {
+      NULL
+    }
 
-    entities <- user_custom_entities()
-    if (new_name %in% names(entities)) {
-      entities[[new_name]]$color <- new_color
-      user_custom_entities(entities)
+    if (!is.null(effective_color)) {
+      current_colors[[new_name]] <- effective_color
+      custom_entity_colors(current_colors)
+
+      entities <- user_custom_entities()
+      if (new_name %in% names(entities)) {
+        entities[[new_name]]$color <- effective_color
+        user_custom_entities(entities)
+      }
+
+      shinyjs::runjs(paste0(
+        "$('.sidebar-color-picker[data-entity=\"", new_name, "\"]').css('background-color', '", effective_color, "');"
+      ))
+
+      domain_cat <- tolower(new_name)
+      if (domain_cat %in% current_categories()) {
+        colors <- domain_entity_colors()
+        colors[[domain_cat]] <- effective_color
+        domain_entity_colors(colors)
+      }
     }
 
     entity_table_refresh(entity_table_refresh() + 1)
-
-    shinyjs::runjs(paste0(
-      "$('.sidebar-color-picker[data-entity=\"", new_name, "\"]').css('background-color', '", new_color, "');"
-    ))
-
-    domain_cat <- tolower(new_name)
-    if (domain_cat %in% current_categories()) {
-      colors <- domain_entity_colors()
-      colors[[domain_cat]] <- new_color
-      domain_entity_colors(colors)
-    }
 
     if (name_changed) {
       sidebar_lemma <- editing_entity_lemma()
@@ -5323,12 +5296,22 @@ server <- shinyServer(function(input, output, session) {
               pending[[new_cat_lower]] <- unique(c(pending[[new_cat_lower]], tokens_to_move))
               new_category_selections(pending)
 
+              assigned_color <- if (!is.null(effective_color)) {
+                effective_color
+              } else if (new_entity_upper %in% names(spacy_default_colors)) {
+                unname(spacy_default_colors[[new_entity_upper]])
+              } else {
+                existing_colors <- unlist(domain_entity_colors())
+                available <- default_category_colors[!default_category_colors %in% existing_colors]
+                if (length(available) > 0) available[1] else sprintf("#%06X", sample(0:16777215, 1))
+              }
+
               colors <- domain_entity_colors()
-              colors[[new_cat_lower]] <- new_color
+              colors[[new_cat_lower]] <- assigned_color
               domain_entity_colors(colors)
 
               custom_colors_sidebar <- custom_entity_colors()
-              custom_colors_sidebar[[new_entity_upper]] <- new_color
+              custom_colors_sidebar[[new_entity_upper]] <- assigned_color
               custom_entity_colors(custom_colors_sidebar)
 
               enabled <- domain_entity_enabled()
@@ -5373,7 +5356,6 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  # Sync custom colors to JavaScript for table rendering
   observe({
     custom_colors <- custom_entity_colors()
     if (length(custom_colors) > 0) {
@@ -6363,7 +6345,7 @@ server <- shinyServer(function(input, output, session) {
     lines <- lines[lines != ""]
 
     if (length(lines) == 0) {
-      showNotification("No constructs entered. Please enter at least one construct.", type = "warning", duration = 3)
+      showNotification("No constructs entered. Please enter at least one construct.", type = "warning", duration = 5)
       return()
     }
 
@@ -6380,7 +6362,7 @@ server <- shinyServer(function(input, output, session) {
           showNotification(
             paste0("Skipping line ", i, ": Invalid format. Use 'label: term1, term2, term3'"),
             type = "warning",
-            duration = 3
+            duration = 5
           )
           next
         }
@@ -6637,7 +6619,7 @@ server <- shinyServer(function(input, output, session) {
       } else if (file_ext %in% c("xlsx", "xls")) {
         codebook <- readxl::read_excel(file_path)
       } else {
-        showNotification("Unsupported file format. Use CSV or Excel.", type = "error", duration = 5)
+        showNotification("Unsupported file format. Use CSV or Excel.", type = "error", duration = 7)
         return()
       }
 
@@ -6646,7 +6628,7 @@ server <- shinyServer(function(input, output, session) {
         showNotification(
           paste0("Missing required columns. Expected: ", paste(required_cols, collapse = ", ")),
           type = "error",
-          duration = 5
+          duration = 7
         )
         return()
       }
@@ -6792,7 +6774,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         paste0("Error processing codebook: ", e$message),
         type = "error",
-        duration = 5
+        duration = 7
       )
     })
   })
@@ -7009,7 +6991,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         paste("Error updating entity:", e$message),
         type = "error",
-        duration = 3
+        duration = 7
       )
     })
   })
@@ -7596,7 +7578,7 @@ server <- shinyServer(function(input, output, session) {
       top_node_n = as.numeric(input$top_node_n_co_occurrence_global),
       nrows = as.numeric(input$nrows_co_occurrence),
       category_params = if (isTRUE(params$use_category_specific)) params$category_params else NULL,
-      width = input$width_word_co_occurrence_network_plot %||% 900,
+      width = "100%",
       height = input$height_word_co_occurrence_network_plot %||% 800,
       node_label_size = input$node_label_size_cooccur %||% 22,
       community_method = input$community_method_cooccur %||% "leiden",
@@ -7688,14 +7670,10 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
-    plot_w <- input$width_word_co_occurrence_network_plot %||% 900
     plot_h <- input$height_word_co_occurrence_network_plot %||% 800
     tags$div(
-      style = sprintf("width: 100%%; overflow: auto; min-height: %dpx;", plot_h + 60),
-      tags$div(
-        style = sprintf("width: %dpx; min-width: %dpx; height: %dpx; margin: 0 auto;", plot_w, plot_w, plot_h),
-        result$plot
-      )
+      style = sprintf("width: 100%%; height: %dpx;", plot_h),
+      result$plot
     )
   })
 
@@ -7948,7 +7926,7 @@ server <- shinyServer(function(input, output, session) {
       top_node_n = as.numeric(input$top_node_n_correlation_global),
       nrows = as.numeric(input$nrows_correlation),
       category_params = if (isTRUE(params$use_category_specific)) params$category_params else NULL,
-      width = input$width_word_correlation_network_plot %||% 900,
+      width = "100%",
       height = input$height_word_correlation_network_plot %||% 1000,
       node_label_size = input$node_label_size_corr %||% 22,
       community_method = input$community_method_corr %||% "leiden",
@@ -8041,14 +8019,10 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
-    plot_w <- input$width_word_correlation_network_plot %||% 900
     plot_h <- input$height_word_correlation_network_plot %||% 1000
     tags$div(
-      style = sprintf("width: 100%%; overflow: auto; min-height: %dpx;", plot_h + 60),
-      tags$div(
-        style = sprintf("width: %dpx; min-width: %dpx; height: %dpx; margin: 0 auto;", plot_w, plot_w, plot_h),
-        result$plot
-      )
+      style = sprintf("width: 100%%; height: %dpx;", plot_h),
+      result$plot
     )
   })
 
@@ -8350,12 +8324,12 @@ server <- shinyServer(function(input, output, session) {
                         width = "100%",
                         dom = "Bfrtip",
                         buttons = c("copy", "csv", "excel", "pdf", "print"),
-                        digits = 3
+                        pageLength = 10
                       )
                     ) %>%
-                      DT::formatStyle(
-                        columns = names(clean_data),
-                        `font-size` = "16px"
+                      DT::formatRound(
+                        columns = names(clean_data)[vapply(clean_data, is.numeric, logical(1))],
+                        digits = 3
                       )
                   )
                 })
@@ -8997,7 +8971,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$sentiment_distribution_plot <- plotly::renderPlotly({
     if (!sentiment_results$analyzed) {
-      return(plot_error("Click 'Analyze Sentiment' to generate results"))
+      return(plot_error("Click 'Analyze Sentiment' to generate results."))
     }
     gg_to_plotly(plot_sentiment_distribution(sentiment_results$data))
   })
@@ -9037,10 +9011,11 @@ server <- shinyServer(function(input, output, session) {
   output$sentiment_category_table <- renderDT({
     if (sentiment_results$analyzed && !is.null(input$sentiment_category_var) &&
         input$sentiment_category_var != "None" && !is.null(sentiment_results$grouped)) {
-      datatable(
+      DT::datatable(
         sentiment_results$grouped %>%
           pivot_wider(names_from = sentiment, values_from = proportion, values_fill = 0) %>%
           mutate(across(where(is.numeric), ~ round(., 3))),
+        extensions = "Buttons",
         options = list(
           dom = 'Bfrtip',
           buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
@@ -9643,7 +9618,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$readability_plot <- plotly::renderPlotly({
     if (!readability_results$analyzed) {
-      return(plot_error("Click 'Analyze' button to generate results"))
+      return(plot_error("Click 'Analyze' to generate results."))
     }
 
     scores_data <- readability_results$metrics_data
@@ -10445,7 +10420,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$tfidf_keywords_plot <- plotly::renderPlotly({
     if (!keyword_results$analyzed) {
-      return(plot_error("Click 'Extract' button to generate results"))
+      return(plot_error("Click 'Extract' to generate results."))
     }
     gg_to_plotly(plot_tfidf_keywords(
       keyword_results$tfidf_data,
@@ -10941,7 +10916,7 @@ server <- shinyServer(function(input, output, session) {
             }, error = function(e) {})
           }
           performance_metrics$last_cleanup <- Sys.time()
-          showNotification("Memory usage high - performed cleanup", type = "warning", duration = 3)
+          showNotification("Memory usage high - performed cleanup", type = "warning", duration = 5)
         }
       }
     }, error = function(e) {
@@ -11041,7 +11016,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         "Document ID variable changed. Please recalculate similarity data to reflect the new configuration.",
         type = "warning",
-        duration = 7
+        duration = 5
       )
     }
     comparison_results$last_doc_id_var <- input$doc_id_var
@@ -11057,7 +11032,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         "Category variable changed. Please recalculate similarity data to reflect the new configuration.",
         type = "warning",
-        duration = 7
+        duration = 5
       )
     }
     comparison_results$last_doc_category_var <- input$doc_category_var
@@ -12159,7 +12134,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         "Please unite text columns first before generating embeddings.",
         type = "error",
-        duration = 5
+        duration = 7
       )
       return()
     }
@@ -12256,7 +12231,7 @@ server <- shinyServer(function(input, output, session) {
           p("The document-feature matrix has no documents."),
           p("Please ensure you have uploaded data and completed preprocessing."),
           easyClose = TRUE,
-          footer = shiny::modalButton("OK")
+          footer = shiny::modalButton("Close")
         ))
         return(FALSE)
       }
@@ -12268,7 +12243,7 @@ server <- shinyServer(function(input, output, session) {
         p("An error occurred during validation."),
         p(paste("Error:", e$message)),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return(FALSE)
     })
@@ -12322,7 +12297,7 @@ server <- shinyServer(function(input, output, session) {
         p("Please run Document Configuration first."),
         p("Configure documents in the Document Configuration section before proceeding."),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return(NULL)
     }
@@ -12474,7 +12449,7 @@ server <- shinyServer(function(input, output, session) {
             title = "Preprocessing Required",
             p("Please complete preprocessing steps first."),
             easyClose = TRUE,
-            footer = shiny::modalButton("OK")
+            footer = shiny::modalButton("Close")
           ))
           return(NULL)
         }
@@ -12500,7 +12475,7 @@ server <- shinyServer(function(input, output, session) {
             title = "Preprocessing Required",
             p("Please complete preprocessing (at least Step 4: DFM) to generate tokens."),
             easyClose = TRUE,
-            footer = shiny::modalButton("OK")
+            footer = shiny::modalButton("Close")
           ))
           return(NULL)
         }
@@ -12677,7 +12652,7 @@ server <- shinyServer(function(input, output, session) {
           p("Please go to Semantic Analysis > Summary and click 'Process' first."),
           p("This will prepare your documents for similarity analysis."),
           easyClose = TRUE,
-          footer = shiny::modalButton("OK")
+          footer = shiny::modalButton("Close")
         ))
         return()
       }
@@ -12818,7 +12793,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         "✗ No similarity data found. Please calculate similarity first.",
         type = "error",
-        duration = 5
+        duration = 7
       )
       return()
     }
@@ -12910,7 +12885,7 @@ server <- shinyServer(function(input, output, session) {
         p("Document text not available."),
         p("Please complete preprocessing steps first."),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }
@@ -12925,7 +12900,7 @@ server <- shinyServer(function(input, output, session) {
           p("Please click 'Process' button in Semantic Analysis > Summary first to process your documents."),
           p("This will prepare the documents for search."),
           easyClose = TRUE,
-          footer = shiny::modalButton("OK")
+          footer = shiny::modalButton("Close")
         ))
         return()
       }
@@ -12937,14 +12912,14 @@ server <- shinyServer(function(input, output, session) {
         p("Some documents have not been processed yet."),
         p("Please click 'Process' button in Semantic Analysis > Summary first."),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }
 
     valid_docs <- docs_data$combined_text[nchar(trimws(docs_data$combined_text)) > 0]
     if (length(valid_docs) == 0) {
-      showNotification("No documents with valid text content found.", type = "error", duration = 5)
+      showNotification("No documents with valid text content found.", type = "error", duration = 7)
       return()
     }
 
@@ -13031,7 +13006,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         showNotification(
           paste("RAG search failed:", rag_result$error),
-          type = "error", duration = 8
+          type = "error", duration = 7
         )
       }
       return()
@@ -13325,7 +13300,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         paste0("⚠ N-gram range changed to ", ngram_label, ". The following data was cleared: ", paste(messages, collapse = ", "), ". Please re-run analyses as needed."),
         type = "warning",
-        duration = 10
+        duration = 5
       )
     }
   })
@@ -13485,7 +13460,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (is.null(dfm_check) || quanteda::ndoc(dfm_check) == 0) {
         remove_notification_by_id("loadingDimRed")
-        showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 5)
+        showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 7)
         return()
       }
 
@@ -13506,7 +13481,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (nrow(feature_matrix) < 2) {
         remove_notification_by_id("loadingDimRed")
-        showNotification("At least 2 documents are required for dimensionality reduction.", type = "error", duration = 5)
+        showNotification("At least 2 documents are required for dimensionality reduction.", type = "error", duration = 7)
         return()
       }
 
@@ -13523,7 +13498,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (nrow(feature_matrix) < 2) {
         remove_notification_by_id("loadingDimRed")
-        showNotification("After removing duplicates, less than 2 unique documents remain.", type = "error", duration = 5)
+        showNotification("After removing duplicates, less than 2 unique documents remain.", type = "error", duration = 7)
         return()
       }
 
@@ -13572,7 +13547,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         "An error occurred during dimensionality reduction. Please ensure documents are processed and all required parameters are set."
       }
-      showNotification(error_msg, type = "error", duration = 5)
+      showNotification(error_msg, type = "error", duration = 7)
     })
   })
 
@@ -13589,7 +13564,7 @@ server <- shinyServer(function(input, output, session) {
       coords <- document_clustering_results$coordinates
       if (is.null(coords) || nrow(coords) < 2) {
         remove_notification_by_id("loadingClustering")
-        showNotification("Valid dimensionality reduction results not found. Please run Step 1 first.", type = "error", duration = 5)
+        showNotification("Valid dimensionality reduction results not found. Please run Step 1 first.", type = "error", duration = 7)
         return()
       }
 
@@ -13651,7 +13626,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         "An error occurred during clustering. Please check your parameters and try again."
       }
-      showNotification(error_msg, type = "error", duration = 5)
+      showNotification(error_msg, type = "error", duration = 7)
     })
   })
 
@@ -13671,7 +13646,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (is.null(dfm_check) || quanteda::ndoc(dfm_check) == 0) {
         remove_notification_by_id("loadingDocClustering")
-        showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 5)
+        showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 7)
         return()
       }
 
@@ -13692,7 +13667,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (nrow(feature_matrix) < 2) {
         remove_notification_by_id("loadingDocClustering")
-        showNotification("At least 2 documents are required for clustering analysis.", type = "error", duration = 5)
+        showNotification("At least 2 documents are required for clustering analysis.", type = "error", duration = 7)
         return()
       }
 
@@ -13709,7 +13684,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (nrow(feature_matrix) < 2) {
         remove_notification_by_id("loadingDocClustering")
-        showNotification("After removing duplicates, less than 2 unique documents remain.", type = "error", duration = 5)
+        showNotification("After removing duplicates, less than 2 unique documents remain.", type = "error", duration = 7)
         return()
       }
 
@@ -13790,7 +13765,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         "An error occurred during clustering analysis. Please ensure documents are processed and all required parameters are set."
       }
-      showNotification(error_msg, type = "error", duration = 5)
+      showNotification(error_msg, type = "error", duration = 7)
     })
   })
 
@@ -13834,7 +13809,7 @@ server <- shinyServer(function(input, output, session) {
         p("Please run Document Configuration first."),
         p("Configure documents in the Document Configuration section before proceeding."),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }
@@ -13970,7 +13945,7 @@ server <- shinyServer(function(input, output, session) {
         p("No document-feature matrix (DFM) found."),
         p("Please complete preprocessing steps first."),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }
@@ -14035,7 +14010,7 @@ server <- shinyServer(function(input, output, session) {
     })
 
     if (processed_docs_null) {
-      showNotification("Run Document Configuration first.", type = "error", duration = 10)
+      showNotification("Run Document Configuration first.", type = "error", duration = 7)
       return()
     }
 
@@ -14050,7 +14025,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         paste(feature_label, "similarity must be calculated first. Please go to Similarity Analysis tab and calculate similarity."),
         type = "warning",
-        duration = 10
+        duration = 5
       )
       return()
     }
@@ -14601,7 +14576,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (is.null(comparison_results$clustering)) {
-      showNotification("✗ No clustering results available. Please run topic discovery first.", type = "error", duration = 5)
+      showNotification("✗ No clustering results available. Please run topic discovery first.", type = "error", duration = 7)
       return()
     }
 
@@ -14767,7 +14742,7 @@ server <- shinyServer(function(input, output, session) {
       if (!is.null(comparison_results$calculation_status[[feature_type]]) &&
           comparison_results$calculation_status[[feature_type]]) {
         return(create_error_plot(
-          "Click 'Visualize Results' to display similarity analysis",
+          "Click 'Visualize Results' to display similarity analysis.",
           color = "#28a745"
         ))
       } else {
@@ -15021,14 +14996,14 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         paste("Please calculate", feature_type, "similarity first."),
         type = "error",
-        duration = 5
+        duration = 7
       )
       return(NULL)
     }
 
     docs_data <- document_display_data()
     if (is.null(docs_data) || nrow(docs_data) < 2) {
-      showNotification("Need at least 2 documents for comparative analysis.", type = "error", duration = 5)
+      showNotification("Need at least 2 documents for comparative analysis.", type = "error", duration = 7)
       return(NULL)
     }
 
@@ -15073,7 +15048,7 @@ server <- shinyServer(function(input, output, session) {
       other_indices <- which(docs_data$category_display != ref_category)
 
       if (length(ref_indices) == 0 || length(other_indices) == 0) {
-        showNotification("Cannot perform analysis: need documents in both reference and comparison categories.", type = "error", duration = 5)
+        showNotification("Cannot perform analysis: need documents in both reference and comparison categories.", type = "error", duration = 7)
         return(NULL)
       }
 
@@ -16021,7 +15996,13 @@ server <- shinyServer(function(input, output, session) {
     }
 
     DT::datatable(table_data,
-                 options = list(pageLength = 10, scrollX = TRUE))
+                 extensions = "Buttons",
+                 options = list(
+                   dom = "Bfrtip",
+                   buttons = c("copy", "csv", "excel"),
+                   pageLength = 10,
+                   scrollX = TRUE
+                 ))
   })
 
   observe({
@@ -16150,7 +16131,12 @@ server <- shinyServer(function(input, output, session) {
       )
 
       DT::datatable(labels_df,
-                    options = list(pageLength = 10, dom = 'tip'),
+                    extensions = "Buttons",
+                    options = list(
+                      dom = "Bfrtip",
+                      buttons = c("copy", "csv", "excel"),
+                      pageLength = 10
+                    ),
                     rownames = FALSE)
     }
   })
@@ -16265,7 +16251,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (!dimred_triggered) {
       return(create_error_plot(
-        "Click 'Visualize' to run analysis",
+        "Click 'Visualize' to run analysis.",
         color = "#6c757d"
       ))
     }
@@ -16290,7 +16276,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (is.null(dimred_results$last_method)) {
       return(create_error_plot(
-        "Click 'Visualize' to run dimensionality reduction analysis",
+        "Click 'Visualize' to run dimensionality reduction analysis.",
         color = "#6c757d"
       ))
     }
@@ -16528,7 +16514,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (is.null(comparison_results$clustering)) {
       return(create_error_plot(
-        "Click 'Apply' in the sidebar to run clustering analysis",
+        "Click 'Apply' in the sidebar to run clustering analysis.",
         color = "#6c757d"
       ))
     }
@@ -16861,12 +16847,14 @@ server <- shinyServer(function(input, output, session) {
       table_out <- DT::datatable(
         doc_cluster_df,
         rownames = FALSE,
+        extensions = "Buttons",
         caption = "Document Cluster Assignments",
         filter = "top",
         options = list(
           scrollX = TRUE,
           pageLength = 15,
-          dom = "frtip",
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel"),
           searching = TRUE
         )
       ) %>%
@@ -17216,7 +17204,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (is.null(input$reduce_outliers) || input$reduce_outliers == 0) {
       return(create_error_plot(
-        "Click 'Reduce Outliers' to run outlier reduction",
+        "Click 'Reduce Outliers' to run outlier reduction.",
         color = "#6c757d"
       ))
     }
@@ -17315,7 +17303,7 @@ server <- shinyServer(function(input, output, session) {
       plotly::layout(
         title = list(
           text = paste("Outlier Reduction Results -", stringr::str_to_title(clustering_result$outlier_reduction_method)),
-          font = list(size = 14, color = "#4269BF", family = "Roboto"),
+          font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
           x = 0.5,
           xref = "paper",
           xanchor = "center"
@@ -17371,7 +17359,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (is.null(input$reduce_outliers) || input$reduce_outliers == 0) {
       return(DT::datatable(
-        data.frame(Message = "Click 'Reduce Outliers' to run outlier reduction"),
+        data.frame(Message = "Click 'Reduce Outliers' to run outlier reduction."),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
       ))
@@ -17838,7 +17826,7 @@ server <- shinyServer(function(input, output, session) {
       if (!nzchar(api_key)) {
         shiny::showNotification(
           TextAnalysisR:::.missing_api_key_message("openai", "shiny"),
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -17849,7 +17837,7 @@ server <- shinyServer(function(input, output, session) {
       if (!nzchar(api_key)) {
         shiny::showNotification(
           TextAnalysisR:::.missing_api_key_message("gemini", "shiny"),
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -18091,7 +18079,7 @@ server <- shinyServer(function(input, output, session) {
           p("Topic modeling requires at least 2 topics to be meaningful."),
           p("Please adjust the range slider to start from 2 or higher."),
           easyClose = TRUE,
-          footer = shiny::modalButton("OK")
+          footer = shiny::modalButton("Close")
         ))
         return(NULL)
       }
@@ -18472,7 +18460,7 @@ server <- shinyServer(function(input, output, session) {
       if (!nzchar(api_key)) {
         shiny::showNotification(
           TextAnalysisR:::.missing_api_key_message("openai", "shiny"),
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -18484,7 +18472,7 @@ server <- shinyServer(function(input, output, session) {
         )
         shiny::showNotification(
           "Invalid API key format. OpenAI keys should start with 'sk-' and be 48+ characters.",
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -18495,7 +18483,7 @@ server <- shinyServer(function(input, output, session) {
       if (!nzchar(api_key)) {
         shiny::showNotification(
           TextAnalysisR:::.missing_api_key_message("gemini", "shiny"),
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -18676,7 +18664,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         "Error generating AI recommendation. Please check your settings and try again."
       }
-      shiny::showNotification(error_msg, type = "error", duration = 8)
+      shiny::showNotification(error_msg, type = "error", duration = 7)
     })
   })
 
@@ -18834,6 +18822,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   topic_model_result <- reactiveVal(NULL)
+  topic_model_type <- reactiveVal(NULL)
   previous_K_number <- reactiveVal(NULL)
   previous_categorical_var_2 <- reactiveVal(NULL)
   previous_continuous_var_2 <- reactiveVal(NULL)
@@ -18954,7 +18943,7 @@ server <- shinyServer(function(input, output, session) {
           )
         ),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }
@@ -18983,7 +18972,7 @@ server <- shinyServer(function(input, output, session) {
           )
         ),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }
@@ -19276,7 +19265,7 @@ server <- shinyServer(function(input, output, session) {
           style = "margin-top: 10px; font-size: 16px; color: #6B7280;"
         ),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }
@@ -19477,7 +19466,7 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$embedding_display, {
     if (is.null(topic_model_result())) {
-      showNotification("Please run the embedding model first.", type = "warning", duration = 3)
+      showNotification("Please run the embedding model first.", type = "warning", duration = 5)
       return()
     }
 
@@ -19769,7 +19758,7 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$embedding_quote, {
     if (is.null(topic_model_result())) {
-      showNotification("Please run the embedding model first.", type = "warning", duration = 3)
+      showNotification("Please run the embedding model first.", type = "warning", duration = 5)
       return()
     }
 
@@ -19863,10 +19852,13 @@ server <- shinyServer(function(input, output, session) {
 
   previous_topic_measure <- reactiveVal(NULL)
 
+  get_topic_measure <- function() {
+    input$stm_topic_measure %||% "frex"
+  }
 
-  # Get number of columns for topic term display based on modeling path
-
-  # Get top term number based on current measure and modeling path
+  get_top_term_number <- function() {
+    input[[paste0("stm_top_term_number_", get_topic_measure())]] %||% 5
+  }
 
   stm_topic_terms <- reactive({
     if (is.null(topic_model_result())) {
@@ -20084,6 +20076,16 @@ server <- shinyServer(function(input, output, session) {
   })
 
   shiny::observeEvent(input$topic_generate_labels, {
+    if (is.null(topic_model_result()) || is.null(beta_td())) {
+      shiny::showModal(shiny::modalDialog(
+        title = tags$div(style = "color: #4269BF;", icon("info-circle"), " Run topic model first"),
+        HTML("<p>Click <strong>'Display'</strong> to fit the topic model before generating labels.</p>"),
+        easyClose = TRUE,
+        footer = shiny::modalButton("Close")
+      ))
+      return()
+    }
+
     if (!is.null(generated_labels()) && input$stm_system_prompt == previous_system() && input$stm_user_prompt == previous_user()) {
       shiny::showModal(shiny::modalDialog(
         title = "Notification",
@@ -20093,8 +20095,6 @@ server <- shinyServer(function(input, output, session) {
       ))
       return()
     }
-
-    shiny::req(beta_td())
 
     provider <- input$stm_label_provider %||% "ollama"
     api_key <- NULL
@@ -20230,7 +20230,7 @@ server <- shinyServer(function(input, output, session) {
       if (!nzchar(api_key)) {
         shiny::showNotification(
           TextAnalysisR:::.missing_api_key_message("openai", "shiny"),
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -20242,7 +20242,7 @@ server <- shinyServer(function(input, output, session) {
         )
         shiny::showNotification(
           "Invalid API key format. OpenAI keys should start with 'sk-' and be 48+ characters.",
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -20253,7 +20253,7 @@ server <- shinyServer(function(input, output, session) {
       if (!nzchar(api_key)) {
         shiny::showNotification(
           TextAnalysisR:::.missing_api_key_message("gemini", "shiny"),
-          type = "error", duration = 5
+          type = "error", duration = 7
         )
         return()
       }
@@ -20356,7 +20356,7 @@ server <- shinyServer(function(input, output, session) {
       shiny::showNotification(
         paste("Content generation failed:", e$message),
         type = "error",
-        duration = 8
+        duration = 7
       )
     })
   })
@@ -20932,7 +20932,7 @@ server <- shinyServer(function(input, output, session) {
         title = "Topic Modeling Required",
         p("Please run the STM model in Step 2 (Topic Modeling) before viewing topic prevalence."),
         easyClose = TRUE,
-        footer = shiny::modalButton("OK")
+        footer = shiny::modalButton("Close")
       ))
       return()
     }

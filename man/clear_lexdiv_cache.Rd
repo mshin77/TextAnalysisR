@@ -11,7 +11,7 @@ Invisible NULL
 }
 \description{
 Clears the internal cache used for lexical diversity calculations.
-Call this function if you need to free memory or ensure fresh calculations.
+Call this function to free memory or force fresh calculations.
 }
 \seealso{
 Other lexical:

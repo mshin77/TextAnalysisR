@@ -22,7 +22,7 @@ Disables unnecessary components (NER, parser) for faster processing.
 }
 \details{
 This function disables NER, entity_ruler, and parser components to speed up
-lemmatization. Use this when you need lemmas without other annotations.
+lemmatization. Use this for lemmas without other annotations.
 }
 \seealso{
 Other lexical:

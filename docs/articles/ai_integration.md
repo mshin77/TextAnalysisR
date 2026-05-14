@@ -17,7 +17,7 @@ providers.
 
 ### 1. Topic-Grounded Content Generation
 
-Generate content grounded in your validated topic terms (not generic AI
+Generate content grounded in validated topic terms (not generic AI
 knowledge):
 
 | Function | Purpose |
@@ -55,7 +55,7 @@ items <- generate_topic_content(
 | Function | Purpose |
 |----|----|
 | [`generate_cluster_labels()`](https://mshin77.github.io/TextAnalysisR/reference/generate_cluster_labels.md) | AI-suggested names for document clusters |
-| [`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md) | Question-answering over your corpus (RAG) |
+| [`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md) | Question-answering over the document corpus (RAG) |
 | [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md) | Vision LLM image description (Ollama/OpenAI/Gemini) |
 | [`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md) | Web-based document embeddings (OpenAI, Gemini) |
 | [`generate_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/generate_embeddings.md) | Local embeddings (sentence-transformers) |
@@ -68,7 +68,7 @@ cluster_labels <- generate_cluster_labels(
  provider = "auto"  # Tries Ollama first, then web-based APIs
 )
 
-# RAG search over your documents
+# RAG search over a document corpus
 result <- run_rag_search(
  query = "What are the main findings?",
  documents = my_docs,
@@ -177,13 +177,13 @@ All AI features follow [NIST AI Risk Management
 Framework](https://www.nist.gov/itl/ai-risk-management-framework)
 principles:
 
-| Principle       | Implementation                                    |
-|-----------------|---------------------------------------------------|
-| Human oversight | AI suggests, you review and approve               |
-| User control    | Edit, regenerate, or override any output          |
-| Transparency    | View prompts and parameters used                  |
-| Privacy         | Local options (Ollama, spaCy) for sensitive data  |
-| Grounding       | Content based on your data, not generic knowledge |
+| Principle       | Implementation                                     |
+|-----------------|----------------------------------------------------|
+| Human oversight | AI suggests; review and approve                    |
+| User control    | Edit, regenerate, or override any output           |
+| Transparency    | View prompts and parameters used                   |
+| Privacy         | Local options (Ollama, spaCy) for sensitive data   |
+| Grounding       | Content based on input data, not generic knowledge |
 
 ## Setup
 
@@ -206,12 +206,12 @@ list_ollama_models()
 ``` r
 
 # Set API keys (choose one or both)
-Sys.setenv(OPENAI_API_KEY = "your-openai-key")
-Sys.setenv(GEMINI_API_KEY = "your-gemini-key")
+Sys.setenv(OPENAI_API_KEY = "<openai-api-key>")
+Sys.setenv(GEMINI_API_KEY = "<gemini-api-key>")
 
 # Or use .env file in project root
-# OPENAI_API_KEY=your-key
-# GEMINI_API_KEY=your-key
+# OPENAI_API_KEY=<openai-api-key>
+# GEMINI_API_KEY=<gemini-api-key>
 ```
 
 ### Linguistic Analysis (spaCy)

@@ -1,6 +1,6 @@
 ## Documentation
 
-- [R Package Documentation](https://mshin77.github.io/TextAnalysisR)
+- [R Package Documentation](https://mshin77.github.io/TextAnalysisR/)
 - [GitHub Repository](https://github.com/mshin77/TextAnalysisR)
 - [BERTopic Documentation](https://maartengr.github.io/BERTopic/)
 - [Sentence Transformers](https://www.sbert.net/)

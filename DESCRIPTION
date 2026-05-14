@@ -27,6 +27,7 @@ Imports:
     DT,
     ggplot2,
     htmltools,
+    htmlwidgets,
     igraph,
     magrittr,
     Matrix,
@@ -43,7 +44,6 @@ Imports:
     visNetwork,
     widyr
 Suggests:
-    a11yviz,
     aricode,
     tidylo,
     broom,
@@ -56,7 +56,6 @@ Suggests:
     dotenv,
     ggraph,
     httr,
-    htmlwidgets,
     jsonlite,
     knitr,
     markdown,
@@ -94,7 +93,7 @@ Depends: R (>= 4.0)
 SystemRequirements: Python (>= 3.8) for spaCy lemmatization and
     sentence-transformers embeddings (optional); Ollama for local
     large language model inference (optional)
-URL: https://mshin77.github.io/TextAnalysisR,
+URL: https://mshin77.github.io/TextAnalysisR/,
     https://github.com/mshin77/TextAnalysisR
 BugReports: https://github.com/mshin77/TextAnalysisR/issues
 VignetteBuilder: knitr

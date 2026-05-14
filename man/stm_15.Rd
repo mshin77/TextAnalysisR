@@ -14,7 +14,8 @@ stm_15
 Contains 15 topics, topic prevalences, and etc. from \code{stm::stm}.
 }
 \examples{
+\donttest{
 stm_15
-
+}
 }
 \keyword{datasets}

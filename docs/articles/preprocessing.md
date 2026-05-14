@@ -71,7 +71,7 @@ computational analysis.
 | `remove_numbers` | TRUE    | FALSE for quantitative text  |
 | `lowercase`      | TRUE    | FALSE to preserve case       |
 
-**Usage:** Select preprocessing options based on your analysis goals.
+**Usage:** Select preprocessing options based on the analysis goals.
 Sentence segmentation splits text into sentences before tokenization
 when sentence structure is important (e.g., sentiment analysis).
 

@@ -528,7 +528,7 @@ class SpacyNLP:
                                 # Get the full subtree for compound objects
                                 objects.append(self._get_span_text(child))
 
-                        # Only add if we found at least a subject or object
+                        # Only add if at least a subject or object was found
                         if subjects or objects:
                             results.append({
                                 "doc_id": doc_id,
