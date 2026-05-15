@@ -4,8 +4,8 @@
 
 ``` r
 
-install.packages("remotes")
-remotes::install_github("mshin77/TextAnalysisR")
+install.packages("TextAnalysisR",
+  repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
 library(TextAnalysisR)
 run_app()
 ```

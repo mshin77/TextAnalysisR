@@ -205,7 +205,7 @@ show_web_banner <- function(disabled = NULL) {
           "For full features: ",
           shiny::tags$code(
             style = "background: #F3F4F6; padding: 2px 6px; border-radius: 3px; font-size: 13px;",
-            "remotes::install_github('mshin77/TextAnalysisR')"
+            "install.packages('TextAnalysisR', repos = c('https://mshin77.r-universe.dev', 'https://cloud.r-project.org'))"
           )
         ),
         shiny::HTML(paste0("<ul style='margin: 5px 0; padding-left: 20px; color: #6B7280;'>", feature_list, "</ul>"))

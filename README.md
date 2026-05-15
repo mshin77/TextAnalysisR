@@ -25,11 +25,17 @@ retrieval-augmented generation.
 
 ## Installation
 
-The development version from
-[GitHub](https://github.com/mshin77/TextAnalysisR) with:
+From [R-universe](https://mshin77.r-universe.dev) (pre-built binaries
+for Windows, macOS, and Linux):
 
-    install.packages("devtools")
-    devtools::install_github("mshin77/TextAnalysisR")
+    install.packages("TextAnalysisR",
+      repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
+
+Or the development version from
+[GitHub](https://github.com/mshin77/TextAnalysisR):
+
+    install.packages("remotes")
+    remotes::install_github("mshin77/TextAnalysisR")
 
 ## First-Time Python Setup
 

@@ -25,11 +25,8 @@ retrieval-augmented generation.
 
 ## Installation
 
-The development version from
-[GitHub](https://github.com/mshin77/TextAnalysisR) with:
-
-    install.packages("devtools")
-    devtools::install_github("mshin77/TextAnalysisR")
+    install.packages("TextAnalysisR",
+      repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
 
 ## Load the TextAnalysisR Package
 

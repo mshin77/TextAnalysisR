@@ -80,29 +80,32 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>The development version from <a href="https://github.com/mshin77/TextAnalysisR" class="external-link">GitHub</a> with:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"devtools"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"mshin77/TextAnalysisR"</span>)</span></code></pre></div>
+<p>From <a href="https://mshin77.r-universe.dev" class="external-link">R-universe</a> (pre-built binaries for Windows, macOS, and Linux):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"TextAnalysisR"</span>,</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="at">repos =</span> <span class="fu">c</span>(<span class="st">"https://mshin77.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span>))</span></code></pre></div>
+<p>Or the development version from <a href="https://github.com/mshin77/TextAnalysisR" class="external-link">GitHub</a>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"remotes"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"mshin77/TextAnalysisR"</span>)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="first-time-python-setup">First-Time Python Setup<a class="anchor" aria-label="anchor" href="#first-time-python-setup"></a>
 </h2>
 <p>Several functions (<code><a href="reference/lemmatize_tokens.html">lemmatize_tokens()</a></code>, <code><a href="reference/generate_embeddings.html">generate_embeddings()</a></code>, <code><a href="reference/cluster_embeddings.html">cluster_embeddings()</a></code>, PDF extraction, transformer-based analyses) require Python packages. Run this <strong>once</strong> after installing TextAnalysisR:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(TextAnalysisR)</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">setup_python_env</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(TextAnalysisR)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">setup_python_env</span>()</span></code></pre></div>
 <p>This creates a dedicated virtualenv (<code>textanalysisr-env</code>), installs the packages listed in <code>inst/python/requirements.txt</code> (spaCy, pandas, pdfplumber, sentence-transformers, torch, umap-learn, hdbscan, scikit-learn, numba), and downloads the <code>en_core_web_sm</code> spaCy model. Restart R afterward. Check status anytime with <code><a href="reference/check_python_env.html">check_python_env()</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="load-the-textanalysisr-package">Load the TextAnalysisR Package<a class="anchor" aria-label="anchor" href="#load-the-textanalysisr-package"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(TextAnalysisR)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">library</span>(TextAnalysisR)</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="alternatively-launch-and-browse-the-shiny-app">Alternatively, Launch and Browse the Shiny App<a class="anchor" aria-label="anchor" href="#alternatively-launch-and-browse-the-shiny-app"></a>
 </h2>
 <p>Access the web app at <a href="https://www.textanalysisr.org" class="external-link uri">https://www.textanalysisr.org</a>.</p>
 <p>Launch and browse the app on the local computer:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">run_app</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">run_app</span>()</span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>

@@ -7,7 +7,7 @@
 
 ## Applications
 
-- **R Package** (full features): `remotes::install_github("mshin77/TextAnalysisR")`
+- **R Package** (full features): `install.packages("TextAnalysisR", repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))`
 - **Web App** (core features): [textanalysisr.org](https://www.textanalysisr.org)
 
 ## Use Policy
