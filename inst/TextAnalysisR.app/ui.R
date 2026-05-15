@@ -27,6 +27,7 @@ ui <- fluidPage(
     tags$meta(charset = "UTF-8"),
     tags$meta(name = "viewport", content = "width=device-width, initial-scale=1.0"),
     tags$meta(name = "description", content = "TextAnalysisR: A text mining workflow tool"),
+    tags$link(rel = "icon", type = "image/png", href = "logo.png"),
     tags$script(HTML(
       "document.documentElement.lang = 'en';
        document.querySelectorAll('title').forEach(function(t, i) {
