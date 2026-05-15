@@ -6,20 +6,22 @@ Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repost
 [![License:
 GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Workflow tool for text mining and natural language processing
-with an interactive `Shiny` interface. Import documents from multiple
-formats (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`) using
-[Marker](https://github.com/datalab-to/marker) for PDF extraction,
-preprocess with [quanteda](https://github.com/quanteda/quanteda), and
-perform linguistic analysis via [spaCy](https://spacy.io/), topic
-modeling ([stm](https://github.com/bstewart/stm),
-[BERTopic](https://maartengr.github.io/BERTopic/)), semantic analysis,
-sentiment analysis, and network visualization with
-[plotly](https://plotly.com/r/). Features topic-grounded content
-generation via local ([Ollama](https://ollama.com)) and web-based
+Text mining and natural language processing workflow for documents
+(`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`). Includes preprocessing via
+[quanteda](https://github.com/quanteda/quanteda), lexical analysis
+(term frequency-inverse document frequency, log-odds ratios, lexical
+diversity) via [tidytext](https://github.com/juliasilge/tidytext),
+topic modeling via [stm](https://github.com/bstewart/stm) and
+[BERTopic](https://maartengr.github.io/BERTopic/), semantic similarity
+and document clustering on transformer embeddings, an interactive
+[Shiny](https://shiny.posit.co/) interface with
+[ggplot2](https://ggplot2.tidyverse.org/) visualization, optional
+[spaCy](https://spacy.io/) lemmatization, and local
+([Ollama](https://ollama.com),
+[sentence-transformers](https://www.sbert.net/)) or web-based
 ([OpenAI](https://platform.openai.com/),
-[Gemini](https://ai.google.dev/)) APIs, `WCAG 2.1 AA` accessibility,
-multi-language support.
+[Gemini](https://ai.google.dev/)) model providers for
+retrieval-augmented generation.
 
 ## Installation
 
