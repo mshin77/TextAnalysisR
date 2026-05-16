@@ -363,7 +363,7 @@ LLM integration, embeddings, PDF extraction, and vision AI
 - [`get_spacy_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_spacy_embeddings.md)
   : Get spaCy Word Embeddings
 - [`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md)
-  : RAG-Enhanced Semantic Search
+  : RAG Semantic Search
 - [`analyze_sentiment_llm()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.md)
   : LLM-based Sentiment Analysis
 - [`get_content_type_prompt()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_prompt.md)

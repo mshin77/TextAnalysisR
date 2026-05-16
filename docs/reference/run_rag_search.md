@@ -1,4 +1,4 @@
-# RAG-Enhanced Semantic Search
+# RAG Semantic Search
 
 Simple in-memory RAG (Retrieval Augmented Generation) for
 question-answering over document corpus with source attribution. Uses

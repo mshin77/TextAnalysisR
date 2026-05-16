@@ -92,3 +92,4 @@ result <- process_pdf_unified("paper.pdf", vision_provider = "gemini")
 | Ollama | Free | Local | Good | Install Ollama + pull model |
 | OpenAI | Per use | Cloud | Best | API key |
 | Gemini | Per use | Cloud | Best | API key |
+

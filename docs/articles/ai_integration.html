@@ -37,11 +37,17 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-get-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Get Started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-get-started">
+<li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
+    <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
+    <li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
+  </ul>
+</li>
+<li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Workflow</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-workflow">
-<li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
-    <li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
-    <li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
+<li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
@@ -51,10 +57,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-extensions">
 <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
-    <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/cybersecurity.html">Cybersecurity</a></li>
-    <li><a class="dropdown-item" href="../articles/web_accessibility.html">Web Accessibility</a></li>
+    <li><a class="dropdown-item" href="../articles/compliance.html">Compliance</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -85,10 +89,10 @@
 
     
     
-<p>TextAnalysisR provides AI and NLP features via local and web-based
+<p>TextAnalysisR provides AI features via local and web-based
 providers.</p>
 <div class="section level2">
-<h2 id="supported-providers">Supported Providers<a class="anchor" aria-label="anchor" href="#supported-providers"></a>
+<h2 id="providers">Providers<a class="anchor" aria-label="anchor" href="#providers"></a>
 </h2>
 <table style="width:100%;" class="table">
 <colgroup>
@@ -138,229 +142,42 @@ providers.</p>
 </table>
 </div>
 <div class="section level2">
-<h2 id="feature-categories">Feature Categories<a class="anchor" aria-label="anchor" href="#feature-categories"></a>
+<h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
 <div class="section level3">
-<h3 id="topic-grounded-content-generation">1. Topic-Grounded Content Generation<a class="anchor" aria-label="anchor" href="#topic-grounded-content-generation"></a>
+<h3 id="local-ai-ollama">Local AI (Ollama)<a class="anchor" aria-label="anchor" href="#local-ai-ollama"></a>
 </h3>
-<p>Generate content grounded in validated topic terms (not generic AI
-knowledge):</p>
-<table class="table">
-<colgroup>
-<col width="52%">
-<col width="47%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Purpose</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="../reference/generate_topic_labels.html">generate_topic_labels()</a></code></td>
-<td>AI-suggested labels from topic model terms</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/generate_topic_content.html">generate_topic_content()</a></code></td>
-<td>Survey items, research questions, theme descriptions, policy
-recommendations</td>
-</tr>
-</tbody>
-</table>
-<p>Content types available:</p>
-<ul>
-<li>
-<strong>survey_item</strong>: Likert-scale questionnaire items</li>
-<li>
-<strong>research_question</strong>: Literature review questions</li>
-<li>
-<strong>theme_description</strong>: Academic theme summaries</li>
-<li>
-<strong>policy_recommendation</strong>: Actionable policy
-suggestions</li>
-<li>
-<strong>interview_question</strong>: Open-ended interview
-prompts</li>
-</ul>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Generate topic labels</span></span>
-<span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span></span>
-<span> <span class="va">top_topic_terms</span>,</span>
-<span> provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
-<span> model <span class="op">=</span> <span class="st">"llama3.2"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># 1. Install Ollama: https://ollama.com</span></span>
+<span><span class="co"># 2. Pull a model (in terminal):</span></span>
+<span><span class="co">#    ollama pull llama3.2</span></span>
+<span><span class="co">#    ollama pull mistral</span></span>
 <span></span>
-<span><span class="co"># Generate survey items</span></span>
-<span><span class="va">items</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_content.html">generate_topic_content</a></span><span class="op">(</span></span>
-<span> <span class="va">topic_terms_df</span>,</span>
-<span> content_type <span class="op">=</span> <span class="st">"survey_item"</span>,</span>
-<span> provider <span class="op">=</span> <span class="st">"openai"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># 3. Verify in R:</span></span>
+<span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/list_ollama_models.html">list_ollama_models</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="semantic-analysis-clustering">2. Semantic Analysis &amp; Clustering<a class="anchor" aria-label="anchor" href="#semantic-analysis-clustering"></a>
+<h3 id="web-based-ai-openai-gemini">Web-based AI (OpenAI / Gemini)<a class="anchor" aria-label="anchor" href="#web-based-ai-openai-gemini"></a>
 </h3>
-<table class="table">
-<colgroup>
-<col width="52%">
-<col width="47%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Purpose</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="../reference/generate_cluster_labels.html">generate_cluster_labels()</a></code></td>
-<td>AI-suggested names for document clusters</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/run_rag_search.html">run_rag_search()</a></code></td>
-<td>Question-answering over the document corpus (RAG)</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/describe_image.html">describe_image()</a></code></td>
-<td>Vision LLM image description (Ollama/OpenAI/Gemini)</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/get_api_embeddings.html">get_api_embeddings()</a></code></td>
-<td>Web-based document embeddings (OpenAI, Gemini)</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/generate_embeddings.html">generate_embeddings()</a></code></td>
-<td>Local embeddings (sentence-transformers)</td>
-</tr>
-</tbody>
-</table>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Generate cluster labels</span></span>
-<span><span class="va">cluster_labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_cluster_labels.html">generate_cluster_labels</a></span><span class="op">(</span></span>
-<span> <span class="va">cluster_keywords</span>,</span>
-<span> provider <span class="op">=</span> <span class="st">"auto"</span>  <span class="co"># Tries Ollama first, then web-based APIs</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"&lt;openai-api-key&gt;"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"&lt;gemini-api-key&gt;"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># RAG search over a document corpus</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_rag_search.html">run_rag_search</a></span><span class="op">(</span></span>
-<span> query <span class="op">=</span> <span class="st">"What are the main findings?"</span>,</span>
-<span> documents <span class="op">=</span> <span class="va">my_docs</span>,</span>
-<span> provider <span class="op">=</span> <span class="st">"openai"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Or use .env file in project root</span></span>
+<span><span class="co"># OPENAI_API_KEY=&lt;openai-api-key&gt;</span></span>
+<span><span class="co"># GEMINI_API_KEY=&lt;gemini-api-key&gt;</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="sentiment-analysis">3. Sentiment Analysis<a class="anchor" aria-label="anchor" href="#sentiment-analysis"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="38%">
-<col width="23%">
-<col width="38%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Type</th>
-<th>Features</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="../reference/analyze_sentiment_llm.html">analyze_sentiment_llm()</a></code></td>
-<td>LLM-based</td>
-<td>Context-aware, detects sarcasm, mixed emotions</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/sentiment_embedding_analysis.html">sentiment_embedding_analysis()</a></code></td>
-<td>Local transformers</td>
-<td>No API required, fast batch processing</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/sentiment_lexicon_analysis.html">sentiment_lexicon_analysis()</a></code></td>
-<td>Dictionary-based</td>
-<td>Multiple lexicons (AFINN, Bing, NRC)</td>
-</tr>
-</tbody>
-</table>
+</div>
+<div class="section level2">
+<h2 id="unified-llm-api">Unified LLM API<a class="anchor" aria-label="anchor" href="#unified-llm-api"></a>
+</h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># LLM-based sentiment (nuanced)</span></span>
-<span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_sentiment_llm.html">analyze_sentiment_llm</a></span><span class="op">(</span></span>
-<span> <span class="va">texts</span>,</span>
-<span> provider <span class="op">=</span> <span class="st">"gemini"</span>,</span>
-<span> include_explanation <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Local transformer sentiment (no API needed)</span></span>
-<span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sentiment_embedding_analysis.html">sentiment_embedding_analysis</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Lexicon-based sentiment</span></span>
-<span><span class="va">sentiment</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sentiment_lexicon_analysis.html">sentiment_lexicon_analysis</a></span><span class="op">(</span><span class="va">dfm_object</span>, lexicon <span class="op">=</span> <span class="st">"nrc"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="linguistic-analysis-spacy">4. Linguistic Analysis (spaCy)<a class="anchor" aria-label="anchor" href="#linguistic-analysis-spacy"></a>
-</h3>
-<p>Deep linguistic processing via spaCy NLP models:</p>
-<table class="table">
-<colgroup>
-<col width="52%">
-<col width="47%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Purpose</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="../reference/spacy_parse_full.html">spacy_parse_full()</a></code></td>
-<td>Full annotation: POS, lemma, NER, dependency, morphology</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/extract_noun_chunks.html">extract_noun_chunks()</a></code></td>
-<td>Keyphrase extraction</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/extract_subjects_objects.html">extract_subjects_objects()</a></code></td>
-<td>Subject-verb-object triples</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/get_word_similarity.html">get_word_similarity()</a></code></td>
-<td>Word vector similarity</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/find_similar_words.html">find_similar_words()</a></code></td>
-<td>Find semantically similar words</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/get_sentences.html">get_sentences()</a></code></td>
-<td>Sentence segmentation</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Initialize spaCy</span></span>
-<span><span class="fu"><a href="../reference/init_spacy_nlp.html">init_spacy_nlp</a></span><span class="op">(</span><span class="st">"en_core_web_sm"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Full linguistic parsing</span></span>
-<span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spacy_parse_full.html">spacy_parse_full</a></span><span class="op">(</span></span>
-<span> <span class="va">texts</span>,</span>
-<span> pos <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span> lemma <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span> entity <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span> dependency <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span> morph <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Extract noun chunks (keyphrases)</span></span>
-<span><span class="va">chunks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_noun_chunks.html">extract_noun_chunks</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Extract subject-verb-object triples</span></span>
-<span><span class="va">svo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_subjects_objects.html">extract_subjects_objects</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="llm-api-access">5. LLM API Access<a class="anchor" aria-label="anchor" href="#llm-api-access"></a>
-</h3>
-<p>Unified interface for all providers:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Provider-agnostic (recommended)</span></span>
 <span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/call_llm_api.html">call_llm_api</a></span><span class="op">(</span></span>
-<span> provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
-<span> system_prompt <span class="op">=</span> <span class="st">"You are a helpful assistant."</span>,</span>
-<span> user_prompt <span class="op">=</span> <span class="st">"Summarize this text..."</span></span>
+<span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
+<span>  system_prompt <span class="op">=</span> <span class="st">"You are a helpful assistant."</span>,</span>
+<span>  user_prompt <span class="op">=</span> <span class="st">"Summarize this text..."</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Provider-specific</span></span>
@@ -368,9 +185,26 @@ prompts</li>
 <span><span class="fu"><a href="../reference/call_gemini_chat.html">call_gemini_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gemini-2.5-flash"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/call_ollama.html">call_ollama</a></span><span class="op">(</span><span class="va">prompt</span>, model <span class="op">=</span> <span class="st">"llama3.2"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="ollama-utilities">6. Ollama Utilities<a class="anchor" aria-label="anchor" href="#ollama-utilities"></a>
-</h3>
+<div class="section level2">
+<h2 id="embeddings-rag">Embeddings &amp; RAG<a class="anchor" aria-label="anchor" href="#embeddings-rag"></a>
+</h2>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Web-based embeddings (OpenAI, Gemini)</span></span>
+<span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_api_embeddings.html">get_api_embeddings</a></span><span class="op">(</span><span class="va">texts</span>, provider <span class="op">=</span> <span class="st">"openai"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Local embeddings (sentence-transformers)</span></span>
+<span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_embeddings.html">generate_embeddings</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># RAG search over a document corpus</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_rag_search.html">run_rag_search</a></span><span class="op">(</span></span>
+<span>  query <span class="op">=</span> <span class="st">"What are the main findings?"</span>,</span>
+<span>  documents <span class="op">=</span> <span class="va">my_docs</span>,</span>
+<span>  provider <span class="op">=</span> <span class="st">"openai"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="ollama-utilities">Ollama Utilities<a class="anchor" aria-label="anchor" href="#ollama-utilities"></a>
+</h2>
 <table class="table">
 <thead><tr class="header">
 <th>Function</th>
@@ -391,13 +225,44 @@ prompts</li>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Check if Ollama is available</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span> <span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_ollama_models.html">list_ollama_models</a></span><span class="op">(</span><span class="op">)</span></span>
-<span> <span class="va">best_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_recommended_ollama_model.html">get_recommended_ollama_model</a></span><span class="op">(</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_ollama_models.html">list_ollama_models</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="va">best_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_recommended_ollama_model.html">get_recommended_ollama_model</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
+<div class="section level2">
+<h2 id="default-models">Default Models<a class="anchor" aria-label="anchor" href="#default-models"></a>
+</h2>
+<table class="table">
+<thead><tr class="header">
+<th>Provider</th>
+<th>Chat Model</th>
+<th>Embedding Model</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>OpenAI</td>
+<td>gpt-4.1-mini</td>
+<td>text-embedding-3-small</td>
+</tr>
+<tr class="even">
+<td>Gemini</td>
+<td>gemini-2.5-flash</td>
+<td>gemini-embedding-001</td>
+</tr>
+<tr class="odd">
+<td>Ollama</td>
+<td>llama3.2</td>
+<td>nomic-embed-text</td>
+</tr>
+<tr class="even">
+<td>Local</td>
+<td>-</td>
+<td>all-MiniLM-L6-v2</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="responsible-ai-design">Responsible AI Design<a class="anchor" aria-label="anchor" href="#responsible-ai-design"></a>
@@ -429,79 +294,6 @@ Risk Management Framework</a> principles:</p>
 <tr class="odd">
 <td>Grounding</td>
 <td>Content based on input data, not generic knowledge</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level2">
-<h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
-</h2>
-<div class="section level3">
-<h3 id="local-ai-ollama">Local AI (Ollama)<a class="anchor" aria-label="anchor" href="#local-ai-ollama"></a>
-</h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Install Ollama: https://ollama.com</span></span>
-<span><span class="co"># 2. Pull a model (in terminal):</span></span>
-<span><span class="co">#    ollama pull llama3.2</span></span>
-<span><span class="co">#    ollama pull mistral</span></span>
-<span></span>
-<span><span class="co"># 3. Verify in R:</span></span>
-<span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/list_ollama_models.html">list_ollama_models</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="web-based-ai-openaigemini">Web-based AI (OpenAI/Gemini)<a class="anchor" aria-label="anchor" href="#web-based-ai-openaigemini"></a>
-</h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Set API keys (choose one or both)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"&lt;openai-api-key&gt;"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"&lt;gemini-api-key&gt;"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or use .env file in project root</span></span>
-<span><span class="co"># OPENAI_API_KEY=&lt;openai-api-key&gt;</span></span>
-<span><span class="co"># GEMINI_API_KEY=&lt;gemini-api-key&gt;</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="linguistic-analysis-spacy-1">Linguistic Analysis (spaCy)<a class="anchor" aria-label="anchor" href="#linguistic-analysis-spacy-1"></a>
-</h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install Python dependencies</span></span>
-<span><span class="fu"><a href="../reference/setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Initialize spaCy with a model</span></span>
-<span><span class="fu"><a href="../reference/init_spacy_nlp.html">init_spacy_nlp</a></span><span class="op">(</span><span class="st">"en_core_web_sm"</span><span class="op">)</span>  <span class="co"># Small model</span></span>
-<span><span class="fu"><a href="../reference/init_spacy_nlp.html">init_spacy_nlp</a></span><span class="op">(</span><span class="st">"en_core_web_md"</span><span class="op">)</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="default-models">Default Models<a class="anchor" aria-label="anchor" href="#default-models"></a>
-</h2>
-<table class="table">
-<thead><tr class="header">
-<th>Provider</th>
-<th>Chat Model</th>
-<th>Embedding Model</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>OpenAI</td>
-<td>gpt-4.1-mini</td>
-<td>text-embedding-3-small</td>
-</tr>
-<tr class="even">
-<td>Gemini</td>
-<td>gemini-2.5-flash</td>
-<td>gemini-embedding-001</td>
-</tr>
-<tr class="odd">
-<td>Ollama</td>
-<td>llama3.2</td>
-<td>nomic-embed-text</td>
-</tr>
-<tr class="even">
-<td>Local</td>
-<td>-</td>
-<td>all-MiniLM-L6-v2</td>
 </tr>
 </tbody>
 </table>

@@ -36,12 +36,18 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-get-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Get Started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-get-started">
+<li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
+    <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
+    <li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
+  </ul>
+</li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Workflow</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-workflow">
-<li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
-    <li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
-    <li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
+<li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
@@ -51,10 +57,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-extensions">
 <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
-    <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/cybersecurity.html">Cybersecurity</a></li>
-    <li><a class="dropdown-item" href="../articles/web_accessibility.html">Web Accessibility</a></li>
+    <li><a class="dropdown-item" href="../articles/compliance.html">Compliance</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -85,7 +89,8 @@
 
     
     
-<p>Topic modeling discovers hidden themes in text collections.</p>
+<p>Topic modeling discovers hidden themes in text collections via STM or
+embedding-based methods.</p>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
@@ -102,28 +107,16 @@
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/find_optimal_k.html">find_optimal_k</a></span><span class="op">(</span><span class="va">dfm_object</span>, topic_range <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span></span></code></pre></div>
-<p><strong>STM (Structural Topic Model)</strong></p>
-<p>STM discovers latent topics using probabilistic modeling while
-incorporating document metadata as covariates. It models how topics vary
-across documents based on metadata like time, author, or category.</p>
-<p><strong>Best For:</strong></p>
-<ul>
-<li>Metadata analysis: Relate topics to document characteristics</li>
-<li>Covariate effects: Test how metadata affects topics</li>
-<li>Interpretability: Clear word-probability distributions</li>
-</ul>
-<p><strong>Quality Metrics:</strong></p>
-<ul>
-<li>
-<strong>Semantic Coherence:</strong> Measures word co-occurrence
-within topics</li>
-<li>
-<strong>Exclusivity:</strong> Measures how unique words are to each
-topic</li>
-<li>
-<strong>Held-out Likelihood:</strong> Predictive performance on
-unseen documents</li>
-</ul>
+</div>
+<div class="section level2">
+<h2 id="stm-structural-topic-model">STM (Structural Topic Model)<a class="anchor" aria-label="anchor" href="#stm-structural-topic-model"></a>
+</h2>
+<p>STM discovers latent topics while incorporating document metadata as
+covariates.</p>
+<p><strong>Best for:</strong> metadata analysis, covariate effects,
+interpretable word-probability distributions.</p>
+<p><strong>Quality metrics:</strong> Semantic Coherence, Exclusivity,
+Held-out Likelihood.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/convert.html" class="external-link">convert</a></span><span class="op">(</span><span class="va">dfm_object</span>, to <span class="op">=</span> <span class="st">"stm"</span><span class="op">)</span></span>
 <span></span>
@@ -136,14 +129,17 @@ unseen documents</li>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_topic_terms.html">get_topic_terms</a></span><span class="op">(</span><span class="va">model</span>, top_term_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Learn More:</strong> <a href="https://www.structuraltopicmodel.com/" class="external-link">Structural Topic Model</a>
-| <a href="https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf" class="external-link">STM
+<p>See: <a href="https://www.structuraltopicmodel.com/" class="external-link">Structural Topic
+Model</a> · <a href="https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf" class="external-link">STM
 Vignette</a></p>
-<p><strong>Embedding-based Topics</strong></p>
+</div>
+<div class="section level2">
+<h2 id="embedding-based-topics">Embedding-based Topics<a class="anchor" aria-label="anchor" href="#embedding-based-topics"></a>
+</h2>
 <p>Uses transformer embeddings with dimensionality reduction and
 clustering. Best for short texts, multilingual content, and semantic
 similarity.</p>
-<p><strong>AI Provider:</strong></p>
+<p><strong>Embedding providers:</strong></p>
 <table class="table">
 <colgroup>
 <col width="41%">
@@ -178,31 +174,11 @@ similarity.</p>
 </tr>
 </tbody>
 </table>
-<p>Embeddings generated in Document Similarity are cached and reused
-automatically if the same provider/model is selected.</p>
-<p><strong>Backend Options:</strong></p>
-<table class="table">
-<thead><tr class="header">
-<th>Backend</th>
-<th>When to Use</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>"python"</code></td>
-<td>Full BERTopic features (default)</td>
-</tr>
-<tr class="even">
-<td><code>"r"</code></td>
-<td>No BERTopic installed</td>
-</tr>
-<tr class="odd">
-<td><code>"auto"</code></td>
-<td>Auto-detect available backend</td>
-</tr>
-</tbody>
-</table>
+<p><strong>Backends:</strong> <code>"python"</code> (full BERTopic,
+default) · <code>"r"</code> (no BERTopic needed) ·
+<code>"auto"</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># With precomputed embeddings (Ollama, OpenAI, Gemini)</span></span>
+<code class="sourceCode R"><span><span class="co"># With precomputed embeddings</span></span>
 <span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_best_embeddings.html">get_best_embeddings</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
@@ -222,164 +198,87 @@ automatically if the same provider/model is selected.</p>
 <span>  backend <span class="op">=</span> <span class="st">"r"</span>,</span>
 <span>  n_topics <span class="op">=</span> <span class="fl">10</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>R Backend Methods:</strong> Format is
-<code>{dimred}_{clustering}</code> (e.g., <code>"umap_dbscan"</code>,
-<code>"tsne_kmeans"</code>, <code>"pca_hierarchical"</code>).</p>
-<p><strong>Learn More:</strong> <a href="https://maartengr.github.io/BERTopic/" class="external-link">BERTopic</a> | <a href="https://www.sbert.net/" class="external-link">Sentence-BERT</a></p>
+<p>R backend methods follow <code>{dimred}_{clustering}</code> (e.g.,
+<code>"umap_dbscan"</code>, <code>"tsne_kmeans"</code>,
+<code>"pca_hierarchical"</code>).</p>
+<p>See: <a href="https://maartengr.github.io/BERTopic/" class="external-link">BERTopic</a> ·
+<a href="https://www.sbert.net/" class="external-link">Sentence-BERT</a></p>
 </div>
 <div class="section level2">
 <h2 id="ai-topic-labels">AI Topic Labels<a class="anchor" aria-label="anchor" href="#ai-topic-labels"></a>
 </h2>
-<p>AI generates label suggestions based on topic terms. You review and
-edit:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Generate</strong>: AI creates draft labels from top
-terms</li>
-<li>
-<strong>Review</strong>: Examine suggestions in the output
-table</li>
-<li>
-<strong>Edit</strong>: Modify any labels that need refinement</li>
-<li>
-<strong>Override</strong>: Use manual labels field to replace AI
-suggestions</li>
-</ol>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># AI suggests, human decides</span></span>
-<span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span></span>
-<span>  <span class="va">terms</span>,</span>
-<span>  provider <span class="op">=</span> <span class="st">"ollama"</span>  <span class="co"># or "openai"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># Review and edit labels before final use</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span><span class="va">terms</span>, provider <span class="op">=</span> <span class="st">"ollama"</span><span class="op">)</span></span></code></pre></div>
+<p>AI generates draft labels; review and edit before final use.</p>
 </div>
 <div class="section level2">
-<h2 id="topic-grounded-content-generation">Topic-Grounded Content Generation<a class="anchor" aria-label="anchor" href="#topic-grounded-content-generation"></a>
+<h2 id="topic-grounded-content">Topic-Grounded Content<a class="anchor" aria-label="anchor" href="#topic-grounded-content"></a>
 </h2>
-<p>Generate draft content grounded in the topic model results rather
-than AI parametric knowledge. The LLM receives topic labels and term
-probabilities (beta scores), ensuring outputs are anchored to the input
-data.</p>
-<div class="section level3">
-<h3 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
-</h3>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Run topic modeling</strong> and optionally generate/edit
-topic labels</li>
-<li>
-<strong>Select content type</strong>: survey items, research
-questions, theme descriptions, policy recommendations, or interview
-questions</li>
-<li>
-<strong>Generate drafts</strong>: AI creates content using the top
-terms ordered by beta scores</li>
-<li>
-<strong>Review and edit</strong>: Examine all outputs before
-use</li>
-<li>
-<strong>Export</strong>: Download as CSV or Excel</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="content-types">Content Types<a class="anchor" aria-label="anchor" href="#content-types"></a>
-</h3>
+<p>Generate draft content (survey items, research questions, theme
+descriptions, policy recommendations, interview questions) anchored to
+topic term probabilities rather than generic AI knowledge.</p>
 <table class="table">
+<colgroup>
+<col width="25%">
+<col width="33%">
+<col width="41%">
+</colgroup>
 <thead><tr class="header">
-<th>Type</th>
+<th>Content type</th>
 <th>Output</th>
-<th>Use Case</th>
+<th>Use case</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Survey Item</td>
+<td><code>survey_item</code></td>
 <td>Likert-scale statement</td>
 <td>Scale development</td>
 </tr>
 <tr class="even">
-<td>Research Question</td>
+<td><code>research_question</code></td>
 <td>RQ for literature review</td>
 <td>Systematic reviews</td>
 </tr>
 <tr class="odd">
-<td>Theme Description</td>
+<td><code>theme_description</code></td>
 <td>Qualitative theme summary</td>
 <td>Thematic analysis</td>
 </tr>
 <tr class="even">
-<td>Policy Recommendation</td>
+<td><code>policy_recommendation</code></td>
 <td>Action-oriented statement</td>
 <td>Policy analysis</td>
 </tr>
 <tr class="odd">
-<td>Interview Question</td>
+<td><code>interview_question</code></td>
 <td>Open-ended question</td>
 <td>Qualitative research</td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section level3">
-<h3 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
-</h3>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Get topic terms with beta scores</span></span>
-<span><span class="va">top_terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_topic_terms.html">get_topic_terms</a></span><span class="op">(</span><span class="va">model</span>, top_term_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">top_terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_topic_terms.html">get_topic_terms</a></span><span class="op">(</span><span class="va">model</span>, top_term_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Optional: Add topic labels</span></span>
-<span><span class="va">topic_labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span> <span class="op">=</span> <span class="st">"Digital Learning Tools"</span>, <span class="st">"2"</span> <span class="op">=</span> <span class="st">"Family Engagement"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Generate content grounded in topic terms</span></span>
 <span><span class="va">content</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_content.html">generate_topic_content</a></span><span class="op">(</span></span>
 <span>  topic_terms_df <span class="op">=</span> <span class="va">top_terms</span>,</span>
 <span>  content_type <span class="op">=</span> <span class="st">"survey_item"</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"llama3.2"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Review before use</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">content</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Prompt Format</strong></p>
-<p>The LLM receives structured prompts with the topic data:</p>
-<pre><code>Topic: Digital Learning Tools
-
-Top Terms (highest to lowest beta score):
-virtual (.035)
-manipulatives (.022)
-mathematical (.014)
-solving (.013)
-learning (.012)</code></pre>
-<p>This “topic-grounded” approach ensures content reflects the actual
-topic model results, not generic AI knowledge. Prompts include
-guidelines for person-first language and content-specific best
-practices.</p>
-<p><strong>Customizing Prompts:</strong></p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Get default prompts</span></span>
-<span><span class="va">system_prompt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_content_type_prompt.html">get_content_type_prompt</a></span><span class="op">(</span><span class="st">"survey_item"</span><span class="op">)</span></span>
-<span><span class="va">user_template</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_content_type_user_template.html">get_content_type_user_template</a></span><span class="op">(</span><span class="st">"survey_item"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Use custom prompts</span></span>
-<span><span class="va">content</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_content.html">generate_topic_content</a></span><span class="op">(</span></span>
-<span>  topic_terms_df <span class="op">=</span> <span class="va">top_terms</span>,</span>
-<span>  content_type <span class="op">=</span> <span class="st">"custom"</span>,</span>
-<span>  system_prompt <span class="op">=</span> <span class="st">"You are a survey methodology expert..."</span>,</span>
-<span>  user_prompt_template <span class="op">=</span> <span class="st">"Create an item for: {topic_label}\nTerms: {terms}"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
+<p>The LLM receives topic labels plus terms with beta scores. Use
+<code><a href="../reference/get_content_type_prompt.html">get_content_type_prompt()</a></code> /
+<code><a href="../reference/get_content_type_user_template.html">get_content_type_user_template()</a></code> to inspect or override
+prompts.</p>
 </div>
 <div class="section level2">
 <h2 id="topic-prevalence-modeling">Topic Prevalence Modeling<a class="anchor" aria-label="anchor" href="#topic-prevalence-modeling"></a>
 </h2>
-<p>Model how topic prevalence varies with document-level covariates
-using count regression. Auto-selects between Poisson, Negative Binomial,
-and Zero-Inflated Negative Binomial based on data diagnostics
-(dispersion ratio and zero proportion).</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Get topic proportions from STM gamma matrix</span></span>
-<span><span class="va">gamma_matrix</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="va">theta</span></span>
+<p>Model how topic prevalence varies with document covariates.
+Auto-selects Poisson, Negative Binomial, or Zero-Inflated NB based on
+dispersion ratio and zero proportion.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gamma_matrix</span> <span class="op">&lt;-</span> <span class="va">model</span><span class="op">$</span><span class="va">theta</span></span>
 <span></span>
-<span><span class="co"># Fit prevalence model for topic 1</span></span>
 <span><span class="va">prevalence_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_topic_prevalence_model.html">fit_topic_prevalence_model</a></span><span class="op">(</span></span>
 <span>  topic_proportions <span class="op">=</span> <span class="va">gamma_matrix</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>,</span>
 <span>  metadata <span class="op">=</span> <span class="va">out</span><span class="op">$</span><span class="va">meta</span>,</span>
@@ -387,10 +286,13 @@ and Zero-Inflated Negative Binomial based on data diagnostics
 <span>  model_type <span class="op">=</span> <span class="st">"auto"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">prevalence_result</span><span class="op">$</span><span class="va">model_type</span>       <span class="co"># Selected model</span></span>
-<span><span class="va">prevalence_result</span><span class="op">$</span><span class="va">summary</span>          <span class="co"># Tidy coefficients with odds ratios</span></span>
-<span><span class="va">prevalence_result</span><span class="op">$</span><span class="va">diagnostics</span>      <span class="co"># Zero proportion, dispersion ratio</span></span></code></pre></div>
-<p><strong>Methods Comparison</strong></p>
+<span><span class="va">prevalence_result</span><span class="op">$</span><span class="va">model_type</span></span>
+<span><span class="va">prevalence_result</span><span class="op">$</span><span class="va">summary</span></span>
+<span><span class="va">prevalence_result</span><span class="op">$</span><span class="va">diagnostics</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="stm-vs-embedding">STM vs Embedding<a class="anchor" aria-label="anchor" href="#stm-vs-embedding"></a>
+</h2>
 <table class="table">
 <thead><tr class="header">
 <th>Feature</th>
@@ -404,12 +306,12 @@ and Zero-Inflated Negative Binomial based on data diagnostics
 <td>Medium</td>
 </tr>
 <tr class="even">
-<td>Metadata Support</td>
+<td>Metadata support</td>
 <td>Yes</td>
 <td>No</td>
 </tr>
 <tr class="odd">
-<td>Short Texts</td>
+<td>Short texts</td>
 <td>Poor</td>
 <td>Good</td>
 </tr>
@@ -420,13 +322,12 @@ and Zero-Inflated Negative Binomial based on data diagnostics
 </tr>
 </tbody>
 </table>
-<p><strong>When to Use:</strong></p>
 <ul>
 <li>
-<strong>STM:</strong> Metadata analysis, covariate effects</li>
+<strong>STM:</strong> metadata analysis, covariate effects</li>
 <li>
-<strong>Embedding:</strong> Short texts, semantic similarity (use
-<code>backend = "r"</code> if no BERTopic)</li>
+<strong>Embedding:</strong> short texts, semantic similarity
+(<code>backend = "r"</code> if no BERTopic)</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -36,12 +36,18 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-get-started" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Get Started</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-get-started">
+<li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
+    <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
+    <li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
+  </ul>
+</li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-workflow" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Workflow</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-workflow">
-<li><a class="dropdown-item" href="../articles/quickstart.html">Quickstart</a></li>
-    <li><a class="dropdown-item" href="../articles/installation.html">Installation</a></li>
-    <li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
+<li><a class="dropdown-item" href="../articles/preprocessing.html">Preprocessing</a></li>
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
@@ -51,10 +57,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-extensions">
 <li><a class="dropdown-item" href="../articles/ai_integration.html">AI Integration</a></li>
-    <li><a class="dropdown-item" href="../articles/python_environment.html">Python Environment</a></li>
     <li><a class="dropdown-item" href="../articles/multimodal_analysis.html">Multimodal Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/cybersecurity.html">Cybersecurity</a></li>
-    <li><a class="dropdown-item" href="../articles/web_accessibility.html">Web Accessibility</a></li>
+    <li><a class="dropdown-item" href="../articles/compliance.html">Compliance</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -325,48 +329,10 @@ nodes.</p>
 </table>
 <p><strong>Learn More:</strong> <a href="https://igraph.org/r/doc/communities.html" class="external-link">igraph Community
 Detection</a></p>
-<p><strong>Embedding Providers</strong></p>
-<p>Document-to-document similarity using vector embeddings. Multiple
-providers are available:</p>
-<table class="table">
-<colgroup>
-<col width="41%">
-<col width="29%">
-<col width="29%">
-</colgroup>
-<thead><tr class="header">
-<th>Provider</th>
-<th>Model</th>
-<th>Notes</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Ollama</td>
-<td>nomic-embed-text (default), mxbai-embed-large, all-minilm</td>
-<td>Free, local, private</td>
-</tr>
-<tr class="even">
-<td>OpenAI</td>
-<td>text-embedding-3-small, text-embedding-3-large</td>
-<td>API key required</td>
-</tr>
-<tr class="odd">
-<td>Gemini</td>
-<td>gemini-embedding-001</td>
-<td>API key required</td>
-</tr>
-<tr class="even">
-<td>Sentence Transformers</td>
-<td>all-MiniLM-L6-v2 (fast), all-mpnet-base-v2 (highest quality)</td>
-<td>Requires Python</td>
-</tr>
-</tbody>
-</table>
 <p>Embeddings are cached and shared across Document Similarity, Topic
-Modeling, and Semantic Search when using the same provider and
-model.</p>
-<p><strong>Learn More:</strong> <a href="https://www.sbert.net/" class="external-link">Sentence Transformers</a> | <a href="https://ollama.com/blog/embedding-models" class="external-link">Ollama Embedding
-Models</a></p>
+Modeling, and Semantic Search when the same provider and model are
+reused. See <a href="ai_integration.html">AI Integration</a> for
+provider/model setup.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

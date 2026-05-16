@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 ```
 
-Topic modeling discovers hidden themes in text collections.
+Topic modeling discovers hidden themes in text collections via STM or embedding-based methods.
 
 ## Setup
 
@@ -30,21 +30,13 @@ dfm_object <- quanteda::dfm(tokens)
 find_optimal_k(dfm_object, topic_range = 5:30)
 ```
 
-**STM (Structural Topic Model)**
+## STM (Structural Topic Model)
 
-STM discovers latent topics using probabilistic modeling while incorporating document metadata as covariates. It models how topics vary across documents based on metadata like time, author, or category.
+STM discovers latent topics while incorporating document metadata as covariates.
 
-**Best For:**
+**Best for:** metadata analysis, covariate effects, interpretable word-probability distributions.
 
-- Metadata analysis: Relate topics to document characteristics
-- Covariate effects: Test how metadata affects topics
-- Interpretability: Clear word-probability distributions
-
-**Quality Metrics:**
-
-- **Semantic Coherence:** Measures word co-occurrence within topics
-- **Exclusivity:** Measures how unique words are to each topic
-- **Held-out Likelihood:** Predictive performance on unseen documents
+**Quality metrics:** Semantic Coherence, Exclusivity, Held-out Likelihood.
 
 ```{r}
 out <- quanteda::convert(dfm_object, to = "stm")
@@ -60,13 +52,13 @@ model <- stm::stm(
 terms <- get_topic_terms(model, top_term_n = 10)
 ```
 
-**Learn More:** [Structural Topic Model](https://www.structuraltopicmodel.com/) | [STM Vignette](https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf)
+See: [Structural Topic Model](https://www.structuraltopicmodel.com/) · [STM Vignette](https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf)
 
-**Embedding-based Topics**
+## Embedding-based Topics
 
 Uses transformer embeddings with dimensionality reduction and clustering. Best for short texts, multilingual content, and semantic similarity.
 
-**AI Provider:**
+**Embedding providers:**
 
 | Provider | Model | Notes |
 |----------|-------|-------|
@@ -75,18 +67,10 @@ Uses transformer embeddings with dimensionality reduction and clustering. Best f
 | OpenAI | text-embedding-3-small, text-embedding-3-large | API key required |
 | Gemini | gemini-embedding-001 | API key required |
 
-Embeddings generated in Document Similarity are cached and reused automatically if the same provider/model is selected.
-
-**Backend Options:**
-
-| Backend | When to Use |
-|---------|-------------|
-| `"python"` | Full BERTopic features (default) |
-| `"r"` | No BERTopic installed |
-| `"auto"` | Auto-detect available backend |
+**Backends:** `"python"` (full BERTopic, default) · `"r"` (no BERTopic needed) · `"auto"`.
 
 ```{r}
-# With precomputed embeddings (Ollama, OpenAI, Gemini)
+# With precomputed embeddings
 embeddings <- get_best_embeddings(
   texts = united_tbl$united_texts,
   provider = "ollama",
@@ -108,113 +92,50 @@ results <- fit_embedding_model(
 )
 ```
 
-**R Backend Methods:** Format is `{dimred}_{clustering}` (e.g., `"umap_dbscan"`, `"tsne_kmeans"`, `"pca_hierarchical"`).
+R backend methods follow `{dimred}_{clustering}` (e.g., `"umap_dbscan"`, `"tsne_kmeans"`, `"pca_hierarchical"`).
 
-**Learn More:** [BERTopic](https://maartengr.github.io/BERTopic/) | [Sentence-BERT](https://www.sbert.net/)
+See: [BERTopic](https://maartengr.github.io/BERTopic/) · [Sentence-BERT](https://www.sbert.net/)
 
 ## AI Topic Labels
 
-AI generates label suggestions based on topic terms. Review and edit:
-
-1. **Generate**: AI creates draft labels from top terms
-2. **Review**: Examine suggestions in the output table
-3. **Edit**: Modify any labels that need refinement
-4. **Override**: Use manual labels field to replace AI suggestions
-
 ```{r}
-# AI suggests, human decides
-labels <- generate_topic_labels(
-  terms,
-  provider = "ollama"  # or "openai"
-)
-# Review and edit labels before final use
+labels <- generate_topic_labels(terms, provider = "ollama")
 ```
 
-## Topic-Grounded Content Generation
+AI generates draft labels; review and edit before final use.
 
-Generate draft content grounded in the topic model results rather than AI parametric knowledge. The LLM receives topic labels and term probabilities (beta scores), ensuring outputs are anchored to the input data.
+## Topic-Grounded Content
 
-### Workflow
+Generate draft content (survey items, research questions, theme descriptions, policy recommendations, interview questions) anchored to topic term probabilities rather than generic AI knowledge.
 
-1. **Run topic modeling** and optionally generate/edit topic labels
-2. **Select content type**: survey items, research questions, theme descriptions, policy recommendations, or interview questions
-3. **Generate drafts**: AI creates content using the top terms ordered by beta scores
-4. **Review and edit**: Examine all outputs before use
-5. **Export**: Download as CSV or Excel
-
-### Content Types
-
-| Type | Output | Use Case |
+| Content type | Output | Use case |
 |------|--------|----------|
-| Survey Item | Likert-scale statement | Scale development |
-| Research Question | RQ for literature review | Systematic reviews |
-| Theme Description | Qualitative theme summary | Thematic analysis |
-| Policy Recommendation | Action-oriented statement | Policy analysis |
-| Interview Question | Open-ended question | Qualitative research |
-
-### Example
+| `survey_item` | Likert-scale statement | Scale development |
+| `research_question` | RQ for literature review | Systematic reviews |
+| `theme_description` | Qualitative theme summary | Thematic analysis |
+| `policy_recommendation` | Action-oriented statement | Policy analysis |
+| `interview_question` | Open-ended question | Qualitative research |
 
 ```{r}
-# Get topic terms with beta scores
 top_terms <- get_topic_terms(model, top_term_n = 10)
 
-# Optional: Add topic labels
-topic_labels <- c("1" = "Digital Learning Tools", "2" = "Family Engagement")
-
-# Generate content grounded in topic terms
 content <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "survey_item",
   provider = "ollama",
   model = "llama3.2"
 )
-
-# Review before use
-print(content)
 ```
 
-**Prompt Format**
-
-The LLM receives structured prompts with the topic data:
-
-```
-Topic: Digital Learning Tools
-
-Top Terms (highest to lowest beta score):
-virtual (.035)
-manipulatives (.022)
-mathematical (.014)
-solving (.013)
-learning (.012)
-```
-
-This "topic-grounded" approach ensures content reflects the actual topic model results, not generic AI knowledge. Prompts include guidelines for person-first language and content-specific best practices.
-
-**Customizing Prompts:**
-
-```{r}
-# Get default prompts
-system_prompt <- get_content_type_prompt("survey_item")
-user_template <- get_content_type_user_template("survey_item")
-
-# Use custom prompts
-content <- generate_topic_content(
-  topic_terms_df = top_terms,
-  content_type = "custom",
-  system_prompt = "You are a survey methodology expert...",
-  user_prompt_template = "Create an item for: {topic_label}\nTerms: {terms}"
-)
-```
+The LLM receives topic labels plus terms with beta scores. Use `get_content_type_prompt()` / `get_content_type_user_template()` to inspect or override prompts.
 
 ## Topic Prevalence Modeling
 
-Model how topic prevalence varies with document-level covariates using count regression. Auto-selects between Poisson, Negative Binomial, and Zero-Inflated Negative Binomial based on data diagnostics (dispersion ratio and zero proportion).
+Model how topic prevalence varies with document covariates. Auto-selects Poisson, Negative Binomial, or Zero-Inflated NB based on dispersion ratio and zero proportion.
 
 ```{r}
-# Get topic proportions from STM gamma matrix
 gamma_matrix <- model$theta
 
-# Fit prevalence model for topic 1
 prevalence_result <- fit_topic_prevalence_model(
   topic_proportions = gamma_matrix[, 1],
   metadata = out$meta,
@@ -222,22 +143,20 @@ prevalence_result <- fit_topic_prevalence_model(
   model_type = "auto"
 )
 
-prevalence_result$model_type       # Selected model
-prevalence_result$summary          # Tidy coefficients with odds ratios
-prevalence_result$diagnostics      # Zero proportion, dispersion ratio
+prevalence_result$model_type
+prevalence_result$summary
+prevalence_result$diagnostics
 ```
 
-**Methods Comparison**
+## STM vs Embedding
 
 | Feature | STM | Embedding |
 |---------|-----|-----------|
 | Speed | Fast | Medium |
-| Metadata Support | Yes | No |
-| Short Texts | Poor | Good |
+| Metadata support | Yes | No |
+| Short texts | Poor | Good |
 | Multilingual | No | Yes |
 
-**When to Use:**
-
-- **STM:** Metadata analysis, covariate effects
-- **Embedding:** Short texts, semantic similarity (use `backend = "r"` if no BERTopic)
+- **STM:** metadata analysis, covariate effects
+- **Embedding:** short texts, semantic similarity (`backend = "r"` if no BERTopic)
 

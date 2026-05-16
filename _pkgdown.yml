@@ -234,11 +234,16 @@ reference:
   - validate_keyboard_navigation
 
 articles:
+- title: "Get Started"
+  navbar: ~
+  contents:
+  - installation
+  - python_environment
+  - quickstart
+
 - title: "Workflow"
   navbar: ~
   contents:
-  - quickstart
-  - installation
   - preprocessing
   - lexical_analysis
   - semantic_analysis
@@ -248,23 +253,27 @@ articles:
   navbar: ~
   contents:
   - ai_integration
-  - python_environment
   - multimodal_analysis
   - cybersecurity
   - web_accessibility
 
 navbar:
   structure:
-    left: [intro, reference, workflow, extensions, news]
+    left: [intro, reference, get_started, workflow, extensions, news]
     right: [search, github]
   components:
+    get_started:
+      text: Get Started
+      menu:
+      - text: Installation
+        href: articles/installation.html
+      - text: Python Environment
+        href: articles/python_environment.html
+      - text: Quickstart
+        href: articles/quickstart.html
     workflow:
       text: Workflow
       menu:
-      - text: Quickstart
-        href: articles/quickstart.html
-      - text: Installation
-        href: articles/installation.html
       - text: Preprocessing
         href: articles/preprocessing.html
       - text: Lexical Analysis
@@ -278,8 +287,6 @@ navbar:
       menu:
       - text: AI Integration
         href: articles/ai_integration.html
-      - text: Python Environment
-        href: articles/python_environment.html
       - text: Multimodal Analysis
         href: articles/multimodal_analysis.html
       - text: Cybersecurity

@@ -59,7 +59,7 @@ TextAnalysisR follows responsible AI principles with human oversight:
 
 - **AI Suggests**: LLMs generate draft labels, content, and
   recommendations
-- **Human Reviews**: You examine all AI outputs before use
+- **Human Reviews**: Examine all AI outputs before use
 - **Human Decides**: Edit, approve, or regenerate as needed
 - **Human Controls**: Override any AI suggestion with manual input
 
