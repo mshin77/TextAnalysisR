@@ -82,17 +82,8 @@ get_available_tokens <- function(final_tokens = NULL,
                                   processed_tokens = NULL,
                                   preprocessed_tokens = NULL,
                                   united_tbl = NULL) {
-  if (!is.null(final_tokens)) {
-    return(final_tokens)
-  }
-
-  if (!is.null(processed_tokens)) {
-    return(processed_tokens)
-  }
-
-  if (!is.null(preprocessed_tokens)) {
-    return(preprocessed_tokens)
-  }
+  tokens <- Find(Negate(is.null), list(final_tokens, processed_tokens, preprocessed_tokens))
+  if (!is.null(tokens)) return(tokens)
 
   if (!is.null(united_tbl) && "united_texts" %in% names(united_tbl)) {
     toks <- quanteda::tokens(united_tbl$united_texts, what = "word")
@@ -103,7 +94,7 @@ get_available_tokens <- function(final_tokens = NULL,
     return(toks)
   }
 
-  return(NULL)
+  NULL
 }
 
 #' @title Process Files

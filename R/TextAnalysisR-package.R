@@ -27,7 +27,7 @@ NULL
 #' **Data Processing:**
 #' - `import_files()`: Process various file formats
 #' - `unite_cols()`: Combine text columns
-#' - `prep_texts()`: Enhanced text preprocessing with validation
+#' - `prep_texts()`: Text preprocessing with validation
 #'
 #' **Topic Modeling:**
 #' - `find_optimal_k()`: Find optimal number of topics

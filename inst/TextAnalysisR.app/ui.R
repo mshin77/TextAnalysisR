@@ -40,11 +40,11 @@ ui <- fluidPage(
       `http-equiv` = "Content-Security-Policy",
       content = paste(
         "default-src 'self';",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.plot.ly https://translate.google.com http://translate.google.com https://translate.googleapis.com https://translate.googleusercontent.com https://translate-pa.googleapis.com https://static.cloudflareinsights.com;",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.plot.ly https://translate.google.com https://translate.googleapis.com https://translate.googleusercontent.com https://translate-pa.googleapis.com https://static.cloudflareinsights.com;",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://translate.googleapis.com https://translate.googleusercontent.com https://www.gstatic.com https://use.fontawesome.com https://cdnjs.cloudflare.com https://ka-f.fontawesome.com;",
         "font-src 'self' https://fonts.gstatic.com https://use.fontawesome.com https://cdnjs.cloudflare.com https://ka-f.fontawesome.com data:;",
-        "img-src 'self' data: https: http://translate.google.com https://www.gstatic.com https://translate.google.com;",
-        "connect-src 'self' http://127.0.0.1:* http://localhost:* https://translate.googleapis.com https://translate-pa.googleapis.com http://translate.googleapis.com https://cloudflareinsights.com;",
+        "img-src 'self' data: https: https://www.gstatic.com https://translate.google.com;",
+        "connect-src 'self' http://127.0.0.1:* http://localhost:* https://translate.googleapis.com https://translate-pa.googleapis.com https://cloudflareinsights.com;",
         "frame-src 'self' http: https: https://translate.google.com https://translate.googleusercontent.com;"
       )
     ),
@@ -2344,7 +2344,7 @@ Supports:
                 choices = list(
                   "Automatic" = "auto",
                   "Manual" = "manual",
-                  "Advanced" = "advanced"
+                  "Method" = "method"
                 ),
                 selected = "auto"
               ),
@@ -2361,7 +2361,7 @@ Supports:
               ),
 
               conditionalPanel(
-                condition = "input.clustering_approach == 'advanced'",
+                condition = "input.clustering_approach == 'method'",
                 selectInput(
                   "semantic_cluster_method",
                   "Algorithm",
@@ -2376,7 +2376,7 @@ Supports:
                 ),
                 tags$p(
                   tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
-                  tags$strong("Note:"), " Neural and Semantic models use transformer embeddings for advanced analysis.",
+                  tags$strong("Note:"), " Neural and Semantic models use transformer embeddings.",
                   style = "font-size: 16px; color: #6b7280; margin-top: 5px;"
                 ),
                 conditionalPanel(
@@ -2412,7 +2412,7 @@ Supports:
                 conditionalPanel(
                   condition = "input.semantic_cluster_method == 'semantic_unified'",
                   tags$h5("Unified Semantic Topic Modeling", style = "color: #10B981; font-weight: bold; margin-bottom: 10px;"),
-                  tags$p("Combines multiple approaches for robust topic modeling",
+                  tags$p("Combines multiple approaches for stable topic modeling",
                         style = "font-size: 16px; color: #6b7280; margin-bottom: 10px;"),
                   selectInput(
                     "unified_method",
@@ -2447,7 +2447,7 @@ Supports:
               style = "margin-top: 15px; margin-bottom: 15px;",
               tags$summary(
                 style = "cursor: pointer; color: #596D80; font-weight: 600;",
-                "Advanced Settings"
+                "More Settings"
               ),
               div(
                 style = "margin-top: 10px; padding: 10px; border-radius: 4px;",

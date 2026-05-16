@@ -30,4 +30,4 @@ py_install(c("bertopic", "sentence-transformers", "umap-learn", "hdbscan"))
 - Transformer-based embeddings
 - Semantic clustering (UMAP + HDBSCAN)
 - Document similarity analysis
-- Advanced topic visualization
+- Interactive topic visualization

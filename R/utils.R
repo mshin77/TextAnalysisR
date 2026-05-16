@@ -187,7 +187,7 @@ show_web_banner <- function(disabled = NULL) {
                   "Embedding analysis", "Large files (>10MB)")
   }
 
-  feature_list <- paste0("<li>", disabled, "</li>", collapse = "")
+  feature_list <- paste0("<li>", htmltools::htmlEscape(disabled), "</li>", collapse = "")
 
   shiny::tagList(
     shiny::tags$details(
@@ -2604,39 +2604,25 @@ validate_column_name <- function(col_name) {
 #' calculate_contrast_ratio("#111827", "#ffffff")  # Returns ~16:1 (Pass)
 #' calculate_contrast_ratio("#6b7280", "#4a5568")  # Returns ~2.8:1 (Fail)
 calculate_contrast_ratio <- function(foreground, background) {
-  hex_to_rgb <- function(hex) {
-    hex <- gsub("#", "", hex)
-    c(
-      strtoi(substr(hex, 1, 2), 16L),
-      strtoi(substr(hex, 3, 4), 16L),
-      strtoi(substr(hex, 5, 6), 16L)
-    ) / 255
-  }
+  l1 <- .relative_luminance(.hex_to_rgb(foreground))
+  l2 <- .relative_luminance(.hex_to_rgb(background))
+  lighter <- max(l1, l2)
+  darker <- min(l1, l2)
+  round((lighter + 0.05) / (darker + 0.05), 2)
+}
 
-  relative_luminance <- function(rgb) {
-    rgb <- sapply(rgb, function(val) {
-      if (val <= 0.03928) {
-        val / 12.92
-      } else {
-        ((val + 0.055) / 1.055)^2.4
-      }
-    })
-    0.2126 * rgb[1] + 0.7152 * rgb[2] + 0.0722 * rgb[3]
-  }
+.hex_to_rgb <- function(hex) {
+  hex <- gsub("#", "", hex)
+  c(
+    strtoi(substr(hex, 1, 2), 16L),
+    strtoi(substr(hex, 3, 4), 16L),
+    strtoi(substr(hex, 5, 6), 16L)
+  ) / 255
+}
 
-  fg_rgb <- hex_to_rgb(foreground)
-  bg_rgb <- hex_to_rgb(background)
-
-  l1 <- relative_luminance(fg_rgb)
-  l2 <- relative_luminance(bg_rgb)
-
-  if (l1 > l2) {
-    ratio <- (l1 + 0.05) / (l2 + 0.05)
-  } else {
-    ratio <- (l2 + 0.05) / (l1 + 0.05)
-  }
-
-  return(round(ratio, 2))
+.relative_luminance <- function(rgb) {
+  rgb <- ifelse(rgb <= 0.03928, rgb / 12.92, ((rgb + 0.055) / 1.055)^2.4)
+  0.2126 * rgb[1] + 0.7152 * rgb[2] + 0.0722 * rgb[3]
 }
 
 #' Check WCAG Contrast Compliance
@@ -3317,6 +3303,12 @@ show_guide_modal <- function(guide_name, title, size = "l") {
 
   if (!requireNamespace("htmltools", quietly = TRUE)) {
     stop("The 'htmltools' package is required for this function.")
+  }
+
+  # strip any directory components from guide_name to block path traversal
+  guide_name <- basename(as.character(guide_name))
+  if (!grepl("^[A-Za-z0-9_-]+$", guide_name)) {
+    stop("Invalid guide_name; allowed: letters, digits, underscore, hyphen.")
   }
 
   guide_path <- system.file(

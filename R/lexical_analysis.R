@@ -15,6 +15,49 @@ NULL
 
 .lexdiv_cache <- new.env(hash = TRUE, parent = emptyenv())
 
+.mtld_one_direction <- function(toks, factor_size = 0.72) {
+  n_toks <- length(toks)
+  seen <- new.env(hash = TRUE, size = n_toks)
+  unique_count <- 0
+  factors <- 0
+  start_idx <- 1
+
+  for (i in seq_len(n_toks)) {
+    token <- toks[i]
+    if (!exists(token, envir = seen, inherits = FALSE)) {
+      assign(token, TRUE, envir = seen)
+      unique_count <- unique_count + 1
+    }
+    current_length <- i - start_idx + 1
+    current_ttr <- unique_count / current_length
+
+    if (current_ttr <= factor_size) {
+      factors <- factors + 1
+      rm(list = ls(seen), envir = seen)
+      unique_count <- 0
+      start_idx <- i + 1
+    }
+  }
+
+  if (start_idx <= n_toks) {
+    remaining_length <- n_toks - start_idx + 1
+    if (remaining_length > 0 && unique_count > 0) {
+      final_ttr <- unique_count / remaining_length
+      factors <- factors + (1 - final_ttr) / (1 - factor_size)
+    }
+  }
+
+  if (factors > 0) n_toks / factors else NA_real_
+}
+
+.calc_mtld <- function(tokens, factor_size = 0.72) {
+  if (length(tokens) < 10) return(NA_real_)
+  mean(c(
+    .mtld_one_direction(tokens, factor_size),
+    .mtld_one_direction(rev(tokens), factor_size)
+  ), na.rm = TRUE)
+}
+
 #' Clear Lexical Diversity Cache
 #'
 #' @description
@@ -585,57 +628,10 @@ lexical_diversity_analysis <- function(x,
 
     if (mtld_requested) {
       tryCatch({
-        calculate_mtld <- function(tokens, factor_size = 0.72) {
-          n <- length(tokens)
-          if (n < 10) return(NA_real_)
-
-          mtld_one_direction <- function(toks) {
-            n_toks <- length(toks)
-            seen <- new.env(hash = TRUE, size = n_toks)
-            unique_count <- 0
-            factors <- 0
-            start_idx <- 1
-
-            for (i in seq_len(n_toks)) {
-              token <- toks[i]
-              if (!exists(token, envir = seen, inherits = FALSE)) {
-                assign(token, TRUE, envir = seen)
-                unique_count <- unique_count + 1
-              }
-              current_length <- i - start_idx + 1
-              current_ttr <- unique_count / current_length
-
-              if (current_ttr <= factor_size) {
-                factors <- factors + 1
-                rm(list = ls(seen), envir = seen)
-                unique_count <- 0
-                start_idx <- i + 1
-              }
-            }
-
-            if (start_idx <= n_toks) {
-              remaining_length <- n_toks - start_idx + 1
-              if (remaining_length > 0 && unique_count > 0) {
-                final_ttr <- unique_count / remaining_length
-                partial <- (1 - final_ttr) / (1 - factor_size)
-                factors <- factors + partial
-              }
-            }
-
-            if (factors > 0) n_toks / factors else NA_real_
-          }
-
-          forward_mtld <- mtld_one_direction(tokens)
-          backward_mtld <- mtld_one_direction(rev(tokens))
-          mean(c(forward_mtld, backward_mtld), na.rm = TRUE)
-        }
-
         tokens_source <- if (is_tokens_input) x else seq_tokens
 
         mtld_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
-          doc_tokens <- as.character(tokens_source[[i]])
-          if (length(doc_tokens) < 10) return(NA_real_)
-          calculate_mtld(doc_tokens)
+          .calc_mtld(as.character(tokens_source[[i]]))
         }, numeric(1))
 
         lexdiv_results$MTLD <- as.numeric(mtld_values)
@@ -2030,17 +2026,14 @@ render_displacy_ent <- function(text, model = "en_core_web_sm", colors = NULL) {
     spacy <- reticulate::import("spacy")
     displacy_module <- reticulate::import("spacy.displacy")
 
-    # Load model
     nlp <- spacy$load(model)
     doc <- nlp(text)
 
-    # Build options with custom colors if provided
     options <- list()
     if (!is.null(colors) && length(colors) > 0) {
       options$colors <- colors
     }
 
-    # Render as HTML
     if (length(options) > 0) {
       html <- displacy_module$render(doc, style = "ent", page = FALSE, options = options)
     } else {
@@ -2077,14 +2070,11 @@ render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") 
     spacy <- reticulate::import("spacy")
     displacy_module <- reticulate::import("spacy.displacy")
 
-    # Load model
     nlp <- spacy$load(model)
     doc <- nlp(text)
 
-    # Render options
     options <- list(compact = compact)
 
-    # Render as SVG
     svg <- displacy_module$render(doc, style = "dep", options = options, page = FALSE)
 
     return(as.character(svg))
@@ -2103,6 +2093,29 @@ render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") 
 
 # Package-level spaCy instance
 .spacy_env <- new.env(parent = emptyenv())
+
+.spacy_prepare_texts <- function(x) {
+  if (inherits(x, "tokens")) {
+    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
+    doc_names <- quanteda::docnames(x)
+  } else if (is.character(x)) {
+    texts <- x
+    doc_names <- names(x) %||% paste0("text", seq_along(texts))
+  } else {
+    stop("x must be a character vector or quanteda tokens object")
+  }
+  list(texts_list = as.list(unname(texts)), doc_names = doc_names)
+}
+
+.map_spacy_doc_ids <- function(df, doc_names) {
+  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
+    df$doc_id <- as.character(df$doc_id)
+    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
+    matched <- doc_id_map[df$doc_id]
+    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
+  }
+  df
+}
 
 #' Initialize spaCy NLP
 #'
@@ -2272,26 +2285,10 @@ spacy_parse_full <- function(x,
     init_spacy_nlp(model)
   }
 
- # Handle quanteda tokens objects
-  if (inherits(x, "tokens")) {
-    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
-    doc_names <- quanteda::docnames(x)
-  } else if (is.character(x)) {
-    texts <- x
-    doc_names <- names(x)
-    if (is.null(doc_names)) {
-      doc_names <- paste0("text", seq_along(texts))
-    }
-  } else {
-    stop("x must be a character vector or quanteda tokens object")
-  }
+  prepared <- .spacy_prepare_texts(x)
 
-  # Convert to list for Python
-  texts_list <- as.list(unname(texts))
-
-  # Call Python method
   result <- .spacy_env$nlp$parse_to_dataframe(
-    texts_list,
+    prepared$texts_list,
     include_pos = pos,
     include_tag = tag,
     include_lemma = lemma,
@@ -2300,18 +2297,8 @@ spacy_parse_full <- function(x,
     include_morph = morph
   )
 
-  # Convert pandas DataFrame to R data.frame
   df <- as.data.frame(reticulate::py_to_r(result))
-
-  # Map doc_id from text1, text2, ... to actual document names
-  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    df$doc_id <- as.character(df$doc_id)
-    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
-    matched <- doc_id_map[df$doc_id]
-    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
-  }
-
-  return(df)
+  .map_spacy_doc_ids(df, prepared$doc_names)
 }
 
 #' Lemmatize Texts with spaCy
@@ -2342,41 +2329,15 @@ spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
     init_spacy_nlp(model)
   }
 
-  # Handle quanteda tokens objects
-  if (inherits(x, "tokens")) {
-    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
-    doc_names <- quanteda::docnames(x)
-  } else if (is.character(x)) {
-    texts <- x
-    doc_names <- names(x)
-    if (is.null(doc_names)) {
-      doc_names <- paste0("text", seq_along(texts))
-    }
-  } else {
-    stop("x must be a character vector or quanteda tokens object")
-  }
+  prepared <- .spacy_prepare_texts(x)
 
-  # Convert to list for Python
-  texts_list <- as.list(unname(texts))
-
-  # Call fast Python method
   result <- .spacy_env$nlp$lemmatize(
-    texts_list,
+    prepared$texts_list,
     batch_size = as.integer(batch_size)
   )
 
-  # Convert pandas DataFrame to R data.frame
   df <- as.data.frame(reticulate::py_to_r(result))
-
-  # Map doc_id from text1, text2, ... to actual document names
-  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    df$doc_id <- as.character(df$doc_id)
-    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
-    matched <- doc_id_map[df$doc_id]
-    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
-  }
-
-  return(df)
+  .map_spacy_doc_ids(df, prepared$doc_names)
 }
 
 #' Extract Named Entities with spaCy
@@ -2408,33 +2369,10 @@ spacy_extract_entities <- function(x, model = "en_core_web_sm") {
     init_spacy_nlp(model)
   }
 
-  # Handle quanteda tokens objects
-  if (inherits(x, "tokens")) {
-    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
-    doc_names <- quanteda::docnames(x)
-  } else if (is.character(x)) {
-    texts <- x
-    doc_names <- names(x)
-    if (is.null(doc_names)) {
-      doc_names <- paste0("text", seq_along(texts))
-    }
-  } else {
-    stop("x must be a character vector or quanteda tokens object")
-  }
-
-  texts_list <- as.list(unname(texts))
-  result <- .spacy_env$nlp$get_entities(texts_list)
+  prepared <- .spacy_prepare_texts(x)
+  result <- .spacy_env$nlp$get_entities(prepared$texts_list)
   df <- as.data.frame(reticulate::py_to_r(result))
-
-  # Map doc_id
-  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    df$doc_id <- as.character(df$doc_id)
-    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
-    matched <- doc_id_map[df$doc_id]
-    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
-  }
-
-  return(df)
+  .map_spacy_doc_ids(df, prepared$doc_names)
 }
 
 #' Extract Noun Chunks
@@ -2460,32 +2398,10 @@ extract_noun_chunks <- function(x, model = "en_core_web_sm") {
     init_spacy_nlp(model)
   }
 
-  if (inherits(x, "tokens")) {
-    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
-    doc_names <- quanteda::docnames(x)
-  } else if (is.character(x)) {
-    texts <- x
-    doc_names <- names(x)
-    if (is.null(doc_names)) {
-      doc_names <- paste0("text", seq_along(texts))
-    }
-  } else {
-    stop("x must be a character vector or quanteda tokens object")
-  }
-
-  texts_list <- as.list(unname(texts))
-  result <- .spacy_env$nlp$get_noun_chunks(texts_list)
+  prepared <- .spacy_prepare_texts(x)
+  result <- .spacy_env$nlp$get_noun_chunks(prepared$texts_list)
   df <- as.data.frame(reticulate::py_to_r(result))
-
-  # Map doc_id
-  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    df$doc_id <- as.character(df$doc_id)
-    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
-    matched <- doc_id_map[df$doc_id]
-    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
-  }
-
-  return(df)
+  .map_spacy_doc_ids(df, prepared$doc_names)
 }
 
 #' Extract Subjects and Objects
@@ -2510,31 +2426,10 @@ extract_subjects_objects <- function(x, model = "en_core_web_sm") {
     init_spacy_nlp(model)
   }
 
-  if (inherits(x, "tokens")) {
-    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
-    doc_names <- quanteda::docnames(x)
-  } else if (is.character(x)) {
-    texts <- x
-    doc_names <- names(x)
-    if (is.null(doc_names)) {
-      doc_names <- paste0("text", seq_along(texts))
-    }
-  } else {
-    stop("x must be a character vector or quanteda tokens object")
-  }
-
-  texts_list <- as.list(unname(texts))
-  result <- .spacy_env$nlp$get_subjects_objects(texts_list)
+  prepared <- .spacy_prepare_texts(x)
+  result <- .spacy_env$nlp$get_subjects_objects(prepared$texts_list)
   df <- as.data.frame(reticulate::py_to_r(result))
-
-  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    df$doc_id <- as.character(df$doc_id)
-    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
-    matched <- doc_id_map[df$doc_id]
-    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
-  }
-
-  return(df)
+  .map_spacy_doc_ids(df, prepared$doc_names)
 }
 
 #' Get Sentences
@@ -2559,31 +2454,10 @@ get_sentences <- function(x, model = "en_core_web_sm") {
     init_spacy_nlp(model)
   }
 
-  if (inherits(x, "tokens")) {
-    texts <- vapply(as.list(x), function(toks) paste(toks, collapse = " "), character(1))
-    doc_names <- quanteda::docnames(x)
-  } else if (is.character(x)) {
-    texts <- x
-    doc_names <- names(x)
-    if (is.null(doc_names)) {
-      doc_names <- paste0("text", seq_along(texts))
-    }
-  } else {
-    stop("x must be a character vector or quanteda tokens object")
-  }
-
-  texts_list <- as.list(unname(texts))
-  result <- .spacy_env$nlp$get_sentences(texts_list)
+  prepared <- .spacy_prepare_texts(x)
+  result <- .spacy_env$nlp$get_sentences(prepared$texts_list)
   df <- as.data.frame(reticulate::py_to_r(result))
-
-  if (nrow(df) > 0 && "doc_id" %in% names(df) && length(doc_names) > 0) {
-    df$doc_id <- as.character(df$doc_id)
-    doc_id_map <- stats::setNames(doc_names, paste0("text", seq_along(doc_names)))
-    matched <- doc_id_map[df$doc_id]
-    df$doc_id <- ifelse(is.na(matched), df$doc_id, matched)
-  }
-
-  return(df)
+  .map_spacy_doc_ids(df, prepared$doc_names)
 }
 
 #' Calculate Word Similarity
@@ -2984,7 +2858,6 @@ calculate_weighted_log_odds <- function(dfm_object,
     dplyr::summarise(n = sum(count), .groups = "drop") %>%
     dplyr::filter(n >= min_count)
 
-  # Apply tidylo weighted log odds
   result <- tidylo::bind_log_odds(
     grouped_counts,
     set = !!rlang::sym(group_var),
@@ -2992,7 +2865,6 @@ calculate_weighted_log_odds <- function(dfm_object,
     n = n
   )
 
-  # Get top terms per group by absolute weighted log odds
   result <- result %>%
     dplyr::group_by(.data[[group_var]]) %>%
     dplyr::slice_max(abs(.data$log_odds_weighted), n = top_n, with_ties = FALSE) %>%
@@ -3444,12 +3316,11 @@ calculate_dispersion_metrics <- function(tokens_object, terms) {
     doc_count <- sum(doc_counts > 0)
     doc_ratio <- doc_count / n_docs
 
-    # Calculate Juilland's D
     if (total_freq > 0 && n_docs > 1) {
       expected <- total_freq / n_docs
-      cv <- stats::sd(doc_counts) / mean(doc_counts)  # Coefficient of variation
+      cv <- stats::sd(doc_counts) / mean(doc_counts)
       juilland_d <- 1 - (cv / sqrt(n_docs - 1))
-      juilland_d <- max(0, min(1, juilland_d))  # Clamp to 0-1
+      juilland_d <- max(0, min(1, juilland_d))
     } else {
       juilland_d <- NA_real_
     }

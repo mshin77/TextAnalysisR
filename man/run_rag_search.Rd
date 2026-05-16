@@ -2,7 +2,7 @@
 % Please edit documentation in R/semantic_analysis.R
 \name{run_rag_search}
 \alias{run_rag_search}
-\title{RAG-Enhanced Semantic Search}
+\title{RAG Semantic Search}
 \usage{
 run_rag_search(
   query,

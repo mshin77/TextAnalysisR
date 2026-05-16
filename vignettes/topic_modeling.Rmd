@@ -114,7 +114,7 @@ results <- fit_embedding_model(
 
 ## AI Topic Labels
 
-AI generates label suggestions based on topic terms. You review and edit:
+AI generates label suggestions based on topic terms. Review and edit:
 
 1. **Generate**: AI creates draft labels from top terms
 2. **Review**: Examine suggestions in the output table

@@ -5,6 +5,41 @@ NULL
 # Semantic Analysis Functions
 # Functions for semantic analysis, embeddings, and document clustering
 
+.cosine_sim <- function(a, b) {
+  sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+}
+
+.resolve_llm_setup <- function(provider, model, api_key, defaults, strict_validate = FALSE) {
+  if (file.exists(".env") && requireNamespace("dotenv", quietly = TRUE)) {
+    dotenv::load_dot_env()
+  }
+  if (is.null(model)) model <- defaults[[provider]]
+  if (provider %in% c("openai", "gemini")) {
+    if (is.null(api_key)) {
+      env_var <- switch(provider, openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
+      api_key <- Sys.getenv(env_var)
+    }
+    if (!nzchar(api_key)) stop(.missing_api_key_message(provider, "package"), call. = FALSE)
+    if (strict_validate) {
+      validation <- validate_api_key(api_key, strict = FALSE)
+      if (!validation$valid) stop(sprintf("Invalid API key format: %s", validation$error))
+    }
+  }
+  list(provider = provider, model = model, api_key = api_key)
+}
+
+.empty_sentiment_row <- function(doc_name) {
+  n <- length(doc_name)
+  data.frame(
+    document = doc_name,
+    sentiment = rep(NA_character_, n),
+    sentiment_score = rep(NA_real_, n),
+    confidence = rep(NA_real_, n),
+    explanation = rep(NA_character_, n),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' @title Calculate Document Similarity
 #'
 #' @description
@@ -739,13 +774,9 @@ cluster_embeddings <- function(data_matrix,
             if (is.vector(embedding_centroids)) embedding_centroids <- matrix(embedding_centroids, nrow = 1)
             embedding_centroids <- t(embedding_centroids)
 
-            cosine_sim <- function(a, b) {
-              sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
-            }
-
             for (idx in noise_idx) {
               point <- data_matrix[idx, ]
-              similarities <- apply(embedding_centroids, 1, function(c) cosine_sim(point, c))
+              similarities <- apply(embedding_centroids, 1, function(c) .cosine_sim(point, c))
               clusters[idx] <- valid_clusters[which.max(similarities)]
             }
           } else {
@@ -1133,12 +1164,6 @@ generate_cluster_labels <- function(cluster_keywords,
     )
   }
 
-  # Load .env if exists
-  if (file.exists(".env") && requireNamespace("dotenv", quietly = TRUE)) {
-    dotenv::load_dot_env()
-  }
-
-  # Auto-detect provider
   if (provider == "auto") {
     if (check_ollama(verbose = FALSE)) {
       provider <- "ollama"
@@ -1154,37 +1179,16 @@ generate_cluster_labels <- function(cluster_keywords,
     }
   }
 
-  # Set provider-based default model
-  if (is.null(model)) {
-    model <- switch(provider,
-      "ollama" = {
-        recommended <- get_recommended_ollama_model(verbose = verbose)
-        if (is.null(recommended)) "tinyllama" else recommended
-      },
-      "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-2.5-flash"
-    )
-  }
-
-  # Resolve API key for cloud providers
-  if (provider %in% c("openai", "gemini") && is.null(api_key)) {
-    api_key <- switch(provider,
-      "openai" = Sys.getenv("OPENAI_API_KEY"),
-      "gemini" = Sys.getenv("GEMINI_API_KEY")
-    )
-  }
-
-  # Validate API key for cloud providers
-  if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
-    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
-  }
-
-  if (provider %in% c("openai", "gemini")) {
-    validation <- validate_api_key(api_key, strict = FALSE)
-    if (!validation$valid) {
-      stop(sprintf("Invalid API key format: %s", validation$error))
-    }
-  }
+  ollama_default <- if (provider == "ollama") {
+    get_recommended_ollama_model(verbose = verbose) %||% "tinyllama"
+  } else NULL
+  setup <- .resolve_llm_setup(
+    provider, model, api_key,
+    defaults = list(ollama = ollama_default, openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash"),
+    strict_validate = TRUE
+  )
+  model <- setup$model
+  api_key <- setup$api_key
 
   if (verbose) {
     message("Generating AI labels for ", length(cluster_keywords), " clusters using ", provider, " (", model, ")...")
@@ -1239,7 +1243,7 @@ Generated Topic Label:"
     )
 
     tryCatch({
-      # Use unified call_llm_api wrapper for all providers
+      # Call LLM
       response_text <- call_llm_api(
         provider = provider,
         system_prompt = "You are a data scientist specializing in generating concise cluster labels.",
@@ -1265,12 +1269,7 @@ Generated Topic Label:"
       gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
     })
 
-    # Rate limiting: cloud APIs need more delay
-    if (provider %in% c("openai", "gemini")) {
-      Sys.sleep(1)
-    } else {
-      Sys.sleep(0.5)
-    }
+    Sys.sleep(if (provider %in% c("openai", "gemini")) 1 else 0.5)
   }
 
   if (verbose) message("AI label generation completed")
@@ -2677,40 +2676,18 @@ analyze_sentiment_llm <- function(texts,
   }
 
   # Set document names if not provided
-  if (is.null(doc_names)) {
-    doc_names <- paste0("text", seq_along(texts))
-  }
-
+  doc_names <- doc_names %||% paste0("text", seq_along(texts))
   if (length(texts) != length(doc_names)) {
     stop("Length of texts and doc_names must match")
   }
 
-  # Load .env if exists
-  if (file.exists(".env") && requireNamespace("dotenv", quietly = TRUE)) {
-    dotenv::load_dot_env()
-  }
-
-  # Set provider-based default model
-  if (is.null(model)) {
-    model <- switch(provider,
-      "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-2.5-flash",
-      "ollama" = "tinyllama"
-    )
-  }
-
-  # Resolve API key for cloud providers
-  if (provider %in% c("openai", "gemini") && is.null(api_key)) {
-    api_key <- switch(provider,
-      "openai" = Sys.getenv("OPENAI_API_KEY"),
-      "gemini" = Sys.getenv("GEMINI_API_KEY")
-    )
-  }
-
-  # Validate API key for cloud providers
-  if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
-    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
-  }
+  # Resolve provider, model, and API key
+  setup <- .resolve_llm_setup(
+    provider, model, api_key,
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash", ollama = "tinyllama")
+  )
+  model <- setup$model
+  api_key <- setup$api_key
 
   if (verbose) {
     message(sprintf("Analyzing sentiment for %d texts using %s (%s)...",
@@ -2740,14 +2717,7 @@ Important:
 - Respond ONLY with valid JSON, no additional text")
 
   # Process texts in batches
-  results <- data.frame(
-    document = character(),
-    sentiment = character(),
-    sentiment_score = numeric(),
-    confidence = numeric(),
-    explanation = character(),
-    stringsAsFactors = FALSE
-  )
+  results <- .empty_sentiment_row(character(0))
 
   n_batches <- ceiling(length(texts) / batch_size)
 
@@ -2761,48 +2731,33 @@ Important:
       message(sprintf("Processing batch %d/%d...", i, n_batches))
     }
 
-    # Create user prompt with numbered texts
-    user_prompt <- "Analyze the sentiment of these texts:\n\n"
-    for (j in seq_along(batch_texts)) {
-      user_prompt <- paste0(user_prompt, sprintf("Text %d: %s\n\n", j, batch_texts[j]))
-    }
+    # Build user prompt with numbered texts
+    user_prompt <- paste0(
+      "Analyze the sentiment of these texts:\n\n",
+      paste(sprintf("Text %d: %s\n", seq_along(batch_texts), batch_texts), collapse = "\n")
+    )
 
     # Call LLM
-    response <- tryCatch({
+    response <- tryCatch(
       call_llm_api(
-        provider = provider,
-        system_prompt = system_prompt,
-        user_prompt = user_prompt,
-        model = model,
-        temperature = 0,
-        max_tokens = 500,
-        api_key = api_key
-      )
-    }, error = function(e) {
-      warning(sprintf("Batch %d failed: %s", i, e$message))
-      return(NULL)
-    })
+        provider = provider, system_prompt = system_prompt, user_prompt = user_prompt,
+        model = model, temperature = 0, max_tokens = 500, api_key = api_key
+      ),
+      error = function(e) {
+        warning(sprintf("Batch %d failed: %s", i, e$message))
+        NULL
+      }
+    )
 
     if (is.null(response)) {
-      # Add failed batch with NA values
-      for (j in seq_along(batch_texts)) {
-        results <- rbind(results, data.frame(
-          document = batch_names[j],
-          sentiment = NA_character_,
-          sentiment_score = NA_real_,
-          confidence = NA_real_,
-          explanation = NA_character_,
-          stringsAsFactors = FALSE
-        ))
-      }
+      # Failed batch: NA rows
+      results <- rbind(results, .empty_sentiment_row(batch_names))
       next
     }
 
     # Parse JSON response
     parsed <- tryCatch({
-      # Clean response - extract JSON array
       json_str <- response
-      # Find JSON array boundaries
       start_bracket <- regexpr("\\[", json_str)
       end_bracket <- regexpr("\\](?=[^\\]]*$)", json_str, perl = TRUE)
       if (start_bracket > 0 && end_bracket > 0) {
@@ -2811,20 +2766,11 @@ Important:
       jsonlite::fromJSON(json_str)
     }, error = function(e) {
       warning(sprintf("Failed to parse JSON response for batch %d: %s", i, e$message))
-      return(NULL)
+      NULL
     })
 
     if (is.null(parsed) || length(parsed) == 0) {
-      for (j in seq_along(batch_texts)) {
-        results <- rbind(results, data.frame(
-          document = batch_names[j],
-          sentiment = NA_character_,
-          sentiment_score = NA_real_,
-          confidence = NA_real_,
-          explanation = NA_character_,
-          stringsAsFactors = FALSE
-        ))
-      }
+      results <- rbind(results, .empty_sentiment_row(batch_names))
       next
     }
 
@@ -2841,23 +2787,12 @@ Important:
           stringsAsFactors = FALSE
         ))
       } else {
-        results <- rbind(results, data.frame(
-          document = batch_names[j],
-          sentiment = NA_character_,
-          sentiment_score = NA_real_,
-          confidence = NA_real_,
-          explanation = NA_character_,
-          stringsAsFactors = FALSE
-        ))
+        results <- rbind(results, .empty_sentiment_row(batch_names[j]))
       }
     }
 
     # Rate limiting
-    if (provider %in% c("openai", "gemini")) {
-      Sys.sleep(1)
-    } else {
-      Sys.sleep(0.5)
-    }
+    Sys.sleep(if (provider %in% c("openai", "gemini")) 1 else 0.5)
   }
 
   # Remove explanation column if not requested
@@ -2865,7 +2800,7 @@ Important:
     results$explanation <- NULL
   }
 
-  # Calculate summary statistics
+  # Summary statistics
   valid_results <- results[!is.na(results$sentiment), ]
   summary_stats <- list(
     total_documents = length(texts),
@@ -3357,9 +3292,8 @@ plot_cross_category_heatmap <- function(similarity_data,
     stop("Package 'stringr' is required. Install with: install.packages('stringr')")
   }
 
-  # Detect input type: data frame (long format) or matrix
+  # Branch on input type: long-format data frame or matrix
   if (is.data.frame(similarity_data)) {
-    # Long-format data frame input
     plot_data <- similarity_data
 
     # Validate required columns
@@ -3369,7 +3303,7 @@ plot_cross_category_heatmap <- function(similarity_data,
       stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
     }
 
-    # Rename columns for internal use
+    # Rename to internal names
     plot_data <- plot_data %>%
       dplyr::rename(
         row_doc = !!rlang::sym(row_var),
@@ -3378,7 +3312,7 @@ plot_cross_category_heatmap <- function(similarity_data,
         col_category = !!rlang::sym(category_var)
       )
 
-    # Handle display variables for tooltips
+    # Display columns for tooltips
     if (!is.null(row_display_var) && row_display_var %in% names(similarity_data)) {
       plot_data$row_display <- similarity_data[[row_display_var]]
     } else {
@@ -3391,7 +3325,7 @@ plot_cross_category_heatmap <- function(similarity_data,
       plot_data$col_display <- plot_data$col_doc
     }
 
-    # Create truncated labels
+    # Truncated labels
     plot_data <- plot_data %>%
       dplyr::mutate(
         row_label_trunc = stringr::str_trunc(.data$row_doc, label_max_chars),
@@ -3420,10 +3354,9 @@ plot_cross_category_heatmap <- function(similarity_data,
       col_order <- unique(plot_data$col_label_trunc)
     }
 
-    # Get category levels
+    # Build final plot data with factor levels and tooltips
     cat_levels <- unique(plot_data$col_category)
 
-    # Build final plot data
     plot_data <- plot_data %>%
       dplyr::mutate(
         row_label_trunc = factor(.data$row_label_trunc, levels = rev(row_order)),
@@ -3437,7 +3370,7 @@ plot_cross_category_heatmap <- function(similarity_data,
       )
 
   } else if (is.matrix(similarity_data)) {
-    # Matrix input - extract cross-category data
+    # Matrix input: extract cross-category data
     if (is.null(docs_data) || is.null(row_category) || is.null(col_categories)) {
       stop("For matrix input, docs_data, row_category, and col_categories are required")
     }
@@ -3727,7 +3660,7 @@ plot_similarity_heatmap <- function(similarity_matrix,
 }
 
 
-#' RAG-Enhanced Semantic Search
+#' RAG Semantic Search
 #'
 #' @description
 #' Simple in-memory RAG (Retrieval Augmented Generation) for question-answering
@@ -3801,7 +3734,7 @@ run_rag_search <- function(
 ) {
   provider <- match.arg(provider)
 
-  # Get API key from environment if not provided (not needed for Ollama)
+  # API key for cloud providers (Ollama runs locally, no key needed)
   if (provider != "ollama") {
     if (is.null(api_key)) {
       api_key <- switch(provider,
@@ -3842,7 +3775,7 @@ run_rag_search <- function(
     ))
   }
 
-  # Set default models based on provider
+  # Default models per provider
   if (is.null(embedding_model)) {
     embedding_model <- switch(provider,
       "ollama" = "nomic-embed-text",
@@ -3859,7 +3792,7 @@ run_rag_search <- function(
     )
   }
 
-  # Limit top_k to available documents
+  # Cap top_k at available documents
   top_k <- min(top_k, length(documents))
 
   # Step 1: Generate embeddings for all documents
@@ -3907,17 +3840,11 @@ run_rag_search <- function(
   }
 
   # Step 3: Calculate cosine similarity between query and all documents
-  # get_api_embeddings returns a matrix directly
   query_vec <- as.numeric(query_embedding[1, ])
   doc_matrix <- as.matrix(doc_embeddings)
 
-  # Cosine similarity: dot(a, b) / (norm(a) * norm(b))
-  cosine_sim <- function(a, b) {
-    sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
-  }
-
   similarities <- apply(doc_matrix, 1, function(doc_vec) {
-    cosine_sim(query_vec, doc_vec)
+    .cosine_sim(query_vec, doc_vec)
   })
 
   # Step 4: Get top-k most similar documents
@@ -3969,7 +3896,7 @@ run_rag_search <- function(
     ))
   }
 
-  # Calculate confidence based on top similarity scores
+  # Confidence from top similarity scores
   avg_similarity <- mean(top_scores)
   confidence <- min(1.0, max(0.0, avg_similarity))
 

@@ -266,7 +266,7 @@ server <- shinyServer(function(input, output, session) {
         class = "status-sidebar-success",
         style = "margin-top: -10px;",
         tags$i(class = "fa fa-check-circle status-icon status-icon-info"),
-        tags$strong("PDF Enhanced Mode:"),
+        tags$strong("PDF Table Mode:"),
         tags$span(" Python available for better table extraction")
       )
     } else {
@@ -2186,7 +2186,7 @@ server <- shinyServer(function(input, output, session) {
       segment_opts <- input$segment_options %||% character(0)
       report_lines <- c(report_lines,
         paste("Status:", if (!is.null(preprocessed_init()) || !is.null(preprocessed_skip())) "Applied" else "Skipped"),
-        paste("Tokenization type:", if (!is.null(preprocessed_init())) "Advanced" else if (!is.null(preprocessed_skip())) "Basic" else "Not performed"),
+        paste("Tokenization type:", if (!is.null(preprocessed_init())) "Preprocessed" else if (!is.null(preprocessed_skip())) "Raw" else "Not performed"),
         "",
         "Options selected:",
         paste("  - Convert to lowercase:", if ("lowercase" %in% segment_opts) "Yes" else "No"),
@@ -9822,7 +9822,7 @@ server <- shinyServer(function(input, output, session) {
             "  1. Go to 'Preprocessing' tab\n",
             "  2. Upload data and unite text columns (Step 1)\n",
             "  3. Create DFM (Step 6: Document-Feature Matrix)\n\n",
-            "Optional Steps (for advanced analysis):\n",
+            "Optional Steps:\n",
             "  • Step 2: Segment Texts (Preprocess)\n",
             "  • Step 3: Remove Stopwords\n",
             "  • Step 4: Multi-Words\n",
@@ -12122,7 +12122,7 @@ server <- shinyServer(function(input, output, session) {
         class = "status-sidebar-warning",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$strong("No Embeddings Generated: "),
-        tags$span("Generate embeddings to enable advanced semantic analyses.")
+        tags$span("Generate embeddings to enable semantic analyses.")
       )
     }
   })
@@ -13293,8 +13293,8 @@ server <- shinyServer(function(input, output, session) {
       messages <- c(messages, "search results cleared")
     }
 
-    advanced_results$ai_labels <- NULL
-    advanced_results$cross_validation <- NULL
+    analysis_results$ai_labels <- NULL
+    analysis_results$cross_validation <- NULL
 
     if (length(messages) > 0) {
       showNotification(
@@ -14191,7 +14191,7 @@ server <- shinyServer(function(input, output, session) {
             embeddings_cache$n_docs <- nrow(unified_result$embeddings)
           }
 
-          advanced_results$semantic_unified <- unified_result
+          analysis_results$semantic_unified <- unified_result
 
           list(
             clusters = unified_result$topic_assignments,
@@ -14216,7 +14216,7 @@ server <- shinyServer(function(input, output, session) {
             seed = input$semantic_cluster_seed
           )
 
-          advanced_results$neural_topic_model <- neural_result
+          analysis_results$neural_topic_model <- neural_result
 
           list(
             clusters = neural_result$topic_assignments,
@@ -14303,7 +14303,7 @@ server <- shinyServer(function(input, output, session) {
     metrics_text <- paste(silhouette_text, davies_bouldin_text, calinski_harabasz_text, sep = " | ")
 
     auto_text <- if (!is.null(clustering_result$auto_detected) && clustering_result$auto_detected) {
-      detection_method <- clustering_result$detection_method %||% "Advanced Analysis"
+      detection_method <- clustering_result$detection_method %||% "Auto-detection"
       if (cluster_method == "dbscan") {
         outlier_info <- if (!is.null(clustering_result$noise_ratio)) {
           paste("| Outlier:", round(clustering_result$noise_ratio * 100, 1), "%")
@@ -14637,8 +14637,8 @@ server <- shinyServer(function(input, output, session) {
       paste0("method_comparison_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".csv")
     },
     content = function(file) {
-      if (!is.null(advanced_results$cross_validation)) {
-        results <- advanced_results$cross_validation$comparison_metrics
+      if (!is.null(analysis_results$cross_validation)) {
+        results <- analysis_results$cross_validation$comparison_metrics
         write.csv(results, file, row.names = FALSE)
         showNotification("Comparison results downloaded", type = "message", duration = 3)
       } else {
@@ -14652,8 +14652,8 @@ server <- shinyServer(function(input, output, session) {
       paste0("temporal_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".csv")
     },
     content = function(file) {
-      if (!is.null(advanced_results$temporal)) {
-        temporal_data <- advanced_results$temporal$temporal_metrics
+      if (!is.null(analysis_results$temporal)) {
+        temporal_data <- analysis_results$temporal$temporal_metrics
         write.csv(temporal_data, file, row.names = FALSE)
         showNotification("Temporal data downloaded", type = "message", duration = 3)
       } else {
@@ -17440,11 +17440,10 @@ server <- shinyServer(function(input, output, session) {
   clean_similarity_matrix <- TextAnalysisR::clean_similarity_matrix
   renumber_clusters_sequentially <- TextAnalysisR::renumber_clusters_sequentially
 
-  advanced_results <- reactiveValues(
+  analysis_results <- reactiveValues(
     ai_labels = NULL,
     cross_validation = NULL,
     temporal_analysis = NULL,
-    llm_enhanced = NULL,
     neural_topic_model = NULL
   )
 
@@ -17484,7 +17483,7 @@ server <- shinyServer(function(input, output, session) {
         verbose = FALSE
       )
 
-      advanced_results$temporal_analysis <- temporal_result
+      analysis_results$temporal_analysis <- temporal_result
 
       remove_notification_by_id("temporal_progress")
       show_completion_notification("Temporal analysis completed successfully!", duration = 3)
@@ -17496,9 +17495,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$temporal_evolution_plot <- plotly::renderPlotly({
-    req(advanced_results$temporal_analysis)
+    req(analysis_results$temporal_analysis)
 
-    result <- advanced_results$temporal_analysis
+    result <- analysis_results$temporal_analysis
     if (!is.null(result$evolution_plot)) {
       result$evolution_plot
     } else if (!is.null(result$drift_over_time)) {
@@ -17539,9 +17538,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$temporal_metrics_table <- DT::renderDataTable({
-    req(advanced_results$temporal_analysis)
+    req(analysis_results$temporal_analysis)
 
-    result <- advanced_results$temporal_analysis
+    result <- analysis_results$temporal_analysis
     if (!is.null(result$topic_stability)) {
       data.frame(
         Metric = c("Average Topic Stability", "Semantic Coherence", "Temporal Consistency"),
@@ -17612,7 +17611,7 @@ server <- shinyServer(function(input, output, session) {
           stm_results = if ("stm" %in% names(semantic_results)) semantic_results$stm else NULL,
           verbose = FALSE
         )
-        advanced_results$cross_validation <- validation_result
+        analysis_results$cross_validation <- validation_result
       }
 
       remove_notification_by_id("crossval_progress")
@@ -17625,9 +17624,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$crossval_comparison_plot <- plotly::renderPlotly({
-    req(advanced_results$cross_validation)
+    req(analysis_results$cross_validation)
 
-    result <- advanced_results$cross_validation
+    result <- analysis_results$cross_validation
 
     if (!is.null(result$comparison_metrics)) {
       metrics_df <- result$comparison_metrics
@@ -17674,9 +17673,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$crossval_results_table <- DT::renderDataTable({
-    req(advanced_results$cross_validation)
+    req(analysis_results$cross_validation)
 
-    result <- advanced_results$cross_validation
+    result <- analysis_results$cross_validation
 
     if (!is.null(result$validation_metrics)) {
       result$validation_metrics
@@ -17898,8 +17897,8 @@ server <- shinyServer(function(input, output, session) {
         verbose = FALSE
       )
 
-      advanced_results$ai_labels <- ai_labels
-      advanced_results$cluster_keywords <- cluster_keywords
+      analysis_results$ai_labels <- ai_labels
+      analysis_results$cluster_keywords <- cluster_keywords
 
       remove_notification_by_id("loadingAILabels")
       show_completion_notification("AI labels generated successfully!")
@@ -18613,7 +18612,7 @@ server <- shinyServer(function(input, output, session) {
           timeout = 300
         )
       } else if (provider == "openai" || provider == "gemini") {
-        enhanced_prompt <- paste0(
+        detailed_prompt <- paste0(
           user_prompt,
           "\n\nIMPORTANT: Provide a detailed, multi-paragraph analysis. ",
           "Include specific metric values in your explanation. ",
@@ -18621,7 +18620,7 @@ server <- shinyServer(function(input, output, session) {
         )
         if (provider == "openai") {
           TextAnalysisR::call_openai_chat(
-            user_prompt = enhanced_prompt,
+            user_prompt = detailed_prompt,
             system_prompt = system_prompt,
             model = model,
             api_key = api_key,
@@ -18630,7 +18629,7 @@ server <- shinyServer(function(input, output, session) {
           )
         } else {
           TextAnalysisR::call_gemini_chat(
-            user_prompt = enhanced_prompt,
+            user_prompt = detailed_prompt,
             system_prompt = system_prompt,
             model = model,
             api_key = api_key,
