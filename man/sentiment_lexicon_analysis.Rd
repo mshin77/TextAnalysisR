@@ -6,7 +6,7 @@
 \usage{
 sentiment_lexicon_analysis(
   dfm_object,
-  lexicon = "afinn",
+  lexicon = "bing",
   texts_df = NULL,
   feature_type = "words",
   ngram_range = 2,
@@ -16,7 +16,7 @@ sentiment_lexicon_analysis(
 \arguments{
 \item{dfm_object}{A quanteda DFM object (unigram or n-gram)}
 
-\item{lexicon}{Lexicon to use: "afinn", "bing", or "nrc" (default: "afinn")}
+\item{lexicon}{Lexicon to use: "afinn", "bing", or "nrc" (default: "bing")}
 
 \item{texts_df}{Optional data frame with original texts and metadata (default: NULL)}
 
@@ -45,7 +45,7 @@ Now supports n-grams for improved negation and intensifier handling.
 abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
 corpus <- quanteda::corpus(abstracts)
 dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
-lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 print(lexicon_results$document_sentiment)
 }
 }

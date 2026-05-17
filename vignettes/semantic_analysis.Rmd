@@ -54,7 +54,7 @@ Semantic analysis measures document similarity using different approaches to cap
 ### Lexicon-based (no Python)
 
 ```{r}
-sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 plot_sentiment_distribution(sentiment$document_sentiment)
 ```
 

@@ -2321,7 +2321,7 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #' Now supports n-grams for improved negation and intensifier handling.
 #'
 #' @param dfm_object A quanteda DFM object (unigram or n-gram)
-#' @param lexicon Lexicon to use: "afinn", "bing", or "nrc" (default: "afinn")
+#' @param lexicon Lexicon to use: "afinn", "bing", or "nrc" (default: "bing")
 #' @param texts_df Optional data frame with original texts and metadata (default: NULL)
 #' @param feature_type Feature space: "words" (unigrams) or "ngrams" (default: "words")
 #' @param ngram_range N-gram size when feature_type = "ngrams" (default: 2 for bigrams)
@@ -2346,11 +2346,11 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #' abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
 #' corpus <- quanteda::corpus(abstracts)
 #' dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
-#' lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+#' lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 #' print(lexicon_results$document_sentiment)
 #' }
 sentiment_lexicon_analysis <- function(dfm_object,
-                                       lexicon = "afinn",
+                                       lexicon = "bing",
                                        texts_df = NULL,
                                        feature_type = "words",
                                        ngram_range = 2,
