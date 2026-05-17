@@ -213,8 +213,8 @@ topic_modeling_ui_content <- function() {
                 "stm_label_ollama_model",
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = "llama3.2",
-                options = list(create = TRUE, placeholder = "Type any model name or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -228,8 +228,8 @@ topic_modeling_ui_content <- function() {
                 "stm_label_openai_model",
                 "OpenAI Model:",
                 choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
-                selected = "gpt-4.1-mini",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("stm_label_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -244,8 +244,8 @@ topic_modeling_ui_content <- function() {
                 "stm_label_gemini_model",
                 "Gemini Model:",
                 choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
-                selected = "gemini-2.5-flash-lite",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("stm_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
@@ -405,8 +405,8 @@ Focus on incorporating the most significant keywords while following the guideli
                 "k_rec_ollama_model",
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = "llama3.2",
-                options = list(create = TRUE, placeholder = "Type any model name or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -425,8 +425,8 @@ Focus on incorporating the most significant keywords while following the guideli
                   "GPT-4.1 (Accurate)" = "gpt-4.1",
                   "GPT-4" = "gpt-4"
                 ),
-                selected = "gpt-4.1-mini",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("k_rec_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -446,8 +446,8 @@ Focus on incorporating the most significant keywords while following the guideli
                   "Gemini 2.5 Flash" = "gemini-2.5-flash",
                   "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
                 ),
-                selected = "gemini-2.5-flash-lite",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("k_rec_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
@@ -582,8 +582,8 @@ Focus on incorporating the most significant keywords while following the guideli
                 "content_ollama_model",
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = "llama3.2",
-                options = list(create = TRUE, placeholder = "Type any model name or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -597,8 +597,8 @@ Focus on incorporating the most significant keywords while following the guideli
                 "content_openai_model",
                 "OpenAI Model:",
                 choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
-                selected = "gpt-4.1-mini",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("content_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -613,8 +613,8 @@ Focus on incorporating the most significant keywords while following the guideli
                 "content_gemini_model",
                 "Gemini Model:",
                 choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
-                selected = "gemini-2.5-flash-lite",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("content_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
@@ -691,8 +691,8 @@ Focus on incorporating the most significant keywords while following the guideli
                   "MxBai Embed Large (Higher Quality)" = "mxbai-embed-large",
                   "All-MiniLM (Lightweight)" = "all-minilm"
                 ),
-                selected = "nomic-embed-text",
-                options = list(create = TRUE, placeholder = "Type any model name or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -715,8 +715,8 @@ Focus on incorporating the most significant keywords while following the guideli
                   "Nomic Embed Text v2 (Multilingual)" = "nomic-ai/nomic-embed-text-v2-moe",
                   "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                 ),
-                selected = "all-MiniLM-L6-v2",
-                options = list(create = TRUE, placeholder = "Type any Hugging Face model ID")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -733,8 +733,8 @@ Focus on incorporating the most significant keywords while following the guideli
                   "Text Embedding 3 Small (Default)" = "text-embedding-3-small",
                   "Text Embedding 3 Large (Higher Quality)" = "text-embedding-3-large"
                 ),
-                selected = "text-embedding-3-small",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("topic_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -750,8 +750,8 @@ Focus on incorporating the most significant keywords while following the guideli
                 "topic_embedding_gemini_model",
                 "Gemini Model:",
                 choices = c("Gemini Embedding 001" = "gemini-embedding-001"),
-                selected = "gemini-embedding-001",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("topic_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
