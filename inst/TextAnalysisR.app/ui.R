@@ -1997,13 +1997,8 @@ Supports:
                   "embedding_ollama_model",
                   "Ollama Model:",
                   choices = c("Nomic Embed Text (Default)" = "nomic-embed-text", "MxBai Embed Large (Higher Quality)" = "mxbai-embed-large", "All-MiniLM (Lightweight)" = "all-minilm"),
-                  selected = "nomic-embed-text",
-                  options = list(create = TRUE, placeholder = "Type any embedding model name")
-                ),
-                tags$p(
-                  style = "font-size: 16px; color: #666;",
-                  "Type any Ollama embedding model. Catalog: ",
-                  tags$a(href = "https://ollama.com/library", target = "_blank", rel = "noopener noreferrer", "ollama.com/library")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 )
               ),
               conditionalPanel(
@@ -2020,13 +2015,12 @@ Supports:
                     "Nomic Embed Text v2 (Multilingual)" = "nomic-ai/nomic-embed-text-v2-moe",
                     "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                   ),
-                  selected = "all-MiniLM-L6-v2",
-                  options = list(create = TRUE, placeholder = "Type any Hugging Face model ID")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 tags$p(
                   style = "font-size: 16px; color: #666;",
-                  "Requires Python + sentence-transformers. Browse Hugging Face: ",
-                  tags$a(href = "https://huggingface.co/sentence-transformers", target = "_blank", rel = "noopener noreferrer", "huggingface.co/sentence-transformers")
+                  "Requires Python + sentence-transformers."
                 )
               ),
               conditionalPanel(
@@ -2035,8 +2029,8 @@ Supports:
                   "embedding_openai_model",
                   "OpenAI Model:",
                   choices = c("Text Embedding 3 Small (Default)" = "text-embedding-3-small", "Text Embedding 3 Large (Higher Quality)" = "text-embedding-3-large"),
-                  selected = "text-embedding-3-small",
-                  options = list(create = TRUE, placeholder = "Type any embedding model ID")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 passwordInput("embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
@@ -2051,8 +2045,8 @@ Supports:
                   "embedding_gemini_model",
                   "Gemini Model:",
                   choices = c("Gemini Embedding 001" = "gemini-embedding-001", "Gemini Embedding 2 Preview" = "gemini-embedding-2-preview"),
-                  selected = "gemini-embedding-001",
-                  options = list(create = TRUE, placeholder = "Type any embedding model ID")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 passwordInput("embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
@@ -2188,13 +2182,8 @@ Supports:
                     "MxBai Embed Large (Higher Quality)" = "mxbai-embed-large",
                     "All-MiniLM (Lightweight)" = "all-minilm"
                   ),
-                  selected = "nomic-embed-text",
-                  options = list(create = TRUE, placeholder = "Type any embedding model name")
-                ),
-                tags$p(
-                  style = "font-size: 16px; color: #666;",
-                  "Type any Ollama embedding model. Catalog: ",
-                  tags$a(href = "https://ollama.com/library", target = "_blank", rel = "noopener noreferrer", "ollama.com/library")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 )
               ),
               conditionalPanel(
@@ -2211,13 +2200,12 @@ Supports:
                     "Nomic Embed Text v2 (Multilingual)" = "nomic-ai/nomic-embed-text-v2-moe",
                     "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                   ),
-                  selected = "all-MiniLM-L6-v2",
-                  options = list(create = TRUE, placeholder = "Type any Hugging Face model ID")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 tags$p(
                   style = "font-size: 16px; color: #666;",
-                  "Requires Python + sentence-transformers. Browse: ",
-                  tags$a(href = "https://huggingface.co/sentence-transformers", target = "_blank", rel = "noopener noreferrer", "huggingface.co/sentence-transformers")
+                  "Requires Python + sentence-transformers."
                 )
               ),
               conditionalPanel(
@@ -2229,8 +2217,8 @@ Supports:
                     "Text Embedding 3 Small (Default)" = "text-embedding-3-small",
                     "Text Embedding 3 Large (Higher Quality)" = "text-embedding-3-large"
                   ),
-                  selected = "text-embedding-3-small",
-                  options = list(create = TRUE, placeholder = "Type any embedding model ID")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 passwordInput("search_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
@@ -2245,8 +2233,8 @@ Supports:
                   "search_embedding_gemini_model",
                   "Gemini Model:",
                   choices = c("Gemini Embedding 001" = "gemini-embedding-001", "Gemini Embedding 2 Preview" = "gemini-embedding-2-preview"),
-                  selected = "gemini-embedding-001",
-                  options = list(create = TRUE, placeholder = "Type any embedding model ID")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 passwordInput("search_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
@@ -2274,13 +2262,8 @@ Supports:
                   "rag_ollama_model",
                   "Ollama Model:",
                   choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                  selected = "llama3.2",
-                  options = list(create = TRUE, placeholder = "Type any model name or pick one")
-                ),
-                tags$p(
-                  style = "font-size: 16px; color: #666; margin-top: 5px;",
-                  "Type any Ollama model name. Browse the catalog at ",
-                  tags$a(href = "https://ollama.com/library", target = "_blank", rel = "noopener noreferrer", "ollama.com/library")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 )
               ),
               conditionalPanel(
@@ -2289,13 +2272,8 @@ Supports:
                   "rag_openai_model",
                   "OpenAI Model:",
                   choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
-                  selected = "gpt-4.1-mini",
-                  options = list(create = TRUE, placeholder = "Type any model ID or pick one")
-                ),
-                tags$p(
-                  style = "font-size: 16px; color: #666; margin-top: 5px;",
-                  "Type any OpenAI model ID. Catalog: ",
-                  tags$a(href = "https://platform.openai.com/docs/models", target = "_blank", rel = "noopener noreferrer", "platform.openai.com/docs/models")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 passwordInput("rag_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
@@ -2310,13 +2288,8 @@ Supports:
                   "rag_gemini_model",
                   "Gemini Model:",
                   choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
-                  selected = "gemini-2.5-flash-lite",
-                  options = list(create = TRUE, placeholder = "Type any model ID or pick one")
-                ),
-                tags$p(
-                  style = "font-size: 16px; color: #666; margin-top: 5px;",
-                  "Type any Gemini model ID. Catalog: ",
-                  tags$a(href = "https://ai.google.dev/gemini-api/docs/models", target = "_blank", rel = "noopener noreferrer", "ai.google.dev/gemini-api/docs/models")
+                  selected = NULL,
+                  options = list(create = TRUE, placeholder = "Type your model...")
                 ),
                 passwordInput("rag_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
@@ -2526,13 +2499,8 @@ Supports:
                 "cluster_ollama_model",
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = "llama3.2",
-                options = list(create = TRUE, placeholder = "Type any model name or pick one")
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Type any Ollama model name. Catalog: ",
-                tags$a(href = "https://ollama.com/library", target = "_blank", rel = "noopener noreferrer", "ollama.com/library")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               )
             ),
 
@@ -2542,13 +2510,8 @@ Supports:
                 "cluster_openai_model",
                 "OpenAI Model:",
                 choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
-                selected = "gpt-4.1-mini",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Type any OpenAI model ID. Catalog: ",
-                tags$a(href = "https://platform.openai.com/docs/models", target = "_blank", rel = "noopener noreferrer", "platform.openai.com/docs/models")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("cluster_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -2564,13 +2527,8 @@ Supports:
                 "cluster_gemini_model",
                 "Gemini Model:",
                 choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
-                selected = "gemini-2.5-flash-lite",
-                options = list(create = TRUE, placeholder = "Type any model ID or pick one")
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Type any Gemini model ID. Catalog: ",
-                tags$a(href = "https://ai.google.dev/gemini-api/docs/models", target = "_blank", rel = "noopener noreferrer", "ai.google.dev/gemini-api/docs/models")
+                selected = NULL,
+                options = list(create = TRUE, placeholder = "Type your model...")
               ),
               passwordInput("cluster_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(

@@ -351,8 +351,8 @@ server <- shinyServer(function(input, output, session) {
           selectizeInput("ollama_vision_model",
             "Ollama model:",
             choices = c("LLaVA (Default)" = "llava", "BakLLaVA" = "bakllava", "LLaVA-Phi3" = "llava-phi3"),
-            selected = "llava",
-            options = list(create = TRUE, placeholder = "Type any vision model name")
+            selected = NULL,
+            options = list(create = TRUE, placeholder = "Type your model...")
           ),
           tags$div(
             class = "ollama-help-text",
@@ -371,8 +371,8 @@ server <- shinyServer(function(input, output, session) {
           selectizeInput("openai_vision_model",
             "OpenAI model:",
             choices = c("GPT-4.1 (Default, accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini", "GPT-4" = "gpt-4"),
-            selected = "gpt-4.1",
-            options = list(create = TRUE, placeholder = "Type any model ID")
+            selected = NULL,
+            options = list(create = TRUE, placeholder = "Type your model...")
           )
         ),
         conditionalPanel(
@@ -386,8 +386,8 @@ server <- shinyServer(function(input, output, session) {
           selectizeInput("gemini_vision_model",
             "Gemini model:",
             choices = c("Gemini 2.5 Flash (Default, fast)" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro", "Gemini 2.5 Flash Lite (Economy)" = "gemini-2.5-flash-lite"),
-            selected = "gemini-2.5-flash",
-            options = list(create = TRUE, placeholder = "Type any model ID")
+            selected = NULL,
+            options = list(create = TRUE, placeholder = "Type your model...")
           )
         )
       )
@@ -8863,13 +8863,8 @@ server <- shinyServer(function(input, output, session) {
               "llm_sentiment_model",
               "Ollama Model",
               choices = models,
-              selected = if ("llama3.2" %in% models) "llama3.2" else models[1],
-              options = list(create = TRUE, placeholder = "Type any model name or pick one")
-            ),
-            tags$p(
-              style = "font-size: 16px; color: #666;",
-              "Type any Ollama model name. Catalog: ",
-              tags$a(href = "https://ollama.com/library", target = "_blank", "ollama.com/library")
+              selected = NULL,
+              options = list(create = TRUE, placeholder = "Type your model...")
             )
           )
         } else {
@@ -8891,13 +8886,8 @@ server <- shinyServer(function(input, output, session) {
               "GPT-4.1 (Accurate)" = "gpt-4.1",
               "GPT-4" = "gpt-4"
             ),
-            selected = "gpt-4.1-mini",
-            options = list(create = TRUE, placeholder = "Type any model ID or pick one")
-          ),
-          tags$p(
-            style = "font-size: 16px; color: #666;",
-            "Type any OpenAI model ID. Catalog: ",
-            tags$a(href = "https://platform.openai.com/docs/models", target = "_blank", "platform.openai.com/docs/models")
+            selected = NULL,
+            options = list(create = TRUE, placeholder = "Type your model...")
           ),
           passwordInput("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
@@ -8917,13 +8907,8 @@ server <- shinyServer(function(input, output, session) {
               "Gemini 2.5 Flash" = "gemini-2.5-flash",
               "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
             ),
-            selected = "gemini-2.5-flash-lite",
-            options = list(create = TRUE, placeholder = "Type any model ID or pick one")
-          ),
-          tags$p(
-            style = "font-size: 16px; color: #666;",
-            "Type any Gemini model ID. Catalog: ",
-            tags$a(href = "https://ai.google.dev/gemini-api/docs/models", target = "_blank", "ai.google.dev/gemini-api/docs/models")
+            selected = NULL,
+            options = list(create = TRUE, placeholder = "Type your model...")
           ),
           passwordInput("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(
