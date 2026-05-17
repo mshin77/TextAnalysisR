@@ -37,12 +37,6 @@ Unified PDF processing:
 }
 }
 \seealso{
-Other preprocessing:
-\code{\link[=get_available_dfm]{get_available_dfm()}},
-\code{\link[=get_available_tokens]{get_available_tokens()}},
-\code{\link[=import_files]{import_files()}},
-\code{\link[=lemmatize_tokens]{lemmatize_tokens()}},
-\code{\link[=prep_texts]{prep_texts()}},
-\code{\link[=unite_cols]{unite_cols()}}
+\code{\link[=import_files]{import_files()}} for the generic file-loading entry point; \code{\link[=describe_image]{describe_image()}} for standalone image captioning
 }
 \concept{preprocessing}

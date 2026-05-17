@@ -22,8 +22,4 @@ Protects against formula injection attacks where malicious column names could
 execute arbitrary code when used in model formulas. Part of NIST SI-10 input validation.
 }
 
-\examples{
-validate_column_name("age")
-validate_column_name("my_variable")
-}
 \keyword{internal}

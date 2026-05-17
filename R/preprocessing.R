@@ -24,7 +24,7 @@ NULL
 #' 3. dfm_final - Final processed version
 #' 4. dfm_init - Initial unprocessed tokens
 #'
-#' @family preprocessing
+#' @concept preprocessing
 #' @keywords internal
 #' @export
 #'
@@ -71,7 +71,7 @@ get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = 
 #' 3. preprocessed_tokens - Early stage preprocessed tokens
 #' 4. united_tbl - Raw text (will be tokenized if used)
 #'
-#' @family preprocessing
+#' @concept preprocessing
 #' @keywords internal
 #' @export
 #'
@@ -111,7 +111,7 @@ get_available_tokens <- function(final_tokens = NULL,
 #'
 #' @importFrom utils read.csv
 #'
-#' @family preprocessing
+#' @concept preprocessing
 #' @export
 #'
 #' @examples
@@ -376,7 +376,8 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
 #'
 #' @return List: success, data, type, method, message
 #'
-#' @family preprocessing
+#' @concept preprocessing
+#' @seealso [import_files()] for the generic file-loading entry point; [describe_image()] for standalone image captioning
 #' @export
 process_pdf_unified <- function(file_path,
                                 use_multimodal = FALSE,
@@ -457,7 +458,8 @@ process_pdf_unified <- function(file_path,
 #' @return A data frame with a new column "united_texts" created by uniting
 #'   the specified variables.
 #'
-#' @family preprocessing
+#' @concept preprocessing
+#' @seealso [prep_texts()] to tokenize and clean the united text; [import_files()] to load source data first
 #' @export
 #'
 #' @examples
@@ -524,7 +526,8 @@ unite_cols <- function(df, listed_vars) {
 #'
 #' @import quanteda
 #'
-#' @family preprocessing
+#' @concept preprocessing
+#' @seealso [unite_cols()] to combine text columns first; [lemmatize_tokens()] to reduce words to base form (e.g., running → run); `quanteda::dfm()` to build a document-feature matrix from the result
 #' @export
 #'
 #' @examples
@@ -672,7 +675,7 @@ prep_texts <- function(united_tbl,
 #' (e.g., "studies" -> "study", "better" -> "good").
 #' Batch processing prevents timeout errors with large document collections.
 #'
-#' @family preprocessing
+#' @concept preprocessing
 #' @export
 #'
 #' @examples
@@ -759,15 +762,9 @@ lemmatize_tokens <- function(tokens,
 #' Preserves page structure and cleans whitespace.
 #' Works best with text-based PDFs (not scanned images).
 #'
-#' @family pdf
-#' @export
+#' @concept pdf
+#' @keywords internal
 #'
-#' @examples
-#' \donttest{
-#' pdf_path <- "path/to/document.pdf"
-#' text_data <- extract_text_from_pdf(pdf_path)
-#' head(text_data)
-#' }
 extract_text_from_pdf <- function(file_path) {
   if (!requireNamespace("pdftools", quietly = TRUE)) {
     stop("Package 'pdftools' is required. Install it with: install.packages('pdftools')")
@@ -826,7 +823,7 @@ extract_text_from_pdf <- function(file_path) {
 #'
 #' For table extraction from PDFs, use \code{\link{extract_tables_from_pdf_py}}.
 #'
-#' @family pdf
+#' @concept pdf
 #' @export
 #'
 #' @examples
@@ -875,20 +872,9 @@ detect_pdf_content_type <- function(file_path) {
 #' For PDFs containing tables or complex layouts, use the Python-based
 #' \code{\link{process_pdf_file_py}} which provides better table extraction.
 #'
-#' @family pdf
-#' @export
+#' @concept pdf
+#' @keywords internal
 #'
-#' @examples
-#' \donttest{
-#' pdf_path <- "path/to/document.pdf"
-#' result <- process_pdf_file(pdf_path)
-#'
-#' if (result$success) {
-#'   print(head(result$data))
-#' } else {
-#'   print(result$message)
-#' }
-#' }
 process_pdf_file <- function(file_path, content_type = "auto") {
   if (!file.exists(file_path)) {
     return(list(
@@ -937,18 +923,9 @@ process_pdf_file <- function(file_path, content_type = "auto") {
 #' Uses pdfplumber Python library through reticulate.
 #' Requires Python environment setup. See \code{setup_python_env()}.
 #'
-#' @family pdf
+#' @concept pdf
 #' @keywords internal
-#' @export
 #'
-#' @examples
-#' if (interactive()) {
-#' setup_python_env()
-#'
-#' pdf_path <- "path/to/document.pdf"
-#' text_data <- extract_text_from_pdf_py(pdf_path)
-#' head(text_data)
-#' }
 extract_text_from_pdf_py <- function(file_path, envname = NULL) {
   .ensure_python("pdfplumber", envname)
 
@@ -1000,7 +977,7 @@ extract_text_from_pdf_py <- function(file_path, envname = NULL) {
 #' Uses pdfplumber Python library through reticulate.
 #' Works with complex table layouts without Java dependency.
 #'
-#' @family pdf
+#' @concept pdf
 #' @keywords internal
 #' @export
 #'
@@ -1061,7 +1038,7 @@ extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = NULL) 
 #'
 #' @return Character string: "tabular", "text", or "unknown"
 #'
-#' @family pdf
+#' @concept pdf
 #' @keywords internal
 #' @export
 #'
@@ -1119,23 +1096,9 @@ detect_pdf_content_type_py <- function(file_path, envname = NULL) {
 #' - Better accuracy than tabulizer for complex tables
 #' - Uses TextAnalysisR Python environment
 #'
-#' @family pdf
+#' @concept pdf
 #' @keywords internal
-#' @export
 #'
-#' @examples
-#' if (interactive()) {
-#' setup_python_env()
-#'
-#' pdf_path <- "path/to/document.pdf"
-#' result <- process_pdf_file_py(pdf_path)
-#'
-#' if (result$success) {
-#'   print(head(result$data))
-#' } else {
-#'   print(result$message)
-#' }
-#' }
 process_pdf_file_py <- function(file_path, content_type = "auto", envname = NULL) {
   if (!file.exists(file_path)) {
     return(list(data = NULL, type = "error", success = FALSE, message = "File not found"))
@@ -1320,20 +1283,9 @@ check_multimodal_prerequisites <- function(
 #' 3. Sends sparse-text pages to vision LLM for description
 #' 4. Merges text + descriptions into a single text corpus
 #'
-#' @family pdf
-#' @export
+#' @concept pdf
+#' @keywords internal
 #'
-#' @examples
-#' if (interactive()) {
-#' result <- extract_pdf_multimodal("research_paper.pdf")
-#' text_for_analysis <- result$combined_text
-#'
-#' result <- extract_pdf_multimodal(
-#'   "paper.pdf",
-#'   vision_provider = "gemini",
-#'   api_key = Sys.getenv("GEMINI_API_KEY")
-#' )
-#' }
 extract_pdf_multimodal <- function(
   file_path,
   vision_provider = "ollama",
@@ -1441,14 +1393,9 @@ extract_pdf_multimodal <- function(
 #'
 #' @return List with extracted content ready for text analysis
 #'
-#' @family pdf
-#' @export
+#' @concept pdf
+#' @keywords internal
 #'
-#' @examples
-#' if (interactive()) {
-#' result <- extract_pdf_smart("document.pdf")
-#' corpus <- prep_texts(result$combined_text)
-#' }
 extract_pdf_smart <- function(
   file_path,
   doc_type = "auto",
@@ -1481,7 +1428,7 @@ extract_pdf_smart <- function(
 #'
 #' @return List with availability status and recommendations
 #'
-#' @family pdf
+#' @concept pdf
 #' @keywords internal
 #' @export
 #'

@@ -65,7 +65,7 @@ NULL
 #'     \item{execution_time}{Time taken for analysis}
 #'   }
 #'
-#' @family semantic
+#' @concept semantic
 #' @keywords internal
 #' @export
 #'
@@ -282,7 +282,7 @@ calculate_document_similarity <- function(texts,
 #'
 #' @return A list containing results from requested analyses.
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -430,7 +430,7 @@ fit_semantic_model <- function(texts,
 #'
 #' @return A list containing the reduced dimensions, method used, and additional metadata.
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -658,7 +658,7 @@ reduce_dimensions <- function(data_matrix,
 #'
 #' @return A list containing cluster assignments, method used, and quality metrics.
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -951,7 +951,7 @@ cluster_embeddings <- function(data_matrix,
 #'
 #' @return A matrix of embeddings.
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRUE) {
 
@@ -979,7 +979,8 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
 #' @description Wrapper for calculate_document_similarity
 #' @param ... Arguments passed to calculate_document_similarity
 #' @return Similarity analysis results
-#' @family semantic
+#' @concept semantic
+#' @seealso [calculate_document_similarity()] for the core computation; [plot_similarity_heatmap()] to render the resulting matrix
 #' @export
 semantic_similarity_analysis <- function(...) {
   return(calculate_document_similarity(...))
@@ -994,7 +995,7 @@ semantic_similarity_analysis <- function(...) {
 #'
 #' @return A ggplot2 visualization of document clusters
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 semantic_document_clustering <- function(embeddings, method = "UMAP", clusters = NULL, ...) {
   reduced_dims <- reduce_dimensions(embeddings, method = method, ...)
@@ -1020,7 +1021,7 @@ semantic_document_clustering <- function(embeddings, method = "UMAP", clusters =
 #' @param clustering_method Clustering method ("none", "kmeans", "hierarchical", "dbscan", "hdbscan")
 #' @param ... Additional parameters for methods
 #' @return List containing coordinates, clusters, method info, and quality metrics
-#' @family semantic
+#' @concept semantic
 #' @export
 analyze_document_clustering <- function(feature_matrix,
                                   method = "UMAP",
@@ -1079,7 +1080,7 @@ analyze_document_clustering <- function(feature_matrix,
 #' @param method Label generation method ("tfidf", "representative", "frequent")
 #' @param n_terms Number of terms per label
 #' @return Named list of cluster labels
-#' @family semantic
+#' @concept semantic
 #' @export
 generate_cluster_labels_auto <- function(feature_matrix,
                                          clusters,
@@ -1135,7 +1136,7 @@ generate_cluster_labels_auto <- function(feature_matrix,
 #'
 #' @return A list of generated labels.
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -1287,7 +1288,7 @@ Generated Topic Label:"
 #'
 #' @return Invisible data frame of the exported data
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 export_document_clustering <- function(coordinates,
                                  clusters = NULL,
@@ -1325,7 +1326,7 @@ export_document_clustering <- function(coordinates,
 #'
 #' @return A list containing cross-validation metrics.
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 validate_cross_models <- function(semantic_results,
                                     stm_results = NULL,
@@ -1391,7 +1392,7 @@ validate_cross_models <- function(semantic_results,
 #'
 #' @return List containing similarity matrix, method used, embeddings, and diagnostics
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -1542,7 +1543,7 @@ calculate_similarity_robust <- function(texts,
 #' - Calinski-Harabasz Index: Ratio of between-cluster to within-cluster variance.
 #'   Higher values indicate better-defined clusters.
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -1715,7 +1716,7 @@ calculate_clustering_metrics <- function(clusters,
 #'   \item{similarity_matrix}{Matrix of cosine similarities (nrow(embeddings1) x nrow(embeddings2))}
 #'   \item{similarity_df}{Long-format data frame with columns: row_idx, col_idx, similarity, and optionally label1, label2}
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -1817,7 +1818,7 @@ calculate_cross_similarity <- function(embeddings1,
 #'   \item{other_category}{Category of comparison document}
 #'   \item{similarity}{Cosine similarity value}
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -1962,7 +1963,7 @@ extract_cross_category_similarities <- function(similarity_matrix,
 #'   \item{cross_policy}{Data frame of items with moderate similarity (learning opportunities)}
 #'   \item{summary_stats}{Summary statistics by category}
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples
@@ -2103,7 +2104,7 @@ analyze_similarity_gaps <- function(similarity_data,
 #'     \item{sentiment}{Classification: "positive", "negative", or "neutral"}
 #'   }
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 #'
 #' @examples
@@ -2151,7 +2152,7 @@ analyze_sentiment <- function(texts,
 #'
 #' @return A ggplot2 bar chart
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 #'
 #' @examples
@@ -2203,7 +2204,7 @@ plot_sentiment_distribution <- function(sentiment_data,
 #'
 #' @return A ggplot2 grouped/stacked bar chart
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 #'
 #' @examples
@@ -2274,7 +2275,7 @@ plot_sentiment_by_category <- function(sentiment_data,
 #'
 #' @return A ggplot2 line chart with color gradient
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 plot_document_sentiment_trajectory <- function(sentiment_data,
                                                top_n = NULL,
@@ -2337,7 +2338,7 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #' @importFrom tidytext tidy get_sentiments
 #' @importFrom dplyr inner_join group_by summarise mutate case_when ungroup n_distinct
 #' @importFrom tidyr pivot_wider pivot_longer
-#' @family sentiment
+#' @concept sentiment
 #' @export
 #'
 #' @examples
@@ -2507,7 +2508,7 @@ sentiment_lexicon_analysis <- function(dfm_object,
 #'     \item{feature_type}{"embeddings"}
 #'   }
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 #'
 #' @examples
@@ -2645,7 +2646,7 @@ sentiment_embedding_analysis <- function(texts,
 #'   \item Works across domains without retraining
 #' }
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 #'
 #' @examples
@@ -2844,7 +2845,7 @@ Important:
 #'
 #' @return A ggplot2 polar chart
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 plot_emotion_radar <- function(emotion_data,
                                group_var = NULL,
@@ -2932,7 +2933,7 @@ plot_emotion_radar <- function(emotion_data,
 #'
 #' @return A ggplot2 box plot
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 plot_sentiment_boxplot <- function(sentiment_data,
                                    category_var = "category_var",
@@ -2970,7 +2971,7 @@ plot_sentiment_boxplot <- function(sentiment_data,
 #'
 #' @return A ggplot2 violin plot
 #'
-#' @family sentiment
+#' @concept sentiment
 #' @export
 plot_sentiment_violin <- function(sentiment_data,
                                   category_var = "category_var",
@@ -3039,7 +3040,7 @@ NULL
 #'
 #' @return A ggplot2 object showing the specified visualization.
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -3240,7 +3241,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
 #'
 #' @return A ggplot object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -3518,7 +3519,7 @@ plot_cross_category_heatmap <- function(similarity_data,
 #'
 #' @return A ggplot2 heatmap object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -3693,7 +3694,8 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #' 2. Find top-k similar documents via cosine similarity
 #' 3. Generate answer using LLM with retrieved context
 #'
-#' @family ai
+#' @concept ai
+#' @seealso [get_best_embeddings()] for the retrieval step alone; [call_llm_api()] for the answer-generation step alone; [sanitize_llm_input()] for an input safety check before calling
 #' @export
 #'
 #' @examples
@@ -4108,7 +4110,8 @@ run_rag_search <- function(
 #' @importFrom htmltools tagList tags browsable
 #' @importFrom RColorBrewer brewer.pal
 #'
-#' @family semantic
+#' @concept semantic
+#' @seealso [word_correlation_network()] for correlation-based edges instead of co-occurrence counts; [plot_cluster_terms()] for bar-style cluster terms
 #' @export
 #'
 #' @examples
@@ -4378,7 +4381,7 @@ word_co_occurrence_network <- function(dfm_object,
 #' @importFrom htmltools tagList tags browsable
 #' @importFrom RColorBrewer brewer.pal
 #'
-#' @family semantic
+#' @concept semantic
 #' @export
 #'
 #' @examples

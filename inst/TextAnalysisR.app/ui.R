@@ -6,7 +6,7 @@ suppressPackageStartupMessages({
 
 # Detect web/Docker deployment (hide GPU option in these environments)
 is_web <- tryCatch({
-  TextAnalysisR::check_web_deployment()
+  TextAnalysisR:::check_web_deployment()
 }, error = function(e) FALSE)
 is_docker <- tryCatch({
   TextAnalysisR:::check_docker_deployment()

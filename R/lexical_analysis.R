@@ -9,7 +9,7 @@
 #' - Readability (Flesch, Gunning Fog, etc.)
 #'
 #' @name lexical_analysis
-#' @family lexical
+#' @concept lexical
 NULL
 
 
@@ -65,7 +65,7 @@ NULL
 #' Call this function to free memory or force fresh calculations.
 #'
 #' @return Invisible NULL
-#' @family lexical
+#' @concept lexical
 #' @importFrom Matrix colSums
 #' @export
 clear_lexdiv_cache <- function() {
@@ -87,7 +87,7 @@ clear_lexdiv_cache <- function() {
 #'
 #' @return A character vector of detected collocations.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -142,7 +142,7 @@ detect_multi_words <- function(tokens, size = 2:5, min_count = 2) {
 #' with spaCy installed. If spaCy is not initialized, this function will
 #' attempt to initialize it with the specified model.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -200,7 +200,7 @@ extract_pos_tags <- function(tokens,
 #'   \item \code{Aspect}: Perf (perfective), Imp (imperfective), Prog (progressive)
 #' }
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -250,7 +250,7 @@ extract_morphology <- function(tokens,
 #'
 #' @return A plotly object.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -348,7 +348,7 @@ plot_morphology_feature <- function(data,
 #'
 #' @return A data frame with Feature, Value, Count, and Percentage columns.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -430,7 +430,7 @@ summarize_morphology <- function(data, features = NULL) {
 #' with spaCy installed. If spaCy is not initialized, this function will
 #' attempt to initialize it with the specified model.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -503,7 +503,8 @@ extract_named_entities <- function(tokens,
 #' of sophisticated approaches to lexical diversity assessment.
 #' Behavior Research Methods, 42(2), 381-392.
 #'
-#' @family lexical
+#' @concept lexical
+#' @seealso [calculate_text_readability()] for grade-level / Flesch metrics on the same input; [calculate_lexical_dispersion()] for term spread across documents; [plot_lexical_diversity_distribution()] to visualize
 #' @export
 #'
 #' @examples
@@ -755,7 +756,7 @@ lexical_diversity_analysis <- function(x,
 #'
 #' @return A plotly boxplot
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -828,7 +829,7 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
 #'
 #' @return A plotly bar chart of word frequencies
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 lexical_frequency_analysis <- function(...) {
   return(plot_word_frequency(...))
@@ -849,7 +850,7 @@ lexical_frequency_analysis <- function(...) {
 #'
 #' @return A ggplot object showing word frequency.
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -928,7 +929,7 @@ plot_word_frequency <- function(dfm_object,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -1024,7 +1025,7 @@ plot_ngram_frequency <- function(ngram_data,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 plot_mwe_frequency <- function(mwe_data,
                                 title = "Multi-Word Expression Frequency",
@@ -1089,7 +1090,7 @@ plot_mwe_frequency <- function(mwe_data,
 #'
 #' @return Data frame with columns: Keyword, TF_IDF_Score, Frequency
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -1142,7 +1143,7 @@ extract_keywords_tfidf <- function(dfm,
 #'
 #' @return Data frame with columns: Keyword, Keyness_Score
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -1197,7 +1198,7 @@ extract_keywords_keyness <- function(dfm,
 #'
 #' @return A plotly bar chart
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 plot_tfidf_keywords <- function(tfidf_data,
                                  title = NULL,
@@ -1243,7 +1244,7 @@ plot_tfidf_keywords <- function(tfidf_data,
 #'
 #' @return A plotly bar chart
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 plot_keyness_keywords <- function(keyness_data,
                                   title = NULL,
@@ -1301,7 +1302,7 @@ plot_keyness_keywords <- function(keyness_data,
 #'
 #' @return A plotly grouped bar chart
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 plot_keyword_comparison <- function(tfidf_data,
                                     top_n = 10,
@@ -1369,7 +1370,7 @@ plot_keyword_comparison <- function(tfidf_data,
 #'
 #' @return A plotly boxplot
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -1443,7 +1444,7 @@ plot_readability_distribution <- function(readability_data,
 #'
 #' @return A plotly boxplot
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 plot_readability_by_group <- function(readability_data,
                                       metric,
@@ -1505,7 +1506,7 @@ plot_readability_by_group <- function(readability_data,
 #'
 #' @return A plotly bar chart
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 plot_top_readability_documents <- function(readability_data,
                                            metric,
@@ -1566,7 +1567,7 @@ plot_top_readability_documents <- function(readability_data,
 #'
 #' @return A data frame with document names and readability scores
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -1711,7 +1712,7 @@ calculate_text_readability <- function(texts,
 #'
 #' @return A plotly object with faceted line plots
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -1818,7 +1819,7 @@ plot_term_trends_continuous <- function(term_data,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -1892,7 +1893,7 @@ plot_pos_frequencies <- function(pos_data,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -2015,7 +2016,7 @@ plot_entity_frequencies <- function(entity_data,
 #'
 #' @return HTML string with entity highlighting.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 render_displacy_ent <- function(text, model = "en_core_web_sm", colors = NULL) {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2059,7 +2060,7 @@ render_displacy_ent <- function(text, model = "en_core_web_sm", colors = NULL) {
 #'
 #' @return SVG string with dependency tree.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2136,7 +2137,7 @@ render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") 
 #'   \item \code{en_core_web_lg}: Large English model (best accuracy)
 #' }
 #'
-#' @family lexical
+#' @concept lexical
 #' @keywords internal
 #' @export
 #'
@@ -2182,7 +2183,7 @@ init_spacy_nlp <- function(model = "en_core_web_sm", force = FALSE) {
 #'
 #' @return Logical; TRUE if initialized, FALSE otherwise.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 spacy_initialized <- function() {
   !is.null(.spacy_env$nlp)
@@ -2195,7 +2196,7 @@ spacy_initialized <- function() {
 #'
 #' @return Logical; TRUE if model has vectors, FALSE otherwise.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 spacy_has_vectors <- function() {
   if (!spacy_initialized()) {
@@ -2212,7 +2213,7 @@ spacy_has_vectors <- function() {
 #' @return A list with model information including name, language,
 #'   pipeline components, and vector availability.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 get_spacy_model_info <- function() {
   if (!spacy_initialized()) {
@@ -2253,7 +2254,7 @@ get_spacy_model_info <- function() {
 #'   \item \code{morph}: Morphological features string (if morph = TRUE)
 #' }
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -2317,7 +2318,7 @@ spacy_parse_full <- function(x,
 #' This function disables NER, entity_ruler, and parser components to speed up
 #' lemmatization. Use this for lemmas without other annotations.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2357,7 +2358,7 @@ spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
 #'   \item \code{end_char}: End character position
 #' }
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 spacy_extract_entities <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2386,7 +2387,7 @@ spacy_extract_entities <- function(x, model = "en_core_web_sm") {
 #'
 #' @return A data frame with noun chunk information.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 extract_noun_chunks <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2414,7 +2415,7 @@ extract_noun_chunks <- function(x, model = "en_core_web_sm") {
 #'
 #' @return A data frame with SVO information.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 extract_subjects_objects <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2442,7 +2443,7 @@ extract_subjects_objects <- function(x, model = "en_core_web_sm") {
 #'
 #' @return A data frame with sentence information.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 get_sentences <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2472,7 +2473,7 @@ get_sentences <- function(x, model = "en_core_web_sm") {
 #'
 #' @return A list with similarity score and metadata.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
@@ -2495,7 +2496,7 @@ get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
 #'
 #' @return A data frame with similar words and similarity scores.
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 find_similar_words <- function(word, top_n = 10L, model = "en_core_web_md") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
@@ -2524,8 +2525,8 @@ find_similar_words <- function(word, top_n = 10L, model = "en_core_web_md") {
 #'
 #' @return A matrix of word embeddings (rows = texts, cols = dimensions).
 #'
-#' @family lexical
-#' @export
+#' @concept lexical
+#' @keywords internal
 get_spacy_embeddings <- function(texts, model = "en_core_web_md") {
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
@@ -2564,9 +2565,8 @@ get_spacy_embeddings <- function(texts, model = "en_core_web_md") {
 #'
 #' @return Data frame with additional morph_* columns for each feature.
 #'
-#' @family lexical
+#' @concept lexical
 #' @keywords internal
-#' @export
 parse_morphology_string <- function(data, features = NULL) {
   # Always extract all common morphology features
   all_features <- c("Number", "Tense", "VerbForm", "Person", "Case", "Mood", "Aspect")
@@ -2626,7 +2626,7 @@ parse_morphology_string <- function(data, features = NULL) {
 #'     \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
 #'   }
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -2800,7 +2800,7 @@ calculate_log_odds_ratio <- function(dfm_object,
 #' Silge, J., & Robinson, D. (2017). Text mining with R: A tidy approach.
 #' O'Reilly Media. https://www.tidytextmining.com/
 #'
-#' @family lexical analysis
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -2894,7 +2894,7 @@ calculate_weighted_log_odds <- function(dfm_object,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -2998,7 +2998,7 @@ plot_log_odds_ratio <- function(log_odds_data,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -3095,7 +3095,7 @@ plot_weighted_log_odds <- function(weighted_data,
 #'     \item doc_length: Total tokens in document
 #'   }
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 #'
 #' @examples
@@ -3190,7 +3190,7 @@ calculate_lexical_dispersion <- function(tokens_object,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 #'
 #' @examples
@@ -3293,7 +3293,7 @@ plot_lexical_dispersion <- function(dispersion_data,
 #'     \item rosengren_s: Rosengren's S dispersion
 #'   }
 #'
-#' @family lexical
+#' @concept lexical
 #' @export
 calculate_dispersion_metrics <- function(tokens_object, terms) {
 

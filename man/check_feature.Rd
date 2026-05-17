@@ -15,8 +15,4 @@ Logical TRUE if feature is available
 \description{
 Checks if a specific optional feature is available in the current environment.
 }
-\examples{
-if (check_feature("ollama")) {
-  # Use AI-powered labeling
-}
-}
+\keyword{internal}

@@ -79,12 +79,7 @@ check_docker_deployment <- function() {
 #' @return Logical TRUE if running on web server, FALSE if local
 #'
 #' @keywords internal
-#' @export
 #'
-#' @examples
-#' if (check_web_deployment()) {
-#'   message("Running on web - some features disabled")
-#' }
 check_web_deployment <- function() {
   # Docker has Python/spaCy available - not a restricted deployment
   if (check_docker_deployment()) {
@@ -108,12 +103,8 @@ check_web_deployment <- function() {
 #'
 #' @return Logical TRUE if feature is available
 #'
-#' @export
+#' @keywords internal
 #'
-#' @examples
-#' if (check_feature("ollama")) {
-#'   # Use AI-powered labeling
-#' }
 check_feature <- function(feature) {
   feature <- tolower(feature)
 
@@ -152,13 +143,8 @@ check_feature <- function(feature) {
 #'
 #' @return Named list with feature availability
 #'
-#' @export
+#' @keywords internal
 #'
-#' @examples
-#' if (interactive()) {
-#'   status <- get_feature_status()
-#'   print(status)
-#' }
 get_feature_status <- function() {
   features <- c("python", "ollama", "pdf_tables", "embeddings", "sentiment_transformer")
   result <- lapply(features, function(f) {
@@ -225,12 +211,7 @@ show_web_banner <- function(disabled = NULL) {
 #' @return Logical TRUE if available, FALSE if not
 #'
 #' @keywords internal
-#' @export
 #'
-#' @examples
-#' if (interactive()) {
-#' if (!require_feature("embeddings", session)) return()
-#' }
 require_feature <- function(feature, session = NULL) {
   if (check_feature(feature)) return(TRUE)
 
@@ -272,13 +253,7 @@ require_feature <- function(feature, session = NULL) {
 #' @return A DT::datatable object
 #'
 #' @keywords internal
-#' @export
 #'
-#' @examples
-#' \donttest{
-#' df <- data.frame(term = c("word1", "word2"), score = c(0.123456, 0.789012))
-#' create_analysis_datatable(df, numeric_cols = "score", digits = 3)
-#' }
 create_analysis_datatable <- function(data,
                                       colnames = NULL,
                                       numeric_cols = NULL,
@@ -353,7 +328,7 @@ calculate_cosine_similarity <- function(matrix_data) {
 #' @param message The message to display
 #' @param color Color for the text (default: "#ef4444")
 #' @return A plotly plot object displaying the message
-#' @export
+#' @keywords internal
 plot_error <- function(message, color = "#ef4444") {
   if (!requireNamespace("plotly", quietly = TRUE)) {
     stop("plotly package is required for this function. ",
@@ -534,6 +509,7 @@ run_text_workflow <- function(dataset_choice,
 #'
 #' @importFrom stats glm reformulate binomial
 #'
+#' @seealso [extract_keywords_tfidf()] and [extract_keywords_keyness()] for ranking terms by importance; [plot_word_frequency()] for the standard frequency-by-doc plot
 #' @export
 #'
 #' @examples
@@ -1083,7 +1059,7 @@ check_python_env <- function(envname = "textanalysisr-env") {
 #'
 #' @return Logical indicating whether Ollama is available.
 #'
-#' @family ai
+#' @concept ai
 #' @export
 #'
 #' @examples
@@ -1128,7 +1104,7 @@ check_ollama <- function(verbose = FALSE) {
 #'
 #' @return Character vector of model names, or NULL if Ollama is unavailable.
 #'
-#' @family ai
+#' @concept ai
 #' @export
 #'
 #' @examples
@@ -1195,17 +1171,9 @@ list_ollama_models <- function(verbose = FALSE) {
 #'
 #' @return Character string with the generated text, or NULL if failed.
 #'
-#' @family ai
-#' @export
+#' @concept ai
+#' @keywords internal
 #'
-#' @examples
-#' if (interactive()) {
-#' response <- call_ollama(
-#'   prompt = "Summarize these keywords: machine learning, neural networks, AI",
-#'   model = "llama3.2"
-#' )
-#' print(response)
-#' }
 call_ollama <- function(prompt,
                        model = "llama3.2",
                        system = NULL,
@@ -1281,7 +1249,7 @@ call_ollama <- function(prompt,
 #'
 #' @return Character string of recommended model, or NULL if none available.
 #'
-#' @family ai
+#' @concept ai
 #' @export
 #'
 #' @examples
@@ -1338,17 +1306,9 @@ get_recommended_ollama_model <- function(preferred_models = c("llama3.2", "gemma
 #'
 #' @return Character string with the model's response
 #'
-#' @family ai
-#' @export
+#' @concept ai
+#' @keywords internal
 #'
-#' @examples
-#' if (interactive()) {
-#' response <- call_openai_chat(
-#'   system_prompt = "You are a helpful assistant.",
-#'   user_prompt = "Generate a topic label for: education, student, learning",
-#'   api_key = Sys.getenv("OPENAI_API_KEY")
-#' )
-#' }
 call_openai_chat <- function(system_prompt,
                               user_prompt,
                               model = "gpt-4.1-mini",
@@ -1411,17 +1371,9 @@ call_openai_chat <- function(system_prompt,
 #'
 #' @return Character string with the model's response
 #'
-#' @family ai
-#' @export
+#' @concept ai
+#' @keywords internal
 #'
-#' @examples
-#' if (interactive()) {
-#' response <- call_gemini_chat(
-#'   system_prompt = "You are a helpful assistant.",
-#'   user_prompt = "Generate a topic label for: education, student, learning",
-#'   api_key = Sys.getenv("GEMINI_API_KEY")
-#' )
-#' }
 call_gemini_chat <- function(system_prompt,
                               user_prompt,
                               model = "gemini-2.5-flash",
@@ -1520,7 +1472,8 @@ call_gemini_chat <- function(system_prompt,
 #'
 #' @return Character string with the model's response
 #'
-#' @family ai
+#' @concept ai
+#' @seealso [sanitize_llm_input()] to clean text before prompting; [get_best_embeddings()] for vector embeddings; [run_rag_search()] for RAG search (retrieval + generation)
 #' @export
 #'
 #' @examples
@@ -1820,7 +1773,7 @@ describe_image_gemini <- function(image_base64,
 #'
 #' @return Character string description, or NULL on failure
 #'
-#' @family ai
+#' @concept ai
 #' @export
 describe_image <- function(image_base64,
                            provider = "ollama",
@@ -1862,22 +1815,9 @@ describe_image <- function(image_base64,
 #'
 #' @return Matrix with embeddings (rows = texts, columns = dimensions)
 #'
-#' @family ai
-#' @export
+#' @concept ai
+#' @keywords internal
 #'
-#' @examples
-#' if (interactive()) {
-#' data(SpecialEduTech)
-#' texts <- SpecialEduTech$abstract[1:5]
-#'
-#' # Using local Ollama API (free, no API key required)
-#' embeddings <- get_api_embeddings(texts, provider = "ollama")
-#'
-#' # Using OpenAI API
-#' embeddings <- get_api_embeddings(texts, provider = "openai")
-#'
-#' dim(embeddings)
-#' }
 get_api_embeddings <- function(texts,
                            provider = c("ollama", "openai", "gemini"),
                            model = NULL,
@@ -2094,7 +2034,7 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
 #'
 #' @return Matrix with embeddings (rows = texts, columns = dimensions)
 #'
-#' @family ai
+#' @concept ai
 #' @export
 #'
 #' @examples
@@ -2486,16 +2426,12 @@ log_security_event <- function(event_type, details, session_info, level = "info"
 #' @param strict Logical, if TRUE performs additional validation checks
 #'
 #' @return List with valid (logical), provider (character), and error (character if invalid)
-#' @export
 #' @keywords internal
 #'
 #' @section NIST Compliance:
 #' Implements NIST IA-5(1): Authenticator Management - Password-Based Authentication.
 #' Validates format, length, and character composition to prevent weak or malformed keys.
 #'
-#' @examples
-#' result <- validate_api_key("sk-proj...")
-#' if (result$valid) cat("Provider:", result$provider)
 validate_api_key <- function(api_key, strict = TRUE) {
   if (is.null(api_key) || !is.character(api_key) || !nzchar(api_key)) {
     return(list(valid = FALSE, provider = NULL, error = "API key is NULL, empty, or not a character string"))
@@ -2544,16 +2480,12 @@ validate_api_key <- function(api_key, strict = TRUE) {
 #' @param col_name Character string containing the column name
 #'
 #' @return TRUE if valid, stops with error if invalid
-#' @export
 #' @keywords internal
 #'
 #' @section Security:
 #' Protects against formula injection attacks where malicious column names could
 #' execute arbitrary code when used in model formulas. Part of NIST SI-10 input validation.
 #'
-#' @examples
-#' validate_column_name("age")
-#' validate_column_name("my_variable")
 validate_column_name <- function(col_name) {
   if (is.null(col_name) || !is.character(col_name) || !nzchar(col_name)) {
     stop("Column name is NULL, empty, or not a character string")
@@ -2606,7 +2538,6 @@ validate_column_name <- function(col_name) {
 #' @param background Background color (hex format, e.g., "#ffffff")
 #'
 #' @return Numeric contrast ratio (1-21)
-#' @export
 #' @keywords internal
 #'
 #' @section WCAG Requirements:
@@ -2614,9 +2545,6 @@ validate_column_name <- function(col_name) {
 #' - Large text (18pt+ or 14pt+ bold): Minimum 3:1 (Level AA)
 #' - UI components and graphics: Minimum 3:1 (Level AA)
 #'
-#' @examples
-#' calculate_contrast_ratio("#111827", "#ffffff")  # Returns ~16:1 (Pass)
-#' calculate_contrast_ratio("#6b7280", "#4a5568")  # Returns ~2.8:1 (Fail)
 calculate_contrast_ratio <- function(foreground, background) {
   l1 <- .relative_luminance(.hex_to_rgb(foreground))
   l2 <- .relative_luminance(.hex_to_rgb(background))
@@ -2649,12 +2577,8 @@ calculate_contrast_ratio <- function(foreground, background) {
 #' @param large_text Logical, TRUE if text is large (18pt+ or 14pt+ bold)
 #'
 #' @return Logical TRUE if compliant, FALSE if not
-#' @export
 #' @keywords internal
 #'
-#' @examples
-#' check_wcag_contrast("#111827", "#ffffff")  # TRUE (16:1 ratio)
-#' check_wcag_contrast("#6b7280", "#4a5568")  # FALSE (2.8:1 ratio)
 check_wcag_contrast <- function(foreground, background, large_text = FALSE) {
   ratio <- calculate_contrast_ratio(foreground, background)
   min_ratio <- if (large_text) 3.0 else 4.5
@@ -2681,12 +2605,8 @@ check_wcag_contrast <- function(foreground, background, large_text = FALSE) {
 #' @param context Additional context (optional)
 #'
 #' @return Character string with ARIA label
-#' @export
 #' @keywords internal
 #'
-#' @examples
-#' create_aria_label("button", "analyze", "readability")
-#' # Returns: "Analyze readability button"
 create_aria_label <- function(element_type, action, context = NULL) {
   if (!is.null(context)) {
     label <- paste(tools::toTitleCase(action), context, element_type)
@@ -2704,11 +2624,8 @@ create_aria_label <- function(element_type, action, context = NULL) {
 #' @param text Text to be read by screen readers
 #'
 #' @return HTML span with sr-only class
-#' @export
 #' @keywords internal
 #'
-#' @examples
-#' create_sr_text("Loading results, please wait")
 create_sr_text <- function(text) {
   return(
     paste0(
@@ -2728,12 +2645,8 @@ create_sr_text <- function(text) {
 #' @param tabindex Integer, tab order (-1 for no tab, 0 for natural order, 1+ for specific order)
 #'
 #' @return Logical TRUE if valid, FALSE with warning if invalid
-#' @export
 #' @keywords internal
 #'
-#' @examples
-#' validate_keyboard_navigation(0)   # TRUE
-#' validate_keyboard_navigation(999) # FALSE (too high)
 validate_keyboard_navigation <- function(tabindex = 0) {
   if (!is.numeric(tabindex)) {
     warning("Tabindex must be numeric")
@@ -2762,13 +2675,8 @@ validate_keyboard_navigation <- function(tabindex = 0) {
 #' @param decorative Logical, TRUE if element is purely decorative
 #'
 #' @return Logical TRUE if valid, FALSE with warning if missing/inadequate
-#' @export
 #' @keywords internal
 #'
-#' @examples
-#' check_alt_text("Bar chart showing word frequency", "plot")  # TRUE
-#' check_alt_text("", "plot")  # FALSE (informative content needs alt text)
-#' check_alt_text("", "icon", decorative = TRUE)  # TRUE (decorative is OK)
 check_alt_text <- function(alt_text, element_type = "image", decorative = FALSE) {
   if (decorative) {
     return(TRUE)
@@ -2811,7 +2719,6 @@ check_alt_text <- function(alt_text, element_type = "image", decorative = FALSE)
 #' - Axis titles: 13px Roboto, #0c1f4a
 #' - Axis tick labels: 12px Roboto, #3B3B3B
 #' @keywords internal
-#' @export
 apply_standard_plotly_layout <- function(plot,
                                          title = NULL,
                                          xaxis_title = NULL,
@@ -2872,7 +2779,6 @@ apply_standard_plotly_layout <- function(plot,
 #' @param fontcolor Tooltip text color.
 #' @return A list for `plotly::layout(hoverlabel = ...)`.
 #' @keywords internal
-#' @export
 get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") {
   list(
     bgcolor = bgcolor,
@@ -2897,21 +2803,9 @@ get_plotly_hover_config <- function(bgcolor = "#ffffff", fontcolor = "#0c1f4a") 
 #'
 #' @return A ggplot2 theme object
 #'
-#' @family visualization
+#' @concept visualization
 #' @keywords internal
-#' @export
 #'
-#' @examples
-#' library(ggplot2)
-#' data(SpecialEduTech, package = "TextAnalysisR")
-#' # Create a simple plot using text lengths
-#' df <- data.frame(
-#'   title_length = nchar(SpecialEduTech$title),
-#'   abstract_length = nchar(SpecialEduTech$abstract)
-#' )
-#' ggplot(df, aes(title_length, abstract_length)) +
-#'   geom_point() +
-#'   create_standard_ggplot_theme()
 create_standard_ggplot_theme <- function(base_size = 11) {
 
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
@@ -2956,7 +2850,7 @@ create_standard_ggplot_theme <- function(base_size = 11) {
 #'
 #' @return Named vector of colors
 #'
-#' @family visualization
+#' @concept visualization
 #' @keywords internal
 #' @export
 get_sentiment_colors <- function() {
@@ -2978,7 +2872,7 @@ get_sentiment_colors <- function() {
 #'
 #' @return Hex color string
 #'
-#' @family visualization
+#' @concept visualization
 #' @keywords internal
 #' @export
 #'
@@ -3012,7 +2906,6 @@ get_sentiment_color <- function(score) {
 #' @param color CSS color.
 #' @return A `DT::datatable` htmlwidget.
 #' @keywords internal
-#' @export
 create_message_table <- function(message,
                                  font_size = "16px",
                                  color = "#6c757d") {
@@ -3056,7 +2949,6 @@ create_message_table <- function(message,
 #' @param font_size Font size in px.
 #' @return A `plotly` htmlwidget.
 #' @keywords internal
-#' @export
 create_empty_plot_message <- function(message,
                                        color = "#6B7280",
                                        font_size = 16) {
@@ -3105,7 +2997,6 @@ create_empty_plot_message <- function(message,
 #' @param show_buttons Include copy/csv/excel/pdf/print buttons.
 #' @return A list for `DT::datatable(options = ...)`.
 #' @keywords internal
-#' @export
 get_dt_options <- function(scroll_y = "400px",
                             page_length = 25,
                             show_buttons = TRUE) {
@@ -3132,7 +3023,6 @@ get_dt_options <- function(scroll_y = "400px",
 #' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
-#' @export
 show_loading_notification <- function(message, id = NULL, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3155,7 +3045,6 @@ show_loading_notification <- function(message, id = NULL, session = NULL) {
 #' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
-#' @export
 show_completion_notification <- function(message, duration = 5, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3178,7 +3067,6 @@ show_completion_notification <- function(message, duration = 5, session = NULL) 
 #' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
-#' @export
 show_error_notification <- function(message, duration = 7, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3201,7 +3089,6 @@ show_error_notification <- function(message, duration = 7, session = NULL) {
 #' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly the notification id.
 #' @keywords internal
-#' @export
 show_warning_notification <- function(message, duration = 5, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3223,7 +3110,6 @@ show_warning_notification <- function(message, duration = 5, session = NULL) {
 #' @param session Shiny session. Defaults to the current reactive domain.
 #' @return Invisibly `NULL`.
 #' @keywords internal
-#' @export
 remove_notification_by_id <- function(id, session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3245,7 +3131,6 @@ remove_notification_by_id <- function(id, session = NULL) {
 #' @param duration Seconds until auto-dismiss.
 #' @return Invisibly the notification id.
 #' @keywords internal
-#' @export
 show_no_dfm_notification <- function(feature_name = "this feature", duration = 7) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3269,7 +3154,6 @@ show_no_dfm_notification <- function(feature_name = "this feature", duration = 7
 #' @param duration Seconds until auto-dismiss.
 #' @return Invisibly the notification id.
 #' @keywords internal
-#' @export
 show_no_feature_matrix_notification <- function(duration = 7) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3288,7 +3172,6 @@ show_no_feature_matrix_notification <- function(duration = 7) {
 #' @param duration Seconds until auto-dismiss.
 #' @return Invisibly the notification id.
 #' @keywords internal
-#' @export
 show_unite_texts_required_notification <- function(duration = 5) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3309,7 +3192,6 @@ show_unite_texts_required_notification <- function(duration = 5) {
 #' @param size Modal size ("s", "m", "l", "xl").
 #' @return Invisibly `NULL`.
 #' @keywords internal
-#' @export
 show_guide_modal <- function(guide_name, title, size = "l") {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3372,7 +3254,6 @@ show_guide_modal <- function(guide_name, title, size = "l") {
 #' @param additional_message Optional extra context appended to the body.
 #' @return Invisibly `NULL`.
 #' @keywords internal
-#' @export
 show_dfm_required_modal <- function(feature_name = "this feature", additional_message = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3429,7 +3310,6 @@ show_dfm_required_modal <- function(feature_name = "this feature", additional_me
 #' @param additional_note Optional note appended to the body.
 #' @return Invisibly `NULL`.
 #' @keywords internal
-#' @export
 show_preprocessing_steps_modal <- function(title = "Preprocessing Required",
                                           message,
                                           required_steps,
@@ -3492,11 +3372,7 @@ show_preprocessing_steps_modal <- function(title = "Preprocessing Required",
 #' @return Character vector of instruction lines
 #'
 #' @keywords internal
-#' @export
 #'
-#' @examples
-#' instructions <- get_dfm_setup_instructions("keyword extraction")
-#' cat(instructions, sep = "\n")
 get_dfm_setup_instructions <- function(feature_name = "this feature") {
   c(
     "Warning: DFM Processing Required\n",
@@ -3514,7 +3390,6 @@ get_dfm_setup_instructions <- function(feature_name = "this feature") {
 #' @param session Shiny session.
 #' @return Invisibly `NULL`.
 #' @keywords internal
-#' @export
 show_dfm_instructions_modal <- function(output_id, feature_name = "this feature", session = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("The 'shiny' package is required for this function.")
@@ -3541,7 +3416,6 @@ show_dfm_instructions_modal <- function(output_id, feature_name = "this feature"
 #' @param title Modal title.
 #' @return Invisibly `NULL`.
 #' @keywords internal
-#' @export
 show_preprocessing_required_modal <- function(message = "Please complete preprocessing steps first.",
                                              title = "Preprocessing Required") {
   if (!requireNamespace("shiny", quietly = TRUE)) {
@@ -3573,9 +3447,8 @@ show_preprocessing_required_modal <- function(message = "Please complete preproc
 #'
 #' @return Truncated text with "..." appended if truncated.
 #'
-#' @family text-utilities
+#' @concept text-utilities
 #' @keywords internal
-#' @export
 truncate_text_with_ellipsis <- function(text, max_chars = 50) {
   text <- as.character(text)
   if (nchar(text) <= max_chars) {
@@ -3594,9 +3467,8 @@ truncate_text_with_ellipsis <- function(text, max_chars = 50) {
 #'
 #' @return Truncated text with "..." appended if truncated.
 #'
-#' @family text-utilities
+#' @concept text-utilities
 #' @keywords internal
-#' @export
 truncate_text_to_words <- function(text, max_words = 150) {
   text <- as.character(text)
   words <- strsplit(text, "\\s+")[[1]]
@@ -3620,9 +3492,8 @@ truncate_text_to_words <- function(text, max_words = 150) {
 #'
 #' @return Text with line breaks inserted.
 #'
-#' @family text-utilities
+#' @concept text-utilities
 #' @keywords internal
-#' @export
 wrap_long_text <- function(text, chars_per_line = 50, max_lines = 3) {
   text <- as.character(text)
 
@@ -3694,7 +3565,6 @@ wrap_long_text <- function(text, chars_per_line = 50, max_lines = 3) {
 #' @param max_lines Maximum lines.
 #' @return A string with HTML `<br>` breaks.
 #' @keywords internal
-#' @export
 wrap_text_for_tooltip <- function(text, max_words = 150, chars_per_line = 50, max_lines = 3) {
   text <- as.character(text)
 
@@ -3756,9 +3626,8 @@ wrap_text_for_tooltip <- function(text, max_words = 150, chars_per_line = 50, ma
 #'
 #' @return Cleaned similarity matrix.
 #'
-#' @family matrix-utilities
+#' @concept matrix-utilities
 #' @keywords internal
-#' @export
 clean_similarity_matrix <- function(similarity_matrix) {
   # Replace non-finite values with 0
   similarity_matrix[!is.finite(similarity_matrix)] <- 0
@@ -3785,9 +3654,8 @@ clean_similarity_matrix <- function(similarity_matrix) {
 #'
 #' @return Vector with clusters renumbered sequentially (1, 2, 3, ...).
 #'
-#' @family matrix-utilities
+#' @concept matrix-utilities
 #' @keywords internal
-#' @export
 renumber_clusters_sequentially <- function(clusters) {
   if (is.null(clusters) || length(clusters) == 0) {
     return(clusters)

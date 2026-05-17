@@ -16,24 +16,6 @@ Similarity analysis results
 Wrapper for calculate_document_similarity
 }
 \seealso{
-Other semantic:
-\code{\link[=analyze_document_clustering]{analyze_document_clustering()}},
-\code{\link[=analyze_similarity_gaps]{analyze_similarity_gaps()}},
-\code{\link[=calculate_clustering_metrics]{calculate_clustering_metrics()}},
-\code{\link[=calculate_cross_similarity]{calculate_cross_similarity()}},
-\code{\link[=calculate_document_similarity]{calculate_document_similarity()}},
-\code{\link[=calculate_similarity_robust]{calculate_similarity_robust()}},
-\code{\link[=cluster_embeddings]{cluster_embeddings()}},
-\code{\link[=export_document_clustering]{export_document_clustering()}},
-\code{\link[=extract_cross_category_similarities]{extract_cross_category_similarities()}},
-\code{\link[=fit_semantic_model]{fit_semantic_model()}},
-\code{\link[=generate_cluster_labels]{generate_cluster_labels()}},
-\code{\link[=generate_cluster_labels_auto]{generate_cluster_labels_auto()}},
-\code{\link[=generate_embeddings]{generate_embeddings()}},
-\code{\link[=reduce_dimensions]{reduce_dimensions()}},
-\code{\link[=semantic_document_clustering]{semantic_document_clustering()}},
-\code{\link[=validate_cross_models]{validate_cross_models()}},
-\code{\link[=word_co_occurrence_network]{word_co_occurrence_network()}},
-\code{\link[=word_correlation_network]{word_correlation_network()}}
+\code{\link[=calculate_document_similarity]{calculate_document_similarity()}} for the core computation; \code{\link[=plot_similarity_heatmap]{plot_similarity_heatmap()}} to render the resulting matrix
 }
 \concept{semantic}

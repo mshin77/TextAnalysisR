@@ -76,7 +76,7 @@ server <- shinyServer(function(input, output, session) {
     })
   }
 
-  is_web <- TextAnalysisR::check_web_deployment()
+  is_web <- TextAnalysisR:::check_web_deployment()
   is_docker <- TextAnalysisR:::check_docker_deployment()
   is_remote <- is_web || is_docker
 
@@ -189,7 +189,7 @@ server <- shinyServer(function(input, output, session) {
   }
 
   feature_status <- reactive({
-    TextAnalysisR::get_feature_status()
+    TextAnalysisR:::get_feature_status()
   })
 
   observe({
@@ -411,14 +411,14 @@ server <- shinyServer(function(input, output, session) {
   })
 
   create_error_plot <- function(message, color = "#6c757d") {
-    TextAnalysisR::create_empty_plot_message(message, color = color)
+    TextAnalysisR:::create_empty_plot_message(message, color = color)
   }
 
   # Text utility functions now use package functions
-  truncate_text_with_ellipsis <- TextAnalysisR::truncate_text_with_ellipsis
-  truncate_text_to_words <- TextAnalysisR::truncate_text_to_words
-  wrap_long_text <- TextAnalysisR::wrap_long_text
-  wrap_text_for_tooltip <- TextAnalysisR::wrap_text_for_tooltip
+  truncate_text_with_ellipsis <- TextAnalysisR:::truncate_text_with_ellipsis
+  truncate_text_to_words <- TextAnalysisR:::truncate_text_to_words
+  wrap_long_text <- TextAnalysisR:::wrap_long_text
+  wrap_text_for_tooltip <- TextAnalysisR:::wrap_text_for_tooltip
 
   stm_model_trigger <- reactiveVal(0)
 
@@ -3385,7 +3385,7 @@ server <- shinyServer(function(input, output, session) {
 
       # Parse morphology string into individual columns
       if ("morph" %in% names(parsed)) {
-        parsed <- TextAnalysisR::parse_morphology_string(parsed, selected_features)
+        parsed <- TextAnalysisR:::parse_morphology_string(parsed, selected_features)
       }
 
       morph_data(parsed)
@@ -3919,7 +3919,7 @@ server <- shinyServer(function(input, output, session) {
     req(pos_applied() > 0)
 
     if (is.null(spacy_parsed())) {
-      return(TextAnalysisR::create_empty_plot_message(
+      return(TextAnalysisR:::create_empty_plot_message(
         "POS tags only available when 'Apply' is clicked (not 'Skip')"
       ))
     }
@@ -3928,7 +3928,7 @@ server <- shinyServer(function(input, output, session) {
 
     # Check if pos column exists
     if (!"pos" %in% names(parsed)) {
-      return(TextAnalysisR::create_empty_plot_message(
+      return(TextAnalysisR:::create_empty_plot_message(
         "POS data not available. Click 'Apply' to extract POS tags."
       ))
     }
@@ -4872,7 +4872,7 @@ server <- shinyServer(function(input, output, session) {
     req(spacy_parsed())
 
     if (is.null(spacy_parsed())) {
-      return(TextAnalysisR::create_empty_plot_message(
+      return(TextAnalysisR:::create_empty_plot_message(
         "Named entities only available when 'Apply' is clicked (not 'Skip')"
       ))
     }
@@ -4901,7 +4901,7 @@ server <- shinyServer(function(input, output, session) {
           dplyr::arrange(dplyr::desc(n)) %>%
           dplyr::slice_head(n = 20)
       } else {
-        return(TextAnalysisR::create_empty_plot_message(
+        return(TextAnalysisR:::create_empty_plot_message(
           "No named entity data available. Entity extraction was not enabled during processing."
         ))
       }
@@ -8669,7 +8669,7 @@ server <- shinyServer(function(input, output, session) {
       ngram_range <- if (feature_type == "ngrams") as.numeric(input$semantic_ngram_range %||% "2") else 2
 
       if (feature_type == "embeddings") {
-        if (!TextAnalysisR::check_feature("embeddings")) {
+        if (!TextAnalysisR:::check_feature("embeddings")) {
           remove_notification_by_id("sentiment_loading")
           showNotification("Embedding-based sentiment requires Python. Please use lexicon method.", type = "warning")
           return()
@@ -8776,7 +8776,7 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch({
       # Check Python availability
-      if (!TextAnalysisR::check_feature("python")) {
+      if (!TextAnalysisR:::check_feature("python")) {
         remove_notification_by_id("neural_sentiment_loading")
         show_error_notification("Neural sentiment requires Python. Please run TextAnalysisR::setup_python_env()")
         return()
@@ -12926,7 +12926,7 @@ server <- shinyServer(function(input, output, session) {
         session,
         "warning"
       )
-      TextAnalysisR::show_error_notification(
+      TextAnalysisR:::show_error_notification(
         "You have made too many search requests. Please wait before trying again."
       )
       return()
@@ -15182,17 +15182,17 @@ server <- shinyServer(function(input, output, session) {
     similarity_data <- get_similarity_data_for_plot(feature_type)
 
     if (is.null(similarity_data) || !is.null(similarity_data$error)) {
-      return(TextAnalysisR::create_empty_plot_message("Similarity data not available"))
+      return(TextAnalysisR:::create_empty_plot_message("Similarity data not available"))
     }
 
     docs_data <- document_display_data()
     if (is.null(docs_data)) {
-      return(TextAnalysisR::create_empty_plot_message("Document data not available"))
+      return(TextAnalysisR:::create_empty_plot_message("Document data not available"))
     }
 
     ref_category <- gap_result$reference_category
     if (is.null(ref_category)) {
-      return(TextAnalysisR::create_empty_plot_message("Reference category not set"))
+      return(TextAnalysisR:::create_empty_plot_message("Reference category not set"))
     }
 
     # Get other categories
@@ -15200,7 +15200,7 @@ server <- shinyServer(function(input, output, session) {
     col_categories <- setdiff(all_categories, ref_category)
 
     if (length(col_categories) == 0) {
-      return(TextAnalysisR::create_empty_plot_message("Need at least one comparison category"))
+      return(TextAnalysisR:::create_empty_plot_message("Need at least one comparison category"))
     }
 
     # Create cross-category heatmap
@@ -15218,7 +15218,7 @@ server <- shinyServer(function(input, output, session) {
       )
       gg_to_plotly(p)
     }, error = function(e) {
-      TextAnalysisR::create_empty_plot_message(paste("Error:", e$message))
+      TextAnalysisR:::create_empty_plot_message(paste("Error:", e$message))
     })
   })
 
@@ -15729,11 +15729,11 @@ server <- shinyServer(function(input, output, session) {
     results <- search_results_reactive$results
 
     if (!all(c("Document_Index", "Similarity_Score", "Document_Text") %in% names(results))) {
-      return(TextAnalysisR::create_message_table("Error: Invalid search results format"))
+      return(TextAnalysisR:::create_message_table("Error: Invalid search results format"))
     }
 
     if (nrow(results) == 0) {
-      return(TextAnalysisR::create_message_table("No documents found matching query"))
+      return(TextAnalysisR:::create_message_table("No documents found matching query"))
     }
 
     tryCatch({
@@ -17501,8 +17501,8 @@ server <- shinyServer(function(input, output, session) {
   })
 
   # Matrix utility functions now use package functions
-  clean_similarity_matrix <- TextAnalysisR::clean_similarity_matrix
-  renumber_clusters_sequentially <- TextAnalysisR::renumber_clusters_sequentially
+  clean_similarity_matrix <- TextAnalysisR:::clean_similarity_matrix
+  renumber_clusters_sequentially <- TextAnalysisR:::renumber_clusters_sequentially
 
   analysis_results <- reactiveValues(
     ai_labels = NULL,
@@ -17597,7 +17597,7 @@ server <- shinyServer(function(input, output, session) {
           hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
         )
     } else {
-      TextAnalysisR::create_empty_plot_message("No temporal data to display")
+      TextAnalysisR:::create_empty_plot_message("No temporal data to display")
     }
   })
 
@@ -17732,7 +17732,7 @@ server <- shinyServer(function(input, output, session) {
           hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
         )
     } else {
-      TextAnalysisR::create_empty_plot_message("No comparison data available")
+      TextAnalysisR:::create_empty_plot_message("No comparison data available")
     }
   })
 
@@ -18109,7 +18109,7 @@ server <- shinyServer(function(input, output, session) {
         session,
         "warning"
       )
-      TextAnalysisR::show_error_notification(
+      TextAnalysisR:::show_error_notification(
         "You have made too many search requests. Please wait before trying again."
       )
       return(NULL)
@@ -18655,7 +18655,7 @@ server <- shinyServer(function(input, output, session) {
 
       # Call the appropriate provider
       recommendation <- if (provider == "ollama") {
-        TextAnalysisR::call_ollama(
+        TextAnalysisR:::call_ollama(
           prompt = user_prompt,
           model = model,
           system = system_prompt,
@@ -18671,7 +18671,7 @@ server <- shinyServer(function(input, output, session) {
           "Discuss trade-offs between different K values and explain your reasoning thoroughly."
         )
         if (provider == "openai") {
-          TextAnalysisR::call_openai_chat(
+          TextAnalysisR:::call_openai_chat(
             user_prompt = detailed_prompt,
             system_prompt = system_prompt,
             model = model,
@@ -18680,7 +18680,7 @@ server <- shinyServer(function(input, output, session) {
             max_tokens = 2048
           )
         } else {
-          TextAnalysisR::call_gemini_chat(
+          TextAnalysisR:::call_gemini_chat(
             user_prompt = detailed_prompt,
             system_prompt = system_prompt,
             model = model,
@@ -19303,7 +19303,7 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$embedding_run, {
     embedding_displayed(FALSE)
 
-    if (!TextAnalysisR::require_feature("embeddings", session)) {
+    if (!TextAnalysisR:::require_feature("embeddings", session)) {
       return()
     }
 
@@ -19703,7 +19703,7 @@ server <- shinyServer(function(input, output, session) {
                 hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
               )
           } else {
-            TextAnalysisR::create_empty_plot_message(
+            TextAnalysisR:::create_empty_plot_message(
               "Need at least 2 topics for similarity heatmap"
             )
           }

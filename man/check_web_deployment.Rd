@@ -13,9 +13,4 @@ Logical TRUE if running on web server, FALSE if local
 Detects whether the app is running on a web server (shinyapps.io, Posit Connect)
 versus locally via \code{run_app()}.
 }
-\examples{
-if (check_web_deployment()) {
-  message("Running on web - some features disabled")
-}
-}
 \keyword{internal}

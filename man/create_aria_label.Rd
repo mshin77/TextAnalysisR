@@ -19,8 +19,4 @@ Character string with ARIA label
 \description{
 Creates accessible ARIA label for UI elements.
 }
-\examples{
-create_aria_label("button", "analyze", "readability")
-# Returns: "Analyze readability button"
-}
 \keyword{internal}

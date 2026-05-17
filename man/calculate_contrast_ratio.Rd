@@ -44,8 +44,4 @@ Calculate Color Contrast Ratio
 }
 }
 
-\examples{
-calculate_contrast_ratio("#111827", "#ffffff")  # Returns ~16:1 (Pass)
-calculate_contrast_ratio("#6b7280", "#4a5568")  # Returns ~2.8:1 (Fail)
-}
 \keyword{internal}

@@ -40,14 +40,5 @@ Priority order (highest to lowest):
 dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
 result <- get_available_dfm(dfm_init = dfm1)
 }
-\seealso{
-Other preprocessing:
-\code{\link[=get_available_tokens]{get_available_tokens()}},
-\code{\link[=import_files]{import_files()}},
-\code{\link[=lemmatize_tokens]{lemmatize_tokens()}},
-\code{\link[=prep_texts]{prep_texts()}},
-\code{\link[=process_pdf_unified]{process_pdf_unified()}},
-\code{\link[=unite_cols]{unite_cols()}}
-}
 \concept{preprocessing}
 \keyword{internal}

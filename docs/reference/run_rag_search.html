@@ -103,8 +103,8 @@ OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.</p></dd>
 
 
 <dt id="arg-chat-model">chat_model<a class="anchor" aria-label="anchor" href="#arg-chat-model"></a></dt>
-<dd><p>Character string, chat model. Defaults: "tinyllama" (ollama),
-"gpt-4.1-mini" (openai), "gemini-2.5-flash" (gemini)</p></dd>
+<dd><p>Character string, chat model. Defaults: "llama3.2" (ollama),
+"gpt-4.1-mini" (openai), "gemini-2.5-flash-lite" (gemini)</p></dd>
 
 
 <dt id="arg-top-k">top_k<a class="anchor" aria-label="anchor" href="#arg-top-k"></a></dt>
@@ -128,20 +128,7 @@ OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.</p></dd>
 </ol></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Other ai:
-<code><a href="call_gemini_chat.html">call_gemini_chat()</a></code>,
-<code><a href="call_llm_api.html">call_llm_api()</a></code>,
-<code><a href="call_ollama.html">call_ollama()</a></code>,
-<code><a href="call_openai_chat.html">call_openai_chat()</a></code>,
-<code><a href="check_ollama.html">check_ollama()</a></code>,
-<code><a href="describe_image.html">describe_image()</a></code>,
-<code><a href="generate_topic_content.html">generate_topic_content()</a></code>,
-<code><a href="get_api_embeddings.html">get_api_embeddings()</a></code>,
-<code><a href="get_best_embeddings.html">get_best_embeddings()</a></code>,
-<code><a href="get_content_type_prompt.html">get_content_type_prompt()</a></code>,
-<code><a href="get_content_type_user_template.html">get_content_type_user_template()</a></code>,
-<code><a href="get_recommended_ollama_model.html">get_recommended_ollama_model()</a></code>,
-<code><a href="list_ollama_models.html">list_ollama_models()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="get_best_embeddings.html">get_best_embeddings()</a></code> for the retrieval step alone; <code><a href="call_llm_api.html">call_llm_api()</a></code> for the answer-generation step alone; <code><a href="sanitize_llm_input.html">sanitize_llm_input()</a></code> for an input safety check before calling</p></div>
     </div>
 
     <div class="section level2">

@@ -60,3 +60,6 @@ if (interactive()) {
   print(word_freq_results$table)
 }
 }
+\seealso{
+\code{\link[=extract_keywords_tfidf]{extract_keywords_tfidf()}} and \code{\link[=extract_keywords_keyness]{extract_keywords_keyness()}} for ranking terms by importance; \code{\link[=plot_word_frequency]{plot_word_frequency()}} for the standard frequency-by-doc plot
+}

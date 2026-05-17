@@ -32,29 +32,5 @@ Character string with the model's response
 \description{
 Makes a chat completion request to OpenAI's API.
 }
-\examples{
-if (interactive()) {
-response <- call_openai_chat(
-  system_prompt = "You are a helpful assistant.",
-  user_prompt = "Generate a topic label for: education, student, learning",
-  api_key = Sys.getenv("OPENAI_API_KEY")
-)
-}
-}
-\seealso{
-Other ai:
-\code{\link[=call_gemini_chat]{call_gemini_chat()}},
-\code{\link[=call_llm_api]{call_llm_api()}},
-\code{\link[=call_ollama]{call_ollama()}},
-\code{\link[=check_ollama]{check_ollama()}},
-\code{\link[=describe_image]{describe_image()}},
-\code{\link[=generate_topic_content]{generate_topic_content()}},
-\code{\link[=get_api_embeddings]{get_api_embeddings()}},
-\code{\link[=get_best_embeddings]{get_best_embeddings()}},
-\code{\link[=get_content_type_prompt]{get_content_type_prompt()}},
-\code{\link[=get_content_type_user_template]{get_content_type_user_template()}},
-\code{\link[=get_recommended_ollama_model]{get_recommended_ollama_model()}},
-\code{\link[=list_ollama_models]{list_ollama_models()}},
-\code{\link[=run_rag_search]{run_rag_search()}}
-}
 \concept{ai}
+\keyword{internal}

@@ -19,8 +19,4 @@ Logical TRUE if compliant, FALSE if not
 \description{
 Validates if color combination meets WCAG 2.1 Level AA contrast requirements.
 }
-\examples{
-check_wcag_contrast("#111827", "#ffffff")  # TRUE (16:1 ratio)
-check_wcag_contrast("#6b7280", "#4a5568")  # FALSE (2.8:1 ratio)
-}
 \keyword{internal}

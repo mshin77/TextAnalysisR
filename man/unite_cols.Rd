@@ -32,12 +32,6 @@ if (interactive()) {
 }
 }
 \seealso{
-Other preprocessing:
-\code{\link[=get_available_dfm]{get_available_dfm()}},
-\code{\link[=get_available_tokens]{get_available_tokens()}},
-\code{\link[=import_files]{import_files()}},
-\code{\link[=lemmatize_tokens]{lemmatize_tokens()}},
-\code{\link[=prep_texts]{prep_texts()}},
-\code{\link[=process_pdf_unified]{process_pdf_unified()}}
+\code{\link[=prep_texts]{prep_texts()}} to tokenize and clean the united text; \code{\link[=import_files]{import_files()}} to load source data first
 }
 \concept{preprocessing}

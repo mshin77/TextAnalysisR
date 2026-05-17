@@ -17,9 +17,4 @@ Logical TRUE if available, FALSE if not
 \description{
 Checks feature availability and shows notification if unavailable.
 }
-\examples{
-if (interactive()) {
-if (!require_feature("embeddings", session)) return()
-}
-}
 \keyword{internal}

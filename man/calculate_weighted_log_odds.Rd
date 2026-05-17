@@ -44,4 +44,4 @@ political conflict. Political Analysis, 16(4), 372-403.
 Silge, J., & Robinson, D. (2017). Text mining with R: A tidy approach.
 O'Reilly Media. https://www.tidytextmining.com/
 }
-\concept{lexical analysis}
+\concept{lexical}

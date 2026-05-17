@@ -18,10 +18,5 @@ Truncated text with "..." appended if truncated.
 Truncates text to a maximum number of words and adds
 ellipsis if truncated.
 }
-\seealso{
-Other text-utilities:
-\code{\link[=truncate_text_with_ellipsis]{truncate_text_with_ellipsis()}},
-\code{\link[=wrap_long_text]{wrap_long_text()}}
-}
 \concept{text-utilities}
 \keyword{internal}

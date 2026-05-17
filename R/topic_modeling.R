@@ -38,7 +38,8 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
 #' @param verbose Logical indicating whether to print progress (default: TRUE).
 #' @param ... Additional arguments passed to stm::searchK.
 #' @return A list containing search results and diagnostic plots.
-#' @family topic-modeling
+#' @concept topic-modeling
+#' @seealso [plot_quality_metrics()] to visualize topic-count diagnostics; `stm::stm()` to fit the chosen model; [fit_embedding_model()] for an embedding-based alternative to STM
 #' @export
 find_optimal_k <- function(dfm_object,
                            topic_range,
@@ -150,7 +151,7 @@ find_optimal_k <- function(dfm_object,
 #'
 #' @return A data frame containing the top terms for each topic.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 #'
 #' @examples
@@ -215,7 +216,7 @@ get_topic_terms <- function(stm_model,
 #'   \item{gamma}{Mean topic prevalence across documents}
 #'   \item{category}{Category label (if provided)}
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 #'
 #' @examples
@@ -275,7 +276,7 @@ get_topic_prevalence <- function(stm_model,
 #'
 #' @return A character vector of topic text strings, one per topic, ordered by topic number.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 #'
 #' @examples
@@ -338,7 +339,7 @@ get_topic_texts <- function(top_terms_df,
 #' @param model A topic model object (STM fit or embedding result).
 #' @param n Number of top terms per topic (default 7).
 #' @return `data.frame(topic, term, beta)` in long format.
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 extract_topic_terms_df <- function(model, n = 7) {
   if (is.null(model)) return(data.frame(topic = integer(0), term = character(0), beta = numeric(0)))
@@ -394,7 +395,8 @@ extract_topic_terms_df <- function(model, n = 7) {
 #'
 #' @return A data frame containing the top terms for each topic along with their generated labels.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
+#' @seealso [get_topic_terms()] to extract top terms first; [generate_topic_content()] for survey items / RQs / themes grounded in the same terms; [call_llm_api()] for the direct AI provider call
 #' @export
 #'
 #' @examples
@@ -595,7 +597,7 @@ Label: Virtual Math Tools for Students with Disabilities"
 #' @return A DT::datatable showing topics and their mean gamma (prevalence) values,
 #'   rounded to 3 decimal places.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 #'
 #' @examples
@@ -646,7 +648,7 @@ calculate_topic_probability <- function(stm_model,
 #' @param seed Random seed for reproducibility
 #'
 #' @return List containing neural topic model and diagnostics
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @keywords internal
 #' @export
 run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
@@ -746,7 +748,8 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #'
 #' @return A list containing topic assignments, topic keywords, and quality metrics.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
+#' @seealso [get_best_embeddings()] to supply precomputed embeddings; [generate_topic_labels()] for AI-suggested topic names; [find_optimal_k()] for an STM-based alternative
 #' @export
 #'
 #' @examples
@@ -1463,7 +1466,7 @@ fit_embedding_topics <- function(texts,
 #'
 #' @return A list containing similar topics and their similarity scores.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 #'
 #' @examples
@@ -1623,7 +1626,7 @@ find_topic_matches <- function(topic_model,
 #' @param epsilon Numerical stabilizer (default 1e-12).
 #' @return list with `mean_npmi` (scalar) and `per_topic_npmi` (numeric vector).
 #' @importFrom methods as
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @keywords internal
 calculate_npmi <- function(top_terms_list, dfm, top_k = 10, epsilon = 1e-12) {
   if (is.null(top_terms_list) || length(top_terms_list) == 0 || is.null(dfm)) {
@@ -1666,7 +1669,7 @@ calculate_npmi <- function(top_terms_list, dfm, top_k = 10, epsilon = 1e-12) {
 #' @param top_terms_list Named or unnamed list of character vectors, one per topic.
 #' @param top_k Number of top terms per topic to include (default 25).
 #' @return Numeric between 0 and 1, or NA if input empty.
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @keywords internal
 calculate_topic_diversity <- function(top_terms_list, top_k = 25) {
   if (is.null(top_terms_list) || length(top_terms_list) == 0) return(NA_real_)
@@ -1705,7 +1708,7 @@ calculate_topic_diversity <- function(top_terms_list, top_k = 25) {
 #' - min_cluster_size: HDBSCAN minimum cluster size (3, 5, 10)
 #' - cluster_selection_method: "eom" (broader) or "leaf" (finer-grained)
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 #' @examples
 #' if (interactive()) {
@@ -1888,7 +1891,7 @@ auto_tune_embedding_topics <- function(
 #' - Keyword Jaccard similarity: Measures overlap in top keywords per topic
 #' - Quality variance: Variance in silhouette scores across runs
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 #' @examples
 #' if (interactive()) {
@@ -2339,7 +2342,7 @@ calculate_topic_quality <- function(embeddings, topic_assignments, similarity_ma
 #' @param embeddings Optional pre-computed embeddings matrix. If NULL, embeddings will be generated.
 #' @param verbose Logical indicating whether to print progress messages (default: TRUE).
 #' @return A list containing temporal analysis results with topic evolution patterns.
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 fit_temporal_model <- function(texts,
                                      dates,
@@ -2487,7 +2490,7 @@ calculate_coherence <- function(embeddings, topic_assignments) {
 #'
 #' @return Stability metrics.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 calculate_topic_stability <- function(temporal_results) {
 
@@ -2521,7 +2524,7 @@ calculate_topic_stability <- function(temporal_results) {
 #'
 #' @return Stability score.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 calculate_keyword_stability <- function(keywords1, keywords2) {
 
@@ -2562,7 +2565,7 @@ calculate_topic_cluster_correspondence <- function(topic_keywords, cluster_keywo
 #' @param topic_assignments Vector of topic assignments for documents.
 #' @param ... Additional parameters (currently unused).
 #' @return List containing coherence score and metrics.
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 validate_semantic_coherence <- function(embeddings, topic_assignments, ...) {
   result <- calculate_coherence(embeddings, topic_assignments)
@@ -2579,7 +2582,7 @@ validate_semantic_coherence <- function(embeddings, topic_assignments, ...) {
 #' @param assignments2 Second set of assignments
 #' @param ... Additional parameters
 #' @return List containing consistency metrics
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 calculate_assignment_consistency <- function(assignments1, assignments2, ...) {
   if (length(assignments1) != length(assignments2)) {
@@ -2611,7 +2614,7 @@ calculate_assignment_consistency <- function(assignments1, assignments2, ...) {
 #' @param verbose Logical indicating whether to print progress messages
 #' @param ... Additional parameters
 #' @return List containing evolution analysis
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 analyze_semantic_evolution <- function(temporal_results, verbose = FALSE, ...) {
   if (verbose) message("Analyzing semantic evolution...")
@@ -2640,7 +2643,7 @@ analyze_semantic_evolution <- function(temporal_results, verbose = FALSE, ...) {
 #' @param temporal_results Temporal analysis results
 #' @param ... Additional parameters
 #' @return List containing drift metrics
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 calculate_semantic_drift <- function(temporal_results, ...) {
   if (is.null(temporal_results) || length(temporal_results) < 2) {
@@ -2675,7 +2678,7 @@ calculate_semantic_drift <- function(temporal_results, ...) {
 #' @param temporal_results Temporal analysis results
 #' @param ... Additional parameters
 #' @return List containing identified trends
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 identify_topic_trends <- function(temporal_results, ...) {
   if (is.null(temporal_results) || length(temporal_results) < 2) {
@@ -2742,7 +2745,7 @@ identify_topic_trends <- function(temporal_results, ...) {
 #'     \item \code{formula}: Formula used
 #'   }
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 fit_topic_prevalence_model <- function(topic_proportions,
                                       metadata,
@@ -2873,7 +2876,7 @@ fit_topic_prevalence_model <- function(topic_proportions,
 #' @return A named list of ggplot objects, one per available metric
 #'   (possible keys: semcoh, residual, heldout, lbound).
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 plot_quality_metrics <- function(search_results) {
 
@@ -2947,7 +2950,7 @@ plot_quality_metrics <- function(search_results) {
 #'
 #' @return A plotly scatter plot
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 plot_model_comparison <- function(search_results,
                                   title = "Coherence-Exclusivity Frontier (choose K in the upper-right)",
@@ -3035,7 +3038,7 @@ plot_model_comparison <- function(search_results,
 #'
 #' @return A ggplot2 object showing word probabilities faceted by topic.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 plot_word_probability <- function(top_topic_terms,
                                    topic_label = NULL,
@@ -3155,7 +3158,7 @@ plot_word_probability <- function(top_topic_terms,
 #'
 #' @return A ggplot2 object showing a bar plot of topic prevalence.
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 plot_topic_probability <- function(gamma_data,
                                    top_n = 10,
@@ -3242,7 +3245,7 @@ plot_topic_probability <- function(gamma_data,
 #'
 #' @return A plotly object
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 plot_topic_effects_categorical <- function(effects_data,
                                            ncol = 2,
@@ -3316,7 +3319,7 @@ plot_topic_effects_categorical <- function(effects_data,
 #'
 #' @return A plotly object
 #'
-#' @family topic-modeling
+#' @concept topic-modeling
 #' @export
 plot_topic_effects_continuous <- function(effects_data,
                                           ncol = 2,
@@ -3379,7 +3382,7 @@ plot_topic_effects_continuous <- function(effects_data,
 #'
 #' @return A plotly object
 #'
-#' @family visualization
+#' @concept visualization
 #' @export
 plot_cluster_terms <- function(terms,
                                 cluster_id = NULL,
@@ -3451,7 +3454,7 @@ plot_cluster_terms <- function(terms,
 #'
 #' @return Character string with the system prompt.
 #'
-#' @family ai
+#' @concept ai
 #' @export
 get_content_type_prompt <- function(content_type) {
   prompts <- list(
@@ -3540,7 +3543,7 @@ Return ONLY the requested content, without numbering, quotes, or explanations."
 #'
 #' @return Character string with the user prompt template containing \code{\{terms\}} placeholder.
 #'
-#' @family ai
+#' @concept ai
 #' @export
 get_content_type_user_template <- function(content_type) {
   templates <- list(
@@ -3641,7 +3644,8 @@ Content:"
 #'
 #' For Ollama, requires a local Ollama installation with the specified model.
 #'
-#' @family ai
+#' @concept ai
+#' @seealso [generate_topic_labels()] for the step that creates topic labels; [get_content_type_prompt()] and [get_content_type_user_template()] to inspect or override default prompts
 #' @export
 #'
 #' @examples

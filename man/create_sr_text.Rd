@@ -15,7 +15,4 @@ HTML span with sr-only class
 \description{
 Generates visually hidden text for screen readers (WCAG 4.1.2).
 }
-\examples{
-create_sr_text("Loading results, please wait")
-}
 \keyword{internal}

@@ -118,12 +118,6 @@ print(tokens)
 }
 }
 \seealso{
-Other preprocessing:
-\code{\link[=get_available_dfm]{get_available_dfm()}},
-\code{\link[=get_available_tokens]{get_available_tokens()}},
-\code{\link[=import_files]{import_files()}},
-\code{\link[=lemmatize_tokens]{lemmatize_tokens()}},
-\code{\link[=process_pdf_unified]{process_pdf_unified()}},
-\code{\link[=unite_cols]{unite_cols()}}
+\code{\link[=unite_cols]{unite_cols()}} to combine text columns first; \code{\link[=lemmatize_tokens]{lemmatize_tokens()}} to reduce words to base form (e.g., running → run); \code{quanteda::dfm()} to build a document-feature matrix from the result
 }
 \concept{preprocessing}

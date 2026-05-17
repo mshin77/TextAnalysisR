@@ -23,9 +23,4 @@ Required for WCAG 1.1.1 (Non-text Content).
 Note: Decorative images should use empty alt text (alt="") to indicate
 they should be ignored by assistive technology.
 }
-\examples{
-check_alt_text("Bar chart showing word frequency", "plot")  # TRUE
-check_alt_text("", "plot")  # FALSE (informative content needs alt text)
-check_alt_text("", "icon", decorative = TRUE)  # TRUE (decorative is OK)
-}
 \keyword{internal}

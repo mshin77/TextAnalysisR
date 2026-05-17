@@ -38,13 +38,4 @@ tokens <- quanteda::tokens(c("The studies showed better results"))
 lemmatized <- lemmatize_tokens(tokens, batch_size = 50)
 }
 }
-\seealso{
-Other preprocessing:
-\code{\link[=get_available_dfm]{get_available_dfm()}},
-\code{\link[=get_available_tokens]{get_available_tokens()}},
-\code{\link[=import_files]{import_files()}},
-\code{\link[=prep_texts]{prep_texts()}},
-\code{\link[=process_pdf_unified]{process_pdf_unified()}},
-\code{\link[=unite_cols]{unite_cols()}}
-}
 \concept{preprocessing}

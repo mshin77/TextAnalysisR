@@ -130,25 +130,16 @@ reference:
   contents:
   - check_ollama
   - list_ollama_models
-  - call_ollama
-  - call_openai_chat
-  - call_gemini_chat
   - call_llm_api
   - check_vision_models
   - describe_image
   - get_recommended_ollama_model
   - get_best_embeddings
-  - get_api_embeddings
-  - get_spacy_embeddings
   - run_rag_search
   - analyze_sentiment_llm
   - get_content_type_prompt
   - get_content_type_user_template
   - process_pdf_unified
-  - starts_with("process_pdf")
-  - starts_with("extract_text")
-  - starts_with("extract_tables")
-  - starts_with("extract_pdf")
   - starts_with("detect_pdf")
 
 - title: "Data"
@@ -232,6 +223,17 @@ reference:
   - validate_column_name
   - validate_file_upload
   - validate_keyboard_navigation
+  - call_ollama
+  - call_openai_chat
+  - call_gemini_chat
+  - get_api_embeddings
+  - get_spacy_embeddings
+  - process_pdf_file
+  - process_pdf_file_py
+  - extract_text_from_pdf
+  - extract_text_from_pdf_py
+  - extract_pdf_smart
+  - extract_pdf_multimodal
 
 articles:
 - title: "Get Started"

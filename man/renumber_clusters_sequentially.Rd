@@ -16,9 +16,5 @@ Vector with clusters renumbered sequentially (1, 2, 3, ...).
 Renumbers cluster assignments to sequential integers
 starting from 1.
 }
-\seealso{
-Other matrix-utilities:
-\code{\link[=clean_similarity_matrix]{clean_similarity_matrix()}}
-}
 \concept{matrix-utilities}
 \keyword{internal}

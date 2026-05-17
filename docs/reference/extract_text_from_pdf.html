@@ -80,31 +80,7 @@ Returns NULL if extraction fails or PDF is empty</p>
 Preserves page structure and cleans whitespace.
 Works best with text-based PDFs (not scanned images).</p>
     </div>
-    <div class="section level2">
-    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>Other pdf:
-<code><a href="check_vision_models.html">check_vision_models()</a></code>,
-<code><a href="detect_pdf_content_type.html">detect_pdf_content_type()</a></code>,
-<code><a href="detect_pdf_content_type_py.html">detect_pdf_content_type_py()</a></code>,
-<code><a href="extract_pdf_multimodal.html">extract_pdf_multimodal()</a></code>,
-<code><a href="extract_pdf_smart.html">extract_pdf_smart()</a></code>,
-<code><a href="extract_tables_from_pdf_py.html">extract_tables_from_pdf_py()</a></code>,
-<code><a href="extract_text_from_pdf_py.html">extract_text_from_pdf_py()</a></code>,
-<code><a href="process_pdf_file.html">process_pdf_file()</a></code>,
-<code><a href="process_pdf_file_py.html">process_pdf_file_py()</a></code></p></div>
-    </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="va">pdf_path</span> <span class="op">&lt;-</span> <span class="st">"path/to/document.pdf"</span></span></span>
-<span class="r-in"><span><span class="va">text_data</span> <span class="op">&lt;-</span> <span class="fu">extract_text_from_pdf</span><span class="op">(</span><span class="va">pdf_path</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Error extracting text from PDF: path[1]="path/to/document.pdf": The system cannot find the path specified</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">text_data</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

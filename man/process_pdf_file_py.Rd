@@ -38,31 +38,5 @@ This function uses Python's pdfplumber library which:
 \item Uses TextAnalysisR Python environment
 }
 }
-\examples{
-if (interactive()) {
-setup_python_env()
-
-pdf_path <- "path/to/document.pdf"
-result <- process_pdf_file_py(pdf_path)
-
-if (result$success) {
-  print(head(result$data))
-} else {
-  print(result$message)
-}
-}
-}
-\seealso{
-Other pdf:
-\code{\link[=check_vision_models]{check_vision_models()}},
-\code{\link[=detect_pdf_content_type]{detect_pdf_content_type()}},
-\code{\link[=detect_pdf_content_type_py]{detect_pdf_content_type_py()}},
-\code{\link[=extract_pdf_multimodal]{extract_pdf_multimodal()}},
-\code{\link[=extract_pdf_smart]{extract_pdf_smart()}},
-\code{\link[=extract_tables_from_pdf_py]{extract_tables_from_pdf_py()}},
-\code{\link[=extract_text_from_pdf]{extract_text_from_pdf()}},
-\code{\link[=extract_text_from_pdf_py]{extract_text_from_pdf_py()}},
-\code{\link[=process_pdf_file]{process_pdf_file()}}
-}
 \concept{pdf}
 \keyword{internal}

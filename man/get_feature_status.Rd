@@ -12,9 +12,4 @@ Named list with feature availability
 \description{
 Returns availability status for all optional features.
 }
-\examples{
-if (interactive()) {
-  status <- get_feature_status()
-  print(status)
-}
-}
+\keyword{internal}
