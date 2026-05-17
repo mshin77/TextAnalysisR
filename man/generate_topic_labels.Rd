@@ -23,7 +23,7 @@ generate_topic_labels(
 "auto" will try Ollama first, then check for OpenAI/Gemini keys.}
 
 \item{model}{A character string specifying which model to use. If NULL, uses
-provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash" (Gemini),
+provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini),
 or recommended Ollama model.}
 
 \item{system}{A character string containing the system prompt for the API.

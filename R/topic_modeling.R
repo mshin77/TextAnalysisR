@@ -380,7 +380,7 @@ extract_topic_terms_df <- function(model, n = 7) {
 #' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
 #'   "auto" will try Ollama first, then check for OpenAI/Gemini keys.
 #' @param model A character string specifying which model to use. If NULL, uses
-#'   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash" (Gemini),
+#'   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini),
 #'   or recommended Ollama model.
 #' @param system A character string containing the system prompt for the API.
 #'   If NULL, the function uses the default system prompt.
@@ -459,10 +459,10 @@ generate_topic_labels <- function(top_topic_terms,
     model <- switch(provider,
       "ollama" = {
         recommended <- get_recommended_ollama_model(verbose = verbose)
-        if (is.null(recommended)) "tinyllama" else recommended
+        if (is.null(recommended)) "llama3.2" else recommended
       },
       "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-2.5-flash"
+      "gemini" = "gemini-2.5-flash-lite"
     )
   }
 

@@ -348,15 +348,16 @@ server <- shinyServer(function(input, output, session) {
         ),
         conditionalPanel(
           condition = "input.vision_provider == 'ollama'",
-          selectInput("ollama_vision_model",
+          selectizeInput("ollama_vision_model",
             "Ollama model:",
             choices = c("LLaVA (Default)" = "llava", "BakLLaVA" = "bakllava", "LLaVA-Phi3" = "llava-phi3"),
-            selected = "llava"
+            selected = "llava",
+            options = list(create = TRUE, placeholder = "Type any vision model name")
           ),
           tags$div(
             class = "ollama-help-text",
             style = "font-size: 16px; color: #64748B; margin-top: -8px; margin-bottom: 8px;",
-            HTML("First time? Run: <code>ollama pull llava</code>")
+            HTML("First time? Run: <code>ollama pull llava</code>. Browse: <a href='https://ollama.com/library' target='_blank'>ollama.com/library</a>")
           )
         ),
         conditionalPanel(
@@ -367,10 +368,11 @@ server <- shinyServer(function(input, output, session) {
             tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
-          selectInput("openai_vision_model",
+          selectizeInput("openai_vision_model",
             "OpenAI model:",
-            choices = c("GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini"),
-            selected = "gpt-4.1"
+            choices = c("GPT-4.1 (Default, accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini", "GPT-4" = "gpt-4"),
+            selected = "gpt-4.1",
+            options = list(create = TRUE, placeholder = "Type any model ID")
           )
         ),
         conditionalPanel(
@@ -381,10 +383,11 @@ server <- shinyServer(function(input, output, session) {
             tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
-          selectInput("gemini_vision_model",
+          selectizeInput("gemini_vision_model",
             "Gemini model:",
-            choices = c("Gemini 2.5 Flash (Fast)" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
-            selected = "gemini-2.5-flash"
+            choices = c("Gemini 2.5 Flash (Default, fast)" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro", "Gemini 2.5 Flash Lite (Economy)" = "gemini-2.5-flash-lite"),
+            selected = "gemini-2.5-flash",
+            options = list(create = TRUE, placeholder = "Type any model ID")
           )
         )
       )
@@ -8856,16 +8859,17 @@ server <- shinyServer(function(input, output, session) {
           }, error = function(e) c("tinyllama", "llama3.2", "mistral", "gemma3"))
 
           tagList(
-            selectInput(
+            selectizeInput(
               "llm_sentiment_model",
               "Ollama Model",
               choices = models,
-              selected = if ("tinyllama" %in% models) "tinyllama" else models[1]
+              selected = if ("llama3.2" %in% models) "llama3.2" else models[1],
+              options = list(create = TRUE, placeholder = "Type any model name or pick one")
             ),
             tags$p(
               style = "font-size: 16px; color: #666;",
-              "Requires Ollama. Get it from ",
-              tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
+              "Type any Ollama model name. Catalog: ",
+              tags$a(href = "https://ollama.com/library", target = "_blank", "ollama.com/library")
             )
           )
         } else {
@@ -8879,14 +8883,21 @@ server <- shinyServer(function(input, output, session) {
       },
       "openai" = {
         tagList(
-          selectInput(
+          selectizeInput(
             "llm_sentiment_model",
             "OpenAI Model",
             choices = c(
-              "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini",
-              "GPT-4.1 (Accurate)" = "gpt-4.1"
+              "GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini",
+              "GPT-4.1 (Accurate)" = "gpt-4.1",
+              "GPT-4" = "gpt-4"
             ),
-            selected = "gpt-4.1-mini"
+            selected = "gpt-4.1-mini",
+            options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+          ),
+          tags$p(
+            style = "font-size: 16px; color: #666;",
+            "Type any OpenAI model ID. Catalog: ",
+            tags$a(href = "https://platform.openai.com/docs/models", target = "_blank", "platform.openai.com/docs/models")
           ),
           passwordInput("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
@@ -8898,15 +8909,21 @@ server <- shinyServer(function(input, output, session) {
       },
       "gemini" = {
         tagList(
-          selectInput(
+          selectizeInput(
             "llm_sentiment_model",
             "Gemini Model",
             choices = c(
-              "Gemini 2.5 Flash (Fast)" = "gemini-2.5-flash",
-              "Gemini 2.5 Flash Lite" = "gemini-2.5-flash-lite",
+              "Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite",
+              "Gemini 2.5 Flash" = "gemini-2.5-flash",
               "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
             ),
-            selected = "gemini-2.5-flash"
+            selected = "gemini-2.5-flash-lite",
+            options = list(create = TRUE, placeholder = "Type any model ID or pick one")
+          ),
+          tags$p(
+            style = "font-size: 16px; color: #666;",
+            "Type any Gemini model ID. Catalog: ",
+            tags$a(href = "https://ai.google.dev/gemini-api/docs/models", target = "_blank", "ai.google.dev/gemini-api/docs/models")
           ),
           passwordInput("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(

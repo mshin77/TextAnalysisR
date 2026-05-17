@@ -6,7 +6,7 @@
 \usage{
 call_ollama(
   prompt,
-  model = "tinyllama",
+  model = "llama3.2",
   system = NULL,
   temperature = 0.3,
   max_tokens = 512,
@@ -17,7 +17,7 @@ call_ollama(
 \arguments{
 \item{prompt}{Character string containing the prompt.}
 
-\item{model}{Character string specifying the Ollama model (default: "tinyllama").}
+\item{model}{Character string specifying the Ollama model (default: "llama3.2").}
 
 \item{system}{Character string with system instructions (default: NULL).}
 
@@ -39,7 +39,7 @@ Sends a prompt to Ollama and returns the generated text.
 if (interactive()) {
 response <- call_ollama(
   prompt = "Summarize these keywords: machine learning, neural networks, AI",
-  model = "tinyllama"
+  model = "llama3.2"
 )
 print(response)
 }

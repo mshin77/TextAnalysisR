@@ -1186,7 +1186,7 @@ list_ollama_models <- function(verbose = FALSE) {
 #' @description Sends a prompt to Ollama and returns the generated text.
 #'
 #' @param prompt Character string containing the prompt.
-#' @param model Character string specifying the Ollama model (default: "tinyllama").
+#' @param model Character string specifying the Ollama model (default: "llama3.2").
 #' @param system Character string with system instructions (default: NULL).
 #' @param temperature Numeric value controlling randomness (default: 0.3).
 #' @param max_tokens Maximum number of tokens to generate (default: 512).
@@ -1202,12 +1202,12 @@ list_ollama_models <- function(verbose = FALSE) {
 #' if (interactive()) {
 #' response <- call_ollama(
 #'   prompt = "Summarize these keywords: machine learning, neural networks, AI",
-#'   model = "tinyllama"
+#'   model = "llama3.2"
 #' )
 #' print(response)
 #' }
 call_ollama <- function(prompt,
-                       model = "tinyllama",
+                       model = "llama3.2",
                        system = NULL,
                        temperature = 0.3,
                        max_tokens = 512,
@@ -1289,18 +1289,19 @@ call_ollama <- function(prompt,
 #' model <- get_recommended_ollama_model()
 #' print(model)
 #' }
-get_recommended_ollama_model <- function(preferred_models = c("tinyllama", "gemma3:1b", "llama3.2", "gemma3", "mistral:7b"),
+get_recommended_ollama_model <- function(preferred_models = c("llama3.2", "gemma3", "mistral:7b", "gemma3:1b", "tinyllama"),
                                         verbose = FALSE) {
 
   available_models <- list_ollama_models(verbose = FALSE)
 
   if (is.null(available_models) || length(available_models) == 0) {
     if (verbose) {
-      message("No Ollama models available. Recommended models:")
-      message("  1. tinyllama (637MB, lightweight)")
-      message("  2. gemma3:1b (815MB, better quality)")
-      message("  3. llama3.2 (2.0GB, best balance - requires 4GB+ RAM)")
-      message("\nTo install: ollama pull tinyllama")
+      message("No Ollama models available. Recommended models for research text:")
+      message("  1. llama3.2 (2.0GB, best balance - requires 4GB+ RAM)")
+      message("  2. gemma3 (good general-purpose)")
+      message("  3. mistral:7b (solid quality)")
+      message("  4. tinyllama (637MB, low-resource fallback only)")
+      message("\nTo install: ollama pull llama3.2")
     }
     return(NULL)
   }
