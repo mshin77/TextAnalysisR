@@ -4,11 +4,7 @@
 \alias{process_pdf_file_py}
 \title{Process PDF File using Python}
 \usage{
-process_pdf_file_py(
-  file_path,
-  content_type = "auto",
-  envname = "textanalysisr-env"
-)
+process_pdf_file_py(file_path, content_type = "auto", envname = NULL)
 }
 \arguments{
 \item{file_path}{Character string path to PDF file}

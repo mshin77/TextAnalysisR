@@ -4,7 +4,7 @@
 \alias{log_security_event}
 \title{Log Security Event}
 \usage{
-log_security_event(event_type, details, session_info, level = "INFO")
+log_security_event(event_type, details, session_info, level = "info")
 }
 \arguments{
 \item{event_type}{Type of security event}
@@ -13,7 +13,7 @@ log_security_event(event_type, details, session_info, level = "INFO")
 
 \item{session_info}{Shiny session object}
 
-\item{level}{Log level (INFO, WARNING, ERROR)}
+\item{level}{Log level ("info", "warning", "error")}
 }
 \description{
 Log Security Event

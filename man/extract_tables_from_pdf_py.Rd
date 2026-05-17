@@ -4,11 +4,7 @@
 \alias{extract_tables_from_pdf_py}
 \title{Extract Tables from PDF using Python}
 \usage{
-extract_tables_from_pdf_py(
-  file_path,
-  pages = NULL,
-  envname = "textanalysisr-env"
-)
+extract_tables_from_pdf_py(file_path, pages = NULL, envname = NULL)
 }
 \arguments{
 \item{file_path}{Character string path to PDF file}

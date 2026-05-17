@@ -949,19 +949,10 @@ process_pdf_file <- function(file_path, content_type = "auto") {
 #' text_data <- extract_text_from_pdf_py(pdf_path)
 #' head(text_data)
 #' }
-extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required.")
-  }
-
-  status <- check_python_env(envname)
-  if (!status$available) {
-    stop("Python environment '", envname, "' not found. Run setup_python_env() first.")
-  }
+extract_text_from_pdf_py <- function(file_path, envname = NULL) {
+  .ensure_python("pdfplumber", envname)
 
   tryCatch({
-    reticulate::use_virtualenv(envname, required = TRUE)
-
     pdf_module <- reticulate::import_from_path(
       "pdf_extraction",
       path = system.file("python", package = "TextAnalysisR")
@@ -1021,19 +1012,10 @@ extract_text_from_pdf_py <- function(file_path, envname = "textanalysisr-env") {
 #' table_data <- extract_tables_from_pdf_py(pdf_path)
 #' head(table_data)
 #' }
-extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "textanalysisr-env") {
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required.")
-  }
-
-  status <- check_python_env(envname)
-  if (!status$available) {
-    stop("Python environment '", envname, "' not found. Run setup_python_env() first.")
-  }
+extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = NULL) {
+  .ensure_python("pdfplumber", envname)
 
   tryCatch({
-    reticulate::use_virtualenv(envname, required = TRUE)
-
     pdf_module <- reticulate::import_from_path(
       "pdf_extraction",
       path = system.file("python", package = "TextAnalysisR")
@@ -1091,19 +1073,11 @@ extract_tables_from_pdf_py <- function(file_path, pages = NULL, envname = "texta
 #' content_type <- detect_pdf_content_type_py(pdf_path)
 #' print(content_type)
 #' }
-detect_pdf_content_type_py <- function(file_path, envname = "textanalysisr-env") {
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required.")
-  }
-
-  status <- check_python_env(envname)
-  if (!status$available) {
-    return("unknown")
-  }
+detect_pdf_content_type_py <- function(file_path, envname = NULL) {
+  ok <- tryCatch({ .ensure_python("pdfplumber", envname); TRUE }, error = function(e) FALSE)
+  if (!ok) return("unknown")
 
   tryCatch({
-    reticulate::use_virtualenv(envname, required = TRUE)
-
     pdf_module <- reticulate::import_from_path(
       "pdf_extraction",
       path = system.file("python", package = "TextAnalysisR")
@@ -1162,38 +1136,17 @@ detect_pdf_content_type_py <- function(file_path, envname = "textanalysisr-env")
 #'   print(result$message)
 #' }
 #' }
-process_pdf_file_py <- function(file_path, content_type = "auto", envname = "textanalysisr-env") {
+process_pdf_file_py <- function(file_path, content_type = "auto", envname = NULL) {
   if (!file.exists(file_path)) {
-    return(list(
-      data = NULL,
-      type = "error",
-      success = FALSE,
-      message = "File not found"
-    ))
+    return(list(data = NULL, type = "error", success = FALSE, message = "File not found"))
   }
 
-  if (!requireNamespace("reticulate", quietly = TRUE)) {
-    return(list(
-      data = NULL,
-      type = "error",
-      success = FALSE,
-      message = "Package 'reticulate' is required"
-    ))
-  }
-
-  status <- check_python_env(envname)
-  if (!status$available) {
-    return(list(
-      data = NULL,
-      type = "error",
-      success = FALSE,
-      message = paste("Python environment", envname, "not found. Run setup_python_env() first.")
-    ))
+  ok <- tryCatch({ .ensure_python("pdfplumber", envname); TRUE }, error = function(e) e$message)
+  if (!isTRUE(ok)) {
+    return(list(data = NULL, type = "error", success = FALSE, message = as.character(ok)))
   }
 
   tryCatch({
-    reticulate::use_virtualenv(envname, required = TRUE)
-
     pdf_module <- reticulate::import_from_path(
       "pdf_extraction",
       path = system.file("python", package = "TextAnalysisR")

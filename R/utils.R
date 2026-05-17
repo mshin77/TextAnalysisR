@@ -2052,8 +2052,8 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
     if (httr::status_code(response) != 200) {
       error_content <- httr::content(response, "text", encoding = "UTF-8")
       tryCatch(
-        log_security_event("API_ERROR", sprintf("Ollama embeddings status %d: %s",
-          httr::status_code(response), error_content), list(token = NULL), "ERROR"),
+        log_security_event("api_error", sprintf("Ollama embeddings status %d: %s",
+          httr::status_code(response), error_content), list(token = NULL), "error"),
         error = function(e) NULL
       )
       stop(sprintf("Ollama embeddings request failed (status %d). Check that Ollama is running and the model is available.",
@@ -2340,9 +2340,9 @@ check_rate_limit <- function(session_token, user_requests, max_requests = 100, w
 #' @param event_type Type of security event
 #' @param details Additional details about the event
 #' @param session_info Shiny session object
-#' @param level Log level (INFO, WARNING, ERROR)
+#' @param level Log level ("info", "warning", "error")
 #' @keywords internal
-log_security_event <- function(event_type, details, session_info, level = "INFO") {
+log_security_event <- function(event_type, details, session_info, level = "info") {
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
   session_token <- if (!is.null(session_info$token)) {
@@ -2432,9 +2432,9 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
 
 .stop_api_error <- function(provider, endpoint, status_code, response_body) {
   tryCatch(
-    log_security_event("API_ERROR", sprintf("%s %s status %d: %s",
+    log_security_event("api_error", sprintf("%s %s status %d: %s",
       if (provider == "openai") "OpenAI" else "Gemini",
-      endpoint, status_code, response_body), list(token = NULL), "ERROR"),
+      endpoint, status_code, response_body), list(token = NULL), "error"),
     error = function(e) NULL
   )
   stop(.format_api_error_message(provider, endpoint, status_code, response_body),
@@ -2443,6 +2443,19 @@ log_security_event <- function(event_type, details, session_info, level = "INFO"
 
 
 #' @keywords internal
+.ensure_python <- function(required_module = NULL, envname = NULL) {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    stop("Package 'reticulate' is required.")
+  }
+  if (!is.null(required_module) && !reticulate::py_module_available(required_module)) {
+    stop(sprintf(
+      "Python module '%s' not found. Run setup_python_env() or install with: pip install %s",
+      required_module, required_module
+    ))
+  }
+  invisible(TRUE)
+}
+
 .missing_api_key_message <- function(provider, context = "package") {
   env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
   provider_label <- if (provider == "openai") "OpenAI" else "Gemini"

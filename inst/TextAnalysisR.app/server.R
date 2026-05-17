@@ -76,11 +76,13 @@ server <- shinyServer(function(input, output, session) {
     })
   }
 
-  # Centralized AI configuration
+  is_web <- TextAnalysisR::check_web_deployment()
+  is_docker <- TextAnalysisR:::check_docker_deployment()
+  is_remote <- is_web || is_docker
 
   ai_config <- reactiveValues(
-    openai_api_key = Sys.getenv("OPENAI_API_KEY"),
-    gemini_api_key = Sys.getenv("GEMINI_API_KEY")
+    openai_api_key = if (is_remote) "" else Sys.getenv("OPENAI_API_KEY"),
+    gemini_api_key = if (is_remote) "" else Sys.getenv("GEMINI_API_KEY")
   )
 
   get_api_key <- function(provider, feature_key = NULL) {
@@ -90,13 +92,40 @@ server <- shinyServer(function(input, output, session) {
       "gemini" = isolate(ai_config$gemini_api_key),
       NULL
     )
-    if (is.null(key) || !nzchar(key)) {
+    if ((is.null(key) || !nzchar(key)) && !is_remote) {
       key <- switch(provider,
         "openai" = Sys.getenv("OPENAI_API_KEY"),
         "gemini" = Sys.getenv("GEMINI_API_KEY"), ""
       )
     }
-    return(key)
+    return(key %||% "")
+  }
+
+  check_api_key <- function(api_key, provider, where, notify = shiny::showNotification) {
+    if (!nzchar(api_key)) {
+      notify(TextAnalysisR:::.missing_api_key_message(provider, "shiny"), type = "error", duration = 7)
+      return(FALSE)
+    }
+    if (!TextAnalysisR:::validate_api_key(api_key, strict = TRUE)$valid) {
+      TextAnalysisR:::log_security_event(
+        "invalid_api_key", sprintf("Malformed %s key submitted for %s", provider, where),
+        session, "warning"
+      )
+      notify("Invalid API key format.", type = "error", duration = 7)
+      return(FALSE)
+    }
+    TRUE
+  }
+
+  gate_rate_limit <- function(where, notify = shiny::showNotification) {
+    tryCatch({
+      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
+      TRUE
+    }, error = function(e) {
+      TextAnalysisR:::log_security_event("rate_limit_exceeded", where, session, "warning")
+      notify("Too many requests. Please wait before trying again.", type = "error", duration = 7)
+      FALSE
+    })
   }
 
   observe({
@@ -159,11 +188,6 @@ server <- shinyServer(function(input, output, session) {
     )))
   }
 
-  # Deployment and feature detection
-
-  is_web <- TextAnalysisR::check_web_deployment()
-  is_docker <- TextAnalysisR:::check_docker_deployment()
-  is_remote <- is_web || is_docker
   feature_status <- reactive({
     TextAnalysisR::get_feature_status()
   })
@@ -446,10 +470,10 @@ server <- shinyServer(function(input, output, session) {
 
     }, error = function(e) {
       if (grepl("Rate limit", e$message)) {
-        TextAnalysisR:::log_security_event("RATE_LIMIT_EXCEEDED", "File upload attempt", session, "WARNING")
+        TextAnalysisR:::log_security_event("rate_limit_exceeded", "File upload attempt", session, "warning")
       } else {
-        TextAnalysisR:::log_security_event("FILE_UPLOAD_REJECTED",
-          paste("Reason:", e$message), session, "WARNING")
+        TextAnalysisR:::log_security_event("file_upload_rejected",
+          paste("Reason:", e$message), session, "warning")
       }
       showNotification(paste("Upload failed:", e$message), type = "error", duration = 10)
       file_validated(FALSE)
@@ -1361,15 +1385,22 @@ server <- shinyServer(function(input, output, session) {
 
   custom_dict_terms <- reactive({
     req(input$custom_dict)
+    ok <- tryCatch({
+      TextAnalysisR:::validate_file_upload(input$custom_dict); TRUE
+    }, error = function(e) {
+      showNotification(paste("Custom dictionary rejected:", e$message), type = "error", duration = 7)
+      FALSE
+    })
+    if (!ok) return(character(0))
+
     ext <- tools::file_ext(input$custom_dict$name)
-    if (tolower(ext) == "csv") {
-      terms <- read.csv(input$custom_dict$datapath, stringsAsFactors = FALSE)[[1]]
+    terms <- if (tolower(ext) == "csv") {
+      read.csv(input$custom_dict$datapath, stringsAsFactors = FALSE)[[1]]
     } else {
-      terms <- readLines(input$custom_dict$datapath, warn = FALSE)
+      readLines(input$custom_dict$datapath, warn = FALSE)
     }
     terms <- trimws(terms)
-    terms <- terms[nzchar(terms)]
-    terms
+    terms[nzchar(terms)]
   })
 
   use_custom_dict <- reactive({
@@ -4231,11 +4262,20 @@ server <- shinyServer(function(input, output, session) {
     file_name <- input$import_domain_preset_data$name
     dataurl <- input$import_domain_preset_data$dataurl
 
-    # Decode the data URL to a temp file
     raw_data <- sub("^data:[^;]*;base64,", "", dataurl)
     tmp <- tempfile(fileext = paste0(".", tools::file_ext(file_name)))
     writeBin(jsonlite::base64_dec(raw_data), tmp)
     file_path <- tmp
+
+    ok <- tryCatch({
+      TextAnalysisR:::validate_file_upload(list(
+        name = file_name, datapath = file_path, size = file.info(file_path)$size
+      )); TRUE
+    }, error = function(e) {
+      showNotification(paste("Preset upload rejected:", e$message), type = "error", duration = 7)
+      FALSE
+    })
+    if (!ok) return()
 
     tryCatch({
       if (grepl("\\.xlsx$", file_name, ignore.case = TRUE)) {
@@ -4368,8 +4408,11 @@ server <- shinyServer(function(input, output, session) {
       is_checked <- isTRUE(enabled_map[[cat]])
       checked_attr <- if (is_checked) " checked" else ""
       is_user_created <- !(cat %in% preset_cats)
+      cat_esc <- htmltools::htmlEscape(cat, attribute = TRUE)
+      cat_label_esc <- htmltools::htmlEscape(cat_label, attribute = TRUE)
+      color_esc <- htmltools::htmlEscape(color, attribute = TRUE)
       delete_html <- if (is_user_created) {
-        paste0("<span class='entity-delete-btn' data-category='", cat,
+        paste0("<span class='entity-delete-btn' data-category='", cat_esc,
                "' data-source='domain' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
                "<i class='fa fa-eraser'></i></span>")
       } else ""
@@ -4377,12 +4420,12 @@ server <- shinyServer(function(input, output, session) {
       tags$details(
         style = "margin-bottom: 8px;", open = NA,
         tags$summary(
-          style = paste0("cursor: pointer; font-weight: 600; color: ", color, "; font-size: 16px;"),
+          style = paste0("cursor: pointer; font-weight: 600; color: ", color_esc, "; font-size: 16px;"),
           HTML(paste0(
             "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
-            "<input type='checkbox' class='entity-visibility-chk' data-category='", cat, "' data-source='domain'", checked_attr, " style='margin:0;cursor:pointer;'/>",
-            "<span class='sidebar-color-picker' data-entity='", cat_label, "' data-source='domain' data-category='", cat, "' style='display:inline-block;width:12px;height:12px;background:", color, ";border-radius:2px;cursor:pointer;'></span>",
-            "<span>", cat_label, "</span>",
+            "<input type='checkbox' class='entity-visibility-chk' data-category='", cat_esc, "' data-source='domain'", checked_attr, " style='margin:0;cursor:pointer;'/>",
+            "<span class='sidebar-color-picker' data-entity='", cat_label_esc, "' data-source='domain' data-category='", cat_esc, "' style='display:inline-block;width:12px;height:12px;background:", color_esc, ";border-radius:2px;cursor:pointer;'></span>",
+            "<span>", htmltools::htmlEscape(cat_label), "</span>",
             delete_html,
             "</span>"
           ))
@@ -4653,8 +4696,10 @@ server <- shinyServer(function(input, output, session) {
       ent <- entities[[name]]
       is_checked <- isTRUE(enabled_map[[name]])
       checked_attr <- if (is_checked) " checked" else ""
+      name_esc <- htmltools::htmlEscape(name, attribute = TRUE)
+      color_esc <- htmltools::htmlEscape(ent$color %||% "", attribute = TRUE)
       delete_html <- paste0(
-        "<span class='entity-delete-btn' data-category='", name,
+        "<span class='entity-delete-btn' data-category='", name_esc,
         "' data-source='custom' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
         "<i class='fa fa-eraser'></i></span>"
       )
@@ -4663,12 +4708,12 @@ server <- shinyServer(function(input, output, session) {
         style = "margin-bottom: 8px;",
         open = NA,
         tags$summary(
-          style = paste0("cursor: pointer; font-weight: 600; color: ", ent$color, "; font-size: 16px;"),
+          style = paste0("cursor: pointer; font-weight: 600; color: ", color_esc, "; font-size: 16px;"),
           HTML(paste0(
             "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
-            "<input type='checkbox' class='entity-visibility-chk' data-category='", name, "' data-source='custom'", checked_attr, " style='margin:0;cursor:pointer;'/>",
-            "<span class='sidebar-color-picker' data-entity='", name, "' data-source='custom' data-category='' style='display:inline-block;width:12px;height:12px;background:", ent$color, ";border-radius:2px;cursor:pointer;'></span>",
-            "<span>", name, "</span>",
+            "<input type='checkbox' class='entity-visibility-chk' data-category='", name_esc, "' data-source='custom'", checked_attr, " style='margin:0;cursor:pointer;'/>",
+            "<span class='sidebar-color-picker' data-entity='", name_esc, "' data-source='custom' data-category='' style='display:inline-block;width:12px;height:12px;background:", color_esc, ";border-radius:2px;cursor:pointer;'></span>",
+            "<span>", htmltools::htmlEscape(name), "</span>",
             delete_html,
             "</span>"
           ))
@@ -4716,7 +4761,14 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$apply_custom_entity, {
     req(input$custom_entity_name)
 
-    entity_name <- toupper(trimws(input$custom_entity_name))
+    entity_name <- trimws(input$custom_entity_name)
+    if (!grepl("^[A-Za-z][A-Za-z0-9_ -]{0,31}$", entity_name)) {
+      showNotification(
+        "Entity name must be 1-32 chars, start with a letter, and use letters, digits, spaces, _, or -.",
+        type = "error", duration = 5
+      )
+      return()
+    }
     selected_tokens <- input$uncategorized_tokens
     color <- input$custom_entity_color
     has_tokens <- !is.null(selected_tokens) && length(selected_tokens) > 0
@@ -6609,6 +6661,13 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$process_codebook, {
     req(input$codebook_upload)
+    ok <- tryCatch({
+      TextAnalysisR:::validate_file_upload(input$codebook_upload); TRUE
+    }, error = function(e) {
+      showNotification(paste("Codebook rejected:", e$message), type = "error", duration = 7)
+      FALSE
+    })
+    if (!ok) return()
 
     tryCatch({
       file_path <- input$codebook_upload$datapath
@@ -8190,10 +8249,10 @@ server <- shinyServer(function(input, output, session) {
                   TextAnalysisR:::validate_column_name(continuous_var)
                 }, error = function(e) {
                   TextAnalysisR:::log_security_event(
-                    "INVALID_COLUMN_NAME",
+                    "invalid_column_name",
                     paste("Invalid column name attempted:", continuous_var),
                     session,
-                    "WARNING"
+                    "warning"
                   )
                   stop("Invalid column name format")
                 })
@@ -8861,6 +8920,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$run_llm_sentiment, {
+    if (!gate_rate_limit("LLM sentiment analysis")) return()
     show_loading_notification("Running LLM sentiment analysis...", id = "llm_sentiment_loading")
 
     tryCatch({
@@ -8878,18 +8938,10 @@ server <- shinyServer(function(input, output, session) {
           showNotification("Ollama is not detected. Install from ollama.com or select another provider.", type = "warning")
           return()
         }
-      } else if (provider == "openai") {
-        api_key <- get_api_key("openai", input$llm_sentiment_openai_api_key)
-        if (!nzchar(api_key)) {
+      } else if (provider %in% c("openai", "gemini")) {
+        api_key <- get_api_key(provider, input[[paste0("llm_sentiment_", provider, "_api_key")]])
+        if (!check_api_key(api_key, provider, "LLM sentiment")) {
           remove_notification_by_id("llm_sentiment_loading")
-          show_error_notification(TextAnalysisR:::.missing_api_key_message("openai", "shiny"))
-          return()
-        }
-      } else if (provider == "gemini") {
-        api_key <- get_api_key("gemini", input$llm_sentiment_gemini_api_key)
-        if (!nzchar(api_key)) {
-          remove_notification_by_id("llm_sentiment_loading")
-          show_error_notification(TextAnalysisR:::.missing_api_key_message("gemini", "shiny"))
           return()
         }
       }
@@ -12128,6 +12180,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$generate_embeddings, {
+    if (!gate_rate_limit("embedding generation")) return()
     texts_df <- tryCatch(united_tbl(), error = function(e) NULL)
 
     if (is.null(texts_df) || !"united_texts" %in% names(texts_df)) {
@@ -12851,10 +12904,10 @@ server <- shinyServer(function(input, output, session) {
       TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
     }, error = function(e) {
       TextAnalysisR:::log_security_event(
-        "RATE_LIMIT_EXCEEDED",
+        "rate_limit_exceeded",
         "Semantic search rate limit exceeded",
         session,
-        "WARNING"
+        "warning"
       )
       TextAnalysisR::show_error_notification(
         "You have made too many search requests. Please wait before trying again."
@@ -12958,18 +13011,12 @@ server <- shinyServer(function(input, output, session) {
 
       } else if (provider == "openai") {
         api_key <- get_api_key("openai", input$rag_openai_api_key)
-        if (!nzchar(api_key)) {
-          showNotification(TextAnalysisR:::.missing_api_key_message("openai", "shiny"), type = "error")
-          return()
-        }
+        if (!check_api_key(api_key, "openai", "RAG search")) return()
         chat_model <- input$rag_openai_model %||% "gpt-4.1-mini"
 
       } else if (provider == "gemini") {
         api_key <- get_api_key("gemini", input$rag_gemini_api_key)
-        if (!nzchar(api_key)) {
-          showNotification(TextAnalysisR:::.missing_api_key_message("gemini", "shiny"), type = "error")
-          return()
-        }
+        if (!check_api_key(api_key, "gemini", "RAG search")) return()
         chat_model <- input$rag_gemini_model %||% "gemini-2.5-flash"
       }
 
@@ -15658,7 +15705,7 @@ server <- shinyServer(function(input, output, session) {
         rag_display,
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE),
-        escape = FALSE
+        escape = TRUE
       ))
     }
 
@@ -17783,8 +17830,8 @@ server <- shinyServer(function(input, output, session) {
       showNotification("Please run clustering analysis first", type = "error")
       return()
     }
+    if (!gate_rate_limit("cluster label generation")) return()
 
-    # Get provider selection
     provider <- input$cluster_label_provider %||% "ollama"
     api_key <- NULL
     model <- NULL
@@ -17822,24 +17869,12 @@ server <- shinyServer(function(input, output, session) {
 
     } else if (provider == "openai") {
       api_key <- get_api_key("openai", input$cluster_openai_api_key)
-      if (!nzchar(api_key)) {
-        shiny::showNotification(
-          TextAnalysisR:::.missing_api_key_message("openai", "shiny"),
-          type = "error", duration = 7
-        )
-        return()
-      }
+      if (!check_api_key(api_key, "openai", "cluster labels")) return()
       model <- input$cluster_openai_model %||% "gpt-4.1-mini"
 
     } else if (provider == "gemini") {
       api_key <- get_api_key("gemini", input$cluster_gemini_api_key)
-      if (!nzchar(api_key)) {
-        shiny::showNotification(
-          TextAnalysisR:::.missing_api_key_message("gemini", "shiny"),
-          type = "error", duration = 7
-        )
-        return()
-      }
+      if (!check_api_key(api_key, "gemini", "cluster labels")) return()
       model <- input$cluster_gemini_model %||% "gemini-2.5-flash"
     }
 
@@ -17991,10 +18026,10 @@ server <- shinyServer(function(input, output, session) {
           TextAnalysisR:::validate_column_name(var)
         }, error = function(e) {
           TextAnalysisR:::log_security_event(
-            "INVALID_COLUMN_NAME",
+            "invalid_column_name",
             paste("Invalid categorical variable name:", var),
             session,
-            "WARNING"
+            "warning"
           )
           stop("Invalid column name format in categorical variables")
         })
@@ -18006,10 +18041,10 @@ server <- shinyServer(function(input, output, session) {
           TextAnalysisR:::validate_column_name(var)
         }, error = function(e) {
           TextAnalysisR:::log_security_event(
-            "INVALID_COLUMN_NAME",
+            "invalid_column_name",
             paste("Invalid continuous variable name:", var),
             session,
-            "WARNING"
+            "warning"
           )
           stop("Invalid column name format in continuous variables")
         })
@@ -18052,10 +18087,10 @@ server <- shinyServer(function(input, output, session) {
       TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
     }, error = function(e) {
       TextAnalysisR:::log_security_event(
-        "RATE_LIMIT_EXCEEDED",
+        "rate_limit_exceeded",
         "K search rate limit exceeded",
         session,
-        "WARNING"
+        "warning"
       )
       TextAnalysisR::show_error_notification(
         "You have made too many search requests. Please wait before trying again."
@@ -18465,9 +18500,9 @@ server <- shinyServer(function(input, output, session) {
       }
       if (!TextAnalysisR:::validate_api_key(api_key, strict = TRUE)$valid) {
         TextAnalysisR:::log_security_event(
-          "INVALID_API_KEY_ATTEMPT",
+          "invalid_api_key_attempt",
           "Malformed API key submitted for K recommendation",
-          session, "WARNING"
+          session, "warning"
         )
         shiny::showNotification(
           "Invalid API key format. OpenAI keys should start with 'sk-' and be 48+ characters.",
@@ -18672,6 +18707,7 @@ server <- shinyServer(function(input, output, session) {
     rec <- ai_recommendation()
 
     process_markdown <- function(text) {
+      text <- htmltools::htmlEscape(text)
       lines <- strsplit(text, "\n")[[1]]
       lines <- lines[!grepl("^#{1,6}\\s+", lines)]
       text <- paste(lines, collapse = "\n")
@@ -18847,10 +18883,10 @@ server <- shinyServer(function(input, output, session) {
           TextAnalysisR:::validate_column_name(var)
         }, error = function(e) {
           TextAnalysisR:::log_security_event(
-            "INVALID_COLUMN_NAME",
+            "invalid_column_name",
             paste("Invalid categorical variable name:", var),
             session,
-            "WARNING"
+            "warning"
           )
           stop("Invalid column name format in categorical variables")
         })
@@ -18862,10 +18898,10 @@ server <- shinyServer(function(input, output, session) {
           TextAnalysisR:::validate_column_name(var)
         }, error = function(e) {
           TextAnalysisR:::log_security_event(
-            "INVALID_COLUMN_NAME",
+            "invalid_column_name",
             paste("Invalid continuous variable name:", var),
             session,
-            "WARNING"
+            "warning"
           )
           stop("Invalid column name format in continuous variables")
         })
@@ -20075,6 +20111,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   shiny::observeEvent(input$topic_generate_labels, {
+    if (!gate_rate_limit("topic label generation")) return()
     if (is.null(topic_model_result()) || is.null(beta_td())) {
       shiny::showModal(shiny::modalDialog(
         title = tags$div(style = "color: #4269BF;", icon("info-circle"), " Run topic model first"),
@@ -20173,9 +20210,8 @@ server <- shinyServer(function(input, output, session) {
     show_completion_notification("Topic labels generated successfully!", duration = 3)
   })
 
-  # Content generation from topics - supports Ollama, OpenAI, and Gemini providers
   shiny::observeEvent(input$generate_topic_content, {
-    # Check if content was already generated for same type
+    if (!gate_rate_limit("topic content generation")) return()
     if (!is.null(generated_content()) && input$content_type == previous_content_type()) {
       shiny::showModal(shiny::modalDialog(
         title = "Notification",
@@ -20235,9 +20271,9 @@ server <- shinyServer(function(input, output, session) {
       }
       if (!TextAnalysisR:::validate_api_key(api_key, strict = TRUE)$valid) {
         TextAnalysisR:::log_security_event(
-          "INVALID_API_KEY_ATTEMPT",
+          "invalid_api_key_attempt",
           "Malformed API key submitted for content generation",
-          session, "WARNING"
+          session, "warning"
         )
         shiny::showNotification(
           "Invalid API key format. OpenAI keys should start with 'sk-' and be 48+ characters.",
@@ -21347,7 +21383,7 @@ server <- shinyServer(function(input, output, session) {
   observe({
     selected_cat <- input$stm_categorical_var_2
     updateSelectizeInput(session,
-                      "effect_cat_btn",
+                      "stm_effect_cat_btn",
                       choices = selected_cat,
                       selected = if (!is.null(selected_cat) && length(selected_cat) > 0) selected_cat[1] else NULL
     )
@@ -21433,7 +21469,7 @@ server <- shinyServer(function(input, output, session) {
   observe({
     selected_con <- input$stm_continuous_var_2
     updateSelectizeInput(session,
-                         "effect_con_btn",
+                         "stm_effect_con_btn",
                          choices = selected_con,
                          selected = if (!is.null(selected_con) && length(selected_con) > 0) selected_con[1] else NULL
     )

@@ -8,6 +8,18 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
 # Topic Modeling Functions
 # Functions for topic modeling, analysis, and evaluation
 
+.embedding_silhouette <- function(model) {
+  coords <- model$embeddings
+  clusters <- model$topic_assignments
+  if (is.null(coords) || is.null(clusters)) return(NA_real_)
+  if (length(unique(clusters)) < 2 || nrow(coords) < 2) return(NA_real_)
+  if (!requireNamespace("cluster", quietly = TRUE)) return(NA_real_)
+  tryCatch(
+    mean(cluster::silhouette(as.integer(as.factor(clusters)), stats::dist(coords))[, 3]),
+    error = function(e) NA_real_
+  )
+}
+
 
 #' @title Find Optimal Number of Topics
 #' @description Searches for the optimal number of topics (K) using stm::searchK.
@@ -1799,9 +1811,9 @@ auto_tune_embedding_topics <- function(
     })
 
     if (!is.null(model_result)) {
-      silhouette_score <- model_result$quality_metrics$mean_topic_separation %||% 0
+      silhouette_score <- .embedding_silhouette(model_result)
       coherence_score <- model_result$quality_metrics$mean_topic_coherence %||% 0
-      combined_score <- (silhouette_score + coherence_score) / 2
+      combined_score <- mean(c(silhouette_score, coherence_score), na.rm = TRUE)
 
       results[[length(results) + 1]] <- list(
         config = config,
@@ -2000,21 +2012,19 @@ assess_embedding_stability <- function(
     }
   }
 
-  # Calculate quality metric variance
-  silhouette_scores <- sapply(models, function(m) m$quality_metrics$mean_topic_separation %||% 0)
+  silhouette_scores <- vapply(models, .embedding_silhouette, numeric(1))
 
-  # Compile stability metrics
   stability_metrics <- list(
     mean_ari = if (length(ari_values) > 0) mean(ari_values) else NA,
     sd_ari = if (length(ari_values) > 1) sd(ari_values) else NA,
     mean_jaccard = if (length(jaccard_values) > 0) mean(jaccard_values) else NA,
     sd_jaccard = if (length(jaccard_values) > 1) sd(jaccard_values) else NA,
-    quality_variance = var(silhouette_scores),
+    mean_silhouette = if (any(!is.na(silhouette_scores))) mean(silhouette_scores, na.rm = TRUE) else NA,
+    quality_variance = if (sum(!is.na(silhouette_scores)) > 1) var(silhouette_scores, na.rm = TRUE) else NA,
     n_successful_runs = n_successful
   )
 
-  # Select best model by silhouette
-  best_idx <- which.max(silhouette_scores)
+  best_idx <- if (any(!is.na(silhouette_scores))) which.max(silhouette_scores) else 1L
   best_model <- if (select_best) models[[best_idx]] else NULL
 
   # Determine stability status and recommendation
@@ -2443,23 +2453,29 @@ calculate_coherence <- function(embeddings, topic_assignments) {
   coherence_scores <- numeric(length(unique_topics))
 
   for (i in seq_along(unique_topics)) {
-    topic <- unique_topics[i]
-    topic_docs <- which(topic_assignments == topic)
+    topic_docs <- which(topic_assignments == unique_topics[i])
 
     if (length(topic_docs) > 1) {
       topic_embeddings <- embeddings[topic_docs, , drop = FALSE]
-      topic_similarities <- as.matrix(stats::dist(topic_embeddings, method = "euclidean"))
-      coherence_scores[i] <- 1 - mean(topic_similarities[upper.tri(topic_similarities)], na.rm = TRUE)
+      norms <- sqrt(rowSums(topic_embeddings^2))
+      keep <- norms > 0
+      if (sum(keep) > 1) {
+        norm_emb <- topic_embeddings[keep, , drop = FALSE] / norms[keep]
+        sim <- norm_emb %*% t(norm_emb)
+        coherence_scores[i] <- mean(sim[upper.tri(sim)], na.rm = TRUE)
+      } else {
+        coherence_scores[i] <- NA
+      }
     } else {
       coherence_scores[i] <- NA
     }
   }
 
-  return(list(
+  list(
     coherence_scores = coherence_scores,
     mean_coherence = mean(coherence_scores, na.rm = TRUE),
     topic_coherence = setNames(coherence_scores, unique_topics)
-  ))
+  )
 }
 
 #' @title Calculate Topic Stability
@@ -2570,13 +2586,23 @@ calculate_assignment_consistency <- function(assignments1, assignments2, ...) {
     return(list(consistency = NA, message = "Assignment lengths differ"))
   }
 
-  consistency <- sum(assignments1 == assignments2) / length(assignments1)
+  if (!requireNamespace("aricode", quietly = TRUE)) {
+    return(list(
+      consistency = NA,
+      n_total = length(assignments1),
+      message = "Install 'aricode' for permutation-invariant consistency (ARI)."
+    ))
+  }
 
-  return(list(
-    consistency = consistency,
-    n_matches = sum(assignments1 == assignments2),
+  ari <- aricode::ARI(assignments1, assignments2)
+  nmi <- aricode::NMI(assignments1, assignments2)
+
+  list(
+    consistency = ari,
+    ari = ari,
+    nmi = nmi,
     n_total = length(assignments1)
-  ))
+  )
 }
 
 #' @title Analyze Semantic Evolution
@@ -2621,22 +2647,27 @@ calculate_semantic_drift <- function(temporal_results, ...) {
     return(list(drift_score = NA, message = "Insufficient temporal data"))
   }
 
-  drift_scores <- numeric(length(temporal_results) - 1)
+  centroids <- lapply(temporal_results, function(p) {
+    if (is.null(p$embeddings) || !is.matrix(p$embeddings) || nrow(p$embeddings) == 0) return(NULL)
+    colMeans(p$embeddings)
+  })
 
-  for (i in seq_along(drift_scores)) {
-    current <- temporal_results[[i]]
-    next_period <- temporal_results[[i + 1]]
+  drift_scores <- vapply(seq_len(length(centroids) - 1), function(i) {
+    a <- centroids[[i]]; b <- centroids[[i + 1]]
+    if (is.null(a) || is.null(b)) return(NA_real_)
+    1 - .cosine_sim(a, b)
+  }, numeric(1))
 
-    if (!is.null(current$topics) && !is.null(next_period$topics)) {
-      drift_scores[i] <- 1 - stats::cor(current$topics, next_period$topics, use = "complete.obs")
-    }
+  if (all(is.na(drift_scores))) {
+    return(list(drift_scores = drift_scores, mean_drift = NA_real_, max_drift = NA_real_,
+                message = "No periods had embeddings to compare"))
   }
 
-  return(list(
+  list(
     drift_scores = drift_scores,
     mean_drift = mean(drift_scores, na.rm = TRUE),
     max_drift = max(drift_scores, na.rm = TRUE)
-  ))
+  )
 }
 
 #' @title Identify Topic Trends

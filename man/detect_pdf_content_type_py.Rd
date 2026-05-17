@@ -4,7 +4,7 @@
 \alias{detect_pdf_content_type_py}
 \title{Detect PDF Content Type using Python}
 \usage{
-detect_pdf_content_type_py(file_path, envname = "textanalysisr-env")
+detect_pdf_content_type_py(file_path, envname = NULL)
 }
 \arguments{
 \item{file_path}{Character string path to PDF file}

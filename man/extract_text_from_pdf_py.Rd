@@ -4,7 +4,7 @@
 \alias{extract_text_from_pdf_py}
 \title{Extract Text from PDF using Python}
 \usage{
-extract_text_from_pdf_py(file_path, envname = "textanalysisr-env")
+extract_text_from_pdf_py(file_path, envname = NULL)
 }
 \arguments{
 \item{file_path}{Character string path to PDF file}

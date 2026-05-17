@@ -3954,10 +3954,11 @@ run_rag_search <- function(
   igraph::V(graph)$betweenness <- igraph::betweenness(graph)
   igraph::V(graph)$closeness   <- igraph::closeness(graph)
   igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-  cluster_fn <- switch(community_method,
-    "louvain" = igraph::cluster_louvain,
-    igraph::cluster_leiden)
-  igraph::V(graph)$community <- cluster_fn(graph)$membership
+  membership <- switch(community_method,
+    "louvain" = igraph::cluster_louvain(graph)$membership,
+    igraph::cluster_leiden(graph, objective_function = "modularity")$membership
+  )
+  igraph::V(graph)$community <- membership
   graph
 }
 
@@ -4243,6 +4244,7 @@ word_co_occurrence_network <- function(dfm_object,
       community_colors[as.character(community_map[as.character(communities)])]
     }
 
+    node_names_esc <- htmltools::htmlEscape(igraph::V(graph)$name)
     nodes <- data.frame(
       id = igraph::V(graph)$name,
       label = ifelse(igraph::V(graph)$name %in% top_nodes, igraph::V(graph)$name, ""),
@@ -4250,7 +4252,7 @@ word_co_occurrence_network <- function(dfm_object,
       value = node_values,
       color = node_colors,
       title = paste0(
-        "<b style='color:black;'>", igraph::V(graph)$name, "</b><br>",
+        "<b style='color:black;'>", node_names_esc, "</b><br>",
         "<span style='color:black;'>Degree: ", igraph::V(graph)$degree, "<br>",
         "Betweenness: ", round(igraph::V(graph)$betweenness, 2), "<br>",
         "Closeness: ", round(igraph::V(graph)$closeness, 3), "<br>",
@@ -4268,7 +4270,8 @@ word_co_occurrence_network <- function(dfm_object,
     edge_alphas <- .safe_rescale(edges$weight, to = c(0.3, 1), fallback = 0.7)
     edges$color <- scales::alpha("#5C5CFF", edge_alphas)
     edges$title <- paste0("<span style='color:black;'>Co-occurrences: ", edges$weight,
-                          "<br>From: ", edges$from, "<br>To: ", edges$to, "</span>")
+                          "<br>From: ", htmltools::htmlEscape(edges$from),
+                          "<br>To: ", htmltools::htmlEscape(edges$to), "</span>")
 
     widget <- .visnet_widget(nodes, edges, group_level,
                              width = panel_width %||% width,
@@ -4508,6 +4511,7 @@ word_correlation_network <- function(dfm_object,
       community_colors[as.character(community_map[as.character(communities)])]
     }
 
+    node_names_esc <- htmltools::htmlEscape(igraph::V(graph)$name)
     nodes <- data.frame(
       id = igraph::V(graph)$name,
       label = ifelse(igraph::V(graph)$name %in% top_nodes, igraph::V(graph)$name, ""),
@@ -4515,7 +4519,7 @@ word_correlation_network <- function(dfm_object,
       value = node_values,
       color = node_colors,
       title = paste0(
-        "<b style='color:black;'>", igraph::V(graph)$name, "</b><br>",
+        "<b style='color:black;'>", node_names_esc, "</b><br>",
         "<span style='color:black;'>Degree: ", igraph::V(graph)$degree, "<br>",
         "Betweenness: ", round(igraph::V(graph)$betweenness, 2), "<br>",
         "Closeness: ", round(igraph::V(graph)$closeness, 3), "<br>",
@@ -4533,7 +4537,8 @@ word_correlation_network <- function(dfm_object,
     edge_alphas <- .safe_rescale(abs(edges$correlation), to = c(0.3, 1), fallback = 0.7)
     edges$color <- scales::alpha("#5C5CFF", edge_alphas)
     edges$title <- paste0("<span style='color:black;'>Correlation: ", round(edges$correlation, 3),
-                          "<br>From: ", edges$from, "<br>To: ", edges$to, "</span>")
+                          "<br>From: ", htmltools::htmlEscape(edges$from),
+                          "<br>To: ", htmltools::htmlEscape(edges$to), "</span>")
 
     widget <- .visnet_widget(nodes, edges, group_level,
                              width = panel_width %||% width,
