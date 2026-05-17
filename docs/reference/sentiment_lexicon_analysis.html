@@ -66,7 +66,7 @@ Now supports n-grams for improved negation and intensifier handling.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sentiment_lexicon_analysis</span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
-<span>  lexicon <span class="op">=</span> <span class="st">"afinn"</span>,</span>
+<span>  lexicon <span class="op">=</span> <span class="st">"bing"</span>,</span>
 <span>  texts_df <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  feature_type <span class="op">=</span> <span class="st">"words"</span>,</span>
 <span>  ngram_range <span class="op">=</span> <span class="fl">2</span>,</span>
@@ -83,7 +83,7 @@ Now supports n-grams for improved negation and intensifier handling.</p>
 
 
 <dt id="arg-lexicon">lexicon<a class="anchor" aria-label="anchor" href="#arg-lexicon"></a></dt>
-<dd><p>Lexicon to use: "afinn", "bing", or "nrc" (default: "afinn")</p></dd>
+<dd><p>Lexicon to use: "afinn", "bing", or "nrc" (default: "bing")</p></dd>
 
 
 <dt id="arg-texts-df">texts_df<a class="anchor" aria-label="anchor" href="#arg-texts-df"></a></dt>
@@ -125,19 +125,21 @@ Now supports n-grams for improved negation and intensifier handling.</p>
 <span class="r-in"><span><span class="va">abstracts</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span><span class="op">$</span><span class="va">abstract</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">corpus</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/corpus.html" class="external-link">corpus</a></span><span class="op">(</span><span class="va">abstracts</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens.html" class="external-link">tokens</a></span><span class="op">(</span><span class="va">corpus</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">lexicon_results</span> <span class="op">&lt;-</span> <span class="fu">sentiment_lexicon_analysis</span><span class="op">(</span><span class="va">dfm_object</span>, lexicon <span class="op">=</span> <span class="st">"afinn"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">lexicon_results</span> <span class="op">&lt;-</span> <span class="fu">sentiment_lexicon_analysis</span><span class="op">(</span><span class="va">dfm_object</span>, lexicon <span class="op">=</span> <span class="st">"bing"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">lexicon_results</span><span class="op">$</span><span class="va">document_sentiment</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 8 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   document sentiment_score n_words avg_sentiment sentiment</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> text1                  2       1         2     positive </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> text10                 0       3         0     neutral  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> text3                  1       1         1     positive </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> text4                  2       1         2     positive </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> text5                  2       1         2     positive </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> text6                  8      16         0.5   neutral  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span> text8                  5       6         0.833 positive </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">8</span> text9                  0       2         0     neutral  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    document positive negative sentiment_score total_sentiment_words sentiment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> text1           3        0               3                     3 positive </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> text10          0        3              -<span style="color: #BB0000;">3</span>                     3 negative </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> text2           1        1               0                     2 neutral  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> text3           1        1               0                     2 neutral  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> text4           2        1               1                     3 positive </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> text5           2        0               2                     2 positive </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> text6           7        6               1                    13 positive </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> text7           1        1               0                     2 neutral  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> text8          12        1              11                    13 positive </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> text9           3        4              -<span style="color: #BB0000;">1</span>                     7 negative </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
