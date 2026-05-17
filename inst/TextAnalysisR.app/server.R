@@ -362,7 +362,7 @@ server <- shinyServer(function(input, output, session) {
         ),
         conditionalPanel(
           condition = "input.vision_provider == 'openai'",
-          passwordInput("openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
+          .password_input("openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
             tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -377,7 +377,7 @@ server <- shinyServer(function(input, output, session) {
         ),
         conditionalPanel(
           condition = "input.vision_provider == 'gemini'",
-          passwordInput("gemini_vision_api_key", "Gemini API Key:", placeholder = "AIza..."),
+          .password_input("gemini_vision_api_key", "Gemini API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
             tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -8889,7 +8889,7 @@ server <- shinyServer(function(input, output, session) {
             selected = NULL,
             options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
           ),
-          passwordInput("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
+          .password_input("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
             tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -8910,7 +8910,7 @@ server <- shinyServer(function(input, output, session) {
             selected = NULL,
             options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
           ),
-          passwordInput("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
+          .password_input("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
             tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",

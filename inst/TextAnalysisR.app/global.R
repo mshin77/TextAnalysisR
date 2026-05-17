@@ -1,3 +1,14 @@
+.password_input <- function(inputId, label, value = "", placeholder = NULL) {
+  pw <- shiny::passwordInput(inputId, label, value = value, placeholder = placeholder)
+  pw$children <- lapply(pw$children, function(ch) {
+    if (inherits(ch, "shiny.tag") && identical(ch$name, "input")) {
+      ch$attribs$autocomplete <- "new-password"
+    }
+    ch
+  })
+  pw
+}
+
 topic_modeling_ui_content <- function() {
       sidebarLayout(
         sidebarPanel(
@@ -231,7 +242,7 @@ topic_modeling_ui_content <- function() {
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("stm_label_openai_api_key", "API Key:", placeholder = "sk-..."),
+              .password_input("stm_label_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -247,7 +258,7 @@ topic_modeling_ui_content <- function() {
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("stm_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
+              .password_input("stm_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -428,7 +439,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("k_rec_openai_api_key", "API Key:", placeholder = "sk-..."),
+              .password_input("k_rec_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -449,7 +460,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("k_rec_gemini_api_key", "API Key:", placeholder = "AIza..."),
+              .password_input("k_rec_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -600,7 +611,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("content_openai_api_key", "API Key:", placeholder = "sk-..."),
+              .password_input("content_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -616,7 +627,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("content_gemini_api_key", "API Key:", placeholder = "AIza..."),
+              .password_input("content_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -736,7 +747,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("topic_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
+              .password_input("topic_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -753,7 +764,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("topic_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
+              .password_input("topic_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",

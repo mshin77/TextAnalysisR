@@ -154,6 +154,8 @@ ui <- fluidPage(
       # Custom language menu dropdown
       tags$div(
         id = "translate_dropdown",
+        class = "notranslate",
+        translate = "no",
         style = "display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 10000; min-width: 200px; max-height: 360px; overflow-y: auto;",
         # Language buttons
         tags$button(class = "lang-btn active", `data-lang` = "en", tags$i(class = "fa fa-check"), " English"),
@@ -174,7 +176,7 @@ ui <- fluidPage(
         # Attribution at bottom
         tags$div(
           class = "translate-attribution",
-          style = "display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 16px; color: #9ca3af; padding: 8px 12px; border-top: 1px solid #e5e7eb; background: #f9fafb; border-radius: 0 0 8px 8px;",
+          style = "display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 16px; color: #9ca3af; padding: 8px 12px; border-top: 1px solid #e5e7eb; background: #f9fafb; border-radius: 0 0 8px 8px; white-space: nowrap; flex-wrap: nowrap;",
           tags$span("Powered by"),
           tags$img(src = "https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png", alt = "Google", height = "12"),
           tags$span("Translate")
@@ -257,8 +259,8 @@ ui <- fluidPage(
             style = "color: #4269BF; margin-bottom: 10px;"
           ),
           tags$p(style = "font-size: 16px; color: #666;", "API keys entered here apply to all AI features. You can also enter keys per-feature."),
-          passwordInput("global_openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
-          passwordInput("global_gemini_api_key", "Gemini API Key:", placeholder = "AIza..."),
+          .password_input("global_openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
+          .password_input("global_gemini_api_key", "Gemini API Key:", placeholder = "AIza..."),
           tags$hr(),
           if (!is_remote_ui) tagList(
             tags$h5(
@@ -2032,7 +2034,7 @@ Supports:
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
                 ),
-                passwordInput("embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
+                .password_input("embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
                   tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -2048,7 +2050,7 @@ Supports:
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
                 ),
-                passwordInput("embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
+                .password_input("embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
                   tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -2220,7 +2222,7 @@ Supports:
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
                 ),
-                passwordInput("search_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
+                .password_input("search_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
                   tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -2236,7 +2238,7 @@ Supports:
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
                 ),
-                passwordInput("search_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
+                .password_input("search_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
                   tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -2275,7 +2277,7 @@ Supports:
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
                 ),
-                passwordInput("rag_openai_api_key", "API Key:", placeholder = "sk-..."),
+                .password_input("rag_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
                   tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -2291,7 +2293,7 @@ Supports:
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
                 ),
-                passwordInput("rag_gemini_api_key", "API Key:", placeholder = "AIza..."),
+                .password_input("rag_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
                   tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -2513,7 +2515,7 @@ Supports:
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("cluster_openai_api_key", "API Key:", placeholder = "sk-..."),
+              .password_input("cluster_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
@@ -2530,7 +2532,7 @@ Supports:
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
-              passwordInput("cluster_gemini_api_key", "API Key:", placeholder = "AIza..."),
+              .password_input("cluster_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
                 tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
