@@ -352,7 +352,7 @@ server <- shinyServer(function(input, output, session) {
             "Ollama model:",
             choices = c("LLaVA (Default)" = "llava", "BakLLaVA" = "bakllava", "LLaVA-Phi3" = "llava-phi3"),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...")
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
           ),
           tags$div(
             class = "ollama-help-text",
@@ -372,7 +372,7 @@ server <- shinyServer(function(input, output, session) {
             "OpenAI model:",
             choices = c("GPT-4.1 (Default, accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini", "GPT-4" = "gpt-4"),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...")
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
           )
         ),
         conditionalPanel(
@@ -387,7 +387,7 @@ server <- shinyServer(function(input, output, session) {
             "Gemini model:",
             choices = c("Gemini 2.5 Flash (Default, fast)" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro", "Gemini 2.5 Flash Lite (Economy)" = "gemini-2.5-flash-lite"),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...")
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
           )
         )
       )
@@ -8864,7 +8864,7 @@ server <- shinyServer(function(input, output, session) {
               "Ollama Model",
               choices = models,
               selected = NULL,
-              options = list(create = TRUE, placeholder = "Type your model...")
+              options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
             )
           )
         } else {
@@ -8887,7 +8887,7 @@ server <- shinyServer(function(input, output, session) {
               "GPT-4" = "gpt-4"
             ),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...")
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
           ),
           passwordInput("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
@@ -8908,7 +8908,7 @@ server <- shinyServer(function(input, output, session) {
               "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
             ),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...")
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
           ),
           passwordInput("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(

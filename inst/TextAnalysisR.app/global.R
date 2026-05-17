@@ -214,7 +214,7 @@ topic_modeling_ui_content <- function() {
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -229,7 +229,7 @@ topic_modeling_ui_content <- function() {
                 "OpenAI Model:",
                 choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("stm_label_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -245,7 +245,7 @@ topic_modeling_ui_content <- function() {
                 "Gemini Model:",
                 choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("stm_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
@@ -406,7 +406,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -426,7 +426,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   "GPT-4" = "gpt-4"
                 ),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("k_rec_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -447,7 +447,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
                 ),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("k_rec_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
@@ -583,7 +583,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -598,7 +598,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 "OpenAI Model:",
                 choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("content_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -614,7 +614,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 "Gemini Model:",
                 choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("content_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
@@ -692,7 +692,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   "All-MiniLM (Lightweight)" = "all-minilm"
                 ),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -716,7 +716,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                 ),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               tags$p(
                 style = "font-size: 16px; color: #666;",
@@ -734,7 +734,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   "Text Embedding 3 Large (Higher Quality)" = "text-embedding-3-large"
                 ),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("topic_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -751,7 +751,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 "Gemini Model:",
                 choices = c("Gemini Embedding 001" = "gemini-embedding-001"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...")
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
               ),
               passwordInput("topic_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
