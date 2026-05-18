@@ -20,6 +20,7 @@ inst/TextAnalysisR\.app/\.claude$
 ^\.env\.example$
 ^\.positai$
 ^cran-comments\.md$
+^\.lintr$
 ^tests/testthat/security\.log$
 ^scratch_.*\.R$
 ^/tmp$

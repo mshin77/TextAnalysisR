@@ -19,7 +19,7 @@ and document clustering on transformer embeddings, an interactive
 [spaCy](https://spacy.io/) lemmatization, and local
 ([Ollama](https://ollama.com),
 [sentence-transformers](https://www.sbert.net/)) or web-based
-([OpenAI](https://platform.openai.com/),
+(OpenAI,
 [Gemini](https://ai.google.dev/)) model providers for
 retrieval-augmented generation.
 

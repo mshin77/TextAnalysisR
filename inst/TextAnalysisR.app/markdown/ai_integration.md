@@ -19,7 +19,7 @@ TextAnalysisR provides AI/NLP capabilities via local and web-based providers.
 <td style="padding: 8px;">Privacy, no cost</td>
 </tr>
 <tr style="border-bottom: 1px solid #dee2e6;">
-<td style="padding: 8px;"><a href="https://platform.openai.com/" target="_blank">OpenAI</a></td>
+<td style="padding: 8px;">OpenAI</td>
 <td style="padding: 8px;">Web-based</td>
 <td style="padding: 8px;">Quality, speed</td>
 </tr>

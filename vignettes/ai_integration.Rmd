@@ -18,7 +18,7 @@ TextAnalysisR provides AI features via local and web-based providers.
 | Provider | Type | API Key | Best For |
 |----------|------|---------|----------|
 | [Ollama](https://ollama.com) | Local | None | Privacy, no cost, offline use |
-| [OpenAI](https://platform.openai.com/) | Web-based | OPENAI_API_KEY | Quality, speed |
+| OpenAI | Web-based | OPENAI_API_KEY | Quality, speed |
 | [Gemini](https://ai.google.dev/) | Web-based | GEMINI_API_KEY | Quality, speed |
 | [spaCy](https://spacy.io/) | Local | None | Linguistic analysis |
 | Transformers | Local | None | Embeddings, sentiment |
