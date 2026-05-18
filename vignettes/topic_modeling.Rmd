@@ -52,7 +52,7 @@ model <- stm::stm(
 terms <- get_topic_terms(model, top_term_n = 10)
 ```
 
-See: [Structural Topic Model](https://www.structuraltopicmodel.com/) · [STM Vignette](https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf)
+See: [Structural Topic Model](https://www.structuraltopicmodel.com/) · [stm package on CRAN](https://CRAN.R-project.org/package=stm)
 
 ## Embedding-based Topics
 
