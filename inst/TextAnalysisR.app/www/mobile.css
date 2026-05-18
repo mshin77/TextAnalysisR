@@ -1,0 +1,26 @@
+/* Mobile */
+@media (max-width: 768px) {
+  .nav-tabs > li > a,
+  .nav-pills > li > a {
+    padding: 8px 12px;
+  }
+
+  /* WCAG 2.5.5 tap-target floor */
+  .nav > li > a,
+  .btn,
+  .form-control {
+    min-height: 44px;
+  }
+
+  pre {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    word-wrap: normal;
+  }
+
+  code {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #f3f4f6;
+  }
+}

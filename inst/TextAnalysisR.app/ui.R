@@ -185,6 +185,7 @@ ui <- fluidPage(
     )
   ),
   includeCSS("www/styles.css"),
+  includeCSS("www/mobile.css"),
   includeScript("www/script.js"),
 
   tags$a(
@@ -210,7 +211,7 @@ ui <- fluidPage(
     role = "main",
     tabindex = "-1",
     navbarPage(
-      "",
+      "TextAnalysisR",
       id = "main_navbar",
       tabPanel(
         "Home",
