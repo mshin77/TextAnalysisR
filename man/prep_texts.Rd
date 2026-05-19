@@ -118,6 +118,6 @@ print(tokens)
 }
 }
 \seealso{
-\code{\link[=unite_cols]{unite_cols()}} to combine text columns first; \code{\link[=lemmatize_tokens]{lemmatize_tokens()}} to reduce words to base form (e.g., running → run); \code{quanteda::dfm()} to build a document-feature matrix from the result
+\code{\link[=unite_cols]{unite_cols()}} to combine text columns first; \code{\link[=lemmatize_tokens]{lemmatize_tokens()}} to reduce words to base form (e.g., running -> run); \code{quanteda::dfm()} to build a document-feature matrix from the result
 }
 \concept{preprocessing}

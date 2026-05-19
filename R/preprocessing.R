@@ -29,8 +29,10 @@ NULL
 #' @export
 #'
 #' @examples
-#' dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
-#' result <- get_available_dfm(dfm_init = dfm1)
+#' if (interactive()) {
+#'   dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
+#'   result <- get_available_dfm(dfm_init = dfm1)
+#' }
 get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = NULL, dfm_init = NULL) {
   if (!is.null(dfm_lemma)) {
     return(dfm_lemma)
@@ -76,8 +78,10 @@ get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = 
 #' @export
 #'
 #' @examples
-#' toks <- quanteda::tokens("assistive technology supports learning")
-#' result <- get_available_tokens(processed_tokens = toks)
+#' if (interactive()) {
+#'   toks <- quanteda::tokens("assistive technology supports learning")
+#'   result <- get_available_tokens(processed_tokens = toks)
+#' }
 get_available_tokens <- function(final_tokens = NULL,
                                   processed_tokens = NULL,
                                   preprocessed_tokens = NULL,
@@ -527,7 +531,7 @@ unite_cols <- function(df, listed_vars) {
 #' @import quanteda
 #'
 #' @concept preprocessing
-#' @seealso [unite_cols()] to combine text columns first; [lemmatize_tokens()] to reduce words to base form (e.g., running → run); `quanteda::dfm()` to build a document-feature matrix from the result
+#' @seealso [unite_cols()] to combine text columns first; [lemmatize_tokens()] to reduce words to base form (e.g., running -> run); `quanteda::dfm()` to build a document-feature matrix from the result
 #' @export
 #'
 #' @examples

@@ -37,8 +37,10 @@ Priority order (highest to lowest):
 }
 }
 \examples{
-toks <- quanteda::tokens("assistive technology supports learning")
-result <- get_available_tokens(processed_tokens = toks)
+if (interactive()) {
+  toks <- quanteda::tokens("assistive technology supports learning")
+  result <- get_available_tokens(processed_tokens = toks)
+}
 }
 \concept{preprocessing}
 \keyword{internal}

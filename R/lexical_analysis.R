@@ -1094,11 +1094,13 @@ plot_mwe_frequency <- function(mwe_data,
 #' @export
 #'
 #' @examples
-#' library(quanteda)
-#' corp <- corpus(c("text analysis", "data mining", "text mining"))
-#' dfm_obj <- dfm(tokens(corp))
-#' keywords <- extract_keywords_tfidf(dfm_obj, top_n = 5)
-#' print(keywords)
+#' if (interactive()) {
+#'   library(quanteda)
+#'   corp <- corpus(c("text analysis", "data mining", "text mining"))
+#'   dfm_obj <- dfm(tokens(corp))
+#'   keywords <- extract_keywords_tfidf(dfm_obj, top_n = 5)
+#'   print(keywords)
+#' }
 extract_keywords_tfidf <- function(dfm,
                                    top_n = 20,
                                    normalize = FALSE) {

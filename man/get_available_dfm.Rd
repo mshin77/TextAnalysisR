@@ -37,8 +37,10 @@ Priority order (highest to lowest):
 }
 }
 \examples{
-dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
-result <- get_available_dfm(dfm_init = dfm1)
+if (interactive()) {
+  dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
+  result <- get_available_dfm(dfm_init = dfm1)
+}
 }
 \concept{preprocessing}
 \keyword{internal}

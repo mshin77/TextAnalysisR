@@ -53,8 +53,8 @@ A list containing processed data, tokens, DFM, and metadata.
 }
 \description{
 This function provides a complete text mining workflow that follows the same sequence
-as the Shiny application: file processing → text uniting → preprocessing →
-DFM creation → analysis.
+as the Shiny application: file processing -> text uniting -> preprocessing ->
+DFM creation -> analysis.
 It serves as a convenience function for users who want to execute the entire
 pipeline programmatically.
 }
