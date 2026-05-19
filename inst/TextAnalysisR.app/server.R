@@ -352,7 +352,7 @@ server <- shinyServer(function(input, output, session) {
             "Ollama model:",
             choices = c("LLaVA (Default)" = "llava", "BakLLaVA" = "bakllava", "LLaVA-Phi3" = "llava-phi3"),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           ),
           tags$div(
             class = "ollama-help-text",
@@ -372,7 +372,7 @@ server <- shinyServer(function(input, output, session) {
             "OpenAI model:",
             choices = c("GPT-4.1 (Default, accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini", "GPT-4" = "gpt-4"),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           )
         ),
         conditionalPanel(
@@ -387,7 +387,7 @@ server <- shinyServer(function(input, output, session) {
             "Gemini model:",
             choices = c("Gemini 2.5 Flash (Default, fast)" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro", "Gemini 2.5 Flash Lite (Economy)" = "gemini-2.5-flash-lite"),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           )
         )
       )
@@ -1370,9 +1370,9 @@ server <- shinyServer(function(input, output, session) {
 
       freq_df <- quanteda.textstats::textstat_frequency(dfm_temp)
 
-      top_100_words <- freq_df$feature[1:min(100, nrow(freq_df))]
+      top_100_words <- freq_df$feature[seq_len(min(100, nrow(freq_df)))]
 
-      top_10_words <- freq_df$feature[1:min(10, nrow(freq_df))]
+      top_10_words <- freq_df$feature[seq_len(min(10, nrow(freq_df)))]
 
       updateSelectizeInput(
         session,
@@ -1511,8 +1511,8 @@ server <- shinyServer(function(input, output, session) {
 
     ngram_stats(tstat_filtered)
 
-    top_ngrams <- tstat_filtered$collocation[1:min(100, nrow(tstat_filtered))]
-    suggested_ngrams <- tstat_filtered$collocation[1:min(20, nrow(tstat_filtered))]
+    top_ngrams <- tstat_filtered$collocation[seq_len(min(100, nrow(tstat_filtered)))]
+    suggested_ngrams <- tstat_filtered$collocation[seq_len(min(20, nrow(tstat_filtered)))]
 
     top_20_preselected(suggested_ngrams)
 
@@ -1533,7 +1533,7 @@ server <- shinyServer(function(input, output, session) {
         TRUE ~ paste0(length, "-grams")
       )) %>%
       dplyr::group_by(ngram_type) %>%
-      dplyr::summarise(count = dplyr::n(), .groups = 'drop') %>%
+      dplyr::summarise(count = dplyr::n(), .groups = "drop") %>%
       dplyr::arrange(ngram_type)
 
     total_found <- nrow(tstat_filtered)
@@ -1546,7 +1546,7 @@ server <- shinyServer(function(input, output, session) {
       "Breakdown by n-gram size:"
     )
 
-    for (i in 1:nrow(ngram_breakdown)) {
+    for (i in seq_len(nrow(ngram_breakdown))) {
       modal_output <- c(modal_output,
         paste0("  ", ngram_breakdown$ngram_type[i], ": ", ngram_breakdown$count[i])
       )
@@ -1823,15 +1823,15 @@ server <- shinyServer(function(input, output, session) {
       )
   },
   rownames = FALSE,
-  extensions = 'Buttons',
-  filter = 'top',
+  extensions = "Buttons",
+  filter = "top",
   options = list(
     scrollX = TRUE,
     scrollY = "400px",
     pageLength = 25,
-    order = list(list(4, 'desc')),
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+    order = list(list(4, "desc")),
+    dom = "Bfrtip",
+    buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
   output$has_dictionary_results <- reactive({
@@ -1994,15 +1994,15 @@ server <- shinyServer(function(input, output, session) {
     }
   },
   rownames = FALSE,
-  extensions = 'Buttons',
-  filter = 'top',
+  extensions = "Buttons",
+  filter = "top",
   options = list(
     scrollX = TRUE,
     scrollY = "400px",
     pageLength = 25,
-    order = list(list(2, 'desc')),
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+    order = list(list(2, "desc")),
+    dom = "Bfrtip",
+    buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
   dfm_init <- eventReactive(input$dfm_btn, {
@@ -2130,13 +2130,13 @@ server <- shinyServer(function(input, output, session) {
     quanteda.textstats::textstat_frequency(dfm_init())
   },
   rownames = FALSE,
-  extensions = 'Buttons',
+  extensions = "Buttons",
   options = list(
     scrollX = TRUE,
     scrollY = "400px",
     width = "100%",
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+    dom = "Bfrtip",
+    buttons = c("copy", "csv", "excel", "pdf", "print")
   )
   )
 
@@ -2550,13 +2550,13 @@ server <- shinyServer(function(input, output, session) {
     quanteda.textstats::textstat_frequency(dfm_for_table)
   },
   rownames = FALSE,
-  extensions = 'Buttons',
+  extensions = "Buttons",
   options = list(
     scrollX = TRUE,
     scrollY = "400px",
     width = "100%",
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+    dom = "Bfrtip",
+    buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
   # Lexical analysis tab
@@ -2942,13 +2942,13 @@ server <- shinyServer(function(input, output, session) {
     result
   },
   rownames = FALSE,
-  extensions = 'Buttons',
+  extensions = "Buttons",
   options = list(
     scrollX = TRUE,
     scrollY = "400px",
     width = "100%",
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+    dom = "Bfrtip",
+    buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
   dfm_final <- reactive({
@@ -3452,13 +3452,13 @@ server <- shinyServer(function(input, output, session) {
       options = list(
         pageLength = 15,
         scrollX = TRUE,
-        dom = 'frtip',
-        order = list(list(2, 'desc'))
+        dom = "frtip",
+        order = list(list(2, "desc"))
       ),
-      class = 'cell-border stripe'
+      class = "cell-border stripe"
     ) %>%
-      DT::formatStyle('Feature', fontWeight = 'bold') %>%
-      DT::formatPercentage('Percentage', digits = 1)
+      DT::formatStyle("Feature", fontWeight = "bold") %>%
+      DT::formatPercentage("Percentage", digits = 1)
   })
 
   # Morphology Info Modal
@@ -3545,7 +3545,7 @@ server <- shinyServer(function(input, output, session) {
       ""
     )
 
-    for (i in 1:min(5, nrow(top_pos))) {
+    for (i in seq_len(min(5, nrow(top_pos)))) {
       report_lines <- c(report_lines,
         sprintf("%d. %s (%s): %s tokens",
           i,
@@ -3652,7 +3652,7 @@ server <- shinyServer(function(input, output, session) {
           ""
         )
 
-        for (i in 1:min(5, nrow(top_pos))) {
+        for (i in seq_len(min(5, nrow(top_pos)))) {
           report_lines <- c(report_lines,
             sprintf("%d. %s (%s): %s tokens",
               i,
@@ -3773,7 +3773,7 @@ server <- shinyServer(function(input, output, session) {
       ""
     )
 
-    for (i in 1:min(20, nrow(top_features))) {
+    for (i in seq_len(min(20, nrow(top_features)))) {
       report_lines <- c(report_lines,
         sprintf("%2d. %-20s: %s (%.2f%%)",
           i,
@@ -3873,7 +3873,7 @@ server <- shinyServer(function(input, output, session) {
           ""
         )
 
-        for (i in 1:min(20, nrow(top_features))) {
+        for (i in seq_len(min(20, nrow(top_features)))) {
           report_lines <- c(report_lines,
             sprintf("%2d. %-20s: %s (%.2f%%)",
               i,
@@ -4046,12 +4046,12 @@ server <- shinyServer(function(input, output, session) {
     }
   },
   rownames = FALSE,
-  extensions = 'Buttons',
+  extensions = "Buttons",
   options = list(
     scrollX = TRUE,
     scrollY = "400px",
-    dom = 'Bfrtip',
-    buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+    dom = "Bfrtip",
+    buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
   # Extract entities when NER filter is applied
@@ -5464,16 +5464,16 @@ server <- shinyServer(function(input, output, session) {
       return(DT::datatable(
         display_df,
         rownames = FALSE,
-        extensions = 'Buttons',
-        filter = 'top',
+        extensions = "Buttons",
+        filter = "top",
         options = list(
           scrollX = TRUE,
           scrollY = "400px",
-          dom = 'Bfrtip',
-          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel", "pdf", "print"),
           pageLength = 50,
           columnDefs = list(
-            list(targets = "_all", className = 'dt-center'),
+            list(targets = "_all", className = "dt-center"),
             list(
               targets = 1,
               render = DT::JS(
@@ -5501,8 +5501,8 @@ server <- shinyServer(function(input, output, session) {
             )
           )
         ),
-        selection = 'none',
-        class = 'cell-border stripe hover compact'
+        selection = "none",
+        class = "cell-border stripe hover compact"
       ))
     }
 
@@ -5518,16 +5518,16 @@ server <- shinyServer(function(input, output, session) {
         return(DT::datatable(
           display_df,
           rownames = FALSE,
-          extensions = 'Buttons',
-          filter = 'top',
+          extensions = "Buttons",
+          filter = "top",
           options = list(
             scrollX = TRUE,
             scrollY = "400px",
-            dom = 'Bfrtip',
-            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+            dom = "Bfrtip",
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
             pageLength = 50,
             columnDefs = list(
-              list(targets = "_all", className = 'dt-center'),
+              list(targets = "_all", className = "dt-center"),
               list(
                 targets = 1,
                 render = DT::JS(
@@ -5555,8 +5555,8 @@ server <- shinyServer(function(input, output, session) {
               )
             )
           ),
-          selection = 'none',
-          class = 'cell-border stripe hover compact'
+          selection = "none",
+          class = "cell-border stripe hover compact"
         ))
       }
       return(NULL)
@@ -5688,17 +5688,17 @@ server <- shinyServer(function(input, output, session) {
     DT::datatable(
       entity_detail,
       rownames = FALSE,
-      extensions = 'Buttons',
-      filter = 'top',
-      editable = list(target = 'cell', disable = list(columns = disabled_cols)),
+      extensions = "Buttons",
+      filter = "top",
+      editable = list(target = "cell", disable = list(columns = disabled_cols)),
       options = list(
         scrollX = TRUE,
         scrollY = "400px",
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel", "pdf", "print"),
         pageLength = 50,
         columnDefs = list(
-          list(targets = "_all", className = 'dt-center'),
+          list(targets = "_all", className = "dt-center"),
           list(
             targets = -1,
             render = DT::JS(
@@ -5727,8 +5727,8 @@ server <- shinyServer(function(input, output, session) {
           )
         )
       ),
-      selection = 'none',
-      class = 'cell-border stripe hover compact'
+      selection = "none",
+      class = "cell-border stripe hover compact"
     )
   })
 
@@ -5862,7 +5862,7 @@ server <- shinyServer(function(input, output, session) {
       if (!is.na(entity) && nzchar(entity)) {
         color <- if (entity %in% names(entity_colors)) entity_colors[entity] else "#757575"
         html_parts[i] <- sprintf(
-          '<mark class="entity" style="background: %s; color: white; padding: 0.25em 0.35em; margin: 0 0.1em; line-height: 1.5; border-radius: 0.35em; box-decoration-break: clone; -webkit-box-decoration-break: clone;">%s<span style="font-size: 0.7em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5em; background: rgba(0,0,0,0.2); padding: 0.15em 0.35em; color: white;">%s</span></mark>',
+          "<mark class=\"entity\" style=\"background: %s; color: white; padding: 0.25em 0.35em; margin: 0 0.1em; line-height: 1.5; border-radius: 0.35em; box-decoration-break: clone; -webkit-box-decoration-break: clone;\">%s<span style=\"font-size: 0.7em; font-weight: bold; line-height: 1; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5em; background: rgba(0,0,0,0.2); padding: 0.15em 0.35em; color: white;\">%s</span></mark>",
           color, token, htmltools::htmlEscape(entity)
         )
       } else {
@@ -5871,9 +5871,9 @@ server <- shinyServer(function(input, output, session) {
     }
 
     paste0(
-      '<div style="line-height: 2.5; direction: ltr; font-family: Roboto, sans-serif; font-size: 16px; color: #4269BF; padding: 15px; background: #fafafa; border-radius: 8px; max-height: 400px; overflow-y: auto;">',
+      "<div style=\"line-height: 2.5; direction: ltr; font-family: Roboto, sans-serif; font-size: 16px; color: #4269BF; padding: 15px; background: #fafafa; border-radius: 8px; max-height: 400px; overflow-y: auto;\">",
       paste(html_parts, collapse = " "),
-      '</div>'
+      "</div>"
     )
   })
 
@@ -5943,9 +5943,9 @@ server <- shinyServer(function(input, output, session) {
     text <- paste(doc_data$token, collapse = " ")
 
     if (is_web) {
-      return(list(type = "warning", content = '<div style="background-color: #FEF3C7; border: 1px solid #F59E0B; color: #B15319; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;"><i class="fa fa-info-circle" style="margin-right: 8px; color: #F59E0B;"></i>
+      return(list(type = "warning", content = "<div style=\"background-color: #FEF3C7; border: 1px solid #F59E0B; color: #B15319; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;\"><i class=\"fa fa-info-circle\" style=\"margin-right: 8px; color: #F59E0B;\"></i>
               Dependency visualization is only available in desktop/Docker mode with Python.
-              </div>'))
+              </div>"))
     }
 
     tryCatch({
@@ -5953,9 +5953,9 @@ server <- shinyServer(function(input, output, session) {
       list(type = "svg", content = svg)
     }, error = function(e) {
       list(type = "error", content = paste0(
-        '<div style="background-color: #FEF3C7; border: 1px solid #F59E0B; color: #B15319; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;"><i class="fa fa-info-circle" style="margin-right: 8px; color: #F59E0B;"></i>',
-        'Visualization unavailable: ', htmltools::htmlEscape(e$message),
-        '</div>'
+        "<div style=\"background-color: #FEF3C7; border: 1px solid #F59E0B; color: #B15319; padding: 12px 16px; border-radius: 4px; text-align: center; font-size: 16px;\"><i class=\"fa fa-info-circle\" style=\"margin-right: 8px; color: #F59E0B;\"></i>",
+        "Visualization unavailable: ", htmltools::htmlEscape(e$message),
+        "</div>"
       ))
     })
   })
@@ -6410,7 +6410,7 @@ server <- shinyServer(function(input, output, session) {
     not_found_count <- 0
     total_occurrences <- 0
 
-    withProgress(message = 'Processing batch constructs...', value = 0, {
+    withProgress(message = "Processing batch constructs...", value = 0, {
       for (i in seq_along(lines)) {
         parts <- strsplit(lines[i], "[:|\t]")[[1]]
         if (length(parts) != 2) {
@@ -6428,7 +6428,7 @@ server <- shinyServer(function(input, output, session) {
         search_terms <- trimws(search_terms)
         search_terms <- search_terms[search_terms != ""]
 
-        incProgress(1/length(lines), detail = paste("Processing:", construct_label))
+        incProgress(1 / length(lines), detail = paste("Processing:", construct_label))
 
         if (!is.null(spacy_parsed())) {
           parsed <- spacy_parsed()
@@ -6700,7 +6700,7 @@ server <- shinyServer(function(input, output, session) {
       not_found_count <- 0
       total_occurrences <- 0
 
-      withProgress(message = 'Processing codebook...', value = 0, {
+      withProgress(message = "Processing codebook...", value = 0, {
         for (i in seq_len(nrow(codebook))) {
           construct_label <- codebook$construct_label[i]
           operational_def <- codebook$operational_definition[i]
@@ -6709,7 +6709,7 @@ server <- shinyServer(function(input, output, session) {
           search_terms <- trimws(search_terms)
           search_terms <- search_terms[search_terms != ""]
 
-          incProgress(1/nrow(codebook), detail = paste("Processing:", construct_label))
+          incProgress(1 / nrow(codebook), detail = paste("Processing:", construct_label))
 
           if (!is.null(spacy_parsed())) {
             parsed <- spacy_parsed()
@@ -8864,7 +8864,7 @@ server <- shinyServer(function(input, output, session) {
               "Ollama Model",
               choices = models,
               selected = NULL,
-              options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+              options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
             )
           )
         } else {
@@ -8887,7 +8887,7 @@ server <- shinyServer(function(input, output, session) {
               "GPT-4" = "gpt-4"
             ),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           ),
           .password_input("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
@@ -8908,7 +8908,7 @@ server <- shinyServer(function(input, output, session) {
               "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
             ),
             selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           ),
           .password_input("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(
@@ -9034,7 +9034,7 @@ server <- shinyServer(function(input, output, session) {
     if (!sentiment_results$analyzed) {
       return(plot_error("Run sentiment analysis to see results"))
     } else if (!is.null(input$sentiment_category_var) && input$sentiment_category_var != "None" && !is.null(sentiment_results$grouped)) {
-      plot_type <- if(is.null(input$category_plot_type)) "bar" else input$category_plot_type
+      plot_type <- if (is.null(input$category_plot_type)) "bar" else input$category_plot_type
 
       gg <- if (plot_type == "bar") {
         plot_sentiment_by_category(
@@ -9071,8 +9071,8 @@ server <- shinyServer(function(input, output, session) {
           mutate(across(where(is.numeric), ~ round(., 3))),
         extensions = "Buttons",
         options = list(
-          dom = 'Bfrtip',
-          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel", "pdf", "print"),
           pageLength = 10,
           scrollX = TRUE
         ),
@@ -9123,15 +9123,15 @@ server <- shinyServer(function(input, output, session) {
 
       datatable(combined_data,
                 options = list(
-                  dom = 'Bt',
-                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  dom = "Bt",
+                  buttons = c("copy", "csv", "excel", "pdf", "print"),
                   pageLength = 15,
                   scrollX = TRUE
                 ),
                 rownames = FALSE) %>%
         DT::formatStyle(
-          'Metric',
-          target = 'row',
+          "Metric",
+          target = "row",
           backgroundColor = styleEqual(
             c("Sentiment Distribution (of analyzed):"),
             c("#f8f9fa")
@@ -9182,7 +9182,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (nrow(sentiment_results$data) == 0) {
       datatable(
         data.frame(Message = "No documents contained sentiment words from the selected lexicon."),
-        options = list(dom = 't', pageLength = 1),
+        options = list(dom = "t", pageLength = 1),
         rownames = FALSE
       )
     } else {
@@ -9208,10 +9208,10 @@ server <- shinyServer(function(input, output, session) {
       datatable(doc_table,
                 options = list(
                   pageLength = 10,
-                  dom = 'Bfrtip',
-                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  dom = "Bfrtip",
+                  buttons = c("copy", "csv", "excel", "pdf", "print"),
                   scrollX = TRUE,
-                  lengthMenu = list(c(10, 25, 50, 100, -1), c('10', '25', '50', '100', 'All'))
+                  lengthMenu = list(c(10, 25, 50, 100, -1), c("10", "25", "50", "100", "All"))
                 ),
                 rownames = FALSE) %>%
         formatStyle("Sentiment",
@@ -9282,8 +9282,8 @@ server <- shinyServer(function(input, output, session) {
 
       datatable(emotion_table,
                 options = list(
-                  dom = 'Bfrtip',
-                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  dom = "Bfrtip",
+                  buttons = c("copy", "csv", "excel", "pdf", "print"),
                   pageLength = 10,
                   scrollX = TRUE
                 ),
@@ -9310,21 +9310,21 @@ server <- shinyServer(function(input, output, session) {
 
       datatable(emotion_table,
                 options = list(
-                  dom = 'Bt',
-                  buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                  dom = "Bt",
+                  buttons = c("copy", "csv", "excel", "pdf", "print"),
                   pageLength = 10,
                   scrollX = TRUE
                 ),
                 rownames = FALSE) %>%
         formatStyle("Score",
                    background = styleColorBar(emotion_table$Score, "#E0E7FF"),
-                   backgroundSize = '98% 80%',
-                   backgroundRepeat = 'no-repeat',
-                   backgroundPosition = 'center')
+                   backgroundSize = "98% 80%",
+                   backgroundRepeat = "no-repeat",
+                   backgroundPosition = "center")
     } else {
       datatable(
         data.frame(Message = "Select NRC lexicon to see emotion scores"),
-        options = list(dom = 't', pageLength = 1),
+        options = list(dom = "t", pageLength = 1),
         rownames = FALSE
       )
     }
@@ -9634,7 +9634,7 @@ server <- shinyServer(function(input, output, session) {
 
       selected_metrics <- input$readability_metrics
 
-      if(is.null(selected_metrics) || length(selected_metrics) == 0) {
+      if (is.null(selected_metrics) || length(selected_metrics) == 0) {
         selected_metrics <- c("flesch", "flesch_kincaid", "gunning_fog")
       }
 
@@ -9692,10 +9692,10 @@ server <- shinyServer(function(input, output, session) {
       return(plot_error("Selected metric not available"))
     }
 
-    if(view_type == "group") {
+    if (view_type == "group") {
       group_var <- input$readability_group_var
 
-      if(is.null(group_var) || group_var == "" || group_var == "None" ||
+      if (is.null(group_var) || group_var == "" || group_var == "None" ||
          !group_var %in% names(readability_results$original_data)) {
         return(plot_error("Please select a group variable in 'Group by'"))
       }
@@ -9705,7 +9705,7 @@ server <- shinyServer(function(input, output, session) {
 
       gg <- plot_readability_by_group(scores_data, selected_metric, group_var)
 
-    } else if(view_type == "document") {
+    } else if (view_type == "document") {
       top_n <- input$readability_top_n %||% 15
       gg <- plot_top_readability_documents(scores_data, selected_metric, top_n = top_n)
 
@@ -9755,8 +9755,8 @@ server <- shinyServer(function(input, output, session) {
         options = list(
           pageLength = 20,
           scrollX = TRUE,
-          dom = 'Bfrtip',
-          buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel", "pdf", "print")
         ),
         rownames = FALSE
       ) %>%
@@ -9987,8 +9987,8 @@ server <- shinyServer(function(input, output, session) {
       options = list(
         pageLength = 20,
         scrollX = TRUE,
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel", "pdf", "print")
       ),
       rownames = FALSE
     ) %>%
@@ -10184,9 +10184,9 @@ server <- shinyServer(function(input, output, session) {
         options = list(
           pageLength = 20,
           scrollX = TRUE,
-          dom = 'Bfrtip',
-          buttons = c('copy', 'csv', 'excel'),
-          order = list(list(3, 'desc'))  # Order by Weighted Log Odds descending
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel"),
+          order = list(list(3, "desc"))  # Order by Weighted Log Odds descending
         ),
         rownames = FALSE
       )
@@ -10216,9 +10216,9 @@ server <- shinyServer(function(input, output, session) {
         options = list(
           pageLength = 20,
           scrollX = TRUE,
-          dom = 'Bfrtip',
-          buttons = c('copy', 'csv', 'excel'),
-          order = list(list(5, 'desc'))  # Order by Log Odds descending
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel"),
+          order = list(list(5, "desc"))  # Order by Log Odds descending
         ),
         rownames = FALSE
       )
@@ -10372,9 +10372,9 @@ server <- shinyServer(function(input, output, session) {
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel'),
-        order = list(list(1, 'desc'))
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel"),
+        order = list(list(1, "desc"))
       ),
       rownames = FALSE
     )
@@ -10421,7 +10421,7 @@ server <- shinyServer(function(input, output, session) {
         normalize = isTRUE(input$tfidf_normalize)
       )
 
-      if(quanteda::ndoc(dfm_obj) > 1) {
+      if (quanteda::ndoc(dfm_obj) > 1) {
         group_var <- input$tfidf_group_var
         keyness_top_n <- input$textrank_top_n %||% 15
 
@@ -10439,11 +10439,11 @@ server <- shinyServer(function(input, output, session) {
               keyness_df <- data.frame(Keyword = character(), Keyness_Score = numeric())
             }
           } else {
-            target_docs <- 1:ceiling(quanteda::ndoc(dfm_obj)/2)
+            target_docs <- 1:ceiling(quanteda::ndoc(dfm_obj) / 2)
             keyness_df <- extract_keywords_keyness(dfm_obj, target = target_docs, top_n = keyness_top_n)
           }
         } else {
-          target_docs <- 1:ceiling(quanteda::ndoc(dfm_obj)/2)
+          target_docs <- 1:ceiling(quanteda::ndoc(dfm_obj) / 2)
           keyness_df <- extract_keywords_keyness(dfm_obj, target = target_docs, top_n = keyness_top_n)
         }
       } else {
@@ -10491,8 +10491,8 @@ server <- shinyServer(function(input, output, session) {
         tfidf_data_desc,
         options = list(
           pageLength = 20,
-          dom = 'Bfrtip',
-          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel", "pdf", "print"),
           order = list(),
           scrollX = TRUE,
           width = "100%"
@@ -10518,10 +10518,10 @@ server <- shinyServer(function(input, output, session) {
     if (!keyword_results$analyzed) {
       return(NULL)
     } else {
-      if(nrow(keyword_results$keyness_data) == 0) {
+      if (nrow(keyword_results$keyness_data) == 0) {
         datatable(
           data.frame(Message = "Keyness analysis requires multiple documents for comparison."),
-          options = list(dom = 't', pageLength = 1),
+          options = list(dom = "t", pageLength = 1),
           rownames = FALSE
         )
       } else {
@@ -10530,8 +10530,8 @@ server <- shinyServer(function(input, output, session) {
           keyness_data_desc,
           options = list(
             pageLength = 20,
-            dom = 'Bfrtip',
-            buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+            dom = "Bfrtip",
+            buttons = c("copy", "csv", "excel", "pdf", "print"),
             order = list(),
             scrollX = TRUE,
             width = "100%"
@@ -10615,8 +10615,8 @@ server <- shinyServer(function(input, output, session) {
         tfidf_df_sorted,
         options = list(
           pageLength = 20,
-          dom = 'Bfrtip',
-          buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+          dom = "Bfrtip",
+          buttons = c("copy", "csv", "excel", "pdf", "print"),
           order = list(),
           scrollX = TRUE,
           width = "100%"
@@ -10886,7 +10886,7 @@ server <- shinyServer(function(input, output, session) {
 
     available_cols <- names(docs_data)
     existing_cols <- base_cols[base_cols %in% available_cols]
-    final_col_names <- col_names[1:length(existing_cols)]
+    final_col_names <- col_names[seq_along(existing_cols)]
 
     summary_data <- docs_data %>%
       dplyr::select(all_of(existing_cols))
@@ -11265,7 +11265,7 @@ server <- shinyServer(function(input, output, session) {
     package_result <- tryCatch({
       TextAnalysisR::calculate_document_similarity(
         texts = texts,
-        document_feature_type = if(use_embeddings) "embeddings" else "words",
+        document_feature_type = if (use_embeddings) "embeddings" else "words",
         similarity_method = method,
         use_embeddings = use_embeddings,
         embedding_model = embedding_model,
@@ -11642,7 +11642,7 @@ server <- shinyServer(function(input, output, session) {
         return(NULL)
       }
 
-      top_indices <- order(similarities, decreasing = TRUE)[1:min(top_k, length(similarities))]
+      top_indices <- order(similarities, decreasing = TRUE)[seq_len(min(top_k, length(similarities)))]
 
       valid_indices <- top_indices[top_indices <= length(documents) & top_indices > 0]
       if (length(valid_indices) == 0) {
@@ -11724,7 +11724,7 @@ server <- shinyServer(function(input, output, session) {
         if (all(doc_scores == 0)) {
           if (!is.null(similarity_matrix)) {
             avg_similarities <- rowMeans(similarity_matrix, na.rm = TRUE)
-            top_indices <- order(avg_similarities, decreasing = TRUE)[1:min(top_k, length(documents))]
+            top_indices <- order(avg_similarities, decreasing = TRUE)[seq_len(min(top_k, length(documents)))]
 
             results <- data.frame(
               Document_Index = top_indices,
@@ -11747,7 +11747,7 @@ server <- shinyServer(function(input, output, session) {
         }
 
         top_indices <- positive_indices[order(doc_scores[positive_indices], decreasing = TRUE)]
-        top_indices <- top_indices[1:min(top_k, length(top_indices))]
+        top_indices <- top_indices[seq_len(min(top_k, length(top_indices)))]
 
         results <- data.frame(
           Document_Index = top_indices,
@@ -11790,7 +11790,7 @@ server <- shinyServer(function(input, output, session) {
       )
 
       ranking <- ranking[order(ranking$Similarity, decreasing = TRUE), ]
-      ranking$Rank <- 1:nrow(ranking)
+      ranking$Rank <- seq_len(nrow(ranking))
 
       return(ranking)
     }, error = function(e) {
@@ -11836,7 +11836,7 @@ server <- shinyServer(function(input, output, session) {
         scores <- tf_idf_scores
       }
 
-      top_indices <- order(scores, decreasing = TRUE)[1:min(top_k, length(scores))]
+      top_indices <- order(scores, decreasing = TRUE)[seq_len(min(top_k, length(scores)))]
       top_indices <- top_indices[scores[top_indices] > 0]
 
       if (length(top_indices) == 0) {
@@ -12785,7 +12785,7 @@ server <- shinyServer(function(input, output, session) {
           paste("Feature type:", tools::toTitleCase(feature_type)),
           paste("Documents processed:", n_docs),
           paste("Similarity method:", comparison_results$results[[feature_type]]$method),
-          paste("Cache status:", if(is_cached_result) "Using cached results" else "Newly calculated"),
+          paste("Cache status:", if (is_cached_result) "Using cached results" else "Newly calculated"),
           "",
           "Calculation successful",
           "",
@@ -16102,7 +16102,7 @@ server <- shinyServer(function(input, output, session) {
       sample_data <- docs_data[sample_indices, c("document_id_display", "combined_text")]
 
       DT::datatable(sample_data,
-                   options = list(pageLength = 5, scrollX = TRUE, dom = 't'))
+                   options = list(pageLength = 5, scrollX = TRUE, dom = "t"))
     }
   })
 
@@ -16218,8 +16218,8 @@ server <- shinyServer(function(input, output, session) {
     clusters <- document_clustering_results$clusters
 
     hover_text <- paste0(
-      "<b>ID:</b> ", sapply(docs_data$document_id_display[1:nrow(coords)], wrap_long_text, USE.NAMES = FALSE), "\n",
-      "<b>Text:</b>\n", sapply(docs_data$combined_text[1:nrow(coords)], wrap_text_for_tooltip, USE.NAMES = FALSE)
+      "<b>ID:</b> ", sapply(docs_data$document_id_display[seq_len(nrow(coords))], wrap_long_text, USE.NAMES = FALSE), "\n",
+      "<b>Text:</b>\n", sapply(docs_data$combined_text[seq_len(nrow(coords))], wrap_text_for_tooltip, USE.NAMES = FALSE)
     )
 
     if (!is.null(clusters)) {
@@ -16647,7 +16647,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     unique_clusters <- sort(unique(cluster_labels[cluster_labels != 0]))
-    cluster_mapping <- setNames(1:length(unique_clusters), unique_clusters)
+    cluster_mapping <- setNames(seq_along(unique_clusters), unique_clusters)
 
     cluster_names <- if (cluster_method == "umap_dbscan" && any(cluster_labels == 0)) {
       ifelse(cluster_labels == 0, "Outlier", paste("Cluster", cluster_mapping[as.character(cluster_labels)]))
@@ -16774,14 +16774,14 @@ server <- shinyServer(function(input, output, session) {
       names(color_mapping) <- cluster_factor_levels
 
       if (length(regular_indices) > 0) {
-        color_mapping[regular_indices] <- base_colors[1:length(regular_indices)]
+        color_mapping[regular_indices] <- base_colors[seq_along(regular_indices)]
       }
 
       if (length(outlier_indices) > 0) {
         color_mapping[outlier_indices] <- "#808080"
       }
     } else {
-      color_mapping <- setNames(base_colors[1:length(cluster_factor_levels)], cluster_factor_levels)
+      color_mapping <- setNames(base_colors[seq_along(cluster_factor_levels)], cluster_factor_levels)
     }
 
     doc_ids_wrapped <- sapply(doc_ids, wrap_long_text, USE.NAMES = FALSE)
@@ -16875,7 +16875,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     unique_clusters <- sort(unique(cluster_labels[cluster_labels != 0]))
-    cluster_mapping <- setNames(1:length(unique_clusters), unique_clusters)
+    cluster_mapping <- setNames(seq_along(unique_clusters), unique_clusters)
 
     cluster_names_table <- if (cluster_method == "umap_dbscan" && any(cluster_labels == 0)) {
       ifelse(cluster_labels == 0, "Outlier", paste("Cluster", cluster_mapping[as.character(cluster_labels)]))
@@ -17060,7 +17060,7 @@ server <- shinyServer(function(input, output, session) {
             DT::datatable(
               sample_data[, display_cols, drop = FALSE],
               options = list(
-                dom = 't',
+                dom = "t",
                 pageLength = 5,
                 ordering = FALSE
               ),
@@ -17309,7 +17309,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     unique_clusters <- sort(unique(cluster_labels[cluster_labels != 0]))
-    cluster_mapping <- setNames(1:length(unique_clusters), unique_clusters)
+    cluster_mapping <- setNames(seq_along(unique_clusters), unique_clusters)
 
     cluster_names <- if (any(cluster_labels == 0)) {
       ifelse(cluster_labels == 0, "Outlier", paste("Cluster", cluster_mapping[as.character(cluster_labels)]))
@@ -17602,7 +17602,7 @@ server <- shinyServer(function(input, output, session) {
     } else {
       data.frame(Metric = "No metrics available", Value = NA)
     }
-  }, options = list(pageLength = 10, dom = 't'))
+  }, options = list(pageLength = 10, dom = "t"))
 
   observeEvent(input$run_cross_validation, {
     req(document_display_data())
@@ -17893,7 +17893,7 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
-      texts <- docs_data$combined_text[1:length(cluster_assignments)]
+      texts <- docs_data$combined_text[seq_along(cluster_assignments)]
 
       cluster_keywords <- list()
       unique_clusters <- unique(cluster_assignments)
@@ -18339,12 +18339,12 @@ server <- shinyServer(function(input, output, session) {
       summary_data <- summary_data %>%
         mutate(
           overall_score = safe_scale(semcoh) + safe_scale(exclus) - safe_scale(residual) +
-                         (if("heldout" %in% names(summary_data)) safe_scale(heldout) else 0),
+                         (if ("heldout" %in% names(summary_data)) safe_scale(heldout) else 0),
           score_components = paste0(
             "Coh_z:", round(safe_scale(semcoh), 2),
             " Exc_z:", round(safe_scale(exclus), 2),
             " -Res_z:", round(-safe_scale(residual), 2),
-            if("heldout" %in% names(summary_data)) paste0(" Held_z:", round(safe_scale(heldout), 2)) else ""
+            if ("heldout" %in% names(summary_data)) paste0(" Held_z:", round(safe_scale(heldout), 2)) else ""
           )
         ) %>%
         rename(
@@ -18360,7 +18360,7 @@ server <- shinyServer(function(input, output, session) {
       summary_data <- summary_data %>%
         mutate(
           overall_score = safe_scale(semcoh) - safe_scale(residual) +
-                         (if("heldout" %in% names(summary_data)) safe_scale(heldout) else 0)
+                         (if ("heldout" %in% names(summary_data)) safe_scale(heldout) else 0)
         ) %>%
         rename(
           `Semantic Coherence` = semcoh,
@@ -18374,7 +18374,7 @@ server <- shinyServer(function(input, output, session) {
       summary_data <- summary_data %>%
         mutate(
           overall_score = -safe_scale(residual) +
-                         (if("heldout" %in% names(summary_data)) safe_scale(heldout) else 0)
+                         (if ("heldout" %in% names(summary_data)) safe_scale(heldout) else 0)
         ) %>%
         rename(
           `Residual` = residual,
@@ -18407,16 +18407,16 @@ server <- shinyServer(function(input, output, session) {
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel')
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel")
       ),
       caption = "Quality metrics summary for different K values. Higher overall score indicates better model."
     ) %>%
       DT::formatStyle(
-        'Overall Score',
+        "Overall Score",
         backgroundColor = DT::styleInterval(
           quantile(summary_data$`Overall Score`, probs = c(0.33, 0.67)),
-          c('#ffcccc', '#ffffcc', '#ccffcc')
+          c("#ffcccc", "#ffffcc", "#ccffcc")
         )
       )
   })
@@ -18808,13 +18808,13 @@ server <- shinyServer(function(input, output, session) {
         rownames = FALSE,
         options = list(
           pageLength = 10,
-          dom = 'rtip'
+          dom = "rtip"
         )
       ) %>%
         DT::formatStyle(
-          'Recommendation',
-          color = DT::styleEqual('Recommended', 'green'),
-          fontWeight = DT::styleEqual('Recommended', 'bold')
+          "Recommendation",
+          color = DT::styleEqual("Recommended", "green"),
+          fontWeight = DT::styleEqual("Recommended", "bold")
         )
     } else {
       NULL
@@ -19072,7 +19072,7 @@ server <- shinyServer(function(input, output, session) {
 
     doc_lengths <- sapply(out()$documents, function(d) {
       if (is.null(d) || length(d) == 0) return(0)
-      if (is.matrix(d) && ncol(d) >= 2) return(sum(d[2,]))
+      if (is.matrix(d) && ncol(d) >= 2) return(sum(d[2, ]))
       return(0)
     })
 
@@ -19098,7 +19098,7 @@ server <- shinyServer(function(input, output, session) {
             kappa.prior = input$stm_kappa_prior_K,
             max.em.its = input$stm_max_em_its_K,
             emtol = 1e-04,
-            control = list(alpha = 50/K_num)
+            control = list(alpha = 50 / K_num)
           )
         }, error = function(init_error) {
           if (grepl("chol|decomposition|singular", init_error$message, ignore.case = TRUE)) {
@@ -19116,7 +19116,7 @@ server <- shinyServer(function(input, output, session) {
               kappa.prior = input$stm_kappa_prior_K,
               max.em.its = input$stm_max_em_its_K,
               emtol = 1e-04,
-              control = list(alpha = 50/K_num)
+              control = list(alpha = 50 / K_num)
             )
           } else {
             stop(init_error)
@@ -19821,7 +19821,7 @@ server <- shinyServer(function(input, output, session) {
         })
 
         n_quotes <- input$embedding_quote_number %||% 5
-        closest_indices <- topic_docs[order(distances)[1:min(n_quotes, length(topic_docs))]]
+        closest_indices <- topic_docs[order(distances)[seq_len(min(n_quotes, length(topic_docs)))]]
       } else {
         n_quotes <- input$embedding_quote_number %||% 5
         closest_indices <- head(topic_docs, n_quotes)
@@ -19916,7 +19916,7 @@ server <- shinyServer(function(input, output, session) {
           beta_matrix <- exp(topic_model_result()$beta$logbeta[[1]])
 
           topic_terms <- data.frame()
-          for (i in 1:nrow(beta_matrix)) {
+          for (i in seq_len(nrow(beta_matrix))) {
             top_indices <- order(beta_matrix[i, ], decreasing = TRUE)[1:current_top_terms]
             top_probs <- beta_matrix[i, top_indices]
             top_terms <- topic_model_result()$vocab[top_indices]
@@ -19942,7 +19942,7 @@ server <- shinyServer(function(input, output, session) {
           beta_matrix <- exp(topic_model_result()$beta$logbeta[[1]])
 
           topic_terms <- data.frame()
-          for (i in 1:nrow(frex_terms)) {
+          for (i in seq_len(nrow(frex_terms))) {
             terms <- as.character(frex_terms[i, ])
             vocab_indices <- match(terms, topic_model_result()$vocab)
             term_probs <- beta_matrix[i, vocab_indices]
@@ -19962,7 +19962,7 @@ server <- shinyServer(function(input, output, session) {
           beta_matrix <- exp(topic_model_result()$beta$logbeta[[1]])
 
           topic_terms <- data.frame()
-          for (i in 1:nrow(lift_terms)) {
+          for (i in seq_len(nrow(lift_terms))) {
             terms <- as.character(lift_terms[i, ])
             vocab_indices <- match(terms, topic_model_result()$vocab)
             term_probs <- beta_matrix[i, vocab_indices]
@@ -19982,7 +19982,7 @@ server <- shinyServer(function(input, output, session) {
           beta_matrix <- exp(topic_model_result()$beta$logbeta[[1]])
 
           topic_terms <- data.frame()
-          for (i in 1:nrow(score_terms)) {
+          for (i in seq_len(nrow(score_terms))) {
             terms <- as.character(score_terms[i, ])
             vocab_indices <- match(terms, topic_model_result()$vocab)
             term_probs <- beta_matrix[i, vocab_indices]
@@ -20078,17 +20078,17 @@ server <- shinyServer(function(input, output, session) {
       options = list(
         pageLength = 20,
         scrollX = TRUE,
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel')
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel")
       ),
       caption = "Topic summary with labels and proportions"
     ) %>%
       DT::formatStyle(
-        'Proportion',
-        background = DT::styleColorBar(summary_df$Proportion, 'lightblue'),
-        backgroundSize = '100% 90%',
-        backgroundRepeat = 'no-repeat',
-        backgroundPosition = 'center'
+        "Proportion",
+        background = DT::styleColorBar(summary_df$Proportion, "lightblue"),
+        backgroundSize = "100% 90%",
+        backgroundRepeat = "no-repeat",
+        backgroundPosition = "center"
       )
   })
 
@@ -20105,8 +20105,8 @@ server <- shinyServer(function(input, output, session) {
       options = list(
         pageLength = 20,
         scrollX = TRUE,
-        dom = 'Bfrtip',
-        buttons = c('copy', 'csv', 'excel')
+        dom = "Bfrtip",
+        buttons = c("copy", "csv", "excel")
       ),
       caption = "AI-generated topic labels"
     )
@@ -20189,8 +20189,8 @@ server <- shinyServer(function(input, output, session) {
         top_topic_terms,
         provider = provider,
         model = model,
-        system = if(nzchar(input$stm_system_prompt)) input$stm_system_prompt else NULL,
-        user = if(nzchar(input$stm_user_prompt)) input$stm_user_prompt else NULL,
+        system = if (nzchar(input$stm_system_prompt)) input$stm_system_prompt else NULL,
+        user = if (nzchar(input$stm_user_prompt)) input$stm_user_prompt else NULL,
         temperature = input$stm_temperature,
         api_key = api_key,
         verbose = FALSE
@@ -20369,16 +20369,16 @@ server <- shinyServer(function(input, output, session) {
             options = list(
               pageLength = 10,
               scrollX = TRUE,
-              dom = 'Bfrtip',
+              dom = "Bfrtip",
               buttons = list(
-                'copy',
-                list(extend = 'csv', title = 'Generated_Content'),
-                list(extend = 'excel', title = 'Generated_Content'),
-                list(extend = 'pdf', title = 'Generated_Content'),
-                'print'
+                "copy",
+                list(extend = "csv", title = "Generated_Content"),
+                list(extend = "excel", title = "Generated_Content"),
+                list(extend = "pdf", title = "Generated_Content"),
+                "print"
               )
             ),
-            extensions = 'Buttons',
+            extensions = "Buttons",
             rownames = FALSE
           )
         }),
@@ -20425,16 +20425,16 @@ server <- shinyServer(function(input, output, session) {
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = 'Bfrtip',
+        dom = "Bfrtip",
         buttons = list(
-          'copy',
-          list(extend = 'csv', title = 'Generated_Content'),
-          list(extend = 'excel', title = 'Generated_Content'),
-          list(extend = 'pdf', title = 'Generated_Content'),
-          'print'
+          "copy",
+          list(extend = "csv", title = "Generated_Content"),
+          list(extend = "excel", title = "Generated_Content"),
+          list(extend = "pdf", title = "Generated_Content"),
+          "print"
         )
       ),
-      extensions = 'Buttons',
+      extensions = "Buttons",
       rownames = FALSE
     ) %>%
       DT::formatStyle(columns = names(generated_content()), `font-size` = "16px")

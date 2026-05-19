@@ -2001,7 +2001,7 @@ Supports:
                   "Ollama Model:",
                   choices = c("Nomic Embed Text (Default)" = "nomic-embed-text", "MxBai Embed Large (Higher Quality)" = "mxbai-embed-large", "All-MiniLM (Lightweight)" = "all-minilm"),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 )
               ),
               conditionalPanel(
@@ -2019,7 +2019,7 @@ Supports:
                     "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                   ),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 tags$p(
                   style = "font-size: 16px; color: #666;",
@@ -2033,7 +2033,7 @@ Supports:
                   "OpenAI Model:",
                   choices = c("Text Embedding 3 Small (Default)" = "text-embedding-3-small", "Text Embedding 3 Large (Higher Quality)" = "text-embedding-3-large"),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 .password_input("embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
@@ -2049,7 +2049,7 @@ Supports:
                   "Gemini Model:",
                   choices = c("Gemini Embedding 001" = "gemini-embedding-001", "Gemini Embedding 2 Preview" = "gemini-embedding-2-preview"),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 .password_input("embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
@@ -2186,7 +2186,7 @@ Supports:
                     "All-MiniLM (Lightweight)" = "all-minilm"
                   ),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 )
               ),
               conditionalPanel(
@@ -2204,7 +2204,7 @@ Supports:
                     "GTE Multilingual Base (Fast, Multilingual)" = "Alibaba-NLP/gte-multilingual-base"
                   ),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 tags$p(
                   style = "font-size: 16px; color: #666;",
@@ -2221,7 +2221,7 @@ Supports:
                     "Text Embedding 3 Large (Higher Quality)" = "text-embedding-3-large"
                   ),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 .password_input("search_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
@@ -2237,7 +2237,7 @@ Supports:
                   "Gemini Model:",
                   choices = c("Gemini Embedding 001" = "gemini-embedding-001", "Gemini Embedding 2 Preview" = "gemini-embedding-2-preview"),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 .password_input("search_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
@@ -2266,7 +2266,7 @@ Supports:
                   "Ollama Model:",
                   choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 )
               ),
               conditionalPanel(
@@ -2276,7 +2276,7 @@ Supports:
                   "OpenAI Model:",
                   choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 .password_input("rag_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
@@ -2292,7 +2292,7 @@ Supports:
                   "Gemini Model:",
                   choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
                   selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 .password_input("rag_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
@@ -2503,7 +2503,7 @@ Supports:
                 "Ollama Model:",
                 choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               )
             ),
 
@@ -2514,7 +2514,7 @@ Supports:
                 "OpenAI Model:",
                 choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
               .password_input("cluster_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
@@ -2531,7 +2531,7 @@ Supports:
                 "Gemini Model:",
                 choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
                 selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I('function() { this.setValue(""); }'))
+                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
               .password_input("cluster_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
@@ -3354,4 +3354,3 @@ Supports:
   )
   )
 )
-
