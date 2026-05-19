@@ -4,7 +4,7 @@
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License:
-GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 Text mining and natural language processing workflow for documents
 (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`). Includes preprocessing via
