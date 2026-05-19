@@ -1119,7 +1119,7 @@ extract_keywords_tfidf <- function(dfm,
     }
   }
 
-  top_features <- sort(feature_scores, decreasing = TRUE)[1:min(top_n, length(feature_scores))]
+  top_features <- sort(feature_scores, decreasing = TRUE)[seq_len(min(top_n, length(feature_scores)))]
 
   data.frame(
     Keyword = names(top_features),
@@ -1481,7 +1481,7 @@ plot_readability_by_group <- function(readability_data,
     ggplot2::geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     suppressWarnings(ggplot2::geom_jitter(ggplot2::aes(text = hover_text),
                          width = 0.15, alpha = 0.5, color = "#0c1f4a", size = 1.8)) +
-    ggplot2::scale_fill_manual(values = colors[1:length(unique_groups)]) +
+    ggplot2::scale_fill_manual(values = colors[seq_along(unique_groups)]) +
     ggplot2::labs(x = group_var, y = metric, title = title) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -1534,8 +1534,6 @@ plot_top_readability_documents <- function(readability_data,
   sorted_data$metric_val <- sorted_data[[metric]]
   sorted_data$hover_text <- paste0(sorted_data$doc_label, "\n",
                                     metric, ": ", round(sorted_data$metric_val, 2))
-
-  text_angle <- if (top_n <= 10) 0 else -45
 
   ggplot2::ggplot(sorted_data, ggplot2::aes(x = doc_ordered, y = metric_val,
                                              text = hover_text)) +
@@ -2739,7 +2737,6 @@ calculate_log_odds_ratio <- function(dfm_object,
 
   } else if (comparison_mode == "one_vs_rest") {
     for (level in levels) {
-      other_levels <- setdiff(levels, level)
       # Combine all other categories
       groups_binary <- ifelse(groups == level, level, "Other")
       result <- compare_two(dfm_object, level, "Other", groups_binary)
@@ -3124,10 +3121,6 @@ calculate_lexical_dispersion <- function(tokens_object,
     ))
   }
 
-  # Convert terms to lowercase for matching
-
-  terms_lower <- tolower(terms)
-
   results <- list()
 
   for (i in seq_along(tokens_object)) {
@@ -3302,7 +3295,6 @@ calculate_dispersion_metrics <- function(tokens_object, terms) {
   }
 
   n_docs <- length(tokens_object)
-  terms_lower <- tolower(terms)
 
   results <- lapply(terms, function(term) {
     term_lower <- tolower(term)
@@ -3317,7 +3309,6 @@ calculate_dispersion_metrics <- function(tokens_object, terms) {
     doc_ratio <- doc_count / n_docs
 
     if (total_freq > 0 && n_docs > 1) {
-      expected <- total_freq / n_docs
       cv <- stats::sd(doc_counts) / mean(doc_counts)
       juilland_d <- 1 - (cv / sqrt(n_docs - 1))
       juilland_d <- max(0, min(1, juilland_d))

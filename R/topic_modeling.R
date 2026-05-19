@@ -319,7 +319,7 @@ get_topic_texts <- function(top_terms_df,
   result <- result %>%
     dplyr::summarise(
       text = paste(.data[[term_var]], collapse = sep),
-      .groups = 'drop'
+      .groups = "drop"
     ) %>%
     dplyr::arrange(.data[[topic_var]]) %>%
     dplyr::pull(text)
@@ -526,7 +526,7 @@ Label: Virtual Math Tools for Students with Disabilities"
     pb <- progress::progress_bar$new(
       format = " Processing [:bar] :percent ETA: :eta",
       total = nrow(unique_topics),
-      clear = FALSE, width = 60 )
+      clear = FALSE, width = 60)
   }
 
   # Rate limiting: 1s for cloud APIs, 0.5s for Ollama
@@ -563,7 +563,7 @@ Label: Virtual Math Tools for Students with Disabilities"
         api_key = api_key
       )
       label <- trimws(response)
-      label <- gsub('^"(.*)"$', '\\1', label)
+      label <- gsub("^\"(.*)\"$", "\\1", label)
       label
     }, error = function(e) {
       warning(sprintf("API request failed for topic '%s': %s", current_topic, e$message))
@@ -1254,7 +1254,7 @@ fit_embedding_model <- function(texts,
       "pca" = {
         pca_result <- stats::prcomp(embeddings, center = TRUE, scale. = TRUE,
                                     rank. = min(pca_dims, ncol(embeddings)))
-        pca_result$x[, 1:min(2, ncol(pca_result$x))]
+        pca_result$x[, seq_len(min(2, ncol(pca_result$x)))]
       },
       {
         if (!requireNamespace("umap", quietly = TRUE)) {
@@ -1598,8 +1598,8 @@ find_topic_matches <- function(topic_model,
     topic_similarities <- topic_similarities[order(topic_similarities$similarity, decreasing = TRUE), ]
 
     result <- list(
-      similar_topics = topic_similarities$topic[1:min(top_n, nrow(topic_similarities))],
-      similarity_scores = topic_similarities$similarity[1:min(top_n, nrow(topic_similarities))],
+      similar_topics = topic_similarities$topic[seq_len(min(top_n, nrow(topic_similarities)))],
+      similarity_scores = topic_similarities$similarity[seq_len(min(top_n, nrow(topic_similarities)))],
       query = query,
       method = method,
       topic_terms = topic_terms
@@ -2114,7 +2114,6 @@ generate_semantic_topic_keywords <- function(texts,
       ctfidf_mat <- sweep(tf_mat, 2, idf, `*`)
 
       # Extract top keywords for each topic in one pass
-      feature_names <- colnames(ctfidf_mat)
       for (i in seq_along(unique_topics)) {
         topic <- unique_topics[i]
         scores <- ctfidf_mat[i, ]
@@ -2685,7 +2684,6 @@ identify_topic_trends <- function(temporal_results, ...) {
     return(list(trends = NULL, message = "Insufficient temporal data"))
   }
 
-  periods <- names(temporal_results)
   all_topics <- unique(unlist(lapply(temporal_results, function(r) {
     unique(r$topic_assignments)
   })))
@@ -3813,7 +3811,7 @@ generate_topic_content <- function(topic_terms_df,
     # Clean up response
     if (!is.na(generated_content)) {
       generated_content <- trimws(generated_content)
-      generated_content <- gsub('^["\'](.*)["\']$', '\\1', generated_content)
+      generated_content <- gsub("^[\"'](.*)[\"']$", "\\1", generated_content)
     }
 
     unique_topics[[output_var]][i] <- generated_content
@@ -3838,4 +3836,3 @@ generate_topic_content <- function(topic_terms_df,
 
   result
 }
-

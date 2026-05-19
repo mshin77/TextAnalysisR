@@ -258,7 +258,7 @@ create_analysis_datatable <- function(data,
                                       colnames = NULL,
                                       numeric_cols = NULL,
                                       digits = 3,
-                                      export_formats = c('copy', 'csv', 'excel', 'pdf', 'print'),
+                                      export_formats = c("copy", "csv", "excel", "pdf", "print"),
                                       page_length = 25,
                                       font_size = "16px") {
 
@@ -266,11 +266,11 @@ create_analysis_datatable <- function(data,
     data,
     colnames = colnames,
     rownames = FALSE,
-    extensions = 'Buttons',
+    extensions = "Buttons",
     options = list(
       scrollX = TRUE,
       pageLength = page_length,
-      dom = 'Bfrtip',
+      dom = "Bfrtip",
       buttons = export_formats
     )
   )
@@ -716,12 +716,12 @@ calculate_word_frequency <- function(dfm_object,
           mutate_if(is.numeric, ~ round(., 3)) %>%
           DT::datatable(
             rownames = FALSE,
-            extensions = 'Buttons',
+            extensions = "Buttons",
             options = list(
               scrollX = TRUE,
               width = "80%",
-              dom = 'Bfrtip',
-              buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+              dom = "Bfrtip",
+              buttons = c("copy", "csv", "excel", "pdf", "print")
             )
           ) %>%
           DT::formatStyle(
@@ -2629,9 +2629,9 @@ create_aria_label <- function(element_type, action, context = NULL) {
 create_sr_text <- function(text) {
   return(
     paste0(
-      '<span class="sr-only" role="status" aria-live="polite">',
+      "<span class=\"sr-only\" role=\"status\" aria-live=\"polite\">",
       text,
-      '</span>'
+      "</span>"
     )
   )
 }
@@ -2921,7 +2921,7 @@ create_message_table <- function(message,
       dom = "t",
       ordering = FALSE,
       columnDefs = list(
-        list(className = 'dt-center', targets = "_all")
+        list(className = "dt-center", targets = "_all")
       ),
       initComplete = htmlwidgets::JS(
         sprintf(
@@ -2938,7 +2938,7 @@ create_message_table <- function(message,
         )
       )
     ),
-    class = 'cell-border stripe'
+    class = "cell-border stripe"
   )
 }
 
@@ -3555,7 +3555,7 @@ wrap_long_text <- function(text, chars_per_line = 50, max_lines = 3) {
     }
   }
 
-  paste(lines[1:min(length(lines), max_lines)], collapse = "\n")
+  paste(lines[seq_len(min(length(lines), max_lines))], collapse = "\n")
 }
 
 #' Wrap text for tooltip display

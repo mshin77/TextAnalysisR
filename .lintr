@@ -6,6 +6,7 @@ linters: linters_with_defaults(
     pipe_consistency_linter = NULL,
     brace_linter = NULL,
     semicolon_linter = NULL,
-    object_name_linter = NULL
+    object_name_linter = NULL,
+    object_length_linter = object_length_linter(length = 40L)
   )
 exclusions: list("R/RcppExports.R", "tests/testthat/")

@@ -1209,7 +1209,7 @@ generate_cluster_labels <- function(cluster_keywords,
       next
     }
 
-    top_keywords <- paste(keywords[1:min(10, length(keywords))], collapse = ", ")
+    top_keywords <- paste(keywords[seq_len(min(10, length(keywords)))], collapse = ", ")
 
     prompt <- paste0(
       "You are a highly skilled data scientist specializing in generating concise and
@@ -1257,7 +1257,7 @@ Generated Topic Label:"
 
       if (!is.null(response_text) && nzchar(response_text)) {
         label <- trimws(response_text)
-        label <- gsub('^"(.*)"$', '\\1', label)
+        label <- gsub("^\"(.*)\"$", "\\1", label)
         label <- gsub("^Generated Topic Label:\\s*", "", label, ignore.case = TRUE)
         label <- trimws(label)
         gen_names[[cluster_id]] <- label
@@ -2018,7 +2018,7 @@ analyze_similarity_gaps <- function(similarity_data,
       min_similarity = round(min(.data[[similarity_var]], na.rm = TRUE), 3),
       max_similarity = round(max(.data[[similarity_var]], na.rm = TRUE), 3),
       n_pairs = dplyr::n(),
-      .groups = 'drop'
+      .groups = "drop"
     )
 
   group_vars <- ref_var
@@ -2034,7 +2034,7 @@ analyze_similarity_gaps <- function(similarity_data,
       .max_idx = which.max(.data[[similarity_var]]),
       best_match = .data[[other_var]][.max_idx],
       best_match_category = .data[[category_var]][.max_idx],
-      .groups = 'drop'
+      .groups = "drop"
     ) %>%
     dplyr::select(-.max_idx) %>%
     dplyr::filter(max_similarity < unique_threshold) %>%
@@ -2052,7 +2052,7 @@ analyze_similarity_gaps <- function(similarity_data,
       min_similarity = min(.data[[similarity_var]], na.rm = TRUE),
       .max_idx = which.max(.data[[similarity_var]]),
       best_match = .data[[ref_var]][.max_idx],
-      .groups = 'drop'
+      .groups = "drop"
     ) %>%
     dplyr::select(-.max_idx) %>%
     dplyr::filter(max_similarity < unique_threshold) %>%
@@ -2066,7 +2066,7 @@ analyze_similarity_gaps <- function(similarity_data,
       .max_idx = which.max(.data[[similarity_var]]),
       best_match = .data[[other_var]][.max_idx],
       best_match_category = .data[[category_var]][.max_idx],
-      .groups = 'drop'
+      .groups = "drop"
     ) %>%
     dplyr::select(-.max_idx) %>%
     dplyr::filter(
@@ -3166,7 +3166,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
 
         if (is.null(plot_data_mat)) {
           if (is.null(data_labels)) {
-            data_labels <- paste0("Doc ", seq_len(length(cluster_data)))
+            data_labels <- paste0("Doc ", seq_along(cluster_data))
           }
 
           scatter_df <- data.frame(
