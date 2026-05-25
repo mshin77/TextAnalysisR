@@ -23,7 +23,7 @@ options(scipen = 999)
 
 server <- shinyServer(function(input, output, session) {
   options(shiny.error = function() {
-    show_error_notification("An unexpected error occurred. Please try again or contact support.")
+    TextAnalysisR:::show_error_notification("An unexpected error occurred. Please try again or contact support.")
   })
 
   onStop(function() {
@@ -516,7 +516,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       if (file_size_mb > 50) {
-        show_loading_notification("Processing large file...", id = "loadingFile")
+        TextAnalysisR:::show_loading_notification("Processing large file...", id = "loadingFile")
       }
 
       if (!file.exists(file_data$datapath)) {
@@ -547,7 +547,7 @@ server <- shinyServer(function(input, output, session) {
         } else {
           "Processing PDF file..."
         }
-        show_loading_notification(loading_msg, id = "processingPDF")
+        TextAnalysisR:::show_loading_notification(loading_msg, id = "processingPDF")
 
         vision_provider <- isolate(input$vision_provider %||% "ollama")
         api_key <- switch(vision_provider,
@@ -840,7 +840,7 @@ server <- shinyServer(function(input, output, session) {
           }
 
           if (text_size_mb > 5 || nchar(text_content) > 100000) {
-            show_loading_notification("Processing large content...", id = "loadingText")
+            TextAnalysisR:::show_loading_notification("Processing large content...", id = "loadingText")
           }
 
           tryCatch(
@@ -927,7 +927,7 @@ server <- shinyServer(function(input, output, session) {
 
                   if (nrow(data) > 0) {
                     try(removeNotification("loadingText"), silent = TRUE)
-                    show_completion_notification(paste("Successfully parsed tabular data with", ncol(data), "columns and", nrow(data), "rows"))
+                    TextAnalysisR:::show_completion_notification(paste("Successfully parsed tabular data with", ncol(data), "columns and", nrow(data), "rows"))
                     return(data)
                   }
                 }
@@ -960,7 +960,7 @@ server <- shinyServer(function(input, output, session) {
                   )
 
                   try(removeNotification("loadingText"), silent = TRUE)
-                  show_completion_notification(paste("Successfully processed", nrow(example_data), "text documents"))
+                  TextAnalysisR:::show_completion_notification(paste("Successfully processed", nrow(example_data), "text documents"))
                   return(example_data)
                 }
               )
@@ -1076,11 +1076,11 @@ server <- shinyServer(function(input, output, session) {
           listed_vars = listed_vars()
         )
 
-        show_completion_notification(paste("Successfully united", length(listed_vars()), "columns into 'united_texts' while keeping original columns"))
+        TextAnalysisR:::show_completion_notification(paste("Successfully united", length(listed_vars()), "columns into 'united_texts' while keeping original columns"))
         return(united_data)
       },
       error = function(e) {
-        show_error_notification(paste("Error uniting columns:", e$message))
+        TextAnalysisR:::show_error_notification(paste("Error uniting columns:", e$message))
         return(NULL)
       }
     )
@@ -1153,7 +1153,7 @@ server <- shinyServer(function(input, output, session) {
     lemmatized_tokens(NULL)
     last_clicked(NULL)
 
-    show_loading_notification("Processing text preprocessing...", id = "loadingPreprocess")
+    TextAnalysisR:::show_loading_notification("Processing text preprocessing...", id = "loadingPreprocess")
 
     tryCatch({
       raw_output <- capture.output(
@@ -1231,7 +1231,7 @@ server <- shinyServer(function(input, output, session) {
       )
 
       try(removeNotification("loadingPreprocess"), silent = TRUE)
-      show_completion_notification(paste("Text preprocessing completed for", quanteda::ndoc(toks_processed), "documents"))
+      TextAnalysisR:::show_completion_notification(paste("Text preprocessing completed for", quanteda::ndoc(toks_processed), "documents"))
 
       output$modal_pre_init_verbose_output <- renderPrint({
         cat(paste(final_output, collapse = "\n"))
@@ -1242,7 +1242,7 @@ server <- shinyServer(function(input, output, session) {
       return(toks_processed)
     }, error = function(e) {
       try(removeNotification("loadingPreprocess"), silent = TRUE)
-      show_error_notification(paste("Error in preprocessing:", e$message), duration = 10)
+      TextAnalysisR:::show_error_notification(paste("Error in preprocessing:", e$message), duration = 10)
       return(NULL)
     })
   })
@@ -1283,7 +1283,7 @@ server <- shinyServer(function(input, output, session) {
     lemmatized_tokens(NULL)
     last_clicked(NULL)
 
-    show_loading_notification("Skipping segmentation - using basic tokenization...", id = "loadingSkipSegment")
+    TextAnalysisR:::show_loading_notification("Skipping segmentation - using basic tokenization...", id = "loadingSkipSegment")
 
     tryCatch({
       toks <- quanteda::tokens(
@@ -1321,7 +1321,7 @@ server <- shinyServer(function(input, output, session) {
       )
 
       try(removeNotification("loadingSkipSegment"), silent = TRUE)
-      show_completion_notification(paste("Basic tokenization completed for", num_docs, "documents"))
+      TextAnalysisR:::show_completion_notification(paste("Basic tokenization completed for", num_docs, "documents"))
 
       step_2_version(step_2_version() + 1)
 
@@ -1339,7 +1339,7 @@ server <- shinyServer(function(input, output, session) {
       )
     }, error = function(e) {
       try(removeNotification("loadingSkipSegment"), silent = TRUE)
-      show_error_notification(paste("Error in basic tokenization:", e$message), duration = 10)
+      TextAnalysisR:::show_error_notification(paste("Error in basic tokenization:", e$message), duration = 10)
     })
   })
 
@@ -2602,7 +2602,7 @@ server <- shinyServer(function(input, output, session) {
       return(NULL)
     }
 
-    show_loading_notification("Running spaCy linguistic analysis...", id = "loadingLemma")
+    TextAnalysisR:::show_loading_notification("Running spaCy linguistic analysis...", id = "loadingLemma")
     shinybusy::show_spinner()
 
     tryCatch({
@@ -2688,7 +2688,7 @@ server <- shinyServer(function(input, output, session) {
 
       try(removeNotification("loadingLemma"), silent = TRUE)
       shinybusy::hide_spinner()
-      show_completion_notification("Linguistic analysis complete", duration = 3)
+      TextAnalysisR:::show_completion_notification("Linguistic analysis complete", duration = 3)
 
     }, error = function(e) {
       try(removeNotification("loadingLemma"), silent = TRUE)
@@ -7655,7 +7655,7 @@ server <- shinyServer(function(input, output, session) {
 
     cooccur_result_val(NULL)
     shinybusy::show_spinner()
-    show_loading_notification("Computing co-occurrence network...", id = "cooccur_network_loading")
+    TextAnalysisR:::show_loading_notification("Computing co-occurrence network...", id = "cooccur_network_loading")
 
     session_local <- session
     start_time <- Sys.time()
@@ -7670,7 +7670,7 @@ server <- shinyServer(function(input, output, session) {
       cooccur_result_val(result)
       elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
       finish <- function() {
-        remove_notification_by_id("cooccur_network_loading", session = session_local)
+        TextAnalysisR:::remove_notification_by_id("cooccur_network_loading", session = session_local)
         try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
       }
       if (elapsed < 0.6) later::later(finish, delay = 0.6 - elapsed) else finish()
@@ -8003,7 +8003,7 @@ server <- shinyServer(function(input, output, session) {
 
     corr_result_val(NULL)
     shinybusy::show_spinner()
-    show_loading_notification("Computing correlation network...", id = "corr_network_loading")
+    TextAnalysisR:::show_loading_notification("Computing correlation network...", id = "corr_network_loading")
 
     session_local <- session
     start_time <- Sys.time()
@@ -8018,7 +8018,7 @@ server <- shinyServer(function(input, output, session) {
       corr_result_val(result)
       elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
       finish <- function() {
-        remove_notification_by_id("corr_network_loading", session = session_local)
+        TextAnalysisR:::remove_notification_by_id("corr_network_loading", session = session_local)
         try(shinybusy::hide_spinner(session = session_local), silent = TRUE)
       }
       if (elapsed < 0.6) later::later(finish, delay = 0.6 - elapsed) else finish()
@@ -8645,21 +8645,21 @@ server <- shinyServer(function(input, output, session) {
   }, ignoreInit = TRUE)
 
   observeEvent(input$run_sentiment_analysis, {
-    show_loading_notification("Running sentiment analysis...", id = "sentiment_loading")
+    TextAnalysisR:::show_loading_notification("Running sentiment analysis...", id = "sentiment_loading")
 
     tryCatch({
       dfm_obj <- get_available_dfm()
 
       if (is.null(dfm_obj)) {
-        remove_notification_by_id("sentiment_loading")
-        show_no_dfm_notification()
+        TextAnalysisR:::remove_notification_by_id("sentiment_loading")
+        TextAnalysisR:::show_no_dfm_notification()
         return()
       }
 
       texts_df <- tryCatch(united_tbl(), error = function(e) NULL)
 
       if (is.null(texts_df)) {
-        remove_notification_by_id("sentiment_loading")
+        TextAnalysisR:::remove_notification_by_id("sentiment_loading")
         showNotification("No text data available. Please complete document processing first.", type = "error", duration = 7)
         return()
       }
@@ -8670,13 +8670,13 @@ server <- shinyServer(function(input, output, session) {
 
       if (feature_type == "embeddings") {
         if (!TextAnalysisR:::check_feature("embeddings")) {
-          remove_notification_by_id("sentiment_loading")
+          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
           showNotification("Embedding-based sentiment requires Python. Please use lexicon method.", type = "warning")
           return()
         }
 
         if (!"united_texts" %in% names(texts_df)) {
-          remove_notification_by_id("sentiment_loading")
+          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
           showNotification("Text column not found. Please unite text columns first.", type = "error")
           return()
         }
@@ -8693,8 +8693,8 @@ server <- shinyServer(function(input, output, session) {
             use_gpu = FALSE
           )
         }, error = function(e) {
-          remove_notification_by_id("sentiment_loading")
-          show_error_notification(
+          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
+          TextAnalysisR:::show_error_notification(
             paste0(
               "Embedding-based sentiment error: ", e$message, ". ",
               "Please ensure Python transformers library is installed. See Setup > Installation."
@@ -8762,31 +8762,31 @@ server <- shinyServer(function(input, output, session) {
         label = paste0("Analyzed documents to show (", docs_analyzed, " available)")
       )
 
-      remove_notification_by_id("sentiment_loading")
-      show_completion_notification("Sentiment analysis complete!")
+      TextAnalysisR:::remove_notification_by_id("sentiment_loading")
+      TextAnalysisR:::show_completion_notification("Sentiment analysis complete!")
     }, error = function(e) {
-      remove_notification_by_id("sentiment_loading")
-      show_error_notification(paste("Error in sentiment analysis:", e$message))
+      TextAnalysisR:::remove_notification_by_id("sentiment_loading")
+      TextAnalysisR:::show_error_notification(paste("Error in sentiment analysis:", e$message))
     })
   })
 
   # Neural sentiment analysis handler
   observeEvent(input$run_neural_sentiment, {
-    show_loading_notification("Running neural sentiment analysis...", id = "neural_sentiment_loading")
+    TextAnalysisR:::show_loading_notification("Running neural sentiment analysis...", id = "neural_sentiment_loading")
 
     tryCatch({
       # Check Python availability
       if (!TextAnalysisR:::check_feature("python")) {
-        remove_notification_by_id("neural_sentiment_loading")
-        show_error_notification("Neural sentiment requires Python. Please run TextAnalysisR::setup_python_env()")
+        TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
+        TextAnalysisR:::show_error_notification("Neural sentiment requires Python. Please run TextAnalysisR::setup_python_env()")
         return()
       }
 
       texts_df <- tryCatch(united_tbl(), error = function(e) NULL)
 
       if (is.null(texts_df) || !"united_texts" %in% names(texts_df)) {
-        remove_notification_by_id("neural_sentiment_loading")
-        show_error_notification("No text data available. Please unite text columns first.")
+        TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
+        TextAnalysisR:::show_error_notification("No text data available. Please unite text columns first.")
         return()
       }
 
@@ -8805,8 +8805,8 @@ server <- shinyServer(function(input, output, session) {
       )
 
       if (is.null(sentiment_analysis_results)) {
-        remove_notification_by_id("neural_sentiment_loading")
-        show_error_notification("Neural sentiment analysis returned no results.")
+        TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
+        TextAnalysisR:::show_error_notification("Neural sentiment analysis returned no results.")
         return()
       }
 
@@ -8825,13 +8825,13 @@ server <- shinyServer(function(input, output, session) {
         label = paste0("Analyzed documents to show (", docs_analyzed, " available)")
       )
 
-      remove_notification_by_id("neural_sentiment_loading")
-      show_completion_notification(paste("Neural sentiment analysis complete using",
+      TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
+      TextAnalysisR:::show_completion_notification(paste("Neural sentiment analysis complete using",
                                          gsub(".*/", "", model_name), "model"))
 
     }, error = function(e) {
-      remove_notification_by_id("neural_sentiment_loading")
-      show_error_notification(paste("Neural sentiment error:", e$message))
+      TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
+      TextAnalysisR:::show_error_notification(paste("Neural sentiment error:", e$message))
     })
   })
 
@@ -8923,7 +8923,7 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$run_llm_sentiment, {
     if (!gate_rate_limit("LLM sentiment analysis")) return()
-    show_loading_notification("Running LLM sentiment analysis...", id = "llm_sentiment_loading")
+    TextAnalysisR:::show_loading_notification("Running LLM sentiment analysis...", id = "llm_sentiment_loading")
 
     tryCatch({
       provider <- input$llm_sentiment_provider %||% "ollama"
@@ -8931,19 +8931,19 @@ server <- shinyServer(function(input, output, session) {
       api_key <- NULL
       if (provider == "ollama") {
         if (is_remote) {
-          remove_notification_by_id("llm_sentiment_loading")
+          TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
           showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning")
           return()
         }
         if (!TextAnalysisR::check_ollama()) {
-          remove_notification_by_id("llm_sentiment_loading")
+          TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
           showNotification("Ollama is not detected. Install from ollama.com or select another provider.", type = "warning")
           return()
         }
       } else if (provider %in% c("openai", "gemini")) {
         api_key <- get_api_key(provider, input[[paste0("llm_sentiment_", provider, "_api_key")]])
         if (!check_api_key(api_key, provider, "LLM sentiment")) {
-          remove_notification_by_id("llm_sentiment_loading")
+          TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
           return()
         }
       }
@@ -8951,8 +8951,8 @@ server <- shinyServer(function(input, output, session) {
       texts_df <- tryCatch(united_tbl(), error = function(e) NULL)
 
       if (is.null(texts_df) || !"united_texts" %in% names(texts_df)) {
-        remove_notification_by_id("llm_sentiment_loading")
-        show_error_notification("No text data available. Please unite text columns first.")
+        TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
+        TextAnalysisR:::show_error_notification("No text data available. Please unite text columns first.")
         return()
       }
 
@@ -8976,8 +8976,8 @@ server <- shinyServer(function(input, output, session) {
       )
 
       if (is.null(llm_sentiment_result) || nrow(llm_sentiment_result) == 0) {
-        remove_notification_by_id("llm_sentiment_loading")
-        show_error_notification("LLM sentiment analysis returned no results.")
+        TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
+        TextAnalysisR:::show_error_notification("LLM sentiment analysis returned no results.")
         return()
       }
 
@@ -9014,12 +9014,12 @@ server <- shinyServer(function(input, output, session) {
         label = paste0("Analyzed documents to show (", docs_analyzed, " available)")
       )
 
-      remove_notification_by_id("llm_sentiment_loading")
-      show_completion_notification(paste("LLM sentiment analysis complete using", provider, "/", model_name))
+      TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
+      TextAnalysisR:::show_completion_notification(paste("LLM sentiment analysis complete using", provider, "/", model_name))
 
     }, error = function(e) {
-      remove_notification_by_id("llm_sentiment_loading")
-      show_error_notification(paste("LLM sentiment error:", e$message))
+      TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
+      TextAnalysisR:::show_error_notification(paste("LLM sentiment error:", e$message))
     })
   })
 
@@ -9508,35 +9508,35 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$showDFMInfo, {
-    show_guide_modal("dfm_guide", "Document-Feature Matrix (DFM) Guide")
+    TextAnalysisR:::show_guide_modal("dfm_guide", "Document-Feature Matrix (DFM) Guide")
   })
 
   observeEvent(input$showPOSInfo, {
-    show_guide_modal("pos_guide", "Part-of-Speech (POS) Tags Guide")
+    TextAnalysisR:::show_guide_modal("pos_guide", "Part-of-Speech (POS) Tags Guide")
   })
 
   observeEvent(input$showDepInfo, {
-    show_guide_modal("dep_guide", "Dependency Parsing Guide")
+    TextAnalysisR:::show_guide_modal("dep_guide", "Dependency Parsing Guide")
   })
 
   observeEvent(input$showNERInfo, {
-    show_guide_modal("ner_guide", "Named Entity Recognition (NER) Types Guide")
+    TextAnalysisR:::show_guide_modal("ner_guide", "Named Entity Recognition (NER) Types Guide")
   })
 
   observeEvent(input$showReadabilityMetricsInfo, {
-    show_guide_modal("readability_metrics_guide", "Readability Metrics Guide")
+    TextAnalysisR:::show_guide_modal("readability_metrics_guide", "Readability Metrics Guide")
   })
 
   observeEvent(input$showLexDivMetricsInfo, {
-    show_guide_modal("lexical_diversity_guide", "Lexical Diversity Metrics Guide")
+    TextAnalysisR:::show_guide_modal("lexical_diversity_guide", "Lexical Diversity Metrics Guide")
   })
 
   observeEvent(input$showSTMInfo, {
-    show_guide_modal("stm_guide", "Structural Topic Model (STM) Guide")
+    TextAnalysisR:::show_guide_modal("stm_guide", "Structural Topic Model (STM) Guide")
   })
 
   observeEvent(input$showEmbeddingTopicsInfo, {
-    show_guide_modal("embedding_topics_guide", "Embedding-based Topic Modeling Guide")
+    TextAnalysisR:::show_guide_modal("embedding_topics_guide", "Embedding-based Topic Modeling Guide")
   })
 
 
@@ -9622,11 +9622,11 @@ server <- shinyServer(function(input, output, session) {
         cat(get_dfm_setup_instructions("readability analysis"), sep = "\n")
       })
 
-      show_dfm_instructions_modal("dfm_required_message")
+      TextAnalysisR:::show_dfm_instructions_modal("dfm_required_message")
       return(NULL)
     }
 
-    show_loading_notification("Running readability analysis...", id = "readability_loading")
+    TextAnalysisR:::show_loading_notification("Running readability analysis...", id = "readability_loading")
 
     tryCatch({
       texts <- united_tbl()$united_texts
@@ -9662,11 +9662,11 @@ server <- shinyServer(function(input, output, session) {
         warning = "Note: Traditional readability formulas (Flesch, FOG, etc.) measure surface-level features but don't capture semantic complexity, cohesion, or domain familiarity. TTR is sensitive to text length; MTLD is more reliable for lexical diversity. Modern best practice (2025) combines traditional metrics with lexical diversity (MTLD), syntactic complexity, and semantic coherence measures. Use these as complementary indicators, not absolute measures of comprehension."
       )
 
-      remove_notification_by_id("readability_loading")
-      show_completion_notification("Readability analysis complete!", duration = 5)
+      TextAnalysisR:::remove_notification_by_id("readability_loading")
+      TextAnalysisR:::show_completion_notification("Readability analysis complete!", duration = 5)
     }, error = function(e) {
-      remove_notification_by_id("readability_loading")
-      show_error_notification(paste("Error in readability analysis:", e$message))
+      TextAnalysisR:::remove_notification_by_id("readability_loading")
+      TextAnalysisR:::show_error_notification(paste("Error in readability analysis:", e$message))
     })
   })
 
@@ -9883,11 +9883,11 @@ server <- shinyServer(function(input, output, session) {
             "  • Step 5: Word Forms (Lemmas)\n\n",
             "Then return to Lexical Analysis → Lexical Diversity and click 'Analyze'", sep = "")
       })
-      show_dfm_instructions_modal("lexdiv_required_message")
+      TextAnalysisR:::show_dfm_instructions_modal("lexdiv_required_message")
       return(NULL)
     }
 
-    show_loading_notification("Calculating lexical diversity metrics...", id = "lexdiv_loading")
+    TextAnalysisR:::show_loading_notification("Calculating lexical diversity metrics...", id = "lexdiv_loading")
 
     tryCatch({
       # Get selected metrics from checkboxGroup, default to all if none selected
@@ -9926,12 +9926,12 @@ server <- shinyServer(function(input, output, session) {
         lexical_diversity_results$selected_metric <- "TTR"
       }
 
-      remove_notification_by_id("lexdiv_loading")
-      show_completion_notification("Lexical diversity analysis completed successfully!")
+      TextAnalysisR:::remove_notification_by_id("lexdiv_loading")
+      TextAnalysisR:::show_completion_notification("Lexical diversity analysis completed successfully!")
 
     }, error = function(e) {
-      remove_notification_by_id("lexdiv_loading")
-      show_error_notification(paste0("Error analyzing lexical diversity: ", e$message))
+      TextAnalysisR:::remove_notification_by_id("lexdiv_loading")
+      TextAnalysisR:::show_error_notification(paste0("Error analyzing lexical diversity: ", e$message))
     })
   })
 
@@ -10047,13 +10047,13 @@ server <- shinyServer(function(input, output, session) {
     })
 
     if (is.null(dfm_to_use)) {
-      show_error_notification("Please create a DFM in the Preprocess tab first.")
+      TextAnalysisR:::show_error_notification("Please create a DFM in the Preprocess tab first.")
       return(NULL)
     }
 
     # Check for group variable
     if (is.null(input$log_odds_group_var) || input$log_odds_group_var == "") {
-      show_error_notification("Please select a grouping variable.")
+      TextAnalysisR:::show_error_notification("Please select a grouping variable.")
       return(NULL)
     }
 
@@ -10067,13 +10067,13 @@ server <- shinyServer(function(input, output, session) {
         }
       }
     }, error = function(e) {
-      show_error_notification(paste0("Error: ", e$message))
+      TextAnalysisR:::show_error_notification(paste0("Error: ", e$message))
       return(NULL)
     })
 
     if (input$log_odds_method == "weighted") {
       # Weighted method using tidylo (Fightin' Words)
-      show_loading_notification("Calculating weighted log odds...", id = "log_odds_loading")
+      TextAnalysisR:::show_loading_notification("Calculating weighted log odds...", id = "log_odds_loading")
 
       tryCatch({
         result <- TextAnalysisR::calculate_weighted_log_odds(
@@ -10087,17 +10087,17 @@ server <- shinyServer(function(input, output, session) {
         log_odds_results$data <- result
         log_odds_results$method <- "weighted"
 
-        remove_notification_by_id("log_odds_loading")
-        show_completion_notification("Weighted log odds analysis completed!")
+        TextAnalysisR:::remove_notification_by_id("log_odds_loading")
+        TextAnalysisR:::show_completion_notification("Weighted log odds analysis completed!")
 
       }, error = function(e) {
-        remove_notification_by_id("log_odds_loading")
-        show_error_notification(paste0("Error calculating weighted log odds: ", e$message))
+        TextAnalysisR:::remove_notification_by_id("log_odds_loading")
+        TextAnalysisR:::show_error_notification(paste0("Error calculating weighted log odds: ", e$message))
       })
 
     } else {
       # Simple method (Laplace smoothing)
-      show_loading_notification("Calculating log odds ratios...", id = "log_odds_loading")
+      TextAnalysisR:::show_loading_notification("Calculating log odds ratios...", id = "log_odds_loading")
 
       tryCatch({
         reference_level <- if (input$log_odds_reference == "") NULL else input$log_odds_reference
@@ -10115,12 +10115,12 @@ server <- shinyServer(function(input, output, session) {
         log_odds_results$data <- result
         log_odds_results$method <- "simple"
 
-        remove_notification_by_id("log_odds_loading")
-        show_completion_notification("Log odds ratio analysis completed!")
+        TextAnalysisR:::remove_notification_by_id("log_odds_loading")
+        TextAnalysisR:::show_completion_notification("Log odds ratio analysis completed!")
 
       }, error = function(e) {
-        remove_notification_by_id("log_odds_loading")
-        show_error_notification(paste0("Error calculating log odds: ", e$message))
+        TextAnalysisR:::remove_notification_by_id("log_odds_loading")
+        TextAnalysisR:::show_error_notification(paste0("Error calculating log odds: ", e$message))
       })
     }
   })
@@ -10288,11 +10288,11 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (is.null(tokens_to_use)) {
-      show_error_notification("Please process tokens first in the Preprocess tab.")
+      TextAnalysisR:::show_error_notification("Please process tokens first in the Preprocess tab.")
       return()
     }
 
-    show_loading_notification("Calculating lexical dispersion...", id = "dispersion_loading")
+    TextAnalysisR:::show_loading_notification("Calculating lexical dispersion...", id = "dispersion_loading")
 
     tryCatch({
       terms <- input$dispersion_terms
@@ -10307,7 +10307,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (nrow(result) == 0) {
         try(removeNotification("dispersion_loading"), silent = TRUE)
-        show_warning_notification("No occurrences found for the selected terms.")
+        TextAnalysisR:::show_warning_notification("No occurrences found for the selected terms.")
         return()
       }
 
@@ -10323,11 +10323,11 @@ server <- shinyServer(function(input, output, session) {
       }
 
       try(removeNotification("dispersion_loading"), silent = TRUE)
-      show_completion_notification("Lexical dispersion analysis complete!")
+      TextAnalysisR:::show_completion_notification("Lexical dispersion analysis complete!")
 
     }, error = function(e) {
       try(removeNotification("dispersion_loading"), silent = TRUE)
-      show_error_notification(paste("Error:", e$message))
+      TextAnalysisR:::show_error_notification(paste("Error:", e$message))
     })
   })
 
@@ -10406,11 +10406,11 @@ server <- shinyServer(function(input, output, session) {
         cat(get_dfm_setup_instructions("keyword extraction"), sep = "\n")
       })
 
-      show_dfm_instructions_modal("keywords_extraction_required_message")
+      TextAnalysisR:::show_dfm_instructions_modal("keywords_extraction_required_message")
       return(NULL)
     }
 
-    show_loading_notification("Extracting keywords using TF-IDF and statistical keyness...", id = "keyword_loading")
+    TextAnalysisR:::show_loading_notification("Extracting keywords using TF-IDF and statistical keyness...", id = "keyword_loading")
 
     tryCatch({
       dfm_obj <- dfm_to_use
@@ -10464,11 +10464,11 @@ server <- shinyServer(function(input, output, session) {
         note = "TF-IDF identifies important terms based on term frequency and inverse document frequency, balancing term prominence with distinctiveness across documents. For multi-document collections, keyness analysis (log-likelihood ratio G²) compares document subsets to identify statistically significant keywords. These lexical-statistical methods are efficient, interpretable, and well-established in corpus linguistics research."
       )
 
-      remove_notification_by_id("keyword_loading")
-      show_completion_notification("Keyword extraction complete!", duration = 5)
+      TextAnalysisR:::remove_notification_by_id("keyword_loading")
+      TextAnalysisR:::show_completion_notification("Keyword extraction complete!", duration = 5)
     }, error = function(e) {
-      remove_notification_by_id("keyword_loading")
-      show_error_notification(paste("Error in keyword extraction:", e$message))
+      TextAnalysisR:::remove_notification_by_id("keyword_loading")
+      TextAnalysisR:::show_error_notification(paste("Error in keyword extraction:", e$message))
     })
   })
 
@@ -10661,7 +10661,7 @@ server <- shinyServer(function(input, output, session) {
         data <- united_tbl()
 
         if (!"united_texts" %in% names(data)) {
-          show_unite_texts_required_notification()
+          TextAnalysisR:::show_unite_texts_required_notification()
           return(NULL)
         }
 
@@ -12217,7 +12217,7 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(api_key) && !nzchar(api_key)) api_key <- NULL
 
     log_ai_usage("Embeddings", provider, model_name)
-    loading_id <- show_loading_notification(paste0("Generating embeddings using ", provider, "..."))
+    loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "..."))
 
     tryCatch({
       embeddings <- TextAnalysisR::get_best_embeddings(
@@ -12236,9 +12236,9 @@ server <- shinyServer(function(input, output, session) {
       embeddings_cache$source <- "generate_embeddings"
       embeddings_cache$n_docs <- nrow(embeddings)
 
-      remove_notification_by_id(loading_id)
+      TextAnalysisR:::remove_notification_by_id(loading_id)
 
-      show_completion_notification(
+      TextAnalysisR:::show_completion_notification(
         paste0(
           "Embeddings generated successfully! ",
           nrow(embeddings), " documents processed."
@@ -12246,14 +12246,14 @@ server <- shinyServer(function(input, output, session) {
       )
 
     }, error = function(e) {
-      remove_notification_by_id(loading_id)
+      TextAnalysisR:::remove_notification_by_id(loading_id)
 
       error_options <- if (is_remote) {
         "Options: 1) Use Sentence Transformers, 2) Set OPENAI_API_KEY or GEMINI_API_KEY."
       } else {
         "Options: 1) Start Ollama, 2) Run setup_python_env(), 3) Set OPENAI_API_KEY or GEMINI_API_KEY."
       }
-      show_error_notification(
+      TextAnalysisR:::show_error_notification(
         paste0("Error generating embeddings: ", e$message, ". ", error_options)
       )
     })
@@ -12261,7 +12261,7 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$semantic_configure_docs, {
     req(united_tbl())
-    show_completion_notification("Documents configured successfully!")
+    TextAnalysisR:::show_completion_notification("Documents configured successfully!")
     values$semantic_step <- 2
   })
 
@@ -12270,7 +12270,7 @@ server <- shinyServer(function(input, output, session) {
       dfm_check <- get_available_dfm()
 
       if (is.null(dfm_check)) {
-        show_dfm_required_modal()
+        TextAnalysisR:::show_dfm_required_modal()
         return(FALSE)
       }
 
@@ -12320,19 +12320,19 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    show_loading_notification(paste("Running", analysis_type, "analysis..."),
+    TextAnalysisR:::show_loading_notification(paste("Running", analysis_type, "analysis..."),
                               id = paste0("loading", gsub(" ", "", analysis_type))
     )
 
     tryCatch(
       {
         result <- analysis_function()
-        remove_notification_by_id(paste0("loading", gsub(" ", "", analysis_type)))
-        show_completion_notification(paste(analysis_type, "analysis completed!"))
+        TextAnalysisR:::remove_notification_by_id(paste0("loading", gsub(" ", "", analysis_type)))
+        TextAnalysisR:::show_completion_notification(paste(analysis_type, "analysis completed!"))
         return(result)
       },
       error = function(e) {
-        remove_notification_by_id(paste0("loading", gsub(" ", "", analysis_type)))
+        TextAnalysisR:::remove_notification_by_id(paste0("loading", gsub(" ", "", analysis_type)))
         showNotification(paste("Error in", tolower(analysis_type), "analysis:", e$message), type = "error")
         return(NULL)
       }
@@ -13081,7 +13081,7 @@ server <- shinyServer(function(input, output, session) {
         if (!is.null(search_api_key) && !nzchar(search_api_key)) search_api_key <- NULL
 
         log_ai_usage("Search Embeddings", search_provider, search_model)
-        loading_id <- show_loading_notification(paste0("Generating embeddings using ", search_provider, "..."))
+        loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", search_provider, "..."))
 
         embed_result <- tryCatch({
           embeddings <- TextAnalysisR::get_best_embeddings(
@@ -13106,11 +13106,11 @@ server <- shinyServer(function(input, output, session) {
           )
           TRUE
         }, error = function(e) {
-          show_error_notification(paste0("Error generating embeddings: ", e$message))
+          TextAnalysisR:::show_error_notification(paste0("Error generating embeddings: ", e$message))
           FALSE
         })
 
-        remove_notification_by_id(loading_id)
+        TextAnalysisR:::remove_notification_by_id(loading_id)
 
         if (!isTRUE(embed_result)) return()
         similarity_data <- comparison_results$results[["embeddings"]]
@@ -13431,7 +13431,7 @@ server <- shinyServer(function(input, output, session) {
       feature_matrix <- document_clustering_results$feature_matrix
 
       if (is.null(feature_matrix)) {
-        remove_notification_by_id("labelGen")
+        TextAnalysisR:::remove_notification_by_id("labelGen")
         showNotification("Feature matrix not available. Please run dimensionality reduction first.", type = "error")
         return()
       }
@@ -13492,30 +13492,30 @@ server <- shinyServer(function(input, output, session) {
       }
 
       document_clustering_results$labels <- labels
-      remove_notification_by_id("labelGen")
-      show_completion_notification("Labels generated successfully!")
+      TextAnalysisR:::remove_notification_by_id("labelGen")
+      TextAnalysisR:::show_completion_notification("Labels generated successfully!")
 
     }, error = function(e) {
-      remove_notification_by_id("labelGen")
-      show_error_notification(paste("Error generating labels:", e$message))
+      TextAnalysisR:::remove_notification_by_id("labelGen")
+      TextAnalysisR:::show_error_notification(paste("Error generating labels:", e$message))
     })
   })
 
   observeEvent(input$run_dimensionality_reduction, {
-    show_loading_notification("Reducing dimensionality...", id = "loadingDimRed")
+    TextAnalysisR:::show_loading_notification("Reducing dimensionality...", id = "loadingDimRed")
 
     tryCatch({
       dfm_check <- get_available_dfm()
 
       if (is.null(dfm_check) || quanteda::ndoc(dfm_check) == 0) {
-        remove_notification_by_id("loadingDimRed")
+        TextAnalysisR:::remove_notification_by_id("loadingDimRed")
         showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 7)
         return()
       }
 
       feature_matrix <- semantic_feature_matrix()
       if (is.null(feature_matrix)) {
-        remove_notification_by_id("loadingDimRed")
+        TextAnalysisR:::remove_notification_by_id("loadingDimRed")
 
         feature_space <- input$semantic_feature_space %||% "words"
         if (feature_space == "embeddings") {
@@ -13523,13 +13523,13 @@ server <- shinyServer(function(input, output, session) {
         } else if (feature_space == "ngrams") {
           showNotification("N-grams require completed preprocessing. Please complete preprocessing steps (including tokens) first.", type = "error", duration = 7)
         } else {
-          show_no_feature_matrix_notification()
+          TextAnalysisR:::show_no_feature_matrix_notification()
         }
         return()
       }
 
       if (nrow(feature_matrix) < 2) {
-        remove_notification_by_id("loadingDimRed")
+        TextAnalysisR:::remove_notification_by_id("loadingDimRed")
         showNotification("At least 2 documents are required for dimensionality reduction.", type = "error", duration = 7)
         return()
       }
@@ -13546,7 +13546,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       if (nrow(feature_matrix) < 2) {
-        remove_notification_by_id("loadingDimRed")
+        TextAnalysisR:::remove_notification_by_id("loadingDimRed")
         showNotification("After removing duplicates, less than 2 unique documents remain.", type = "error", duration = 7)
         return()
       }
@@ -13584,13 +13584,13 @@ server <- shinyServer(function(input, output, session) {
       document_clustering_results$feature_space <- input$semantic_feature_space %||% "words"
       document_clustering_results$ngram_range <- if (document_clustering_results$feature_space == "ngrams") input$semantic_ngram_range else NULL
 
-      remove_notification_by_id("loadingDimRed")
-      show_completion_notification("Dimensionality reduction complete! You can now apply clustering if desired.", duration = 5)
+      TextAnalysisR:::remove_notification_by_id("loadingDimRed")
+      TextAnalysisR:::show_completion_notification("Dimensionality reduction complete! You can now apply clustering if desired.", duration = 5)
 
     }, error = function(e) {
       cat("ERROR in dimensionality reduction:", e$message, "\n")
       print(e)
-      remove_notification_by_id("loadingDimRed")
+      TextAnalysisR:::remove_notification_by_id("loadingDimRed")
       error_msg <- if (!is.null(e$message) && nchar(e$message) > 0) {
         paste("Dimensionality reduction error:", e$message)
       } else {
@@ -13601,18 +13601,18 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$apply_clustering, {
-    show_loading_notification("Applying clustering...", id = "loadingClustering")
+    TextAnalysisR:::show_loading_notification("Applying clustering...", id = "loadingClustering")
 
     tryCatch({
       if (!isTRUE(document_clustering_results$dimred_complete)) {
-        remove_notification_by_id("loadingClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingClustering")
         showNotification("Please run dimensionality reduction first (Step 1).", type = "error", duration = 5)
         return()
       }
 
       coords <- document_clustering_results$coordinates
       if (is.null(coords) || nrow(coords) < 2) {
-        remove_notification_by_id("loadingClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingClustering")
         showNotification("Valid dimensionality reduction results not found. Please run Step 1 first.", type = "error", duration = 7)
         return()
       }
@@ -13620,7 +13620,7 @@ server <- shinyServer(function(input, output, session) {
       clustering_method <- input$document_clustering_method %||% "none"
 
       if (clustering_method == "none") {
-        remove_notification_by_id("loadingClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingClustering")
         showNotification("Please select a clustering method other than 'None'.", type = "warning", duration = 5)
         return()
       }
@@ -13663,13 +13663,13 @@ server <- shinyServer(function(input, output, session) {
       document_clustering_results$quality_metrics <- quality_metrics
       document_clustering_results$analysis_run <- TRUE
 
-      remove_notification_by_id("loadingClustering")
-      show_completion_notification("Clustering applied successfully!", duration = 5)
+      TextAnalysisR:::remove_notification_by_id("loadingClustering")
+      TextAnalysisR:::show_completion_notification("Clustering applied successfully!", duration = 5)
 
     }, error = function(e) {
       cat("ERROR in clustering:", e$message, "\n")
       print(e)
-      remove_notification_by_id("loadingClustering")
+      TextAnalysisR:::remove_notification_by_id("loadingClustering")
       error_msg <- if (!is.null(e$message) && nchar(e$message) > 0) {
         paste("Clustering error:", e$message)
       } else {
@@ -13688,20 +13688,20 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$run_document_clustering_analysis, {
-    show_loading_notification("Running document clustering analysis...", id = "loadingDocClustering")
+    TextAnalysisR:::show_loading_notification("Running document clustering analysis...", id = "loadingDocClustering")
 
     tryCatch({
       dfm_check <- get_available_dfm()
 
       if (is.null(dfm_check) || quanteda::ndoc(dfm_check) == 0) {
-        remove_notification_by_id("loadingDocClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
         showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 7)
         return()
       }
 
       feature_matrix <- semantic_feature_matrix()
       if (is.null(feature_matrix)) {
-        remove_notification_by_id("loadingDocClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
 
         feature_space <- input$semantic_feature_space %||% "words"
         if (feature_space == "embeddings") {
@@ -13709,13 +13709,13 @@ server <- shinyServer(function(input, output, session) {
         } else if (feature_space == "ngrams") {
           showNotification("N-grams require completed preprocessing. Please complete preprocessing steps (including tokens) first.", type = "error", duration = 7)
         } else {
-          show_no_feature_matrix_notification()
+          TextAnalysisR:::show_no_feature_matrix_notification()
         }
         return()
       }
 
       if (nrow(feature_matrix) < 2) {
-        remove_notification_by_id("loadingDocClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
         showNotification("At least 2 documents are required for clustering analysis.", type = "error", duration = 7)
         return()
       }
@@ -13732,7 +13732,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       if (nrow(feature_matrix) < 2) {
-        remove_notification_by_id("loadingDocClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
         showNotification("After removing duplicates, less than 2 unique documents remain.", type = "error", duration = 7)
         return()
       }
@@ -13802,13 +13802,13 @@ server <- shinyServer(function(input, output, session) {
       document_clustering_results$quality_metrics <- quality_metrics
       document_clustering_results$analysis_run <- TRUE
 
-      remove_notification_by_id("loadingDocClustering")
-      show_completion_notification("Document clustering analysis complete!")
+      TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
+      TextAnalysisR:::show_completion_notification("Document clustering analysis complete!")
 
     }, error = function(e) {
       cat("ERROR in document clustering:", e$message, "\n")
       print(e)
-      remove_notification_by_id("loadingDocClustering")
+      TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
       error_msg <- if (!is.null(e$message) && nchar(e$message) > 0) {
         paste("Clustering error:", e$message)
       } else {
@@ -13819,7 +13819,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$run_semantic_analysis_dimred, {
-    show_loading_notification("Running dimensionality reduction...", id = "loadingDimRed")
+    TextAnalysisR:::show_loading_notification("Running dimensionality reduction...", id = "loadingDimRed")
 
     dimred_results$cached_plots <- list()
     dimred_results$just_ran_analysis <- TRUE
@@ -13971,7 +13971,7 @@ server <- shinyServer(function(input, output, session) {
 
     dimred_results$calculating <- FALSE
     try(removeNotification("loadingDimRed"), silent = TRUE)
-    show_completion_notification("Dimensionality reduction completed!")
+    TextAnalysisR:::show_completion_notification("Dimensionality reduction completed!")
 
     dimred_analysis_triggered(TRUE)
   })
@@ -14010,7 +14010,7 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    show_loading_notification("Running parameter optimization...", id = "optimizationProgress")
+    TextAnalysisR:::show_loading_notification("Running parameter optimization...", id = "optimizationProgress")
 
     opt_results <- time_operation("parameter_optimization", function() {
       find_optimal_parameters(
@@ -14079,14 +14079,14 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    show_loading_notification("Running clustering analysis...", id = "loadingClustering")
+    TextAnalysisR:::show_loading_notification("Running clustering analysis...", id = "loadingClustering")
     comparison_results$clustering_calculating <- TRUE
 
     if (length(comparison_results$results) == 0) {
       feature_matrix <- semantic_feature_matrix()
       if (is.null(feature_matrix)) {
         comparison_results$clustering_calculating <- FALSE
-        remove_notification_by_id("loadingClustering")
+        TextAnalysisR:::remove_notification_by_id("loadingClustering")
         showNotification("No feature matrix available. Please process documents first.", type = "error")
         return()
       }
@@ -14097,7 +14097,7 @@ server <- shinyServer(function(input, output, session) {
         dfm_check <- tryCatch(dfm_outcome(), error = function(e) NULL)
         if (is.null(dfm_check)) {
           comparison_results$clustering_calculating <- FALSE
-          remove_notification_by_id("loadingClustering")
+          TextAnalysisR:::remove_notification_by_id("loadingClustering")
           showNotification("No DFM available. Please complete preprocessing first.", type = "error")
           return()
         }
@@ -14201,7 +14201,7 @@ server <- shinyServer(function(input, output, session) {
       NULL
     }
 
-    show_loading_notification(paste("Running", method_display_name, "clustering analysis..."), id = "loadingClustering")
+    TextAnalysisR:::show_loading_notification(paste("Running", method_display_name, "clustering analysis..."), id = "loadingClustering")
 
     set.seed(input$semantic_cluster_seed)
 
@@ -14369,7 +14369,7 @@ server <- shinyServer(function(input, output, session) {
 
     comparison_results$clustering_calculating <- FALSE
     try(removeNotification("loadingClustering"), silent = TRUE)
-    show_completion_notification(paste(method_display_name, "clustering completed!", auto_text, metrics_text))
+    TextAnalysisR:::show_completion_notification(paste(method_display_name, "clustering completed!", auto_text, metrics_text))
 
     clustering_analysis_triggered(TRUE)
   })
@@ -15289,15 +15289,15 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$showDimRedInfo, {
-    show_guide_modal("dimensionality_reduction_guide", "Dimensionality Reduction Guide")
+    TextAnalysisR:::show_guide_modal("dimensionality_reduction_guide", "Dimensionality Reduction Guide")
   })
 
   observeEvent(input$showClusteringInfo, {
-    show_guide_modal("clustering_guide", "Document Clustering Guide")
+    TextAnalysisR:::show_guide_modal("clustering_guide", "Document Clustering Guide")
   })
 
   observeEvent(input$showSemanticMethodsInfo, {
-    show_guide_modal("semantic_methods_guide", "Semantic Analysis Methods Guide")
+    TextAnalysisR:::show_guide_modal("semantic_methods_guide", "Semantic Analysis Methods Guide")
   })
 
   output$semantic_method_description <- renderUI({
@@ -17511,7 +17511,7 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    show_loading_notification("Running temporal semantic analysis...", id = "temporal_progress")
+    TextAnalysisR:::show_loading_notification("Running temporal semantic analysis...", id = "temporal_progress")
 
     tryCatch({
       embeddings <- if (!is.null(embeddings_cache$embeddings)) {
@@ -17534,12 +17534,12 @@ server <- shinyServer(function(input, output, session) {
 
       analysis_results$temporal_analysis <- temporal_result
 
-      remove_notification_by_id("temporal_progress")
-      show_completion_notification("Temporal analysis completed successfully!", duration = 3)
+      TextAnalysisR:::remove_notification_by_id("temporal_progress")
+      TextAnalysisR:::show_completion_notification("Temporal analysis completed successfully!", duration = 3)
 
     }, error = function(e) {
-      remove_notification_by_id("temporal_progress")
-      show_error_notification(paste("Temporal analysis error:", e$message))
+      TextAnalysisR:::remove_notification_by_id("temporal_progress")
+      TextAnalysisR:::show_error_notification(paste("Temporal analysis error:", e$message))
     })
   })
 
@@ -17608,7 +17608,7 @@ server <- shinyServer(function(input, output, session) {
     req(document_display_data())
     req(length(input$crossval_methods) >= 2)
 
-    show_loading_notification("Running cross-validation analysis...", id = "crossval_progress")
+    TextAnalysisR:::show_loading_notification("Running cross-validation analysis...", id = "crossval_progress")
 
     texts <- document_display_data()$combined_text
 
@@ -17663,12 +17663,12 @@ server <- shinyServer(function(input, output, session) {
         analysis_results$cross_validation <- validation_result
       }
 
-      remove_notification_by_id("crossval_progress")
-      show_completion_notification("Cross-validation completed successfully!", duration = 3)
+      TextAnalysisR:::remove_notification_by_id("crossval_progress")
+      TextAnalysisR:::show_completion_notification("Cross-validation completed successfully!", duration = 3)
 
     }, error = function(e) {
-      remove_notification_by_id("crossval_progress")
-      show_error_notification(paste("Cross-validation error:", e$message))
+      TextAnalysisR:::remove_notification_by_id("crossval_progress")
+      TextAnalysisR:::show_error_notification(paste("Cross-validation error:", e$message))
     })
   })
 
@@ -17881,7 +17881,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     log_ai_usage("Cluster Labels", provider, model)
-    show_loading_notification(paste("Generating AI labels using", provider, "..."), id = "loadingAILabels")
+    TextAnalysisR:::show_loading_notification(paste("Generating AI labels using", provider, "..."), id = "loadingAILabels")
 
     tryCatch({
       clustering_result <- comparison_results$clustering
@@ -17937,12 +17937,12 @@ server <- shinyServer(function(input, output, session) {
       analysis_results$ai_labels <- ai_labels
       analysis_results$cluster_keywords <- cluster_keywords
 
-      remove_notification_by_id("loadingAILabels")
-      show_completion_notification("AI labels generated successfully!")
+      TextAnalysisR:::remove_notification_by_id("loadingAILabels")
+      TextAnalysisR:::show_completion_notification("AI labels generated successfully!")
 
     }, error = function(e) {
-      remove_notification_by_id("loadingAILabels")
-      show_error_notification(paste("Error generating AI labels:", e$message))
+      TextAnalysisR:::remove_notification_by_id("loadingAILabels")
+      TextAnalysisR:::show_error_notification(paste("Error generating AI labels:", e$message))
     })
   })
 
@@ -18103,7 +18103,7 @@ server <- shinyServer(function(input, output, session) {
     dfm_obj <- get_available_dfm()
 
     if (is.null(dfm_obj)) {
-      show_dfm_required_modal()
+      TextAnalysisR:::show_dfm_required_modal()
       return(NULL)
     }
 
@@ -18196,8 +18196,8 @@ server <- shinyServer(function(input, output, session) {
           }
         })
 
-        remove_notification_by_id("search_k_notification")
-        show_completion_notification("Search completed successfully!", duration = 3)
+        TextAnalysisR:::remove_notification_by_id("search_k_notification")
+        TextAnalysisR:::show_completion_notification("Search completed successfully!", duration = 3)
         search_notification_shown(FALSE)
 
         # Cache the result
@@ -18689,7 +18689,7 @@ server <- shinyServer(function(input, output, session) {
 
       tryCatch(removeNotification(id = "ai_gen_notification"), error = function(e) {})
       tryCatch(removeNotification(id = "search_k_notification"), error = function(e) {})
-      show_completion_notification("AI recommendation generated successfully!", duration = 3)
+      TextAnalysisR:::show_completion_notification("AI recommendation generated successfully!", duration = 3)
 
     }, error = function(e) {
       tryCatch(removeNotification(id = "ai_gen_notification"), error = function(e) {})
@@ -19141,7 +19141,7 @@ server <- shinyServer(function(input, output, session) {
         previous_slider_values(current_slider_values)
 
         tryCatch(removeNotification(id = "stm_model_notification"), error = function(e) {})
-        show_completion_notification("STM model completed successfully!", duration = 3)
+        TextAnalysisR:::show_completion_notification("STM model completed successfully!", duration = 3)
       },
       error = function(e) {
         tryCatch(removeNotification(id = "stm_model_notification"), error = function(e) {})
@@ -19320,7 +19320,7 @@ server <- shinyServer(function(input, output, session) {
       n_topics_msg <- "automatic"
     }
 
-    show_loading_notification(HTML(paste0(
+    TextAnalysisR:::show_loading_notification(HTML(paste0(
       "Running embedding-based topic modeling (", backend, " backend) with ", n_topics_msg, " topics...<br>This may take several minutes."
     )), id = "embedding_model_notification")
 
@@ -20209,7 +20209,7 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch(removeNotification(id = "label_gen_notification"), error = function(e) {})
     tryCatch(removeNotification(id = "search_k_notification"), error = function(e) {})
-    show_completion_notification("Topic labels generated successfully!", duration = 3)
+    TextAnalysisR:::show_completion_notification("Topic labels generated successfully!", duration = 3)
   })
 
   shiny::observeEvent(input$generate_topic_content, {
@@ -20357,7 +20357,7 @@ server <- shinyServer(function(input, output, session) {
       previous_content_type(content_type)
 
       tryCatch(removeNotification(id = "content_gen_notification"), error = function(e) {})
-      show_completion_notification(paste0(content_type_label, " generated successfully!"), duration = 3)
+      TextAnalysisR:::show_completion_notification(paste0(content_type_label, " generated successfully!"), duration = 3)
 
       # Show results in a modal
       shiny::showModal(shiny::modalDialog(
