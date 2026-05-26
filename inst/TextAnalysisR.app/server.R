@@ -5223,33 +5223,20 @@ server <- shinyServer(function(input, output, session) {
 
     if (name_changed) {
       parsed <- spacy_parsed()
-      target_lemma <- editing_entity_lemma()
       if (!is.null(parsed)) {
-        if (!is.null(target_lemma) && nzchar(target_lemma)) {
-          parsed <- parsed %>%
-            dplyr::mutate(entity = dplyr::if_else(
-              gsub("_[BI]$", "", entity) == old_name &
-                (tolower(lemma) == tolower(target_lemma) | tolower(token) == tolower(target_lemma)),
-              new_name,
-              entity
-            ))
-        } else {
-          parsed <- parsed %>%
-            dplyr::mutate(entity = dplyr::if_else(
-              gsub("_[BI]$", "", entity) == old_name,
-              gsub(old_name, new_name, entity, fixed = TRUE),
-              entity
-            ))
-        }
+        parsed <- parsed %>%
+          dplyr::mutate(entity = dplyr::if_else(
+            gsub("_[BI]$", "", entity) == old_name,
+            gsub(old_name, new_name, entity, fixed = TRUE),
+            entity
+          ))
         spacy_parsed(parsed)
       }
 
       entities <- user_custom_entities()
       if (old_name %in% names(entities) && !(new_name %in% names(entities))) {
         entities[[new_name]] <- entities[[old_name]]
-        if (is.null(target_lemma) || !nzchar(target_lemma)) {
-          entities[[old_name]] <- NULL
-        }
+        entities[[old_name]] <- NULL
         user_custom_entities(entities)
       }
     }
@@ -5331,15 +5318,10 @@ server <- shinyServer(function(input, output, session) {
     entity_table_refresh(entity_table_refresh() + 1)
 
     if (name_changed) {
-      sidebar_lemma <- editing_entity_lemma()
       parsed <- spacy_parsed()
 
       if (!is.null(parsed)) {
-        tokens_to_move <- if (!is.null(sidebar_lemma) && nzchar(sidebar_lemma)) {
-          sidebar_lemma
-        } else {
-          unique(parsed$token[gsub("_[BI]$", "", parsed$entity) == new_name])
-        }
+        tokens_to_move <- unique(parsed$token[gsub("_[BI]$", "", parsed$entity) == new_name])
 
         if (length(tokens_to_move) > 0) {
           domain_types <- toupper(current_categories())
