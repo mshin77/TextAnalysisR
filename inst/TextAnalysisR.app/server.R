@@ -4255,7 +4255,7 @@ server <- shinyServer(function(input, output, session) {
       presets <- domain_presets()
       if (preset_name %in% names(presets)) {
         df <- preset_to_dataframe(presets[[preset_name]])
-        writexl::write_xlsx(df, file)
+        openxlsx::write.xlsx(df, file = file)
       }
     }
   )
