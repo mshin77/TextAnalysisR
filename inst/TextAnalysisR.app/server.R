@@ -4519,7 +4519,7 @@ server <- shinyServer(function(input, output, session) {
 
     parsed <- spacy_parsed()
     all_tokens <- if (!is.null(parsed)) get_uncategorized_tokens(parsed) else character(0)
-    top_tokens <- head(all_tokens, 50)
+    top_tokens <- head(all_tokens, 20)
     defaults <- domain_defaults()
     selected <- domain_selected()
     is_initialized <- isolate(sidebar_initialized())
@@ -4553,8 +4553,9 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(all_lemmas_for_dropdown(), {
     current_sel <- isolate(input$uncategorized_tokens) %||% character(0)
+    top_lemmas <- head(all_lemmas_for_dropdown(), 20)
     updateSelectizeInput(session, "uncategorized_tokens",
-      choices = unique(c(current_sel, all_lemmas_for_dropdown())),
+      choices = unique(c(current_sel, top_lemmas)),
       selected = current_sel,
       server = TRUE
     )
@@ -4742,7 +4743,7 @@ server <- shinyServer(function(input, output, session) {
     entities <- user_custom_entities()
     if (length(entities) == 0) return()
     parsed <- spacy_parsed()
-    top_lemmas <- head(get_uncategorized_tokens(parsed), 50)
+    top_lemmas <- head(get_uncategorized_tokens(parsed), 20)
 
     shinyjs::delay(200, {
       for (name in names(entities)) {
@@ -4764,7 +4765,7 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$apply_custom_entity, {
     req(input$custom_entity_name)
 
-    entity_name <- trimws(input$custom_entity_name)
+    entity_name <- toupper(trimws(input$custom_entity_name))
     if (!grepl("^[A-Za-z][A-Za-z0-9_ -]{0,31}$", entity_name)) {
       showNotification(
         "Entity name must be 1-32 chars, start with a letter, and use letters, digits, spaces, _, or -.",
@@ -5285,6 +5286,48 @@ server <- shinyServer(function(input, output, session) {
       }
     }
 
+    if (name_changed) {
+      parsed_now <- spacy_parsed()
+      old_remaining <- !is.null(parsed_now) &&
+        "entity" %in% names(parsed_now) &&
+        any(gsub("_[BI]$", "", parsed_now$entity) == old_name, na.rm = TRUE)
+
+      if (!old_remaining) {
+        sidebar_colors <- custom_entity_colors()
+        sidebar_colors[[old_name]] <- NULL
+        custom_entity_colors(sidebar_colors)
+
+        sidebar_enabled <- custom_entity_enabled()
+        sidebar_enabled[[old_name]] <- NULL
+        custom_entity_enabled(sidebar_enabled)
+
+        sidebar_entities <- user_custom_entities()
+        sidebar_entities[[old_name]] <- NULL
+        user_custom_entities(sidebar_entities)
+
+        old_cat_lower <- tolower(old_name)
+        cats_now <- current_categories()
+        if (old_cat_lower %in% cats_now) {
+          current_categories(cats_now[cats_now != old_cat_lower])
+          d_colors <- domain_entity_colors()
+          d_colors[[old_cat_lower]] <- NULL
+          domain_entity_colors(d_colors)
+          d_enabled <- domain_entity_enabled()
+          d_enabled[[old_cat_lower]] <- NULL
+          domain_entity_enabled(d_enabled)
+        }
+      }
+
+      custom_df <- custom_entities()
+      if (nrow(custom_df) > 0 && "Variable" %in% names(custom_df)) {
+        match_idx <- custom_df$Variable == old_name
+        if (any(match_idx)) {
+          custom_df$Variable[match_idx] <- new_name
+          custom_entities(custom_df)
+        }
+      }
+    }
+
     entity_table_refresh(entity_table_refresh() + 1)
 
     if (name_changed) {
@@ -5301,7 +5344,7 @@ server <- shinyServer(function(input, output, session) {
         if (length(tokens_to_move) > 0) {
           domain_types <- toupper(current_categories())
           new_entity_upper <- toupper(new_name)
-          all_tokens <- get_uncategorized_tokens(parsed)
+          all_tokens <- head(get_uncategorized_tokens(parsed), 20)
 
           if (toupper(old_name) %in% domain_types) {
             old_domain_input_id <- paste0("domain_", tolower(old_name))
@@ -6217,7 +6260,7 @@ server <- shinyServer(function(input, output, session) {
     req(input$custom_entity_text)
     req(input$custom_construct_label)
 
-    construct_label <- input$custom_construct_label
+    construct_label <- toupper(trimws(input$custom_construct_label))
     search_terms <- strsplit(input$custom_entity_text, "\n")[[1]]
     search_terms <- trimws(search_terms)
     search_terms <- search_terms[search_terms != ""]
@@ -6947,7 +6990,7 @@ server <- shinyServer(function(input, output, session) {
             # Sync sidebar domain categories
             domain_types <- toupper(current_categories())
             if (nzchar(entity_value)) {
-              all_tokens <- get_uncategorized_tokens(parsed)
+              all_tokens <- head(get_uncategorized_tokens(parsed), 20)
               token_to_move <- target_row$token
 
               if (toupper(old_entity) %in% domain_types) {
@@ -7115,7 +7158,7 @@ server <- shinyServer(function(input, output, session) {
           new_entity_upper <- toupper(new_value)
 
           if (nzchar(target_token) && nzchar(new_value)) {
-            all_tokens <- get_uncategorized_tokens(parsed)
+            all_tokens <- head(get_uncategorized_tokens(parsed), 20)
 
             # Remove from old category if it was a domain type
             if (toupper(old_entity) %in% domain_types) {
