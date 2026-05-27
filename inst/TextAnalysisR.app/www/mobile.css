@@ -23,4 +23,19 @@
     border-radius: 4px;
     background-color: #f3f4f6;
   }
+
+  .visNetwork,
+  .visNetwork-output,
+  .plotly,
+  .js-plotly-plot,
+  .html-widget-output,
+  div[id$="_plot"],
+  div[id$="_network_plot"] {
+    max-height: 70vh !important;
+  }
+
+  .modal-body pre {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

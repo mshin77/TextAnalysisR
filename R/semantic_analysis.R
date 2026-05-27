@@ -2411,14 +2411,14 @@ sentiment_lexicon_analysis <- function(dfm_object,
 
     doc_sentiment <- doc_sentiment %>%
       dplyr::mutate(
-        total_sentiment_words = positive + negative,
-        sentiment_score = ifelse(total_sentiment_words > 0,
-                                 (positive - negative) / total_sentiment_words,
+        total_sentiment_words = .data$positive + .data$negative,
+        sentiment_score = ifelse(.data$total_sentiment_words > 0,
+                                 (.data$positive - .data$negative) / .data$total_sentiment_words,
                                  0),
-        sentiment_raw = positive - negative,
+        sentiment_raw = .data$positive - .data$negative,
         sentiment = dplyr::case_when(
-          sentiment_score > 0 ~ "positive",
-          sentiment_score < 0 ~ "negative",
+          .data$sentiment_score > 0 ~ "positive",
+          .data$sentiment_score < 0 ~ "negative",
           TRUE ~ "neutral"
         )
       )

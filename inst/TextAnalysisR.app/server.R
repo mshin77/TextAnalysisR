@@ -1098,7 +1098,7 @@ server <- shinyServer(function(input, output, session) {
 
   united_tbl <- eventReactive(input$apply, {
     if (is.null(listed_vars()) || length(listed_vars()) == 0) {
-      showNotification("Please select at least one column to unite", type = "error")
+      showNotification("Please select at least one column to unite", type = "error", duration = 10)
       return(NULL)
     }
 
@@ -1507,7 +1507,7 @@ server <- shinyServer(function(input, output, session) {
 
     ngram_sizes <- as.integer(input$ngram_sizes)
     if (is.null(ngram_sizes) || length(ngram_sizes) == 0) {
-      showNotification("Please select at least one n-gram size", type = "warning")
+      showNotification("Please select at least one n-gram size", type = "warning", duration = 7)
       return()
     }
 
@@ -3390,7 +3390,7 @@ server <- shinyServer(function(input, output, session) {
 
     selected_features <- input$morph_features
     if (is.null(selected_features) || length(selected_features) == 0) {
-      showNotification("Please select at least one morphology feature", type = "warning")
+      showNotification("Please select at least one morphology feature", type = "warning", duration = 7)
       return()
     }
 
@@ -3550,7 +3550,7 @@ server <- shinyServer(function(input, output, session) {
 
     # Check if pos and tag columns exist
     if (!all(c("pos", "tag") %in% names(parsed))) {
-      showNotification("POS data not available. Click 'Apply' to extract POS tags.", type = "warning")
+      showNotification("POS data not available. Click 'Apply' to extract POS tags.", type = "warning", duration = 7)
       return()
     }
 
@@ -6327,7 +6327,7 @@ server <- shinyServer(function(input, output, session) {
         }
 
         if (is.null(tokens_obj)) {
-          showNotification("No tokens available. Please complete preprocessing first.", type = "error")
+          showNotification("No tokens available. Please complete preprocessing first.", type = "error", duration = 10)
           return()
         }
 
@@ -6482,7 +6482,7 @@ server <- shinyServer(function(input, output, session) {
 
           # Check required columns exist
           if (!"token" %in% names(parsed)) {
-            showNotification("Error: 'token' column not found in parsed data", type = "error")
+            showNotification("Error: 'token' column not found in parsed data", type = "error", duration = 10)
             next
           }
 
@@ -6567,7 +6567,7 @@ server <- shinyServer(function(input, output, session) {
             }
 
             if (is.null(tokens_obj)) {
-              showNotification("No tokens available. Please complete preprocessing first.", type = "error")
+              showNotification("No tokens available. Please complete preprocessing first.", type = "error", duration = 10)
               next
             }
 
@@ -6782,7 +6782,7 @@ server <- shinyServer(function(input, output, session) {
               }
 
               if (is.null(tokens_obj)) {
-                showNotification("No tokens available. Please complete preprocessing first.", type = "error")
+                showNotification("No tokens available. Please complete preprocessing first.", type = "error", duration = 10)
                 next
               }
 
@@ -8702,13 +8702,13 @@ server <- shinyServer(function(input, output, session) {
       if (feature_type == "embeddings") {
         if (!TextAnalysisR:::check_feature("embeddings")) {
           TextAnalysisR:::remove_notification_by_id("sentiment_loading")
-          showNotification("Embedding-based sentiment requires Python. Please use lexicon method.", type = "warning")
+          showNotification("Embedding-based sentiment requires Python. Please use lexicon method.", type = "warning", duration = 7)
           return()
         }
 
         if (!"united_texts" %in% names(texts_df)) {
           TextAnalysisR:::remove_notification_by_id("sentiment_loading")
-          showNotification("Text column not found. Please unite text columns first.", type = "error")
+          showNotification("Text column not found. Please unite text columns first.", type = "error", duration = 10)
           return()
         }
 
@@ -8963,12 +8963,12 @@ server <- shinyServer(function(input, output, session) {
       if (provider == "ollama") {
         if (is_remote) {
           TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
-          showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning")
+          showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning", duration = 7)
           return()
         }
         if (!TextAnalysisR::check_ollama()) {
           TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
-          showNotification("Ollama is not detected. Install from ollama.com or select another provider.", type = "warning")
+          showNotification("Ollama is not detected. Install from ollama.com or select another provider.", type = "warning", duration = 7)
           return()
         }
       } else if (provider %in% c("openai", "gemini")) {
@@ -9115,9 +9115,8 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$sentiment_summary_table <- renderDT({
-    if (!sentiment_results$analyzed) {
-      return(NULL)
-    } else {
+    req(sentiment_results$analyzed)
+    {
       coverage_data <- data.frame(
         Metric = c("Total Documents in Dataset",
                    "Documents with Sentiment Words",
@@ -10498,9 +10497,8 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$tfidf_keywords_table <- renderDT({
-    if (!keyword_results$analyzed) {
-      return(NULL)
-    } else {
+    req(keyword_results$analyzed)
+    {
       tfidf_data_desc <- keyword_results$tfidf_data[order(keyword_results$tfidf_data$TF_IDF_Score, decreasing = TRUE), ]
       datatable(
         tfidf_data_desc,
@@ -10530,9 +10528,8 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$textrank_keywords_table <- renderDT({
-    if (!keyword_results$analyzed) {
-      return(NULL)
-    } else {
+    req(keyword_results$analyzed)
+    {
       if (nrow(keyword_results$keyness_data) == 0) {
         datatable(
           data.frame(Message = "Keyness analysis requires multiple documents for comparison."),
@@ -10695,7 +10692,7 @@ server <- shinyServer(function(input, output, session) {
           filter(nchar(combined_text) > 0)
 
         if (nrow(doc_summary) == 0) {
-          showNotification("No valid documents found after processing.", type = "warning")
+          showNotification("No valid documents found after processing.", type = "warning", duration = 7)
           return(NULL)
         }
 
@@ -11298,13 +11295,13 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (is.null(texts) || length(texts) == 0) {
-      showNotification("No texts provided for similarity calculation", type = "error")
+      showNotification("No texts provided for similarity calculation", type = "error", duration = 10)
       return(NULL)
     }
 
     valid_texts <- texts[nchar(trimws(texts)) > 0]
     if (length(valid_texts) < 2) {
-      showNotification("Need at least 2 non-empty texts for similarity calculation", type = "error")
+      showNotification("Need at least 2 non-empty texts for similarity calculation", type = "error", duration = 10)
       return(NULL)
     }
 
@@ -11342,7 +11339,7 @@ server <- shinyServer(function(input, output, session) {
         }, error = function(e) FALSE)
 
         if (!python_available) {
-          showNotification("Python not available. Falling back to traditional similarity.", type = "warning")
+          showNotification("Python not available. Falling back to traditional similarity.", type = "warning", duration = 7)
           use_embeddings <- FALSE
         } else {
           libs_available <- tryCatch({
@@ -11350,7 +11347,7 @@ server <- shinyServer(function(input, output, session) {
             sklearn_metrics <- reticulate::import("sklearn.metrics.pairwise")
             TRUE
           }, error = function(e) {
-            showNotification("Required Python libraries not found. Falling back to traditional similarity.", type = "warning")
+            showNotification("Required Python libraries not found. Falling back to traditional similarity.", type = "warning", duration = 7)
             FALSE
           })
           if (!libs_available) use_embeddings <- FALSE
@@ -11435,7 +11432,7 @@ server <- shinyServer(function(input, output, session) {
           try(removeNotification("embedding_progress"), silent = TRUE)
 
           if (length(embeddings_list) == 0) {
-            showNotification("Failed to generate embeddings - all batches failed", type = "error")
+            showNotification("Failed to generate embeddings - all batches failed", type = "error", duration = 10)
             return(NULL)
           }
 
@@ -11516,7 +11513,7 @@ server <- shinyServer(function(input, output, session) {
       dfm <- quanteda::dfm_trim(dfm, min_termfreq = 2, min_docfreq = 1)
 
       if (quanteda::nfeat(dfm) == 0) {
-        showNotification("No features remaining after preprocessing. Using basic similarity.", type = "warning")
+        showNotification("No features remaining after preprocessing. Using basic similarity.", type = "warning", duration = 7)
         similarity_matrix <- outer(valid_texts, valid_texts, function(x, y) {
           mapply(function(a, b) {
             if (nchar(a) == 0 || nchar(b) == 0) {
@@ -11545,12 +11542,12 @@ server <- shinyServer(function(input, output, session) {
 
   semantic_search <- function(query, documents, embeddings = NULL, top_k = 5, use_embeddings = FALSE, search_method = "keyword") {
     if (is.null(query) || nchar(trimws(query)) == 0) {
-      showNotification("Search query cannot be empty", type = "warning")
+      showNotification("Search query cannot be empty", type = "warning", duration = 7)
       return(NULL)
     }
 
     if (is.null(documents) || length(documents) == 0) {
-      showNotification("No documents available for search", type = "error")
+      showNotification("No documents available for search", type = "error", duration = 10)
       return(NULL)
     }
 
@@ -11564,13 +11561,13 @@ server <- shinyServer(function(input, output, session) {
       if (!is.null(embeddings_cache$embeddings)) {
         embeddings <- embeddings_cache$embeddings
       } else {
-        showNotification("Embeddings not available for semantic search", type = "error")
+        showNotification("Embeddings not available for semantic search", type = "error", duration = 10)
         return(NULL)
       }
     }
 
     if (nrow(embeddings) != length(documents)) {
-      showNotification("Embeddings and documents count mismatch", type = "error")
+      showNotification("Embeddings and documents count mismatch", type = "error", duration = 10)
       return(NULL)
     }
 
@@ -11578,26 +11575,26 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch({
       if (!requireNamespace("reticulate", quietly = TRUE)) {
-        showNotification("Python/reticulate not available for semantic search", type = "error")
+        showNotification("Python/reticulate not available for semantic search", type = "error", duration = 10)
         return(NULL)
       }
 
       if (!reticulate::py_available()) {
-        showNotification("Python not available. Please check Python installation.", type = "error")
+        showNotification("Python not available. Please check Python installation.", type = "error", duration = 10)
         return(NULL)
       }
 
       sentence_transformers <- tryCatch({
         reticulate::import("sentence_transformers")
       }, error = function(e) {
-        showNotification("sentence_transformers not available. Please install: pip install sentence-transformers", type = "error")
+        showNotification("sentence_transformers not available. Please install: pip install sentence-transformers", type = "error", duration = 10)
         return(NULL)
       })
 
       sklearn_metrics <- tryCatch({
         reticulate::import("sklearn.metrics.pairwise")
       }, error = function(e) {
-        showNotification("sklearn not available. Please install: pip install scikit-learn", type = "error")
+        showNotification("sklearn not available. Please install: pip install scikit-learn", type = "error", duration = 10)
         return(NULL)
       })
 
@@ -11650,14 +11647,14 @@ server <- shinyServer(function(input, output, session) {
       }
 
       if (length(similarities) != length(documents)) {
-        showNotification("Similarity calculation error: dimension mismatch", type = "error")
+        showNotification("Similarity calculation error: dimension mismatch", type = "error", duration = 10)
         return(NULL)
       }
 
       similarities[is.na(similarities) | is.infinite(similarities)] <- 0
 
       if (length(similarities) == 0) {
-        showNotification("No valid similarities calculated", type = "error")
+        showNotification("No valid similarities calculated", type = "error", duration = 10)
         return(NULL)
       }
 
@@ -11665,7 +11662,7 @@ server <- shinyServer(function(input, output, session) {
 
       valid_indices <- top_indices[top_indices <= length(documents) & top_indices > 0]
       if (length(valid_indices) == 0) {
-        showNotification("No valid document indices found", type = "error")
+        showNotification("No valid document indices found", type = "error", duration = 10)
         return(NULL)
       }
 
@@ -11693,12 +11690,12 @@ server <- shinyServer(function(input, output, session) {
 
   perform_similarity_search <- function(query, documents, top_k = 5, search_method = "keyword", similarity_matrix = NULL, ngram_size = NULL) {
     if (is.null(query) || nchar(trimws(query)) == 0) {
-      showNotification("Search query cannot be empty", type = "warning")
+      showNotification("Search query cannot be empty", type = "warning", duration = 7)
       return(NULL)
     }
 
     if (is.null(documents) || length(documents) == 0) {
-      showNotification("No documents available for search", type = "error")
+      showNotification("No documents available for search", type = "error", duration = 10)
       return(NULL)
     }
 
@@ -11878,7 +11875,7 @@ server <- shinyServer(function(input, output, session) {
 
   find_optimal_parameters <- function(data_matrix, method = "silhouette", range = c(2, 10)) {
     if (nrow(data_matrix) < max(range)) {
-      showNotification("Not enough data points for the specified range", type = "warning")
+      showNotification("Not enough data points for the specified range", type = "warning", duration = 7)
       return(NULL)
     }
 
@@ -12227,7 +12224,7 @@ server <- shinyServer(function(input, output, session) {
     texts_vec <- texts_df$united_texts
 
     if (length(texts_vec) == 0) {
-      showNotification("No texts available for embedding generation.", type = "error")
+      showNotification("No texts available for embedding generation.", type = "error", duration = 10)
       return()
     }
 
@@ -12390,7 +12387,7 @@ server <- shinyServer(function(input, output, session) {
     if (feature_type == "embeddings") {
       docs_data <- processed_documents()
       if (!"combined_text" %in% names(docs_data)) {
-        showNotification("Document text data not available for embeddings.", type = "error")
+        showNotification("Document text data not available for embeddings.", type = "error", duration = 10)
         return(NULL)
       }
       return(list(
@@ -12400,7 +12397,7 @@ server <- shinyServer(function(input, output, session) {
     } else {
       docs_data_available <- !is.null(get_document_data())
       if (!docs_data_available) {
-        showNotification("Document data not available.", type = "error")
+        showNotification("Document data not available.", type = "error", duration = 10)
         return(NULL)
       }
       docs_data <- get_document_data()
@@ -12949,18 +12946,18 @@ server <- shinyServer(function(input, output, session) {
 
     query <- TextAnalysisR:::sanitize_text_input(input$semantic_search_query)
     if (is.null(query) || nchar(trimws(query)) == 0) {
-      showNotification("Please enter a search query", type = "warning")
+      showNotification("Please enter a search query", type = "warning", duration = 7)
       return()
     }
 
     if (nchar(trimws(query)) > 1000) {
-      showNotification("Search query too long. Please use a shorter query.", type = "warning")
+      showNotification("Search query too long. Please use a shorter query.", type = "warning", duration = 7)
       return()
     }
 
     docs_data <- document_display_data()
     if (is.null(docs_data) || nrow(docs_data) == 0) {
-      showNotification("No documents available for search. Please complete document configuration first.", type = "error")
+      showNotification("No documents available for search. Please complete document configuration first.", type = "error", duration = 10)
       return()
     }
 
@@ -13018,7 +13015,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (provider == "ollama") {
         if (is_remote) {
-          showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning")
+          showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning", duration = 7)
           return()
         }
 
@@ -13189,7 +13186,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       if (search_method == "embeddings" && is.null(embeddings_cache$embeddings)) {
-        showNotification("Embeddings cache is empty. Please recalculate embeddings.", type = "error")
+        showNotification("Embeddings cache is empty. Please recalculate embeddings.", type = "error", duration = 10)
         return()
       }
 
@@ -13462,7 +13459,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (is.null(feature_matrix)) {
         TextAnalysisR:::remove_notification_by_id("labelGen")
-        showNotification("Feature matrix not available. Please run dimensionality reduction first.", type = "error")
+        showNotification("Feature matrix not available. Please run dimensionality reduction first.", type = "error", duration = 10)
         return()
       }
 
@@ -13870,7 +13867,7 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(dfm_available)) {
       dimred_results$calculating <- FALSE
       try(removeNotification("loadingDimRed"), silent = TRUE)
-      showNotification("Please complete the preprocessing steps and create a DFM first.", type = "error")
+      showNotification("Please complete the preprocessing steps and create a DFM first.", type = "error", duration = 10)
       return()
     }
 
@@ -13910,7 +13907,7 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(feature_matrix)) {
       dimred_results$calculating <- FALSE
       try(removeNotification("loadingDimRed"), silent = TRUE)
-      showNotification("No feature matrix available. Please process documents first.", type = "error")
+      showNotification("No feature matrix available. Please process documents first.", type = "error", duration = 10)
       return()
     }
 
@@ -13919,7 +13916,7 @@ server <- shinyServer(function(input, output, session) {
     if (n_docs < 2) {
       dimred_results$calculating <- FALSE
       try(removeNotification("loadingDimRed"), silent = TRUE)
-      showNotification("Need at least 2 documents for dimensionality reduction", type = "error")
+      showNotification("Need at least 2 documents for dimensionality reduction", type = "error", duration = 10)
       return()
     }
 
@@ -13953,7 +13950,7 @@ server <- shinyServer(function(input, output, session) {
       if (ncol(feature_matrix) < 2) {
         dimred_results$calculating <- FALSE
         try(removeNotification("loadingDimRed"), silent = TRUE)
-        showNotification("Insufficient non-constant features for PCA analysis", type = "error")
+        showNotification("Insufficient non-constant features for PCA analysis", type = "error", duration = 10)
         return()
       }
 
@@ -14031,12 +14028,12 @@ server <- shinyServer(function(input, output, session) {
 
     feature_matrix <- semantic_feature_matrix()
     if (is.null(feature_matrix)) {
-      showNotification("No feature matrix available. Please process documents first.", type = "error")
+      showNotification("No feature matrix available. Please process documents first.", type = "error", duration = 10)
       return()
     }
 
     if (nrow(feature_matrix) < 3) {
-      showNotification("Need at least 3 documents for parameter optimization", type = "error")
+      showNotification("Need at least 3 documents for parameter optimization", type = "error", duration = 10)
       return()
     }
 
@@ -14078,7 +14075,7 @@ server <- shinyServer(function(input, output, session) {
 
     dfm_check <- get_available_dfm()
     if (is.null(dfm_check)) {
-      showNotification("Please complete the preprocessing steps and create a DFM first.", type = "error")
+      showNotification("Please complete the preprocessing steps and create a DFM first.", type = "error", duration = 10)
       return()
     }
 
@@ -14117,7 +14114,7 @@ server <- shinyServer(function(input, output, session) {
       if (is.null(feature_matrix)) {
         comparison_results$clustering_calculating <- FALSE
         TextAnalysisR:::remove_notification_by_id("loadingClustering")
-        showNotification("No feature matrix available. Please process documents first.", type = "error")
+        showNotification("No feature matrix available. Please process documents first.", type = "error", duration = 10)
         return()
       }
 
@@ -14128,7 +14125,7 @@ server <- shinyServer(function(input, output, session) {
         if (is.null(dfm_check)) {
           comparison_results$clustering_calculating <- FALSE
           TextAnalysisR:::remove_notification_by_id("loadingClustering")
-          showNotification("No DFM available. Please complete preprocessing first.", type = "error")
+          showNotification("No DFM available. Please complete preprocessing first.", type = "error", duration = 10)
           return()
         }
         feature_matrix <- as.matrix(dfm_check)
@@ -14146,21 +14143,21 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(similarity_matrix)) {
       comparison_results$clustering_calculating <- FALSE
       try(removeNotification("loadingClustering"), silent = TRUE)
-      showNotification("No similarity matrix available. Please run similarity analysis first.", type = "error")
+      showNotification("No similarity matrix available. Please run similarity analysis first.", type = "error", duration = 10)
       return()
     }
 
     if (any(is.na(similarity_matrix)) || any(!is.finite(similarity_matrix))) {
       comparison_results$clustering_calculating <- FALSE
       try(removeNotification("loadingClustering"), silent = TRUE)
-      showNotification("Similarity matrix contains missing or infinite values. Please check data.", type = "error")
+      showNotification("Similarity matrix contains missing or infinite values. Please check data.", type = "error", duration = 10)
       return()
     }
 
     if (nrow(similarity_matrix) < 2 || ncol(similarity_matrix) < 2) {
       comparison_results$clustering_calculating <- FALSE
       try(removeNotification("loadingClustering"), silent = TRUE)
-      showNotification("Insufficient data for clustering analysis. Need at least 2 documents.", type = "error")
+      showNotification("Insufficient data for clustering analysis. Need at least 2 documents.", type = "error", duration = 10)
       return()
     }
 
@@ -14168,7 +14165,7 @@ server <- shinyServer(function(input, output, session) {
     if (all(col_vars == 0 | is.na(col_vars))) {
       comparison_results$clustering_calculating <- FALSE
       try(removeNotification("loadingClustering"), silent = TRUE)
-      showNotification("All features have zero variance. Cannot perform clustering.", type = "error")
+      showNotification("All features have zero variance. Cannot perform clustering.", type = "error", duration = 10)
       return()
     }
 
@@ -14340,9 +14337,9 @@ server <- shinyServer(function(input, output, session) {
       error = function(e) {
         error_msg <- e$message
         if (grepl("constant.*zero.*variance", error_msg, ignore.case = TRUE)) {
-          showNotification("Clustering error: cannot rescale a constant/zero column to unit variance", type = "error")
+          showNotification("Clustering error: cannot rescale a constant/zero column to unit variance", type = "error", duration = 10)
         } else if (grepl("missing.*TRUE.*FALSE", error_msg, ignore.case = TRUE)) {
-          showNotification("Clustering error: missing value where TRUE/FALSE needed", type = "error")
+          showNotification("Clustering error: missing value where TRUE/FALSE needed", type = "error", duration = 10)
         } else {
           showNotification(paste("Clustering error:", error_msg), type = "error")
         }
@@ -14351,7 +14348,7 @@ server <- shinyServer(function(input, output, session) {
     )
 
     if (is.null(clustering_result)) {
-      showNotification("Clustering analysis failed. Please try a different method.", type = "error")
+      showNotification("Clustering analysis failed. Please try a different method.", type = "error", duration = 10)
       return()
     }
 
@@ -14561,7 +14558,7 @@ server <- shinyServer(function(input, output, session) {
         non_outlier_indices <- which(clustering_result$clusters != 0)
 
         if (length(non_outlier_indices) == 0) {
-          showNotification("Cannot remove all documents - they are all outliers.", type = "error")
+          showNotification("Cannot remove all documents - they are all outliers.", type = "error", duration = 10)
           return(NULL)
         }
 
@@ -14663,7 +14660,7 @@ server <- shinyServer(function(input, output, session) {
     cluster_method <- clustering_result$method %||% "unknown"
 
     if (cluster_method != "umap_dbscan") {
-      showNotification("Outlier reduction is only available for UMAP + DBSCAN clustering.", type = "warning")
+      showNotification("Outlier reduction is only available for UMAP + DBSCAN clustering.", type = "warning", duration = 7)
       return()
     }
 
@@ -14676,7 +14673,7 @@ server <- shinyServer(function(input, output, session) {
     threshold <- input$outlier_threshold
 
     if (method == "none") {
-      showNotification("Please select an outlier reduction method.", type = "warning")
+      showNotification("Please select an outlier reduction method.", type = "warning", duration = 7)
       return()
     }
 
@@ -14684,14 +14681,14 @@ server <- shinyServer(function(input, output, session) {
 
     similarity_matrix <- clustering_result$similarity_matrix
     if (is.null(similarity_matrix)) {
-      showNotification("Similarity matrix not available. Please run clustering analysis again.", type = "error")
+      showNotification("Similarity matrix not available. Please run clustering analysis again.", type = "error", duration = 10)
       return()
     }
 
     reduced_result <- reduce_outliers(clustering_result, similarity_matrix, method, threshold)
 
     if (is.null(reduced_result)) {
-      showNotification("Outlier reduction failed.", type = "error")
+      showNotification("Outlier reduction failed.", type = "error", duration = 10)
       return()
     }
 
@@ -17541,7 +17538,7 @@ server <- shinyServer(function(input, output, session) {
 
     docs_data <- document_display_data()
     if (!"date" %in% names(docs_data)) {
-      showNotification("No date variable found. Please configure dates in Document Configuration.", type = "error")
+      showNotification("No date variable found. Please configure dates in Document Configuration.", type = "error", duration = 10)
       return()
     }
 
@@ -17863,7 +17860,7 @@ server <- shinyServer(function(input, output, session) {
   # Cluster Label Generation - supports Ollama, OpenAI, and Gemini providers
   observeEvent(input$generate_cluster_labels, {
     if (is.null(comparison_results$clustering)) {
-      showNotification("Please run clustering analysis first", type = "error")
+      showNotification("Please run clustering analysis first", type = "error", duration = 10)
       return()
     }
     if (!gate_rate_limit("cluster label generation")) return()
@@ -17923,7 +17920,7 @@ server <- shinyServer(function(input, output, session) {
 
       docs_data <- document_display_data()
       if (is.null(docs_data)) {
-        showNotification("Document data not available", type = "error")
+        showNotification("Document data not available", type = "error", duration = 10)
         return()
       }
 
@@ -18207,7 +18204,7 @@ server <- shinyServer(function(input, output, session) {
           }
         }, error = function(search_error) {
           if (grepl("chol|decomposition|singular", search_error$message, ignore.case = TRUE)) {
-            showNotification("Spectral initialization failed. Using LDA initialization instead...", type = "warning")
+            showNotification("Spectral initialization failed. Using LDA initialization instead...", type = "warning", duration = 7)
             n_cores <- if (.Platform$OS.type == "windows") 1L else max(1L, parallel::detectCores() - 1L)
             stm::searchK(
               data = out()$meta,
@@ -19136,7 +19133,7 @@ server <- shinyServer(function(input, output, session) {
           )
         }, error = function(init_error) {
           if (grepl("chol|decomposition|singular", init_error$message, ignore.case = TRUE)) {
-            showNotification("Spectral initialization failed. Trying LDA initialization...", type = "warning")
+            showNotification("Spectral initialization failed. Trying LDA initialization...", type = "warning", duration = 7)
             stm::stm(
               data = out()$meta,
               documents = out()$documents,
@@ -19836,7 +19833,7 @@ server <- shinyServer(function(input, output, session) {
     selected_topic <- as.numeric(input$embedding_quote_topic)
 
     if (is.na(selected_topic)) {
-      showNotification("Please select a topic first.", type = "warning")
+      showNotification("Please select a topic first.", type = "warning", duration = 7)
       return()
     }
 
@@ -19871,7 +19868,7 @@ server <- shinyServer(function(input, output, session) {
         )
       }, options = list(pageLength = 5))
     } else {
-      showNotification("No documents found for this topic.", type = "warning")
+      showNotification("No documents found for this topic.", type = "warning", duration = 7)
     }
   })
 
@@ -20173,7 +20170,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (provider == "ollama") {
       if (is_remote) {
-        showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning")
+        showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning", duration = 7)
         return()
       }
       if (!TextAnalysisR::check_ollama(verbose = FALSE)) {
@@ -20609,13 +20606,16 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
+  width_debounced <- debounce(reactive(input$width), 300)
+
   topic_table_data <- reactive({
     req(beta_td())
     get_top_term_number()
 
-    current_wrap_width <- if (is.null(input$width)) {
+    w <- width_debounced()
+    current_wrap_width <- if (is.null(w)) {
       30
-    } else if (input$width > 1000) {
+    } else if (w > 1000) {
       35
     } else {
       25
@@ -20744,7 +20744,7 @@ server <- shinyServer(function(input, output, session) {
 
                        "dbscan" = {
                          if (!requireNamespace("dbscan", quietly = TRUE)) {
-                           showNotification("dbscan package required for this method", type = "error")
+                           showNotification("dbscan package required for this method", type = "error", duration = 10)
                            return(NULL)
                          }
 
@@ -20955,13 +20955,13 @@ server <- shinyServer(function(input, output, session) {
 
         topic_data <- topic_table_data()
         if (is.null(topic_data) || inherits(topic_data, "htmlwidget") || !is.data.frame(topic_data)) {
-          showNotification("Topic data is not available. Please ensure topic modeling has been run.", type = "error")
+          showNotification("Topic data is not available. Please ensure topic modeling has been run.", type = "error", duration = 10)
           return(NULL)
         }
 
         top_terms <- top_terms_selected()
         if (is.null(top_terms) || inherits(top_terms, "htmlwidget") || !is.data.frame(top_terms)) {
-          showNotification("Top terms data is not available.", type = "error")
+          showNotification("Top terms data is not available.", type = "error", duration = 10)
           return(NULL)
         }
 
@@ -21314,7 +21314,7 @@ server <- shinyServer(function(input, output, session) {
 
   stm_effect_estimates <- eventReactive(eventExpr = input$stm_effect, {
     if (is.null(topic_model_result()) || is.null(out()) || !"theta" %in% names(topic_model_result())) {
-      showNotification("No STM model available. Please run topic modeling first.", type = "warning")
+      showNotification("No STM model available. Please run topic modeling first.", type = "warning", duration = 7)
       return(NULL)
     }
 
@@ -21406,7 +21406,7 @@ server <- shinyServer(function(input, output, session) {
     },
     content = function(file) {
       if (is.null(stm_effect_estimates())) {
-        showNotification("No effect estimates available for download. Please run the effect estimation first.", type = "error")
+        showNotification("No effect estimates available for download. Please run the effect estimation first.", type = "error", duration = 10)
         return()
       }
       td <- tidytext::tidy(stm_effect_estimates()) %>%

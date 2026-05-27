@@ -611,6 +611,21 @@ $(document).ready(function() {
     // Clear all active states when mouse leaves dropdown
     $('.selectize-dropdown .option').removeClass('active');
   });
+
+  // WCAG 4.1.2 — set role/aria-modal/aria-labelledby on every Shiny showModal
+  $(document).on('shown.bs.modal', '.modal', function () {
+    var $m = $(this);
+    $m.attr('role', 'dialog').attr('aria-modal', 'true');
+    var $title = $m.find('.modal-title').first();
+    if ($title.length) {
+      var tid = $title.attr('id');
+      if (!tid) {
+        tid = 'modal-title-' + Math.random().toString(36).slice(2, 9);
+        $title.attr('id', tid);
+      }
+      $m.attr('aria-labelledby', tid);
+    }
+  });
 });
 
 
