@@ -2942,7 +2942,7 @@ plot_quality_metrics <- function(search_results) {
 #' Automatically selects the best available metric combination.
 #'
 #' @param search_results Results from stm::searchK or find_optimal_k()
-#' @param title Plot title (default: "Model Comparison")
+#' @param title Plot title (default `NULL` selects an auto-title based on which metric columns are present in `search_results`)
 #' @param height Plot height in pixels (default: 600)
 #' @param width Plot width in pixels (default: 800)
 #'

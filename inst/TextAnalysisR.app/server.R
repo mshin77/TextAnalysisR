@@ -408,7 +408,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
-            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
           selectizeInput("openai_vision_model",
@@ -423,7 +423,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("gemini_vision_api_key", "Gemini API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
-            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
           selectizeInput("gemini_vision_model",
@@ -8923,7 +8923,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
-            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         )
@@ -8944,7 +8944,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
-            tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         )
@@ -12838,7 +12838,7 @@ server <- shinyServer(function(input, output, session) {
         shiny::showModal(shiny::modalDialog(
           title = "Calculation Completed",
           tags$p("Calculation completed but no results were generated."),
-          easyClose = FALSE,
+          easyClose = TRUE,
           footer = shiny::modalButton("Close")
         ))
       }
@@ -12855,7 +12855,7 @@ server <- shinyServer(function(input, output, session) {
       shiny::showModal(shiny::modalDialog(
         title = "Calculation Error",
         tags$p(tags$strong("Error:"), e$message, style = "color: #EF4444;"),
-        easyClose = FALSE,
+        easyClose = TRUE,
         footer = shiny::modalButton("Close")
       ))
     })

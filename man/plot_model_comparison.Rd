@@ -4,17 +4,12 @@
 \alias{plot_model_comparison}
 \title{Plot Topic Model Comparison Scatter}
 \usage{
-plot_model_comparison(
-  search_results,
-  title = "Coherence-Exclusivity Frontier (choose K in the upper-right)",
-  height = 600,
-  width = 800
-)
+plot_model_comparison(search_results, title = NULL, height = 600, width = 800)
 }
 \arguments{
 \item{search_results}{Results from stm::searchK or find_optimal_k()}
 
-\item{title}{Plot title (default: "Model Comparison")}
+\item{title}{Plot title (default \code{NULL} selects an auto-title based on which metric columns are present in \code{search_results})}
 
 \item{height}{Plot height in pixels (default: 600)}
 

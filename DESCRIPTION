@@ -86,9 +86,10 @@ Suggests:
     umap,
     plotly
 Depends: R (>= 4.0)
-SystemRequirements: Python (>= 3.8) for spaCy lemmatization and
-    sentence-transformers embeddings (optional); Ollama for local
-    large language model inference (optional)
+SystemRequirements: Python (>= 3.8) with spaCy (>= 3.5) for
+    lemmatization and sentence-transformers (>= 2.2) for embeddings
+    (optional); Ollama (>= 0.1.30) for local large language model
+    inference (optional)
 URL: https://mshin77.github.io/TextAnalysisR/,
     https://github.com/mshin77/TextAnalysisR
 BugReports: https://github.com/mshin77/TextAnalysisR/issues

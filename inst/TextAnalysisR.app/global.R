@@ -2,6 +2,8 @@ is_web <- TextAnalysisR:::check_web_deployment()
 is_docker <- TextAnalysisR:::check_docker_deployment()
 is_remote <- is_web || is_docker
 
+shiny::enableBookmarking("disable")
+
 .password_input <- function(inputId, label, value = "", placeholder = NULL) {
   pw <- shiny::passwordInput(inputId, label, value = value, placeholder = placeholder)
   pw$children <- lapply(pw$children, function(ch) {
@@ -249,7 +251,7 @@ topic_modeling_ui_content <- function() {
               .password_input("stm_label_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -265,7 +267,7 @@ topic_modeling_ui_content <- function() {
               .password_input("stm_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -446,7 +448,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("k_rec_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -467,7 +469,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("k_rec_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -618,7 +620,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("content_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -634,7 +636,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("content_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -754,7 +756,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("topic_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -771,7 +773,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("topic_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 12px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
