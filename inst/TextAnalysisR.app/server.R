@@ -5774,19 +5774,27 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  # Build labeled doc choices using a given doc_id_var input
+  .clean_doc_id_label <- function(x, max_chars = 80) {
+    clean <- gsub("\\s+", " ", trimws(as.character(x)))
+    too_long <- !is.na(clean) & nchar(clean) > max_chars
+    clean[too_long] <- paste0(substr(clean[too_long], 1, max_chars - 3), "...")
+    clean
+  }
+
+  # Long-text Document ID columns (e.g. abstract) would freeze the dropdown
   .build_labeled_doc_ids <- function(doc_ids, tokens_obj, doc_id_var) {
-    if (!is.null(tokens_obj) &&
-        !is.null(doc_id_var) &&
-        doc_id_var != "") {
-      doc_vars <- quanteda::docvars(tokens_obj)
-      if (!is.null(doc_vars) && doc_id_var %in% names(doc_vars)) {
-        all_doc_ids <- quanteda::docnames(tokens_obj)
-        doc_id_values <- doc_vars[[doc_id_var]]
-        doc_labels <- as.character(doc_id_values)
-        names(doc_ids) <- doc_labels[match(doc_ids, all_doc_ids)]
-      }
+    if (is.null(tokens_obj) || is.null(doc_id_var) || doc_id_var %in% c("", "None")) {
+      return(doc_ids)
     }
+    doc_vars <- quanteda::docvars(tokens_obj)
+    if (is.null(doc_vars) || !doc_id_var %in% names(doc_vars)) {
+      return(doc_ids)
+    }
+    idx <- match(doc_ids, quanteda::docnames(tokens_obj))
+    labels <- .clean_doc_id_label(doc_vars[[doc_id_var]][idx], max_chars = 60)
+    missing <- is.na(labels) | labels == ""
+    labels[missing] <- doc_ids[missing]
+    names(doc_ids) <- labels
     doc_ids
   }
 
@@ -6011,7 +6019,7 @@ server <- shinyServer(function(input, output, session) {
       doc_vars <- quanteda::docvars(tokens_obj)
       if (!is.null(doc_vars) && input$dep_doc_id_var %in% names(doc_vars) &&
           !is.na(doc_position)) {
-        display_df$`Document ID` <- as.character(doc_vars[[input$dep_doc_id_var]][doc_position])
+        display_df$`Document ID` <- .clean_doc_id_label(doc_vars[[input$dep_doc_id_var]][doc_position])
       } else {
         has_doc_id <- FALSE
       }
@@ -9174,7 +9182,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (!is.null(input$sentiment_doc_id_var) && input$sentiment_doc_id_var != "" &&
         input$sentiment_doc_id_var != "None" && input$sentiment_doc_id_var %in% names(sentiment_results$original_data)) {
-      doc_ids <- as.character(sentiment_results$original_data[[input$sentiment_doc_id_var]])
+      doc_ids <- .clean_doc_id_label(sentiment_results$original_data[[input$sentiment_doc_id_var]])
     }
 
     text_col <- input$sentiment_text_var %||% "text"
@@ -9210,7 +9218,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (!is.null(input$sentiment_doc_id_var) && input$sentiment_doc_id_var != "" &&
           input$sentiment_doc_id_var != "None" && input$sentiment_doc_id_var %in% names(sentiment_results$original_data)) {
-        doc_ids <- as.character(sentiment_results$original_data[[input$sentiment_doc_id_var]])
+        doc_ids <- .clean_doc_id_label(sentiment_results$original_data[[input$sentiment_doc_id_var]])
         doc_table$`Document ID` <- doc_ids[doc_table$document]
 
         doc_table <- doc_table %>%
@@ -9735,8 +9743,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (!is.null(input$readability_doc_id_var) && input$readability_doc_id_var != "" &&
           input$readability_doc_id_var != "None" && input$readability_doc_id_var %in% names(readability_results$original_data)) {
-        doc_ids <- as.character(readability_results$original_data[[input$readability_doc_id_var]])
-        scores_data$`Document ID` <- doc_ids
+        scores_data$`Document ID` <- .clean_doc_id_label(readability_results$original_data[[input$readability_doc_id_var]])
       }
 
       if (view_type == "group") {
@@ -9980,7 +9987,7 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(input$lexdiv_doc_id_var) && input$lexdiv_doc_id_var != "" &&
         input$lexdiv_doc_id_var != "None" && !is.null(lexical_diversity_results$original_data) &&
         input$lexdiv_doc_id_var %in% names(lexical_diversity_results$original_data)) {
-      lex_data$`Document ID` <- as.character(
+      lex_data$`Document ID` <- .clean_doc_id_label(
         lexical_diversity_results$original_data[[input$lexdiv_doc_id_var]]
       )
       lex_data <- lex_data[, c("Document", "Document ID",
@@ -10778,12 +10785,12 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(input$doc_id_var) && input$doc_id_var != "" && input$doc_id_var != "None" &&
         input$doc_id_var %in% names(original_data)) {
       if (nrow(original_data) == n_docs) {
-        docs_data$document_id_display <- as.character(original_data[[input$doc_id_var]])
+        docs_data$document_id_display <- .clean_doc_id_label(original_data[[input$doc_id_var]])
       } else if (has_dfm) {
         matching_indices <- match(dfm_doc_names, rownames(original_data))
-        docs_data$document_id_display <- as.character(original_data[[input$doc_id_var]][matching_indices])
+        docs_data$document_id_display <- .clean_doc_id_label(original_data[[input$doc_id_var]][matching_indices])
       } else {
-        docs_data$document_id_display <- as.character(original_data[[input$doc_id_var]])
+        docs_data$document_id_display <- .clean_doc_id_label(original_data[[input$doc_id_var]])
       }
 
       docs_data$document_id_display <- ifelse(is.na(docs_data$document_id_display),
