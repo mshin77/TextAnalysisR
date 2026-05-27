@@ -479,7 +479,9 @@ process_pdf_unified <- function(file_path,
 unite_cols <- function(df, listed_vars) {
   united_texts_tbl <- df %>%
     dplyr::select(all_of(unname(listed_vars))) %>%
-    tidyr::unite(col = "united_texts", sep = " ", remove = FALSE)
+    dplyr::mutate(dplyr::across(dplyr::everything(), ~ tidyr::replace_na(as.character(.x), ""))) %>%
+    tidyr::unite(col = "united_texts", sep = " ", remove = FALSE) %>%
+    dplyr::mutate(united_texts = trimws(gsub("\\s+", " ", united_texts)))
 
   docvar_tbl <- df %>%
     dplyr::select(-all_of(unname(listed_vars)))

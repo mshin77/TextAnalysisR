@@ -4282,12 +4282,12 @@ server <- shinyServer(function(input, output, session) {
 
   output$export_domain_preset <- downloadHandler(
     filename = function() {
-      preset_name <- current_domain_preset()
+      preset_name <- isolate(current_domain_preset())
       paste0("ner_preset_", preset_name, "_", format(Sys.time(), "%Y%m%d"), ".xlsx")
     },
     content = function(file) {
-      preset_name <- current_domain_preset()
-      presets <- domain_presets()
+      preset_name <- isolate(current_domain_preset())
+      presets <- isolate(domain_presets())
       if (preset_name %in% names(presets)) {
         df <- preset_to_dataframe(presets[[preset_name]])
         openxlsx::write.xlsx(df, file = file)
@@ -9984,12 +9984,14 @@ server <- shinyServer(function(input, output, session) {
     }
     lex_data$Document <- paste0("Doc ", seq_len(nrow(lex_data)))
 
-    if (!is.null(input$lexdiv_doc_id_var) && input$lexdiv_doc_id_var != "" &&
+    orig_doc_col <- if (!is.null(input$lexdiv_doc_id_var) && input$lexdiv_doc_id_var != "" &&
         input$lexdiv_doc_id_var != "None" && !is.null(lexical_diversity_results$original_data) &&
         input$lexdiv_doc_id_var %in% names(lexical_diversity_results$original_data)) {
-      lex_data$`Document ID` <- .clean_doc_id_label(
-        lexical_diversity_results$original_data[[input$lexdiv_doc_id_var]]
-      )
+      lexical_diversity_results$original_data[[input$lexdiv_doc_id_var]]
+    } else NULL
+
+    if (!is.null(orig_doc_col) && length(orig_doc_col) == nrow(lex_data)) {
+      lex_data$`Document ID` <- .clean_doc_id_label(orig_doc_col)
       lex_data <- lex_data[, c("Document", "Document ID",
                                setdiff(names(lex_data), c("Document", "Document ID"))),
                            drop = FALSE]
@@ -21419,6 +21421,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$stm_display_cat, {
+    req(input$stm_effect_cat_btn)
     output$cat_plot <- plotly::renderPlotly({
       gg_to_plotly(plot_topic_effects_categorical(
         effects_data = effects_categorical_var(),
@@ -21427,20 +21430,6 @@ server <- shinyServer(function(input, output, session) {
         width = input$width_cat_plot
       ))
     })
-  })
-
-  output$cat_plot_uiOutput <- renderUI({
-    req(input$stm_effect_cat_btn)
-    req(input$stm_display_cat)
-    plotly::plotlyOutput(
-      "cat_plot",
-      height = input$height_cat_plot,
-      width = input$width_cat_plot
-    )
-  })
-
-  observeEvent(input$stm_display_cat, {
-    req(input$stm_effect_cat_btn)
     output$cat_table <- DT::renderDataTable({
       if (is.null(effects_categorical_var()) || nrow(effects_categorical_var()) == 0) {
         return(DT::datatable(
@@ -21463,6 +21452,16 @@ server <- shinyServer(function(input, output, session) {
           )
         )
     })
+  })
+
+  output$cat_plot_uiOutput <- renderUI({
+    req(input$stm_effect_cat_btn)
+    req(input$stm_display_cat)
+    plotly::plotlyOutput(
+      "cat_plot",
+      height = input$height_cat_plot,
+      width = input$width_cat_plot
+    )
   })
 
   output$cat_table_uiOutput <- renderUI({
@@ -21505,6 +21504,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$stm_display_con, {
+    req(input$stm_effect_con_btn)
     output$con_plot <- plotly::renderPlotly({
       req(effects_continuous_var())
 
@@ -21515,20 +21515,6 @@ server <- shinyServer(function(input, output, session) {
         width = input$width_con_plot
       ))
     })
-  })
-
-  output$con_plot_uiOutput <- renderUI({
-    req(input$stm_effect_con_btn)
-    req(input$stm_display_con)
-    plotly::plotlyOutput(
-      "con_plot",
-      height = input$height_con_plot,
-      width = input$width_con_plot
-    )
-  })
-
-  observeEvent(input$stm_display_con, {
-    req(input$stm_effect_con_btn)
     output$con_table <- DT::renderDataTable({
       if (is.null(effects_continuous_var()) || nrow(effects_continuous_var()) == 0) {
         return(DT::datatable(
@@ -21551,6 +21537,16 @@ server <- shinyServer(function(input, output, session) {
           )
         )
     })
+  })
+
+  output$con_plot_uiOutput <- renderUI({
+    req(input$stm_effect_con_btn)
+    req(input$stm_display_con)
+    plotly::plotlyOutput(
+      "con_plot",
+      height = input$height_con_plot,
+      width = input$width_con_plot
+    )
   })
 
   output$con_table_uiOutput <- renderUI({
