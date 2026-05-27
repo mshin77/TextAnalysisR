@@ -1333,8 +1333,12 @@ Focus on incorporating the most significant keywords while following the guideli
               "5. Quotes",
               value = 7,
               conditionalPanel(
-                condition = "output.has_quotes == true",
+                condition = "output.has_quotes == true && input.topic_modeling_path == 'probability'",
                 DT::dataTableOutput("quote_table")
+              ),
+              conditionalPanel(
+                condition = "output.has_quotes == true && input.topic_modeling_path == 'embedding'",
+                DT::dataTableOutput("embedding_quote_table")
               ),
               conditionalPanel(
                 condition = "output.has_quotes == false",

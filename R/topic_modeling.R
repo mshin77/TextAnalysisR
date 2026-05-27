@@ -851,7 +851,7 @@ fit_embedding_model <- function(texts,
     stop("Need at least ", min_topic_size, " non-empty texts for analysis")
   }
 
-  set.seed(seed)
+  withr::local_seed(seed)
   start_time <- Sys.time()
 
   tryCatch({
@@ -1173,7 +1173,7 @@ fit_embedding_model <- function(texts,
     stop("Need at least ", min_topic_size, " non-empty texts for analysis")
   }
 
-  set.seed(seed)
+  withr::local_seed(seed)
   start_time <- Sys.time()
 
   tryCatch({
@@ -1762,7 +1762,7 @@ auto_tune_embedding_topics <- function(
 
   # Sample configurations if grid is larger than n_trials
   if (nrow(param_grid) > n_trials) {
-    set.seed(seed)
+    withr::local_seed(seed)
     sampled_rows <- sample(nrow(param_grid), n_trials)
     param_grid <- param_grid[sampled_rows, ]
   }

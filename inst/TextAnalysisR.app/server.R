@@ -2180,7 +2180,7 @@ server <- shinyServer(function(input, output, session) {
       paste0("preprocessing_report_", format(Sys.Date(), "%Y%m%d"), ".txt")
     },
     content = function(file) {
-      tryCatch({
+      isolate(tryCatch({
         if (is.null(united_tbl())) {
           error_msg <- c(
             "",
@@ -2434,7 +2434,7 @@ server <- shinyServer(function(input, output, session) {
           ""
         )
         writeLines(paste(error_msg, collapse = "\n"), file)
-      })
+      }))
     }
   )
 
@@ -3656,11 +3656,12 @@ server <- shinyServer(function(input, output, session) {
       tryCatch({
         req(spacy_parsed())
 
-        parsed <- spacy_parsed()
+        parsed <- isolate(spacy_parsed())
+        pos_filter_snapshot <- isolate(input$pos_filter)
 
-        if (!is.null(input$pos_filter) && length(input$pos_filter) > 0) {
+        if (!is.null(pos_filter_snapshot) && length(pos_filter_snapshot) > 0) {
           parsed <- parsed %>%
-            dplyr::filter(pos %in% input$pos_filter)
+            dplyr::filter(pos %in% pos_filter_snapshot)
         }
 
         pos_summary <- parsed %>%
@@ -6093,7 +6094,7 @@ server <- shinyServer(function(input, output, session) {
     },
     content = function(file) {
       tryCatch({
-        parsed_data <- spacy_parsed()
+        parsed_data <- isolate(spacy_parsed())
         if (is.null(parsed_data) || nrow(parsed_data) == 0 || !"entity" %in% names(parsed_data)) {
           p <- ggplot2::ggplot() +
             ggplot2::theme_void() +
@@ -6102,7 +6103,9 @@ server <- shinyServer(function(input, output, session) {
           return()
         }
 
-        selected_types <- get_selected_entity_types()
+        selected_types <- isolate(get_selected_entity_types())
+        custom_ent <- isolate(custom_entities())
+        custom_cols_snapshot <- isolate(custom_entity_colors())
 
         entity_data <- parsed_data %>%
           dplyr::filter(!is.na(entity), entity != "") %>%
@@ -6118,8 +6121,8 @@ server <- shinyServer(function(input, output, session) {
           dplyr::rename(entity = entity_clean) %>%
           dplyr::slice_head(n = 20)
 
-        if (nrow(custom_entities()) > 0) {
-          custom_counts <- custom_entities() %>%
+        if (nrow(custom_ent) > 0) {
+          custom_counts <- custom_ent %>%
             dplyr::count(`Variable`, name = "n") %>%
             dplyr::rename(entity = `Variable`)
           if (length(selected_types) > 0) {
@@ -6153,9 +6156,8 @@ server <- shinyServer(function(input, output, session) {
           "THEME" = "#7c4dff", "CODE" = "#546e7a", "CATEGORY" = "#26a69a",
           "CUSTOM" = "#d81b60"
         )
-        custom_cols <- custom_entity_colors()
-        if (length(custom_cols) > 0) {
-          entity_colors[names(custom_cols)] <- custom_cols
+        if (length(custom_cols_snapshot) > 0) {
+          entity_colors[names(custom_cols_snapshot)] <- custom_cols_snapshot
         }
 
         bar_colors <- vapply(entity_data$entity, function(e) {
@@ -6215,8 +6217,8 @@ server <- shinyServer(function(input, output, session) {
         text <- paste(doc_data$token, collapse = " ")
         svg_content <- TextAnalysisR::render_displacy_dep(text, compact = TRUE)
 
-        # Create temp HTML file and capture as PNG using webshot2
         temp_html <- tempfile(fileext = ".html")
+        on.exit(unlink(temp_html), add = TRUE)
         full_html <- paste0(
           "<!DOCTYPE html><html><head><style>body{background:white;padding:20px;font-family:Arial,sans-serif;}</style></head><body>",
           "<h3 style='margin-bottom:20px;'>Dependency Parse: ", htmltools::htmlEscape(input$dep_viz_doc), "</h3>",
@@ -6233,8 +6235,6 @@ server <- shinyServer(function(input, output, session) {
           text(0.5, 0.5, "Install webshot2 package for PNG export")
           dev.off()
         }
-
-        unlink(temp_html)
       }, error = function(e) {
         png(file, width = 800, height = 400)
         plot.new()
@@ -7747,7 +7747,7 @@ server <- shinyServer(function(input, output, session) {
   output$download_cooccur_html <- downloadHandler(
     filename = function() paste0("co_occurrence_network_", Sys.Date(), ".html"),
     content = function(file) {
-      result <- word_co_occurrence_network_results()
+      result <- isolate(word_co_occurrence_network_results())
       req(result, result$plot)
       htmlwidgets::saveWidget(result$plot, file, selfcontained = TRUE)
     }
@@ -8096,7 +8096,7 @@ server <- shinyServer(function(input, output, session) {
   output$download_corr_html <- downloadHandler(
     filename = function() paste0("correlation_network_", Sys.Date(), ".html"),
     content = function(file) {
-      result <- word_correlation_network_results()
+      result <- isolate(word_correlation_network_results())
       req(result, result$plot)
       htmlwidgets::saveWidget(result$plot, file, selfcontained = TRUE)
     }
@@ -14696,13 +14696,15 @@ server <- shinyServer(function(input, output, session) {
       paste0("method_comparison_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".csv")
     },
     content = function(file) {
-      if (!is.null(analysis_results$cross_validation)) {
-        results <- analysis_results$cross_validation$comparison_metrics
-        write.csv(results, file, row.names = FALSE)
-        showNotification("Comparison results downloaded", type = "message", duration = 3)
-      } else {
-        write.csv(data.frame(Message = "No comparison results available. Please run cross-validation first."), file)
-      }
+      isolate({
+        if (!is.null(analysis_results$cross_validation)) {
+          results <- analysis_results$cross_validation$comparison_metrics
+          write.csv(results, file, row.names = FALSE)
+          showNotification("Comparison results downloaded", type = "message", duration = 3)
+        } else {
+          write.csv(data.frame(Message = "No comparison results available. Please run cross-validation first."), file)
+        }
+      })
     }
   )
 
@@ -14711,13 +14713,15 @@ server <- shinyServer(function(input, output, session) {
       paste0("temporal_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".csv")
     },
     content = function(file) {
-      if (!is.null(analysis_results$temporal)) {
-        temporal_data <- analysis_results$temporal$temporal_metrics
-        write.csv(temporal_data, file, row.names = FALSE)
-        showNotification("Temporal data downloaded", type = "message", duration = 3)
-      } else {
-        write.csv(data.frame(Message = "No temporal analysis results available. Please run analysis first."), file)
-      }
+      isolate({
+        if (!is.null(analysis_results$temporal)) {
+          temporal_data <- analysis_results$temporal$temporal_metrics
+          write.csv(temporal_data, file, row.names = FALSE)
+          showNotification("Temporal data downloaded", type = "message", duration = 3)
+        } else {
+          write.csv(data.frame(Message = "No temporal analysis results available. Please run analysis first."), file)
+        }
+      })
     }
   )
 
@@ -19839,7 +19843,7 @@ server <- shinyServer(function(input, output, session) {
 
       example_texts <- texts[closest_indices]
 
-      output$quote_table <- DT::renderDataTable({
+      output$embedding_quote_table <- DT::renderDataTable({
         data.frame(
           `Document ID` = closest_indices,
           `Example Text` = substr(example_texts, 1, 500),
@@ -20415,8 +20419,9 @@ server <- shinyServer(function(input, output, session) {
       paste0("generated_", content_type, "_", Sys.Date(), ".csv")
     },
     content = function(file) {
-      req(generated_content())
-      utils::write.csv(generated_content(), file, row.names = FALSE)
+      gc <- isolate(generated_content())
+      req(gc)
+      utils::write.csv(gc, file, row.names = FALSE)
     }
   )
 
@@ -21664,6 +21669,6 @@ server <- shinyServer(function(input, output, session) {
 
   output$download_ai_log <- downloadHandler(
     filename = function() paste0("ai_usage_log_", Sys.Date(), ".csv"),
-    content = function(file) write.csv(ai_usage_log(), file, row.names = FALSE)
+    content = function(file) write.csv(isolate(ai_usage_log()), file, row.names = FALSE)
   )
 })

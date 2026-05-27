@@ -4178,7 +4178,7 @@ word_co_occurrence_network <- function(dfm_object,
 
   build_network_plot <- function(data, group_level = NULL, local_co_occur_n = NULL,
                                  local_top_node_n = NULL, panel_width = NULL, panel_height = NULL) {
-    if (!is.null(seed)) set.seed(seed)
+    if (!is.null(seed)) withr::local_seed(seed)
     eff_co_occur_n <- local_co_occur_n %||% co_occur_n
     eff_top_node_n <- local_top_node_n %||% top_node_n
 
@@ -4451,7 +4451,7 @@ word_correlation_network <- function(dfm_object,
   build_network_plot <- function(data, group_level = NULL, local_common_term_n = NULL,
                                  local_corr_n = NULL, local_top_node_n = NULL,
                                  panel_width = NULL, panel_height = NULL) {
-    if (!is.null(seed)) set.seed(seed)
+    if (!is.null(seed)) withr::local_seed(seed)
     eff_common_term_n <- local_common_term_n %||% common_term_n
     eff_corr_n <- local_corr_n %||% corr_n
     eff_top_node_n <- local_top_node_n %||% top_node_n
