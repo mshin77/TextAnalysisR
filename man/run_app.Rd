@@ -19,7 +19,6 @@ Launch the TextAnalysisR Shiny application.
 }
 \examples{
 if (interactive()) {
-  library(TextAnalysisR)
   run_app()
 }
 
