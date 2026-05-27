@@ -15,22 +15,45 @@ suppressPackageStartupMessages({
   library(quanteda)
 })
 
-options(shiny.maxRequestSize = 100 * 1024^2)
-options(shiny.timeout = 300)
+.old_app_options <- options(
+  shiny.maxRequestSize = 100 * 1024^2,
+  shiny.timeout = 300,
+  digits = 4,
+  scipen = 999
+)
 
-options(digits = 4)
-options(scipen = 999)
+shiny::onStop(function() {
+  options(.old_app_options)
+})
 
 server <- shinyServer(function(input, output, session) {
-  options(shiny.error = function() {
+  .old_session_options <- options(shiny.error = function() {
     TextAnalysisR:::show_error_notification("An unexpected error occurred. Please try again or contact support.")
   })
 
-  onStop(function() {
-    gc(verbose = FALSE)
+  session$onSessionEnded(function() {
+    options(.old_session_options)
   })
 
   user_requests <- reactiveVal(list())
+
+  entity_color_map_js <- paste(
+    "  var colors = {",
+    "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
+    "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
+    "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
+    "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
+    "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
+    "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
+    "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
+    "    'TECHNOLOGY': '#FF9800',",
+    "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
+    "  };",
+    "  if (window.customEntityColors) {",
+    "    Object.assign(colors, window.customEntityColors);",
+    "  }",
+    sep = "\n"
+  )
 
   # Lazy-load Topic Modeling tab on first visit
   topic_tab_loaded <- reactiveVal(FALSE)
@@ -76,14 +99,17 @@ server <- shinyServer(function(input, output, session) {
     })
   }
 
-  is_web <- TextAnalysisR:::check_web_deployment()
-  is_docker <- TextAnalysisR:::check_docker_deployment()
-  is_remote <- is_web || is_docker
-
   ai_config <- reactiveValues(
     openai_api_key = if (is_remote) "" else Sys.getenv("OPENAI_API_KEY"),
     gemini_api_key = if (is_remote) "" else Sys.getenv("GEMINI_API_KEY")
   )
+
+  session$onSessionEnded(function() {
+    isolate({
+      ai_config$openai_api_key <- ""
+      ai_config$gemini_api_key <- ""
+    })
+  })
 
   get_api_key <- function(provider, feature_key = NULL) {
     if (!is.null(feature_key) && nzchar(feature_key)) return(feature_key)
@@ -128,7 +154,15 @@ server <- shinyServer(function(input, output, session) {
     })
   }
 
-  observe({
+  observeEvent({
+    list(
+      input$embedding_openai_api_key, input$rag_openai_api_key,
+      input$cluster_openai_api_key, input$llm_sentiment_openai_api_key,
+      input$stm_label_openai_api_key, input$k_rec_openai_api_key,
+      input$content_openai_api_key,
+      input$topic_embedding_openai_api_key, input$openai_api_key, input$global_openai_api_key
+    )
+  }, {
     keys <- c(
       input$embedding_openai_api_key, input$rag_openai_api_key,
       input$cluster_openai_api_key, input$llm_sentiment_openai_api_key,
@@ -138,9 +172,18 @@ server <- shinyServer(function(input, output, session) {
     )
     valid <- keys[!is.null(keys) & nzchar(keys)]
     if (length(valid) > 0) ai_config$openai_api_key <- valid[1]
-  })
+  }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
-  observe({
+  observeEvent({
+    list(
+      input$embedding_gemini_api_key, input$rag_gemini_api_key,
+      input$cluster_gemini_api_key, input$llm_sentiment_gemini_api_key,
+      input$stm_label_gemini_api_key, input$k_rec_gemini_api_key,
+      input$content_gemini_api_key,
+      input$topic_embedding_gemini_api_key, input$global_gemini_api_key,
+      input$gemini_vision_api_key
+    )
+  }, {
     keys <- c(
       input$embedding_gemini_api_key, input$rag_gemini_api_key,
       input$cluster_gemini_api_key, input$llm_sentiment_gemini_api_key,
@@ -151,7 +194,7 @@ server <- shinyServer(function(input, output, session) {
     )
     valid <- keys[!is.null(keys) & nzchar(keys)]
     if (length(valid) > 0) ai_config$gemini_api_key <- valid[1]
-  })
+  }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
   output$has_openai_key <- reactive({ nzchar(ai_config$openai_api_key %||% "") })
   outputOptions(output, "has_openai_key", suspendWhenHidden = FALSE)
@@ -786,15 +829,7 @@ server <- shinyServer(function(input, output, session) {
                   }
                 },
                 error = function(e) {
-                  tryCatch(
-                    {
-                      example_data <- get("SpecialEduTech", envir = asNamespace("TextAnalysisR"))
-                    },
-                    error = function(e) {
-                      library(TextAnalysisR)
-                      example_data <- SpecialEduTech
-                    }
-                  )
+                  example_data <- get("SpecialEduTech", envir = asNamespace("TextAnalysisR"))
                 }
               )
             }
@@ -4267,6 +4302,7 @@ server <- shinyServer(function(input, output, session) {
 
     raw_data <- sub("^data:[^;]*;base64,", "", dataurl)
     tmp <- tempfile(fileext = paste0(".", tools::file_ext(file_name)))
+    on.exit(unlink(tmp), add = TRUE)
     writeBin(jsonlite::base64_dec(raw_data), tmp)
     file_path <- tmp
 
@@ -5501,28 +5537,16 @@ server <- shinyServer(function(input, output, session) {
             list(targets = "_all", className = "dt-center"),
             list(
               targets = 1,
-              render = DT::JS(
+              render = DT::JS(paste(
                 "function(data, type, row, meta) {",
                 "  if (type !== 'display') return data;",
                 "  if (!data || data === '') return '';",
-                "  var colors = {",
-                "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-                "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
-                "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
-                "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
-                "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
-                "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-                "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
-                "    'TECHNOLOGY': '#FF9800',",
-                "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
-                "  };",
-                "  if (window.customEntityColors) {",
-                "    Object.assign(colors, window.customEntityColors);",
-                "  }",
+                entity_color_map_js,
                 "  var color = colors[data] || '#757575';",
                 "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px;\">' + data + '</span>';",
-                "}"
-              )
+                "}",
+                sep = "\n"
+              ))
             )
           )
         ),
@@ -5555,28 +5579,16 @@ server <- shinyServer(function(input, output, session) {
               list(targets = "_all", className = "dt-center"),
               list(
                 targets = 1,
-                render = DT::JS(
+                render = DT::JS(paste(
                   "function(data, type, row, meta) {",
                   "  if (type !== 'display') return data;",
                   "  if (!data || data === '') return '';",
-                  "  var colors = {",
-                  "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-                  "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
-                  "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
-                  "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
-                  "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
-                  "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-                  "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
-                  "    'TECHNOLOGY': '#FF9800',",
-                  "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
-                  "  };",
-                  "  if (window.customEntityColors) {",
-                  "    Object.assign(colors, window.customEntityColors);",
-                  "  }",
+                  entity_color_map_js,
                   "  var color = colors[data] || '#757575';",
                   "  return '<span style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px;\">' + data + '</span>';",
-                  "}"
-                )
+                  "}",
+                  sep = "\n"
+                ))
               )
             )
           ),
@@ -5726,29 +5738,17 @@ server <- shinyServer(function(input, output, session) {
           list(targets = "_all", className = "dt-center"),
           list(
             targets = -1,
-            render = DT::JS(
+            render = DT::JS(paste(
               "function(data, type, row, meta) {",
               "  if (type !== 'display') return data;",
               "  if (!data || data === '') return '';",
-              "  var colors = {",
-              "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-              "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
-              "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
-              "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
-              "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
-              "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-              "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
-              "    'TECHNOLOGY': '#FF9800',",
-              "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
-              "  };",
-              "  if (window.customEntityColors) {",
-              "    Object.assign(colors, window.customEntityColors);",
-              "  }",
+              entity_color_map_js,
               "  var color = colors[data] || '#757575';",
               "  var lemma = row[row.length - 2] || '';",
               "  return '<span class=\"entity-badge\" data-entity=\"' + data + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px; cursor: pointer;\" title=\"Click to edit\">' + data + '</span>';",
-              "}"
-            )
+              "}",
+              sep = "\n"
+            ))
           )
         )
       ),
@@ -8156,21 +8156,16 @@ server <- shinyServer(function(input, output, session) {
   })
 
   tstat_freq_over_con_var <- reactive({
-    dfm_to_use <- NULL
-
-    tryCatch({
-      dfm_to_use <- dfm_outcome()
-    }, error = function(e) {
-      tryCatch({
-        dfm_to_use <<- dfm_final()
-      }, error = function(e2) {
-        tryCatch({
-          dfm_to_use <<- dfm_init()
-        }, error = function(e3) {
-          dfm_to_use <<- NULL
-        })
-      })
-    })
+    dfm_to_use <- tryCatch(
+      dfm_outcome(),
+      error = function(e) tryCatch(
+        dfm_final(),
+        error = function(e2) tryCatch(
+          dfm_init(),
+          error = function(e3) NULL
+        )
+      )
+    )
 
     req(dfm_to_use)
 
@@ -8205,21 +8200,16 @@ server <- shinyServer(function(input, output, session) {
 
         vm <- isolate(input$type_terms)
         if (!is.null(vm)) {
-          dfm_to_use <- NULL
-
-          tryCatch({
-            dfm_to_use <- dfm_outcome()
-          }, error = function(e) {
-            tryCatch({
-              dfm_to_use <<- dfm_final()
-            }, error = function(e2) {
-              tryCatch({
-                dfm_to_use <<- dfm_init()
-              }, error = function(e3) {
-                dfm_to_use <<- NULL
-              })
-            })
-          })
+          dfm_to_use <- tryCatch(
+            dfm_outcome(),
+            error = function(e) tryCatch(
+              dfm_final(),
+              error = function(e2) tryCatch(
+                dfm_init(),
+                error = function(e3) NULL
+              )
+            )
+          )
 
           req(dfm_to_use)
 
@@ -9630,17 +9620,13 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$run_readability_analysis, {
     req(united_tbl())
 
-    dfm_to_use <- NULL
-
-    tryCatch({
-      dfm_to_use <- dfm_final()
-    }, error = function(e) {
-      tryCatch({
-        dfm_to_use <<- dfm_init()
-      }, error = function(e2) {
-        dfm_to_use <<- NULL
-      })
-    })
+    dfm_to_use <- tryCatch(
+      dfm_final(),
+      error = function(e) tryCatch(
+        dfm_init(),
+        error = function(e2) NULL
+      )
+    )
 
     if (is.null(dfm_to_use)) {
       output$dfm_required_message <- renderPrint({
@@ -10058,18 +10044,13 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$run_log_odds, {
-    # Check for DFM
-    dfm_to_use <- NULL
-
-    tryCatch({
-      dfm_to_use <- dfm_final()
-    }, error = function(e) {
-      tryCatch({
-        dfm_to_use <<- dfm_init()
-      }, error = function(e2) {
-        dfm_to_use <<- NULL
-      })
-    })
+    dfm_to_use <- tryCatch(
+      dfm_final(),
+      error = function(e) tryCatch(
+        dfm_init(),
+        error = function(e2) NULL
+      )
+    )
 
     if (is.null(dfm_to_use)) {
       TextAnalysisR:::show_error_notification("Please create a DFM in the Preprocess tab first.")
@@ -10267,21 +10248,16 @@ server <- shinyServer(function(input, output, session) {
 
   # Update term choices based on DFM (same source as Frequency Trends)
   observe({
-    dfm_to_use <- NULL
-
-    tryCatch({
-      dfm_to_use <- dfm_outcome()
-    }, error = function(e) {
-      tryCatch({
-        dfm_to_use <<- dfm_final()
-      }, error = function(e2) {
-        tryCatch({
-          dfm_to_use <<- dfm_init()
-        }, error = function(e3) {
-          dfm_to_use <<- NULL
-        })
-      })
-    })
+    dfm_to_use <- tryCatch(
+      dfm_outcome(),
+      error = function(e) tryCatch(
+        dfm_final(),
+        error = function(e2) tryCatch(
+          dfm_init(),
+          error = function(e3) NULL
+        )
+      )
+    )
 
     if (!is.null(dfm_to_use)) {
       tstat_freq <- quanteda.textstats::textstat_frequency(dfm_to_use)
@@ -10414,17 +10390,13 @@ server <- shinyServer(function(input, output, session) {
   )
 
   observeEvent(input$run_keyword_extraction, {
-    dfm_to_use <- NULL
-
-    tryCatch({
-      dfm_to_use <- dfm_final()
-    }, error = function(e) {
-      tryCatch({
-        dfm_to_use <<- dfm_init()
-      }, error = function(e2) {
-        dfm_to_use <<- NULL
-      })
-    })
+    dfm_to_use <- tryCatch(
+      dfm_final(),
+      error = function(e) tryCatch(
+        dfm_init(),
+        error = function(e2) NULL
+      )
+    )
 
     if (is.null(dfm_to_use)) {
       output$keywords_extraction_required_message <- renderPrint({
@@ -21687,8 +21659,4 @@ server <- shinyServer(function(input, output, session) {
     filename = function() paste0("ai_usage_log_", Sys.Date(), ".csv"),
     content = function(file) write.csv(ai_usage_log(), file, row.names = FALSE)
   )
-
-  session$onSessionEnded(function() {
-    stopApp()
-  })
 })

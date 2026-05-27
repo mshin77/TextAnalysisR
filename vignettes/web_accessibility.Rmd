@@ -11,6 +11,10 @@ vignette: >
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 ```
 
+```{r, eval = TRUE}
+library(TextAnalysisR)
+```
+
 TextAnalysisR meets WCAG 2.1 Level AA standards.
 
 ## Keyboard Navigation

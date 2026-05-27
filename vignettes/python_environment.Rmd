@@ -11,6 +11,11 @@ vignette: >
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 ```
 
+```{r, eval = TRUE}
+library(TextAnalysisR)
+requireNamespace("reticulate", quietly = TRUE)
+```
+
 Python enables features: NLP with spaCy, embeddings, and neural sentiment analysis.
 
 ## Quick Setup

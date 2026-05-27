@@ -8,21 +8,21 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
 TextAnalysisR provides text analysis through an interactive Shiny app or R code.
 
 ## Install
 
-```{r}
+```{r, eval = FALSE}
 install.packages("TextAnalysisR",
   repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
 ## Launch App
 
-```{r}
+```{r, eval = FALSE}
 library(TextAnalysisR)
 run_app()
 ```
@@ -34,17 +34,12 @@ Or visit [textanalysisr.org](https://www.textanalysisr.org) for the web version.
 ```{r}
 library(TextAnalysisR)
 
-# Load data
 mydata <- SpecialEduTech
-
-# Combine text columns
 united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
 
-# Preprocess
 tokens <- prep_texts(united_tbl, text_field = "united_texts")
 dfm_object <- quanteda::dfm(tokens)
 
-# Visualize
 plot_word_frequency(dfm_object, n = 20)
 ```
 

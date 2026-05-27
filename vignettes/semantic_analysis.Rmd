@@ -15,7 +15,7 @@ Semantic analysis finds patterns of meaning using embeddings and neural networks
 
 ## Setup
 
-```{r}
+```{r, eval = TRUE}
 library(TextAnalysisR)
 
 mydata <- SpecialEduTech

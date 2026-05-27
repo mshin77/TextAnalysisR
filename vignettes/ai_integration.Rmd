@@ -11,6 +11,11 @@ vignette: >
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 ```
 
+```{r, eval = TRUE}
+library(TextAnalysisR)
+check_ollama()
+```
+
 TextAnalysisR provides AI features via local and web-based providers.
 
 ## Providers

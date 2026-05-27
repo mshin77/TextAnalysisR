@@ -482,12 +482,9 @@ reduce_dimensions <- function(data_matrix,
     message("Starting dimensionality reduction with method: ", method)
   }
 
-  old_seed <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv) else NULL
-  on.exit(if (!is.null(old_seed)) assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
-  set.seed(seed)
   start_time <- Sys.time()
 
-  tryCatch({
+  withr::with_seed(seed, tryCatch({
     if (verbose) message("Performing PCA preprocessing...")
 
     col_vars <- apply(data_matrix, 2, var, na.rm = TRUE)
@@ -626,7 +623,7 @@ reduce_dimensions <- function(data_matrix,
 
   }, error = function(e) {
     stop("Error in dimensionality reduction analysis: ", e$message)
-  })
+  }))
 }
 
 #' @title Embedding-based Document Clustering
@@ -716,12 +713,9 @@ cluster_embeddings <- function(data_matrix,
     message("Starting clustering analysis with method: ", method)
   }
 
-  old_seed <- if (exists(".Random.seed", envir = .GlobalEnv)) get(".Random.seed", envir = .GlobalEnv) else NULL
-  on.exit(if (!is.null(old_seed)) assign(".Random.seed", old_seed, envir = .GlobalEnv), add = TRUE)
-  set.seed(seed)
   start_time <- Sys.time()
 
-  tryCatch({
+  withr::with_seed(seed, tryCatch({
     result <- switch(method,
       "umap_dbscan" = {
         if (verbose) message("Performing UMAP + DBSCAN clustering...")
@@ -937,7 +931,7 @@ cluster_embeddings <- function(data_matrix,
 
   }, error = function(e) {
     stop("Error in clustering analysis: ", e$message)
-  })
+  }))
 }
 
 #' @title Generate Embeddings

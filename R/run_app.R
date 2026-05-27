@@ -13,7 +13,6 @@
 #'
 #' @examples
 #' if (interactive()) {
-#'   library(TextAnalysisR)
 #'   run_app()
 #' }
 #'

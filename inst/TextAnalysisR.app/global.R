@@ -1,3 +1,7 @@
+is_web <- TextAnalysisR:::check_web_deployment()
+is_docker <- TextAnalysisR:::check_docker_deployment()
+is_remote <- is_web || is_docker
+
 .password_input <- function(inputId, label, value = "", placeholder = NULL) {
   pw <- shiny::passwordInput(inputId, label, value = value, placeholder = placeholder)
   pw$children <- lapply(pw$children, function(ch) {

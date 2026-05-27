@@ -41,7 +41,8 @@ Imports:
     tidyr,
     tidytext,
     visNetwork,
-    widyr
+    widyr,
+    withr
 Suggests:
     aricode,
     tidylo,
@@ -53,13 +54,11 @@ Suggests:
     dbscan,
     digest,
     dotenv,
-    ggraph,
     httr,
     jsonlite,
     knitr,
     markdown,
     MASS,
-    mclust,
     moments,
     numform,
     officer,
@@ -77,7 +76,6 @@ Suggests:
     shinyBS,
     shinybusy,
     shinyjs,
-    shinyWidgets,
     spelling,
     stm,
     stopwords,
@@ -86,7 +84,6 @@ Suggests:
     testthat (>= 3.0.0),
     textdata,
     umap,
-    ggrepel,
     plotly
 Depends: R (>= 4.0)
 SystemRequirements: Python (>= 3.8) for spaCy lemmatization and

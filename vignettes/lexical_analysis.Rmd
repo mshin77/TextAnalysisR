@@ -15,7 +15,7 @@ Lexical analysis examines word patterns and frequencies.
 
 ## Setup
 
-```{r}
+```{r, eval = TRUE}
 library(TextAnalysisR)
 
 mydata <- SpecialEduTech
@@ -26,7 +26,7 @@ dfm_object <- quanteda::dfm(tokens)
 
 ## Word Frequency
 
-```{r}
+```{r, eval = TRUE}
 plot_word_frequency(dfm_object, n = 20)
 ```
 
@@ -67,7 +67,7 @@ N-grams are sequences of consecutive words that frequently appear together. They
 
 **Usage:** Set minimum frequency (how often phrases appear) and lambda (collocation strength) to detect meaningful multi-word expressions. The function returns a collocations table; pass it to `quanteda::tokens_compound()` to merge phrases into the tokens object.
 
-```{r}
+```{r, eval = FALSE}
 compounds <- detect_multi_words(tokens, min_count = 10)
 tokens <- quanteda::tokens_compound(tokens, compounds)
 ```
@@ -103,7 +103,7 @@ Morphological analysis extracts grammatical features from words. Uses Python spa
 | Person | Grammatical person | 1, 2, 3 |
 | Case | Grammatical case | Nom, Acc, Dat, Gen |
 
-```{r}
+```{r, eval = FALSE}
 parsed <- extract_pos_tags(united_tbl$united_texts)
 # Returns columns: doc_id, token, lemma, pos, tag
 ```
@@ -160,7 +160,7 @@ plot_log_odds_ratio(log_odds)
 
 For publication-quality analysis, use the weighted log odds method which accounts for sampling variability by weighting results with z-scores. This method identifies words that reliably distinguish between groups, not just rare words with extreme ratios.
 
-```{r}
+```{r, eval = FALSE}
 # Requires tidylo package: install.packages("tidylo")
 weighted_odds <- calculate_weighted_log_odds(
   dfm_object,

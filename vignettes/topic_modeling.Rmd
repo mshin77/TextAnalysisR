@@ -15,7 +15,7 @@ Topic modeling discovers hidden themes in text collections via STM or embedding-
 
 ## Setup
 
-```{r}
+```{r, eval = TRUE}
 library(TextAnalysisR)
 
 mydata <- SpecialEduTech
