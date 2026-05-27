@@ -5634,13 +5634,12 @@ server <- shinyServer(function(input, output, session) {
     entity_detail <- entity_detail %>%
       dplyr::left_join(doc_number_mapping, by = "doc_id")
 
-    # Add Document ID if selected
     if (!is.null(input$ner_doc_id_var) && input$ner_doc_id_var != "") {
       doc_vars <- quanteda::docvars(tokens_obj)
       if (!is.null(doc_vars) && input$ner_doc_id_var %in% names(doc_vars)) {
         doc_id_mapping <- data.frame(
           doc_id = all_doc_ids,
-          `Document ID` = doc_vars[[input$ner_doc_id_var]],
+          `Document ID` = .clean_doc_id_label(doc_vars[[input$ner_doc_id_var]]),
           stringsAsFactors = FALSE,
           check.names = FALSE
         )
@@ -9219,7 +9218,8 @@ server <- shinyServer(function(input, output, session) {
       if (!is.null(input$sentiment_doc_id_var) && input$sentiment_doc_id_var != "" &&
           input$sentiment_doc_id_var != "None" && input$sentiment_doc_id_var %in% names(sentiment_results$original_data)) {
         doc_ids <- .clean_doc_id_label(sentiment_results$original_data[[input$sentiment_doc_id_var]])
-        doc_table$`Document ID` <- doc_ids[doc_table$document]
+        doc_idx <- suppressWarnings(as.integer(doc_table$document))
+        doc_table$`Document ID` <- doc_ids[doc_idx]
 
         doc_table <- doc_table %>%
           select(Document, `Document ID`, Sentiment = sentiment, Score)
@@ -10725,7 +10725,11 @@ server <- shinyServer(function(input, output, session) {
 
         if (!is.null(input$doc_date_var) && input$doc_date_var != "" && input$doc_date_var != "None" &&
             input$doc_date_var %in% names(data)) {
-          doc_summary$date <- as.Date(doc_summary[[input$doc_date_var]])
+          raw_date <- doc_summary[[input$doc_date_var]]
+          doc_summary$date <- suppressWarnings(as.Date(
+            raw_date,
+            tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%m/%d/%Y", "%d/%m/%Y", "%m-%d-%Y", "%d-%m-%Y")
+          ))
           documents_data_reactive$has_dates <- TRUE
           documents_data_reactive$date_column <- input$doc_date_var
         } else {
@@ -21371,7 +21375,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$stm_effect_download_table <- downloadHandler(
     filename = function() {
-      paste0(ifelse(is.null(input$file) || input$file == "", "estimated regression data", input$file), ".xlsx")
+      paste0("estimated_regression_data_", Sys.Date(), ".xlsx")
     },
     content = function(file) {
       if (is.null(stm_effect_estimates())) {
