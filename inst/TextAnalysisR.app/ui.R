@@ -286,7 +286,7 @@ ui <- fluidPage(
             div(
               style = "padding: 30px 20px;",
               tags$h5(HTML("<strong>AI Features Overview</strong>"), style = "color: #4269BF; margin-bottom: 16px;"),
-              tags$p(style = "font-size: 16px; color: #64748B; margin-bottom: 20px;",
+              tags$p(style = "font-size: 16px; color: #475569; margin-bottom: 20px;",
                 "Configure API keys in the sidebar, then use AI features across the app. Usage is logged here for reproducibility."),
               tags$table(
                 class = "table table-bordered",
@@ -649,7 +649,7 @@ Supports:
                       "Select columns and click ",
                       tags$strong("'Apply'", style = "color: #4269BF;"),
                       " to unite text columns",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -673,7 +673,7 @@ Supports:
                       "Configure options and click ",
                       tags$strong("'Apply'", style = "color: #4269BF;"),
                       " to tokenize texts",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -716,7 +716,7 @@ Supports:
                       "Select stopwords and click ",
                       tags$strong("'Apply'", style = "color: #4269BF;"),
                       " to remove common words",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -748,7 +748,7 @@ Supports:
                           "Configure settings and click ",
                           tags$strong("'Apply'", style = "color: #4269BF;"),
                           " to detect multi-words",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -787,7 +787,7 @@ Supports:
                           "Select n-grams and click ",
                           tags$strong("'Apply'", style = "color: #4269BF;"),
                           " to compound multi-words",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -832,7 +832,7 @@ Supports:
                       "Click ",
                       tags$strong("'Process'", style = "color: #4269BF;"),
                       " to create document-feature matrix",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -924,7 +924,7 @@ Supports:
             ),
             tags$p(
               "Run POS tagging first, then select features to analyze.",
-              style = "font-size: 16px; color: #64748B; margin-bottom: 10px;"
+              style = "font-size: 16px; color: #475569; margin-bottom: 10px;"
             ),
             uiOutput("morph_status_ui"),
             checkboxGroupInput(
@@ -1121,7 +1121,7 @@ Supports:
               ),
               tags$p(
                 "Scales scores to 0-1 range.",
-                style = "font-size: 16px; color: #64748B; margin-top: -5px; margin-bottom: 10px;"
+                style = "font-size: 16px; color: #475569; margin-top: -5px; margin-bottom: 10px;"
               )
             ),
             conditionalPanel(
@@ -1143,7 +1143,7 @@ Supports:
               ),
               tags$p(
                 "Finds words used significantly more in one group vs others.",
-                style = "font-size: 16px; color: #64748B; margin-top: -5px; margin-bottom: 10px;"
+                style = "font-size: 16px; color: #475569; margin-top: -5px; margin-bottom: 10px;"
               )
             ),
             conditionalPanel(
@@ -1165,7 +1165,7 @@ Supports:
             tags$h5(HTML("<strong>Log Odds Ratio Analysis</strong>"), style = "color: #4269BF; margin-bottom: 10px;"),
             tags$p(
               "Compare word frequencies between categories to identify distinctive terms.",
-              style = "font-size: 16px; color: #64748B; margin-bottom: 10px;"
+              style = "font-size: 16px; color: #475569; margin-bottom: 10px;"
             ),
             selectizeInput(
               "log_odds_group_var",
@@ -1229,7 +1229,7 @@ Supports:
             tags$h5(HTML("<strong>Lexical Dispersion</strong>"), style = "color: #4269BF; margin-bottom: 10px;"),
             tags$p(
               "Visualize where selected terms appear across documents in your corpus.",
-              style = "font-size: 16px; color: #64748B; margin-bottom: 10px;"
+              style = "font-size: 16px; color: #475569; margin-bottom: 10px;"
             ),
             selectizeInput(
               "dispersion_terms",
@@ -1304,14 +1304,14 @@ Supports:
                   tags$summary(style = "cursor: pointer; font-weight: 600; font-size: 16px;", "People & Places"),
                   div(
                     style = "padding: 8px 0 0 8px;",
-                    checkboxGroupInput("ner_named", NULL, inline = FALSE,
+                    checkboxGroupInput("ner_named", HTML("<span class='sr-only'>Named entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' data-entity='PERSON' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#e91e63;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERSON</span> <span style='color:#64748B;'>- People, including fictional</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='NORP' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ff8f00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>NORP</span> <span style='color:#64748B;'>- Nationalities, religious/political groups</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='ORG' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#1565c0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORG</span> <span style='color:#64748B;'>- Companies, agencies, institutions</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='GPE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#2e7d32;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>GPE</span> <span style='color:#64748B;'>- Countries, cities, states</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='LOC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#0277bd;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LOC</span> <span style='color:#64748B;'>- Non-GPE locations, mountains, water bodies</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='FAC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9e9d24;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>FAC</span> <span style='color:#64748B;'>- Buildings, airports, highways, bridges</span>")
+                        HTML("<span class='sidebar-color-picker' data-entity='PERSON' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#e91e63;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERSON</span> <span style='color:#475569;'>- People, including fictional</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='NORP' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ff8f00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>NORP</span> <span style='color:#475569;'>- Nationalities, religious/political groups</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='ORG' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#1565c0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORG</span> <span style='color:#475569;'>- Companies, agencies, institutions</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='GPE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#2e7d32;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>GPE</span> <span style='color:#475569;'>- Countries, cities, states</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='LOC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#0277bd;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LOC</span> <span style='color:#475569;'>- Non-GPE locations, mountains, water bodies</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='FAC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9e9d24;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>FAC</span> <span style='color:#475569;'>- Buildings, airports, highways, bridges</span>")
                       ),
                       choiceValues = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC"),
                       selected = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC")
@@ -1323,13 +1323,13 @@ Supports:
                   tags$summary(style = "cursor: pointer; font-weight: 600; font-size: 16px;", "Objects & Events"),
                   div(
                     style = "padding: 8px 0 0 8px;",
-                    checkboxGroupInput("ner_objects", NULL, inline = FALSE,
+                    checkboxGroupInput("ner_objects", HTML("<span class='sr-only'>Object and event entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' data-entity='PRODUCT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5060D5;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PRODUCT</span> <span style='color:#64748B;'>- Objects, vehicles, foods, etc.</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='EVENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c62828;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>EVENT</span> <span style='color:#64748B;'>- Named hurricanes, battles, wars, sports</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#734FE2;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#64748B;'>- Titles of books, songs, etc.</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#03786A;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#64748B;'>- Named documents made into laws</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#558b2f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#64748B;'>- Any named language</span>")
+                        HTML("<span class='sidebar-color-picker' data-entity='PRODUCT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5060D5;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PRODUCT</span> <span style='color:#475569;'>- Objects, vehicles, foods, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='EVENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c62828;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>EVENT</span> <span style='color:#475569;'>- Named hurricanes, battles, wars, sports</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#734FE2;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#475569;'>- Titles of books, songs, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#03786A;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#475569;'>- Named documents made into laws</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#558b2f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#475569;'>- Any named language</span>")
                       ),
                       choiceValues = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE"),
                       selected = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE")
@@ -1341,15 +1341,15 @@ Supports:
                   tags$summary(style = "cursor: pointer; font-weight: 600; font-size: 16px;", "Numeric & Temporal"),
                   div(
                     style = "padding: 8px 0 0 8px;",
-                    checkboxGroupInput("ner_numeric", NULL, inline = FALSE,
+                    checkboxGroupInput("ner_numeric", HTML("<span class='sr-only'>Numeric and temporal entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ef6c00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#64748B;'>- Absolute or relative dates/periods</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#d84315;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#64748B;'>- Times smaller than a day</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9C3AD7;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#64748B;'>- Monetary values including unit</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='PERCENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00838f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERCENT</span> <span style='color:#64748B;'>- Percentage including %</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#78909c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#64748B;'>- Measurements (weight, distance)</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#866358;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#64748B;'>- first, second, third, etc.</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='CARDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#546e7a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>CARDINAL</span> <span style='color:#64748B;'>- Numerals not in other category</span>")
+                        HTML("<span class='sidebar-color-picker' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ef6c00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#475569;'>- Absolute or relative dates/periods</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#d84315;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#475569;'>- Times smaller than a day</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9C3AD7;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#475569;'>- Monetary values including unit</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='PERCENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00838f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERCENT</span> <span style='color:#475569;'>- Percentage including %</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#78909c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#475569;'>- Measurements (weight, distance)</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#866358;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#475569;'>- first, second, third, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' data-entity='CARDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#546e7a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>CARDINAL</span> <span style='color:#475569;'>- Numerals not in other category</span>")
                       ),
                       choiceValues = c("DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL"),
                       selected = c("DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL")
@@ -1358,7 +1358,7 @@ Supports:
                 )
               ),
               shinyjs::hidden(
-                selectizeInput("spacy_default_entities", NULL, choices = NULL)
+                selectizeInput("spacy_default_entities", HTML("<span class='sr-only'>Default spaCy entities</span>"), choices = NULL)
               )
             ),
             tags$hr(style = "margin: 15px 0; border-color: #dee2e6;"),
@@ -1433,15 +1433,15 @@ Supports:
                   style = "flex: 0 0 36px;",
                   title = "Select the entity color",
                   if (requireNamespace("colourpicker", quietly = TRUE)) {
-                    colourpicker::colourInput("custom_entity_color", NULL,
+                    colourpicker::colourInput("custom_entity_color", HTML("<span class='sr-only'>Custom entity color</span>"),
                       value = "#607D8B", showColour = "background")
                   } else {
-                    textInput("custom_entity_color", NULL, value = "#607D8B", placeholder = "#HEX")
+                    textInput("custom_entity_color", HTML("<span class='sr-only'>Custom entity color hex</span>"), value = "#607D8B", placeholder = "#HEX")
                   }
                 ),
                 div(
                   style = "flex: 1;",
-                  textInput("custom_entity_name", NULL, placeholder = "Type a New Entity")
+                  textInput("custom_entity_name", HTML("<span class='sr-only'>Custom entity name</span>"), placeholder = "Type a New Entity")
                 ),
                 div(
                   style = "flex: 0 0 auto; margin-bottom: 15px;",
@@ -1451,7 +1451,7 @@ Supports:
                     title = "Add custom entity")
                 )
               ),
-              selectizeInput("uncategorized_tokens", NULL,
+              selectizeInput("uncategorized_tokens", HTML("<span class='sr-only'>Uncategorized tokens to assign</span>"),
                 choices = NULL, selected = NULL, multiple = TRUE,
                 options = list(create = TRUE, placeholder = "Select terms for this entity")
               )
@@ -1473,9 +1473,9 @@ Supports:
               )
             ),
             shinyjs::hidden(
-              selectizeInput("entity_type_filter", NULL, choices = NULL),
-              textAreaInput("batch_entity_text", NULL),
-              checkboxInput("batch_include_lemmas", NULL, value = TRUE),
+              selectizeInput("entity_type_filter", HTML("<span class='sr-only'>Entity type filter</span>"), choices = NULL),
+              textAreaInput("batch_entity_text", HTML("<span class='sr-only'>Batch entity text input</span>")),
+              checkboxInput("batch_include_lemmas", HTML("<span class='sr-only'>Include lemmas in batch</span>"), value = TRUE),
               actionButton("add_custom_entity_type", ""),
               actionButton("tab_type", ""),
               actionButton("tab_upload", ""),
@@ -1483,7 +1483,7 @@ Supports:
               actionButton("add_batch_entities_bottom", ""),
               actionButton("process_codebook", ""),
               actionButton("process_codebook_bottom", ""),
-              fileInput("codebook_upload", NULL)
+              fileInput("codebook_upload", HTML("<span class='sr-only'>Upload codebook file</span>"))
             ),
             tags$script(HTML("
               $(document).on('click', '.sidebar-color-picker', function(e) {
@@ -1561,7 +1561,7 @@ Supports:
                           " to run spaCy linguistic analysis, or ",
                           tags$strong("'Skip'", style = "color: #4269BF;"),
                           " to use standard tokenization.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -1593,7 +1593,7 @@ Supports:
                           " on the Word Forms tab to run spaCy analysis. Then configure and click ",
                           tags$strong("'Apply'", style = "color: #4269BF;"),
                           " here to view POS tags.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -1620,7 +1620,7 @@ Supports:
                           "First, run POS tagging on the Word Forms tab. Then select morphological features in the sidebar and click ",
                           tags$strong("'Analyze Morphology'", style = "color: #4269BF;"),
                           " to extract features.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -1668,7 +1668,7 @@ Supports:
                             div(style = "max-width: 400px; margin: 0 auto;",
                               tags$i(class = "fa fa-language", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", `aria-hidden` = "true"),
                               tags$p("Select Case, Mood, or Aspect checkboxes from the sidebar to display additional morphological features.",
-                                style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;")
+                                style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;")
                             )
                           )
                         )
@@ -1696,7 +1696,7 @@ Supports:
                           "Click ",
                           tags$strong("'Apply'", style = "color: #4269BF;"),
                           " on the Word Forms tab to run spaCy analysis and extract dependency parsing data.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -1735,7 +1735,7 @@ Supports:
                           "Click ",
                           tags$strong("'Apply'", style = "color: #4269BF;"),
                           " on the Word Forms tab to run spaCy analysis.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -1751,7 +1751,7 @@ Supports:
                           "Click ",
                           tags$strong("'Apply'", style = "color: #4269BF;"),
                           " to extract named entities.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                         )
                       )
                     )
@@ -1808,7 +1808,7 @@ Supports:
                       "Select terms, continuous variable, and click ",
                       tags$strong("'Plot Terms'", style = "color: #4269BF;"),
                       " to analyze frequency trends",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1864,7 +1864,7 @@ Supports:
                       "Select a grouping variable and click ",
                       tags$strong("'Calculate'", style = "color: #4269BF;"),
                       " to compare word usage between categories.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     ),
 
                   )
@@ -1892,7 +1892,7 @@ Supports:
                       "Select terms in the sidebar and click ",
                       tags$strong("'Analyze'", style = "color: #4269BF;"),
                       " to visualize their dispersion across documents.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     ),
 
                   )
@@ -2979,7 +2979,7 @@ Supports:
                       "Load data and process documents in the ",
                       tags$strong("1. Setup", style = "color: #4269BF;"),
                       " tab first",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3060,7 +3060,7 @@ Supports:
                       "Configure settings and click ",
                       tags$strong("'Plot Network'", style = "color: #4269BF;"),
                       " to visualize word co-occurrence",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3141,7 +3141,7 @@ Supports:
                       "Configure settings and click ",
                       tags$strong("'Plot Network'", style = "color: #4269BF;"),
                       " to visualize word correlation",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3161,7 +3161,7 @@ Supports:
                       "Process documents in the ",
                       tags$strong("1. Setup", style = "color: #4269BF;"),
                       " tab first",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3177,7 +3177,7 @@ Supports:
                       "Configure settings and click ",
                       tags$strong("'Calculate'", style = "color: #4269BF;"),
                       " to begin analysis",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3208,7 +3208,7 @@ Supports:
                     tags$i(class = "fa fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Upload data to enable Comparative Analysis",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3222,7 +3222,7 @@ Supports:
                     tags$i(class = "fa fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                     tags$p(
                       "Run Comparative Analysis from the sidebar to compare categories and identify unique content, gaps, and cross-category opportunities.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3242,28 +3242,28 @@ Supports:
                     "Heatmap",
                     br(),
                     tags$p("Cross-category similarity heatmap comparing reference documents against other categories.",
-                           style = "color: #64748B; font-size: 16px; margin-bottom: 10px;"),
+                           style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
                     plotly::plotlyOutput("gap_cross_category_heatmap", height = "600px")
                   ),
                   tabPanel(
                     "Unique (Reference)",
                     br(),
                     tags$p("Reference items with low similarity to all comparison categories (distinctive content).",
-                           style = "color: #64748B; font-size: 16px; margin-bottom: 10px;"),
+                           style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
                     DT::dataTableOutput("gap_unique_items")
                   ),
                   tabPanel(
                     "Missing (Comparison)",
                     br(),
                     tags$p("Comparison category items not well-covered by reference category (content gaps).",
-                           style = "color: #64748B; font-size: 16px; margin-bottom: 10px;"),
+                           style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
                     DT::dataTableOutput("gap_missing_items")
                   ),
                   tabPanel(
                     "Cross-Category",
                     br(),
                     tags$p("Items with moderate similarity - potential for cross-category learning or transfer.",
-                           style = "color: #64748B; font-size: 16px; margin-bottom: 10px;"),
+                           style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
                     DT::dataTableOutput("gap_cross_policy")
                   )
                 )
@@ -3283,7 +3283,7 @@ Supports:
                       "Process documents in the ",
                       tags$strong("1. Setup", style = "color: #4269BF;"),
                       " tab first",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -3299,7 +3299,7 @@ Supports:
                       "Enter a search query and click ",
                       tags$strong("'Search'", style = "color: #4269BF;"),
                       " to see results",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )

@@ -37,7 +37,7 @@
 
   /* Colors */
   --color-text-primary: #111827;
-  --color-text-secondary: #64748B;
+  --color-text-secondary: #475569;
   --color-text-muted: #6B7280;
   --color-heading: #4269BF;
   --color-success: #0C795A;
@@ -122,18 +122,18 @@ body {
 }
 
 [data-theme="dark"] .empty-state-icon {
-  color: #64748B;
+  color: #475569;
 }
 
 /* Fix inline icon colors for dark mode */
 [data-theme="dark"] [style*="color: #CBD5E1"],
 [data-theme="dark"] [style*="color:#CBD5E1"] {
-  color: #64748B !important;
+  color: #475569 !important;
 }
 
 /* Secondary text - ensure contrast compliance */
 .text-secondary {
-  color: #64748B;
+  color: #475569;
 }
 
 [data-theme="dark"] .text-secondary {
@@ -1794,7 +1794,7 @@ body>.skiptranslate {
   color: #8b949e !important;
 }
 
-[data-theme="dark"] [style*="color: #64748B"],
+[data-theme="dark"] [style*="color: #475569"],
 [data-theme="dark"] [style*="color: #64748b"] {
   color: #c9d1d9 !important;
 }

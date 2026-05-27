@@ -2951,7 +2951,7 @@ plot_quality_metrics <- function(search_results) {
 #' @concept topic-modeling
 #' @export
 plot_model_comparison <- function(search_results,
-                                  title = "Coherence-Exclusivity Frontier (choose K in the upper-right)",
+                                  title = NULL,
                                   height = 600,
                                   width = 800) {
 
@@ -2975,17 +2975,22 @@ plot_model_comparison <- function(search_results,
     y_values <- comparison_data$exclus
     x_label <- "Semantic Coherence"
     y_label <- "Exclusivity"
+    auto_title <- "Coherence-Exclusivity Frontier (choose K in the upper-right)"
   } else if ("semcoh" %in% names(comparison_data)) {
     x_values <- comparison_data$semcoh
     y_values <- comparison_data$residual
     x_label <- "Semantic Coherence"
     y_label <- "Residual"
+    auto_title <- "Coherence-Residual Trade-off (run searchK with heldout for exclusivity)"
   } else {
     x_values <- comparison_data$lbound
     y_values <- comparison_data$residual
     x_label <- "Lower Bound"
     y_label <- "Residual"
+    auto_title <- "Lower Bound vs Residual"
   }
+
+  if (is.null(title)) title <- auto_title
 
   k_values <- comparison_data$K
   k_normalized <- (k_values - min(k_values)) / max(1, max(k_values) - min(k_values))

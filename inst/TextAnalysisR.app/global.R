@@ -1109,7 +1109,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Configure K range and click ",
                       tags$strong("'Search K'", style = "color: #4269BF;"),
                       " to find optimal topic numbers",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1125,7 +1125,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Configure settings and click ",
                       tags$strong("'Run Model'", style = "color: #4269BF;"),
                       " to discover topics",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1196,7 +1196,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Search K, and then click ",
                       tags$strong("'Display'", style = "color: #4269BF;"),
                       " to view word-topic distributions",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1212,7 +1212,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Run model, then click ",
                       tags$strong("'Display'", style = "color: #4269BF;"),
                       " to view topic keywords",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1237,7 +1237,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Run topic modeling first, then configure settings in the sidebar and click ",
                       tags$strong("'Generate Content'", style = "color: #4269BF;"),
                       " to create content from your topics.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1307,7 +1307,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Complete ",
                       tags$strong("Word-Topic tab", style = "color: #4269BF;"),
                       " to view document-topic distributions",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1323,7 +1323,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Complete ",
                       tags$strong("Word-Topic tab", style = "color: #4269BF;"),
                       " to view document-topic distributions",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1350,7 +1350,7 @@ Focus on incorporating the most significant keywords while following the guideli
                     tags$p(
                       "Run topic model and select a topic to view ",
                       tags$strong("representative quotes", style = "color: #4269BF;"),
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1374,7 +1374,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Click ",
                       tags$strong("'Estimate'", style = "color: #4269BF;"),
                       " button to generate effect estimates",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1443,7 +1443,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Estimate effects, select categorical covariate, then click ",
                       tags$strong("'Display'", style = "color: #4269BF;"),
                       " to visualize topic prevalence by categories",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )
@@ -1512,7 +1512,7 @@ Focus on incorporating the most significant keywords while following the guideli
                       "Estimate effects, select continuous covariate, then click ",
                       tags$strong("'Display'", style = "color: #4269BF;"),
                       " to visualize topic prevalence trends",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
                     )
                   )
                 )

@@ -644,7 +644,7 @@ lexical_diversity_analysis <- function(x,
     if (mattr_requested) {
       tryCatch({
         tokens_source <- if (is_tokens_input) x else seq_tokens
-        mattr_window <- min(50, min(quanteda::ntoken(tokens_source)))
+        mattr_window <- min(window_size, min(quanteda::ntoken(tokens_source)))
 
         mattr_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
           doc_tokens <- as.character(tokens_source[[i]])

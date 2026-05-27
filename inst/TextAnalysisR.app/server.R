@@ -399,7 +399,7 @@ server <- shinyServer(function(input, output, session) {
           ),
           tags$div(
             class = "ollama-help-text",
-            style = "font-size: 16px; color: #64748B; margin-top: -8px; margin-bottom: 8px;",
+            style = "font-size: 16px; color: #475569; margin-top: -8px; margin-bottom: 8px;",
             HTML("First time? Run: <code>ollama pull llava</code>. Browse: <a href='https://ollama.com/library' target='_blank'>ollama.com/library</a>")
           )
         ),
@@ -1129,15 +1129,24 @@ server <- shinyServer(function(input, output, session) {
   output$united_table <- DT::renderDataTable(
     {
       req(input$apply)
-      united_tbl()
+      tbl <- united_tbl()
+      text_col_idx <- which(vapply(tbl, function(col) {
+        is.character(col) && mean(nchar(as.character(col)), na.rm = TRUE) > 60
+      }, logical(1))) - 1L
+      attr(tbl, "wide_text_cols") <- text_col_idx
+      tbl
     },
     rownames = FALSE,
     extensions = "Buttons",
     options = list(
       scrollX = TRUE,
-      width = "100%",
+      autoWidth = TRUE,
       dom = "Bfrtip",
-      buttons = c("copy", "csv", "excel", "pdf", "print")
+      buttons = c("copy", "csv", "excel", "pdf", "print"),
+      columnDefs = list(
+        list(targets = "_all", width = "200px"),
+        list(targets = "_all", className = "dt-top")
+      )
     )
   )
 
@@ -3513,7 +3522,7 @@ server <- shinyServer(function(input, output, session) {
           tags$li(tags$strong("Aspect:"), " Perfective (Perf), Imperfective (Imp), Progressive (Prog)")
         ),
         tags$hr(),
-        tags$p(style = "font-size: 16px; color: #64748B;",
+        tags$p(style = "font-size: 16px; color: #475569;",
           "Note: Not all features apply to all words. For example, Tense only applies to verbs."),
         tags$hr(style = "margin-top: 20px; margin-bottom: 15px;"),
         tags$div(
@@ -7760,7 +7769,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 60px 40px; text-align: center;",
         tags$p(
           "Click 'Plot Network' to generate co-occurrence network visualization.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B;"
+          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
         )
       ))
     }
@@ -7778,7 +7787,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 60px 40px; text-align: center;",
         tags$p(
           "Network centrality table will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B;"
+          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
         )
       ))
     }
@@ -7792,7 +7801,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 60px 40px; text-align: center;",
         tags$p(
           "Network statistics will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B;"
+          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
         )
       ))
     }
@@ -8109,7 +8118,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 60px 40px; text-align: center;",
         tags$p(
           "Click 'Plot Network' to generate correlation network visualization.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B;"
+          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
         )
       ))
     }
@@ -8127,7 +8136,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 60px 40px; text-align: center;",
         tags$p(
           "Network centrality table will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B;"
+          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
         )
       ))
     }
@@ -8141,7 +8150,7 @@ server <- shinyServer(function(input, output, session) {
         style = "padding: 60px 40px; text-align: center;",
         tags$p(
           "Network statistics will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B;"
+          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
         )
       ))
     }
@@ -9377,7 +9386,7 @@ server <- shinyServer(function(input, output, session) {
             "Configure settings and click ",
             tags$strong("'Analyze Sentiment'", style = "color: #4269BF;"),
             " to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -9406,7 +9415,7 @@ server <- shinyServer(function(input, output, session) {
           tags$i(class = "fa fa-layer-group", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
           tags$p(
             "Select a category variable in the sidebar to see sentiment analysis by category",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -9420,7 +9429,7 @@ server <- shinyServer(function(input, output, session) {
             "Run sentiment analysis from the ",
             tags$strong("Overall Sentiment", style = "color: #4269BF;"),
             " tab first",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -9445,7 +9454,7 @@ server <- shinyServer(function(input, output, session) {
             "Run sentiment analysis from the ",
             tags$strong("Overall Sentiment", style = "color: #4269BF;"),
             " tab first",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -9509,7 +9518,7 @@ server <- shinyServer(function(input, output, session) {
             "See ",
             tags$strong("NRC Lexicon", style = "color: #4269BF;"),
             " setup instructions in the sidebar",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -9523,7 +9532,7 @@ server <- shinyServer(function(input, output, session) {
             "Run sentiment analysis from the ",
             tags$strong("Overall Sentiment", style = "color: #4269BF;"),
             " tab first",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -9801,7 +9810,7 @@ server <- shinyServer(function(input, output, session) {
             "Configure settings and click ",
             tags$strong("'Analyze'", style = "color: #4269BF;"),
             " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -9872,7 +9881,7 @@ server <- shinyServer(function(input, output, session) {
               "Click ",
               tags$strong("'Analyze'", style = "color: #4269BF;"),
               " in the sidebar to calculate lexical diversity metrics",
-              style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+              style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
             )
           )
         )
@@ -10170,7 +10179,7 @@ server <- shinyServer(function(input, output, session) {
       div(
         style = "padding: 40px; text-align: center;",
         tags$i(class = "fa fa-info-circle", style = "font-size: 36px; color: #CBD5E1;"),
-        tags$p("No log odds data available", style = "color: #64748B; margin-top: 10px;")
+        tags$p("No log odds data available", style = "color: #475569; margin-top: 10px;")
       )
     }
   })
@@ -10568,7 +10577,7 @@ server <- shinyServer(function(input, output, session) {
             "Configure settings and click ",
             tags$strong("'Extract'", style = "color: #4269BF;"),
             " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -10593,7 +10602,7 @@ server <- shinyServer(function(input, output, session) {
             "Configure settings and click ",
             tags$strong("'Extract'", style = "color: #4269BF;"),
             " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -10652,7 +10661,7 @@ server <- shinyServer(function(input, output, session) {
             "Configure settings and click ",
             tags$strong("'Extract'", style = "color: #4269BF;"),
             " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #64748B; margin: 0;"
+            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
           )
         )
       )
@@ -11963,6 +11972,17 @@ server <- shinyServer(function(input, output, session) {
     ))
   }
 
+  observe({
+    dfm_ready <- !is.null(get_available_dfm())
+    for (id in c("stm_search", "stm_run", "stm_effect", "stm_display_cat",
+                 "stm_display_con", "stm_quote", "topic_generate_labels",
+                 "embedding_run", "embedding_display", "embedding_quote",
+                 "run_log_odds", "run_readability_analysis",
+                 "run_lexdiv_analysis", "run_keyword_extraction")) {
+      shinyjs::toggleState(id, condition = dfm_ready)
+    }
+  })
+
   get_available_tokens <- function() {
     final_tokens_result <- tryCatch(final_tokens(), error = function(e) NULL)
     if (!is.null(final_tokens_result)) {
@@ -12162,7 +12182,7 @@ server <- shinyServer(function(input, output, session) {
           step = 0.05
         ),
         tags$div(
-          style = "font-size: 16px; color: #64748B; margin-top: -8px; margin-bottom: 8px;",
+          style = "font-size: 16px; color: #475569; margin-top: -8px; margin-bottom: 8px;",
           "Higher values = fewer, stronger document connections"
         )
       )
@@ -13153,7 +13173,7 @@ server <- shinyServer(function(input, output, session) {
             tags$p(
               tags$i(class = "fa fa-info-circle", style = "margin-right: 5px; color: #337ab7;"),
               "Tip: Use 'Keyword' search method for simple text matching without similarity calculation.",
-              style = "color: #64748B; font-size: 16px; font-style: italic;"
+              style = "color: #475569; font-size: 16px; font-style: italic;"
             )
           ),
           easyClose = TRUE,
@@ -17101,7 +17121,7 @@ server <- shinyServer(function(input, output, session) {
         if (!is.na(quality_score)) {
           tags$p(
             paste0("Quality score: ", round(quality_score * 100, 1), "%"),
-            style = "margin-bottom: 5px; color: #64748B;"
+            style = "margin-bottom: 5px; color: #475569;"
           )
         },
         if (n_outliers > 0) {
@@ -17774,7 +17794,7 @@ server <- shinyServer(function(input, output, session) {
       return(tags$div(
         style = "background-color: #F1F5F9; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
         tags$small(
-          style = "color: #64748B;",
+          style = "color: #475569;",
           icon("info-circle"), " Ollama is for local use only. Use OpenAI or Gemini on the web server."
         )
       ))
@@ -17802,7 +17822,7 @@ server <- shinyServer(function(input, output, session) {
       tags$div(
         style = "background-color: #F1F5F9; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
         tags$small(
-          style = "color: #64748B;",
+          style = "color: #475569;",
           icon("info-circle"), " Ollama not detected. Install from ",
           tags$a(href = "https://ollama.com", target = "_blank", "ollama.com"),
           " for local AI features."
@@ -17831,11 +17851,11 @@ server <- shinyServer(function(input, output, session) {
 
     if (provider == "auto") {
       if (is_remote) {
-        tags$p(style = "color: #64748B; font-size: 16px;", icon("info-circle"), " Will use OpenAI or Gemini (Ollama requires local installation)")
+        tags$p(style = "color: #475569; font-size: 16px;", icon("info-circle"), " Will use OpenAI or Gemini (Ollama requires local installation)")
       } else if (ollama_available_cluster()) {
         tags$p(style = "color: #337ab7; font-size: 16px;", icon("info-circle"), " Using Ollama (local AI)")
       } else {
-        tags$p(style = "color: #64748B; font-size: 16px;", icon("info-circle"), " Will use OpenAI (requires API key). Install Ollama for local AI.")
+        tags$p(style = "color: #475569; font-size: 16px;", icon("info-circle"), " Will use OpenAI (requires API key). Install Ollama for local AI.")
       }
     }
   })
@@ -19189,7 +19209,7 @@ server <- shinyServer(function(input, output, session) {
         return(tags$div(
           class = "status-sidebar-info",
           style = "margin-bottom: 10px;",
-          tags$i(class = "fa fa-info-circle status-icon", style = "color: #64748B;"),
+          tags$i(class = "fa fa-info-circle status-icon", style = "color: #475569;"),
           tags$span("Ollama is for local use only. Use another provider on the web server.")
         ))
       }
@@ -19209,7 +19229,7 @@ server <- shinyServer(function(input, output, session) {
         tags$div(
           class = "status-sidebar-info",
           style = "margin-bottom: 10px;",
-          tags$i(class = "fa fa-info-circle status-icon", style = "color: #64748B;"),
+          tags$i(class = "fa fa-info-circle status-icon", style = "color: #475569;"),
           tags$span("Ollama not detected. Install from ollama.com for local AI features.")
         )
       }
@@ -21631,7 +21651,7 @@ server <- shinyServer(function(input, output, session) {
       return(tags$div(
         style = "background-color: #F1F5F9; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
         tags$small(
-          style = "color: #64748B;",
+          style = "color: #475569;",
           icon("info-circle"), " Ollama is for local use only. Use OpenAI or Gemini on the web server."
         )
       ))
@@ -21646,7 +21666,7 @@ server <- shinyServer(function(input, output, session) {
       )
     } else {
       tagList(
-        tags$span(style = "color: #64748B;", icon("info-circle"), " Ollama not detected"),
+        tags$span(style = "color: #475569;", icon("info-circle"), " Ollama not detected"),
         tags$p(style = "font-size: 16px; color: #666;",
           "Install from ", tags$a(href = "https://ollama.com", target = "_blank", "ollama.com"),
           " for local AI features.")
