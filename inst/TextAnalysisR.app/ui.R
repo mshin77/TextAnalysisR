@@ -118,8 +118,7 @@ ui <- fluidPage(
     class = "top-right-controls",
     tags$a(
       id = "tts_toggle",
-      href = "#",
-      tabindex = "2",
+      href = "javascript:void(0);",
       style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 26px; user-select: none;",
       `aria-label` = "Text to speech",
       title = "Text to Speech (Alt+S)",
@@ -129,7 +128,6 @@ ui <- fluidPage(
       id = "dark_mode_toggle",
       href = "javascript:void(0);",
       onclick = "toggleDarkMode()",
-      tabindex = "3",
       style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 30px;",
       `aria-label` = "Toggle dark mode",
       title = "Toggle dark mode",
@@ -139,8 +137,7 @@ ui <- fluidPage(
       style = "position: relative; display: flex; align-items: center; gap: 8px;",
       tags$a(
         id = "translate_icon",
-        href = "#",
-        tabindex = "4",
+        href = "javascript:void(0);",
         style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 26px; user-select: none;",
         `aria-label` = "Select language",
         title = "Select Language",
@@ -191,7 +188,6 @@ ui <- fluidPage(
   tags$a(
     href = "#main-content",
     class = "skip-link",
-    tabindex = "1",
     "Skip to main content"
   ),
 
@@ -213,6 +209,7 @@ ui <- fluidPage(
     navbarPage(
       "TextAnalysisR",
       id = "main_navbar",
+      collapsible = TRUE,
       tabPanel(
         "Home",
         fluidRow(
