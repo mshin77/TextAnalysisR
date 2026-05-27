@@ -721,6 +721,7 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #' @param clustering_method The clustering method for embedding-based approach: "kmeans", "hierarchical", "dbscan", "hdbscan".
 #' @param similarity_threshold The similarity threshold for topic assignment (default: 0.7).
 #' @param min_topic_size The minimum number of documents per topic (default: 3).
+#' @param min_cluster_size HDBSCAN density threshold (default `NULL` falls back to `min_topic_size`). Setting this independently lets fine-grained clusters merge into broader topics.
 #' @param cluster_selection_method HDBSCAN cluster selection method: "eom" (Excess of Mass, default) or "leaf" (finer-grained topics).
 #' @param umap_neighbors The number of neighbors for UMAP dimensionality reduction (default: 15).
 #' @param umap_min_dist The minimum distance for UMAP (default: 0.0). Use 0.0 for tight, well-separated clusters. Use 0.1+ for visualization purposes. Range: 0.0-0.99.
@@ -780,6 +781,7 @@ fit_embedding_model <- function(texts,
                                    clustering_method = "kmeans",
                                    similarity_threshold = 0.7,
                                    min_topic_size = 10,
+                                   min_cluster_size = NULL,
                                    cluster_selection_method = "eom",
                                    umap_neighbors = 15,
                                    umap_min_dist = 0.0,
@@ -933,7 +935,7 @@ fit_embedding_model <- function(texts,
             random_state = as.integer(seed)
           ),
           hdbscan_model = reticulate::import("hdbscan")$HDBSCAN(
-            min_cluster_size = as.integer(min_topic_size),
+            min_cluster_size = as.integer(min_cluster_size %||% min_topic_size),
             cluster_selection_method = cluster_selection_method,
             metric = "euclidean",
             prediction_data = TRUE

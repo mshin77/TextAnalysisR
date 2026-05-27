@@ -693,7 +693,17 @@ g.hoverlayer tspan {
 
 .modal-dialog {
   max-width: 90%;
-  width: 900px;
+}
+
+#tts_toggle,
+#dark_mode_toggle,
+#translate_icon,
+.password-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (min-width: 1200px) {
@@ -1631,12 +1641,6 @@ body>.skiptranslate {
     -webkit-text-size-adjust: 100% !important;
     text-size-adjust: 100% !important;
   }
-}
-
-/* Sidebar logo */
-.sidebar-logo {
-  width: 100%;
-  text-align: center;
 }
 
 [data-theme="dark"] .navbar,

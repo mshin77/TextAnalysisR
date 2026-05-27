@@ -109,6 +109,7 @@ server <- shinyServer(function(input, output, session) {
       ai_config$openai_api_key <- ""
       ai_config$gemini_api_key <- ""
     })
+    try(reticulate::py_run_string("import gc; gc.collect()"), silent = TRUE)
   })
 
   get_api_key <- function(provider, feature_key = NULL) {
