@@ -19,12 +19,3 @@ check_feature(feature)
 ## Value
 
 Logical TRUE if feature is available
-
-## Examples
-
-``` r
-if (check_feature("ollama")) {
-  # Use AI-powered labeling
-}
-#> NULL
-```

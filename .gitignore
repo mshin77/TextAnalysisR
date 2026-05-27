@@ -25,3 +25,7 @@ Thumbs.db
 __pycache__/
 *.pyc
 .positai
+
+# Sourcemaps embed local source paths
+*.js.map
+*.css.map

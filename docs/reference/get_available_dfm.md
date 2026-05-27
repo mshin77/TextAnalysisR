@@ -49,19 +49,11 @@ Priority order (highest to lowest):
 
 4.  dfm_init - Initial unprocessed tokens
 
-## See also
-
-Other preprocessing:
-[`get_available_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_tokens.md),
-[`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
-[`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md),
-[`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
-[`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),
-[`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)
-
 ## Examples
 
 ``` r
-dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
-result <- get_available_dfm(dfm_init = dfm1)
+if (interactive()) {
+  dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
+  result <- get_available_dfm(dfm_init = dfm1)
+}
 ```

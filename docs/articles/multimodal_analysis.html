@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
 <meta property="og:title" content="Multimodal Analysis">
@@ -90,6 +90,8 @@
 
     
     
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span></code></pre></div>
 <p>Extract text from PDFs with charts, diagrams, and images using vision
 AI. R-native pipeline – no Python required.</p>
 <div class="section level2">
@@ -114,15 +116,15 @@ corpus</li>
 <div class="section level3">
 <h3 id="local-ollama">Local (Ollama)<a class="anchor" aria-label="anchor" href="#local-ollama"></a>
 </h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Install from https://ollama.com</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="ex">ollama</span> pull llava          <span class="co"># General purpose (default)</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="ex">ollama</span> pull bakllava       <span class="co"># Mistral-based alternative</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="ex">ollama</span> pull llava-phi3     <span class="co"># Lightweight option</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Install from https://ollama.com</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="ex">ollama</span> pull llava          <span class="co"># General purpose (default)</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="ex">ollama</span> pull bakllava       <span class="co"># Mistral-based alternative</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="ex">ollama</span> pull llava-phi3     <span class="co"># Lightweight option</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="cloud-openai-gemini">Cloud (OpenAI / Gemini)<a class="anchor" aria-label="anchor" href="#cloud-openai-gemini"></a>
 </h3>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"sk-..."</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"&lt;gemini-api-key&gt;"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -130,7 +132,7 @@ corpus</li>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Extract PDF with vision AI (default: Ollama)</span></span>
@@ -144,7 +146,7 @@ corpus</li>
 <div class="section level3">
 <h3 id="gemini-example">Gemini Example<a class="anchor" aria-label="anchor" href="#gemini-example"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pdf_multimodal.html">extract_pdf_multimodal</a></span><span class="op">(</span></span>
 <span>  <span class="st">"paper.pdf"</span>,</span>
 <span>  vision_provider <span class="op">=</span> <span class="st">"gemini"</span>,</span>
@@ -154,7 +156,7 @@ corpus</li>
 <div class="section level3">
 <h3 id="describe-individual-images">Describe Individual Images<a class="anchor" aria-label="anchor" href="#describe-individual-images"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">description</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/describe_image.html">describe_image</a></span><span class="op">(</span></span>
 <span>  <span class="va">image_base64</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
@@ -174,7 +176,7 @@ and describes visual content</li>
 <strong>Text-only</strong> (pdftools) – fallback if no vision
 provider is available</li>
 </ol>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_pdf_unified.html">process_pdf_unified</a></span><span class="op">(</span><span class="st">"paper.pdf"</span>, vision_provider <span class="op">=</span> <span class="st">"gemini"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">

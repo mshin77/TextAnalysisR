@@ -8,13 +8,10 @@ Preprocessing cleans and prepares text for analysis.
 
 library(TextAnalysisR)
 
-# 1. Load data
 mydata <- SpecialEduTech
 
-# 2. Combine text columns
 united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
 
-# 3. Tokenize and clean
 tokens <- prep_texts(
   united_tbl,
   text_field = "united_texts",
@@ -22,10 +19,8 @@ tokens <- prep_texts(
   remove_numbers = TRUE
 )
 
-# 4. Remove stopwords
 tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
 
-# 5. Create document-feature matrix
 dfm_object <- quanteda::dfm(tokens_clean)
 ```
 

@@ -134,12 +134,13 @@ prep_texts(
 
   Logical; if `TRUE`, preserve math content (numbers, operators,
   symbols) by forcing `remove_punct`, `remove_symbols`, and
-  `remove_numbers` all to `FALSE` and `min_char` to 1 (so
-  single-character tokens such as `+ - = x 3` survive), then strip only
-  sentence-end punctuation such as periods, commas, question marks,
-  exclamation marks, colons, semicolons, parentheses, brackets, braces,
-  quotation marks, em dashes, and en dashes. Use for math or STEM
-  corpora where operators and numerals carry meaning (default: FALSE).
+  `remove_numbers` all to `FALSE`, then strip only sentence-end
+  punctuation such as periods, commas, question marks, exclamation
+  marks, colons, semicolons, parentheses, brackets, braces, quotation
+  marks, em dashes, and en dashes. The `min_char` default of 2 still
+  applies, so noisy single-character tokens are dropped; pass
+  `min_char = 1` to keep them. Use for math or STEM corpora where
+  multi-character operators and numerals carry meaning (default: FALSE).
 
 - verbose:
 
@@ -156,13 +157,12 @@ A `tokens` object that contains the preprocessed text data.
 
 ## See also
 
-Other preprocessing:
-[`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
-[`get_available_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_tokens.md),
-[`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
-[`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md),
-[`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),
 [`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)
+to combine text columns first;
+[`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md)
+to reduce words to base form (e.g., running -\> run);
+[`quanteda::dfm()`](https://quanteda.io/reference/dfm.html) to build a
+document-feature matrix from the result
 
 ## Examples
 

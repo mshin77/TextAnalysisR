@@ -25,11 +25,3 @@ create_aria_label(element_type, action, context = NULL)
 ## Value
 
 Character string with ARIA label
-
-## Examples
-
-``` r
-create_aria_label("button", "analyze", "readability")
-#> [1] "Analyze readability button"
-# Returns: "Analyze readability button"
-```

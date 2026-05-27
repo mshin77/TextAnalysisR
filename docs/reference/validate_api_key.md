@@ -29,10 +29,3 @@ invalid)
 Implements NIST IA-5(1): Authenticator Management - Password-Based
 Authentication. Validates format, length, and character composition to
 prevent weak or malformed keys.
-
-## Examples
-
-``` r
-result <- validate_api_key("sk-proj...")
-if (result$valid) cat("Provider:", result$provider)
-```

@@ -46,8 +46,8 @@ run_rag_search(
 
 - chat_model:
 
-  Character string, chat model. Defaults: "tinyllama" (ollama),
-  "gpt-4.1-mini" (openai), "gemini-2.5-flash" (gemini)
+  Character string, chat model. Defaults: "llama3.2" (ollama),
+  "gpt-4.1-mini" (openai), "gemini-2.5-flash-lite" (gemini)
 
 - top_k:
 
@@ -81,20 +81,12 @@ Simple RAG workflow:
 
 ## See also
 
-Other ai:
-[`call_gemini_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.md),
-[`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md),
-[`call_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/call_ollama.md),
-[`call_openai_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.md),
-[`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md),
-[`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md),
-[`generate_topic_content()`](https://mshin77.github.io/TextAnalysisR/reference/generate_topic_content.md),
-[`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md),
-[`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md),
-[`get_content_type_prompt()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_prompt.md),
-[`get_content_type_user_template()`](https://mshin77.github.io/TextAnalysisR/reference/get_content_type_user_template.md),
-[`get_recommended_ollama_model()`](https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.md),
-[`list_ollama_models()`](https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.md)
+[`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md)
+for the retrieval step alone;
+[`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md)
+for the answer-generation step alone;
+[`sanitize_llm_input()`](https://mshin77.github.io/TextAnalysisR/reference/sanitize_llm_input.md)
+for an input safety check before calling
 
 ## Examples
 

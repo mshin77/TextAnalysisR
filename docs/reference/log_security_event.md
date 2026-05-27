@@ -5,7 +5,7 @@ Log Security Event
 ## Usage
 
 ``` r
-log_security_event(event_type, details, session_info, level = "INFO")
+log_security_event(event_type, details, session_info, level = "info")
 ```
 
 ## Arguments
@@ -24,4 +24,4 @@ log_security_event(event_type, details, session_info, level = "INFO")
 
 - level:
 
-  Log level (INFO, WARNING, ERROR)
+  Log level ("info", "warning", "error")

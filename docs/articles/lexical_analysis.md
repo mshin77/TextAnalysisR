@@ -21,6 +21,8 @@ dfm_object <- quanteda::dfm(tokens)
 plot_word_frequency(dfm_object, n = 20)
 ```
 
+![](lexical_analysis_files/figure-html/unnamed-chunk-2-1.png)
+
 **TF-IDF Keyword Extraction**
 
 Find distinctive words per document using Term Frequency-Inverse

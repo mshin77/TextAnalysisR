@@ -18,8 +18,3 @@ clean_similarity_matrix(similarity_matrix)
 ## Value
 
 Cleaned similarity matrix.
-
-## See also
-
-Other matrix-utilities:
-[`renumber_clusters_sequentially()`](https://mshin77.github.io/TextAnalysisR/reference/renumber_clusters_sequentially.md)

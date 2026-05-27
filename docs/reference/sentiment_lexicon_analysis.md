@@ -10,7 +10,7 @@ intensifier handling.
 ``` r
 sentiment_lexicon_analysis(
   dfm_object,
-  lexicon = "afinn",
+  lexicon = "bing",
   texts_df = NULL,
   feature_type = "words",
   ngram_range = 2,
@@ -26,7 +26,7 @@ sentiment_lexicon_analysis(
 
 - lexicon:
 
-  Lexicon to use: "afinn", "bing", or "nrc" (default: "afinn")
+  Lexicon to use: "afinn", "bing", or "nrc" (default: "bing")
 
 - texts_df:
 
@@ -64,19 +64,6 @@ A list containing:
 
   Feature type used for analysis
 
-## See also
-
-Other sentiment:
-[`analyze_sentiment()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment.md),
-[`analyze_sentiment_llm()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.md),
-[`plot_document_sentiment_trajectory()`](https://mshin77.github.io/TextAnalysisR/reference/plot_document_sentiment_trajectory.md),
-[`plot_emotion_radar()`](https://mshin77.github.io/TextAnalysisR/reference/plot_emotion_radar.md),
-[`plot_sentiment_boxplot()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_boxplot.md),
-[`plot_sentiment_by_category()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_by_category.md),
-[`plot_sentiment_distribution()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_distribution.md),
-[`plot_sentiment_violin()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_violin.md),
-[`sentiment_embedding_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/sentiment_embedding_analysis.md)
-
 ## Examples
 
 ``` r
@@ -84,18 +71,20 @@ Other sentiment:
 abstracts <- TextAnalysisR::SpecialEduTech$abstract[1:10]
 corpus <- quanteda::corpus(abstracts)
 dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
-lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 print(lexicon_results$document_sentiment)
-#> # A tibble: 8 × 5
-#>   document sentiment_score n_words avg_sentiment sentiment
-#>   <chr>              <dbl>   <dbl>         <dbl> <chr>    
-#> 1 text1                  2       1         2     positive 
-#> 2 text10                 0       3         0     neutral  
-#> 3 text3                  1       1         1     positive 
-#> 4 text4                  2       1         2     positive 
-#> 5 text5                  2       1         2     positive 
-#> 6 text6                  8      16         0.5   neutral  
-#> 7 text8                  5       6         0.833 positive 
-#> 8 text9                  0       2         0     neutral  
+#> # A tibble: 10 × 6
+#>    document positive negative sentiment_score total_sentiment_words sentiment
+#>    <chr>       <dbl>    <dbl>           <dbl>                 <dbl> <chr>    
+#>  1 text1           3        0               3                     3 positive 
+#>  2 text10          0        3              -3                     3 negative 
+#>  3 text2           1        1               0                     2 neutral  
+#>  4 text3           1        1               0                     2 neutral  
+#>  5 text4           2        1               1                     3 positive 
+#>  6 text5           2        0               2                     2 positive 
+#>  7 text6           7        6               1                    13 positive 
+#>  8 text7           1        1               0                     2 neutral  
+#>  9 text8          12        1              11                    13 positive 
+#> 10 text9           3        4              -1                     7 negative 
 # }
 ```

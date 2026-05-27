@@ -13,11 +13,3 @@ check_web_deployment()
 ## Value
 
 Logical TRUE if running on web server, FALSE if local
-
-## Examples
-
-``` r
-if (check_web_deployment()) {
-  message("Running on web - some features disabled")
-}
-```

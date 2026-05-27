@@ -247,12 +247,6 @@ LLM integration, embeddings, PDF extraction, and vision AI
   : Check if Ollama is Available
 - [`list_ollama_models()`](https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.md)
   : List Available Ollama Models
-- [`call_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/call_ollama.md)
-  : Call Ollama for Text Generation
-- [`call_openai_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.md)
-  : Call OpenAI Chat Completion API
-- [`call_gemini_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.md)
-  : Call Gemini Chat API
 - [`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md)
   : Call LLM API (Unified Wrapper)
 - [`check_vision_models()`](https://mshin77.github.io/TextAnalysisR/reference/check_vision_models.md)
@@ -263,10 +257,6 @@ LLM integration, embeddings, PDF extraction, and vision AI
   : Get Recommended Ollama Model
 - [`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md)
   : Get Best Available Embeddings
-- [`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md)
-  : Get Embeddings from API
-- [`get_spacy_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_spacy_embeddings.md)
-  : Get spaCy Word Embeddings
 - [`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md)
   : RAG Semantic Search
 - [`analyze_sentiment_llm()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.md)
@@ -277,14 +267,6 @@ LLM integration, embeddings, PDF extraction, and vision AI
   : Get Default User Prompt Template for Content Type
 - [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md)
   : Process PDF File (Unified Entry Point)
-- [`process_pdf_file()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_file.md)
-  : Process PDF File
-- [`extract_text_from_pdf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_text_from_pdf.md)
-  : Extract Text from PDF
-- [`extract_pdf_multimodal()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_multimodal.md)
-  : Extract PDF with Multimodal Analysis
-- [`extract_pdf_smart()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pdf_smart.md)
-  : Smart PDF Extraction with Auto-Detection
 - [`detect_pdf_content_type()`](https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.md)
   : Detect PDF Content Type
 

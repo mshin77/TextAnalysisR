@@ -42,16 +42,6 @@ Uses spaCy for linguistic lemmatization producing proper dictionary
 forms (e.g., "studies" -\> "study", "better" -\> "good"). Batch
 processing prevents timeout errors with large document collections.
 
-## See also
-
-Other preprocessing:
-[`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
-[`get_available_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_tokens.md),
-[`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
-[`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
-[`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),
-[`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)
-
 ## Examples
 
 ``` r

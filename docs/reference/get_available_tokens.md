@@ -51,19 +51,11 @@ Priority order (highest to lowest):
 
 4.  united_tbl - Raw text (will be tokenized if used)
 
-## See also
-
-Other preprocessing:
-[`get_available_dfm()`](https://mshin77.github.io/TextAnalysisR/reference/get_available_dfm.md),
-[`import_files()`](https://mshin77.github.io/TextAnalysisR/reference/import_files.md),
-[`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md),
-[`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md),
-[`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md),
-[`unite_cols()`](https://mshin77.github.io/TextAnalysisR/reference/unite_cols.md)
-
 ## Examples
 
 ``` r
-toks <- quanteda::tokens("assistive technology supports learning")
-result <- get_available_tokens(processed_tokens = toks)
+if (interactive()) {
+  toks <- quanteda::tokens("assistive technology supports learning")
+  result <- get_available_tokens(processed_tokens = toks)
+}
 ```

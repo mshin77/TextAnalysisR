@@ -4,7 +4,7 @@
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License:
-GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 Text mining and natural language processing workflow for documents
 (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`). Includes preprocessing via
@@ -18,8 +18,7 @@ and document clustering on transformer embeddings, an interactive
 [ggplot2](https://ggplot2.tidyverse.org/) visualization, optional
 [spaCy](https://spacy.io/) lemmatization, and local
 ([Ollama](https://ollama.com),
-[sentence-transformers](https://www.sbert.net/)) or web-based
-([OpenAI](https://platform.openai.com/),
+[sentence-transformers](https://www.sbert.net/)) or web-based (OpenAI,
 [Gemini](https://ai.google.dev/)) model providers for
 retrieval-augmented generation.
 

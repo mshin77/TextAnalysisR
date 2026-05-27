@@ -19,13 +19,3 @@ validate_keyboard_navigation(tabindex = 0)
 ## Value
 
 Logical TRUE if valid, FALSE with warning if invalid
-
-## Examples
-
-``` r
-validate_keyboard_navigation(0)   # TRUE
-#> [1] TRUE
-validate_keyboard_navigation(999) # FALSE (too high)
-#> Warning: Tabindex > 100 creates unpredictable tab order (WCAG 2.1.1)
-#> [1] FALSE
-```

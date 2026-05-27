@@ -25,12 +25,3 @@ TRUE if valid, stops with error if invalid
 Protects against formula injection attacks where malicious column names
 could execute arbitrary code when used in model formulas. Part of NIST
 SI-10 input validation.
-
-## Examples
-
-``` r
-validate_column_name("age")
-#> [1] TRUE
-validate_column_name("my_variable")
-#> [1] TRUE
-```

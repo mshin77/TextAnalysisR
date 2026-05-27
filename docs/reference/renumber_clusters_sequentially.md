@@ -17,8 +17,3 @@ renumber_clusters_sequentially(clusters)
 ## Value
 
 Vector with clusters renumbered sequentially (1, 2, 3, ...).
-
-## See also
-
-Other matrix-utilities:
-[`clean_similarity_matrix()`](https://mshin77.github.io/TextAnalysisR/reference/clean_similarity_matrix.md)

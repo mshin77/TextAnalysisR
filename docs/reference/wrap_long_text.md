@@ -26,9 +26,3 @@ wrap_long_text(text, chars_per_line = 50, max_lines = 3)
 ## Value
 
 Text with line breaks inserted.
-
-## See also
-
-Other text-utilities:
-[`truncate_text_to_words()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_to_words.md),
-[`truncate_text_with_ellipsis()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_with_ellipsis.md)

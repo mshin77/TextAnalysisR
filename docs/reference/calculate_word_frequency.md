@@ -49,6 +49,15 @@ the dfm object. The selected terms should be a vector of terms to
 analyze trends for. The required packages are 'htmltools', 'splines',
 and 'broom' (plus additional ones loaded internally).
 
+## See also
+
+[`extract_keywords_tfidf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_tfidf.md)
+and
+[`extract_keywords_keyness()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_keyness.md)
+for ranking terms by importance;
+[`plot_word_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_word_frequency.md)
+for the standard frequency-by-doc plot
+
 ## Examples
 
 ``` r

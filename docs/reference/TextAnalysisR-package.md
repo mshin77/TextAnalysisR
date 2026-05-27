@@ -1,15 +1,15 @@
 # TextAnalysisR: A Text Mining Workflow Tool
 
 Provides a text mining and natural language processing workflow for
-documents (PDF, DOCX, XLSX, CSV, TXT). Includes preprocessing via
-'quanteda', lexical analysis (term frequency-inverse document frequency,
-log-odds ratios, lexical diversity) via 'tidytext', topic modeling via
-'stm' and the 'BERTopic' approach, semantic similarity and document
-clustering on transformer embeddings, an interactive 'Shiny' interface
-with 'ggplot2' visualization, optional 'spaCy' lemmatization, and local
-('Ollama', 'sentence-transformers') or web-based ('OpenAI', 'Gemini')
-model providers for retrieval-augmented generation, as employed in Shin
-et al. (2026)
+documents. Includes preprocessing via 'quanteda', lexical analysis (term
+frequency-inverse document frequency, log-odds ratios, lexical
+diversity) via 'tidytext', topic modeling via 'stm' and the 'BERTopic'
+approach, semantic similarity and document clustering on transformer
+representations, an interactive 'Shiny' interface with 'ggplot2'
+visualization, optional 'spaCy' preprocessing, and local ('Ollama',
+'sentence-transformers') or web-based ('OpenAI', 'Gemini') model
+providers for retrieval-augmented generation, as described in Shin et
+al. (2026)
 [doi:10.1177/07319487251412879](https://doi.org/10.1177/07319487251412879)
 .
 

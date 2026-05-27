@@ -24,7 +24,6 @@ No return value, called for side effects (launching Shiny app).
 
 ``` r
 if (interactive()) {
-  library(TextAnalysisR)
   run_app()
 }
 ```

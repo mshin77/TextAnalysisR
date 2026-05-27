@@ -52,7 +52,7 @@ Documentation](https://www.sbert.net/)
 
 ``` r
 
-sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "afinn")
+sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 plot_sentiment_distribution(sentiment$document_sentiment)
 ```
 
@@ -175,20 +175,8 @@ Community detection identifies clusters of semantically related nodes.
 **Learn More:** [igraph Community
 Detection](https://igraph.org/r/doc/communities.html)
 
-**Embedding Providers**
-
-Document-to-document similarity using vector embeddings. Multiple
-providers are available:
-
-| Provider | Model | Notes |
-|----|----|----|
-| Ollama | nomic-embed-text (default), mxbai-embed-large, all-minilm | Free, local, private |
-| OpenAI | text-embedding-3-small, text-embedding-3-large | API key required |
-| Gemini | gemini-embedding-001 | API key required |
-| Sentence Transformers | all-MiniLM-L6-v2 (fast), all-mpnet-base-v2 (highest quality) | Requires Python |
-
 Embeddings are cached and shared across Document Similarity, Topic
-Modeling, and Semantic Search when using the same provider and model.
-
-**Learn More:** [Sentence Transformers](https://www.sbert.net/) \|
-[Ollama Embedding Models](https://ollama.com/blog/embedding-models)
+Modeling, and Semantic Search when the same provider and model are
+reused. See [AI
+Integration](https://mshin77.github.io/TextAnalysisR/articles/ai_integration.md)
+for provider/model setup.

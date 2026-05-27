@@ -1,5 +1,13 @@
 # Installation
 
+``` r
+
+library(TextAnalysisR)
+packageVersion("TextAnalysisR")
+```
+
+    ## [1] '0.1.4'
+
 ## R Package
 
 ``` r
@@ -52,17 +60,3 @@ local AI.
 | Package install failed | `remotes::install_github("mshin77/TextAnalysisR", dependencies = TRUE)` |
 | Browser doesn’t open | Navigate to URL shown in R console |
 | Python errors | See [Python Environment](https://mshin77.github.io/TextAnalysisR/articles/python_environment.md) |
-
-## Responsible AI Design
-
-TextAnalysisR follows responsible AI principles with human oversight:
-
-- **AI Suggests**: LLMs generate draft labels, content, and
-  recommendations
-- **Human Reviews**: Examine all AI outputs before use
-- **Human Decides**: Edit, approve, or regenerate as needed
-- **Human Controls**: Override any AI suggestion with manual input
-
-This approach aligns with [NIST AI Risk Management
-Framework](https://www.nist.gov/itl/ai-risk-management-framework) and EU
-AI Act requirements for meaningful human control.

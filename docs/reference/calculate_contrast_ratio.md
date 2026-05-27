@@ -55,12 +55,3 @@ Level AA:
 - Large text (18pt+ or 14pt+ bold): Minimum 3:1 (Level AA)
 
 - UI components and graphics: Minimum 3:1 (Level AA)
-
-## Examples
-
-``` r
-calculate_contrast_ratio("#111827", "#ffffff")  # Returns ~16:1 (Pass)
-#> [1] 17.74
-calculate_contrast_ratio("#6b7280", "#4a5568")  # Returns ~2.8:1 (Fail)
-#> [1] 1.56
-```

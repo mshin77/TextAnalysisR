@@ -29,15 +29,3 @@ check_alt_text(alt_text, element_type = "image", decorative = FALSE)
 ## Value
 
 Logical TRUE if valid, FALSE with warning if missing/inadequate
-
-## Examples
-
-``` r
-check_alt_text("Bar chart showing word frequency", "plot")  # TRUE
-#> [1] TRUE
-check_alt_text("", "plot")  # FALSE (informative content needs alt text)
-#> Warning: Missing alt text for plot (WCAG 1.1.1)
-#> [1] FALSE
-check_alt_text("", "icon", decorative = TRUE)  # TRUE (decorative is OK)
-#> [1] TRUE
-```

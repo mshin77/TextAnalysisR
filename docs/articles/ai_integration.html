@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
 <meta property="og:title" content="AI Integration">
@@ -90,6 +90,10 @@
 
     
     
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
 <p>TextAnalysisR provides AI features via local and web-based
 providers.</p>
 <div class="section level2">
@@ -116,7 +120,7 @@ providers.</p>
 <td>Privacy, no cost, offline use</td>
 </tr>
 <tr class="even">
-<td><a href="https://platform.openai.com/" class="external-link">OpenAI</a></td>
+<td>OpenAI</td>
 <td>Web-based</td>
 <td>OPENAI_API_KEY</td>
 <td>Quality, speed</td>
@@ -148,7 +152,7 @@ providers.</p>
 <div class="section level3">
 <h3 id="local-ai-ollama">Local AI (Ollama)<a class="anchor" aria-label="anchor" href="#local-ai-ollama"></a>
 </h3>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 1. Install Ollama: https://ollama.com</span></span>
 <span><span class="co"># 2. Pull a model (in terminal):</span></span>
 <span><span class="co">#    ollama pull llama3.2</span></span>
@@ -161,7 +165,7 @@ providers.</p>
 <div class="section level3">
 <h3 id="web-based-ai-openai-gemini">Web-based AI (OpenAI / Gemini)<a class="anchor" aria-label="anchor" href="#web-based-ai-openai-gemini"></a>
 </h3>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"&lt;openai-api-key&gt;"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"&lt;gemini-api-key&gt;"</span><span class="op">)</span></span>
 <span></span>
@@ -173,7 +177,7 @@ providers.</p>
 <div class="section level2">
 <h2 id="unified-llm-api">Unified LLM API<a class="anchor" aria-label="anchor" href="#unified-llm-api"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Provider-agnostic (recommended)</span></span>
 <span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/call_llm_api.html">call_llm_api</a></span><span class="op">(</span></span>
 <span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
@@ -189,7 +193,7 @@ providers.</p>
 <div class="section level2">
 <h2 id="embeddings-rag">Embeddings &amp; RAG<a class="anchor" aria-label="anchor" href="#embeddings-rag"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Web-based embeddings (OpenAI, Gemini)</span></span>
 <span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_api_embeddings.html">get_api_embeddings</a></span><span class="op">(</span><span class="va">texts</span>, provider <span class="op">=</span> <span class="st">"openai"</span><span class="op">)</span></span>
 <span></span>
@@ -226,7 +230,7 @@ providers.</p>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_ollama_models.html">list_ollama_models</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="va">best_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_recommended_ollama_model.html">get_recommended_ollama_model</a></span><span class="op">(</span><span class="op">)</span></span>

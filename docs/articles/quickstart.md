@@ -28,19 +28,16 @@ version.
 
 library(TextAnalysisR)
 
-# Load data
 mydata <- SpecialEduTech
-
-# Combine text columns
 united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
 
-# Preprocess
 tokens <- prep_texts(united_tbl, text_field = "united_texts")
 dfm_object <- quanteda::dfm(tokens)
 
-# Visualize
 plot_word_frequency(dfm_object, n = 20)
 ```
+
+![](quickstart_files/figure-html/unnamed-chunk-3-1.png)
 
 ## Features
 

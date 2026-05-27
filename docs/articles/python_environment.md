@@ -1,5 +1,11 @@
 # Python Environment
 
+``` r
+
+library(TextAnalysisR)
+requireNamespace("reticulate", quietly = TRUE)
+```
+
 Python enables features: NLP with spaCy, embeddings, and neural
 sentiment analysis.
 

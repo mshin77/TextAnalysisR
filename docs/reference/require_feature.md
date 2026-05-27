@@ -21,11 +21,3 @@ require_feature(feature, session = NULL)
 ## Value
 
 Logical TRUE if available, FALSE if not
-
-## Examples
-
-``` r
-if (interactive()) {
-if (!require_feature("embeddings", session)) return()
-}
-```

@@ -22,9 +22,3 @@ truncate_text_with_ellipsis(text, max_chars = 50)
 ## Value
 
 Truncated text with "..." appended if truncated.
-
-## See also
-
-Other text-utilities:
-[`truncate_text_to_words()`](https://mshin77.github.io/TextAnalysisR/reference/truncate_text_to_words.md),
-[`wrap_long_text()`](https://mshin77.github.io/TextAnalysisR/reference/wrap_long_text.md)

@@ -1,5 +1,10 @@
 # Multimodal Analysis
 
+``` r
+
+library(TextAnalysisR)
+```
+
 Extract text from PDFs with charts, diagrams, and images using vision
 AI. R-native pipeline – no Python required.
 
