@@ -3997,7 +3997,7 @@ run_rag_search <- function(
       barnesHut = list(gravitationalConstant = physics_gravity, centralGravity = 0.4,
                        springLength = physics_spring_length, springConstant = 0.05,
                        avoidOverlap = physics_avoid_overlap),
-      stabilization = list(enabled = TRUE, iterations = 1000)
+      stabilization = list(enabled = TRUE, iterations = 150, updateInterval = 50)
     ) %>%
     visNetwork::visInteraction(hover = TRUE, tooltipDelay = 0, tooltipStay = 1000,
                                zoomView = TRUE, dragView = TRUE,

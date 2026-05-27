@@ -1178,11 +1178,12 @@ extract_keywords_keyness <- function(dfm,
     measure = measure
   )
 
-  keyness_top <- head(keyness[order(-abs(keyness$G2)), ], min(top_n, nrow(keyness)))
+  score_col <- if (measure == "chi2") "chi2" else if (measure == "exact") "p" else "G2"
+  keyness_top <- head(keyness[order(-abs(keyness[[score_col]])), ], min(top_n, nrow(keyness)))
 
   data.frame(
     Keyword = keyness_top$feature,
-    Keyness_Score = keyness_top$G2,
+    Keyness_Score = keyness_top[[score_col]],
     stringsAsFactors = FALSE,
     row.names = NULL
   )
