@@ -3,7 +3,22 @@
 ``` r
 
 library(TextAnalysisR)
+
+# Text-only fallback runs without any vision provider.
+# prep_texts handles the cleaned text that PDF extraction yields.
+sample_text <- c(
+  "Figure 1 shows the distribution of student outcomes.",
+  "Table 2 reports the effect sizes for each intervention."
+)
+toks <- prep_texts(
+  data.frame(united_texts = sample_text),
+  text_field = "united_texts"
+)
+quanteda::ntoken(toks)
 ```
+
+    ## text1 text2 
+    ##     7     8
 
 Extract text from PDFs with charts, diagrams, and images using vision
 AI. R-native pipeline – no Python required.
@@ -22,15 +37,6 @@ AI. R-native pipeline – no Python required.
 
 ## Setup
 
-### Local (Ollama)
-
-``` bash
-# Install from https://ollama.com
-ollama pull llava          # General purpose (default)
-ollama pull bakllava       # Mistral-based alternative
-ollama pull llava-phi3     # Lightweight option
-```
-
 ### Cloud (OpenAI / Gemini)
 
 ``` r
@@ -45,10 +51,10 @@ Sys.setenv(GEMINI_API_KEY = "<gemini-api-key>")
 
 library(TextAnalysisR)
 
-# Extract PDF with vision AI (default: Ollama)
+# Extract PDF with vision AI
 result <- extract_pdf_multimodal(
   "document.pdf",
-  vision_provider = "ollama"  # or "openai" or "gemini"
+  vision_provider = "gemini"  # or "openai"
 )
 
 # Use in analysis
@@ -94,8 +100,7 @@ result <- process_pdf_unified("paper.pdf", vision_provider = "gemini")
 
 ## Provider Comparison
 
-| Provider | Cost    | Privacy | Accuracy | Setup                       |
-|----------|---------|---------|----------|-----------------------------|
-| Ollama   | Free    | Local   | Good     | Install Ollama + pull model |
-| OpenAI   | Per use | Cloud   | Best     | API key                     |
-| Gemini   | Per use | Cloud   | Best     | API key                     |
+| Provider | Cost | Privacy | Accuracy | Setup |
+|----|----|----|----|----|
+| OpenAI | Per use | Cloud | Best | API key |
+| Gemini | Free on hosted app (Google Cloud Research); otherwise per use | Cloud | Best | API key |

@@ -4,7 +4,23 @@
 
 library(TextAnalysisR)
 requireNamespace("reticulate", quietly = TRUE)
+
+# Lexical dispersion runs in pure R — Python is only needed for the
+# spaCy/embedding extensions described below.
+tokens <- quanteda::tokens(SpecialEduTech$abstract[1:5])
+dispersion <- calculate_lexical_dispersion(
+  tokens,
+  terms = c("learning", "instruction")
+)
+head(dispersion)
 ```
+
+    ##   doc_id        term  position doc_length
+    ## 1  text2    learning 0.5200000         25
+    ## 2  text3    learning 0.3714286         35
+    ## 3  text3 instruction 0.3142857         35
+    ## 4  text3 instruction 0.6857143         35
+    ## 5  text5    learning 0.7904762        105
 
 Python enables features: NLP with spaCy, embeddings, and neural
 sentiment analysis.

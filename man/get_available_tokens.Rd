@@ -37,7 +37,7 @@ Priority order (highest to lowest):
 }
 }
 \examples{
-if (interactive()) {
+\donttest{
   toks <- quanteda::tokens("assistive technology supports learning")
   result <- get_available_tokens(processed_tokens = toks)
 }

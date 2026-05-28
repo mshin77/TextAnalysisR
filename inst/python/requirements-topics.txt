@@ -1,0 +1,6 @@
+# Topics tier — adds BERTopic, UMAP, HDBSCAN (~300 MB on top of embeddings)
+umap-learn>=0.5.3
+hdbscan>=0.8.29
+scikit-learn>=1.2.0
+numba>=0.56.0
+bertopic>=0.15.0

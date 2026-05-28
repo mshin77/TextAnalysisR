@@ -5,18 +5,18 @@
 \title{Check Multimodal Prerequisites}
 \usage{
 check_multimodal_prerequisites(
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   envname = "textanalysisr-env"
 )
 }
 \arguments{
-\item{vision_provider}{Character: "ollama", "openai", or "gemini"}
+\item{vision_provider}{Character: "openai" or "gemini"}
 
 \item{vision_model}{Character: Model name (optional)}
 
-\item{api_key}{Character: API key for OpenAI/Gemini (if using cloud provider)}
+\item{api_key}{Character: API key for OpenAI/Gemini}
 
 \item{envname}{Character: Kept for backward compatibility, ignored}
 }

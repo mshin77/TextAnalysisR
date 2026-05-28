@@ -8,7 +8,7 @@ and vision LLM APIs. No Python required.
 ``` r
 extract_pdf_multimodal(
   file_path,
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE,
@@ -24,13 +24,11 @@ extract_pdf_multimodal(
 
 - vision_provider:
 
-  Character: "ollama" (local, default), "openai", or "gemini"
+  Character: "openai" or "gemini" (default)
 
 - vision_model:
 
   Character: Model name
-
-  - For Ollama: "llava", "llava:13b", "bakllava"
 
   - For OpenAI: "gpt-4.1", "gpt-4.1-mini"
 

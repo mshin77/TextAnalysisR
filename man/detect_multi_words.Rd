@@ -22,8 +22,8 @@ This function detects multi-word expressions (collocations) of specified
 sizes that appear at least a specified number of times in the provided tokens.
 }
 \examples{
-if (interactive()) {
-  mydata <- TextAnalysisR::SpecialEduTech
+\donttest{
+  mydata <- TextAnalysisR::SpecialEduTech[seq_len(50), ]
 
   united_tbl <- TextAnalysisR::unite_cols(
     mydata,
@@ -32,7 +32,7 @@ if (interactive()) {
 
   tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
 
-  collocations <- TextAnalysisR::detect_multi_words(tokens, size = 2:5, min_count = 2)
+  collocations <- TextAnalysisR::detect_multi_words(tokens, size = 2:3, min_count = 2)
   print(collocations)
 }
 }

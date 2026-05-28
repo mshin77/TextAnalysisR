@@ -1,6 +1,8 @@
 ## AI Integration
 
-TextAnalysisR provides AI/NLP capabilities via local and web-based providers.
+Gemini usage is free here, supported by the Google Cloud Research program. OpenAI requires your own API key.
+
+TextAnalysisR provides AI/NLP capabilities via cloud-based providers.
 
 ### Providers
 
@@ -13,11 +15,6 @@ TextAnalysisR provides AI/NLP capabilities via local and web-based providers.
 </tr>
 </thead>
 <tbody>
-<tr style="border-bottom: 1px solid #dee2e6;">
-<td style="padding: 8px;"><a href="https://ollama.com" target="_blank">Ollama</a></td>
-<td style="padding: 8px;">Local</td>
-<td style="padding: 8px;">Privacy, no cost</td>
-</tr>
 <tr style="border-bottom: 1px solid #dee2e6;">
 <td style="padding: 8px;">OpenAI</td>
 <td style="padding: 8px;">Web-based</td>
@@ -37,18 +34,13 @@ TextAnalysisR provides AI/NLP capabilities via local and web-based providers.
 - **Content Generation**: Survey items, research questions, themes
 - **Cluster Labels**: AI-suggested names for document clusters
 - **RAG Search**: Question-answering over the document corpus
-- **Vision AI**: PDF image/chart extraction via Ollama, OpenAI, or Gemini
+- **Vision AI**: PDF image/chart extraction via OpenAI or Gemini
 - **Sentiment Analysis**: LLM-based or local transformer models
 - **Linguistic Analysis**: POS, NER, dependency parsing via spaCy
 
 ### Setup
 
 ```r
-# Local AI (recommended for privacy)
-# Install Ollama: https://ollama.com
-# Then: ollama pull tinyllama
-
-# Web-based AI
 Sys.setenv(OPENAI_API_KEY = "<openai-api-key>")
 # or
 Sys.setenv(GEMINI_API_KEY = "<gemini-api-key>")

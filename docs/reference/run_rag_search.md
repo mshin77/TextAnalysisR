@@ -2,8 +2,8 @@
 
 Simple in-memory RAG (Retrieval Augmented Generation) for
 question-answering over document corpus with source attribution. Uses
-local (Ollama) or cloud (OpenAI/Gemini) embeddings for semantic search
-and LLM for answer generation.
+OpenAI or Gemini embeddings for semantic search and LLM for answer
+generation.
 
 ## Usage
 
@@ -11,7 +11,7 @@ and LLM for answer generation.
 run_rag_search(
   query,
   documents,
-  provider = c("ollama", "openai", "gemini"),
+  provider = c("openai", "gemini"),
   api_key = NULL,
   embedding_model = NULL,
   chat_model = NULL,
@@ -31,23 +31,21 @@ run_rag_search(
 
 - provider:
 
-  Character string, provider: "ollama" (local), "openai", or "gemini"
+  Character string, provider: "openai" or "gemini"
 
 - api_key:
 
-  Character string, API key for cloud providers (or from
-  OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.
+  Character string, API key (or from OPENAI_API_KEY/GEMINI_API_KEY env).
 
 - embedding_model:
 
-  Character string, embedding model. Defaults: "nomic-embed-text"
-  (ollama), "text-embedding-3-small" (openai), "gemini-embedding-001"
-  (gemini)
+  Character string, embedding model. Defaults: "text-embedding-3-small"
+  (openai), "gemini-embedding-001" (gemini)
 
 - chat_model:
 
-  Character string, chat model. Defaults: "llama3.2" (ollama),
-  "gpt-4.1-mini" (openai), "gemini-2.5-flash-lite" (gemini)
+  Character string, chat model. Defaults: "gpt-4.1-mini" (openai),
+  "gemini-2.5-flash-lite" (gemini)
 
 - top_k:
 
@@ -96,13 +94,6 @@ documents <- c(
   "Assistive technology helps students with disabilities access curriculum.",
   "Universal Design for Learning provides multiple means of engagement.",
   "Response to Intervention uses tiered support systems."
-)
-
-# Using local Ollama (free, private)
-result <- run_rag_search(
-  query = "How does assistive technology support learning?",
-  documents = documents,
-  provider = "ollama"
 )
 
 # Using OpenAI (requires API key)

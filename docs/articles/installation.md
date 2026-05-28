@@ -8,6 +8,27 @@ packageVersion("TextAnalysisR")
 
     ## [1] '0.1.4'
 
+``` r
+
+# Bundled corpus is available immediately after install — no Python required.
+data("SpecialEduTech")
+nrow(SpecialEduTech)
+```
+
+    ## [1] 490
+
+``` r
+
+head(SpecialEduTech[, c("title", "year")], 3)
+```
+
+    ## # A tibble: 3 × 2
+    ##   title                                                                     year
+    ##   <chr>                                                                    <dbl>
+    ## 1 Dyscalculia and the minicalculator: the ALP program                       1980
+    ## 2 The effects of computer-assisted instruction for mastery of multiplicat…  1981
+    ## 3 Computer Assisted Instruction with Learning Disabled Students             1981
+
 ## R Package
 
 ``` r
@@ -25,9 +46,8 @@ run_app()
 Visit [textanalysisr.org](https://www.textanalysisr.org) - no
 installation needed.
 
-Note: Web version has limited features (no Python, no local AI via
-Ollama, no large files). Cloud AI providers (OpenAI, Gemini) are
-available with an API key.
+Note: Web version has limited features (no Python, no large files).
+Cloud AI providers (OpenAI, Gemini) are available with an API key.
 
 ## Optional Features
 
@@ -50,8 +70,7 @@ For embeddings and neural sentiment analysis:
 setup_python_env()
 ```
 
-Requires Python 3.9+ and optionally [Ollama](https://ollama.com) for
-local AI.
+Requires Python 3.9+.
 
 ## Troubleshooting
 

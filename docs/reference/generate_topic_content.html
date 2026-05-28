@@ -71,7 +71,7 @@ default prompts, or fully custom prompts.</p>
 <span>  topic_var <span class="op">=</span> <span class="st">"topic"</span>,</span>
 <span>  term_var <span class="op">=</span> <span class="st">"term"</span>,</span>
 <span>  weight_var <span class="op">=</span> <span class="st">"beta"</span>,</span>
-<span>  provider <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"openai"</span>, <span class="st">"ollama"</span><span class="op">)</span>,</span>
+<span>  provider <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"openai"</span>, <span class="st">"gemini"</span><span class="op">)</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"gpt-4.1-mini"</span>,</span>
 <span>  temperature <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  system_prompt <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -128,12 +128,12 @@ topic identifier, term, and optionally term weight (beta).</p></dd>
 
 
 <dt id="arg-provider">provider<a class="anchor" aria-label="anchor" href="#arg-provider"></a></dt>
-<dd><p>LLM provider: "openai" or "ollama" (default: "openai").</p></dd>
+<dd><p>LLM provider: "openai" or "gemini" (default: "openai").</p></dd>
 
 
 <dt id="arg-model">model<a class="anchor" aria-label="anchor" href="#arg-model"></a></dt>
 <dd><p>Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc.
-For Ollama: "llama3", "mistral", etc.</p></dd>
+For Gemini: "gemini-2.5-flash-lite", "gemini-2.5-flash", etc.</p></dd>
 
 
 <dt id="arg-temperature">temperature<a class="anchor" aria-label="anchor" href="#arg-temperature"></a></dt>
@@ -154,7 +154,8 @@ If NULL, uses default for content_type.</p></dd>
 
 
 <dt id="arg-api-key">api_key<a class="anchor" aria-label="anchor" href="#arg-api-key"></a></dt>
-<dd><p>OpenAI API key. If NULL, reads from OPENAI_API_KEY environment variable.</p></dd>
+<dd><p>API key for the selected provider. If NULL, reads from
+OPENAI_API_KEY or GEMINI_API_KEY environment variable.</p></dd>
 
 
 <dt id="arg-output-var">output_var<a class="anchor" aria-label="anchor" href="#arg-output-var"></a></dt>
@@ -173,9 +174,8 @@ If NULL, uses default for content_type.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function generates one piece of content per unique topic. Each content type
 has optimized default prompts, but these can be overridden with custom prompts.</p>
-<p>For OpenAI, requires an API key set via the <code>api_key</code> parameter or
-OPENAI_API_KEY environment variable (can be loaded from .env file).</p>
-<p>For Ollama, requires a local Ollama installation with the specified model.</p>
+<p>Requires an API key set via the <code>api_key</code> parameter or the relevant
+environment variable (OPENAI_API_KEY or GEMINI_API_KEY).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -197,8 +197,8 @@ OPENAI_API_KEY environment variable (can be loaded from .env file).</p>
 <span class="r-in"><span><span class="va">research_qs</span> <span class="op">&lt;-</span> <span class="fu">generate_topic_content</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  topic_terms_df <span class="op">=</span> <span class="va">top_terms</span>,</span></span>
 <span class="r-in"><span>  content_type <span class="op">=</span> <span class="st">"research_question"</span>,</span></span>
-<span class="r-in"><span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span></span>
-<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"llama3"</span></span></span>
+<span class="r-in"><span>  provider <span class="op">=</span> <span class="st">"gemini"</span>,</span></span>
+<span class="r-in"><span>  model <span class="op">=</span> <span class="st">"gemini-2.5-flash-lite"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Generate with custom prompt</span></span></span>

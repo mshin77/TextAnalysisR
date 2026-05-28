@@ -211,7 +211,7 @@ This function serves as the foundation for all subsequent text analysis workflow
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="unite_cols.html">unite_cols</a></span><span class="op">(</span></span></span>
@@ -235,7 +235,45 @@ This function serves as the foundation for all subsequent text analysis workflow
 <span class="r-in"><span>                                         padding <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>                                         verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tokens consisting of 490 documents and 6 docvars.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> text1 :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "dyscalculia"    "and"            "the"            "minicalculator"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "the"            "alp"            "program"        "arithmetic"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "arithmetic"     "remedial"       "teaching"       "education"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [ ... and 109 more ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> text2 :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "the"            "effects"        "of"             "computer"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "assisted"       "instruction"    "for"            "mastery"       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "of"             "multiplication" "facts"          "on"            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [ ... and 72 more ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> text3 :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "computer"    "assisted"    "instruction" "with"        "learning"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "disabled"    "students"    "computer"    "assisted"    "instruction"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "computer"    "programs"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [ ... and 53 more ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> text4 :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "arc"           "ed"            "curriculum"    "applicability"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "for"           "severely"      "handicapped"   "pupils"       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "computer"      "assisted"      "instruction"   "games"        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [ ... and 48 more ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> text5 :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "arc"         "ed"          "curriculum"  "the"         "application"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "of"          "video"       "game"        "formats"     "to"         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "educational" "software"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [ ... and 128 more ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> text6 :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "the"         "effect"      "of"          "the"         "hand"       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "held"        "calculator"  "on"          "mathematics" "speed"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "accuracy"    "and"        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [ ... and 345 more ]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [ reached max_ndoc ... 484 more documents ]</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

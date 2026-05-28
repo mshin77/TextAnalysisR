@@ -151,14 +151,35 @@ pipeline programmatically.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="co"># Using example dataset</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    dataset_choice <span class="op">=</span> <span class="st">"Upload an Example Dataset"</span>,</span></span>
 <span class="r-in"><span>    listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Using file upload</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting complete text mining workflow...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 1: Processing files...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 2: Uniting text columns...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 3: Preprocessing texts...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating corpus...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Tokenizing texts...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating a tokens from a corpus object...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...starting tokenization</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...tokenizing 1 of 1 blocks</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...preserving elisions</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...removing separators, punctuation, symbols, numbers, URLs </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...6,736 unique types</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...complete, elapsed time: 0.31 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finished constructing tokens from 490 documents</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Converting to lowercase...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Applying minimum character filter...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Text preprocessing completed in 0.45 seconds</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processed 490 documents with 1218465601403578929318175265121813953461568396368196169611121638337616515867194144150377958690910316623182406173226381248722423928817422019313711774198121165879777161148193166981339668127659915512511214711817592104375815923753691181572861919514618299657911375921213617316320816416210841886271146133752381481664241591324416346172146136172151682572583011491701161751513884951341561262932296889300131156181161157244142277316533159190251213146165152133113262397274138248190285181763261851791801043897415118411431544841813037133610615217719311818111927433117917735721018010928118017713219516432012219026714518016713812118315512326429213247014811915717320424123114520335832033317813928013918226227527841293247164191187166204180257246158168137227222216316194235203188192262197173148261263187201108186135375231154831851472195814618327118516317324628618925816535517316718117524835830042127622021316917732124714914130219215618316115112518317940716421126822219316421114518112927425316233636842919817126730826916535215521717220419027814218118840727712210623921320618618811217218520021518515017418418315619016521517017212315424116714153627326820016917618729219818032628319732812213013615312413414418318415319421392249216387199232158311170205195202230143187238485215396258156147206266143244318134194164215201116138150184275170264291197222147126188201213246142144156193141246159138270226122184172156151181152162153126189236193136 total tokens</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 5: Creating document-feature matrix...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Complete text mining workflow finished in 1.17 seconds</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Documents processed: 490</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Features identified: 5078</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">file_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>filepath <span class="op">=</span> <span class="st">"path/to/file.xlsx"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    dataset_choice <span class="op">=</span> <span class="st">"Upload Your File"</span>,</span></span>
@@ -166,7 +187,6 @@ pipeline programmatically.</p>
 <span class="r-in"><span>    listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"column1"</span>, <span class="st">"column2"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Using copy-paste text</span></span></span>
 <span class="r-in"><span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    dataset_choice <span class="op">=</span> <span class="st">"Copy and Paste Text"</span>,</span></span>
 <span class="r-in"><span>    text_input <span class="op">=</span> <span class="st">"Your text content here"</span>,</span></span>

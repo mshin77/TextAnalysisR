@@ -4,11 +4,16 @@
 \alias{setup_python_env}
 \title{Setup Python Environment}
 \usage{
-setup_python_env(envname = "textanalysisr-env", force = FALSE)
+setup_python_env(envname = "textanalysisr-env", tier = "core", force = FALSE)
 }
 \arguments{
 \item{envname}{Character string name for the virtual environment
 (default: "textanalysisr-env")}
+
+\item{tier}{Which feature tier to install. One or more of:
+\code{"core"} (spacy + pdfplumber, ~200 MB; default),
+\code{"embeddings"} (adds sentence-transformers + transformers + torch, ~1 GB),
+\code{"topics"} (adds BERTopic + UMAP + HDBSCAN, ~300 MB on top of embeddings).}
 
 \item{force}{Logical, whether to recreate environment if it exists
 (default: FALSE)}
@@ -17,40 +22,19 @@ setup_python_env(envname = "textanalysisr-env", force = FALSE)
 Invisible TRUE if successful, stops with error message if failed
 }
 \description{
-Intelligently sets up Python virtual environment with required packages.
-Detects existing Python installations and guides users if Python is missing.
+Sets up a tiered Python virtual environment.
 }
 \details{
-This function:
-\itemize{
-\item Automatically detects if Python is already installed
-\item Offers to install Miniconda if no Python found
-\item Creates an isolated virtual environment (does NOT modify system Python)
-\item Installs minimal core packages:
-\itemize{
-\item spacy (NLP processing)
-\item pdfplumber (PDF table extraction)
-}
-\item Dependencies installed automatically by pip
-\item Avoids heavy packages (no torch, transformers)
-}
+Default \code{tier = "core"} keeps the install light — spaCy NLP and PDF text
+extraction only. Add \code{"embeddings"} for sentence-transformers-based
+similarity/sentiment, and \code{"topics"} for BERTopic.
 
-The virtual environment approach means:
-\itemize{
-\item No conflicts with other Python projects
-\item Easy to remove (just delete the environment)
-\item System Python remains untouched
-\item Much smaller download (~100MB vs 5GB+)
-}
-
-After setup, restart R session to activate Python-backed features.
+The virtual environment is isolated; system Python is not modified.
 }
 \examples{
 if (interactive()) {
-# First time setup (auto-detects Python)
-setup_python_env()
-
-# Recreate environment
-setup_python_env(force = TRUE)
+  setup_python_env()                              # core only (~200 MB)
+  setup_python_env(tier = c("core", "embeddings"))  # +1 GB
+  setup_python_env(tier = c("core", "embeddings", "topics"))  # full stack
 }
 }

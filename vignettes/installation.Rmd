@@ -14,6 +14,11 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 ```{r, eval = TRUE}
 library(TextAnalysisR)
 packageVersion("TextAnalysisR")
+
+# Bundled corpus is available immediately after install — no Python required.
+data("SpecialEduTech")
+nrow(SpecialEduTech)
+head(SpecialEduTech[, c("title", "year")], 3)
 ```
 
 ## R Package
@@ -31,7 +36,7 @@ run_app()
 
 Visit [textanalysisr.org](https://www.textanalysisr.org) - no installation needed.
 
-Note: Web version has limited features (no Python, no local AI via Ollama, no large files). Cloud AI providers (OpenAI, Gemini) are available with an API key.
+Note: Web version has limited features (no Python, no large files). Cloud AI providers (OpenAI, Gemini) are available with an API key.
 
 ## Optional Features
 
@@ -52,7 +57,7 @@ For embeddings and neural sentiment analysis:
 setup_python_env()
 ```
 
-Requires Python 3.9+ and optionally [Ollama](https://ollama.com) for local AI.
+Requires Python 3.9+.
 
 ## Troubleshooting
 

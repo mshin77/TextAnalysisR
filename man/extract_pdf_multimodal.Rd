@@ -6,7 +6,7 @@
 \usage{
 extract_pdf_multimodal(
   file_path,
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE,
@@ -16,11 +16,10 @@ extract_pdf_multimodal(
 \arguments{
 \item{file_path}{Character string path to PDF file}
 
-\item{vision_provider}{Character: "ollama" (local, default), "openai", or "gemini"}
+\item{vision_provider}{Character: "openai" or "gemini" (default)}
 
 \item{vision_model}{Character: Model name
 \itemize{
-\item For Ollama: "llava", "llava:13b", "bakllava"
 \item For OpenAI: "gpt-4.1", "gpt-4.1-mini"
 \item For Gemini: "gemini-2.5-flash", "gemini-2.5-pro"
 }}

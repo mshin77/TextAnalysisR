@@ -92,10 +92,30 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
-<p>TextAnalysisR provides AI features via local and web-based
-providers.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"TextAnalysisR"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] '0.1.4'</span></span></code></pre>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Local pipeline runs without any API key — TF-IDF surfaces the same</span></span>
+<span><span class="co"># corpus terms the LLM workflows below would summarize for you.</span></span>
+<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">united</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">mydata</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">toks</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span>
+<span><span class="va">dfm</span>    <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">toks</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/extract_keywords_tfidf.html">extract_keywords_tfidf</a></span><span class="op">(</span><span class="va">dfm</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         Keyword TF_IDF_Score Frequency</span></span>
+<span><span class="co">## 1           was    15.258649        44</span></span>
+<span><span class="co">## 2      practice    10.837080        18</span></span>
+<span><span class="co">## 3        groups    10.484550        15</span></span>
+<span><span class="co">## 4      educable    10.000000        10</span></span>
+<span><span class="co">## 5          were     9.948500        25</span></span>
+<span><span class="co">## 6         drill     9.785580        14</span></span>
+<span><span class="co">## 7   achievement     9.550560        24</span></span>
+<span><span class="co">## 8      mentally     9.062996        11</span></span>
+<span><span class="co">## 9  experimental     9.030900        15</span></span>
+<span><span class="co">## 10     assisted     9.016475        26</span></span></code></pre>
+<p>TextAnalysisR provides AI features via cloud-based providers.</p>
+<p>On the hosted web app, Gemini usage is free, supported by the Google
+Cloud Research program. OpenAI calls require a personal API key.</p>
 <div class="section level2">
 <h2 id="providers">Providers<a class="anchor" aria-label="anchor" href="#providers"></a>
 </h2>
@@ -114,30 +134,24 @@ providers.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><a href="https://ollama.com" class="external-link">Ollama</a></td>
-<td>Local</td>
-<td>None</td>
-<td>Privacy, no cost, offline use</td>
-</tr>
-<tr class="even">
 <td>OpenAI</td>
 <td>Web-based</td>
 <td>OPENAI_API_KEY</td>
 <td>Quality, speed</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="https://ai.google.dev/" class="external-link">Gemini</a></td>
 <td>Web-based</td>
-<td>GEMINI_API_KEY</td>
+<td>None on hosted app; otherwise GEMINI_API_KEY</td>
 <td>Quality, speed</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="https://spacy.io/" class="external-link">spaCy</a></td>
 <td>Local</td>
 <td>None</td>
 <td>Linguistic analysis</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Transformers</td>
 <td>Local</td>
 <td>None</td>
@@ -149,23 +163,7 @@ providers.</p>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
-<div class="section level3">
-<h3 id="local-ai-ollama">Local AI (Ollama)<a class="anchor" aria-label="anchor" href="#local-ai-ollama"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Install Ollama: https://ollama.com</span></span>
-<span><span class="co"># 2. Pull a model (in terminal):</span></span>
-<span><span class="co">#    ollama pull llama3.2</span></span>
-<span><span class="co">#    ollama pull mistral</span></span>
-<span></span>
-<span><span class="co"># 3. Verify in R:</span></span>
-<span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/list_ollama_models.html">list_ollama_models</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="web-based-ai-openai-gemini">Web-based AI (OpenAI / Gemini)<a class="anchor" aria-label="anchor" href="#web-based-ai-openai-gemini"></a>
-</h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"&lt;openai-api-key&gt;"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"&lt;gemini-api-key&gt;"</span><span class="op">)</span></span>
 <span></span>
@@ -173,11 +171,10 @@ providers.</p>
 <span><span class="co"># OPENAI_API_KEY=&lt;openai-api-key&gt;</span></span>
 <span><span class="co"># GEMINI_API_KEY=&lt;gemini-api-key&gt;</span></span></code></pre></div>
 </div>
-</div>
 <div class="section level2">
 <h2 id="unified-llm-api">Unified LLM API<a class="anchor" aria-label="anchor" href="#unified-llm-api"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Provider-agnostic (recommended)</span></span>
 <span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/call_llm_api.html">call_llm_api</a></span><span class="op">(</span></span>
 <span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
@@ -187,13 +184,12 @@ providers.</p>
 <span></span>
 <span><span class="co"># Provider-specific</span></span>
 <span><span class="fu"><a href="../reference/call_openai_chat.html">call_openai_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gpt-4.1-mini"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/call_gemini_chat.html">call_gemini_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gemini-2.5-flash"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/call_ollama.html">call_ollama</a></span><span class="op">(</span><span class="va">prompt</span>, model <span class="op">=</span> <span class="st">"llama3.2"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/call_gemini_chat.html">call_gemini_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gemini-2.5-flash"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="embeddings-rag">Embeddings &amp; RAG<a class="anchor" aria-label="anchor" href="#embeddings-rag"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Web-based embeddings (OpenAI, Gemini)</span></span>
 <span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_api_embeddings.html">get_api_embeddings</a></span><span class="op">(</span><span class="va">texts</span>, provider <span class="op">=</span> <span class="st">"openai"</span><span class="op">)</span></span>
 <span></span>
@@ -206,35 +202,6 @@ providers.</p>
 <span>  documents <span class="op">=</span> <span class="va">my_docs</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"openai"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="ollama-utilities">Ollama Utilities<a class="anchor" aria-label="anchor" href="#ollama-utilities"></a>
-</h2>
-<table class="table">
-<thead><tr class="header">
-<th>Function</th>
-<th>Purpose</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="../reference/check_ollama.html">check_ollama()</a></code></td>
-<td>Verify Ollama server is running</td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/list_ollama_models.html">list_ollama_models()</a></code></td>
-<td>List installed models</td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/get_recommended_ollama_model.html">get_recommended_ollama_model()</a></code></td>
-<td>Auto-select optimal model</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="../reference/check_ollama.html">check_ollama</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/list_ollama_models.html">list_ollama_models</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>  <span class="va">best_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_recommended_ollama_model.html">get_recommended_ollama_model</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="default-models">Default Models<a class="anchor" aria-label="anchor" href="#default-models"></a>
@@ -257,11 +224,6 @@ providers.</p>
 <td>gemini-embedding-001</td>
 </tr>
 <tr class="odd">
-<td>Ollama</td>
-<td>llama3.2</td>
-<td>nomic-embed-text</td>
-</tr>
-<tr class="even">
 <td>Local</td>
 <td>-</td>
 <td>all-MiniLM-L6-v2</td>
@@ -275,6 +237,10 @@ providers.</p>
 <p>All AI features follow <a href="https://www.nist.gov/itl/ai-risk-management-framework" class="external-link">NIST AI
 Risk Management Framework</a> principles:</p>
 <table class="table">
+<colgroup>
+<col width="40%">
+<col width="59%">
+</colgroup>
 <thead><tr class="header">
 <th>Principle</th>
 <th>Implementation</th>
@@ -294,7 +260,8 @@ Risk Management Framework</a> principles:</p>
 </tr>
 <tr class="even">
 <td>Privacy</td>
-<td>Local options (Ollama, spaCy) for sensitive data</td>
+<td>Local sentence-transformers and spaCy options for sensitive
+data</td>
 </tr>
 <tr class="odd">
 <td>Grounding</td>

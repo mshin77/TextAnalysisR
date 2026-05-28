@@ -1,14 +1,13 @@
 # Call LLM API (Unified Wrapper)
 
-Unified wrapper for calling different LLM providers (OpenAI, Gemini,
-Ollama). Automatically routes to the appropriate provider-specific
-function.
+Unified wrapper for calling different LLM providers (OpenAI, Gemini).
+Automatically routes to the appropriate provider-specific function.
 
 ## Usage
 
 ``` r
 call_llm_api(
-  provider = c("openai", "gemini", "ollama"),
+  provider = c("openai", "gemini"),
   system_prompt,
   user_prompt,
   model = NULL,
@@ -22,7 +21,7 @@ call_llm_api(
 
 - provider:
 
-  Character string: "openai", "gemini", or "ollama"
+  Character string: "openai" or "gemini"
 
 - system_prompt:
 

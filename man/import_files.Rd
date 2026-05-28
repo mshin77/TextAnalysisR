@@ -26,7 +26,9 @@ if (interactive()) {
   mydata <- TextAnalysisR::import_files(dataset_choice = "Upload an Example Dataset")
   head(mydata)
 
-  file_info <- data.frame(filepath = "inst/extdata/SpecialEduTech.xlsx")
+  xlsx_path <- system.file("extdata", "SpecialEduTech.xlsx",
+                           package = "TextAnalysisR")
+  file_info <- data.frame(filepath = xlsx_path)
   mydata <- TextAnalysisR::import_files(dataset_choice = "Upload Your File",
                                           file_info = file_info)
   head(mydata)

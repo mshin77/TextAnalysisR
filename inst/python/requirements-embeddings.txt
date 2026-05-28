@@ -1,0 +1,4 @@
+# Embeddings tier — adds sentence-transformers, transformers, torch (~1 GB)
+sentence-transformers>=2.2.0
+transformers>=4.30.0
+torch>=2.0.0

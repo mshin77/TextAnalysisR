@@ -29,7 +29,7 @@
 - spaCy support for POS tagging, NER, lemmatization, and dependency
   parsing.
 - Sentence-transformer document embeddings.
-- LLM integration (OpenAI, Gemini, Ollama) for topic labeling and RAG.
+- LLM integration (OpenAI, Gemini) for topic labeling and RAG.
 
 ## TextAnalysisR 0.0.2
 

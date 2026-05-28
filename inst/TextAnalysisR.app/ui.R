@@ -185,6 +185,15 @@ ui <- fluidPage(
   includeCSS("www/mobile.css"),
   includeScript("www/script.js"),
 
+  tags$script(HTML(
+    "$(document).on('shiny:connected', function(){",
+    "  $('.navbar-brand').css({cursor:'pointer', 'user-select':'none'}).on('click', function(e){",
+    "    e.preventDefault();",
+    "    $('a[data-value=\"Home\"]').tab('show');",
+    "  });",
+    "});"
+  )),
+
   tags$a(
     href = "#main-content",
     class = "skip-link",
@@ -260,14 +269,6 @@ ui <- fluidPage(
           .password_input("global_openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
           .password_input("global_gemini_api_key", "Gemini API Key:", placeholder = "AIza..."),
           tags$hr(),
-          if (!is_remote_ui) tagList(
-            tags$h5(
-              HTML("<strong>Ollama Status</strong>"),
-              style = "color: #4269BF; margin-bottom: 10px;"
-            ),
-            uiOutput("global_ollama_status"),
-            tags$hr()
-          ),
           tags$h5(
             HTML("<strong>Usage Log</strong>"),
             style = "color: #4269BF; margin-bottom: 10px;"
@@ -301,46 +302,43 @@ ui <- fluidPage(
                 tags$tbody(
                   tags$tr(
                     tags$td("Document Similarity"),
-                    tags$td("Ollama, Sentence Transformers, OpenAI, Gemini"),
+                    tags$td("Sentence Transformers, OpenAI, Gemini"),
                     tags$td("Semantic Analysis")
                   ),
                   tags$tr(
                     tags$td("Semantic Search"),
-                    tags$td("Ollama, Sentence Transformers, OpenAI, Gemini"),
+                    tags$td("Sentence Transformers, OpenAI, Gemini"),
                     tags$td("Semantic Analysis")
                   ),
                   tags$tr(
                     tags$td("RAG Q&A"),
-                    tags$td("Ollama, OpenAI, Gemini"),
+                    tags$td("OpenAI, Gemini"),
                     tags$td("Semantic Analysis")
                   ),
                   tags$tr(
                     tags$td("LLM Sentiment"),
-                    tags$td("Ollama, OpenAI, Gemini"),
+                    tags$td("OpenAI, Gemini"),
                     tags$td("Semantic Analysis")
                   ),
                   tags$tr(
                     tags$td("Topic Modeling Embeddings"),
-                    tags$td("Ollama, Sentence Transformers, OpenAI, Gemini"),
+                    tags$td("Sentence Transformers, OpenAI, Gemini"),
                     tags$td("Topic Modeling")
                   ),
                   tags$tr(
                     tags$td("Topic Labels & Content"),
-                    tags$td("Ollama, OpenAI, Gemini"),
+                    tags$td("OpenAI, Gemini"),
                     tags$td("Topic Modeling")
                   ),
                   tags$tr(
                     tags$td("Vision OCR"),
-                    tags$td("Ollama, OpenAI, Gemini"),
+                    tags$td("OpenAI, Gemini"),
                     tags$td("Upload")
                   )
                 )
               ),
               tags$div(
                 style = "margin-top: 20px; padding: 12px 16px; background-color: #F1F5F9; border-radius: 6px;",
-                tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
-                  tags$strong("Ollama"), " \u2014 Free, private, runs locally. Install from ",
-                  tags$a(href = "https://ollama.com", target = "_blank", rel = "noopener noreferrer", "ollama.com"), "."),
                 tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("Sentence Transformers"), " \u2014 Free, runs locally. Requires Python + sentence-transformers."),
                 tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
@@ -1983,23 +1981,12 @@ Supports:
                 "embedding_provider",
                 "AI Provider:",
                 choices = c(
-                  "Local (Ollama - Free, Private)" = "ollama",
                   "Sentence Transformers (Python)" = "sentence-transformers",
                   "OpenAI (API Key Required)" = "openai",
                   "Gemini (API Key Required)" = "gemini"
                 ),
-                selected = "ollama",
+                selected = "sentence-transformers",
                 inline = FALSE
-              ),
-              conditionalPanel(
-                condition = "input.embedding_provider == 'ollama'",
-                selectizeInput(
-                  "embedding_ollama_model",
-                  "Ollama Model:",
-                  choices = c("Nomic Embed Text (Default)" = "nomic-embed-text", "MxBai Embed Large (Higher Quality)" = "mxbai-embed-large", "All-MiniLM (Lightweight)" = "all-minilm"),
-                  selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-                )
               ),
               conditionalPanel(
                 condition = "input.embedding_provider == 'sentence-transformers'",
@@ -2165,26 +2152,11 @@ Supports:
                 "search_embedding_provider",
                 "AI Provider:",
                 choices = c(
-                  "Local (Ollama - Free, Private)" = "ollama",
                   "Sentence Transformers (Python)" = "sentence-transformers",
                   "OpenAI (API Key Required)" = "openai",
                   "Gemini (API Key Required)" = "gemini"
                 ),
-                selected = "ollama"
-              ),
-              conditionalPanel(
-                condition = "input.search_embedding_provider == 'ollama'",
-                selectizeInput(
-                  "search_embedding_ollama_model",
-                  "Ollama Model:",
-                  choices = c(
-                    "Nomic Embed Text (Default)" = "nomic-embed-text",
-                    "MxBai Embed Large (Higher Quality)" = "mxbai-embed-large",
-                    "All-MiniLM (Lightweight)" = "all-minilm"
-                  ),
-                  selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-                )
+                selected = "sentence-transformers"
               ),
               conditionalPanel(
                 condition = "input.search_embedding_provider == 'sentence-transformers'",
@@ -2250,21 +2222,10 @@ Supports:
                 "rag_provider",
                 "AI Provider:",
                 choices = c(
-                  "Local (Ollama - Free, Private)" = "ollama",
                   "OpenAI (API Key Required)" = "openai",
                   "Gemini (API Key Required)" = "gemini"
                 ),
-                selected = "ollama"
-              ),
-              conditionalPanel(
-                condition = "input.rag_provider == 'ollama'",
-                selectizeInput(
-                  "rag_ollama_model",
-                  "Ollama Model:",
-                  choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                  selected = NULL,
-                  options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-                )
+                selected = "openai"
               ),
               conditionalPanel(
                 condition = "input.rag_provider == 'openai'",
@@ -2485,23 +2446,11 @@ Supports:
               "cluster_label_provider",
               "AI Provider:",
               choices = c(
-                "Local (Ollama - Free, Private)" = "ollama",
                 "OpenAI (API Key Required)" = "openai",
                 "Gemini (API Key Required)" = "gemini"
               ),
-              selected = "ollama",
+              selected = "openai",
               inline = FALSE
-            ),
-
-            conditionalPanel(
-              condition = "input.cluster_label_provider == 'ollama'",
-              selectizeInput(
-                "cluster_ollama_model",
-                "Ollama Model:",
-                choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-              )
             ),
 
             conditionalPanel(
@@ -2607,11 +2556,10 @@ Supports:
                   "llm_sentiment_provider",
                   "AI Provider:",
                   choices = c(
-                    "Local (Ollama - Free, Private)" = "ollama",
                     "OpenAI (API Key Required)" = "openai",
                     "Gemini (API Key Required)" = "gemini"
                   ),
-                  selected = "ollama",
+                  selected = "openai",
                   inline = FALSE
                 ),
                 uiOutput("llm_sentiment_model_ui"),

@@ -1768,22 +1768,12 @@ body>.skiptranslate {
   color: #111827 !important;
 }
 
-[data-theme="dark"] #ollama_vision_model,
 [data-theme="dark"] #openai_vision_model {
   color: #111827 !important;
 }
 
 [data-theme="dark"] .selectize-dropdown .option {
   color: #111827 !important;
-}
-
-[data-theme="dark"] .sidebar-panel .ollama-help-text {
-  color: #111827 !important;
-}
-
-[data-theme="dark"] .sidebar-panel .ollama-help-text code {
-  color: #111827 !important;
-  background-color: transparent !important;
 }
 
 

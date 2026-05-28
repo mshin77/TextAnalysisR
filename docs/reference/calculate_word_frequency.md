@@ -61,7 +61,7 @@ for the standard frequency-by-doc plot
 ## Examples
 
 ``` r
-if (interactive()) {
+# \donttest{
   mydata <- TextAnalysisR::SpecialEduTech
 
   united_tbl <- TextAnalysisR::unite_cols(
@@ -81,6 +81,7 @@ if (interactive()) {
     width = 900
   )
   print(word_freq_results$plot)
+
   print(word_freq_results$table)
-}
+# }
 ```

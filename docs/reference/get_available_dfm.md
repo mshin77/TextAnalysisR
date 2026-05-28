@@ -52,8 +52,8 @@ Priority order (highest to lowest):
 ## Examples
 
 ``` r
-if (interactive()) {
+# \donttest{
   dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
   result <- get_available_dfm(dfm_init = dfm1)
-}
+# }
 ```

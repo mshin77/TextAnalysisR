@@ -5,7 +5,7 @@
 \title{Call LLM API (Unified Wrapper)}
 \usage{
 call_llm_api(
-  provider = c("openai", "gemini", "ollama"),
+  provider = c("openai", "gemini"),
   system_prompt,
   user_prompt,
   model = NULL,
@@ -15,7 +15,7 @@ call_llm_api(
 )
 }
 \arguments{
-\item{provider}{Character string: "openai", "gemini", or "ollama"}
+\item{provider}{Character string: "openai" or "gemini"}
 
 \item{system_prompt}{Character string with system instructions}
 
@@ -33,7 +33,7 @@ call_llm_api(
 Character string with the model's response
 }
 \description{
-Unified wrapper for calling different LLM providers (OpenAI, Gemini, Ollama).
+Unified wrapper for calling different LLM providers (OpenAI, Gemini).
 Automatically routes to the appropriate provider-specific function.
 }
 \examples{

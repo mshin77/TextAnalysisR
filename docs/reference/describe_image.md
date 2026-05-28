@@ -1,14 +1,14 @@
 # Describe Image Using Vision LLM
 
 Unified dispatcher for image description using vision LLMs. Routes to
-the appropriate provider (Ollama, OpenAI, or Gemini).
+the appropriate provider (OpenAI or Gemini).
 
 ## Usage
 
 ``` r
 describe_image(
   image_base64,
-  provider = "ollama",
+  provider = "gemini",
   model = NULL,
   api_key = NULL,
   prompt =
@@ -25,7 +25,7 @@ describe_image(
 
 - provider:
 
-  Character: "ollama", "openai", or "gemini"
+  Character: "openai" or "gemini"
 
 - model:
 

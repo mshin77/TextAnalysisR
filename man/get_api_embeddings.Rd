@@ -6,7 +6,7 @@
 \usage{
 get_api_embeddings(
   texts,
-  provider = c("ollama", "openai", "gemini"),
+  provider = c("openai", "gemini"),
   model = NULL,
   api_key = NULL,
   batch_size = 100
@@ -15,16 +15,15 @@ get_api_embeddings(
 \arguments{
 \item{texts}{Character vector of texts to embed}
 
-\item{provider}{Character string: "ollama" (local API, free), "openai", or "gemini"}
+\item{provider}{Character string: "openai" or "gemini"}
 
 \item{model}{Character string specifying the embedding model. Defaults:
 \itemize{
-\item ollama: "nomic-embed-text"
 \item openai: "text-embedding-3-small"
 \item gemini: "gemini-embedding-001"
 }}
 
-\item{api_key}{Character string with API key (not required for Ollama)}
+\item{api_key}{Character string with API key}
 
 \item{batch_size}{Integer, number of texts to embed per API call (default: 100)}
 }
@@ -32,7 +31,7 @@ get_api_embeddings(
 Matrix with embeddings (rows = texts, columns = dimensions)
 }
 \description{
-Generates text embeddings using Ollama (local), OpenAI, or Gemini embedding APIs.
+Generates text embeddings using OpenAI or Gemini embedding APIs.
 }
 \concept{ai}
 \keyword{internal}

@@ -90,11 +90,6 @@ them reduces noise and improves focus on content-bearing words.
 words. For sentiment analysis or syntactic studies, consider keeping
 stopwords as they may carry important meaning.
 
-``` r
-
-tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
-```
-
 **Learn More:** [stopwords Package
 Documentation](https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html)
 
@@ -137,11 +132,6 @@ numerical format for computational analysis.
 including keyword extraction, topic modeling, and semantic analysis.
 Create it after preprocessing (tokenization, stopword removal,
 lemmatization).
-
-``` r
-
-dfm_object <- quanteda::dfm(tokens_clean)
-```
 
 **Learn More:** [quanteda DFM
 Documentation](https://quanteda.io/reference/dfm.html)

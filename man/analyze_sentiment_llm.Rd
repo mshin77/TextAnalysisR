@@ -7,7 +7,7 @@
 analyze_sentiment_llm(
   texts,
   doc_names = NULL,
-  provider = c("openai", "gemini", "ollama"),
+  provider = c("openai", "gemini"),
   model = NULL,
   api_key = NULL,
   batch_size = 5,
@@ -20,13 +20,12 @@ analyze_sentiment_llm(
 
 \item{doc_names}{Optional character vector of document names (default: text1, text2, ...).}
 
-\item{provider}{AI provider to use: "openai" (default), "gemini", or "ollama".}
+\item{provider}{AI provider to use: "openai" (default) or "gemini".}
 
 \item{model}{Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
-"gemini-2.5-flash-lite" (Gemini), "llama3.2" (Ollama).}
+"gemini-2.5-flash-lite" (Gemini).}
 
-\item{api_key}{API key for OpenAI or Gemini. If NULL, uses environment variable.
-Not required for Ollama.}
+\item{api_key}{API key for OpenAI or Gemini. If NULL, uses environment variable.}
 
 \item{batch_size}{Number of texts to process per API call (default: 5).
 Larger batches are more efficient but may hit token limits.}
@@ -46,7 +45,7 @@ A list containing:
 }
 }
 \description{
-Analyzes sentiment using Large Language Models (OpenAI, Gemini, or Ollama).
+Analyzes sentiment using Large Language Models (OpenAI or Gemini).
 Provides nuanced sentiment understanding including sarcasm detection,
 mixed emotions, and contextual interpretation that lexicon-based methods miss.
 }
@@ -67,9 +66,6 @@ if (interactive()) {
 
   sentiment_gemini <- analyze_sentiment_llm(abstracts, provider = "gemini",
                                              include_explanation = TRUE)
-
-  sentiment_ollama <- analyze_sentiment_llm(abstracts, provider = "ollama",
-                                             model = "llama3")
 }
 }
 \concept{sentiment}

@@ -91,7 +91,7 @@ Preprocesses text data following the complete workflow implemented in the Shiny 
 This function serves as the foundation for all subsequent text analysis workflows.
 }
 \examples{
-if (interactive()) {
+\donttest{
 mydata <- TextAnalysisR::SpecialEduTech
 
 united_tbl <- TextAnalysisR::unite_cols(

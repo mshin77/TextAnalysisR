@@ -167,7 +167,7 @@ document-feature matrix from the result
 ## Examples
 
 ``` r
-if (interactive()) {
+# \donttest{
 mydata <- TextAnalysisR::SpecialEduTech
 
 united_tbl <- TextAnalysisR::unite_cols(
@@ -191,5 +191,43 @@ tokens <- TextAnalysisR::prep_texts(united_tbl,
                                          padding = FALSE,
                                          verbose = FALSE)
 print(tokens)
-}
+#> Tokens consisting of 490 documents and 6 docvars.
+#> text1 :
+#>  [1] "dyscalculia"    "and"            "the"            "minicalculator"
+#>  [5] "the"            "alp"            "program"        "arithmetic"    
+#>  [9] "arithmetic"     "remedial"       "teaching"       "education"     
+#> [ ... and 109 more ]
+#> 
+#> text2 :
+#>  [1] "the"            "effects"        "of"             "computer"      
+#>  [5] "assisted"       "instruction"    "for"            "mastery"       
+#>  [9] "of"             "multiplication" "facts"          "on"            
+#> [ ... and 72 more ]
+#> 
+#> text3 :
+#>  [1] "computer"    "assisted"    "instruction" "with"        "learning"   
+#>  [6] "disabled"    "students"    "computer"    "assisted"    "instruction"
+#> [11] "computer"    "programs"   
+#> [ ... and 53 more ]
+#> 
+#> text4 :
+#>  [1] "arc"           "ed"            "curriculum"    "applicability"
+#>  [5] "for"           "severely"      "handicapped"   "pupils"       
+#>  [9] "computer"      "assisted"      "instruction"   "games"        
+#> [ ... and 48 more ]
+#> 
+#> text5 :
+#>  [1] "arc"         "ed"          "curriculum"  "the"         "application"
+#>  [6] "of"          "video"       "game"        "formats"     "to"         
+#> [11] "educational" "software"   
+#> [ ... and 128 more ]
+#> 
+#> text6 :
+#>  [1] "the"         "effect"      "of"          "the"         "hand"       
+#>  [6] "held"        "calculator"  "on"          "mathematics" "speed"      
+#> [11] "accuracy"    "and"        
+#> [ ... and 345 more ]
+#> 
+#> [ reached max_ndoc ... 484 more documents ]
+# }
 ```

@@ -84,7 +84,6 @@ test_that(".missing_api_key_message returns package format for openai", {
   expect_match(msg, "Sys.setenv")
   expect_match(msg, "\\.Renviron")
   expect_match(msg, "api_key parameter")
-  expect_match(msg, "Ollama")
 })
 
 test_that(".missing_api_key_message returns package format for gemini", {

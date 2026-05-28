@@ -91,6 +91,7 @@ extraction.</p></li>
 <span>  clustering_method <span class="op">=</span> <span class="st">"kmeans"</span>,</span>
 <span>  similarity_threshold <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  min_topic_size <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  min_cluster_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cluster_selection_method <span class="op">=</span> <span class="st">"eom"</span>,</span>
 <span>  umap_neighbors <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  umap_min_dist <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -150,6 +151,10 @@ extraction.</p></li>
 
 <dt id="arg-min-topic-size">min_topic_size<a class="anchor" aria-label="anchor" href="#arg-min-topic-size"></a></dt>
 <dd><p>The minimum number of documents per topic (default: 3).</p></dd>
+
+
+<dt id="arg-min-cluster-size">min_cluster_size<a class="anchor" aria-label="anchor" href="#arg-min-cluster-size"></a></dt>
+<dd><p>HDBSCAN density threshold (default <code>NULL</code> falls back to <code>min_topic_size</code>). Setting this independently lets fine-grained clusters merge into broader topics.</p></dd>
 
 
 <dt id="arg-cluster-selection-method">cluster_selection_method<a class="anchor" aria-label="anchor" href="#arg-cluster-selection-method"></a></dt>

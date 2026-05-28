@@ -7,7 +7,7 @@ pdftools for rendering (no Python required).
 
 ``` r
 check_multimodal_prerequisites(
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   envname = "textanalysisr-env"
@@ -18,7 +18,7 @@ check_multimodal_prerequisites(
 
 - vision_provider:
 
-  Character: "ollama", "openai", or "gemini"
+  Character: "openai" or "gemini"
 
 - vision_model:
 
@@ -26,7 +26,7 @@ check_multimodal_prerequisites(
 
 - api_key:
 
-  Character: API key for OpenAI/Gemini (if using cloud provider)
+  Character: API key for OpenAI/Gemini
 
 - envname:
 

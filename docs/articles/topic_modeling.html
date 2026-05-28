@@ -154,21 +154,16 @@ similarity.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Ollama (default)</td>
-<td>nomic-embed-text, mxbai-embed-large, all-minilm</td>
-<td>Free, local, private</td>
-</tr>
-<tr class="even">
-<td>Sentence Transformers</td>
+<td>Sentence Transformers (default)</td>
 <td>all-MiniLM-L6-v2, all-mpnet-base-v2</td>
 <td>Requires Python</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>OpenAI</td>
 <td>text-embedding-3-small, text-embedding-3-large</td>
 <td>API key required</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Gemini</td>
 <td>gemini-embedding-001</td>
 <td>API key required</td>
@@ -182,8 +177,8 @@ default) · <code>"r"</code> (no BERTopic needed) ·
 <code class="sourceCode R"><span><span class="co"># With precomputed embeddings</span></span>
 <span><span class="va">embeddings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_best_embeddings.html">get_best_embeddings</a></span><span class="op">(</span></span>
 <span>  texts <span class="op">=</span> <span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span>,</span>
-<span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
-<span>  model <span class="op">=</span> <span class="st">"nomic-embed-text"</span></span>
+<span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"text-embedding-3-small"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_embedding_model.html">fit_embedding_model</a></span><span class="op">(</span></span>
@@ -209,7 +204,7 @@ default) · <code>"r"</code> (no BERTopic needed) ·
 <h2 id="ai-topic-labels">AI Topic Labels<a class="anchor" aria-label="anchor" href="#ai-topic-labels"></a>
 </h2>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span><span class="va">terms</span>, provider <span class="op">=</span> <span class="st">"ollama"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_labels.html">generate_topic_labels</a></span><span class="op">(</span><span class="va">terms</span>, provider <span class="op">=</span> <span class="st">"openai"</span><span class="op">)</span></span></code></pre></div>
 <p>AI generates draft labels; review and edit before final use.</p>
 </div>
 <div class="section level2">
@@ -263,8 +258,8 @@ topic term probabilities rather than generic AI knowledge.</p>
 <span><span class="va">content</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_topic_content.html">generate_topic_content</a></span><span class="op">(</span></span>
 <span>  topic_terms_df <span class="op">=</span> <span class="va">top_terms</span>,</span>
 <span>  content_type <span class="op">=</span> <span class="st">"survey_item"</span>,</span>
-<span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
-<span>  model <span class="op">=</span> <span class="st">"llama3.2"</span></span>
+<span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
+<span>  model <span class="op">=</span> <span class="st">"gpt-4.1-mini"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The LLM receives topic labels plus terms with beta scores. Use
 <code><a href="../reference/get_content_type_prompt.html">get_content_type_prompt()</a></code> /

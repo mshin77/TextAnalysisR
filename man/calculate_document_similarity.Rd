@@ -48,7 +48,7 @@ modern embedding-based approaches. Metrics are automatically
 computed unless disabled.
 }
 \examples{
-if (interactive()) {
+\donttest{
   data(SpecialEduTech)
   texts <- SpecialEduTech$abstract[1:5]
 

@@ -73,18 +73,19 @@ corpus <- quanteda::corpus(abstracts)
 dfm_object <- quanteda::dfm(quanteda::tokens(corpus))
 lexicon_results <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 print(lexicon_results$document_sentiment)
-#> # A tibble: 10 × 6
-#>    document positive negative sentiment_score total_sentiment_words sentiment
-#>    <chr>       <dbl>    <dbl>           <dbl>                 <dbl> <chr>    
-#>  1 text1           3        0               3                     3 positive 
-#>  2 text10          0        3              -3                     3 negative 
-#>  3 text2           1        1               0                     2 neutral  
-#>  4 text3           1        1               0                     2 neutral  
-#>  5 text4           2        1               1                     3 positive 
-#>  6 text5           2        0               2                     2 positive 
-#>  7 text6           7        6               1                    13 positive 
-#>  8 text7           1        1               0                     2 neutral  
-#>  9 text8          12        1              11                    13 positive 
-#> 10 text9           3        4              -1                     7 negative 
+#> # A tibble: 10 × 7
+#>    document positive negative total_sentiment_words sentiment_score
+#>    <chr>       <dbl>    <dbl>                 <dbl>           <dbl>
+#>  1 text1           3        0                     3          1     
+#>  2 text10          0        3                     3         -1     
+#>  3 text2           1        1                     2          0     
+#>  4 text3           1        1                     2          0     
+#>  5 text4           2        1                     3          0.333 
+#>  6 text5           2        0                     2          1     
+#>  7 text6           7        6                    13          0.0769
+#>  8 text7           1        1                     2          0     
+#>  9 text8          12        1                    13          0.846 
+#> 10 text9           3        4                     7         -0.143 
+#> # ℹ 2 more variables: sentiment_raw <dbl>, sentiment <chr>
 # }
 ```

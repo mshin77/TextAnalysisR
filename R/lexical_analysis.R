@@ -91,8 +91,8 @@ clear_lexdiv_cache <- function() {
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
-#'   mydata <- TextAnalysisR::SpecialEduTech
+#' \donttest{
+#'   mydata <- TextAnalysisR::SpecialEduTech[seq_len(50), ]
 #'
 #'   united_tbl <- TextAnalysisR::unite_cols(
 #'     mydata,
@@ -101,7 +101,7 @@ clear_lexdiv_cache <- function() {
 #'
 #'   tokens <- TextAnalysisR::prep_texts(united_tbl, text_field = "united_texts")
 #'
-#'   collocations <- TextAnalysisR::detect_multi_words(tokens, size = 2:5, min_count = 2)
+#'   collocations <- TextAnalysisR::detect_multi_words(tokens, size = 2:3, min_count = 2)
 #'   print(collocations)
 #' }
 detect_multi_words <- function(tokens, size = 2:5, min_count = 2) {
@@ -854,7 +854,7 @@ lexical_frequency_analysis <- function(...) {
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   data(SpecialEduTech, package = "TextAnalysisR")
 #'   texts <- SpecialEduTech$abstract[1:10]
 #'   dfm <- quanteda::dfm(quanteda::tokens(texts))
@@ -933,7 +933,7 @@ plot_word_frequency <- function(dfm_object,
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   ngram_df <- data.frame(
 #'     collocation = c("machine learning", "deep learning", "neural network"),
 #'     count = c(150, 120, 90),
@@ -1094,7 +1094,7 @@ plot_mwe_frequency <- function(mwe_data,
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   library(quanteda)
 #'   corp <- corpus(c("text analysis", "data mining", "text mining"))
 #'   dfm_obj <- dfm(tokens(corp))

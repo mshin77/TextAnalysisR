@@ -15,7 +15,7 @@ get_best_embeddings(
 \arguments{
 \item{texts}{Character vector of texts to embed}
 
-\item{provider}{Character string: "auto" (default), "ollama", "sentence-transformers",
+\item{provider}{Character string: "auto" (default), "sentence-transformers",
 "openai", or "gemini". Use "auto" for automatic detection.}
 
 \item{model}{Character string specifying the embedding model. If NULL, uses default
@@ -32,7 +32,6 @@ Matrix with embeddings (rows = texts, columns = dimensions)
 \description{
 Auto-detects and uses the best available embedding provider with the following priority:
 \enumerate{
-\item Ollama (free, local, fast) - if running
 \item sentence-transformers (local Python) - if Python environment is set up
 \item OpenAI API - if OPENAI_API_KEY is set
 \item Gemini API - if GEMINI_API_KEY is set
@@ -47,7 +46,7 @@ texts <- SpecialEduTech$abstract[1:5]
 embeddings <- get_best_embeddings(texts)
 
 # Force specific provider
-embeddings <- get_best_embeddings(texts, provider = "ollama")
+embeddings <- get_best_embeddings(texts, provider = "openai")
 
 dim(embeddings)
 }

@@ -101,13 +101,15 @@ server <- shinyServer(function(input, output, session) {
 
   ai_config <- reactiveValues(
     openai_api_key = if (is_remote) "" else Sys.getenv("OPENAI_API_KEY"),
-    gemini_api_key = if (is_remote) "" else Sys.getenv("GEMINI_API_KEY")
+    gemini_api_key = if (has_server_gemini) server_gemini_key
+                     else if (is_remote) ""
+                     else Sys.getenv("GEMINI_API_KEY")
   )
 
   session$onSessionEnded(function() {
     isolate({
       ai_config$openai_api_key <- ""
-      ai_config$gemini_api_key <- ""
+      ai_config$gemini_api_key <- if (has_server_gemini) server_gemini_key else ""
     })
     try(reticulate::py_run_string("import gc; gc.collect()"), silent = TRUE)
   })
@@ -201,21 +203,8 @@ server <- shinyServer(function(input, output, session) {
   outputOptions(output, "has_openai_key", suspendWhenHidden = FALSE)
   output$has_gemini_key <- reactive({ nzchar(ai_config$gemini_api_key %||% "") })
   outputOptions(output, "has_gemini_key", suspendWhenHidden = FALSE)
-
-  available_ollama_models <- reactiveVal(NULL)
-
-  observe({
-    if (is_remote) return()
-    shinyjs::delay(10000, {
-      models <- tryCatch({
-        if (TextAnalysisR::check_ollama(verbose = FALSE)) {
-          TextAnalysisR::list_ollama_models(verbose = FALSE)
-        } else NULL
-      }, error = function(e) NULL)
-      available_ollama_models(models)
-    })
-    invalidateLater(30000)
-  })
+  output$server_gemini <- reactive({ isTRUE(has_server_gemini) })
+  outputOptions(output, "server_gemini", suspendWhenHidden = FALSE)
 
   ai_usage_log <- reactiveVal(data.frame(
     timestamp = character(), feature = character(),
@@ -238,19 +227,24 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     if (!is_remote) return()
-    llm_providers <- c("OpenAI (API Key Required)" = "openai", "Gemini (API Key Required)" = "gemini")
+    gemini_label <- if (has_server_gemini) "Gemini (free, Google Cloud Research)" else "Gemini (API Key Required)"
+    default_llm <- if (has_server_gemini) "gemini" else "openai"
+    default_embed <- if (has_server_gemini) "gemini" else "sentence-transformers"
+    llm_providers <- c("OpenAI (API Key Required)" = "openai", "Gemini" = "gemini")
+    names(llm_providers)[2] <- gemini_label
     embed_providers <- c("Sentence Transformers (Python)" = "sentence-transformers",
-                         "OpenAI (API Key Required)" = "openai", "Gemini (API Key Required)" = "gemini")
+                         "OpenAI (API Key Required)" = "openai", "Gemini" = "gemini")
+    names(embed_providers)[3] <- gemini_label
 
-    updateRadioButtons(session, "embedding_provider", choices = embed_providers, selected = "sentence-transformers")
-    updateRadioButtons(session, "search_embedding_provider", choices = embed_providers, selected = "sentence-transformers")
-    updateRadioButtons(session, "topic_embedding_provider", choices = embed_providers, selected = "sentence-transformers")
-    updateRadioButtons(session, "rag_provider", choices = llm_providers, selected = "openai")
-    updateRadioButtons(session, "cluster_label_provider", choices = llm_providers, selected = "openai")
-    updateRadioButtons(session, "llm_sentiment_provider", choices = llm_providers, selected = "openai")
-    updateRadioButtons(session, "stm_label_provider", choices = llm_providers, selected = "openai")
-    updateRadioButtons(session, "k_rec_provider", choices = llm_providers, selected = "openai")
-    updateRadioButtons(session, "content_provider", choices = llm_providers, selected = "openai")
+    updateRadioButtons(session, "embedding_provider", choices = embed_providers, selected = default_embed)
+    updateRadioButtons(session, "search_embedding_provider", choices = embed_providers, selected = default_embed)
+    updateRadioButtons(session, "topic_embedding_provider", choices = embed_providers, selected = default_embed)
+    updateRadioButtons(session, "rag_provider", choices = llm_providers, selected = default_llm)
+    updateRadioButtons(session, "cluster_label_provider", choices = llm_providers, selected = default_llm)
+    updateRadioButtons(session, "llm_sentiment_provider", choices = llm_providers, selected = default_llm)
+    updateRadioButtons(session, "stm_label_provider", choices = llm_providers, selected = default_llm)
+    updateRadioButtons(session, "k_rec_provider", choices = llm_providers, selected = default_llm)
+    updateRadioButtons(session, "content_provider", choices = llm_providers, selected = default_llm)
   })
 
   # spaCy initialization status
@@ -382,27 +376,9 @@ server <- shinyServer(function(input, output, session) {
         condition = "input.enable_multimodal == true",
         radioButtons("vision_provider",
           "Vision provider:",
-          choices = if (is_remote) {
-            c("OpenAI (API Key Required)" = "openai", "Gemini (API Key Required)" = "gemini")
-          } else {
-            c("Local (Ollama - Free, Private)" = "ollama", "OpenAI (API Key Required)" = "openai", "Gemini (API Key Required)" = "gemini")
-          },
-          selected = if (is_remote) "openai" else "ollama",
+          choices = c("OpenAI (API Key Required)" = "openai", "Gemini (API Key Required)" = "gemini"),
+          selected = "openai",
           inline = FALSE
-        ),
-        conditionalPanel(
-          condition = "input.vision_provider == 'ollama'",
-          selectizeInput("ollama_vision_model",
-            "Ollama model:",
-            choices = c("LLaVA (Default)" = "llava", "BakLLaVA" = "bakllava", "LLaVA-Phi3" = "llava-phi3"),
-            selected = NULL,
-            options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-          ),
-          tags$div(
-            class = "ollama-help-text",
-            style = "font-size: 16px; color: #475569; margin-top: -8px; margin-bottom: 8px;",
-            HTML("First time? Run: <code>ollama pull llava</code>. Browse: <a href='https://ollama.com/library' target='_blank'>ollama.com/library</a>")
-          )
         ),
         conditionalPanel(
           condition = "input.vision_provider == 'openai'",
@@ -593,14 +569,13 @@ server <- shinyServer(function(input, output, session) {
         }
         TextAnalysisR:::show_loading_notification(loading_msg, id = "processingPDF")
 
-        vision_provider <- isolate(input$vision_provider %||% "ollama")
+        vision_provider <- isolate(input$vision_provider %||% "openai")
         api_key <- switch(vision_provider,
           "openai" = isolate(get_api_key("openai", input$openai_api_key)),
           "gemini" = isolate(get_api_key("gemini", input$gemini_vision_api_key)),
           NULL
         )
         vision_model <- switch(vision_provider,
-          "ollama" = isolate(input$ollama_vision_model %||% "llava"),
           "openai" = isolate(input$openai_vision_model %||% "gpt-4.1"),
           "gemini" = isolate(input$gemini_vision_model %||% "gemini-2.5-flash"),
           NULL
@@ -8868,46 +8843,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$llm_sentiment_model_ui <- renderUI({
-    provider <- input$llm_sentiment_provider %||% "ollama"
+    provider <- input$llm_sentiment_provider %||% "openai"
 
     switch(provider,
-      "ollama" = {
-        if (is_remote) {
-          return(div(
-            class = "alert alert-info",
-            style = "padding: 8px; margin-bottom: 10px;",
-            icon("info-circle"),
-            " Ollama is for local use only. Select OpenAI or Gemini on the web server."
-          ))
-        }
-
-        ollama_available <- tryCatch({
-          TextAnalysisR::check_ollama()
-        }, error = function(e) FALSE)
-
-        if (ollama_available) {
-          models <- tryCatch({
-            TextAnalysisR::list_ollama_models()
-          }, error = function(e) c("tinyllama", "llama3.2", "mistral", "gemma3"))
-
-          tagList(
-            selectizeInput(
-              "llm_sentiment_model",
-              "Ollama Model",
-              choices = models,
-              selected = NULL,
-              options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-            )
-          )
-        } else {
-          div(
-            class = "alert alert-info",
-            style = "padding: 8px; margin-bottom: 10px;",
-            icon("info-circle"),
-            " Ollama not detected. Install from ollama.com or select another provider."
-          )
-        }
-      },
       "openai" = {
         tagList(
           selectizeInput(
@@ -8958,21 +8896,10 @@ server <- shinyServer(function(input, output, session) {
     TextAnalysisR:::show_loading_notification("Running LLM sentiment analysis...", id = "llm_sentiment_loading")
 
     tryCatch({
-      provider <- input$llm_sentiment_provider %||% "ollama"
+      provider <- input$llm_sentiment_provider %||% "openai"
 
       api_key <- NULL
-      if (provider == "ollama") {
-        if (is_remote) {
-          TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
-          showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning", duration = 7)
-          return()
-        }
-        if (!TextAnalysisR::check_ollama()) {
-          TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
-          showNotification("Ollama is not detected. Install from ollama.com or select another provider.", type = "warning", duration = 7)
-          return()
-        }
-      } else if (provider %in% c("openai", "gemini")) {
+      if (provider %in% c("openai", "gemini")) {
         api_key <- get_api_key(provider, input[[paste0("llm_sentiment_", provider, "_api_key")]])
         if (!check_api_key(api_key, provider, "LLM sentiment")) {
           TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
@@ -12229,9 +12156,8 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    provider <- input$embedding_provider %||% "ollama"
+    provider <- input$embedding_provider %||% "sentence-transformers"
     model_name <- switch(provider,
-      "ollama" = input$embedding_ollama_model %||% "nomic-embed-text",
       "sentence-transformers" = input$embedding_st_model %||% "all-MiniLM-L6-v2",
       "openai" = input$embedding_openai_model %||% "text-embedding-3-small",
       "gemini" = input$embedding_gemini_model %||% "gemini-embedding-001",
@@ -12276,11 +12202,7 @@ server <- shinyServer(function(input, output, session) {
     }, error = function(e) {
       TextAnalysisR:::remove_notification_by_id(loading_id)
 
-      error_options <- if (is_remote) {
-        "Options: 1) Use Sentence Transformers, 2) Set OPENAI_API_KEY or GEMINI_API_KEY."
-      } else {
-        "Options: 1) Start Ollama, 2) Run setup_python_env(), 3) Set OPENAI_API_KEY or GEMINI_API_KEY."
-      }
+      error_options <- "Options: 1) Use Sentence Transformers, 2) Set OPENAI_API_KEY or GEMINI_API_KEY."
       TextAnalysisR:::show_error_notification(
         paste0("Error generating embeddings: ", e$message, ". ", error_options)
       )
@@ -13009,37 +12931,11 @@ server <- shinyServer(function(input, output, session) {
     search_method <- input$search_method %||% "keyword"
 
     if (search_method == "rag") {
-      provider <- input$rag_provider %||% "ollama"
+      provider <- input$rag_provider %||% "openai"
 
-      # Check provider availability and get API key
       api_key <- NULL
 
-      if (provider == "ollama") {
-        if (is_remote) {
-          showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning", duration = 7)
-          return()
-        }
-
-        if (!TextAnalysisR::check_ollama(verbose = FALSE)) {
-          showModal(modalDialog(
-            title = "Ollama Required",
-            HTML("<p>RAG Q&A with Ollama requires Ollama to be running locally.</p>
-                 <p><strong>Setup:</strong></p>
-                 <ol>
-                   <li>Download Ollama from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>
-                   <li>Run: <code>ollama pull nomic-embed-text</code> (for embeddings)</li>
-                   <li>Run: <code>ollama pull tinyllama</code> (for chat)</li>
-                   <li>Start Ollama and try again</li>
-                 </ol>"),
-            easyClose = TRUE,
-            footer = modalButton("Close")
-          ))
-          return()
-        }
-
-        chat_model <- input$rag_ollama_model %||% "tinyllama"
-
-      } else if (provider == "openai") {
+      if (provider == "openai") {
         api_key <- get_api_key("openai", input$rag_openai_api_key)
         if (!check_api_key(api_key, "openai", "RAG search")) return()
         chat_model <- input$rag_openai_model %||% "gpt-4.1-mini"
@@ -13093,9 +12989,8 @@ server <- shinyServer(function(input, output, session) {
       similarity_data <- comparison_results$results[[search_method]]
 
       if (is.null(similarity_data) && search_method == "embeddings") {
-        search_provider <- input$search_embedding_provider %||% "ollama"
+        search_provider <- input$search_embedding_provider %||% "sentence-transformers"
         search_model <- switch(search_provider,
-          "ollama" = input$search_embedding_ollama_model %||% "nomic-embed-text",
           "sentence-transformers" = input$search_embedding_st_model %||% "all-MiniLM-L6-v2",
           "openai" = input$search_embedding_openai_model %||% "text-embedding-3-small",
           "gemini" = input$search_embedding_gemini_model %||% "gemini-embedding-001",
@@ -17772,93 +17667,15 @@ server <- shinyServer(function(input, output, session) {
     }
   }, options = list(pageLength = 10, scrollX = TRUE))
 
-  ollama_available_cluster <- reactive({
-    if (is_remote) return(FALSE)
-    TextAnalysisR::check_ollama(verbose = FALSE)
-  })
-
-  ollama_models_cluster <- reactive({
-    if (ollama_available_cluster()) {
-      models <- TextAnalysisR::list_ollama_models(verbose = FALSE)
-      if (!is.null(models) && length(models) > 0) {
-        return(models)
-      }
-    }
-    return(NULL)
-  })
-
-  output$ollama_status_cluster <- renderUI({
-    if (is_remote) {
-      return(tags$div(
-        style = "background-color: #F1F5F9; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
-        tags$small(
-          style = "color: #475569;",
-          icon("info-circle"), " Ollama is for local use only. Use OpenAI or Gemini on the web server."
-        )
-      ))
-    }
-    if (ollama_available_cluster()) {
-      models <- ollama_models_cluster()
-      if (!is.null(models) && length(models) > 0) {
-        tags$div(
-          style = "background-color: #D1FAE5; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
-          tags$small(
-            style = "color: #0C795A;",
-            icon("check-circle"), " Ollama is available with ", length(models), " model(s)"
-          )
-        )
-      } else {
-        tags$div(
-          style = "background-color: #FEF3C7; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
-          tags$small(
-            style = "color: #B15319;",
-            icon("exclamation-triangle"), " Ollama running but no models found. Run: ollama pull tinyllama"
-          )
-        )
-      }
-    } else {
-      tags$div(
-        style = "background-color: #F1F5F9; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
-        tags$small(
-          style = "color: #475569;",
-          icon("info-circle"), " Ollama not detected. Install from ",
-          tags$a(href = "https://ollama.com", target = "_blank", "ollama.com"),
-          " for local AI features."
-        )
-      )
-    }
-  })
-
-  output$cluster_ollama_model_selector <- renderUI({
-    models <- ollama_models_cluster()
-    if (!is.null(models) && length(models) > 0) {
-      selectInput(
-        "cluster_ollama_model",
-        "Ollama Model:",
-        choices = models,
-        selected = models[1]
-      )
-    } else {
-      NULL
-    }
-  })
-
   output$cluster_labeling_status <- renderUI({
     provider <- input$cluster_label_provider
     if (is.null(provider)) provider <- "auto"
 
     if (provider == "auto") {
-      if (is_remote) {
-        tags$p(style = "color: #475569; font-size: 16px;", icon("info-circle"), " Will use OpenAI or Gemini (Ollama requires local installation)")
-      } else if (ollama_available_cluster()) {
-        tags$p(style = "color: #337ab7; font-size: 16px;", icon("info-circle"), " Using Ollama (local AI)")
-      } else {
-        tags$p(style = "color: #475569; font-size: 16px;", icon("info-circle"), " Will use OpenAI (requires API key). Install Ollama for local AI.")
-      }
+      tags$p(style = "color: #475569; font-size: 16px;", icon("info-circle"), " Will use OpenAI or Gemini (requires API key).")
     }
   })
 
-  # Cluster Label Generation - supports Ollama, OpenAI, and Gemini providers
   observeEvent(input$generate_cluster_labels, {
     if (is.null(comparison_results$clustering)) {
       showNotification("Please run clustering analysis first", type = "error", duration = 10)
@@ -17866,42 +17683,11 @@ server <- shinyServer(function(input, output, session) {
     }
     if (!gate_rate_limit("cluster label generation")) return()
 
-    provider <- input$cluster_label_provider %||% "ollama"
+    provider <- input$cluster_label_provider %||% "openai"
     api_key <- NULL
     model <- NULL
 
-    if (provider == "ollama") {
-      if (is_remote) {
-        shiny::showNotification(
-          "Ollama requires local installation. Please use OpenAI or Gemini on the web server.",
-          type = "warning",
-          duration = 5
-        )
-        return()
-      }
-
-      # Check if Ollama is running
-      if (!TextAnalysisR::check_ollama(verbose = FALSE)) {
-        shiny::showModal(shiny::modalDialog(
-          title = "Ollama Required",
-          HTML(paste0(
-            "<p>Ollama is not running or not installed.</p>",
-            "<p><strong>To set up Ollama:</strong></p>",
-            "<ol>",
-            "<li>Download from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>",
-            "<li>Install and start Ollama</li>",
-            "<li>Run: <code>ollama pull tinyllama</code></li>",
-            "</ol>"
-          )),
-          easyClose = TRUE,
-          footer = shiny::modalButton("Close")
-        ))
-        return()
-      }
-
-      model <- input$cluster_ollama_model %||% "tinyllama"
-
-    } else if (provider == "openai") {
+    if (provider == "openai") {
       api_key <- get_api_key("openai", input$cluster_openai_api_key)
       if (!check_api_key(api_key, "openai", "cluster labels")) return()
       model <- input$cluster_openai_model %||% "gpt-4.1-mini"
@@ -18483,47 +18269,14 @@ server <- shinyServer(function(input, output, session) {
 
   ai_recommendation <- reactiveVal(NULL)
 
-  # K Recommendation Generation - supports Ollama, OpenAI, and Gemini providers
   observeEvent(input$generate_k_recommendation, {
     req(K_search())
 
-    # Get provider selection
-    provider <- input$k_rec_provider %||% "ollama"
+    provider <- input$k_rec_provider %||% "openai"
     api_key <- NULL
     model <- NULL
 
-    if (provider == "ollama") {
-      if (is_remote) {
-        shiny::showNotification(
-          "Ollama requires local installation. Please use OpenAI or Gemini on the web server.",
-          type = "warning",
-          duration = 5
-        )
-        return()
-      }
-
-      # Check if Ollama is running
-      if (!TextAnalysisR::check_ollama(verbose = FALSE)) {
-        shiny::showModal(shiny::modalDialog(
-          title = "Ollama Required",
-          HTML(paste0(
-            "<p>Ollama is not running or not installed.</p>",
-            "<p><strong>To set up Ollama:</strong></p>",
-            "<ol>",
-            "<li>Download from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>",
-            "<li>Install and start Ollama</li>",
-            "<li>Run: <code>ollama pull tinyllama</code></li>",
-            "</ol>"
-          )),
-          easyClose = TRUE,
-          footer = shiny::modalButton("Close")
-        ))
-        return()
-      }
-
-      model <- input$k_rec_ollama_model %||% "tinyllama"
-
-    } else if (provider == "openai") {
+    if (provider == "openai") {
       api_key <- get_api_key("openai", input$k_rec_openai_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
@@ -18670,42 +18423,30 @@ server <- shinyServer(function(input, output, session) {
       system_prompt <- input$ai_system_search
       user_prompt <- paste(input$ai_user_search, "\n\n", analysis_context)
 
-      # Call the appropriate provider
-      recommendation <- if (provider == "ollama") {
-        TextAnalysisR:::call_ollama(
-          prompt = user_prompt,
+      detailed_prompt <- paste0(
+        user_prompt,
+        "\n\nIMPORTANT: Provide a detailed, multi-paragraph analysis. ",
+        "Include specific metric values in your explanation. ",
+        "Discuss trade-offs between different K values and explain your reasoning thoroughly."
+      )
+      recommendation <- if (provider == "openai") {
+        TextAnalysisR:::call_openai_chat(
+          user_prompt = detailed_prompt,
+          system_prompt = system_prompt,
           model = model,
-          system = system_prompt,
+          api_key = api_key,
           temperature = 0.7,
-          max_tokens = 2048,
-          timeout = 300
+          max_tokens = 2048
         )
-      } else if (provider == "openai" || provider == "gemini") {
-        detailed_prompt <- paste0(
-          user_prompt,
-          "\n\nIMPORTANT: Provide a detailed, multi-paragraph analysis. ",
-          "Include specific metric values in your explanation. ",
-          "Discuss trade-offs between different K values and explain your reasoning thoroughly."
+      } else {
+        TextAnalysisR:::call_gemini_chat(
+          user_prompt = detailed_prompt,
+          system_prompt = system_prompt,
+          model = model,
+          api_key = api_key,
+          temperature = 0.7,
+          max_tokens = 2048
         )
-        if (provider == "openai") {
-          TextAnalysisR:::call_openai_chat(
-            user_prompt = detailed_prompt,
-            system_prompt = system_prompt,
-            model = model,
-            api_key = api_key,
-            temperature = 0.7,
-            max_tokens = 2048
-          )
-        } else {
-          TextAnalysisR:::call_gemini_chat(
-            user_prompt = detailed_prompt,
-            system_prompt = system_prompt,
-            model = model,
-            api_key = api_key,
-            temperature = 0.7,
-            max_tokens = 2048
-          )
-        }
       }
 
       # Extract K value from recommendation
@@ -18725,9 +18466,7 @@ server <- shinyServer(function(input, output, session) {
 
     }, error = function(e) {
       tryCatch(removeNotification(id = "ai_gen_notification"), error = function(e) {})
-      error_msg <- if (grepl("timeout|timed out", e$message, ignore.case = TRUE)) {
-        "Ollama request timed out. The model may be loading or your hardware may be slow. Try again or use a smaller model like 'tinyllama'."
-      } else if (!is.null(e$message) && nchar(e$message) > 0) {
+      error_msg <- if (!is.null(e$message) && nchar(e$message) > 0) {
         paste("AI recommendation error:", e$message)
       } else {
         "Error generating AI recommendation. Please check your settings and try again."
@@ -19200,38 +18939,9 @@ server <- shinyServer(function(input, output, session) {
 
   output$embedding_topic_provider_status <- renderUI({
     req(input$topic_modeling_path == "embedding")
-    provider <- input$topic_embedding_provider %||% "ollama"
+    provider <- input$topic_embedding_provider %||% "sentence-transformers"
 
-    if (provider == "ollama") {
-      if (is_remote) {
-        return(tags$div(
-          class = "status-sidebar-info",
-          style = "margin-bottom: 10px;",
-          tags$i(class = "fa fa-info-circle status-icon", style = "color: #475569;"),
-          tags$span("Ollama is for local use only. Use another provider on the web server.")
-        ))
-      }
-
-      ollama_ok <- isolate(tryCatch({
-        TextAnalysisR::check_ollama(verbose = FALSE)
-      }, error = function(e) FALSE))
-
-      if (ollama_ok) {
-        tags$div(
-          class = "status-sidebar-success",
-          style = "margin-bottom: 10px;",
-          tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
-          tags$span("Ollama connected")
-        )
-      } else {
-        tags$div(
-          class = "status-sidebar-info",
-          style = "margin-bottom: 10px;",
-          tags$i(class = "fa fa-info-circle status-icon", style = "color: #475569;"),
-          tags$span("Ollama not detected. Install from ollama.com for local AI features.")
-        )
-      }
-    } else if (provider == "sentence-transformers") {
+    if (provider == "sentence-transformers") {
       python_ok <- isolate(tryCatch({
         requireNamespace("reticulate", quietly = TRUE) &&
           reticulate::py_module_available("sentence_transformers")
@@ -19360,9 +19070,8 @@ server <- shinyServer(function(input, output, session) {
       texts <- united_tbl()$united_texts
       start_time <- Sys.time()
 
-      provider <- input$topic_embedding_provider %||% "ollama"
+      provider <- input$topic_embedding_provider %||% "sentence-transformers"
       model_name <- switch(provider,
-        "ollama" = input$topic_embedding_ollama_model %||% "nomic-embed-text",
         "sentence-transformers" = input$topic_embedding_st_model %||% "all-MiniLM-L6-v2",
         "openai" = input$topic_embedding_openai_model %||% "text-embedding-3-small",
         "gemini" = input$topic_embedding_gemini_model %||% "gemini-embedding-001",
@@ -20166,32 +19875,10 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    provider <- input$stm_label_provider %||% "ollama"
+    provider <- input$stm_label_provider %||% "openai"
     api_key <- NULL
 
-    if (provider == "ollama") {
-      if (is_remote) {
-        showNotification("Ollama requires local installation. Please use OpenAI or Gemini on the web server.", type = "warning", duration = 7)
-        return()
-      }
-      if (!TextAnalysisR::check_ollama(verbose = FALSE)) {
-        showModal(modalDialog(
-          title = "Ollama Required",
-          HTML("<p>Topic labeling with Ollama requires Ollama to be running locally.</p>
-               <p><strong>Setup:</strong></p>
-               <ol>
-                 <li>Download Ollama from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>
-                 <li>Run: <code>ollama pull tinyllama</code></li>
-                 <li>Start Ollama and try again</li>
-               </ol>"),
-          easyClose = TRUE,
-          footer = modalButton("Close")
-        ))
-        return()
-      }
-      model <- input$stm_label_ollama_model %||% "tinyllama"
-
-    } else if (provider == "openai") {
+    if (provider == "openai") {
       api_key <- get_api_key("openai", input$stm_label_openai_api_key)
       if (!nzchar(api_key)) {
         showNotification(TextAnalysisR:::.missing_api_key_message("openai", "shiny"), type = "error")
@@ -20258,43 +19945,11 @@ server <- shinyServer(function(input, output, session) {
 
     shiny::req(beta_td())
 
-    # Get provider selection
-    provider <- input$content_provider %||% "ollama"
+    provider <- input$content_provider %||% "openai"
     api_key <- NULL
     model <- NULL
 
-    if (provider == "ollama") {
-      if (is_remote) {
-        shiny::showNotification(
-          "Ollama requires local installation. Please use OpenAI or Gemini on the web server.",
-          type = "warning",
-          duration = 5
-        )
-        return()
-      }
-
-      # Check if Ollama is running
-      if (!TextAnalysisR::check_ollama(verbose = FALSE)) {
-        shiny::showModal(shiny::modalDialog(
-          title = "Ollama Required",
-          HTML(paste0(
-            "<p>Ollama is not running or not installed.</p>",
-            "<p><strong>To set up Ollama:</strong></p>",
-            "<ol>",
-            "<li>Download from <a href='https://ollama.com' target='_blank'>ollama.com</a></li>",
-            "<li>Install and start Ollama</li>",
-            "<li>Run: <code>ollama pull tinyllama</code></li>",
-            "</ol>"
-          )),
-          easyClose = TRUE,
-          footer = shiny::modalButton("Close")
-        ))
-        return()
-      }
-
-      model <- input$content_ollama_model %||% "tinyllama"
-
-    } else if (provider == "openai") {
+    if (provider == "openai") {
       api_key <- get_api_key("openai", input$content_openai_api_key)
       if (!nzchar(api_key)) {
         shiny::showNotification(
@@ -21633,11 +21288,6 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  # Dynamic Ollama model list updates
-
-
-  # AI settings panel
-
   observe({
     key <- input$global_openai_api_key
     if (!is.null(key) && nzchar(key)) ai_config$openai_api_key <- key
@@ -21645,34 +21295,6 @@ server <- shinyServer(function(input, output, session) {
   observe({
     key <- input$global_gemini_api_key
     if (!is.null(key) && nzchar(key)) ai_config$gemini_api_key <- key
-  })
-
-  output$global_ollama_status <- renderUI({
-    if (is_remote) {
-      return(tags$div(
-        style = "background-color: #F1F5F9; padding: 8px; border-radius: 4px; margin-bottom: 10px;",
-        tags$small(
-          style = "color: #475569;",
-          icon("info-circle"), " Ollama is for local use only. Use OpenAI or Gemini on the web server."
-        )
-      ))
-    }
-    models <- available_ollama_models()
-    if (!is.null(models) && length(models) > 0) {
-      tagList(
-        tags$span(style = "color: #28a745;", icon("check-circle"), " Ollama running"),
-        tags$p(style = "font-size: 16px; color: #666; margin-top: 4px;",
-          paste(length(models), "models:", paste(head(models, 5), collapse = ", "),
-                if (length(models) > 5) "..." else ""))
-      )
-    } else {
-      tagList(
-        tags$span(style = "color: #475569;", icon("info-circle"), " Ollama not detected"),
-        tags$p(style = "font-size: 16px; color: #666;",
-          "Install from ", tags$a(href = "https://ollama.com", target = "_blank", "ollama.com"),
-          " for local AI features.")
-      )
-    }
   })
 
   output$has_ai_usage_log <- reactive({ nrow(ai_usage_log()) > 0 })

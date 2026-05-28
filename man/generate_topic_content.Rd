@@ -11,7 +11,7 @@ generate_topic_content(
   topic_var = "topic",
   term_var = "term",
   weight_var = "beta",
-  provider = c("openai", "ollama"),
+  provider = c("openai", "gemini"),
   model = "gpt-4.1-mini",
   temperature = 0,
   system_prompt = NULL,
@@ -42,10 +42,10 @@ topic identifier, term, and optionally term weight (beta).}
 
 \item{weight_var}{Name of the column containing term weights (default: "beta").}
 
-\item{provider}{LLM provider: "openai" or "ollama" (default: "openai").}
+\item{provider}{LLM provider: "openai" or "gemini" (default: "openai").}
 
 \item{model}{Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc.
-For Ollama: "llama3", "mistral", etc.}
+For Gemini: "gemini-2.5-flash-lite", "gemini-2.5-flash", etc.}
 
 \item{temperature}{Sampling temperature (0-2). Lower = more deterministic (default: 0).}
 
@@ -56,7 +56,8 @@ If NULL, uses default for content_type.}
 
 \item{max_tokens}{Maximum tokens for response (default: 150).}
 
-\item{api_key}{OpenAI API key. If NULL, reads from OPENAI_API_KEY environment variable.}
+\item{api_key}{API key for the selected provider. If NULL, reads from
+OPENAI_API_KEY or GEMINI_API_KEY environment variable.}
 
 \item{output_var}{Name of the output column (default: based on content_type).}
 
@@ -74,10 +75,8 @@ default prompts, or fully custom prompts.
 The function generates one piece of content per unique topic. Each content type
 has optimized default prompts, but these can be overridden with custom prompts.
 
-For OpenAI, requires an API key set via the \code{api_key} parameter or
-OPENAI_API_KEY environment variable (can be loaded from .env file).
-
-For Ollama, requires a local Ollama installation with the specified model.
+Requires an API key set via the \code{api_key} parameter or the relevant
+environment variable (OPENAI_API_KEY or GEMINI_API_KEY).
 }
 \examples{
 if (interactive()) {
@@ -93,8 +92,8 @@ survey_items <- generate_topic_content(
 research_qs <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "research_question",
-  provider = "ollama",
-  model = "llama3"
+  provider = "gemini",
+  model = "gemini-2.5-flash-lite"
 )
 
 # Generate with custom prompt

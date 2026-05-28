@@ -14,7 +14,7 @@ generate_topic_content(
   topic_var = "topic",
   term_var = "term",
   weight_var = "beta",
-  provider = c("openai", "ollama"),
+  provider = c("openai", "gemini"),
   model = "gpt-4.1-mini",
   temperature = 0,
   system_prompt = NULL,
@@ -75,12 +75,12 @@ generate_topic_content(
 
 - provider:
 
-  LLM provider: "openai" or "ollama" (default: "openai").
+  LLM provider: "openai" or "gemini" (default: "openai").
 
 - model:
 
-  Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc. For Ollama:
-  "llama3", "mistral", etc.
+  Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc. For Gemini:
+  "gemini-2.5-flash-lite", "gemini-2.5-flash", etc.
 
 - temperature:
 
@@ -101,8 +101,8 @@ generate_topic_content(
 
 - api_key:
 
-  OpenAI API key. If NULL, reads from OPENAI_API_KEY environment
-  variable.
+  API key for the selected provider. If NULL, reads from OPENAI_API_KEY
+  or GEMINI_API_KEY environment variable.
 
 - output_var:
 
@@ -122,11 +122,8 @@ The function generates one piece of content per unique topic. Each
 content type has optimized default prompts, but these can be overridden
 with custom prompts.
 
-For OpenAI, requires an API key set via the `api_key` parameter or
-OPENAI_API_KEY environment variable (can be loaded from .env file).
-
-For Ollama, requires a local Ollama installation with the specified
-model.
+Requires an API key set via the `api_key` parameter or the relevant
+environment variable (OPENAI_API_KEY or GEMINI_API_KEY).
 
 ## See also
 
@@ -153,8 +150,8 @@ survey_items <- generate_topic_content(
 research_qs <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "research_question",
-  provider = "ollama",
-  model = "llama3"
+  provider = "gemini",
+  model = "gemini-2.5-flash-lite"
 )
 
 # Generate with custom prompt

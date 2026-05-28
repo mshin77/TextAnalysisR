@@ -20,7 +20,6 @@
 - Rate limiting: 100 requests/hour per session
 - Security event logging with sanitized error messages
 - Local processing option (FERPA/HIPAA compatible)
-- Offline AI via Ollama for fully local operation
 
 ## Infrastructure
 

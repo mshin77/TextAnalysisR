@@ -128,12 +128,9 @@ reference:
 - title: "AI & Multimodal"
   desc: "LLM integration, embeddings, PDF extraction, and vision AI"
   contents:
-  - check_ollama
-  - list_ollama_models
   - call_llm_api
   - check_vision_models
   - describe_image
-  - get_recommended_ollama_model
   - get_best_embeddings
   - run_rag_search
   - analyze_sentiment_llm
@@ -208,12 +205,10 @@ reference:
   - create_aria_label
   - create_sr_text
   - describe_image_gemini
-  - describe_image_ollama
   - describe_image_openai
   - generate_semantic_topic_keywords
   - generate_topic_keywords
   - get_gemini_embeddings
-  - get_ollama_embeddings
   - get_openai_embeddings
   - log_security_event
   - render_pdf_pages_to_base64
@@ -223,7 +218,6 @@ reference:
   - validate_column_name
   - validate_file_upload
   - validate_keyboard_navigation
-  - call_ollama
   - call_openai_chat
   - call_gemini_chat
   - get_api_embeddings

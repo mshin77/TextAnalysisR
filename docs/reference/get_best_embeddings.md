@@ -3,14 +3,12 @@
 Auto-detects and uses the best available embedding provider with the
 following priority:
 
-1.  Ollama (free, local, fast) - if running
-
-2.  sentence-transformers (local Python) - if Python environment is set
+1.  sentence-transformers (local Python) - if Python environment is set
     up
 
-3.  OpenAI API - if OPENAI_API_KEY is set
+2.  OpenAI API - if OPENAI_API_KEY is set
 
-4.  Gemini API - if GEMINI_API_KEY is set
+3.  Gemini API - if GEMINI_API_KEY is set
 
 ## Usage
 
@@ -32,8 +30,8 @@ get_best_embeddings(
 
 - provider:
 
-  Character string: "auto" (default), "ollama", "sentence-transformers",
-  "openai", or "gemini". Use "auto" for automatic detection.
+  Character string: "auto" (default), "sentence-transformers", "openai",
+  or "gemini". Use "auto" for automatic detection.
 
 - model:
 
@@ -64,7 +62,7 @@ texts <- SpecialEduTech$abstract[1:5]
 embeddings <- get_best_embeddings(texts)
 
 # Force specific provider
-embeddings <- get_best_embeddings(texts, provider = "ollama")
+embeddings <- get_best_embeddings(texts, provider = "openai")
 
 dim(embeddings)
 }

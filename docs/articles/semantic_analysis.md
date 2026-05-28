@@ -94,7 +94,7 @@ for details.
 
 labels <- generate_cluster_labels(
   results$topic_keywords,
-  provider = "ollama"
+  provider = "openai"
 )
 ```
 

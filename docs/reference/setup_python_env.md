@@ -1,13 +1,11 @@
 # Setup Python Environment
 
-Intelligently sets up Python virtual environment with required packages.
-Detects existing Python installations and guides users if Python is
-missing.
+Sets up a tiered Python virtual environment.
 
 ## Usage
 
 ``` r
-setup_python_env(envname = "textanalysisr-env", force = FALSE)
+setup_python_env(envname = "textanalysisr-env", tier = "core", force = FALSE)
 ```
 
 ## Arguments
@@ -16,6 +14,13 @@ setup_python_env(envname = "textanalysisr-env", force = FALSE)
 
   Character string name for the virtual environment (default:
   "textanalysisr-env")
+
+- tier:
+
+  Which feature tier to install. One or more of: `"core"` (spacy +
+  pdfplumber, ~200 MB; default), `"embeddings"` (adds
+  sentence-transformers + transformers + torch, ~1 GB), `"topics"` (adds
+  BERTopic + UMAP + HDBSCAN, ~300 MB on top of embeddings).
 
 - force:
 
@@ -27,45 +32,18 @@ Invisible TRUE if successful, stops with error message if failed
 
 ## Details
 
-This function:
+Default `tier = "core"` keeps the install light — spaCy NLP and PDF text
+extraction only. Add `"embeddings"` for sentence-transformers-based
+similarity/sentiment, and `"topics"` for BERTopic.
 
-- Automatically detects if Python is already installed
-
-- Offers to install Miniconda if no Python found
-
-- Creates an isolated virtual environment (does NOT modify system
-  Python)
-
-- Installs minimal core packages:
-
-  - spacy (NLP processing)
-
-  - pdfplumber (PDF table extraction)
-
-- Dependencies installed automatically by pip
-
-- Avoids heavy packages (no torch, transformers)
-
-The virtual environment approach means:
-
-- No conflicts with other Python projects
-
-- Easy to remove (just delete the environment)
-
-- System Python remains untouched
-
-- Much smaller download (~100MB vs 5GB+)
-
-After setup, restart R session to activate Python-backed features.
+The virtual environment is isolated; system Python is not modified.
 
 ## Examples
 
 ``` r
 if (interactive()) {
-# First time setup (auto-detects Python)
-setup_python_env()
-
-# Recreate environment
-setup_python_env(force = TRUE)
+  setup_python_env()                              # core only (~200 MB)
+  setup_python_env(tier = c("core", "embeddings"))  # +1 GB
+  setup_python_env(tier = c("core", "embeddings", "topics"))  # full stack
 }
 ```

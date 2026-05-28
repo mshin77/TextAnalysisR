@@ -94,10 +94,23 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"TextAnalysisR"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] '0.1.4'</span></span></code></pre>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Bundled corpus is available immediately after install — no Python required.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"SpecialEduTech"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 490</span></span></code></pre>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">SpecialEduTech</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"year"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 3 × 2</span></span></span>
+<span><span class="co">##   title                                                                     year</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> Dyscalculia and the minicalculator: the ALP program                       <span style="text-decoration: underline;">1</span>980</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> The effects of computer-assisted instruction for mastery of multiplicat…  <span style="text-decoration: underline;">1</span>981</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> Computer Assisted Instruction with Learning Disabled Students             <span style="text-decoration: underline;">1</span>981</span></span></code></pre>
 <div class="section level2">
 <h2 id="r-package">R Package<a class="anchor" aria-label="anchor" href="#r-package"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"TextAnalysisR"</span>,</span>
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://mshin77.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
@@ -109,9 +122,8 @@
 </h2>
 <p>Visit <a href="https://www.textanalysisr.org" class="external-link">textanalysisr.org</a> -
 no installation needed.</p>
-<p>Note: Web version has limited features (no Python, no local AI via
-Ollama, no large files). Cloud AI providers (OpenAI, Gemini) are
-available with an API key.</p>
+<p>Note: Web version has limited features (no Python, no large files).
+Cloud AI providers (OpenAI, Gemini) are available with an API key.</p>
 </div>
 <div class="section level2">
 <h2 id="optional-features">Optional Features<a class="anchor" aria-label="anchor" href="#optional-features"></a>
@@ -120,7 +132,7 @@ available with an API key.</p>
 <h3 id="linguistic-analysis-spacy">Linguistic Analysis (spaCy)<a class="anchor" aria-label="anchor" href="#linguistic-analysis-spacy"></a>
 </h3>
 <p>For lemmatization, POS tagging, and named entity recognition:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Python spaCy required - see setup_python_env()</span></span>
 <span><span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="../reference/setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -128,9 +140,9 @@ available with an API key.</p>
 <h3 id="python-features">Python Features<a class="anchor" aria-label="anchor" href="#python-features"></a>
 </h3>
 <p>For embeddings and neural sentiment analysis:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/setup_python_env.html">setup_python_env</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p>Requires Python 3.9+ and optionally <a href="https://ollama.com" class="external-link">Ollama</a> for local AI.</p>
+<p>Requires Python 3.9+.</p>
 </div>
 </div>
 <div class="section level2">

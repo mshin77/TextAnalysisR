@@ -3,40 +3,49 @@
 ``` r
 
 library(TextAnalysisR)
-check_ollama()
+packageVersion("TextAnalysisR")
 ```
 
-    ## [1] TRUE
+    ## [1] '0.1.4'
 
-TextAnalysisR provides AI features via local and web-based providers.
+``` r
+
+# Local pipeline runs without any API key — TF-IDF surfaces the same
+# corpus terms the LLM workflows below would summarize for you.
+mydata <- SpecialEduTech[seq_len(20), c("title", "abstract")]
+united <- unite_cols(mydata, listed_vars = c("title", "abstract"))
+toks   <- prep_texts(united, text_field = "united_texts")
+dfm    <- quanteda::dfm(toks)
+extract_keywords_tfidf(dfm, top_n = 10)
+```
+
+    ##         Keyword TF_IDF_Score Frequency
+    ## 1           was    15.258649        44
+    ## 2      practice    10.837080        18
+    ## 3        groups    10.484550        15
+    ## 4      educable    10.000000        10
+    ## 5          were     9.948500        25
+    ## 6         drill     9.785580        14
+    ## 7   achievement     9.550560        24
+    ## 8      mentally     9.062996        11
+    ## 9  experimental     9.030900        15
+    ## 10     assisted     9.016475        26
+
+TextAnalysisR provides AI features via cloud-based providers.
+
+On the hosted web app, Gemini usage is free, supported by the Google
+Cloud Research program. OpenAI calls require a personal API key.
 
 ## Providers
 
 | Provider | Type | API Key | Best For |
 |----|----|----|----|
-| [Ollama](https://ollama.com) | Local | None | Privacy, no cost, offline use |
 | OpenAI | Web-based | OPENAI_API_KEY | Quality, speed |
-| [Gemini](https://ai.google.dev/) | Web-based | GEMINI_API_KEY | Quality, speed |
+| [Gemini](https://ai.google.dev/) | Web-based | None on hosted app; otherwise GEMINI_API_KEY | Quality, speed |
 | [spaCy](https://spacy.io/) | Local | None | Linguistic analysis |
 | Transformers | Local | None | Embeddings, sentiment |
 
 ## Setup
-
-### Local AI (Ollama)
-
-``` r
-
-# 1. Install Ollama: https://ollama.com
-# 2. Pull a model (in terminal):
-#    ollama pull llama3.2
-#    ollama pull mistral
-
-# 3. Verify in R:
-check_ollama()
-list_ollama_models()
-```
-
-### Web-based AI (OpenAI / Gemini)
 
 ``` r
 
@@ -62,7 +71,6 @@ response <- call_llm_api(
 # Provider-specific
 call_openai_chat(system_prompt, user_prompt, model = "gpt-4.1-mini")
 call_gemini_chat(system_prompt, user_prompt, model = "gemini-2.5-flash")
-call_ollama(prompt, model = "llama3.2")
 ```
 
 ## Embeddings & RAG
@@ -83,29 +91,12 @@ result <- run_rag_search(
 )
 ```
 
-## Ollama Utilities
-
-| Function | Purpose |
-|----|----|
-| [`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md) | Verify Ollama server is running |
-| [`list_ollama_models()`](https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.md) | List installed models |
-| [`get_recommended_ollama_model()`](https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.md) | Auto-select optimal model |
-
-``` r
-
-if (check_ollama()) {
-  models <- list_ollama_models()
-  best_model <- get_recommended_ollama_model()
-}
-```
-
 ## Default Models
 
 | Provider | Chat Model       | Embedding Model        |
 |----------|------------------|------------------------|
 | OpenAI   | gpt-4.1-mini     | text-embedding-3-small |
 | Gemini   | gemini-2.5-flash | gemini-embedding-001   |
-| Ollama   | llama3.2         | nomic-embed-text       |
 | Local    | \-               | all-MiniLM-L6-v2       |
 
 ## Responsible AI Design
@@ -114,10 +105,10 @@ All AI features follow [NIST AI Risk Management
 Framework](https://www.nist.gov/itl/ai-risk-management-framework)
 principles:
 
-| Principle       | Implementation                                     |
-|-----------------|----------------------------------------------------|
-| Human oversight | AI suggests; review and approve                    |
-| User control    | Edit, regenerate, or override any output           |
-| Transparency    | View prompts and parameters used                   |
-| Privacy         | Local options (Ollama, spaCy) for sensitive data   |
-| Grounding       | Content based on input data, not generic knowledge |
+| Principle | Implementation |
+|----|----|
+| Human oversight | AI suggests; review and approve |
+| User control | Edit, regenerate, or override any output |
+| Transparency | View prompts and parameters used |
+| Privacy | Local sentence-transformers and spaCy options for sensitive data |
+| Grounding | Content based on input data, not generic knowledge |

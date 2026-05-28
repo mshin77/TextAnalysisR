@@ -62,8 +62,7 @@ Uses transformer embeddings with dimensionality reduction and clustering. Best f
 
 | Provider | Model | Notes |
 |----------|-------|-------|
-| Ollama (default) | nomic-embed-text, mxbai-embed-large, all-minilm | Free, local, private |
-| Sentence Transformers | all-MiniLM-L6-v2, all-mpnet-base-v2 | Requires Python |
+| Sentence Transformers (default) | all-MiniLM-L6-v2, all-mpnet-base-v2 | Requires Python |
 | OpenAI | text-embedding-3-small, text-embedding-3-large | API key required |
 | Gemini | gemini-embedding-001 | API key required |
 
@@ -73,8 +72,8 @@ Uses transformer embeddings with dimensionality reduction and clustering. Best f
 # With precomputed embeddings
 embeddings <- get_best_embeddings(
   texts = united_tbl$united_texts,
-  provider = "ollama",
-  model = "nomic-embed-text"
+  provider = "openai",
+  model = "text-embedding-3-small"
 )
 
 results <- fit_embedding_model(
@@ -99,7 +98,7 @@ See: [BERTopic](https://maartengr.github.io/BERTopic/) · [Sentence-BERT](https:
 ## AI Topic Labels
 
 ```{r}
-labels <- generate_topic_labels(terms, provider = "ollama")
+labels <- generate_topic_labels(terms, provider = "openai")
 ```
 
 AI generates draft labels; review and edit before final use.
@@ -122,8 +121,8 @@ top_terms <- get_topic_terms(model, top_term_n = 10)
 content <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "survey_item",
-  provider = "ollama",
-  model = "llama3.2"
+  provider = "openai",
+  model = "gpt-4.1-mini"
 )
 ```
 

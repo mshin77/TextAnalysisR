@@ -37,7 +37,7 @@ The required packages are 'htmltools', 'splines', and 'broom' (plus
 additional ones loaded internally).
 }
 \examples{
-if (interactive()) {
+\donttest{
   mydata <- TextAnalysisR::SpecialEduTech
 
   united_tbl <- TextAnalysisR::unite_cols(

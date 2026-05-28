@@ -23,6 +23,7 @@ fit_embedding_model(
   clustering_method = "kmeans",
   similarity_threshold = 0.7,
   min_topic_size = 10,
+  min_cluster_size = NULL,
   cluster_selection_method = "eom",
   umap_neighbors = 15,
   umap_min_dist = 0,
@@ -86,6 +87,12 @@ fit_embedding_model(
 - min_topic_size:
 
   The minimum number of documents per topic (default: 3).
+
+- min_cluster_size:
+
+  HDBSCAN density threshold (default `NULL` falls back to
+  `min_topic_size`). Setting this independently lets fine-grained
+  clusters merge into broader topics.
 
 - cluster_selection_method:
 

@@ -6,7 +6,7 @@
 \usage{
 describe_image(
   image_base64,
-  provider = "ollama",
+  provider = "gemini",
   model = NULL,
   api_key = NULL,
   prompt =
@@ -17,7 +17,7 @@ describe_image(
 \arguments{
 \item{image_base64}{Character string of base64-encoded PNG image}
 
-\item{provider}{Character: "ollama", "openai", or "gemini"}
+\item{provider}{Character: "openai" or "gemini"}
 
 \item{model}{Character: Model name (uses provider default if NULL)}
 
@@ -32,6 +32,6 @@ Character string description, or NULL on failure
 }
 \description{
 Unified dispatcher for image description using vision LLMs.
-Routes to the appropriate provider (Ollama, OpenAI, or Gemini).
+Routes to the appropriate provider (OpenAI or Gemini).
 }
 \concept{ai}

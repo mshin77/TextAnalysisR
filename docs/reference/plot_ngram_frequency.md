@@ -73,7 +73,7 @@ A plotly object
 ## Examples
 
 ``` r
-if (interactive()) {
+# \donttest{
   ngram_df <- data.frame(
     collocation = c("machine learning", "deep learning", "neural network"),
     count = c(150, 120, 90),
@@ -81,5 +81,6 @@ if (interactive()) {
     z = c(12.3, 10.5, 9.2)
   )
   plot_ngram_frequency(ngram_df, selected = c("machine learning"))
-}
+
+# }
 ```

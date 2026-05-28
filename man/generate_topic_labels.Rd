@@ -19,12 +19,11 @@ generate_topic_labels(
 \arguments{
 \item{top_topic_terms}{A data frame containing the top terms for each topic.}
 
-\item{provider}{AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
-"auto" will try Ollama first, then check for OpenAI/Gemini keys.}
+\item{provider}{AI provider to use: "auto" (default), "openai", or "gemini".
+"auto" picks the first provider with an available API key.}
 
 \item{model}{A character string specifying which model to use. If NULL, uses
-provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini),
-or recommended Ollama model.}
+provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini).}
 
 \item{system}{A character string containing the system prompt for the API.
 If NULL, the function uses the default system prompt.}
@@ -34,8 +33,7 @@ If NULL, the function uses the default user prompt.}
 
 \item{temperature}{A numeric value controlling the randomness of the output (default: 0.5).}
 
-\item{api_key}{API key for OpenAI or Gemini. If NULL, uses environment variable.
-Not required for Ollama.}
+\item{api_key}{API key for OpenAI or Gemini. If NULL, uses environment variable.}
 
 \item{openai_api_key}{Deprecated. Use \code{api_key} instead. Kept for backward compatibility.}
 
@@ -46,17 +44,16 @@ A data frame containing the top terms for each topic along with their generated 
 }
 \description{
 This function generates descriptive labels for each topic based on their
-top terms using AI providers (OpenAI, Gemini, or Ollama).
+top terms using AI providers (OpenAI or Gemini).
 }
 \examples{
 if (interactive()) {
 top_topic_terms <- get_topic_terms(stm_model, top_term_n = 10)
 
-# Auto-detect provider (tries Ollama -> OpenAI -> Gemini)
+# Auto-detect provider (tries OpenAI -> Gemini)
 labels <- generate_topic_labels(top_topic_terms)
 
 # Use specific provider
-labels_ollama <- generate_topic_labels(top_topic_terms, provider = "ollama")
 labels_openai <- generate_topic_labels(top_topic_terms, provider = "openai")
 labels_gemini <- generate_topic_labels(top_topic_terms, provider = "gemini")
 }

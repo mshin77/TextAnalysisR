@@ -7,7 +7,7 @@
 run_rag_search(
   query,
   documents,
-  provider = c("ollama", "openai", "gemini"),
+  provider = c("openai", "gemini"),
   api_key = NULL,
   embedding_model = NULL,
   chat_model = NULL,
@@ -19,16 +19,15 @@ run_rag_search(
 
 \item{documents}{Character vector, corpus to search}
 
-\item{provider}{Character string, provider: "ollama" (local), "openai", or "gemini"}
+\item{provider}{Character string, provider: "openai" or "gemini"}
 
-\item{api_key}{Character string, API key for cloud providers (or from
-OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.}
+\item{api_key}{Character string, API key (or from
+OPENAI_API_KEY/GEMINI_API_KEY env).}
 
 \item{embedding_model}{Character string, embedding model. Defaults:
-"nomic-embed-text" (ollama), "text-embedding-3-small" (openai),
-"gemini-embedding-001" (gemini)}
+"text-embedding-3-small" (openai), "gemini-embedding-001" (gemini)}
 
-\item{chat_model}{Character string, chat model. Defaults: "llama3.2" (ollama),
+\item{chat_model}{Character string, chat model. Defaults:
 "gpt-4.1-mini" (openai), "gemini-2.5-flash-lite" (gemini)}
 
 \item{top_k}{Integer, number of documents to retrieve (default: 5)}
@@ -46,8 +45,8 @@ List with:
 }
 \description{
 Simple in-memory RAG (Retrieval Augmented Generation) for question-answering
-over document corpus with source attribution. Uses local (Ollama) or cloud
-(OpenAI/Gemini) embeddings for semantic search and LLM for answer generation.
+over document corpus with source attribution. Uses OpenAI or Gemini
+embeddings for semantic search and LLM for answer generation.
 }
 \details{
 Simple RAG workflow:
@@ -63,13 +62,6 @@ documents <- c(
   "Assistive technology helps students with disabilities access curriculum.",
   "Universal Design for Learning provides multiple means of engagement.",
   "Response to Intervention uses tiered support systems."
-)
-
-# Using local Ollama (free, private)
-result <- run_rag_search(
-  query = "How does assistive technology support learning?",
-  documents = documents,
-  provider = "ollama"
 )
 
 # Using OpenAI (requires API key)

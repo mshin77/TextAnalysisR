@@ -99,7 +99,7 @@ check_web_deployment <- function() {
 #' @description
 #' Checks if a specific optional feature is available in the current environment.
 #'
-#' @param feature Character: "python", "ollama", "pdf_tables", "embeddings", "sentiment_transformer"
+#' @param feature Character: "python", "pdf_tables", "embeddings", "sentiment_transformer"
 #'
 #' @return Logical TRUE if feature is available
 #'
@@ -116,9 +116,6 @@ check_feature <- function(feature) {
     "python" = tryCatch({
       status <- check_python_env()
       isTRUE(status$available)
-    }, error = function(e) FALSE),
-    "ollama" = tryCatch({
-      check_ollama(verbose = FALSE)
     }, error = function(e) FALSE),
     "pdf_tables" = tryCatch({
       status <- check_python_env()
@@ -146,7 +143,7 @@ check_feature <- function(feature) {
 #' @keywords internal
 #'
 get_feature_status <- function() {
-  features <- c("python", "ollama", "pdf_tables", "embeddings", "sentiment_transformer")
+  features <- c("python", "pdf_tables", "embeddings", "sentiment_transformer")
   result <- lapply(features, function(f) {
     tryCatch(check_feature(f), error = function(e) FALSE)
   })
@@ -169,7 +166,7 @@ show_web_banner <- function(disabled = NULL) {
   if (!check_web_deployment()) return(NULL)
 
   if (is.null(disabled)) {
-    disabled <- c("Python PDF processing", "Local Ollama AI",
+    disabled <- c("Python PDF processing", "Local AI",
                   "Embedding analysis", "Large files (>10MB)")
   }
 
@@ -217,7 +214,6 @@ require_feature <- function(feature, session = NULL) {
 
   msg <- switch(feature,
     "python" = "Python not configured. Run setup_python_env().",
-    "ollama" = "Ollama not available. Install from ollama.com.",
     "pdf_tables" = "PDF tables require Python. Run setup_python_env().",
     "embeddings" = "Embeddings require sentence-transformers. Run: pip install sentence-transformers torch",
     "sentiment_transformer" = "Neural sentiment requires transformers. Run: pip install transformers torch",
@@ -386,14 +382,13 @@ plot_error <- function(message, color = "#ef4444") {
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
-#'   # Using example dataset
+#' \donttest{
 #'   workflow_result <- TextAnalysisR::run_text_workflow(
 #'     dataset_choice = "Upload an Example Dataset",
 #'     listed_vars = c("title", "keyword", "abstract")
 #'   )
-#'
-#'   # Using file upload
+#' }
+#' if (interactive()) {
 #'   file_info <- data.frame(filepath = "path/to/file.xlsx")
 #'   workflow_result <- TextAnalysisR::run_text_workflow(
 #'     dataset_choice = "Upload Your File",
@@ -401,7 +396,6 @@ plot_error <- function(message, color = "#ef4444") {
 #'     listed_vars = c("column1", "column2")
 #'   )
 #'
-#'   # Using copy-paste text
 #'   workflow_result <- TextAnalysisR::run_text_workflow(
 #'     dataset_choice = "Copy and Paste Text",
 #'     text_input = "Your text content here",
@@ -513,7 +507,7 @@ run_text_workflow <- function(dataset_choice,
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   mydata <- TextAnalysisR::SpecialEduTech
 #'
 #'   united_tbl <- TextAnalysisR::unite_cols(
@@ -820,46 +814,39 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
 #' Setup Python Environment
 #'
 #' @description
-#' Intelligently sets up Python virtual environment with required packages.
-#' Detects existing Python installations and guides users if Python is missing.
+#' Sets up a tiered Python virtual environment.
 #'
 #' @param envname Character string name for the virtual environment
 #'   (default: "textanalysisr-env")
+#' @param tier Which feature tier to install. One or more of:
+#'   `"core"` (spacy + pdfplumber, ~200 MB; default),
+#'   `"embeddings"` (adds sentence-transformers + transformers + torch, ~1 GB),
+#'   `"topics"` (adds BERTopic + UMAP + HDBSCAN, ~300 MB on top of embeddings).
 #' @param force Logical, whether to recreate environment if it exists
 #'   (default: FALSE)
 #'
 #' @return Invisible TRUE if successful, stops with error message if failed
 #'
 #' @details
-#' This function:
-#' - Automatically detects if Python is already installed
-#' - Offers to install Miniconda if no Python found
-#' - Creates an isolated virtual environment (does NOT modify system Python)
-#' - Installs minimal core packages:
-#'   * spacy (NLP processing)
-#'   * pdfplumber (PDF table extraction)
-#' - Dependencies installed automatically by pip
-#' - Avoids heavy packages (no torch, transformers)
+#' Default `tier = "core"` keeps the install light — spaCy NLP and PDF text
+#' extraction only. Add `"embeddings"` for sentence-transformers-based
+#' similarity/sentiment, and `"topics"` for BERTopic.
 #'
-#' The virtual environment approach means:
-#' - No conflicts with other Python projects
-#' - Easy to remove (just delete the environment)
-#' - System Python remains untouched
-#' - Much smaller download (~100MB vs 5GB+)
-#'
-#' After setup, restart R session to activate Python-backed features.
+#' The virtual environment is isolated; system Python is not modified.
 #'
 #' @export
 #'
 #' @examples
 #' if (interactive()) {
-#' # First time setup (auto-detects Python)
-#' setup_python_env()
-#'
-#' # Recreate environment
-#' setup_python_env(force = TRUE)
+#'   setup_python_env()                              # core only (~200 MB)
+#'   setup_python_env(tier = c("core", "embeddings"))  # +1 GB
+#'   setup_python_env(tier = c("core", "embeddings", "topics"))  # full stack
 #' }
-setup_python_env <- function(envname = "textanalysisr-env", force = FALSE) {
+setup_python_env <- function(envname = "textanalysisr-env",
+                             tier = "core",
+                             force = FALSE) {
+  tier <- match.arg(tier, c("core", "embeddings", "topics"), several.ok = TRUE)
+  if (!"core" %in% tier) tier <- c("core", tier)
   if (!requireNamespace("reticulate", quietly = TRUE)) {
     stop("Package 'reticulate' is required. Install it with: install.packages('reticulate')")
   }
@@ -911,20 +898,20 @@ setup_python_env <- function(envname = "textanalysisr-env", force = FALSE) {
     reticulate::virtualenv_create(envname, python = NULL)
     reticulate::use_virtualenv(envname, required = TRUE)
 
-    requirements_file <- system.file("python", "requirements.txt", package = "TextAnalysisR")
+    tier_files <- paste0("requirements-", tier, ".txt")
+    req_packages <- unlist(lapply(tier_files, function(f) {
+      path <- system.file("python", f, package = "TextAnalysisR")
+      if (!nzchar(path) || !file.exists(path)) return(character(0))
+      lines <- readLines(path)
+      lines[!grepl("^#|^\\s*$", lines)]
+    }))
 
-    message("Installing packages...")
-    if (file.exists(requirements_file)) {
-      req_packages <- readLines(requirements_file)
-      req_packages <- req_packages[!grepl("^#|^\\s*$", req_packages)]
-      reticulate::virtualenv_install(envname = envname, packages = req_packages, ignore_installed = FALSE)
-    } else {
-      packages <- c(
-        "spacy>=3.5.0",
-        "pdfplumber>=0.10.0"
-      )
-      reticulate::virtualenv_install(envname = envname, packages = packages, ignore_installed = FALSE)
+    if (length(req_packages) == 0) {
+      req_packages <- c("spacy>=3.5.0", "pdfplumber>=0.10.0")
     }
+
+    message("Installing packages for tier(s): ", paste(tier, collapse = ", "))
+    reticulate::virtualenv_install(envname = envname, packages = req_packages, ignore_installed = FALSE)
 
     message("Testing imports...")
     test_result <- tryCatch({
@@ -1042,252 +1029,6 @@ check_python_env <- function(envname = "textanalysisr-env") {
 }
 
 
-
-
-# Ollama local LLM utilities
-
-#' @keywords internal
-.ollama_base_url <- function() {
-  Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-}
-
-#' Check if Ollama is Available
-#'
-#' @description Checks if Ollama is installed and running on the local machine.
-#'
-#' @param verbose Logical, if TRUE, prints status messages.
-#'
-#' @return Logical indicating whether Ollama is available.
-#'
-#' @concept ai
-#' @export
-#'
-#' @examples
-#' if (interactive()) {
-#' if (check_ollama()) {
-#'   message("Ollama is ready!")
-#' }
-#' }
-check_ollama <- function(verbose = FALSE) {
-  tryCatch({
-    response <- httr::GET(
-      paste0(.ollama_base_url(), "/api/tags"),
-      httr::timeout(2)
-    )
-
-    is_available <- httr::status_code(response) == 200
-
-    if (verbose) {
-      if (is_available) {
-        message("Ollama is available and running")
-      } else {
-        message("Ollama server responded but returned error status")
-      }
-    }
-
-    return(is_available)
-
-  }, error = function(e) {
-    if (verbose) {
-      message("Ollama is not available: ", e$message)
-      message("To use Ollama, please install it from https://ollama.com")
-    }
-    return(FALSE)
-  })
-}
-
-#' List Available Ollama Models
-#'
-#' @description Lists all models currently installed in Ollama.
-#'
-#' @param verbose Logical, if TRUE, prints status messages.
-#'
-#' @return Character vector of model names, or NULL if Ollama is unavailable.
-#'
-#' @concept ai
-#' @export
-#'
-#' @examples
-#' if (interactive()) {
-#' models <- list_ollama_models()
-#' print(models)
-#' }
-list_ollama_models <- function(verbose = FALSE) {
-  if (!check_ollama(verbose = FALSE)) {
-    if (verbose) {
-      message("Ollama is not available")
-    }
-    return(NULL)
-  }
-
-  tryCatch({
-    response <- httr::GET(
-      paste0(.ollama_base_url(), "/api/tags"),
-      httr::timeout(5)
-    )
-
-    if (httr::status_code(response) == 200) {
-      content <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
-
-      if (!is.null(content$models) && length(content$models) > 0) {
-        model_names <- content$models$name
-        if (verbose) {
-          message("Found ", length(model_names), " Ollama models:")
-          for (model in model_names) {
-            message("  - ", model)
-          }
-        }
-        return(model_names)
-      } else {
-        if (verbose) {
-          message("No Ollama models found. Please pull a model:")
-          message("  ollama pull tinyllama")
-        }
-        return(character(0))
-      }
-    }
-
-    return(NULL)
-
-  }, error = function(e) {
-    if (verbose) {
-      message("Error listing Ollama models: ", e$message)
-    }
-    return(NULL)
-  })
-}
-
-#' Call Ollama for Text Generation
-#'
-#' @description Sends a prompt to Ollama and returns the generated text.
-#'
-#' @param prompt Character string containing the prompt.
-#' @param model Character string specifying the Ollama model (default: "llama3.2").
-#' @param system Character string with system instructions (default: NULL).
-#' @param temperature Numeric value controlling randomness (default: 0.3).
-#' @param max_tokens Maximum number of tokens to generate (default: 512).
-#' @param timeout Timeout in seconds for the request (default: 60).
-#' @param verbose Logical, if TRUE, prints progress messages.
-#'
-#' @return Character string with the generated text, or NULL if failed.
-#'
-#' @concept ai
-#' @keywords internal
-#'
-call_ollama <- function(prompt,
-                       model = "llama3.2",
-                       system = NULL,
-                       temperature = 0.3,
-                       max_tokens = 512,
-                       timeout = 120,
-                       verbose = FALSE) {
-
-  if (!check_ollama(verbose = verbose)) {
-    stop("Ollama is not available. Please ensure Ollama is installed and running.")
-  }
-
-  available_models <- list_ollama_models(verbose = FALSE)
-  if (!is.null(available_models) && length(available_models) > 0) {
-    model_base <- sub(":.*", "", model)
-    matched <- any(grepl(paste0("^", model_base), available_models))
-    if (!matched) {
-      stop(sprintf(
-        "Model '%s' is not installed in Ollama. Available models: %s. Run 'ollama pull %s' to install it.",
-        model, paste(available_models, collapse = ", "), model
-      ))
-    }
-  }
-
-  if (verbose) {
-    message("Calling Ollama with model: ", model)
-  }
-
-  body <- list(
-    model = model,
-    prompt = prompt,
-    stream = FALSE,
-    options = list(
-      temperature = temperature,
-      num_predict = max_tokens
-    )
-  )
-
-  if (!is.null(system) && nzchar(system)) {
-    body$system <- system
-  }
-
-  response <- httr::POST(
-    paste0(.ollama_base_url(), "/api/generate"),
-    body = jsonlite::toJSON(body, auto_unbox = TRUE),
-    httr::content_type_json(),
-    httr::timeout(timeout)
-  )
-
-  if (httr::status_code(response) != 200) {
-    stop(sprintf("Ollama API returned status code: %d", httr::status_code(response)))
-  }
-
-  content <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
-
-  if (is.null(content$response) || !nzchar(trimws(content$response))) {
-    stop("Ollama returned an empty response.")
-  }
-
-  if (verbose) {
-    message("Ollama response received successfully")
-  }
-
-  return(trimws(content$response))
-}
-
-#' Get Recommended Ollama Model
-#'
-#' @description Returns a recommended Ollama model based on what's available.
-#'
-#' @param preferred_models Character vector of preferred models in priority order.
-#' @param verbose Logical, if TRUE, prints status messages.
-#'
-#' @return Character string of recommended model, or NULL if none available.
-#'
-#' @concept ai
-#' @export
-#'
-#' @examples
-#' if (interactive()) {
-#' model <- get_recommended_ollama_model()
-#' print(model)
-#' }
-get_recommended_ollama_model <- function(preferred_models = c("llama3.2", "gemma3", "mistral:7b", "gemma3:1b", "tinyllama"),
-                                        verbose = FALSE) {
-
-  available_models <- list_ollama_models(verbose = FALSE)
-
-  if (is.null(available_models) || length(available_models) == 0) {
-    if (verbose) {
-      message("No Ollama models available. Recommended models for research text:")
-      message("  1. llama3.2 (2.0GB, best balance - requires 4GB+ RAM)")
-      message("  2. gemma3 (good general-purpose)")
-      message("  3. mistral:7b (solid quality)")
-      message("  4. tinyllama (637MB, low-resource fallback only)")
-      message("\nTo install: ollama pull llama3.2")
-    }
-    return(NULL)
-  }
-
-  for (preferred in preferred_models) {
-    if (preferred %in% available_models) {
-      if (verbose) {
-        message("Using model: ", preferred)
-      }
-      return(preferred)
-    }
-  }
-
-  if (verbose) {
-    message("Using first available model: ", available_models[1])
-  }
-  return(available_models[1])
-}
 
 
 # Cloud LLM API utilities (OpenAI, Gemini)
@@ -1459,10 +1200,10 @@ call_gemini_chat <- function(system_prompt,
 #' Call LLM API (Unified Wrapper)
 #'
 #' @description
-#' Unified wrapper for calling different LLM providers (OpenAI, Gemini, Ollama).
+#' Unified wrapper for calling different LLM providers (OpenAI, Gemini).
 #' Automatically routes to the appropriate provider-specific function.
 #'
-#' @param provider Character string: "openai", "gemini", or "ollama"
+#' @param provider Character string: "openai" or "gemini"
 #' @param system_prompt Character string with system instructions
 #' @param user_prompt Character string with user message
 #' @param model Character string specifying the model (provider-specific defaults apply)
@@ -1494,7 +1235,7 @@ call_gemini_chat <- function(system_prompt,
 #'   api_key = Sys.getenv("GEMINI_API_KEY")
 #' )
 #' }
-call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
+call_llm_api <- function(provider = c("openai", "gemini"),
                          system_prompt,
                          user_prompt,
                          model = NULL,
@@ -1508,27 +1249,21 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
   if (is.null(model)) {
     model <- switch(provider,
       "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-2.5-flash",
-      "ollama" = "tinyllama"
+      "gemini" = "gemini-2.5-flash"
     )
   }
 
-  # Validate API key for cloud providers
-  if (provider %in% c("openai", "gemini")) {
-    if (is.null(api_key) || !nzchar(api_key)) {
-      # Try to get from environment
-      api_key <- switch(provider,
-        "openai" = Sys.getenv("OPENAI_API_KEY"),
-        "gemini" = Sys.getenv("GEMINI_API_KEY")
-      )
-    }
-
-    if (!nzchar(api_key)) {
-      stop(.missing_api_key_message(provider, "package"), call. = FALSE)
-    }
+  if (is.null(api_key) || !nzchar(api_key)) {
+    api_key <- switch(provider,
+      "openai" = Sys.getenv("OPENAI_API_KEY"),
+      "gemini" = Sys.getenv("GEMINI_API_KEY")
+    )
   }
 
-  # Route to appropriate provider
+  if (!nzchar(api_key)) {
+    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
+  }
+
   result <- switch(provider,
     "openai" = call_openai_chat(
       system_prompt = system_prompt,
@@ -1545,62 +1280,10 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
       temperature = temperature,
       max_tokens = max_tokens,
       api_key = api_key
-    ),
-    "ollama" = call_ollama(
-      prompt = user_prompt,
-      model = model,
-      system = system_prompt,
-      temperature = temperature,
-      max_tokens = max_tokens
     )
   )
 
   return(result)
-}
-
-
-#' Describe Image with Ollama Vision Model
-#'
-#' @param image_base64 Character string of base64-encoded PNG image
-#' @param prompt Character string describing what to extract
-#' @param model Character string, Ollama vision model name (default: "llava")
-#' @param timeout Numeric, request timeout in seconds (default: 120)
-#'
-#' @return Character string description, or NULL on failure
-#' @keywords internal
-describe_image_ollama <- function(image_base64,
-                                  prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
-                                  model = "llava",
-                                  timeout = 120) {
-  if (!requireNamespace("httr", quietly = TRUE) ||
-      !requireNamespace("jsonlite", quietly = TRUE)) {
-    return(NULL)
-  }
-
-  tryCatch({
-    body <- list(
-      model = model,
-      prompt = prompt,
-      images = list(image_base64),
-      stream = FALSE
-    )
-
-    response <- httr::POST(
-      url = paste0(.ollama_base_url(), "/api/generate"),
-      body = jsonlite::toJSON(body, auto_unbox = TRUE),
-      httr::content_type_json(),
-      httr::timeout(timeout)
-    )
-
-    if (httr::status_code(response) != 200) return(NULL)
-
-    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
-    result <- res_json$response
-    if (is.null(result) || !nzchar(trimws(result))) return(NULL)
-    return(trimws(result))
-  }, error = function(e) {
-    NULL
-  })
 }
 
 
@@ -1762,10 +1445,10 @@ describe_image_gemini <- function(image_base64,
 #'
 #' @description
 #' Unified dispatcher for image description using vision LLMs.
-#' Routes to the appropriate provider (Ollama, OpenAI, or Gemini).
+#' Routes to the appropriate provider (OpenAI or Gemini).
 #'
 #' @param image_base64 Character string of base64-encoded PNG image
-#' @param provider Character: "ollama", "openai", or "gemini"
+#' @param provider Character: "openai" or "gemini"
 #' @param model Character: Model name (uses provider default if NULL)
 #' @param api_key Character: API key (required for openai/gemini)
 #' @param prompt Character: Description prompt
@@ -1776,22 +1459,20 @@ describe_image_gemini <- function(image_base64,
 #' @concept ai
 #' @export
 describe_image <- function(image_base64,
-                           provider = "ollama",
+                           provider = "gemini",
                            model = NULL,
                            api_key = NULL,
                            prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                            timeout = 120) {
   if (is.null(model)) {
     model <- switch(provider,
-      "ollama" = "llava",
       "openai" = "gpt-4.1",
       "gemini" = "gemini-2.5-flash",
-      "llava"
+      "gemini-2.5-flash"
     )
   }
 
   switch(provider,
-    "ollama" = describe_image_ollama(image_base64, prompt, model, timeout),
     "openai" = describe_image_openai(image_base64, prompt, model, api_key = api_key),
     "gemini" = describe_image_gemini(image_base64, prompt, model, api_key = api_key),
     NULL
@@ -1802,15 +1483,14 @@ describe_image <- function(image_base64,
 #' Get Embeddings from API
 #'
 #' @description
-#' Generates text embeddings using Ollama (local), OpenAI, or Gemini embedding APIs.
+#' Generates text embeddings using OpenAI or Gemini embedding APIs.
 #'
 #' @param texts Character vector of texts to embed
-#' @param provider Character string: "ollama" (local API, free), "openai", or "gemini"
+#' @param provider Character string: "openai" or "gemini"
 #' @param model Character string specifying the embedding model. Defaults:
-#'   - ollama: "nomic-embed-text"
 #'   - openai: "text-embedding-3-small"
 #'   - gemini: "gemini-embedding-001"
-#' @param api_key Character string with API key (not required for Ollama)
+#' @param api_key Character string with API key
 #' @param batch_size Integer, number of texts to embed per API call (default: 100)
 #'
 #' @return Matrix with embeddings (rows = texts, columns = dimensions)
@@ -1819,34 +1499,29 @@ describe_image <- function(image_base64,
 #' @keywords internal
 #'
 get_api_embeddings <- function(texts,
-                           provider = c("ollama", "openai", "gemini"),
+                           provider = c("openai", "gemini"),
                            model = NULL,
                            api_key = NULL,
                            batch_size = 100) {
 
   provider <- match.arg(provider)
 
-  # Set default models
   if (is.null(model)) {
     model <- switch(provider,
-      "ollama" = "nomic-embed-text",
       "openai" = "text-embedding-3-small",
       "gemini" = "gemini-embedding-001"
     )
   }
 
-  # Get API key from environment if not provided (not needed for Ollama)
-  if (provider != "ollama") {
-    if (is.null(api_key) || !nzchar(api_key)) {
-      api_key <- switch(provider,
-        "openai" = Sys.getenv("OPENAI_API_KEY"),
-        "gemini" = Sys.getenv("GEMINI_API_KEY")
-      )
-    }
+  if (is.null(api_key) || !nzchar(api_key)) {
+    api_key <- switch(provider,
+      "openai" = Sys.getenv("OPENAI_API_KEY"),
+      "gemini" = Sys.getenv("GEMINI_API_KEY")
+    )
+  }
 
-    if (!nzchar(api_key)) {
-      stop(.missing_api_key_message(provider, "package"), call. = FALSE)
-    }
+  if (!nzchar(api_key)) {
+    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
   }
 
   if (!requireNamespace("httr", quietly = TRUE)) {
@@ -1856,7 +1531,6 @@ get_api_embeddings <- function(texts,
     stop("jsonlite package is required for embedding API calls")
   }
 
-  # Process in batches
   n_texts <- length(texts)
   all_embeddings <- list()
 
@@ -1865,7 +1539,6 @@ get_api_embeddings <- function(texts,
     batch_texts <- texts[start:end]
 
     embeddings <- switch(provider,
-      "ollama" = get_ollama_embeddings(batch_texts, model),
       "openai" = get_openai_embeddings(batch_texts, model, api_key),
       "gemini" = get_gemini_embeddings(batch_texts, model, api_key)
     )
@@ -1873,7 +1546,6 @@ get_api_embeddings <- function(texts,
     all_embeddings[[length(all_embeddings) + 1]] <- embeddings
   }
 
-  # Combine all batches
   do.call(rbind, all_embeddings)
 }
 
@@ -1960,71 +1632,16 @@ get_gemini_embeddings <- function(texts, model, api_key) {
 }
 
 
-#' Get Ollama Embeddings (Internal)
-#'
-#' Generate embeddings using local Ollama models.
-#'
-#' @param texts Character vector of texts to embed.
-#' @param model Ollama embedding model (default: "nomic-embed-text").
-#' @return Numeric matrix of embeddings (one row per text).
-#' @keywords internal
-get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
-  if (!check_ollama(verbose = FALSE)) {
-    stop("Ollama is not running. Start Ollama and try again.")
-  }
-
-  embeddings_list <- lapply(texts, function(text) {
-    body <- list(
-      model = model,
-      prompt = text
-    )
-
-    response <- tryCatch({
-      httr::POST(
-        url = paste0(.ollama_base_url(), "/api/embeddings"),
-        body = jsonlite::toJSON(body, auto_unbox = TRUE),
-        httr::content_type_json(),
-        httr::timeout(60)
-      )
-    }, error = function(e) {
-      stop(paste("Ollama embeddings request failed:", e$message))
-    })
-
-    if (httr::status_code(response) != 200) {
-      error_content <- httr::content(response, "text", encoding = "UTF-8")
-      tryCatch(
-        log_security_event("api_error", sprintf("Ollama embeddings status %d: %s",
-          httr::status_code(response), error_content), list(token = NULL), "error"),
-        error = function(e) NULL
-      )
-      stop(sprintf("Ollama embeddings request failed (status %d). Check that Ollama is running and the model is available.",
-                   httr::status_code(response)))
-    }
-
-    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
-
-    if (!is.null(res_json$embedding)) {
-      return(res_json$embedding)
-    } else {
-      stop("Unexpected response structure from Ollama embeddings API")
-    }
-  })
-
-  do.call(rbind, embeddings_list)
-}
-
-
 #' Get Best Available Embeddings
 #'
 #' @description
 #' Auto-detects and uses the best available embedding provider with the following priority:
-#' 1. Ollama (free, local, fast) - if running
-#' 2. sentence-transformers (local Python) - if Python environment is set up
-#' 3. OpenAI API - if OPENAI_API_KEY is set
-#' 4. Gemini API - if GEMINI_API_KEY is set
+#' 1. sentence-transformers (local Python) - if Python environment is set up
+#' 2. OpenAI API - if OPENAI_API_KEY is set
+#' 3. Gemini API - if GEMINI_API_KEY is set
 #'
 #' @param texts Character vector of texts to embed
-#' @param provider Character string: "auto" (default), "ollama", "sentence-transformers",
+#' @param provider Character string: "auto" (default), "sentence-transformers",
 #'   "openai", or "gemini". Use "auto" for automatic detection.
 #' @param model Character string specifying the embedding model. If NULL, uses default
 #'   model for the selected provider.
@@ -2046,7 +1663,7 @@ get_ollama_embeddings <- function(texts, model = "nomic-embed-text") {
 #' embeddings <- get_best_embeddings(texts)
 #'
 #' # Force specific provider
-#' embeddings <- get_best_embeddings(texts, provider = "ollama")
+#' embeddings <- get_best_embeddings(texts, provider = "openai")
 #'
 #' dim(embeddings)
 #' }
@@ -2061,10 +1678,7 @@ get_best_embeddings <- function(texts,
   }
 
   if (provider == "auto") {
-    if (check_ollama(verbose = FALSE)) {
-      provider <- "ollama"
-      if (verbose) message("Using Ollama embeddings (local)")
-    } else if (check_feature("python")) {
+    if (check_feature("python")) {
       provider <- "sentence-transformers"
       if (verbose) message("Using sentence-transformers embeddings (local Python)")
     } else if ((!is.null(api_key) && nzchar(api_key)) || nzchar(Sys.getenv("OPENAI_API_KEY"))) {
@@ -2076,21 +1690,13 @@ get_best_embeddings <- function(texts,
     } else {
       stop(paste0(
         "No embedding provider available. Options:\n",
-        "  1. Install and start Ollama (https://ollama.com)\n",
-        "  2. Set up Python with: TextAnalysisR::setup_python_env()\n",
-        "  3. Set OPENAI_API_KEY or GEMINI_API_KEY environment variable"
+        "  1. Set up Python with: TextAnalysisR::setup_python_env()\n",
+        "  2. Set OPENAI_API_KEY or GEMINI_API_KEY environment variable"
       ))
     }
   }
 
   embeddings <- switch(provider,
-    "ollama" = {
-      if (!check_ollama(verbose = FALSE)) {
-        stop("Ollama is not running. Start Ollama and try again.")
-      }
-      model <- model %||% "nomic-embed-text"
-      get_api_embeddings(texts, provider = "ollama", model = model)
-    },
     "sentence-transformers" = {
       if (!check_feature("python")) {
         stop("Python not available. Run TextAnalysisR::setup_python_env() first.")
@@ -2108,7 +1714,7 @@ get_best_embeddings <- function(texts,
     },
     stop(paste0(
       "Unknown provider: ", provider, ". ",
-      "Valid options: auto, ollama, sentence-transformers, openai, gemini"
+      "Valid options: auto, sentence-transformers, openai, gemini"
     ))
   )
 
@@ -2410,8 +2016,7 @@ log_security_event <- function(event_type, details, session_info, level = "info"
     sprintf("No %s API key found. Provide your key using one of these methods:\n", provider_label),
     sprintf("  1. Sys.setenv(%s = \"your-key-here\")\n", env_var),
     sprintf("  2. Add %s=your-key-here to your .Renviron file\n", env_var),
-    "  3. Pass directly via the api_key parameter\n\n",
-    "Or use Ollama for free local AI: https://ollama.com"
+    "  3. Pass directly via the api_key parameter"
   )
 }
 

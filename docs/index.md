@@ -17,8 +17,7 @@ and document clustering on transformer embeddings, an interactive
 [Shiny](https://shiny.posit.co/) interface with
 [ggplot2](https://ggplot2.tidyverse.org/) visualization, optional
 [spaCy](https://spacy.io/) lemmatization, and local
-([Ollama](https://ollama.com),
-[sentence-transformers](https://www.sbert.net/)) or web-based (OpenAI,
+[sentence-transformers](https://www.sbert.net/) or web-based (OpenAI,
 [Gemini](https://ai.google.dev/)) model providers for
 retrieval-augmented generation.
 

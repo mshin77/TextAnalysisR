@@ -155,7 +155,7 @@ find_optimal_k <- function(dfm_object,
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' if (interactive() && requireNamespace("stm", quietly = TRUE)) {
 #'   mydata <- TextAnalysisR::SpecialEduTech
 #'
 #'   united_tbl <- TextAnalysisR::unite_cols(
@@ -169,22 +169,23 @@ find_optimal_k <- function(dfm_object,
 #'
 #'   out <- quanteda::convert(dfm_object, to = "stm")
 #'
-#' stm_15 <- stm::stm(
-#'   data = out$meta,
-#'   documents = out$documents,
-#'   vocab = out$vocab,
-#'   max.em.its = 75,
-#'   init.type = "Spectral",
-#'   K = 15,
-#'   prevalence = ~ reference_type + s(year),
-#'   verbose = TRUE)
-#'
-#' top_topic_terms <- TextAnalysisR::get_topic_terms(
-#'   stm_model = stm_15,
-#'   top_term_n = 10,
-#'   verbose = TRUE
+#'   stm_15 <- stm::stm(
+#'     data = out$meta,
+#'     documents = out$documents,
+#'     vocab = out$vocab,
+#'     max.em.its = 75,
+#'     init.type = "Spectral",
+#'     K = 15,
+#'     prevalence = ~ reference_type + s(year),
+#'     verbose = TRUE
 #'   )
-#' print(top_topic_terms)
+#'
+#'   top_topic_terms <- TextAnalysisR::get_topic_terms(
+#'     stm_model = stm_15,
+#'     top_term_n = 10,
+#'     verbose = TRUE
+#'   )
+#'   print(top_topic_terms)
 #' }
 get_topic_terms <- function(stm_model,
                              top_term_n = 10,
@@ -375,21 +376,19 @@ extract_topic_terms_df <- function(model, n = 7) {
 #' Generate Topic Labels Using AI
 #'
 #' This function generates descriptive labels for each topic based on their
-#' top terms using AI providers (OpenAI, Gemini, or Ollama).
+#' top terms using AI providers (OpenAI or Gemini).
 #'
 #' @param top_topic_terms A data frame containing the top terms for each topic.
-#' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
-#'   "auto" will try Ollama first, then check for OpenAI/Gemini keys.
+#' @param provider AI provider to use: "auto" (default), "openai", or "gemini".
+#'   "auto" picks the first provider with an available API key.
 #' @param model A character string specifying which model to use. If NULL, uses
-#'   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini),
-#'   or recommended Ollama model.
+#'   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini).
 #' @param system A character string containing the system prompt for the API.
 #'   If NULL, the function uses the default system prompt.
 #' @param user A character string containing the user prompt for the API.
 #'   If NULL, the function uses the default user prompt.
 #' @param temperature A numeric value controlling the randomness of the output (default: 0.5).
 #' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
-#'   Not required for Ollama.
 #' @param openai_api_key Deprecated. Use `api_key` instead. Kept for backward compatibility.
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
@@ -403,11 +402,10 @@ extract_topic_terms_df <- function(model, n = 7) {
 #' if (interactive()) {
 #' top_topic_terms <- get_topic_terms(stm_model, top_term_n = 10)
 #'
-#' # Auto-detect provider (tries Ollama -> OpenAI -> Gemini)
+#' # Auto-detect provider (tries OpenAI -> Gemini)
 #' labels <- generate_topic_labels(top_topic_terms)
 #'
 #' # Use specific provider
-#' labels_ollama <- generate_topic_labels(top_topic_terms, provider = "ollama")
 #' labels_openai <- generate_topic_labels(top_topic_terms, provider = "openai")
 #' labels_gemini <- generate_topic_labels(top_topic_terms, provider = "gemini")
 #' }
@@ -440,52 +438,39 @@ generate_topic_labels <- function(top_topic_terms,
     if (provider == "auto") provider <- "openai"
   }
 
-  # Auto-detect provider
   if (provider == "auto") {
-    if (check_ollama(verbose = FALSE)) {
-      provider <- "ollama"
-      if (verbose) message("Using Ollama (local AI) for topic label generation")
-    } else if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
+    if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
       provider <- "openai"
       if (verbose) message("Using OpenAI for topic label generation")
     } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
       provider <- "gemini"
       if (verbose) message("Using Gemini for topic label generation")
     } else {
-      stop("No AI provider available. Install Ollama or set OPENAI_API_KEY/GEMINI_API_KEY.")
+      stop("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
     }
   }
 
-  # Set provider-based default model
   if (is.null(model)) {
     model <- switch(provider,
-      "ollama" = {
-        recommended <- get_recommended_ollama_model(verbose = verbose)
-        if (is.null(recommended)) "llama3.2" else recommended
-      },
       "openai" = "gpt-4.1-mini",
       "gemini" = "gemini-2.5-flash-lite"
     )
   }
 
-  # Resolve API key for cloud providers
-  if (provider %in% c("openai", "gemini") && is.null(api_key)) {
+  if (is.null(api_key)) {
     api_key <- switch(provider,
       "openai" = Sys.getenv("OPENAI_API_KEY"),
       "gemini" = Sys.getenv("GEMINI_API_KEY")
     )
   }
 
-  # Validate API key for cloud providers
-  if (provider %in% c("openai", "gemini") && !nzchar(api_key)) {
+  if (!nzchar(api_key)) {
     stop(.missing_api_key_message(provider, "package"), call. = FALSE)
   }
 
-  if (provider %in% c("openai", "gemini")) {
-    validation <- validate_api_key(api_key, strict = FALSE)
-    if (!validation$valid) {
-      stop(sprintf("Invalid API key format: %s", validation$error))
-    }
+  validation <- validate_api_key(api_key, strict = FALSE)
+  if (!validation$valid) {
+    stop(sprintf("Invalid API key format: %s", validation$error))
   }
 
   if (verbose) {
@@ -529,8 +514,7 @@ Label: Virtual Math Tools for Students with Disabilities"
       clear = FALSE, width = 60)
   }
 
-  # Rate limiting: 1s for cloud APIs, 0.5s for Ollama
-  rate_limit_delay <- if (provider == "ollama") 0.5 else 1
+  rate_limit_delay <- 1
 
   for (i in seq_len(nrow(unique_topics))) {
     if (!is.null(pb)) pb$tick()
@@ -3626,15 +3610,16 @@ Content:"
 #' @param topic_var Name of the column containing topic identifiers (default: "topic").
 #' @param term_var Name of the column containing terms (default: "term").
 #' @param weight_var Name of the column containing term weights (default: "beta").
-#' @param provider LLM provider: "openai" or "ollama" (default: "openai").
+#' @param provider LLM provider: "openai" or "gemini" (default: "openai").
 #' @param model Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc.
-#'   For Ollama: "llama3", "mistral", etc.
+#'   For Gemini: "gemini-2.5-flash-lite", "gemini-2.5-flash", etc.
 #' @param temperature Sampling temperature (0-2). Lower = more deterministic (default: 0).
 #' @param system_prompt Custom system prompt. If NULL, uses default for content_type.
 #' @param user_prompt_template Custom user prompt template with \{terms\} placeholder.
 #'   If NULL, uses default for content_type.
 #' @param max_tokens Maximum tokens for response (default: 150).
-#' @param api_key OpenAI API key. If NULL, reads from OPENAI_API_KEY environment variable.
+#' @param api_key API key for the selected provider. If NULL, reads from
+#'   OPENAI_API_KEY or GEMINI_API_KEY environment variable.
 #' @param output_var Name of the output column (default: based on content_type).
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
@@ -3644,10 +3629,8 @@ Content:"
 #' The function generates one piece of content per unique topic. Each content type
 #' has optimized default prompts, but these can be overridden with custom prompts.
 #'
-#' For OpenAI, requires an API key set via the \code{api_key} parameter or
-#' OPENAI_API_KEY environment variable (can be loaded from .env file).
-#'
-#' For Ollama, requires a local Ollama installation with the specified model.
+#' Requires an API key set via the \code{api_key} parameter or the relevant
+#' environment variable (OPENAI_API_KEY or GEMINI_API_KEY).
 #'
 #' @concept ai
 #' @seealso [generate_topic_labels()] for the step that creates topic labels; [get_content_type_prompt()] and [get_content_type_user_template()] to inspect or override default prompts
@@ -3667,8 +3650,8 @@ Content:"
 #' research_qs <- generate_topic_content(
 #'   topic_terms_df = top_terms,
 #'   content_type = "research_question",
-#'   provider = "ollama",
-#'   model = "llama3"
+#'   provider = "gemini",
+#'   model = "gemini-2.5-flash-lite"
 #' )
 #'
 #' # Generate with custom prompt
@@ -3686,7 +3669,7 @@ generate_topic_content <- function(topic_terms_df,
                                     topic_var = "topic",
                                     term_var = "term",
                                     weight_var = "beta",
-                                    provider = c("openai", "ollama"),
+                                    provider = c("openai", "gemini"),
                                     model = "gpt-4.1-mini",
                                     temperature = 0,
                                     system_prompt = NULL,
@@ -3746,22 +3729,16 @@ generate_topic_content <- function(topic_terms_df,
 
   unique_topics[[output_var]] <- NA_character_
 
-  # Setup for provider
-  if (provider == "openai") {
-    if (is.null(api_key)) {
-      if (file.exists(".env")) {
-        if (requireNamespace("dotenv", quietly = TRUE)) {
-          dotenv::load_dot_env()
-        }
-      }
-      api_key <- Sys.getenv("OPENAI_API_KEY")
-      if (api_key == "") {
-        stop(.missing_api_key_message("openai", "package"), call. = FALSE)
+  if (is.null(api_key)) {
+    if (file.exists(".env")) {
+      if (requireNamespace("dotenv", quietly = TRUE)) {
+        dotenv::load_dot_env()
       }
     }
-  } else if (provider == "ollama") {
-    if (!check_ollama(verbose = FALSE)) {
-      stop("Ollama is not available. Please install and start Ollama from https://ollama.ai")
+    env_var <- switch(provider, "openai" = "OPENAI_API_KEY", "gemini" = "GEMINI_API_KEY")
+    api_key <- Sys.getenv(env_var)
+    if (api_key == "") {
+      stop(.missing_api_key_message(provider, "package"), call. = FALSE)
     }
   }
 
@@ -3790,30 +3767,23 @@ generate_topic_content <- function(topic_terms_df,
     # Create user prompt
     user_prompt <- gsub("\\{terms\\}", terms_text, user_prompt_template)
 
-    # Call LLM
-    generated_content <- tryCatch({
-      if (provider == "openai") {
-        call_openai_chat(
-          system_prompt = system_prompt,
-          user_prompt = user_prompt,
-          model = model,
-          temperature = temperature,
-          max_tokens = max_tokens,
-          api_key = api_key
-        )
-      } else {
-        call_ollama(
-          prompt = paste(system_prompt, "\n\n", user_prompt),
-          model = model,
-          temperature = temperature
-        )
+    generated_content <- tryCatch(
+      call_llm_api(
+        provider = provider,
+        system_prompt = system_prompt,
+        user_prompt = user_prompt,
+        model = model,
+        temperature = temperature,
+        max_tokens = max_tokens,
+        api_key = api_key
+      ),
+      error = function(e) {
+        if (verbose) {
+          warning(sprintf("Error generating content for topic %s: %s", current_topic, e$message))
+        }
+        NA_character_
       }
-    }, error = function(e) {
-      if (verbose) {
-        warning(sprintf("Error generating content for topic %s: %s", current_topic, e$message))
-      }
-      NA_character_
-    })
+    )
 
     # Clean up response
     if (!is.na(generated_content)) {
@@ -3823,10 +3793,7 @@ generate_topic_content <- function(topic_terms_df,
 
     unique_topics[[output_var]][i] <- generated_content
 
-    # Rate limiting
-    if (provider == "openai") {
-      Sys.sleep(0.5)
-    }
+    Sys.sleep(0.5)
   }
 
   # Join generated content back to original data

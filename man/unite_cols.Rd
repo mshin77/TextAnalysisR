@@ -21,7 +21,7 @@ This function unites specified text columns in a data frame into a single
 column named "united_texts" while retaining the original columns.
 }
 \examples{
-if (interactive()) {
+\donttest{
   mydata <- TextAnalysisR::SpecialEduTech
 
   united_tbl <- TextAnalysisR::unite_cols(

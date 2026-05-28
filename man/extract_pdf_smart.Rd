@@ -7,7 +7,7 @@
 extract_pdf_smart(
   file_path,
   doc_type = "auto",
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   envname = "textanalysisr-env"
@@ -18,7 +18,7 @@ extract_pdf_smart(
 
 \item{doc_type}{Character: "auto" (default), "academic", or "general" (kept for compatibility)}
 
-\item{vision_provider}{Character: "ollama" (default), "openai", or "gemini"}
+\item{vision_provider}{Character: "openai" or "gemini" (default)}
 
 \item{vision_model}{Character: Model name for vision analysis}
 

@@ -49,7 +49,7 @@ Creates a bar plot showing n-gram frequencies with optional highlighting
 of selected n-grams. Supports both detected n-grams and selected multi-word expressions.
 }
 \examples{
-if (interactive()) {
+\donttest{
   ngram_df <- data.frame(
     collocation = c("machine learning", "deep learning", "neural network"),
     count = c(150, 120, 90),

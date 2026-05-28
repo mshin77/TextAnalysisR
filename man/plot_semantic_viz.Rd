@@ -54,7 +54,7 @@ Creates interactive visualizations for semantic analysis results including
 similarity heatmaps, dimensionality reduction plots, and clustering visualizations.
 }
 \examples{
-if (interactive()) {
+\donttest{
   data(SpecialEduTech)
   texts <- SpecialEduTech$abstract[1:5]
   result <- semantic_similarity_analysis(texts)

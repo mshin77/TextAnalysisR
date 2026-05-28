@@ -29,7 +29,7 @@ NULL
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   dfm1 <- quanteda::dfm(quanteda::tokens("assistive technology supports learning"))
 #'   result <- get_available_dfm(dfm_init = dfm1)
 #' }
@@ -78,7 +78,7 @@ get_available_dfm <- function(dfm_lemma = NULL, dfm_outcome = NULL, dfm_final = 
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   toks <- quanteda::tokens("assistive technology supports learning")
 #'   result <- get_available_tokens(processed_tokens = toks)
 #' }
@@ -124,7 +124,9 @@ get_available_tokens <- function(final_tokens = NULL,
 #'   mydata <- TextAnalysisR::import_files(dataset_choice = "Upload an Example Dataset")
 #'   head(mydata)
 #'
-#'   file_info <- data.frame(filepath = "inst/extdata/SpecialEduTech.xlsx")
+#'   xlsx_path <- system.file("extdata", "SpecialEduTech.xlsx",
+#'                            package = "TextAnalysisR")
+#'   file_info <- data.frame(filepath = xlsx_path)
 #'   mydata <- TextAnalysisR::import_files(dataset_choice = "Upload Your File",
 #'                                           file_info = file_info)
 #'   head(mydata)
@@ -260,18 +262,10 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
                                     describe_images) {
   if (is.null(vision_model)) {
     vision_model <- switch(vision_provider,
-      "ollama" = "llava",
       "openai" = "gpt-4.1",
       "gemini" = "gemini-2.5-flash",
-      "llava"
+      "gemini-2.5-flash"
     )
-  }
-
-  if (vision_provider == "ollama") {
-    ollama_check <- check_vision_models("ollama")
-    if (!isTRUE(ollama_check$available)) {
-      stop("Ollama not available: ", ollama_check$message)
-    }
   }
 
   text_pages <- tryCatch(pdftools::pdf_text(file_path), error = function(e) character(0))
@@ -373,7 +367,7 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
 #'
 #' @param file_path Character string path to PDF file
 #' @param use_multimodal Logical, enable multimodal extraction
-#' @param vision_provider Character, "ollama", "openai", or "gemini"
+#' @param vision_provider Character, "openai" or "gemini"
 #' @param vision_model Character, model name
 #' @param api_key Character, API key (if using openai/gemini)
 #' @param describe_images Logical, generate image descriptions
@@ -385,7 +379,7 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
 #' @export
 process_pdf_unified <- function(file_path,
                                 use_multimodal = FALSE,
-                                vision_provider = "ollama",
+                                vision_provider = "gemini",
                                 vision_model = NULL,
                                 api_key = NULL,
                                 describe_images = TRUE) {
@@ -432,8 +426,7 @@ process_pdf_unified <- function(file_path,
       method = "multimodal",
       message = paste0(
         "Multimodal extraction encountered an error.\n\n",
-        "Error: ", result$message,
-        if (vision_provider == "ollama") "\n\nNote: Pull the vision model using terminal/command prompt (not R code): ollama pull llava" else ""
+        "Error: ", result$message
       )
     ))
   }
@@ -467,7 +460,7 @@ process_pdf_unified <- function(file_path,
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   mydata <- TextAnalysisR::SpecialEduTech
 #'
 #'   united_tbl <- TextAnalysisR::unite_cols(
@@ -537,7 +530,7 @@ unite_cols <- function(df, listed_vars) {
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #' mydata <- TextAnalysisR::SpecialEduTech
 #'
 #' united_tbl <- TextAnalysisR::unite_cols(
@@ -1170,9 +1163,9 @@ process_pdf_file_py <- function(file_path, content_type = "auto", envname = NULL
 #' Checks all prerequisites for multimodal PDF extraction.
 #' Uses R-native pdftools for rendering (no Python required).
 #'
-#' @param vision_provider Character: "ollama", "openai", or "gemini"
+#' @param vision_provider Character: "openai" or "gemini"
 #' @param vision_model Character: Model name (optional)
-#' @param api_key Character: API key for OpenAI/Gemini (if using cloud provider)
+#' @param api_key Character: API key for OpenAI/Gemini
 #' @param envname Character: Kept for backward compatibility, ignored
 #'
 #' @return List with:
@@ -1183,7 +1176,7 @@ process_pdf_file_py <- function(file_path, content_type = "auto", envname = NULL
 #'
 #' @keywords internal
 check_multimodal_prerequisites <- function(
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   envname = "textanalysisr-env"
@@ -1201,29 +1194,7 @@ check_multimodal_prerequisites <- function(
   }
   details$pdftools <- list(available = pdftools_ok)
 
-  if (vision_provider == "ollama") {
-    ollama_ok <- check_ollama(verbose = FALSE)
-
-    if (!ollama_ok) {
-      missing <- c(missing, "Ollama")
-      instructions <- c(instructions, paste0(
-        "Ollama not running.\n",
-        "1. Start Ollama application\n",
-        "2. Pull vision model: ollama pull llava"
-      ))
-    } else if (!is.null(vision_model)) {
-      models_available <- tryCatch(list_ollama_models(), error = function(e) character(0))
-      if (!vision_model %in% models_available) {
-        missing <- c(missing, paste("Vision model:", vision_model))
-        instructions <- c(instructions, paste0(
-          "Vision model '", vision_model, "' not found.\n",
-          "Pull model: ollama pull ", vision_model
-        ))
-      }
-    }
-    details$ollama <- list(available = ollama_ok)
-
-  } else if (vision_provider == "openai") {
+  if (vision_provider == "openai") {
     if (is.null(api_key) || nchar(api_key) == 0) {
       missing <- c(missing, "OpenAI API key")
       instructions <- c(instructions, .missing_api_key_message("openai", "shiny"))
@@ -1243,8 +1214,7 @@ check_multimodal_prerequisites <- function(
   if (!ready) {
     full_instructions <- paste0(
       "Multimodal extraction requires:\n\n",
-      paste(paste0(seq_along(instructions), ". ", instructions), collapse = "\n\n"),
-      if (vision_provider == "ollama") "\n\nNote: Pull the vision model using terminal/command prompt (not R code): ollama pull llava" else ""
+      paste(paste0(seq_along(instructions), ". ", instructions), collapse = "\n\n")
     )
   } else {
     full_instructions <- "All prerequisites met"
@@ -1264,9 +1234,8 @@ check_multimodal_prerequisites <- function(
 #' and vision LLM APIs. No Python required.
 #'
 #' @param file_path Character string path to PDF file
-#' @param vision_provider Character: "ollama" (local, default), "openai", or "gemini"
+#' @param vision_provider Character: "openai" or "gemini" (default)
 #' @param vision_model Character: Model name
-#'   - For Ollama: "llava", "llava:13b", "bakllava"
 #'   - For OpenAI: "gpt-4.1", "gpt-4.1-mini"
 #'   - For Gemini: "gemini-2.5-flash", "gemini-2.5-pro"
 #' @param api_key Character: API key (required for openai/gemini providers)
@@ -1294,7 +1263,7 @@ check_multimodal_prerequisites <- function(
 #'
 extract_pdf_multimodal <- function(
   file_path,
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE,
@@ -1306,26 +1275,13 @@ extract_pdf_multimodal <- function(
 
   if (is.null(vision_model)) {
     vision_model <- switch(vision_provider,
-      "ollama" = "llava",
       "openai" = "gpt-4.1",
       "gemini" = "gemini-2.5-flash",
-      "llava"
+      "gemini-2.5-flash"
     )
   }
 
-  if (vision_provider == "ollama") {
-    if (!check_ollama(verbose = FALSE)) {
-      return(list(
-        success = FALSE,
-        message = paste(
-          "Ollama not available. Please:",
-          "1. Install Ollama from https://ollama.com",
-          "2. Pull a vision model: ollama pull llava",
-          sep = "\n"
-        )
-      ))
-    }
-  } else if (vision_provider == "openai") {
+  if (vision_provider == "openai") {
     if (is.null(api_key) || !nzchar(api_key)) {
       return(list(success = FALSE, message = .missing_api_key_message("openai", "shiny")))
     }
@@ -1392,7 +1348,7 @@ extract_pdf_multimodal <- function(
 #'
 #' @param file_path Character string path to PDF file
 #' @param doc_type Character: "auto" (default), "academic", or "general" (kept for compatibility)
-#' @param vision_provider Character: "ollama" (default), "openai", or "gemini"
+#' @param vision_provider Character: "openai" or "gemini" (default)
 #' @param vision_model Character: Model name for vision analysis
 #' @param api_key Character: API key for cloud providers
 #' @param envname Character: Kept for backward compatibility, ignored
@@ -1405,7 +1361,7 @@ extract_pdf_multimodal <- function(
 extract_pdf_smart <- function(
   file_path,
   doc_type = "auto",
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   envname = "textanalysisr-env"
@@ -1429,7 +1385,7 @@ extract_pdf_smart <- function(
 #' @description
 #' Check if required vision models are available for multimodal processing.
 #'
-#' @param provider Character: "ollama", "openai", or "gemini"
+#' @param provider Character: "openai" or "gemini"
 #' @param api_key Character: API key (for OpenAI/Gemini)
 #'
 #' @return List with availability status and recommendations
@@ -1439,44 +1395,12 @@ extract_pdf_smart <- function(
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
-#' status <- check_vision_models("ollama")
+#' \donttest{
+#' status <- check_vision_models("openai", api_key = Sys.getenv("OPENAI_API_KEY"))
 #' status <- check_vision_models("gemini", api_key = Sys.getenv("GEMINI_API_KEY"))
 #' }
-check_vision_models <- function(provider = "ollama", api_key = NULL) {
-  if (provider == "ollama") {
-    if (!check_ollama(verbose = FALSE)) {
-      return(list(
-        available = FALSE,
-        models = character(0),
-        message = "Ollama not running. Install from https://ollama.com"
-      ))
-    }
-
-    models <- list_ollama_models(verbose = FALSE)
-    vision_models <- grep("llava|bakllava|llava-phi3", models, value = TRUE)
-
-    if (length(vision_models) == 0) {
-      return(list(
-        available = FALSE,
-        models = character(0),
-        message = paste(
-          "No vision models found. Pull one with:",
-          "  ollama pull llava",
-          "  ollama pull bakllava",
-          "  ollama pull llava-phi3",
-          sep = "\n"
-        )
-      ))
-    }
-
-    return(list(
-      available = TRUE,
-      models = vision_models,
-      message = paste("Found", length(vision_models), "vision model(s)")
-    ))
-
-  } else if (provider == "openai") {
+check_vision_models <- function(provider = "gemini", api_key = NULL) {
+  if (provider == "openai") {
     if (is.null(api_key) || !nzchar(api_key)) {
       return(list(available = FALSE, message = "OpenAI API key required"))
     }

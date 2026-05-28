@@ -38,11 +38,12 @@ A ggplot object showing word frequency.
 ## Examples
 
 ``` r
-if (interactive()) {
+# \donttest{
   data(SpecialEduTech, package = "TextAnalysisR")
   texts <- SpecialEduTech$abstract[1:10]
   dfm <- quanteda::dfm(quanteda::tokens(texts))
   plot <- plot_word_frequency(dfm, n = 10)
   print(plot)
-}
+
+# }
 ```

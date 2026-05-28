@@ -7,7 +7,7 @@
 check_feature(feature)
 }
 \arguments{
-\item{feature}{Character: "python", "ollama", "pdf_tables", "embeddings", "sentiment_transformer"}
+\item{feature}{Character: "python", "pdf_tables", "embeddings", "sentiment_transformer"}
 }
 \value{
 Logical TRUE if feature is available

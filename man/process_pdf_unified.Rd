@@ -7,7 +7,7 @@
 process_pdf_unified(
   file_path,
   use_multimodal = FALSE,
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE
@@ -18,7 +18,7 @@ process_pdf_unified(
 
 \item{use_multimodal}{Logical, enable multimodal extraction}
 
-\item{vision_provider}{Character, "ollama", "openai", or "gemini"}
+\item{vision_provider}{Character, "openai" or "gemini"}
 
 \item{vision_model}{Character, model name}
 

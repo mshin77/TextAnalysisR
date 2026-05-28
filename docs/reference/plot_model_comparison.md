@@ -6,12 +6,7 @@ Automatically selects the best available metric combination.
 ## Usage
 
 ``` r
-plot_model_comparison(
-  search_results,
-  title = "Coherence-Exclusivity Frontier (choose K in the upper-right)",
-  height = 600,
-  width = 800
-)
+plot_model_comparison(search_results, title = NULL, height = 600, width = 800)
 ```
 
 ## Arguments
@@ -22,7 +17,8 @@ plot_model_comparison(
 
 - title:
 
-  Plot title (default: "Model Comparison")
+  Plot title (default `NULL` selects an auto-title based on which metric
+  columns are present in `search_results`)
 
 - height:
 

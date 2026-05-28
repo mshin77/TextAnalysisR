@@ -89,7 +89,7 @@ the specified variables.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span>  <span class="va">mydata</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">unite_cols</span><span class="op">(</span></span></span>
@@ -97,7 +97,21 @@ the specified variables.</p>
 <span class="r-in"><span>    listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 490 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    united_texts               title keyword abstract reference_type author  year</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> Dyscalculia and the minic… Dysc… <span style="color: #949494;">"</span>Arith… Notes t… journal_artic… Block…  <span style="text-decoration: underline;">1</span>980</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> The effects of computer-a… The … <span style="color: #949494;">"</span>locus… This st… thesis         Bukat…  <span style="text-decoration: underline;">1</span>981</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> Computer Assisted Instruc… Comp… <span style="color: #949494;">"</span>Compu… Results… journal_artic… Watki…  <span style="text-decoration: underline;">1</span>981</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> Arc-Ed Curriculum: Applic… Arc-… <span style="color: #949494;">"</span>Compu… The Arc… journal_artic… Chaff…  <span style="text-decoration: underline;">1</span>982</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> ARC-ED curriculum: the ap… ARC-… <span style="color: #949494;">"</span>Elect… This ar… journal_artic… Chaff…  <span style="text-decoration: underline;">1</span>982</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> The Effect of the Hand-he… The … <span style="color: #949494;">""</span>      The pur… thesis         Golde…  <span style="text-decoration: underline;">1</span>982</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> A review of some traditio… A re… <span style="color: #949494;">"</span>tradi… Discuss… journal_artic… Neal,…  <span style="text-decoration: underline;">1</span>982</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> A study of the effectiven… A st… <span style="color: #949494;">"</span>micro… The pur… thesis         Engle…  <span style="text-decoration: underline;">1</span>983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> The influence of computer… The … <span style="color: #949494;">"</span>compu… The eff… thesis         Foste…  <span style="text-decoration: underline;">1</span>983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> Using Computer Software t… Usin… <span style="color: #949494;">"</span>Compu… The art… journal_artic… Pomme…  <span style="text-decoration: underline;">1</span>983</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 480 more rows</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

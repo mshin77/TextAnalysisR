@@ -14,36 +14,30 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
 ```{r, eval = TRUE}
 library(TextAnalysisR)
 packageVersion("TextAnalysisR")
+
+# Local pipeline runs without any API key — TF-IDF surfaces the same
+# corpus terms the LLM workflows below would summarize for you.
+mydata <- SpecialEduTech[seq_len(20), c("title", "abstract")]
+united <- unite_cols(mydata, listed_vars = c("title", "abstract"))
+toks   <- prep_texts(united, text_field = "united_texts")
+dfm    <- quanteda::dfm(toks)
+extract_keywords_tfidf(dfm, top_n = 10)
 ```
 
-TextAnalysisR provides AI features via local and web-based providers.
+TextAnalysisR provides AI features via cloud-based providers.
+
+On the hosted web app, Gemini usage is free, supported by the Google Cloud Research program. OpenAI calls require a personal API key.
 
 ## Providers
 
 | Provider | Type | API Key | Best For |
 |----------|------|---------|----------|
-| [Ollama](https://ollama.com) | Local | None | Privacy, no cost, offline use |
 | OpenAI | Web-based | OPENAI_API_KEY | Quality, speed |
-| [Gemini](https://ai.google.dev/) | Web-based | GEMINI_API_KEY | Quality, speed |
+| [Gemini](https://ai.google.dev/) | Web-based | None on hosted app; otherwise GEMINI_API_KEY | Quality, speed |
 | [spaCy](https://spacy.io/) | Local | None | Linguistic analysis |
 | Transformers | Local | None | Embeddings, sentiment |
 
 ## Setup
-
-### Local AI (Ollama)
-
-```{r}
-# 1. Install Ollama: https://ollama.com
-# 2. Pull a model (in terminal):
-#    ollama pull llama3.2
-#    ollama pull mistral
-
-# 3. Verify in R:
-check_ollama()
-list_ollama_models()
-```
-
-### Web-based AI (OpenAI / Gemini)
 
 ```{r}
 Sys.setenv(OPENAI_API_KEY = "<openai-api-key>")
@@ -67,7 +61,6 @@ response <- call_llm_api(
 # Provider-specific
 call_openai_chat(system_prompt, user_prompt, model = "gpt-4.1-mini")
 call_gemini_chat(system_prompt, user_prompt, model = "gemini-2.5-flash")
-call_ollama(prompt, model = "llama3.2")
 ```
 
 ## Embeddings & RAG
@@ -87,28 +80,12 @@ result <- run_rag_search(
 )
 ```
 
-## Ollama Utilities
-
-| Function | Purpose |
-|----------|---------|
-| `check_ollama()` | Verify Ollama server is running |
-| `list_ollama_models()` | List installed models |
-| `get_recommended_ollama_model()` | Auto-select optimal model |
-
-```{r}
-if (check_ollama()) {
-  models <- list_ollama_models()
-  best_model <- get_recommended_ollama_model()
-}
-```
-
 ## Default Models
 
 | Provider | Chat Model | Embedding Model |
 |----------|------------|-----------------|
 | OpenAI | gpt-4.1-mini | text-embedding-3-small |
 | Gemini | gemini-2.5-flash | gemini-embedding-001 |
-| Ollama | llama3.2 | nomic-embed-text |
 | Local | - | all-MiniLM-L6-v2 |
 
 ## Responsible AI Design
@@ -120,6 +97,5 @@ All AI features follow [NIST AI Risk Management Framework](https://www.nist.gov/
 | Human oversight | AI suggests; review and approve |
 | User control | Edit, regenerate, or override any output |
 | Transparency | View prompts and parameters used |
-| Privacy | Local options (Ollama, spaCy) for sensitive data |
+| Privacy | Local sentence-transformers and spaCy options for sensitive data |
 | Grounding | Content based on input data, not generic knowledge |
-

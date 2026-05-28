@@ -34,7 +34,7 @@ A data frame containing the top terms for each topic.
 ## Examples
 
 ``` r
-if (interactive()) {
+if (interactive() && requireNamespace("stm", quietly = TRUE)) {
   mydata <- TextAnalysisR::SpecialEduTech
 
   united_tbl <- TextAnalysisR::unite_cols(
@@ -48,21 +48,22 @@ if (interactive()) {
 
   out <- quanteda::convert(dfm_object, to = "stm")
 
-stm_15 <- stm::stm(
-  data = out$meta,
-  documents = out$documents,
-  vocab = out$vocab,
-  max.em.its = 75,
-  init.type = "Spectral",
-  K = 15,
-  prevalence = ~ reference_type + s(year),
-  verbose = TRUE)
-
-top_topic_terms <- TextAnalysisR::get_topic_terms(
-  stm_model = stm_15,
-  top_term_n = 10,
-  verbose = TRUE
+  stm_15 <- stm::stm(
+    data = out$meta,
+    documents = out$documents,
+    vocab = out$vocab,
+    max.em.its = 75,
+    init.type = "Spectral",
+    K = 15,
+    prevalence = ~ reference_type + s(year),
+    verbose = TRUE
   )
-print(top_topic_terms)
+
+  top_topic_terms <- TextAnalysisR::get_topic_terms(
+    stm_model = stm_15,
+    top_term_n = 10,
+    verbose = TRUE
+  )
+  print(top_topic_terms)
 }
 ```

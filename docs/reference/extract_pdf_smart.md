@@ -9,7 +9,7 @@ vision LLM APIs. Routes directly to multimodal extraction.
 extract_pdf_smart(
   file_path,
   doc_type = "auto",
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   envname = "textanalysisr-env"
@@ -29,7 +29,7 @@ extract_pdf_smart(
 
 - vision_provider:
 
-  Character: "ollama" (default), "openai", or "gemini"
+  Character: "openai" or "gemini" (default)
 
 - vision_model:
 

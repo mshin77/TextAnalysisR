@@ -82,10 +82,6 @@ Stopwords are common words (e.g., "the", "is", "and") that appear frequently but
 
 **Usage:** Use predefined stopword lists (e.g., Snowball) or add custom words. For sentiment analysis or syntactic studies, consider keeping stopwords as they may carry important meaning.
 
-```{r}
-tokens_clean <- quanteda::tokens_remove(tokens, quanteda::stopwords("en"))
-```
-
 **Learn More:** [stopwords Package Documentation](https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html)
 
 **Lemmatization**
@@ -114,10 +110,6 @@ A Document-Feature Matrix (DFM) is a mathematical representation where rows are 
 - **Sparse Matrix:** Efficient storage format for large corpora
 
 **Usage:** The DFM is the foundation for all downstream analyses including keyword extraction, topic modeling, and semantic analysis. Create it after preprocessing (tokenization, stopword removal, lemmatization).
-
-```{r}
-dfm_object <- quanteda::dfm(tokens_clean)
-```
 
 **Learn More:** [quanteda DFM Documentation](https://quanteda.io/reference/dfm.html)
 

@@ -1,14 +1,13 @@
 # Get Embeddings from API
 
-Generates text embeddings using Ollama (local), OpenAI, or Gemini
-embedding APIs.
+Generates text embeddings using OpenAI or Gemini embedding APIs.
 
 ## Usage
 
 ``` r
 get_api_embeddings(
   texts,
-  provider = c("ollama", "openai", "gemini"),
+  provider = c("openai", "gemini"),
   model = NULL,
   api_key = NULL,
   batch_size = 100
@@ -23,13 +22,11 @@ get_api_embeddings(
 
 - provider:
 
-  Character string: "ollama" (local API, free), "openai", or "gemini"
+  Character string: "openai" or "gemini"
 
 - model:
 
   Character string specifying the embedding model. Defaults:
-
-  - ollama: "nomic-embed-text"
 
   - openai: "text-embedding-3-small"
 
@@ -37,7 +34,7 @@ get_api_embeddings(
 
 - api_key:
 
-  Character string with API key (not required for Ollama)
+  Character string with API key
 
 - batch_size:
 

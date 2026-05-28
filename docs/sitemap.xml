@@ -49,13 +49,11 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/calculate_word_frequency.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_ollama.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_alt_text.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_docker_deployment.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_feature.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_multimodal_prerequisites.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_ollama.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_python_env.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_rate_limit.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/check_vision_models.html</loc></url>
@@ -72,7 +70,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_standard_ggplot_theme.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image_gemini.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image_ollama.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image_openai.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.html</loc></url>
@@ -117,10 +114,8 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_dt_options.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_feature_status.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_gemini_embeddings.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_ollama_embeddings.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_openai_embeddings.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_plotly_hover_config.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_sentences.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_sentiment_color.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/get_sentiment_colors.html</loc></url>
@@ -138,7 +133,6 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_frequency_analysis.html</loc></url>
-<url><loc>https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/log_security_event.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/parse_morphology_string.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/pipe.html</loc></url>

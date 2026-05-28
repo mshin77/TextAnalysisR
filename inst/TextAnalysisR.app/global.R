@@ -2,9 +2,19 @@ is_web <- TextAnalysisR:::check_web_deployment()
 is_docker <- TextAnalysisR:::check_docker_deployment()
 is_remote <- is_web || is_docker
 
+server_gemini_key <- Sys.getenv("GEMINI_API_KEY", "")
+has_server_gemini <- nzchar(server_gemini_key)
+server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")
+
 shiny::enableBookmarking("disable")
 
 .password_input <- function(inputId, label, value = "", placeholder = NULL) {
+  if (isTRUE(has_server_gemini) && grepl("gemini", inputId, ignore.case = TRUE)) {
+    return(tags$p(
+      style = "color: #475569; font-size: 13px; margin-bottom: 8px;",
+      "Usage is free here, supported by the Google Cloud Research program."
+    ))
+  }
   pw <- shiny::passwordInput(inputId, label, value = value, placeholder = placeholder)
   pw$children <- lapply(pw$children, function(ch) {
     if (inherits(ch, "shiny.tag") && identical(ch$name, "input")) {
@@ -217,27 +227,11 @@ topic_modeling_ui_content <- function() {
               "stm_label_provider",
               "AI Provider:",
               choices = c(
-                "Local (Ollama - Free, Private)" = "ollama",
                 "OpenAI (API Key Required)" = "openai",
                 "Gemini (API Key Required)" = "gemini"
               ),
-              selected = "ollama",
+              selected = "openai",
               inline = FALSE
-            ),
-            conditionalPanel(
-              condition = "input.stm_label_provider == 'ollama'",
-              selectizeInput(
-                "stm_label_ollama_model",
-                "Ollama Model:",
-                choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Requires Ollama. Get it from ",
-                tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
-              )
             ),
             conditionalPanel(
               condition = "input.stm_label_provider == 'openai'",
@@ -403,33 +397,15 @@ Focus on incorporating the most significant keywords while following the guideli
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 4 && input.searchKSubtabs == 'ai_rec'",
             tags$h5(strong("AI Configuration for K Selection"), style = "color: #4269BF; margin-bottom: 10px;"),
 
-            # AI Provider selection
             radioButtons(
               "k_rec_provider",
               "AI Provider:",
               choices = c(
-                "Local (Ollama - Free, Private)" = "ollama",
                 "OpenAI (API Key Required)" = "openai",
                 "Gemini (API Key Required)" = "gemini"
               ),
-              selected = "ollama",
+              selected = "openai",
               inline = FALSE
-            ),
-
-            conditionalPanel(
-              condition = "input.k_rec_provider == 'ollama'",
-              selectizeInput(
-                "k_rec_ollama_model",
-                "Ollama Model:",
-                choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Requires Ollama. Get it from ",
-                tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
-              )
             ),
 
             conditionalPanel(
@@ -586,27 +562,11 @@ Focus on incorporating the most significant keywords while following the guideli
               "content_provider",
               "AI Provider:",
               choices = c(
-                "Local (Ollama - Free, Private)" = "ollama",
                 "OpenAI (API Key Required)" = "openai",
                 "Gemini (API Key Required)" = "gemini"
               ),
-              selected = "ollama",
+              selected = "openai",
               inline = FALSE
-            ),
-            conditionalPanel(
-              condition = "input.content_provider == 'ollama'",
-              selectizeInput(
-                "content_ollama_model",
-                "Ollama Model:",
-                choices = c("Llama 3.2" = "llama3.2", "Gemma 3" = "gemma3", "Mistral" = "mistral"),
-                selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Requires Ollama. Get it from ",
-                tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
-              )
             ),
             conditionalPanel(
               condition = "input.content_provider == 'openai'",
@@ -689,33 +649,12 @@ Focus on incorporating the most significant keywords while following the guideli
               "topic_embedding_provider",
               "AI Provider:",
               choices = c(
-                "Local (Ollama - Free, Private)" = "ollama",
                 "Sentence Transformers (Python)" = "sentence-transformers",
                 "OpenAI (API Key Required)" = "openai",
                 "Gemini (API Key Required)" = "gemini"
               ),
-              selected = "ollama",
+              selected = "sentence-transformers",
               inline = FALSE
-            ),
-
-            conditionalPanel(
-              condition = "input.topic_embedding_provider == 'ollama'",
-              selectizeInput(
-                "topic_embedding_ollama_model",
-                "Ollama Model:",
-                choices = c(
-                  "Nomic Embed Text (Default)" = "nomic-embed-text",
-                  "MxBai Embed Large (Higher Quality)" = "mxbai-embed-large",
-                  "All-MiniLM (Lightweight)" = "all-minilm"
-                ),
-                selected = NULL,
-                options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
-              ),
-              tags$p(
-                style = "font-size: 16px; color: #666;",
-                "Requires Ollama. Get it from ",
-                tags$a(href = "https://ollama.com", target = "_blank", "ollama.com")
-              )
             ),
 
             conditionalPanel(
@@ -1359,7 +1298,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "5. Estimated Effects",
+              "6. Estimated Effects",
               value = 8,
               conditionalPanel(
                 condition = "output.has_effect_estimates == true",
@@ -1383,7 +1322,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "6. Categorical Covariates",
+              "7. Categorical Covariates",
               value = 9,
               shinyBS::bsCollapse(
                 open = 0,
@@ -1452,7 +1391,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "7. Continuous Covariates",
+              "8. Continuous Covariates",
               value = 10,
               shinyBS::bsCollapse(
                 open = 0,

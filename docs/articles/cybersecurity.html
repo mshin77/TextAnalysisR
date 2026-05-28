@@ -91,7 +91,16 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Demonstrate sanitized preprocessing on bundled data — no eval()</span></span>
+<span><span class="co"># of user input, no shell calls. All text is tokenized through</span></span>
+<span><span class="co"># quanteda, which rejects malformed UTF-8 and strips control chars.</span></span>
+<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">united</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">mydata</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">toks</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span>
+<span><span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/ndoc.html" class="external-link">ndoc</a></span><span class="op">(</span><span class="va">toks</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 5</span></span></code></pre>
 <p>TextAnalysisR includes built-in security features.</p>
 <div class="section level2">
 <h2 id="input-validation">Input Validation<a class="anchor" aria-label="anchor" href="#input-validation"></a>
@@ -131,7 +140,7 @@ or persisted)</li>
 <li>Transmitted via secure headers only</li>
 </ul>
 <p><strong>Environment Variable:</strong></p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"sk-..."</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -151,7 +160,6 @@ identifiers</li>
 <li>Rate limiting: 100 requests/hour per session</li>
 <li>Security event logging with sanitized error messages</li>
 <li>Local processing option (FERPA/HIPAA compatible)</li>
-<li>Offline AI via Ollama for fully local operation</li>
 </ul>
 </div>
 <div class="section level2">

@@ -24,7 +24,7 @@ A ggplot object showing word frequency.
 Creates a bar plot showing the most frequent words in a document-feature matrix (dfm).
 }
 \examples{
-if (interactive()) {
+\donttest{
   data(SpecialEduTech, package = "TextAnalysisR")
   texts <- SpecialEduTech$abstract[1:10]
   dfm <- quanteda::dfm(quanteda::tokens(texts))

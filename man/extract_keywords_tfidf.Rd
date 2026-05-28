@@ -20,7 +20,7 @@ Data frame with columns: Keyword, TF_IDF_Score, Frequency
 Extracts top keywords from a document-feature matrix using TF-IDF weighting.
 }
 \examples{
-if (interactive()) {
+\donttest{
   library(quanteda)
   corp <- corpus(c("text analysis", "data mining", "text mining"))
   dfm_obj <- dfm(tokens(corp))

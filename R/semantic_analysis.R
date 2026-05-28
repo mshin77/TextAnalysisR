@@ -14,16 +14,14 @@ NULL
     dotenv::load_dot_env()
   }
   if (is.null(model)) model <- defaults[[provider]]
-  if (provider %in% c("openai", "gemini")) {
-    if (is.null(api_key)) {
-      env_var <- switch(provider, openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
-      api_key <- Sys.getenv(env_var)
-    }
-    if (!nzchar(api_key)) stop(.missing_api_key_message(provider, "package"), call. = FALSE)
-    if (strict_validate) {
-      validation <- validate_api_key(api_key, strict = FALSE)
-      if (!validation$valid) stop(sprintf("Invalid API key format: %s", validation$error))
-    }
+  if (is.null(api_key)) {
+    env_var <- switch(provider, openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
+    api_key <- Sys.getenv(env_var)
+  }
+  if (!nzchar(api_key)) stop(.missing_api_key_message(provider, "package"), call. = FALSE)
+  if (strict_validate) {
+    validation <- validate_api_key(api_key, strict = FALSE)
+    if (!validation$valid) stop(sprintf("Invalid API key format: %s", validation$error))
   }
   list(provider = provider, model = model, api_key = api_key)
 }
@@ -70,7 +68,7 @@ NULL
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   data(SpecialEduTech)
 #'   texts <- SpecialEduTech$abstract[1:5]
 #'
@@ -1114,18 +1112,16 @@ generate_cluster_labels_auto <- function(feature_matrix,
 #' @description
 #' Suggests descriptive labels for clusters using AI. Labels are suggestions
 #' for human review - users should edit and approve before using.
-#' Supports OpenAI, Gemini, or Ollama (local) for AI generation.
-#' When running locally, Ollama is preferred for privacy and cost-free operation.
+#' Supports OpenAI or Gemini for AI generation.
 #'
 #' @param cluster_keywords List of keywords for each cluster.
-#' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
-#'   "auto" will try Ollama first, then check for OpenAI/Gemini keys.
+#' @param provider AI provider to use: "auto" (default), "openai", or "gemini".
+#'   "auto" picks the first provider with an available API key.
 #' @param model Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
-#'   "gemini-2.5-flash-lite" (Gemini), or recommended Ollama model.
+#'   "gemini-2.5-flash-lite" (Gemini).
 #' @param temperature Temperature parameter (default: 0.3).
 #' @param max_tokens Maximum tokens for response (default: 50).
 #' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
-#'   Not required for Ollama.
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
 #' @return A list of generated labels.
@@ -1139,7 +1135,6 @@ generate_cluster_labels_auto <- function(feature_matrix,
 #'     "1" = c("calculator", "arithmetic", "elementary", "remedial"),
 #'     "2" = c("computer", "instruction", "multiplication", "drill")
 #'   )
-#'   labels_ollama <- generate_cluster_labels(cluster_keywords, provider = "ollama")
 #'   labels_openai <- generate_cluster_labels(cluster_keywords, provider = "openai")
 #'   labels_gemini <- generate_cluster_labels(cluster_keywords, provider = "gemini")
 #' }
@@ -1160,26 +1155,20 @@ generate_cluster_labels <- function(cluster_keywords,
   }
 
   if (provider == "auto") {
-    if (check_ollama(verbose = FALSE)) {
-      provider <- "ollama"
-      if (verbose) message("Using Ollama (local AI) for label generation")
-    } else if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
+    if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
       provider <- "openai"
       if (verbose) message("Using OpenAI for label generation")
     } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
       provider <- "gemini"
       if (verbose) message("Using Gemini for label generation")
     } else {
-      stop("No AI provider available. Install Ollama or set OPENAI_API_KEY/GEMINI_API_KEY.")
+      stop("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
     }
   }
 
-  ollama_default <- if (provider == "ollama") {
-    get_recommended_ollama_model(verbose = verbose) %||% "tinyllama"
-  } else NULL
   setup <- .resolve_llm_setup(
     provider, model, api_key,
-    defaults = list(ollama = ollama_default, openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite"),
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite"),
     strict_validate = TRUE
   )
   model <- setup$model
@@ -1264,7 +1253,7 @@ Generated Topic Label:"
       gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
     })
 
-    Sys.sleep(if (provider %in% c("openai", "gemini")) 1 else 0.5)
+    Sys.sleep(1)
   }
 
   if (verbose) message("AI label generation completed")
@@ -2609,17 +2598,16 @@ sentiment_embedding_analysis <- function(texts,
 #' LLM-based Sentiment Analysis
 #'
 #' @description
-#' Analyzes sentiment using Large Language Models (OpenAI, Gemini, or Ollama).
+#' Analyzes sentiment using Large Language Models (OpenAI or Gemini).
 #' Provides nuanced sentiment understanding including sarcasm detection,
 #' mixed emotions, and contextual interpretation that lexicon-based methods miss.
 #'
 #' @param texts Character vector of texts to analyze.
 #' @param doc_names Optional character vector of document names (default: text1, text2, ...).
-#' @param provider AI provider to use: "openai" (default), "gemini", or "ollama".
+#' @param provider AI provider to use: "openai" (default) or "gemini".
 #' @param model Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
-#'   "gemini-2.5-flash-lite" (Gemini), "llama3.2" (Ollama).
+#'   "gemini-2.5-flash-lite" (Gemini).
 #' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
-#'   Not required for Ollama.
 #' @param batch_size Number of texts to process per API call (default: 5).
 #'   Larger batches are more efficient but may hit token limits.
 #' @param include_explanation Logical, if TRUE includes natural language explanation
@@ -2654,13 +2642,10 @@ sentiment_embedding_analysis <- function(texts,
 #'
 #'   sentiment_gemini <- analyze_sentiment_llm(abstracts, provider = "gemini",
 #'                                              include_explanation = TRUE)
-#'
-#'   sentiment_ollama <- analyze_sentiment_llm(abstracts, provider = "ollama",
-#'                                              model = "llama3")
 #' }
 analyze_sentiment_llm <- function(texts,
                                   doc_names = NULL,
-                                  provider = c("openai", "gemini", "ollama"),
+                                  provider = c("openai", "gemini"),
                                   model = NULL,
                                   api_key = NULL,
                                   batch_size = 5,
@@ -2682,7 +2667,7 @@ analyze_sentiment_llm <- function(texts,
   # Resolve provider, model, and API key
   setup <- .resolve_llm_setup(
     provider, model, api_key,
-    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite", ollama = "llama3.2")
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite")
   )
   model <- setup$model
   api_key <- setup$api_key
@@ -2790,7 +2775,7 @@ Important:
     }
 
     # Rate limiting
-    Sys.sleep(if (provider %in% c("openai", "gemini")) 1 else 0.5)
+    Sys.sleep(1)
   }
 
   # Remove explanation column if not requested
@@ -3041,7 +3026,7 @@ NULL
 #' @export
 #'
 #' @examples
-#' if (interactive()) {
+#' \donttest{
 #'   data(SpecialEduTech)
 #'   texts <- SpecialEduTech$abstract[1:5]
 #'   result <- semantic_similarity_analysis(texts)
@@ -3662,18 +3647,17 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #'
 #' @description
 #' Simple in-memory RAG (Retrieval Augmented Generation) for question-answering
-#' over document corpus with source attribution. Uses local (Ollama) or cloud
-#' (OpenAI/Gemini) embeddings for semantic search and LLM for answer generation.
+#' over document corpus with source attribution. Uses OpenAI or Gemini
+#' embeddings for semantic search and LLM for answer generation.
 #'
 #' @param query Character string, user question
 #' @param documents Character vector, corpus to search
-#' @param provider Character string, provider: "ollama" (local), "openai", or "gemini"
-#' @param api_key Character string, API key for cloud providers (or from
-#'   OPENAI_API_KEY/GEMINI_API_KEY env). Not required for Ollama.
+#' @param provider Character string, provider: "openai" or "gemini"
+#' @param api_key Character string, API key (or from
+#'   OPENAI_API_KEY/GEMINI_API_KEY env).
 #' @param embedding_model Character string, embedding model. Defaults:
-#'   "nomic-embed-text" (ollama), "text-embedding-3-small" (openai),
-#'   "gemini-embedding-001" (gemini)
-#' @param chat_model Character string, chat model. Defaults: "llama3.2" (ollama),
+#'   "text-embedding-3-small" (openai), "gemini-embedding-001" (gemini)
+#' @param chat_model Character string, chat model. Defaults:
 #'   "gpt-4.1-mini" (openai), "gemini-2.5-flash-lite" (gemini)
 #' @param top_k Integer, number of documents to retrieve (default: 5)
 #'
@@ -3703,13 +3687,6 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #'   "Response to Intervention uses tiered support systems."
 #' )
 #'
-#' # Using local Ollama (free, private)
-#' result <- run_rag_search(
-#'   query = "How does assistive technology support learning?",
-#'   documents = documents,
-#'   provider = "ollama"
-#' )
-#'
 #' # Using OpenAI (requires API key)
 #' result <- run_rag_search(
 #'   query = "How does assistive technology support learning?",
@@ -3725,7 +3702,7 @@ plot_similarity_heatmap <- function(similarity_matrix,
 run_rag_search <- function(
   query,
   documents,
-  provider = c("ollama", "openai", "gemini"),
+  provider = c("openai", "gemini"),
   api_key = NULL,
   embedding_model = NULL,
   chat_model = NULL,
@@ -3733,35 +3710,21 @@ run_rag_search <- function(
 ) {
   provider <- match.arg(provider)
 
-  # API key for cloud providers (Ollama runs locally, no key needed)
-  if (provider != "ollama") {
-    if (is.null(api_key)) {
-      api_key <- switch(provider,
-        "openai" = Sys.getenv("OPENAI_API_KEY"),
-        "gemini" = Sys.getenv("GEMINI_API_KEY")
-      )
-    }
+  if (is.null(api_key)) {
+    api_key <- switch(provider,
+      "openai" = Sys.getenv("OPENAI_API_KEY"),
+      "gemini" = Sys.getenv("GEMINI_API_KEY")
+    )
+  }
 
-    if (!nzchar(api_key)) {
-      return(list(
-        success = FALSE,
-        error = .missing_api_key_message(provider, "package"),
-        answer = "",
-        confidence = 0.0,
-        sources = c()
-      ))
-    }
-  } else {
-    # Check Ollama availability
-    if (!check_ollama(verbose = FALSE)) {
-      return(list(
-        success = FALSE,
-        error = "Ollama is not running. Please start Ollama and try again.",
-        answer = "",
-        confidence = 0.0,
-        sources = c()
-      ))
-    }
+  if (!nzchar(api_key)) {
+    return(list(
+      success = FALSE,
+      error = .missing_api_key_message(provider, "package"),
+      answer = "",
+      confidence = 0.0,
+      sources = c()
+    ))
   }
 
   if (length(documents) < 1) {
@@ -3774,10 +3737,8 @@ run_rag_search <- function(
     ))
   }
 
-  # Default models per provider
   if (is.null(embedding_model)) {
     embedding_model <- switch(provider,
-      "ollama" = "nomic-embed-text",
       "openai" = "text-embedding-3-small",
       "gemini" = "gemini-embedding-001"
     )
@@ -3785,7 +3746,6 @@ run_rag_search <- function(
 
   if (is.null(chat_model)) {
     chat_model <- switch(provider,
-      "ollama" = "llama3.2",
       "openai" = "gpt-4.1-mini",
       "gemini" = "gemini-2.5-flash-lite"
     )
@@ -3794,13 +3754,12 @@ run_rag_search <- function(
   # Cap top_k at available documents
   top_k <- min(top_k, length(documents))
 
-  # Step 1: Generate embeddings for all documents
   doc_embeddings <- tryCatch({
     get_api_embeddings(
       texts = documents,
       provider = provider,
       model = embedding_model,
-      api_key = if (provider == "ollama") NULL else api_key
+      api_key = api_key
     )
   }, error = function(e) {
     return(list(error = e$message))
@@ -3816,13 +3775,12 @@ run_rag_search <- function(
     ))
   }
 
-  # Step 2: Generate embedding for the query
   query_embedding <- tryCatch({
     get_api_embeddings(
       texts = query,
       provider = provider,
       model = embedding_model,
-      api_key = if (provider == "ollama") NULL else api_key
+      api_key = api_key
     )
   }, error = function(e) {
     return(list(error = e$message))

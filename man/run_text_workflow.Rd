@@ -59,14 +59,13 @@ It serves as a convenience function for users who want to execute the entire
 pipeline programmatically.
 }
 \examples{
-if (interactive()) {
-  # Using example dataset
+\donttest{
   workflow_result <- TextAnalysisR::run_text_workflow(
     dataset_choice = "Upload an Example Dataset",
     listed_vars = c("title", "keyword", "abstract")
   )
-
-  # Using file upload
+}
+if (interactive()) {
   file_info <- data.frame(filepath = "path/to/file.xlsx")
   workflow_result <- TextAnalysisR::run_text_workflow(
     dataset_choice = "Upload Your File",
@@ -74,7 +73,6 @@ if (interactive()) {
     listed_vars = c("column1", "column2")
   )
 
-  # Using copy-paste text
   workflow_result <- TextAnalysisR::run_text_workflow(
     dataset_choice = "Copy and Paste Text",
     text_input = "Your text content here",

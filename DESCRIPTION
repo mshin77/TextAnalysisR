@@ -11,8 +11,8 @@ Description: Provides a text mining and natural language processing
     topic modeling via 'stm' and the 'BERTopic' approach, semantic
     similarity and document clustering on transformer representations,
     an interactive 'Shiny' interface with 'ggplot2' visualization,
-    optional 'spaCy' preprocessing, and local ('Ollama',
-    'sentence-transformers') or web-based ('OpenAI', 'Gemini') model
+    optional 'spaCy' preprocessing, and local 'sentence-transformers'
+    or web-based ('OpenAI', 'Gemini') model
     providers for retrieval-augmented generation, as described in
     Shin et al. (2026) <doi:10.1177/07319487251412879>.
 License: GPL (>= 3)
@@ -88,8 +88,7 @@ Suggests:
 Depends: R (>= 4.0)
 SystemRequirements: Python (>= 3.8) with spaCy (>= 3.5) for
     lemmatization and sentence-transformers (>= 2.2) for embeddings
-    (optional); Ollama (>= 0.1.30) for local large language model
-    inference (optional)
+    (optional)
 URL: https://mshin77.github.io/TextAnalysisR/,
     https://github.com/mshin77/TextAnalysisR
 BugReports: https://github.com/mshin77/TextAnalysisR/issues

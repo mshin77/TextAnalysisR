@@ -54,8 +54,8 @@ Priority order (highest to lowest):
 ## Examples
 
 ``` r
-if (interactive()) {
+# \donttest{
   toks <- quanteda::tokens("assistive technology supports learning")
   result <- get_available_tokens(processed_tokens = toks)
-}
+# }
 ```

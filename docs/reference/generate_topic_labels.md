@@ -1,7 +1,7 @@
 # Generate Topic Labels Using AI
 
 This function generates descriptive labels for each topic based on their
-top terms using AI providers (OpenAI, Gemini, or Ollama).
+top terms using AI providers (OpenAI or Gemini).
 
 ## Usage
 
@@ -27,14 +27,14 @@ generate_topic_labels(
 
 - provider:
 
-  AI provider to use: "auto" (default), "openai", "gemini", or "ollama".
-  "auto" will try Ollama first, then check for OpenAI/Gemini keys.
+  AI provider to use: "auto" (default), "openai", or "gemini". "auto"
+  picks the first provider with an available API key.
 
 - model:
 
   A character string specifying which model to use. If NULL, uses
   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite"
-  (Gemini), or recommended Ollama model.
+  (Gemini).
 
 - system:
 
@@ -53,8 +53,7 @@ generate_topic_labels(
 
 - api_key:
 
-  API key for OpenAI or Gemini. If NULL, uses environment variable. Not
-  required for Ollama.
+  API key for OpenAI or Gemini. If NULL, uses environment variable.
 
 - openai_api_key:
 
@@ -84,11 +83,10 @@ for the direct AI provider call
 if (interactive()) {
 top_topic_terms <- get_topic_terms(stm_model, top_term_n = 10)
 
-# Auto-detect provider (tries Ollama -> OpenAI -> Gemini)
+# Auto-detect provider (tries OpenAI -> Gemini)
 labels <- generate_topic_labels(top_topic_terms)
 
 # Use specific provider
-labels_ollama <- generate_topic_labels(top_topic_terms, provider = "ollama")
 labels_openai <- generate_topic_labels(top_topic_terms, provider = "openai")
 labels_gemini <- generate_topic_labels(top_topic_terms, provider = "gemini")
 }

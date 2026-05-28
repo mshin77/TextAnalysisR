@@ -85,11 +85,23 @@ A ggplot2 object showing the specified visualization.
 ## Examples
 
 ``` r
-if (interactive()) {
+# \donttest{
   data(SpecialEduTech)
   texts <- SpecialEduTech$abstract[1:5]
   result <- semantic_similarity_analysis(texts)
+#> Starting document similarity analysis...
+#> Feature type: words
+#> Similarity method: cosine
+#> Use embeddings: FALSE
+#> Step 1: Generating feature matrix...
+#> Using word-based features...
+#> Step 2: Calculating similarity matrix...
+#> Step 3: Calculating metrics...
+#> Document similarity analysis completed in 0.14 seconds
+#> Documents analyzed: 5
+#> Feature dimensions: 30
   plot <- plot_semantic_viz(result, plot_type = "similarity")
   print(plot)
-}
+
+# }
 ```

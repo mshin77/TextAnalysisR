@@ -12,7 +12,7 @@ Unified PDF processing:
 process_pdf_unified(
   file_path,
   use_multimodal = FALSE,
-  vision_provider = "ollama",
+  vision_provider = "gemini",
   vision_model = NULL,
   api_key = NULL,
   describe_images = TRUE
@@ -31,7 +31,7 @@ process_pdf_unified(
 
 - vision_provider:
 
-  Character, "ollama", "openai", or "gemini"
+  Character, "openai" or "gemini"
 
 - vision_model:
 

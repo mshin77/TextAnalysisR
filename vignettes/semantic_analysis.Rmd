@@ -87,7 +87,7 @@ For standalone clustering without keywords, use `cluster_embeddings()`. See [Top
 ```{r}
 labels <- generate_cluster_labels(
   results$topic_keywords,
-  provider = "ollama"
+  provider = "openai"
 )
 ```
 

@@ -243,18 +243,12 @@ STM and embedding-based models, validation, and quality metrics
 
 LLM integration, embeddings, PDF extraction, and vision AI
 
-- [`check_ollama()`](https://mshin77.github.io/TextAnalysisR/reference/check_ollama.md)
-  : Check if Ollama is Available
-- [`list_ollama_models()`](https://mshin77.github.io/TextAnalysisR/reference/list_ollama_models.md)
-  : List Available Ollama Models
 - [`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md)
   : Call LLM API (Unified Wrapper)
 - [`check_vision_models()`](https://mshin77.github.io/TextAnalysisR/reference/check_vision_models.md)
   : Check Vision Model Availability
 - [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md)
   : Describe Image Using Vision LLM
-- [`get_recommended_ollama_model()`](https://mshin77.github.io/TextAnalysisR/reference/get_recommended_ollama_model.md)
-  : Get Recommended Ollama Model
 - [`get_best_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_best_embeddings.md)
   : Get Best Available Embeddings
 - [`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md)
