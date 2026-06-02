@@ -2,8 +2,7 @@
 
 Performs lexicon-based sentiment analysis on a DFM object using tidytext
 lexicons. Supports AFINN, Bing, and NRC lexicons with scoring and
-emotion analysis. Now supports n-grams for improved negation and
-intensifier handling.
+emotion analysis.
 
 ## Usage
 
@@ -22,7 +21,7 @@ sentiment_lexicon_analysis(
 
 - dfm_object:
 
-  A quanteda DFM object (unigram or n-gram)
+  A quanteda DFM object (unigram)
 
 - lexicon:
 
@@ -34,15 +33,18 @@ sentiment_lexicon_analysis(
 
 - feature_type:
 
-  Feature space: "words" (unigrams) or "ngrams" (default: "words")
+  Feature space: "words" (unigrams). The AFINN/Bing/NRC lexicons are
+  unigram lexicons; "ngrams" falls back to unigram scoring with a
+  warning (default: "words").
 
 - ngram_range:
 
-  N-gram size when feature_type = "ngrams" (default: 2 for bigrams)
+  Retained for backward compatibility; not used for scoring (default: 2)
 
 - texts:
 
-  Optional character vector of texts for n-gram creation (default: NULL)
+  Optional character vector of texts used to rebuild a unigram DFM
+  (default: NULL)
 
 ## Value
 

@@ -372,6 +372,9 @@ $(document).ready(function() {
         translateIcon.on('click touchend', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            if (typeof window.loadGoogleTranslate === 'function') {
+                window.loadGoogleTranslate();
+            }
             window.toggleTranslate();
             return false;
         });

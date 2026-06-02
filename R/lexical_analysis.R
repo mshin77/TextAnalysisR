@@ -157,6 +157,10 @@ extract_pos_tags <- function(tokens,
                              include_dependency = FALSE,
                              model = "en_core_web_sm") {
 
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    return(.notify_missing_python("POS tagging via spaCy"))
+  }
+
   parsed <- spacy_parse_full(
     tokens,
     pos = TRUE,
@@ -2021,7 +2025,7 @@ plot_entity_frequencies <- function(entity_data,
 #' @export
 render_displacy_ent <- function(text, model = "en_core_web_sm", colors = NULL) {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for displaCy visualization.")
+    return(.notify_missing_python("displaCy entity visualization"))
   }
 
   tryCatch({
@@ -2065,7 +2069,7 @@ render_displacy_ent <- function(text, model = "en_core_web_sm", colors = NULL) {
 #' @export
 render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for displaCy visualization.")
+    return(.notify_missing_python("displaCy dependency visualization"))
   }
 
   tryCatch({
@@ -2148,7 +2152,7 @@ render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") 
 #' }
 init_spacy_nlp <- function(model = "en_core_web_sm", force = FALSE) {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required. Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy initialization"))
   }
 
   # Check if already initialized with same model
@@ -2278,8 +2282,7 @@ spacy_parse_full <- function(x,
                              morph = FALSE,
                              model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for spaCy-backed features. ",
-         "Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy-backed features"))
   }
 
 
@@ -2323,8 +2326,7 @@ spacy_parse_full <- function(x,
 #' @export
 spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for spaCy-backed features. ",
-         "Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy-backed features"))
   }
 
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
@@ -2363,8 +2365,7 @@ spacy_lemmatize <- function(x, batch_size = 100, model = "en_core_web_sm") {
 #' @export
 spacy_extract_entities <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for spaCy-backed features. ",
-         "Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy-backed features"))
   }
 
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
@@ -2392,8 +2393,7 @@ spacy_extract_entities <- function(x, model = "en_core_web_sm") {
 #' @export
 extract_noun_chunks <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for spaCy-backed features. ",
-         "Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy-backed features"))
   }
 
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
@@ -2420,8 +2420,7 @@ extract_noun_chunks <- function(x, model = "en_core_web_sm") {
 #' @export
 extract_subjects_objects <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for spaCy-backed features. ",
-         "Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy-backed features"))
   }
 
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
@@ -2448,8 +2447,7 @@ extract_subjects_objects <- function(x, model = "en_core_web_sm") {
 #' @export
 get_sentences <- function(x, model = "en_core_web_sm") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for spaCy-backed features. ",
-         "Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy-backed features"))
   }
 
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
@@ -2501,8 +2499,7 @@ get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
 #' @export
 find_similar_words <- function(word, top_n = 10L, model = "en_core_web_md") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required for spaCy-backed features. ",
-         "Install with: install.packages('reticulate')")
+    return(.notify_missing_python("spaCy-backed features"))
   }
 
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
@@ -2623,7 +2620,6 @@ parse_morphology_string <- function(data, features = NULL) {
 #'     \item odds1: Odds in category 1
 #'     \item odds2: Odds in category 2
 #'     \item odds_ratio: Ratio of odds
-
 #'     \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
 #'   }
 #'
@@ -2715,7 +2711,7 @@ calculate_log_odds_ratio <- function(dfm_object,
 
     # Get top terms by absolute log odds
     result <- result[order(abs(result$log_odds_ratio), decreasing = TRUE), ]
-    utils::head(result, top_n)  # Get top by absolute log odds
+    utils::head(result, top_n)
   }
 
   results <- list()

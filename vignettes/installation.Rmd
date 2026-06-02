@@ -8,14 +8,13 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
-```{r, eval = TRUE}
+```{r}
 library(TextAnalysisR)
 packageVersion("TextAnalysisR")
 
-# Bundled corpus is available immediately after install — no Python required.
 data("SpecialEduTech")
 nrow(SpecialEduTech)
 head(SpecialEduTech[, c("title", "year")], 3)
@@ -23,7 +22,7 @@ head(SpecialEduTech[, c("title", "year")], 3)
 
 ## R Package
 
-```{r}
+```{r, eval = FALSE}
 install.packages("TextAnalysisR",
   repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
 library(TextAnalysisR)
@@ -42,22 +41,11 @@ Note: Web version has limited features (no Python, no large files). Cloud AI pro
 
 ### Linguistic Analysis (spaCy)
 
-For lemmatization, POS tagging, and named entity recognition:
-
-```{r}
-# Python spaCy required - see setup_python_env()
-TextAnalysisR::setup_python_env()
-```
+For lemmatization, POS tagging, and named entity recognition, set up Python with `TextAnalysisR::setup_python_env()`.
 
 ### Python Features
 
-For embeddings and neural sentiment analysis:
-
-```{r}
-setup_python_env()
-```
-
-Requires Python 3.9+.
+For embeddings and neural sentiment analysis, run `setup_python_env()`. Requires Python 3.9+.
 
 ## Troubleshooting
 

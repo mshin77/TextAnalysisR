@@ -172,6 +172,3 @@ NULL
 #' 3. **For Custom Workflows:** Use individual functions as building blocks
 #' 4. **For Power Users:** Combine with custom R code and other packages
 #'
-#' @author Shin Mikyung 
-#' @docType package
-#' @name TextAnalysisR

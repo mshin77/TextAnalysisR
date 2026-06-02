@@ -22,12 +22,12 @@ globalVariables(names = c(
   "entity", "estimate", "feature", "frequency", "from", "generated_content", "group", "size_metric_log",
   "interview_question", "item1", "item2", "label", "labeled_topic", "line_group",
   "lower", "max_corr", "max_count", "max_similarity", "metric_value", "min_corr",
-  "min_count", "model_type", "n", "n_words", "name", "negative", "odds ratio",
+  "min_count", "model_type", "n", "n_words", "name", "negative", "rate ratio",
   "odds.ratio", "ord", "other_category", "other_id", "other_idx", "other_name",
   "p.value", "percent", "policy_recommendation", "pos", "positive", "proportion",
   "ref_id", "ref_idx", "ref_name", "research_question", "row_idx", "score",
   "sentiment", "sentiment_score", "similarity", "statistic", "std.error",
-  "std.error (odds ratio)", "survey_item", "term", "term_proportion",
+  "std.error (rate ratio)", "survey_item", "term", "term_proportion",
   "terms", "text", "theme_description", "to",
   "topic", "topic_display", "topic_label", "total_count", "total_score", "tt",
   "united_texts", "upper", "value", "word", "word_frequency", "x", "xend",
@@ -557,9 +557,7 @@ calculate_word_frequency <- function(dfm_object,
 
   con_var_term_counts <- dfm_td %>%
     tibble::as_tibble() %>%
-    group_by(!!rlang::sym(continuous_variable)) %>%
-    mutate(word_frequency = n()) %>%
-    ungroup()
+    mutate(word_frequency = count)
 
   con_var_term_gg <- con_var_term_counts %>%
     mutate(term = factor(term, levels = selected_terms)) %>%
@@ -615,24 +613,24 @@ calculate_word_frequency <- function(dfm_object,
       if (length(unique(df$word_frequency)) <= 1) {
         return(tibble::tibble(term = NA, estimate = NA, std.error = NA,
                               statistic = NA, p.value = NA,
-                              `odds ratio` = NA, var.diag = NA,
-                              `std.error (odds ratio)` = NA,
+                              `rate ratio` = NA, var.diag = NA,
+                              `std.error (rate ratio)` = NA,
                               model_type = "Insufficient data"))
       }
 
       if (length(unique(df[[continuous_var]])) <= 1) {
         return(tibble::tibble(term = NA, estimate = NA, std.error = NA,
                               statistic = NA, p.value = NA,
-                              `odds ratio` = NA, var.diag = NA,
-                              `std.error (odds ratio)` = NA,
+                              `rate ratio` = NA, var.diag = NA,
+                              `std.error (rate ratio)` = NA,
                               model_type = "Insufficient data"))
       }
 
       if (nrow(df) < 2) {
         return(tibble::tibble(term = NA, estimate = NA, std.error = NA,
                               statistic = NA, p.value = NA,
-                              `odds ratio` = NA, var.diag = NA,
-                              `std.error (odds ratio)` = NA,
+                              `rate ratio` = NA, var.diag = NA,
+                              `std.error (rate ratio)` = NA,
                               model_type = "Insufficient data"))
       }
 
@@ -674,10 +672,10 @@ calculate_word_frequency <- function(dfm_object,
 
       tidy_result <- broom::tidy(model) %>%
         dplyr::mutate(
-          `odds ratio` = exp(estimate),
+          `rate ratio` = exp(estimate),
           var.diag = diag(vcov(model)),
-          `std.error (odds ratio)` = ifelse(var.diag >= 0,
-                                            sqrt(`odds ratio`^2 * var.diag),
+          `std.error (rate ratio)` = ifelse(var.diag >= 0,
+                                            sqrt(`rate ratio`^2 * var.diag),
                                             NA),
           model_type = model_type
         )
@@ -686,7 +684,7 @@ calculate_word_frequency <- function(dfm_object,
     }) %>%
     ungroup() %>%
     dplyr::select(word, model_type, term, estimate, std.error,
-                  `odds ratio`, `std.error (odds ratio)`, statistic, p.value) %>%
+                  `rate ratio`, `std.error (rate ratio)`, statistic, p.value) %>%
     rename(
       logit = estimate,
       `z-statistic` = statistic
@@ -828,7 +826,7 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
 #' @return Invisible TRUE if successful, stops with error message if failed
 #'
 #' @details
-#' Default `tier = "core"` keeps the install light — spaCy NLP and PDF text
+#' Default `tier = "core"` keeps the install light -- spaCy NLP and PDF text
 #' extraction only. Add `"embeddings"` for sentence-transformers-based
 #' similarity/sentiment, and `"topics"` for BERTopic.
 #'
@@ -848,7 +846,19 @@ setup_python_env <- function(envname = "textanalysisr-env",
   tier <- match.arg(tier, c("core", "embeddings", "topics"), several.ok = TRUE)
   if (!"core" %in% tier) tier <- c("core", tier)
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required. Install it with: install.packages('reticulate')")
+    return(.notify_missing_python("Python environment setup"))
+  }
+
+  env_exists <- tryCatch(
+    envname %in% reticulate::virtualenv_list(),
+    error = function(e) FALSE
+  )
+
+  if (!interactive() && !env_exists) {
+    message("setup_python_env() skipped: non-interactive session and ",
+            "virtualenv '", envname, "' not found. ",
+            "Run in an interactive R session to create it.")
+    return(invisible(FALSE))
   }
 
   message("\nPython Environment Setup")
@@ -862,8 +872,9 @@ setup_python_env <- function(envname = "textanalysisr-env",
 
   if (!python_available) {
     if (!interactive()) {
-      stop("Python not found. Install Python (e.g. from python.org) and rerun ",
-           "setup_python_env() in an interactive R session.")
+      message("Python not found. Install Python (e.g. from python.org) and rerun ",
+              "setup_python_env() in an interactive R session.")
+      return(invisible(FALSE))
     }
     message("No Python found. Install Miniconda? (y/n): ")
     response <- readline(prompt = "")
@@ -873,7 +884,8 @@ setup_python_env <- function(envname = "textanalysisr-env",
       reticulate::install_miniconda()
       message("Done.")
     } else {
-      stop("Python required. Install from python.org and retry.")
+      message("Python required. Install from python.org and retry.")
+      return(invisible(FALSE))
     }
   } else {
     py_info <- reticulate::py_discover_config()
@@ -924,7 +936,8 @@ setup_python_env <- function(envname = "textanalysisr-env",
     })
 
     if (!test_result) {
-      stop("Package imports failed. Check Python logs.")
+      message("Package imports failed. Check Python logs.")
+      return(invisible(FALSE))
     }
 
     # Download spaCy English model
@@ -955,7 +968,8 @@ except OSError:
     return(invisible(TRUE))
 
   }, error = function(e) {
-    stop("Failed to set up Python environment: ", e$message)
+    message("Failed to set up Python environment: ", e$message)
+    invisible(FALSE)
   })
 }
 
@@ -983,7 +997,8 @@ except OSError:
 #' }
 check_python_env <- function(envname = "textanalysisr-env") {
   if (!requireNamespace("reticulate", quietly = TRUE)) {
-    stop("Package 'reticulate' is required.")
+    message("Package 'reticulate' is required. Install with install.packages('reticulate').")
+    return(list(available = FALSE, active = FALSE, packages = list()))
   }
 
   env_list <- reticulate::virtualenv_list()
@@ -1261,7 +1276,7 @@ call_llm_api <- function(provider = c("openai", "gemini"),
   }
 
   if (!nzchar(api_key)) {
-    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
+    return(.notify_missing_api_key(provider))
   }
 
   result <- switch(provider,
@@ -1521,7 +1536,7 @@ get_api_embeddings <- function(texts,
   }
 
   if (!nzchar(api_key)) {
-    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
+    return(.notify_missing_api_key(provider))
   }
 
   if (!requireNamespace("httr", quietly = TRUE)) {
@@ -1688,18 +1703,19 @@ get_best_embeddings <- function(texts,
       provider <- "gemini"
       if (verbose) message("Using Gemini embeddings (API)")
     } else {
-      stop(paste0(
+      message(
         "No embedding provider available. Options:\n",
         "  1. Set up Python with: TextAnalysisR::setup_python_env()\n",
         "  2. Set OPENAI_API_KEY or GEMINI_API_KEY environment variable"
-      ))
+      )
+      return(invisible(NULL))
     }
   }
 
   embeddings <- switch(provider,
     "sentence-transformers" = {
       if (!check_feature("python")) {
-        stop("Python not available. Run TextAnalysisR::setup_python_env() first.")
+        return(.notify_missing_python("Embedding generation via sentence-transformers"))
       }
       model <- model %||% "all-MiniLM-L6-v2"
       generate_embeddings(texts, model = model, verbose = verbose)
@@ -2018,6 +2034,21 @@ log_security_event <- function(event_type, details, session_info, level = "info"
     sprintf("  2. Add %s=your-key-here to your .Renviron file\n", env_var),
     "  3. Pass directly via the api_key parameter"
   )
+}
+
+.notify_missing_api_key <- function(provider) {
+  message(.missing_api_key_message(provider, "package"))
+  invisible(NULL)
+}
+
+.notify_missing_python <- function(feature = "this feature") {
+  hint <- if (!requireNamespace("reticulate", quietly = TRUE)) {
+    "Install reticulate (install.packages('reticulate')), then run TextAnalysisR::setup_python_env()."
+  } else {
+    "Run TextAnalysisR::setup_python_env() to install Python and required modules."
+  }
+  message(sprintf("%s requires Python. %s", feature, hint))
+  invisible(NULL)
 }
 
 

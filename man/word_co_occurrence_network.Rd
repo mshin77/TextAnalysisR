@@ -16,13 +16,8 @@ word_co_occurrence_network(
   community_method = "leiden",
   node_size_by = "degree",
   node_color_by = "community",
-  category_params = NULL,
-  pattern = NULL,
-  seed = 2025,
-  physics_gravity = -1500,
-  physics_spring_length = 100,
-  physics_avoid_overlap = 0.3,
-  showlegend = TRUE
+  seed = 123,
+  category_params = NULL
 )
 }
 \arguments{
@@ -48,22 +43,12 @@ word_co_occurrence_network(
 
 \item{node_color_by}{Node coloring method: "community" or "centrality" (default: "community").}
 
+\item{seed}{Integer seed for the force-directed layout, so the plot is reproducible (default: 123).}
+
 \item{category_params}{Optional named list of category-specific parameters. Each element should be a list with \code{co_occur_n} and \code{top_node_n} values for that category (default: NULL).}
-
-\item{pattern}{Optional regex (case-insensitive). If provided, keeps only edges whose \code{item1} or \code{item2} matches (default: NULL).}
-
-\item{seed}{Integer RNG seed for reproducible layout (default: 2025).}
-
-\item{physics_gravity}{barnesHut \code{gravitationalConstant}. More negative = nodes spread further apart (default: -1500).}
-
-\item{physics_spring_length}{barnesHut spring length. Higher = longer edges (default: 100).}
-
-\item{physics_avoid_overlap}{barnesHut overlap avoidance, 0 to 1. Higher = more node separation (default: 0.3).}
-
-\item{showlegend}{Whether to display the community legend (default: TRUE).}
 }
 \value{
-A list containing the visNetwork widget (or flex-layout HTML for faceted), a DT table, and a summary.
+A list containing the ggplot2 plot, a table, and a summary.
 }
 \description{
 This function creates a word co-occurrence network based on a document-feature matrix (dfm).
@@ -93,6 +78,7 @@ if (interactive()) {
 }
 }
 \seealso{
-\code{\link[=word_correlation_network]{word_correlation_network()}} for correlation-based edges instead of co-occurrence counts; \code{\link[=plot_cluster_terms]{plot_cluster_terms()}} for bar-style cluster terms
+Other semantic:
+\code{\link[=word_correlation_network]{word_correlation_network()}}
 }
 \concept{semantic}

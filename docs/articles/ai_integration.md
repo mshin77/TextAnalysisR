@@ -10,8 +10,6 @@ packageVersion("TextAnalysisR")
 
 ``` r
 
-# Local pipeline runs without any API key — TF-IDF surfaces the same
-# corpus terms the LLM workflows below would summarize for you.
 mydata <- SpecialEduTech[seq_len(20), c("title", "abstract")]
 united <- unite_cols(mydata, listed_vars = c("title", "abstract"))
 toks   <- prep_texts(united, text_field = "united_texts")
@@ -47,49 +45,16 @@ Cloud Research program. OpenAI calls require a personal API key.
 
 ## Setup
 
-``` r
-
-Sys.setenv(OPENAI_API_KEY = "<openai-api-key>")
-Sys.setenv(GEMINI_API_KEY = "<gemini-api-key>")
-
-# Or use .env file in project root
-# OPENAI_API_KEY=<openai-api-key>
-# GEMINI_API_KEY=<gemini-api-key>
-```
-
-## Unified LLM API
-
-``` r
-
-# Provider-agnostic (recommended)
-response <- call_llm_api(
-  provider = "openai",
-  system_prompt = "You are a helpful assistant.",
-  user_prompt = "Summarize this text..."
-)
-
-# Provider-specific
-call_openai_chat(system_prompt, user_prompt, model = "gpt-4.1-mini")
-call_gemini_chat(system_prompt, user_prompt, model = "gemini-2.5-flash")
-```
-
-## Embeddings & RAG
-
-``` r
-
-# Web-based embeddings (OpenAI, Gemini)
-emb <- get_api_embeddings(texts, provider = "openai")
-
-# Local embeddings (sentence-transformers)
-emb <- generate_embeddings(texts)
-
-# RAG search over a document corpus
-result <- run_rag_search(
-  query = "What are the main findings?",
-  documents = my_docs,
-  provider = "openai"
-)
-```
+Set keys via `.Renviron` (persistent) or
+[`Sys.setenv()`](https://rdrr.io/r/base/Sys.setenv.html) (session). The
+cloud chat, embedding, and RAG functions
+([`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md),
+[`call_openai_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_openai_chat.md),
+[`call_gemini_chat()`](https://mshin77.github.io/TextAnalysisR/reference/call_gemini_chat.md),
+[`get_api_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/get_api_embeddings.md),
+[`run_rag_search()`](https://mshin77.github.io/TextAnalysisR/reference/run_rag_search.md))
+require an API key and network access; see their reference pages for
+usage.
 
 ## Default Models
 

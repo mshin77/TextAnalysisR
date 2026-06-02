@@ -1,32 +1,82 @@
 # Lexical Analysis
 
-Lexical analysis examines word patterns and frequencies.
+Lexical analysis examines word patterns, distinctiveness, and
+complexity. The sections below follow the Shiny app’s **Lexical
+Analysis** tabs in order.
 
 ## Setup
+
+A 150-document subset of `SpecialEduTech` keeps the build fast; the full
+dataset works the same way.
 
 ``` r
 
 library(TextAnalysisR)
 
-mydata <- SpecialEduTech
+mydata <- SpecialEduTech[1:150, ]
 united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
-tokens <- prep_texts(united_tbl, text_field = "united_texts")
+tokens <- prep_texts(united_tbl, text_field = "united_texts", remove_stopwords = TRUE)
 dfm_object <- quanteda::dfm(tokens)
 ```
 
-## Word Frequency
+## Linguistic Annotation
+
+Token-level annotation (lemmas, part-of-speech, morphology,
+dependencies, named entities) uses spaCy through reticulate, so the
+examples below require Python and are not run here.
+
+### Part-of-Speech Tags
+
+[`extract_pos_tags()`](https://mshin77.github.io/TextAnalysisR/reference/extract_pos_tags.md)
+returns one row per token with `doc_id, token, lemma, pos, tag`.
+Universal POS tags include NOUN, VERB, ADJ, ADV (content words), PROPN
+(proper nouns), and DET, ADP, PRON (function words).
+
+``` r
+
+pos <- extract_pos_tags(united_tbl$united_texts)
+```
+
+### Morphological Features
+
+[`extract_morphology()`](https://mshin77.github.io/TextAnalysisR/reference/extract_morphology.md)
+extracts grammatical features such as Number (Sing/Plur), Tense
+(Past/Pres/Fut), VerbForm, Person, and Case.
+
+``` r
+
+morphology <- extract_morphology(united_tbl$united_texts)
+```
+
+### Named Entity Recognition
+
+[`extract_named_entities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_named_entities.md)
+tags entities such as PERSON, ORG, GPE/LOC, and DATE/MONEY/PERCENT.
+
+``` r
+
+entities <- extract_named_entities(united_tbl$united_texts)
+```
+
+## Frequency Trends
+
+[`plot_word_frequency()`](https://mshin77.github.io/TextAnalysisR/reference/plot_word_frequency.md)
+shows the most frequent terms in the document-feature matrix.
 
 ``` r
 
 plot_word_frequency(dfm_object, n = 20)
 ```
 
-![](lexical_analysis_files/figure-html/unnamed-chunk-2-1.png)
+![](lexical_analysis_files/figure-html/unnamed-chunk-5-1.png)
 
-**TF-IDF Keyword Extraction**
+## Keywords
 
-Find distinctive words per document using Term Frequency-Inverse
-Document Frequency:
+### TF-IDF
+
+[`extract_keywords_tfidf()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_tfidf.md)
+weights terms that are frequent in a document but rare across the
+corpus, surfacing distinctive vocabulary.
 
 ``` r
 
@@ -34,137 +84,87 @@ keywords <- extract_keywords_tfidf(dfm_object, top_n = 10)
 plot_tfidf_keywords(keywords)
 ```
 
-TF-IDF weights terms that are frequent in a document but rare across the
-corpus, identifying distinctive vocabulary.
+![](lexical_analysis_files/figure-html/unnamed-chunk-6-1.png)
 
-**Keyness Analysis**
+### Statistical Keyness
 
-Compare word usage between groups:
+[`extract_keywords_keyness()`](https://mshin77.github.io/TextAnalysisR/reference/extract_keywords_keyness.md)
+identifies terms that distinguish one group from the rest using a
+log-likelihood (G^2) statistic.
 
 ``` r
 
 keyness <- extract_keywords_keyness(
   dfm_object,
-  target = quanteda::docvars(dfm_object, "reference_type") == "Journal Article"
+  target = quanteda::docvars(dfm_object, "reference_type") == "journal_article"
 )
 plot_keyness_keywords(keyness)
 ```
 
-Keyness analysis identifies statistically significant differences in
-word usage between groups.
+![](lexical_analysis_files/figure-html/unnamed-chunk-7-1.png)
 
-**N-gram Analysis**
+### Comparison
 
-N-grams are sequences of consecutive words that frequently appear
-together. They capture multi-word expressions like “machine learning” or
-“New York City” that carry meaning as complete phrases.
-
-**Types:**
-
-- **Bigrams:** 2-word sequences (e.g., “data analysis”)
-- **Trigrams:** 3-word sequences (e.g., “natural language processing”)
-- **4-grams & 5-grams:** Longer phrases (e.g., “statistical significance
-  test results”)
-
-**Usage:** Set minimum frequency (how often phrases appear) and lambda
-(collocation strength) to detect meaningful multi-word expressions. The
-function returns a collocations table; pass it to
-[`quanteda::tokens_compound()`](https://quanteda.io/reference/tokens_compound.html)
-to merge phrases into the tokens object.
+[`plot_keyword_comparison()`](https://mshin77.github.io/TextAnalysisR/reference/plot_keyword_comparison.md)
+places TF-IDF scores next to term frequency for the top keywords.
 
 ``` r
 
-compounds <- detect_multi_words(tokens, min_count = 10)
-tokens <- quanteda::tokens_compound(tokens, compounds)
+plot_keyword_comparison(keywords, top_n = 10)
 ```
 
-**Learn More:** [Text Mining with R - N-grams
-Chapter](https://www.tidytextmining.com/ngrams.html)
+![](lexical_analysis_files/figure-html/unnamed-chunk-8-1.png)
 
-**Part-of-Speech Tagging**
+## Lexical Diversity
 
-Part-of-speech (POS) tagging identifies the grammatical category of each
-word. Requires Python with spaCy.
-
-**Tags (Universal Dependencies):**
-
-- **NOUN, VERB, ADJ, ADV:** Content words
-- **PROPN:** Proper nouns (names)
-- **DET, ADP, PRON:** Function words
-- **NUM, PUNCT:** Numbers, punctuation
-
-**Usage:** Filter by tags to focus on specific word types (e.g., nouns
-and verbs for content analysis).
-
-**Learn More:** [Universal Dependencies POS
-Tags](https://universaldependencies.org/u/pos/)
-
-**Morphological Analysis**
-
-Morphological analysis extracts grammatical features from words. Uses
-Python spaCy via reticulate.
-
-**Features:**
-
-| Feature  | Description        | Values              |
-|----------|--------------------|---------------------|
-| Number   | Singular/Plural    | Sing, Plur          |
-| Tense    | Verb tense         | Past, Pres, Fut     |
-| VerbForm | Verb form          | Fin, Inf, Part, Ger |
-| Person   | Grammatical person | 1, 2, 3             |
-| Case     | Grammatical case   | Nom, Acc, Dat, Gen  |
+[`lexical_diversity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.md)
+reports vocabulary-richness indices. MTLD and MATTR are stable across
+text lengths; TTR and CTTR are length-sensitive.
 
 ``` r
 
-parsed <- extract_pos_tags(united_tbl$united_texts)
-# Returns columns: doc_id, token, lemma, pos, tag
+diversity <- lexical_diversity_analysis(dfm_object)
+plot_lexical_diversity_distribution(diversity$lexical_diversity, metric = "TTR")
 ```
 
-**Usage:** Analyze verb tenses for temporal patterns, number agreement,
-or grammatical complexity.
+![](lexical_analysis_files/figure-html/unnamed-chunk-9-1.png)
 
-**Learn More:** [spaCy
-Morphology](https://spacy.io/usage/linguistic-features#morphology)
+| Metric | Description                 | Note                    |
+|--------|-----------------------------|-------------------------|
+| TTR    | Types / Tokens              | Length-sensitive        |
+| CTTR   | Types / sqrt(2 × Tokens)    | Partly length-corrected |
+| MATTR  | Moving-average TTR          | Stable across lengths   |
+| MTLD   | Mean length maintaining TTR | Length-independent      |
+| Maas   | Log-based index             | Lower = more diverse    |
 
-**Named Entity Recognition**
+## Readability
 
-Named Entity Recognition (NER) identifies and classifies named entities
-in text. Requires Python with spaCy.
-
-**Entity Types:**
-
-- **PERSON, ORG:** People, organizations
-- **GPE, LOC:** Places, locations
-- **DATE, MONEY, PERCENT:** Temporal, monetary values
-
-**Usage:** Filter by entity type. Add custom entities for qualitative
-coding.
-
-**Learn More:** [spaCy Named Entity
-Recognition](https://spacy.io/usage/linguistic-features#named-entities)
-
-## Word Networks
-
-### Co-occurrence
+[`calculate_text_readability()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_text_readability.md)
+computes grade-level and reading-ease indices from sentence and word
+structure.
 
 ``` r
 
-word_co_occurrence_network(dfm_object, co_occur_n = 10)
+readability <- calculate_text_readability(united_tbl$united_texts)
+plot_readability_distribution(readability, metric = "flesch")
 ```
 
-### Correlation
+![](lexical_analysis_files/figure-html/unnamed-chunk-10-1.png)
 
-``` r
+| Metric | Basis | Output |
+|----|----|----|
+| Flesch Reading Ease | Sentence length + syllables | 0-100 (higher = easier) |
+| Flesch-Kincaid | Sentence length + syllables | Grade level |
+| Gunning Fog | Sentence length + complex words | Years of education |
+| SMOG | Polysyllabic words | Years of education |
+| ARI | Characters per word | Grade level |
+| Coleman-Liau | Letters per 100 words | Grade level |
 
-word_correlation_network(dfm_object, corr_n = 0.3)
-```
+## Log Odds Ratio
 
-**Log Odds Ratio Analysis**
-
-Log odds ratio compares word frequencies between categories to identify
-distinctive vocabulary.
-
-**Simple Log Odds Ratio:**
+[`calculate_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_log_odds_ratio.md)
+compares term frequencies between categories to find distinctive
+vocabulary.
 
 ``` r
 
@@ -177,97 +177,53 @@ log_odds <- calculate_log_odds_ratio(
 plot_log_odds_ratio(log_odds)
 ```
 
-**Weighted Log Odds Ratio:**
+![](lexical_analysis_files/figure-html/unnamed-chunk-11-1.png)
 
-For publication-quality analysis, use the weighted log odds method which
-accounts for sampling variability by weighting results with z-scores.
-This method identifies words that reliably distinguish between groups,
-not just rare words with extreme ratios.
+[`calculate_weighted_log_odds()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_weighted_log_odds.md)
+weights the ratio by a z-score (Monroe et al.), so reliably distinctive
+terms rank above rare terms with extreme ratios (uses the tidylo
+package).
 
 ``` r
 
-# Requires tidylo package: install.packages("tidylo")
 weighted_odds <- calculate_weighted_log_odds(
   dfm_object,
   group_var = "reference_type",
   top_n = 15
 )
+plot_weighted_log_odds(weighted_odds)
 ```
 
-**Learn More:** [tidylo: Weighted Log
-Odds](https://juliasilge.github.io/tidylo/)
+![](lexical_analysis_files/figure-html/unnamed-chunk-12-1.png)
 
-**Lexical Dispersion**
+## Lexical Dispersion
 
-Lexical dispersion (X-ray plot) shows where terms appear across
-documents.
+[`calculate_lexical_dispersion()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_lexical_dispersion.md)
+shows where selected terms appear across documents (an X-ray plot).
 
 ``` r
 
-dispersion <- calculate_lexical_dispersion(tokens, terms = c("education", "technology"))
+dispersion <- calculate_lexical_dispersion(tokens[1:50], terms = c("education", "technology"))
 plot_lexical_dispersion(dispersion)
 ```
 
-**Readability Metrics**
+![](lexical_analysis_files/figure-html/unnamed-chunk-13-1.png)
 
-Readability metrics quantify text complexity using statistical measures
-of sentence structure and word characteristics.
+## Multi-Word Expressions
 
-**Available Metrics:**
-
-| Metric | Formula Basis | Output |
-|----|----|----|
-| Flesch Reading Ease | Sentence length + syllables | 0-100 (higher = easier) |
-| Flesch-Kincaid | Sentence length + syllables | U.S. grade level |
-| Gunning Fog | Sentence length + complex words | Years of education |
-| SMOG | Polysyllabic word count | Years of education |
-| ARI | Characters per word | U.S. grade level |
-| Coleman-Liau | Letters per 100 words | U.S. grade level |
-
-**Usage Notes:**
-
-- Different formulas may produce slightly different grade level
-  estimates
-- These formulas measure surface-level text features (word length,
-  sentence length)
-- Short texts may produce less reliable scores
+Multi-word (n-gram) detection belongs to the **Preprocess → Multi-Word
+Dictionary** step in the app.
+[`detect_multi_words()`](https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.md)
+returns a collocations table to feed
+[`quanteda::tokens_compound()`](https://quanteda.io/reference/tokens_compound.html).
 
 ``` r
 
-readability <- calculate_text_readability(united_tbl$united_texts)
-plot_readability_distribution(readability)
+compounds <- detect_multi_words(tokens, min_count = 10)
+head(compounds, 10)
 ```
 
-**Learn More:** [quanteda textstat_readability
-Documentation](https://quanteda.io/reference/textstat_readability.html)
-
-**Lexical Diversity Metrics**
-
-Lexical diversity measures vocabulary richness by quantifying the
-relationship between unique words (types) and total words (tokens).
-
-**Available Metrics:**
-
-| Metric | Description                 | Note                          |
-|--------|-----------------------------|-------------------------------|
-| TTR    | Types / Tokens              | Sensitive to text length      |
-| CTTR   | Types / sqrt(2 × Tokens)    | Partially corrects for length |
-| MSTTR  | Mean Segmental TTR          | Divides into segments         |
-| MATTR  | Moving Average TTR          | More stable across lengths    |
-| MTLD   | Mean length maintaining TTR | Text-length independent       |
-| Maas   | Log-based formula           | Lower = more diverse          |
-
-**Usage Notes:**
-
-- MTLD and MATTR are more stable across different text lengths
-- TTR is sensitive to text length - compare only similar-length texts
-- Maas, Yule K, and Simpson D use inverse scales (lower = more diverse)
-
-``` r
-
-diversity <- lexical_diversity_analysis(dfm_object)
-plot_lexical_diversity_distribution(diversity)
-```
-
-**Learn More:** [quanteda textstat_lexdiv
-Documentation](https://quanteda.io/reference/textstat_lexdiv.html)
+    ##  [1] "learning disabilities" "assisted instruction"  "computer assisted"    
+    ##  [4] "problem solving"       "special education"     "learning disabled"    
+    ##  [7] "elementary school"     "students learning"     "school students"      
+    ## [10] "high school"

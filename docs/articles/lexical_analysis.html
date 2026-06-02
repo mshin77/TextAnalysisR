@@ -90,208 +90,166 @@
 
     
     
-<p>Lexical analysis examines word patterns and frequencies.</p>
+<p>Lexical analysis examines word patterns, distinctiveness, and
+complexity. The sections below follow the Shiny app’s <strong>Lexical
+Analysis</strong> tabs in order.</p>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
+<p>A 150-document subset of <code>SpecialEduTech</code> keeps the build
+fast; the full dataset works the same way.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span></span>
+<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">150</span>, <span class="op">]</span></span>
 <span><span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">mydata</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united_tbl</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span>
+<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united_tbl</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span>, remove_stopwords <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="word-frequency">Word Frequency<a class="anchor" aria-label="anchor" href="#word-frequency"></a>
+<h2 id="linguistic-annotation">Linguistic Annotation<a class="anchor" aria-label="anchor" href="#linguistic-annotation"></a>
 </h2>
+<p>Token-level annotation (lemmas, part-of-speech, morphology,
+dependencies, named entities) uses spaCy through reticulate, so the
+examples below require Python and are not run here.</p>
+<div class="section level3">
+<h3 id="part-of-speech-tags">Part-of-Speech Tags<a class="anchor" aria-label="anchor" href="#part-of-speech-tags"></a>
+</h3>
+<p><code><a href="../reference/extract_pos_tags.html">extract_pos_tags()</a></code> returns one row per token with
+<code>doc_id, token, lemma, pos, tag</code>. Universal POS tags include
+NOUN, VERB, ADJ, ADV (content words), PROPN (proper nouns), and DET,
+ADP, PRON (function words).</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span><span class="va">dfm_object</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
-<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="700"></p>
-<p><strong>TF-IDF Keyword Extraction</strong></p>
-<p>Find distinctive words per document using Term Frequency-Inverse
-Document Frequency:</p>
+<code class="sourceCode R"><span><span class="va">pos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pos_tags.html">extract_pos_tags</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="morphological-features">Morphological Features<a class="anchor" aria-label="anchor" href="#morphological-features"></a>
+</h3>
+<p><code><a href="../reference/extract_morphology.html">extract_morphology()</a></code> extracts grammatical features such
+as Number (Sing/Plur), Tense (Past/Pres/Fut), VerbForm, Person, and
+Case.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">morphology</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_morphology.html">extract_morphology</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="named-entity-recognition">Named Entity Recognition<a class="anchor" aria-label="anchor" href="#named-entity-recognition"></a>
+</h3>
+<p><code><a href="../reference/extract_named_entities.html">extract_named_entities()</a></code> tags entities such as PERSON,
+ORG, GPE/LOC, and DATE/MONEY/PERCENT.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">entities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_named_entities.html">extract_named_entities</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="frequency-trends">Frequency Trends<a class="anchor" aria-label="anchor" href="#frequency-trends"></a>
+</h2>
+<p><code><a href="../reference/plot_word_frequency.html">plot_word_frequency()</a></code> shows the most frequent terms in
+the document-feature matrix.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_word_frequency.html">plot_word_frequency</a></span><span class="op">(</span><span class="va">dfm_object</span>, n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level2">
+<h2 id="keywords">Keywords<a class="anchor" aria-label="anchor" href="#keywords"></a>
+</h2>
+<div class="section level3">
+<h3 id="tf-idf">TF-IDF<a class="anchor" aria-label="anchor" href="#tf-idf"></a>
+</h3>
+<p><code><a href="../reference/extract_keywords_tfidf.html">extract_keywords_tfidf()</a></code> weights terms that are frequent
+in a document but rare across the corpus, surfacing distinctive
+vocabulary.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">keywords</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_tfidf.html">extract_keywords_tfidf</a></span><span class="op">(</span><span class="va">dfm_object</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_tfidf_keywords.html">plot_tfidf_keywords</a></span><span class="op">(</span><span class="va">keywords</span><span class="op">)</span></span></code></pre></div>
-<p>TF-IDF weights terms that are frequent in a document but rare across
-the corpus, identifying distinctive vocabulary.</p>
-<p><strong>Keyness Analysis</strong></p>
-<p>Compare word usage between groups:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="statistical-keyness">Statistical Keyness<a class="anchor" aria-label="anchor" href="#statistical-keyness"></a>
+</h3>
+<p><code><a href="../reference/extract_keywords_keyness.html">extract_keywords_keyness()</a></code> identifies terms that
+distinguish one group from the rest using a log-likelihood (G^2)
+statistic.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">keyness</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_keywords_keyness.html">extract_keywords_keyness</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>
-<span>  target <span class="op">=</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/docvars.html" class="external-link">docvars</a></span><span class="op">(</span><span class="va">dfm_object</span>, <span class="st">"reference_type"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"Journal Article"</span></span>
+<span>  target <span class="op">=</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/docvars.html" class="external-link">docvars</a></span><span class="op">(</span><span class="va">dfm_object</span>, <span class="st">"reference_type"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"journal_article"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_keyness_keywords.html">plot_keyness_keywords</a></span><span class="op">(</span><span class="va">keyness</span><span class="op">)</span></span></code></pre></div>
-<p>Keyness analysis identifies statistically significant differences in
-word usage between groups.</p>
-<p><strong>N-gram Analysis</strong></p>
-<p>N-grams are sequences of consecutive words that frequently appear
-together. They capture multi-word expressions like “machine learning” or
-“New York City” that carry meaning as complete phrases.</p>
-<p><strong>Types:</strong></p>
-<ul>
-<li>
-<strong>Bigrams:</strong> 2-word sequences (e.g., “data
-analysis”)</li>
-<li>
-<strong>Trigrams:</strong> 3-word sequences (e.g., “natural language
-processing”)</li>
-<li>
-<strong>4-grams &amp; 5-grams:</strong> Longer phrases (e.g.,
-“statistical significance test results”)</li>
-</ul>
-<p><strong>Usage:</strong> Set minimum frequency (how often phrases
-appear) and lambda (collocation strength) to detect meaningful
-multi-word expressions. The function returns a collocations table; pass
-it to <code><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">quanteda::tokens_compound()</a></code> to merge phrases into the
-tokens object.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">compounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">tokens_compound</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="va">compounds</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Learn More:</strong> <a href="https://www.tidytextmining.com/ngrams.html" class="external-link">Text Mining with R -
-N-grams Chapter</a></p>
-<p><strong>Part-of-Speech Tagging</strong></p>
-<p>Part-of-speech (POS) tagging identifies the grammatical category of
-each word. Requires Python with spaCy.</p>
-<p><strong>Tags (Universal Dependencies):</strong></p>
-<ul>
-<li>
-<strong>NOUN, VERB, ADJ, ADV:</strong> Content words</li>
-<li>
-<strong>PROPN:</strong> Proper nouns (names)</li>
-<li>
-<strong>DET, ADP, PRON:</strong> Function words</li>
-<li>
-<strong>NUM, PUNCT:</strong> Numbers, punctuation</li>
-</ul>
-<p><strong>Usage:</strong> Filter by tags to focus on specific word
-types (e.g., nouns and verbs for content analysis).</p>
-<p><strong>Learn More:</strong> <a href="https://universaldependencies.org/u/pos/" class="external-link">Universal Dependencies
-POS Tags</a></p>
-<p><strong>Morphological Analysis</strong></p>
-<p>Morphological analysis extracts grammatical features from words. Uses
-Python spaCy via reticulate.</p>
-<p><strong>Features:</strong></p>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level3">
+<h3 id="comparison">Comparison<a class="anchor" aria-label="anchor" href="#comparison"></a>
+</h3>
+<p><code><a href="../reference/plot_keyword_comparison.html">plot_keyword_comparison()</a></code> places TF-IDF scores next to
+term frequency for the top keywords.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_keyword_comparison.html">plot_keyword_comparison</a></span><span class="op">(</span><span class="va">keywords</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="lexical-diversity">Lexical Diversity<a class="anchor" aria-label="anchor" href="#lexical-diversity"></a>
+</h2>
+<p><code><a href="../reference/lexical_diversity_analysis.html">lexical_diversity_analysis()</a></code> reports vocabulary-richness
+indices. MTLD and MATTR are stable across text lengths; TTR and CTTR are
+length-sensitive.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">diversity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lexical_diversity_analysis.html">lexical_diversity_analysis</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_lexical_diversity_distribution.html">plot_lexical_diversity_distribution</a></span><span class="op">(</span><span class="va">diversity</span><span class="op">$</span><span class="va">lexical_diversity</span>, metric <span class="op">=</span> <span class="st">"TTR"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
 <table class="table">
 <thead><tr class="header">
-<th>Feature</th>
+<th>Metric</th>
 <th>Description</th>
-<th>Values</th>
+<th>Note</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Number</td>
-<td>Singular/Plural</td>
-<td>Sing, Plur</td>
+<td>TTR</td>
+<td>Types / Tokens</td>
+<td>Length-sensitive</td>
 </tr>
 <tr class="even">
-<td>Tense</td>
-<td>Verb tense</td>
-<td>Past, Pres, Fut</td>
+<td>CTTR</td>
+<td>Types / sqrt(2 × Tokens)</td>
+<td>Partly length-corrected</td>
 </tr>
 <tr class="odd">
-<td>VerbForm</td>
-<td>Verb form</td>
-<td>Fin, Inf, Part, Ger</td>
+<td>MATTR</td>
+<td>Moving-average TTR</td>
+<td>Stable across lengths</td>
 </tr>
 <tr class="even">
-<td>Person</td>
-<td>Grammatical person</td>
-<td>1, 2, 3</td>
+<td>MTLD</td>
+<td>Mean length maintaining TTR</td>
+<td>Length-independent</td>
 </tr>
 <tr class="odd">
-<td>Case</td>
-<td>Grammatical case</td>
-<td>Nom, Acc, Dat, Gen</td>
+<td>Maas</td>
+<td>Log-based index</td>
+<td>Lower = more diverse</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">parsed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/extract_pos_tags.html">extract_pos_tags</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span>
-<span><span class="co"># Returns columns: doc_id, token, lemma, pos, tag</span></span></code></pre></div>
-<p><strong>Usage:</strong> Analyze verb tenses for temporal patterns,
-number agreement, or grammatical complexity.</p>
-<p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#morphology" class="external-link">spaCy
-Morphology</a></p>
-<p><strong>Named Entity Recognition</strong></p>
-<p>Named Entity Recognition (NER) identifies and classifies named
-entities in text. Requires Python with spaCy.</p>
-<p><strong>Entity Types:</strong></p>
-<ul>
-<li>
-<strong>PERSON, ORG:</strong> People, organizations</li>
-<li>
-<strong>GPE, LOC:</strong> Places, locations</li>
-<li>
-<strong>DATE, MONEY, PERCENT:</strong> Temporal, monetary
-values</li>
-</ul>
-<p><strong>Usage:</strong> Filter by entity type. Add custom entities
-for qualitative coding.</p>
-<p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#named-entities" class="external-link">spaCy
-Named Entity Recognition</a></p>
 </div>
 <div class="section level2">
-<h2 id="word-networks">Word Networks<a class="anchor" aria-label="anchor" href="#word-networks"></a>
+<h2 id="readability">Readability<a class="anchor" aria-label="anchor" href="#readability"></a>
 </h2>
-<div class="section level3">
-<h3 id="co-occurrence">Co-occurrence<a class="anchor" aria-label="anchor" href="#co-occurrence"></a>
-</h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/word_co_occurrence_network.html">word_co_occurrence_network</a></span><span class="op">(</span><span class="va">dfm_object</span>, co_occur_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="correlation">Correlation<a class="anchor" aria-label="anchor" href="#correlation"></a>
-</h3>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/word_correlation_network.html">word_correlation_network</a></span><span class="op">(</span><span class="va">dfm_object</span>, corr_n <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Log Odds Ratio Analysis</strong></p>
-<p>Log odds ratio compares word frequencies between categories to
-identify distinctive vocabulary.</p>
-<p><strong>Simple Log Odds Ratio:</strong></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">log_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio</a></span><span class="op">(</span></span>
-<span>  <span class="va">dfm_object</span>,</span>
-<span>  group_var <span class="op">=</span> <span class="st">"reference_type"</span>,</span>
-<span>  comparison_mode <span class="op">=</span> <span class="st">"binary"</span>,</span>
-<span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plot_log_odds_ratio.html">plot_log_odds_ratio</a></span><span class="op">(</span><span class="va">log_odds</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Weighted Log Odds Ratio:</strong></p>
-<p>For publication-quality analysis, use the weighted log odds method
-which accounts for sampling variability by weighting results with
-z-scores. This method identifies words that reliably distinguish between
-groups, not just rare words with extreme ratios.</p>
+<p><code><a href="../reference/calculate_text_readability.html">calculate_text_readability()</a></code> computes grade-level and
+reading-ease indices from sentence and word structure.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Requires tidylo package: install.packages("tidylo")</span></span>
-<span><span class="va">weighted_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_weighted_log_odds.html">calculate_weighted_log_odds</a></span><span class="op">(</span></span>
-<span>  <span class="va">dfm_object</span>,</span>
-<span>  group_var <span class="op">=</span> <span class="st">"reference_type"</span>,</span>
-<span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><strong>Learn More:</strong> <a href="https://juliasilge.github.io/tidylo/" class="external-link">tidylo: Weighted Log
-Odds</a></p>
-<p><strong>Lexical Dispersion</strong></p>
-<p>Lexical dispersion (X-ray plot) shows where terms appear across
-documents.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dispersion</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_lexical_dispersion.html">calculate_lexical_dispersion</a></span><span class="op">(</span><span class="va">tokens</span>, terms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"education"</span>, <span class="st">"technology"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plot_lexical_dispersion.html">plot_lexical_dispersion</a></span><span class="op">(</span><span class="va">dispersion</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Readability Metrics</strong></p>
-<p>Readability metrics quantify text complexity using statistical
-measures of sentence structure and word characteristics.</p>
-<p><strong>Available Metrics:</strong></p>
+<code class="sourceCode R"><span><span class="va">readability</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_text_readability.html">calculate_text_readability</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_readability_distribution.html">plot_readability_distribution</a></span><span class="op">(</span><span class="va">readability</span>, metric <span class="op">=</span> <span class="st">"flesch"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"></p>
 <table class="table">
 <colgroup>
-<col width="25%">
-<col width="48%">
-<col width="25%">
+<col width="34%">
+<col width="30%">
+<col width="34%">
 </colgroup>
 <thead><tr class="header">
 <th>Metric</th>
-<th>Formula Basis</th>
+<th>Basis</th>
 <th>Output</th>
 </tr></thead>
 <tbody>
@@ -303,7 +261,7 @@ measures of sentence structure and word characteristics.</p>
 <tr class="even">
 <td>Flesch-Kincaid</td>
 <td>Sentence length + syllables</td>
-<td>U.S. grade level</td>
+<td>Grade level</td>
 </tr>
 <tr class="odd">
 <td>Gunning Fog</td>
@@ -312,91 +270,72 @@ measures of sentence structure and word characteristics.</p>
 </tr>
 <tr class="even">
 <td>SMOG</td>
-<td>Polysyllabic word count</td>
+<td>Polysyllabic words</td>
 <td>Years of education</td>
 </tr>
 <tr class="odd">
 <td>ARI</td>
 <td>Characters per word</td>
-<td>U.S. grade level</td>
+<td>Grade level</td>
 </tr>
 <tr class="even">
 <td>Coleman-Liau</td>
 <td>Letters per 100 words</td>
-<td>U.S. grade level</td>
+<td>Grade level</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Usage Notes:</strong></p>
-<ul>
-<li>Different formulas may produce slightly different grade level
-estimates</li>
-<li>These formulas measure surface-level text features (word length,
-sentence length)</li>
-<li>Short texts may produce less reliable scores</li>
-</ul>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">readability</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_text_readability.html">calculate_text_readability</a></span><span class="op">(</span><span class="va">united_tbl</span><span class="op">$</span><span class="va">united_texts</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plot_readability_distribution.html">plot_readability_distribution</a></span><span class="op">(</span><span class="va">readability</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_readability.html" class="external-link">quanteda
-textstat_readability Documentation</a></p>
-<p><strong>Lexical Diversity Metrics</strong></p>
-<p>Lexical diversity measures vocabulary richness by quantifying the
-relationship between unique words (types) and total words (tokens).</p>
-<p><strong>Available Metrics:</strong></p>
-<table class="table">
-<thead><tr class="header">
-<th>Metric</th>
-<th>Description</th>
-<th>Note</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>TTR</td>
-<td>Types / Tokens</td>
-<td>Sensitive to text length</td>
-</tr>
-<tr class="even">
-<td>CTTR</td>
-<td>Types / sqrt(2 × Tokens)</td>
-<td>Partially corrects for length</td>
-</tr>
-<tr class="odd">
-<td>MSTTR</td>
-<td>Mean Segmental TTR</td>
-<td>Divides into segments</td>
-</tr>
-<tr class="even">
-<td>MATTR</td>
-<td>Moving Average TTR</td>
-<td>More stable across lengths</td>
-</tr>
-<tr class="odd">
-<td>MTLD</td>
-<td>Mean length maintaining TTR</td>
-<td>Text-length independent</td>
-</tr>
-<tr class="even">
-<td>Maas</td>
-<td>Log-based formula</td>
-<td>Lower = more diverse</td>
-</tr>
-</tbody>
-</table>
-<p><strong>Usage Notes:</strong></p>
-<ul>
-<li>MTLD and MATTR are more stable across different text lengths</li>
-<li>TTR is sensitive to text length - compare only similar-length
-texts</li>
-<li>Maas, Yule K, and Simpson D use inverse scales (lower = more
-diverse)</li>
-</ul>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">diversity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lexical_diversity_analysis.html">lexical_diversity_analysis</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/plot_lexical_diversity_distribution.html">plot_lexical_diversity_distribution</a></span><span class="op">(</span><span class="va">diversity</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/textstat_lexdiv.html" class="external-link">quanteda
-textstat_lexdiv Documentation</a></p>
 </div>
+<div class="section level2">
+<h2 id="log-odds-ratio">Log Odds Ratio<a class="anchor" aria-label="anchor" href="#log-odds-ratio"></a>
+</h2>
+<p><code><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio()</a></code> compares term frequencies
+between categories to find distinctive vocabulary.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">log_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio</a></span><span class="op">(</span></span>
+<span>  <span class="va">dfm_object</span>,</span>
+<span>  group_var <span class="op">=</span> <span class="st">"reference_type"</span>,</span>
+<span>  comparison_mode <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_log_odds_ratio.html">plot_log_odds_ratio</a></span><span class="op">(</span><span class="va">log_odds</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="700"></p>
+<p><code><a href="../reference/calculate_weighted_log_odds.html">calculate_weighted_log_odds()</a></code> weights the ratio by a
+z-score (Monroe et al.), so reliably distinctive terms rank above rare
+terms with extreme ratios (uses the tidylo package).</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">weighted_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_weighted_log_odds.html">calculate_weighted_log_odds</a></span><span class="op">(</span></span>
+<span>  <span class="va">dfm_object</span>,</span>
+<span>  group_var <span class="op">=</span> <span class="st">"reference_type"</span>,</span>
+<span>  top_n <span class="op">=</span> <span class="fl">15</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_weighted_log_odds.html">plot_weighted_log_odds</a></span><span class="op">(</span><span class="va">weighted_odds</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level2">
+<h2 id="lexical-dispersion">Lexical Dispersion<a class="anchor" aria-label="anchor" href="#lexical-dispersion"></a>
+</h2>
+<p><code><a href="../reference/calculate_lexical_dispersion.html">calculate_lexical_dispersion()</a></code> shows where selected
+terms appear across documents (an X-ray plot).</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dispersion</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_lexical_dispersion.html">calculate_lexical_dispersion</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">]</span>, terms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"education"</span>, <span class="st">"technology"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_lexical_dispersion.html">plot_lexical_dispersion</a></span><span class="op">(</span><span class="va">dispersion</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lexical_analysis_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="700"></p>
+</div>
+<div class="section level2">
+<h2 id="multi-word-expressions">Multi-Word Expressions<a class="anchor" aria-label="anchor" href="#multi-word-expressions"></a>
+</h2>
+<p>Multi-word (n-gram) detection belongs to the <strong>Preprocess →
+Multi-Word Dictionary</strong> step in the app.
+<code><a href="../reference/detect_multi_words.html">detect_multi_words()</a></code> returns a collocations table to feed
+<code><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">quanteda::tokens_compound()</a></code>.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">compounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">compounds</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##  [1] "learning disabilities" "assisted instruction"  "computer assisted"    </span></span>
+<span><span class="co">##  [4] "problem solving"       "special education"     "learning disabled"    </span></span>
+<span><span class="co">##  [7] "elementary school"     "students learning"     "school students"      </span></span>
+<span><span class="co">## [10] "high school"</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

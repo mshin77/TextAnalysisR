@@ -25,7 +25,7 @@ Invisible TRUE if successful, stops with error message if failed
 Sets up a tiered Python virtual environment.
 }
 \details{
-Default \code{tier = "core"} keeps the install light — spaCy NLP and PDF text
+Default \code{tier = "core"} keeps the install light -- spaCy NLP and PDF text
 extraction only. Add \code{"embeddings"} for sentence-transformers-based
 similarity/sentiment, and \code{"topics"} for BERTopic.
 

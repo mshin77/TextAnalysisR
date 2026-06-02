@@ -4,8 +4,6 @@
 
 library(TextAnalysisR)
 
-# Plots inherit accessible defaults: descriptive labels, color-blind
-# safe palettes, and 4.5:1 contrast ratios verified at build time.
 mydata <- SpecialEduTech[seq_len(20), c("title", "abstract")]
 united <- unite_cols(mydata, listed_vars = c("title", "abstract"))
 toks   <- prep_texts(united, text_field = "united_texts")

@@ -8,158 +8,175 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
-Semantic analysis finds patterns of meaning using embeddings and neural networks.
+Semantic analysis examines relationships of meaning between words and documents. The sections below
+follow the Shiny app's **Semantic Analysis** tabs in order.
 
 ## Setup
 
-```{r, eval = TRUE}
+A 150-document subset of `SpecialEduTech` keeps the build fast; the full dataset works the same way.
+
+```{r}
 library(TextAnalysisR)
 
-mydata <- SpecialEduTech
+mydata <- SpecialEduTech[1:150, ]
 united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
-tokens <- prep_texts(united_tbl, text_field = "united_texts")
+tokens <- prep_texts(united_tbl, text_field = "united_texts", remove_stopwords = TRUE)
 dfm_object <- quanteda::dfm(tokens)
+```
+
+## Word Co-occurrence
+
+`word_co_occurrence_network()` builds a network of words that co-occur across documents, with community
+detection and centrality metrics.
+
+```{r}
+network <- word_co_occurrence_network(
+  dfm_object,
+  co_occur_n = 30,
+  top_node_n = 30,
+  node_label_size = 22,
+  community_method = "leiden"
+)
+
+network$plot
+network$top_nodes
+network$table
+network$summary
+```
+
+## Word Correlation
+
+`word_correlation_network()` connects words by phi correlation of their document co-occurrence patterns.
+
+```{r}
+corr_network <- word_correlation_network(
+  dfm_object,
+  common_term_n = 10,
+  corr_n = 0.4,
+  community_method = "leiden"
+)
+
+corr_network$plot
+corr_network$top_nodes
+corr_network$table
 ```
 
 ## Document Similarity
 
+`semantic_similarity_analysis()` compares documents by words, n-grams, or embeddings (embeddings require
+Python). The example below uses word features on a subset and renders a cosine similarity heatmap.
+
 ```{r}
+subset_texts <- united_tbl$united_texts[1:10]
+
 similarity <- semantic_similarity_analysis(
-  texts = united_tbl$united_texts,
-  similarity_method = "cosine"
+  subset_texts,
+  document_feature_type = "words",
+  similarity_method = "cosine",
+  verbose = FALSE
+)
+
+plot_similarity_heatmap(similarity$similarity_matrix, method_name = "Cosine")
+```
+
+| Method | Description | Requires |
+|--------|-------------|----------|
+| Words | Word-frequency vectors (bag-of-words) | none |
+| N-grams | Word-sequence vectors | none |
+| Embeddings | Transformer sentence vectors | Python |
+
+## Comparative Analysis
+
+Comparative analysis scores how similar documents in one category are to a reference category.
+`extract_cross_category_similarities()` pulls cross-category pairs from a similarity matrix and
+`analyze_similarity_gaps()` summarizes the differences. The example uses the first 30 documents.
+
+```{r}
+term_matrix <- as.matrix(dfm_object)[1:30, ]
+normalized <- term_matrix / sqrt(rowSums(term_matrix^2))
+sim_matrix <- normalized %*% t(normalized)
+
+docs_data <- data.frame(
+  display_name = paste0("doc", 1:30),
+  reference_type = quanteda::docvars(dfm_object, "reference_type")[1:30]
+)
+dimnames(sim_matrix) <- list(docs_data$display_name, docs_data$display_name)
+
+cross <- extract_cross_category_similarities(
+  sim_matrix,
+  docs_data,
+  reference_category = "journal_article",
+  category_var = "reference_type",
+  id_var = "display_name"
+)
+
+gaps <- analyze_similarity_gaps(cross)
+gaps$summary_stats
+```
+
+## Semantic Search
+
+`run_rag_search()` retrieves the documents most relevant to a query using embedding similarity. It
+requires an OpenAI or Gemini API key; see [AI Integration](ai_integration.html).
+
+```{r, eval = FALSE}
+results <- run_rag_search(
+  query = "math intervention for students with disabilities",
+  documents = united_tbl$united_texts,
+  provider = "openai"
 )
 ```
 
-**Similarity Methods**
+## Sentiment & Emotion
 
-Semantic analysis measures document similarity using different approaches to capture meaning, from simple vocabulary matching to deep neural representations.
-
-**Methods:**
-
-| Method | Description | Best For |
-|--------|-------------|----------|
-| Words | Lexical analysis using word frequency vectors (bag-of-words) | Finding documents with shared terminology |
-| N-grams | Phrase-based analysis capturing word sequences | Detecting similar phraseology |
-| Embeddings | Deep semantic analysis using transformer models | Conceptual similarity, handles synonyms |
-
-**Usage:** Choose method based on analysis goals. Words and n-grams are faster and interpretable. Embeddings capture deeper meaning but require more computation. All methods use cosine similarity for comparison.
-
-**Learn More:** [Sentence Transformers Documentation](https://www.sbert.net/)
-
-## Sentiment Analysis
-
-### Lexicon-based (no Python)
+`sentiment_lexicon_analysis()` scores documents with the Bing, AFINN, or NRC lexicon. NRC also yields
+discrete emotions for `plot_emotion_radar()`.
 
 ```{r}
 sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 plot_sentiment_distribution(sentiment$document_sentiment)
 ```
 
-### Neural (requires Python)
-
 ```{r}
-sentiment <- sentiment_embedding_analysis(united_tbl$united_texts)
+emotion <- sentiment_lexicon_analysis(dfm_object, lexicon = "nrc")
+plot_emotion_radar(emotion$emotion_scores)
 ```
 
-## Document Clustering
-
-> **Shiny App:** Document clustering is now in **Topic Modeling → Embedding-based Topics**, which combines clustering with automatic keyword extraction.
-
-```{r}
-results <- fit_embedding_model(
-  texts = united_tbl$united_texts,
-  method = "umap_dbscan",
-  backend = "r",
-  n_topics = 5
-)
-
-results$topic_assignments
-results$topic_keywords
-```
-
-For standalone clustering without keywords, use `cluster_embeddings()`. See [Topic Modeling](topic_modeling.html) for details.
-
-### AI Cluster Labels
+`plot_sentiment_by_category()` compares sentiment across a metadata category after joining it to the
+scored documents. Transformer (`sentiment_embedding_analysis()`) and LLM (`analyze_sentiment_llm()`)
+scoring require Python or an API key and are not run here.
 
 ```{r}
-labels <- generate_cluster_labels(
-  results$topic_keywords,
-  provider = "openai"
-)
+scored <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")$document_sentiment
+scored$reference_type <- quanteda::docvars(dfm_object, "reference_type")[
+  match(scored$document, quanteda::docnames(dfm_object))
+]
+plot_sentiment_by_category(scored, category_var = "reference_type")
 ```
 
-**Algorithms Reference**
+## Document Groups
 
-**Clustering:** K-means (spherical), Hierarchical (nested), DBSCAN (density-based), HDBSCAN (auto-detect K)
-
-**Dimensionality Reduction:** PCA (fast, linear), t-SNE (local structure), UMAP (balanced)
-
-## Network Analysis
-
-Visualize word relationships as interactive networks with community detection.
-
-### Word Co-occurrence Network
+`cluster_embeddings()` groups documents from a feature matrix. K-means and hierarchical clustering run
+in base R; the app's default UMAP + DBSCAN path requires Python. `generate_cluster_labels_auto()` labels
+each group with its most distinctive terms.
 
 ```{r}
-network <- word_co_occurrence_network(
-  dfm_object,
-  co_occur_n = 10,                    # Minimum co-occurrence count
-  top_node_n = 30,                    # Top nodes to display
-  node_label_size = 22,               # Font size (12-40)
-  community_method = "leiden"         # Community detection algorithm
-)
+data_matrix <- as.matrix(dfm_object)
 
-network$plot   # Interactive visNetwork plot
-network$table  # Node metrics (degree, eigenvector, community)
-network$stats  # 9 network statistics
+groups <- cluster_embeddings(data_matrix, method = "kmeans", n_clusters = 5, verbose = FALSE)
+groups$n_clusters
+
+labels <- generate_cluster_labels_auto(data_matrix, groups$clusters, method = "tfidf", n_terms = 3)
+labels
 ```
 
-### Word Correlation Network
+A 2-D map of the groups uses `reduce_dimensions()` (PCA runs in base R; t-SNE and UMAP need their
+packages).
 
 ```{r}
-corr_network <- word_correlation_network(
-  dfm_object,
-  common_term_n = 20,                 # Minimum term frequency
-  corr_n = 0.4,                       # Minimum correlation threshold
-  community_method = "leiden"
-)
+coords <- reduce_dimensions(data_matrix, method = "PCA", n_components = 2, verbose = FALSE)
+head(coords$reduced_data)
 ```
-
-### Category-Specific Analysis
-
-Enable per-category networks in the Shiny app to generate separate networks for each category, displayed in a tabbed interface.
-
-**Network Statistics (9 Metrics)**
-
-Each network returns statistics:
-
-| Metric | Description |
-|--------|-------------|
-| Nodes | Total unique words in network |
-| Edges | Total connections between nodes |
-| Density | Proportion of possible edges present (0-1) |
-| Diameter | Longest shortest path in network |
-| Global Clustering | Overall network clustering tendency |
-| Avg Local Clustering | Average of local clustering coefficients |
-| Modularity | Quality of community structure (higher = better separation) |
-| Assortativity | Tendency of similar nodes to connect |
-| Avg Path Length | Average distance between nodes |
-
-**Community Detection Methods**
-
-Community detection identifies clusters of semantically related nodes.
-
-| Method | Description | Best For |
-|--------|-------------|----------|
-| `leiden` | Modern algorithm, guarantees well-connected communities | Default, best quality |
-| `louvain` | Fast modularity optimization | Large networks |
-| `label_prop` | Propagates labels through network | Very large networks |
-| `fast_greedy` | Hierarchical agglomerative | Quick exploration |
-
-**Learn More:** [igraph Community Detection](https://igraph.org/r/doc/communities.html)
-
-Embeddings are cached and shared across Document Similarity, Topic Modeling, and Semantic Search when the same provider and model are reused. See [AI Integration](ai_integration.html) for provider/model setup.
-

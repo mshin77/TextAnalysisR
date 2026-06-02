@@ -8,154 +8,191 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
-Topic modeling discovers hidden themes in text collections via STM or embedding-based methods.
+Topic modeling discovers latent themes in a text collection. The Shiny app offers two types:
+
+- **Structural Topic Model (STM):** word-probability topics that incorporate document metadata as
+  covariates. Runs in R.
+- **Embedding-based topics:** transformer embeddings reduced and clustered into topics. Best for short
+  texts and multilingual content. Requires Python (BERTopic) or an embedding API key.
+
+The sections below follow the app's **Topic Modeling** tabs in order, first with STM (run live on the
+bundled data) and then with the embedding-based type.
 
 ## Setup
 
-```{r, eval = TRUE}
+A 150-document subset of `SpecialEduTech` keeps the build fast; the full dataset works the same way.
+
+```{r}
 library(TextAnalysisR)
 
-mydata <- SpecialEduTech
+mydata <- SpecialEduTech[1:150, ]
 united_tbl <- unite_cols(mydata, listed_vars = c("title", "keyword", "abstract"))
-tokens <- prep_texts(united_tbl, text_field = "united_texts")
+tokens <- prep_texts(united_tbl, text_field = "united_texts", remove_stopwords = TRUE)
 dfm_object <- quanteda::dfm(tokens)
 ```
 
-## Find Optimal Topics
+## Model Configuration
+
+`find_optimal_k()` compares models across a range of K via `searchK` (semantic coherence, exclusivity,
+held-out likelihood, residuals). The example uses a small document subset and a narrow K range to keep
+the runtime short.
 
 ```{r}
-find_optimal_k(dfm_object, topic_range = 5:30)
+k_search <- find_optimal_k(dfm_object, topic_range = 5:6)
+names(k_search)
 ```
 
-## STM (Structural Topic Model)
-
-STM discovers latent topics while incorporating document metadata as covariates.
-
-**Best for:** metadata analysis, covariate effects, interpretable word-probability distributions.
-
-**Quality metrics:** Semantic Coherence, Exclusivity, Held-out Likelihood.
+Fit a small STM for the examples below. `prevalence` makes topic proportions depend on document
+metadata.
 
 ```{r}
 out <- quanteda::convert(dfm_object, to = "stm")
+out$meta$year <- as.numeric(out$meta$year)
 
 model <- stm::stm(
   documents = out$documents,
   vocab = out$vocab,
-  K = 15,
-  prevalence = ~ reference_type + s(year),
-  data = out$meta
+  K = 5,
+  prevalence = ~ reference_type + year,
+  data = out$meta,
+  max.em.its = 15,
+  init.type = "Spectral",
+  verbose = FALSE
 )
-
-terms <- get_topic_terms(model, top_term_n = 10)
 ```
 
-See: [Structural Topic Model](https://www.structuraltopicmodel.com/) · [stm package on CRAN](https://CRAN.R-project.org/package=stm)
+See: [Structural Topic Model](https://www.structuraltopicmodel.com/) · [stm on CRAN](https://CRAN.R-project.org/package=stm)
+
+## Word-Topic
+
+`get_topic_terms()` returns the top terms per topic from the word-topic (beta) distribution.
+
+```{r}
+terms <- get_topic_terms(model, top_term_n = 10)
+head(terms, 15)
+```
+
+## Content Generation
+
+`generate_topic_content()` drafts topic-grounded content (survey items, research questions, theme
+descriptions, policy recommendations, interview questions) from `get_topic_terms()` output. It calls an
+LLM, so it needs an OpenAI or Gemini API key.
+
+| Content type | Output |
+|------|--------|
+| `survey_item` | Likert-scale statement |
+| `research_question` | Research question |
+| `theme_description` | Qualitative theme summary |
+| `policy_recommendation` | Action-oriented statement |
+| `interview_question` | Open-ended question |
+
+```{r, eval = FALSE}
+labels <- generate_topic_labels(terms, provider = "openai")
+
+content <- generate_topic_content(terms, content_type = "research_question", provider = "openai")
+```
+
+## Document-Topic
+
+`calculate_topic_probability()` summarizes the corpus-level expected topic proportions (mean of the
+per-document theta matrix).
+
+```{r}
+doc_topic <- calculate_topic_probability(model, top_n = 10, verbose = FALSE)
+doc_topic
+```
+
+## Quotes
+
+`stm::findThoughts()` returns the documents most representative of a topic.
+
+```{r}
+quotes <- stm::findThoughts(model, texts = united_tbl$united_texts, topics = 1, n = 3)
+quotes
+```
+
+## Estimated Effects
+
+`stm::estimateEffect()` regresses topic proportions on document covariates; `tidytext::tidy()` returns
+the per-topic coefficient table shown in the app's Estimated Effects tab.
+
+```{r}
+prep <- stm::estimateEffect(1:5 ~ reference_type + year, model, metadata = out$meta, uncertainty = "Global")
+head(tidytext::tidy(prep), 10)
+```
+
+## Categorical Covariates
+
+`plot_topic_effects_categorical()` plots topic proportions across the levels of a categorical covariate.
+`stm::plot.estimateEffect(..., method = "pointestimate", omit.plot = TRUE)` returns the model-based
+estimate and 95% CI per topic and level, reshaped here into the columns the plot expects.
+
+```{r}
+ec <- stm::plot.estimateEffect(prep, "reference_type", method = "pointestimate",
+                               model = model, omit.plot = TRUE)
+effects_cat <- do.call(rbind, lapply(seq_along(ec$topics), function(i) {
+  data.frame(topic = ec$topics[i], value = as.character(ec$uvals),
+             proportion = as.numeric(ec$means[[i]]),
+             lower = as.numeric(ec$cis[[i]][1, ]), upper = as.numeric(ec$cis[[i]][2, ]))
+}))
+plot_topic_effects_categorical(effects_cat)
+```
+
+## Continuous Covariates
+
+`plot_topic_effects_continuous()` plots topic proportions across a continuous covariate. The same
+`plot.estimateEffect()` call with `method = "continuous"` returns the estimate and CI over a grid of the
+covariate.
+
+```{r}
+en <- stm::plot.estimateEffect(prep, "year", method = "continuous",
+                               model = model, omit.plot = TRUE)
+effects_cont <- do.call(rbind, lapply(seq_along(en$topics), function(i) {
+  data.frame(topic = en$topics[i], value = en$x,
+             proportion = as.numeric(en$means[[i]]),
+             lower = as.numeric(en$ci[[i]][1, ]), upper = as.numeric(en$ci[[i]][2, ]))
+}))
+plot_topic_effects_continuous(effects_cont)
+```
 
 ## Embedding-based Topics
 
-Uses transformer embeddings with dimensionality reduction and clustering. Best for short texts, multilingual content, and semantic similarity.
+The second type embeds documents with a transformer, reduces dimensionality, and clusters the
+embeddings into topics. `get_best_embeddings()` produces the embeddings and `fit_embedding_model()`
+clusters them; `generate_topic_labels()` drafts labels. These need Python (BERTopic) or an embedding API
+key, so they are shown without running.
 
-**Embedding providers:**
+```{r, eval = FALSE}
+embeddings <- get_best_embeddings(united_tbl$united_texts, provider = "openai")
+
+topics <- fit_embedding_model(
+  united_tbl$united_texts,
+  method = "umap_hdbscan",
+  n_topics = 10,
+  precomputed_embeddings = embeddings
+)
+
+embedding_labels <- generate_topic_labels(topics$topic_terms, provider = "openai")
+```
 
 | Provider | Model | Notes |
 |----------|-------|-------|
 | Sentence Transformers (default) | all-MiniLM-L6-v2, all-mpnet-base-v2 | Requires Python |
-| OpenAI | text-embedding-3-small, text-embedding-3-large | API key required |
-| Gemini | gemini-embedding-001 | API key required |
+| OpenAI | text-embedding-3-small, text-embedding-3-large | API key |
+| Gemini | gemini-embedding-001 | API key |
 
-**Backends:** `"python"` (full BERTopic, default) · `"r"` (no BERTopic needed) · `"auto"`.
-
-```{r}
-# With precomputed embeddings
-embeddings <- get_best_embeddings(
-  texts = united_tbl$united_texts,
-  provider = "openai",
-  model = "text-embedding-3-small"
-)
-
-results <- fit_embedding_model(
-  texts = united_tbl$united_texts,
-  method = "umap_hdbscan",
-  precomputed_embeddings = embeddings
-)
-
-# R backend (no BERTopic needed)
-results <- fit_embedding_model(
-  texts = united_tbl$united_texts,
-  method = "umap_dbscan",
-  backend = "r",
-  n_topics = 10
-)
-```
-
-R backend methods follow `{dimred}_{clustering}` (e.g., `"umap_dbscan"`, `"tsne_kmeans"`, `"pca_hierarchical"`).
-
-See: [BERTopic](https://maartengr.github.io/BERTopic/) · [Sentence-BERT](https://www.sbert.net/)
-
-## AI Topic Labels
-
-```{r}
-labels <- generate_topic_labels(terms, provider = "openai")
-```
-
-AI generates draft labels; review and edit before final use.
-
-## Topic-Grounded Content
-
-Generate draft content (survey items, research questions, theme descriptions, policy recommendations, interview questions) anchored to topic term probabilities rather than generic AI knowledge.
-
-| Content type | Output | Use case |
-|------|--------|----------|
-| `survey_item` | Likert-scale statement | Scale development |
-| `research_question` | RQ for literature review | Systematic reviews |
-| `theme_description` | Qualitative theme summary | Thematic analysis |
-| `policy_recommendation` | Action-oriented statement | Policy analysis |
-| `interview_question` | Open-ended question | Qualitative research |
-
-```{r}
-top_terms <- get_topic_terms(model, top_term_n = 10)
-
-content <- generate_topic_content(
-  topic_terms_df = top_terms,
-  content_type = "survey_item",
-  provider = "openai",
-  model = "gpt-4.1-mini"
-)
-```
-
-The LLM receives topic labels plus terms with beta scores. Use `get_content_type_prompt()` / `get_content_type_user_template()` to inspect or override prompts.
-
-## Topic Prevalence Modeling
-
-Model how topic prevalence varies with document covariates. Auto-selects Poisson, Negative Binomial, or Zero-Inflated NB based on dispersion ratio and zero proportion.
-
-```{r}
-gamma_matrix <- model$theta
-
-prevalence_result <- fit_topic_prevalence_model(
-  topic_proportions = gamma_matrix[, 1],
-  metadata = out$meta,
-  formula = topic_count ~ reference_type,
-  model_type = "auto"
-)
-
-prevalence_result$model_type
-prevalence_result$summary
-prevalence_result$diagnostics
-```
+R backend methods follow `{dimred}_{clustering}` (e.g., `"umap_dbscan"`, `"tsne_kmeans"`,
+`"pca_hierarchical"`). See: [BERTopic](https://maartengr.github.io/BERTopic/) · [Sentence-BERT](https://www.sbert.net/)
 
 ## STM vs Embedding
 
 | Feature | STM | Embedding |
 |---------|-----|-----------|
 | Speed | Fast | Medium |
-| Metadata support | Yes | No |
-| Short texts | Poor | Good |
+| Metadata covariates | Yes | No |
+| Short texts | Weaker | Strong |
 | Multilingual | No | Yes |
-
-- **STM:** metadata analysis, covariate effects
-- **Embedding:** short texts, semantic similarity (`backend = "r"` if no BERTopic)
-
+| Dependencies | R only | Python or API |

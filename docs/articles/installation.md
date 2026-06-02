@@ -10,7 +10,6 @@ packageVersion("TextAnalysisR")
 
 ``` r
 
-# Bundled corpus is available immediately after install — no Python required.
 data("SpecialEduTech")
 nrow(SpecialEduTech)
 ```
@@ -53,23 +52,14 @@ Cloud AI providers (OpenAI, Gemini) are available with an API key.
 
 ### Linguistic Analysis (spaCy)
 
-For lemmatization, POS tagging, and named entity recognition:
-
-``` r
-
-# Python spaCy required - see setup_python_env()
-TextAnalysisR::setup_python_env()
-```
+For lemmatization, POS tagging, and named entity recognition, set up
+Python with
+[`TextAnalysisR::setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md).
 
 ### Python Features
 
-For embeddings and neural sentiment analysis:
-
-``` r
-
-setup_python_env()
-```
-
+For embeddings and neural sentiment analysis, run
+[`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md).
 Requires Python 3.9+.
 
 ## Troubleshooting

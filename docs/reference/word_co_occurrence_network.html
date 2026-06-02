@@ -70,13 +70,8 @@
 <span>  community_method <span class="op">=</span> <span class="st">"leiden"</span>,</span>
 <span>  node_size_by <span class="op">=</span> <span class="st">"degree"</span>,</span>
 <span>  node_color_by <span class="op">=</span> <span class="st">"community"</span>,</span>
-<span>  category_params <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  pattern <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fl">2025</span>,</span>
-<span>  physics_gravity <span class="op">=</span> <span class="op">-</span><span class="fl">1500</span>,</span>
-<span>  physics_spring_length <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  physics_avoid_overlap <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>  showlegend <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  seed <span class="op">=</span> <span class="fl">123</span>,</span>
+<span>  category_params <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -128,41 +123,22 @@
 <dd><p>Node coloring method: "community" or "centrality" (default: "community").</p></dd>
 
 
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Integer seed for the force-directed layout, so the plot is reproducible (default: 123).</p></dd>
+
+
 <dt id="arg-category-params">category_params<a class="anchor" aria-label="anchor" href="#arg-category-params"></a></dt>
 <dd><p>Optional named list of category-specific parameters. Each element should be a list with <code>co_occur_n</code> and <code>top_node_n</code> values for that category (default: NULL).</p></dd>
-
-
-<dt id="arg-pattern">pattern<a class="anchor" aria-label="anchor" href="#arg-pattern"></a></dt>
-<dd><p>Optional regex (case-insensitive). If provided, keeps only edges whose <code>item1</code> or <code>item2</code> matches (default: NULL).</p></dd>
-
-
-<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Integer RNG seed for reproducible layout (default: 2025).</p></dd>
-
-
-<dt id="arg-physics-gravity">physics_gravity<a class="anchor" aria-label="anchor" href="#arg-physics-gravity"></a></dt>
-<dd><p>barnesHut <code>gravitationalConstant</code>. More negative = nodes spread further apart (default: -1500).</p></dd>
-
-
-<dt id="arg-physics-spring-length">physics_spring_length<a class="anchor" aria-label="anchor" href="#arg-physics-spring-length"></a></dt>
-<dd><p>barnesHut spring length. Higher = longer edges (default: 100).</p></dd>
-
-
-<dt id="arg-physics-avoid-overlap">physics_avoid_overlap<a class="anchor" aria-label="anchor" href="#arg-physics-avoid-overlap"></a></dt>
-<dd><p>barnesHut overlap avoidance, 0 to 1. Higher = more node separation (default: 0.3).</p></dd>
-
-
-<dt id="arg-showlegend">showlegend<a class="anchor" aria-label="anchor" href="#arg-showlegend"></a></dt>
-<dd><p>Whether to display the community legend (default: TRUE).</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing the visNetwork widget (or flex-layout HTML for faceted), a DT table, and a summary.</p>
+    <p>A list containing the ggplot2 plot, a table, and a summary.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="word_correlation_network.html">word_correlation_network()</a></code> for correlation-based edges instead of co-occurrence counts; <code><a href="plot_cluster_terms.html">plot_cluster_terms()</a></code> for bar-style cluster terms</p></div>
+    <div class="dont-index"><p>Other semantic:
+<code><a href="word_correlation_network.html">word_correlation_network()</a></code></p></div>
     </div>
 
     <div class="section level2">

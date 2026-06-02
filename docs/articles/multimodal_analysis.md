@@ -4,8 +4,6 @@
 
 library(TextAnalysisR)
 
-# Text-only fallback runs without any vision provider.
-# prep_texts handles the cleaned text that PDF extraction yields.
 sample_text <- c(
   "Figure 1 shows the distribution of student outcomes.",
   "Table 2 reports the effect sizes for each intervention."
@@ -35,68 +33,19 @@ AI. R-native pipeline – no Python required.
 4.  Sends only those pages to a vision LLM for description
 5.  Merges extracted text + image descriptions into a single text corpus
 
-## Setup
-
-### Cloud (OpenAI / Gemini)
-
-``` r
-
-Sys.setenv(OPENAI_API_KEY = "sk-...")
-Sys.setenv(GEMINI_API_KEY = "<gemini-api-key>")
-```
-
-## Usage
-
-``` r
-
-library(TextAnalysisR)
-
-# Extract PDF with vision AI
-result <- extract_pdf_multimodal(
-  "document.pdf",
-  vision_provider = "gemini"  # or "openai"
-)
-
-# Use in analysis
-tokens <- prep_texts(result$combined_text)
-```
-
-### Gemini Example
-
-``` r
-
-result <- extract_pdf_multimodal(
-  "paper.pdf",
-  vision_provider = "gemini",
-  api_key = Sys.getenv("GEMINI_API_KEY")
-)
-```
-
-### Describe Individual Images
-
-``` r
-
-description <- describe_image(
-  image_base64,
-  provider = "openai",
-  api_key = Sys.getenv("OPENAI_API_KEY")
-)
-```
-
-## Unified PDF Pipeline
+## Functions
 
 [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md)
-provides automatic fallback:
+runs the full pipeline with automatic fallback:
 
 1.  **Multimodal** (pdftools + vision LLM) – extracts text and describes
     visual content
-2.  **Text-only** (pdftools) – fallback if no vision provider is
-    available
+2.  **Text-only** (pdftools) – fallback when no vision provider is set
 
-``` r
-
-result <- process_pdf_unified("paper.pdf", vision_provider = "gemini")
-```
+[`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md)
+describes a single base64-encoded PNG. Both require a vision-provider
+API key (OpenAI/Gemini) and network access; see their reference pages
+for usage.
 
 ## Provider Comparison
 

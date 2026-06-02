@@ -10,6 +10,7 @@ inst/TextAnalysisR\.app/\.claude$
 ^pkgdown$
 ^CRAN-SUBMISSION$
 ^www$
+^local$
 ^.*\.Rcheck$
 ^.*\.tar\.gz$
 ^\.Rhistory$
@@ -26,3 +27,5 @@ inst/TextAnalysisR\.app/\.claude$
 ^/tmp$
 __pycache__$
 \.pyc$
+\.bak$
+\.tmp\.

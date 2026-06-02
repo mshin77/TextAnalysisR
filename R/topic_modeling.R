@@ -8,6 +8,14 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
 # Topic Modeling Functions
 # Functions for topic modeling, analysis, and evaluation
 
+.number_labeller <- function(digits) {
+  if (requireNamespace("numform", quietly = TRUE)) {
+    numform::ff_num(zero = 0, digits = digits)
+  } else {
+    scales::label_number(accuracy = 10^(-digits))
+  }
+}
+
 .embedding_silhouette <- function(model) {
   coords <- model$embeddings
   clusters <- model$topic_assignments
@@ -427,10 +435,6 @@ generate_topic_labels <- function(top_topic_terms,
     )
   }
 
-  if (file.exists(".env") && requireNamespace("dotenv", quietly = TRUE)) {
-    dotenv::load_dot_env()
-  }
-
   # Handle backward compatibility: openai_api_key -> api_key
 
   if (!is.null(openai_api_key) && is.null(api_key)) {
@@ -446,7 +450,8 @@ generate_topic_labels <- function(top_topic_terms,
       provider <- "gemini"
       if (verbose) message("Using Gemini for topic label generation")
     } else {
-      stop("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
+      message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
+      return(invisible(NULL))
     }
   }
 
@@ -465,12 +470,13 @@ generate_topic_labels <- function(top_topic_terms,
   }
 
   if (!nzchar(api_key)) {
-    stop(.missing_api_key_message(provider, "package"), call. = FALSE)
+    return(.notify_missing_api_key(provider))
   }
 
   validation <- validate_api_key(api_key, strict = FALSE)
   if (!validation$valid) {
-    stop(sprintf("Invalid API key format: %s", validation$error))
+    message(sprintf("Invalid API key format: %s", validation$error))
+    return(invisible(NULL))
   }
 
   if (verbose) {
@@ -856,7 +862,7 @@ fit_embedding_model <- function(texts,
       if (verbose) message("Step 1: Generating document embeddings...")
 
       if (!requireNamespace("reticulate", quietly = TRUE)) {
-        stop("reticulate package is required for semantic topic modeling")
+        return(.notify_missing_python("Semantic topic modeling"))
       }
 
       python_available <- tryCatch({
@@ -865,7 +871,7 @@ fit_embedding_model <- function(texts,
       }, error = function(e) FALSE)
 
       if (!python_available) {
-        stop("Python not available. Please install Python and sentence-transformers: pip install sentence-transformers")
+        return(.notify_missing_python("Semantic topic modeling (sentence-transformers)"))
       }
       sentence_transformers <- reticulate::import("sentence_transformers")
       model <- sentence_transformers$SentenceTransformer(embedding_model)
@@ -1178,8 +1184,7 @@ fit_embedding_model <- function(texts,
       if (verbose) message("Step 1: Generating document embeddings...")
 
       if (!requireNamespace("reticulate", quietly = TRUE)) {
-        stop("reticulate package is required for embedding generation. ",
-             "Install with: install.packages('reticulate')")
+        return(.notify_missing_python("Embedding generation"))
       }
 
       python_available <- tryCatch({
@@ -1188,7 +1193,7 @@ fit_embedding_model <- function(texts,
       }, error = function(e) FALSE)
 
       if (!python_available) {
-        stop("Python not available. Please install Python and sentence-transformers: pip install sentence-transformers")
+        return(.notify_missing_python("Embedding generation (sentence-transformers)"))
       }
       sentence_transformers <- reticulate::import("sentence_transformers")
       model <- sentence_transformers$SentenceTransformer(embedding_model)
@@ -1221,7 +1226,7 @@ fit_embedding_model <- function(texts,
         }
         umap_config <- umap::umap.defaults
         umap_config$n_neighbors <- umap_neighbors
-        umap_config$min_dist <- umap_min_dist
+        umap_config$min_dist <- max(umap_min_dist, 0.001)
         umap_config$n_components <- min(umap_n_components, ncol(embeddings))
         umap_config$metric <- umap_metric
         umap_result <- umap::umap(embeddings, config = umap_config)
@@ -1248,7 +1253,7 @@ fit_embedding_model <- function(texts,
         }
         umap_config <- umap::umap.defaults
         umap_config$n_neighbors <- umap_neighbors
-        umap_config$min_dist <- umap_min_dist
+        umap_config$min_dist <- max(umap_min_dist, 0.001)
         umap_config$n_components <- min(umap_n_components, ncol(embeddings))
         umap_config$metric <- umap_metric
         umap_result <- umap::umap(embeddings, config = umap_config)
@@ -1766,6 +1771,12 @@ auto_tune_embedding_topics <- function(
     }, error = function(e) {
       stop("Failed to generate embeddings: ", e$message)
     })
+
+    if (is.null(embeddings)) {
+      stop("Embedding generation unavailable. ",
+           "Run setup_python_env() or pass precomputed embeddings.",
+           call. = FALSE)
+    }
   }
 
   # Evaluate each configuration
@@ -1926,6 +1937,11 @@ assess_embedding_stability <- function(
   }, error = function(e) {
     stop("Failed to generate embeddings: ", e$message)
   })
+
+  if (is.null(embeddings)) {
+    stop("Embedding generation unavailable. Run setup_python_env() first.",
+         call. = FALSE)
+  }
 
   # Run models with different seeds
   models <- list()
@@ -2364,7 +2380,12 @@ fit_temporal_model <- function(texts,
     period_embeddings <- if (!is.null(embeddings)) {
       embeddings[period_indices, , drop = FALSE]
     } else {
-      generate_embeddings(period_texts, verbose = FALSE)
+      pe <- generate_embeddings(period_texts, verbose = FALSE)
+      if (is.null(pe)) {
+        stop("Embedding generation unavailable. Run setup_python_env() first.",
+             call. = FALSE)
+      }
+      pe
     }
 
     period_results <- fit_embedding_model(
@@ -3099,7 +3120,7 @@ plot_word_probability <- function(top_topic_terms,
     ggplot2::geom_col(show.legend = FALSE, alpha = 0.8) +
     ggplot2::facet_wrap(~ labeled_topic, scales = "free", ncol = ncol, strip.position = "top") +
     tidytext::scale_x_reordered() +
-    ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+    ggplot2::scale_y_continuous(labels = .number_labeller(3)) +
     ggplot2::coord_flip() +
     ggplot2::xlab("") +
     ggplot2::ylab(ylab) +
@@ -3194,7 +3215,7 @@ plot_topic_probability <- function(gamma_data,
                                           text = hover_text)) +
       ggplot2::geom_col(alpha = 0.8) +
       ggplot2::coord_flip() +
-      ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 2)) +
+      ggplot2::scale_y_continuous(labels = .number_labeller(2)) +
       ggplot2::xlab("") +
       ggplot2::ylab(ylab) +
       ggplot2::theme_minimal(base_size = base_font_size) +
@@ -3261,7 +3282,7 @@ plot_topic_effects_categorical <- function(effects_data,
 
   ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion, text = hover_text)) +
     ggplot2::facet_wrap(~topic_label, ncol = ncol, scales = "free") +
-    ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+    ggplot2::scale_y_continuous(labels = .number_labeller(3)) +
     ggplot2::xlab("") +
     ggplot2::ylab("Topic proportion") +
     ggplot2::geom_errorbar(
@@ -3326,7 +3347,7 @@ plot_topic_effects_continuous <- function(effects_data,
 
   ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion, text = hover_text)) +
     ggplot2::facet_wrap(~topic_label, ncol = ncol, scales = "free") +
-    ggplot2::scale_y_continuous(labels = numform::ff_num(zero = 0, digits = 3)) +
+    ggplot2::scale_y_continuous(labels = .number_labeller(3)) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = "#337ab7", alpha = 0.2) +
     ggplot2::geom_line(linewidth = 0.5, color = "#337ab7") +
     ggplot2::xlab("") +
@@ -3730,15 +3751,10 @@ generate_topic_content <- function(topic_terms_df,
   unique_topics[[output_var]] <- NA_character_
 
   if (is.null(api_key)) {
-    if (file.exists(".env")) {
-      if (requireNamespace("dotenv", quietly = TRUE)) {
-        dotenv::load_dot_env()
-      }
-    }
     env_var <- switch(provider, "openai" = "OPENAI_API_KEY", "gemini" = "GEMINI_API_KEY")
     api_key <- Sys.getenv(env_var)
     if (api_key == "") {
-      stop(.missing_api_key_message(provider, "package"), call. = FALSE)
+      return(.notify_missing_api_key(provider))
     }
   }
 

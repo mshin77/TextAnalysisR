@@ -4,9 +4,6 @@
 
 library(TextAnalysisR)
 
-# Demonstrate sanitized preprocessing on bundled data — no eval()
-# of user input, no shell calls. All text is tokenized through
-# quanteda, which rejects malformed UTF-8 and strips control chars.
 mydata <- SpecialEduTech[seq_len(5), c("title", "abstract")]
 united <- unite_cols(mydata, listed_vars = c("title", "abstract"))
 toks   <- prep_texts(united, text_field = "united_texts")
@@ -31,7 +28,8 @@ TextAnalysisR includes built-in security features.
 - Masked input field with format validation
 - Transmitted via secure headers only
 
-**Environment Variable:**
+**Environment Variable:** add `OPENAI_API_KEY=...` to `.Renviron`, or
+set in-session:
 
 ``` r
 

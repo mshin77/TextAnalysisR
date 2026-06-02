@@ -15,21 +15,16 @@ suppressPackageStartupMessages({
   library(quanteda)
 })
 
-.old_app_options <- options(
-  shiny.maxRequestSize = 100 * 1024^2,
-  shiny.timeout = 300,
-  digits = 4,
-  scipen = 999
-)
-
-shiny::onStop(function() {
-  options(.old_app_options)
-})
-
 server <- shinyServer(function(input, output, session) {
-  .old_session_options <- options(shiny.error = function() {
-    TextAnalysisR:::show_error_notification("An unexpected error occurred. Please try again or contact support.")
-  })
+  .old_session_options <- options(
+    shiny.maxRequestSize = 100 * 1024^2,
+    shiny.timeout = 300,
+    digits = 4,
+    scipen = 999,
+    shiny.error = function() {
+      TextAnalysisR:::show_error_notification("An unexpected error occurred. Please try again or contact support.")
+    }
+  )
 
   session$onSessionEnded(function() {
     options(.old_session_options)
@@ -55,17 +50,25 @@ server <- shinyServer(function(input, output, session) {
     sep = "\n"
   )
 
-  # Lazy-load Topic Modeling tab on first visit
-  topic_tab_loaded <- reactiveVal(FALSE)
+  lazy_tabs <- list(
+    "Lexical Analysis"  = list(out = "lexical_analysis_ui",  content = lexical_analysis_ui_content),
+    "Semantic Analysis" = list(out = "semantic_analysis_ui", content = semantic_analysis_ui_content),
+    "Topic Modeling"    = list(out = "topic_modeling_ui",    content = topic_modeling_ui_content)
+  )
+  tab_loaded <- reactiveValues()
+  for (nm in names(lazy_tabs)) tab_loaded[[nm]] <- FALSE
+
   observeEvent(input$main_navbar, {
-    if (input$main_navbar == "Topic Modeling" && !topic_tab_loaded()) {
-      topic_tab_loaded(TRUE)
-    }
+    nm <- input$main_navbar
+    if (!is.null(lazy_tabs[[nm]]) && isFALSE(tab_loaded[[nm]])) tab_loaded[[nm]] <- TRUE
   }, ignoreInit = TRUE)
 
-  output$topic_modeling_ui <- renderUI({
-    req(topic_tab_loaded())
-    topic_modeling_ui_content()
+  lapply(names(lazy_tabs), function(nm) {
+    spec <- lazy_tabs[[nm]]
+    output[[spec$out]] <- renderUI({
+      req(isTRUE(tab_loaded[[nm]]))
+      spec$content()
+    })
   })
 
   `%||%` <- function(a, b) if (is.null(a)) b else a
@@ -3333,6 +3336,10 @@ server <- shinyServer(function(input, output, session) {
         morph = TRUE
       )
 
+      if (is.null(parsed)) {
+        stop("Python spaCy is not configured. Run TextAnalysisR::setup_python_env() in the R console.")
+      }
+
       spacy_parsed(parsed)
       pos_applied(pos_applied() + 1)
       entity_table_refresh(entity_table_refresh() + 1)
@@ -3639,7 +3646,10 @@ server <- shinyServer(function(input, output, session) {
     },
     content = function(file) {
       tryCatch({
-        req(spacy_parsed())
+        if (is.null(spacy_parsed())) {
+          writeLines("No linguistic annotation available. Click Apply on the Part-of-Speech tab first.", file)
+          return()
+        }
 
         parsed <- isolate(spacy_parsed())
         pos_filter_snapshot <- isolate(input$pos_filter)
@@ -3836,7 +3846,10 @@ server <- shinyServer(function(input, output, session) {
     },
     content = function(file) {
       tryCatch({
-        req(dfm_init())
+        if (is.null(dfm_init())) {
+          writeLines("No document-feature matrix available. Process the DFM first.", file)
+          return()
+        }
 
         dfm_obj <- dfm_init()
 
@@ -4269,14 +4282,17 @@ server <- shinyServer(function(input, output, session) {
   output$export_domain_preset <- downloadHandler(
     filename = function() {
       preset_name <- isolate(current_domain_preset())
+      if (is.null(preset_name) || !nzchar(preset_name)) preset_name <- "none"
       paste0("ner_preset_", preset_name, "_", format(Sys.time(), "%Y%m%d"), ".xlsx")
     },
     content = function(file) {
       preset_name <- isolate(current_domain_preset())
       presets <- isolate(domain_presets())
-      if (preset_name %in% names(presets)) {
+      if (!is.null(preset_name) && preset_name %in% names(presets)) {
         df <- preset_to_dataframe(presets[[preset_name]])
         openxlsx::write.xlsx(df, file = file)
+      } else {
+        openxlsx::write.xlsx(data.frame(message = "No NER preset selected to export."), file = file)
       }
     }
   )
@@ -7504,7 +7520,7 @@ server <- shinyServer(function(input, output, session) {
             paste0("co_occur_", level_id),
             "Minimum co-occurrences",
             value = min(isolate(input$co_occurence_number_global) %||% 5, 150),
-            min = 0,
+            min = 2,
             max = 150,
             step = 1,
             width = "100%"
@@ -7513,7 +7529,7 @@ server <- shinyServer(function(input, output, session) {
             paste0("top_nodes_", level_id),
             "Top N nodes",
             value = min(isolate(input$top_node_n_co_occurrence_global) %||% 30, 150),
-            min = 0,
+            min = 2,
             max = 150,
             step = 1,
             width = "100%"
@@ -7663,11 +7679,7 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_cooccur %||% "leiden",
       node_size_by = input$node_size_cooccur %||% "degree",
       node_color_by = input$node_color_cooccur %||% "community",
-      physics_gravity = as.numeric(input$physics_gravity_cooccur %||% -1500),
-      physics_spring_length = as.numeric(input$physics_spring_length_cooccur %||% 100),
-      physics_avoid_overlap = as.numeric(input$physics_avoid_overlap_cooccur %||% 0.3),
-      seed = as.numeric(input$seed_cooccur %||% 2026),
-      showlegend = isTRUE(input$showlegend_cooccur)
+      seed = as.numeric(input$seed_cooccur %||% 123)
     )
 
     cooccur_result_val(NULL)
@@ -7712,9 +7724,6 @@ server <- shinyServer(function(input, output, session) {
       input$height_word_co_occurrence_network_plot,
       input$doc_var_co_occurrence,
       input$use_category_cooccur,
-      input$physics_gravity_cooccur,
-      input$physics_spring_length_cooccur,
-      input$physics_avoid_overlap_cooccur,
       input$seed_cooccur,
       input$showlegend_cooccur
     )
@@ -7734,7 +7743,7 @@ server <- shinyServer(function(input, output, session) {
     content = function(file) {
       result <- isolate(word_co_occurrence_network_results())
       req(result, result$plot)
-      htmlwidgets::saveWidget(result$plot, file, selfcontained = TRUE)
+      htmlwidgets::saveWidget(gg_to_plotly(result$plot), file, selfcontained = TRUE)
     }
   )
 
@@ -7749,11 +7758,25 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
-    plot_h <- input$height_word_co_occurrence_network_plot %||% 800
-    tags$div(
-      style = sprintf("width: 100%%; height: %dpx;", plot_h),
-      result$plot
-    )
+    w <- input$width_word_co_occurrence_network_plot %||% 900
+    h <- input$height_word_co_occurrence_network_plot %||% 800
+    plotly::plotlyOutput("word_co_occurrence_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
+  })
+
+  output$word_co_occurrence_network_plotly <- plotly::renderPlotly({
+    result <- word_co_occurrence_network_results()
+    req(result)
+    p <- gg_to_plotly(result$plot)
+    top <- result$top_nodes
+    if (!is.null(top) && nrow(top) > 0) {
+      annotations <- lapply(seq_len(nrow(top)), function(i) {
+        list(x = top$x[i], y = top$y[i], text = top$label[i], showarrow = FALSE,
+             font = list(size = top$text_size[i] * 0.75, color = "#0c1f4a", family = "Roboto, sans-serif"),
+             xanchor = "center", yanchor = "bottom", yshift = 8)
+      })
+      p <- p %>% plotly::layout(annotations = annotations)
+    }
+    p
   })
 
   output$word_co_occurrence_network_table_uiOutput <- renderUI({
@@ -7917,7 +7940,7 @@ server <- shinyServer(function(input, output, session) {
             paste0("common_terms_", level_id),
             "Common terms",
             value = min(isolate(input$common_term_n_global) %||% 5, 150),
-            min = 0,
+            min = 2,
             max = 150,
             step = 1,
             width = "100%"
@@ -7935,7 +7958,7 @@ server <- shinyServer(function(input, output, session) {
             paste0("top_nodes_corr_", level_id),
             "Top N nodes",
             value = min(isolate(input$top_node_n_correlation_global) %||% 30, 150),
-            min = 0,
+            min = 2,
             max = 150,
             step = 1,
             width = "100%"
@@ -8011,11 +8034,7 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_corr %||% "leiden",
       node_size_by = input$node_size_corr %||% "degree",
       node_color_by = input$node_color_corr %||% "community",
-      physics_gravity = as.numeric(input$physics_gravity_corr %||% -1500),
-      physics_spring_length = as.numeric(input$physics_spring_length_corr %||% 100),
-      physics_avoid_overlap = as.numeric(input$physics_avoid_overlap_corr %||% 0.3),
-      seed = as.numeric(input$seed_corr %||% 2026),
-      showlegend = isTRUE(input$showlegend_corr)
+      seed = as.numeric(input$seed_corr %||% 123)
     )
 
     corr_result_val(NULL)
@@ -8061,9 +8080,6 @@ server <- shinyServer(function(input, output, session) {
       input$height_word_correlation_network_plot,
       input$doc_var_correlation,
       input$use_category_corr,
-      input$physics_gravity_corr,
-      input$physics_spring_length_corr,
-      input$physics_avoid_overlap_corr,
       input$seed_corr,
       input$showlegend_corr
     )
@@ -8083,7 +8099,7 @@ server <- shinyServer(function(input, output, session) {
     content = function(file) {
       result <- isolate(word_correlation_network_results())
       req(result, result$plot)
-      htmlwidgets::saveWidget(result$plot, file, selfcontained = TRUE)
+      htmlwidgets::saveWidget(gg_to_plotly(result$plot), file, selfcontained = TRUE)
     }
   )
 
@@ -8098,11 +8114,25 @@ server <- shinyServer(function(input, output, session) {
         )
       ))
     }
-    plot_h <- input$height_word_correlation_network_plot %||% 1000
-    tags$div(
-      style = sprintf("width: 100%%; height: %dpx;", plot_h),
-      result$plot
-    )
+    w <- input$width_word_correlation_network_plot %||% 900
+    h <- input$height_word_correlation_network_plot %||% 1000
+    plotly::plotlyOutput("word_correlation_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
+  })
+
+  output$word_correlation_network_plotly <- plotly::renderPlotly({
+    result <- word_correlation_network_results()
+    req(result)
+    p <- gg_to_plotly(result$plot)
+    top <- result$top_nodes
+    if (!is.null(top) && nrow(top) > 0) {
+      annotations <- lapply(seq_len(nrow(top)), function(i) {
+        list(x = top$x[i], y = top$y[i], text = top$label[i], showarrow = FALSE,
+             font = list(size = top$text_size[i] * 0.75, color = "#0c1f4a", family = "Roboto, sans-serif"),
+             xanchor = "center", yanchor = "bottom", yshift = 8)
+      })
+      p <- p %>% plotly::layout(annotations = annotations)
+    }
+    p
   })
 
   output$word_correlation_network_table_uiOutput <- renderUI({
@@ -8279,8 +8309,8 @@ server <- shinyServer(function(input, output, session) {
                 return(tibble::tibble(
                   term = NA, estimate = NA, std.error = NA,
                   statistic = NA, p.value = NA,
-                  `odds ratio` = NA, var.diag = NA,
-                  `std.error (odds ratio)` = NA,
+                  `rate ratio` = NA, var.diag = NA,
+                  `std.error (rate ratio)` = NA,
                   model_type = "Insufficient data"
                 ))
               }
@@ -8289,8 +8319,8 @@ server <- shinyServer(function(input, output, session) {
                 return(tibble::tibble(
                   term = NA, estimate = NA, std.error = NA,
                   statistic = NA, p.value = NA,
-                  `odds ratio` = NA, var.diag = NA,
-                  `std.error (odds ratio)` = NA,
+                  `rate ratio` = NA, var.diag = NA,
+                  `std.error (rate ratio)` = NA,
                   model_type = "Insufficient data"
                 ))
               }
@@ -8299,8 +8329,8 @@ server <- shinyServer(function(input, output, session) {
                 return(tibble::tibble(
                   term = NA, estimate = NA, std.error = NA,
                   statistic = NA, p.value = NA,
-                  `odds ratio` = NA, var.diag = NA,
-                  `std.error (odds ratio)` = NA,
+                  `rate ratio` = NA, var.diag = NA,
+                  `std.error (rate ratio)` = NA,
                   model_type = "Insufficient data"
                 ))
               }
@@ -8343,10 +8373,10 @@ server <- shinyServer(function(input, output, session) {
 
               tidy_result <- broom::tidy(model) %>%
                 dplyr::mutate(
-                  `odds ratio` = exp(estimate),
+                  `rate ratio` = exp(estimate),
                   var.diag = diag(vcov(model)),
-                  `std.error (odds ratio)` = ifelse(var.diag >= 0,
-                                                    sqrt(`odds ratio`^2 * var.diag),
+                  `std.error (rate ratio)` = ifelse(var.diag >= 0,
+                                                    sqrt(`rate ratio`^2 * var.diag),
                                                     NA),
                   model_type = model_type
                 )
@@ -8356,12 +8386,13 @@ server <- shinyServer(function(input, output, session) {
             ungroup() %>%
             dplyr::select(
               word, model_type, term, estimate, std.error,
-              `odds ratio`, `std.error (odds ratio)`, statistic, p.value
+              `rate ratio`, `std.error (rate ratio)`, statistic, p.value
             ) %>%
             rename(
               logit = estimate,
               `z-statistic` = statistic
-            )
+            ) %>%
+            dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3)))
 
             if (nrow(significance_results) > 0) {
               tables <- significance_results %>%
@@ -8369,13 +8400,6 @@ server <- shinyServer(function(input, output, session) {
                 arrange(word) %>%
                 group_by(word) %>%
                 group_map(~ {
-
-                  # Round all numeric columns to 3 decimal places
-                  clean_data <- .x %>%
-                    dplyr::mutate(
-                      dplyr::across(where(is.numeric), ~ round(.x, 3))
-                    )
-
                   htmltools::tagList(
                     htmltools::tags$div(
                       style = "margin-top: 20px; margin-bottom: 20px;",
@@ -8385,7 +8409,7 @@ server <- shinyServer(function(input, output, session) {
                       )
                     ),
                     DT::datatable(
-                      clean_data,
+                      .x,
                       rownames = FALSE,
                       extensions = "Buttons",
                       options = list(
@@ -8397,7 +8421,7 @@ server <- shinyServer(function(input, output, session) {
                       )
                     ) %>%
                       DT::formatRound(
-                        columns = names(clean_data)[vapply(clean_data, is.numeric, logical(1))],
+                        columns = names(.x)[vapply(.x, is.numeric, logical(1))],
                         digits = 3
                       )
                   )
@@ -12182,6 +12206,18 @@ server <- shinyServer(function(input, output, session) {
         verbose = FALSE
       )
 
+      if (is.null(embeddings) || !is.matrix(embeddings) || nrow(embeddings) == 0) {
+        TextAnalysisR:::remove_notification_by_id(loading_id)
+        TextAnalysisR:::show_error_notification(
+          paste0(
+            "Embeddings unavailable for provider '", provider,
+            "'. For Sentence Transformers, configure Python (setup_python_env()); ",
+            "for OpenAI/Gemini, set a valid API key."
+          )
+        )
+        return()
+      }
+
       embeddings_cache$embeddings <- embeddings
       embeddings_cache$model <- model_name %||% "auto-detected"
       embeddings_cache$provider <- provider
@@ -13313,12 +13349,6 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$semantic_feature_space, {
     if (input$semantic_feature_space != "embeddings") {
       search_results_reactive$results <- NULL
-    }
-
-    dfm_check <- get_available_dfm()
-    if (input$semantic_analysis_tabs == "similarity" && !is.null(dfm_check) && quanteda::ndoc(dfm_check) > 0) {
-      feature_type <- input$semantic_feature_space
-
     }
   })
 
@@ -18825,34 +18855,35 @@ server <- shinyServer(function(input, output, session) {
     print(paste("Computing STM model with K =", input$K_number))
 
     K_num <- as.numeric(input$K_number)
-    if (is.na(K_num)) {
-      stop("K_number must be a numeric value")
-    }
-
-    if (is.null(out()$documents) || length(out()$documents) == 0) {
-      stop("No documents found. Please check preprocessing steps.")
-    }
-
-    if (is.null(out()$vocab) || length(out()$vocab) == 0) {
-      stop("No vocabulary found. Please check preprocessing steps.")
-    }
-
-    if (!is.list(out()$documents)) {
-      stop("Documents must be in STM format. Please check the data conversion.")
-    }
-
-    doc_lengths <- sapply(out()$documents, function(d) {
-      if (is.null(d) || length(d) == 0) return(0)
-      if (is.matrix(d) && ncol(d) >= 2) return(sum(d[2, ]))
-      return(0)
-    })
-
-    if (all(doc_lengths == 0)) {
-      stop("All documents are empty after preprocessing. Please check text preprocessing steps.")
-    }
 
     tryCatch(
       {
+        if (is.na(K_num)) {
+          stop("K_number must be a numeric value")
+        }
+
+        if (is.null(out()$documents) || length(out()$documents) == 0) {
+          stop("No documents found. Please check preprocessing steps.")
+        }
+
+        if (is.null(out()$vocab) || length(out()$vocab) == 0) {
+          stop("No vocabulary found. Please check preprocessing steps.")
+        }
+
+        if (!is.list(out()$documents)) {
+          stop("Documents must be in STM format. Please check the data conversion.")
+        }
+
+        doc_lengths <- sapply(out()$documents, function(d) {
+          if (is.null(d) || length(d) == 0) return(0)
+          if (is.matrix(d) && ncol(d) >= 2) return(sum(d[2, ]))
+          return(0)
+        })
+
+        if (all(doc_lengths == 0)) {
+          stop("All documents are empty after preprocessing. Please check text preprocessing steps.")
+        }
+
         init_type_to_use <- input$stm_init_type_K
 
         stm_result <- tryCatch({

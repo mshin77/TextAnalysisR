@@ -1,10 +1,10 @@
 .env
 .Renviron
 security.log
-.Rbuildignore
 .Rproj.user
 .Rhistory
 .claude
+local
 inst/doc
 CRAN-SUBMISSION
 .RData
@@ -13,19 +13,14 @@ README-*.png
 cran-comments.md
 test_*.R
 run_checks.R
-
 **/*.tmp
 **/tmp*
 *.tmp
 *.tmp.*
 .DS_Store
 Thumbs.db
-
-# Python cache
 __pycache__/
 *.pyc
 .positai
-
-# Sourcemaps embed local source paths
 *.js.map
 *.css.map

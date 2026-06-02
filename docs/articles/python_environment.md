@@ -3,10 +3,7 @@
 ``` r
 
 library(TextAnalysisR)
-requireNamespace("reticulate", quietly = TRUE)
 
-# Lexical dispersion runs in pure R — Python is only needed for the
-# spaCy/embedding extensions described below.
 tokens <- quanteda::tokens(SpecialEduTech$abstract[1:5])
 dispersion <- calculate_lexical_dispersion(
   tokens,
@@ -27,13 +24,8 @@ sentiment analysis.
 
 ## Quick Setup
 
-``` r
-
-library(TextAnalysisR)
-setup_python_env()
-```
-
-This automatically:
+[`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md)
+automatically:
 
 1.  Creates virtual environment `textanalysisr-env`
 2.  Installs **spacy** and **pdfplumber**
@@ -43,41 +35,32 @@ Uses virtualenv (or conda if available).
 
 ## Check Status
 
-``` r
-
-check_python_env()
-```
+Run
+[`check_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/check_python_env.md)
+to verify the environment.
 
 ## Common Issues
 
 ### “Another Python already initialized”
 
-Set preferred environment in `.Rprofile`:
-
-``` r
-
-Sys.setenv(RETICULATE_PYTHON_ENV = "textanalysisr-env")
-```
-
-Then restart R.
+Set preferred environment in `.Rprofile` with
+`Sys.setenv(RETICULATE_PYTHON_ENV = "textanalysisr-env")`, then restart
+R.
 
 ### Environment in OneDrive
 
-Avoid OneDrive paths. Use:
-
-``` r
-
-setup_python_env(envname = "textanalysisr-env")
-```
+Avoid OneDrive paths. Use
+`setup_python_env(envname = "textanalysisr-env")`.
 
 ## spaCy Models
 
 The default `en_core_web_sm` model is installed automatically. For word
-vectors (similarity):
+vectors (similarity), the medium model is 91 MB and the large model is
+560 MB:
 
 ``` bash
-python -m spacy download en_core_web_md  # Medium (91 MB)
-python -m spacy download en_core_web_lg  # Large (560 MB)
+python -m spacy download en_core_web_md
+python -m spacy download en_core_web_lg
 ```
 
 ## Deep Learning (Optional)
@@ -90,9 +73,8 @@ pip install sentence-transformers transformers torch
 
 ## Diagnostics
 
-``` r
-
-library(reticulate)
-py_config()
-virtualenv_list()
-```
+Use
+[`reticulate::py_config()`](https://rstudio.github.io/reticulate/reference/py_config.html)
+and
+[`reticulate::virtualenv_list()`](https://rstudio.github.io/reticulate/reference/virtualenv-tools.html)
+to inspect the active Python.

@@ -32,7 +32,7 @@ Invisible TRUE if successful, stops with error message if failed
 
 ## Details
 
-Default `tier = "core"` keeps the install light — spaCy NLP and PDF text
+Default `tier = "core"` keeps the install light – spaCy NLP and PDF text
 extraction only. Add `"embeddings"` for sentence-transformers-based
 similarity/sentiment, and `"topics"` for BERTopic.
 

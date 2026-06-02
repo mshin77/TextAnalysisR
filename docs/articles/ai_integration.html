@@ -95,9 +95,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"TextAnalysisR"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] '0.1.4'</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Local pipeline runs without any API key — TF-IDF surfaces the same</span></span>
-<span><span class="co"># corpus terms the LLM workflows below would summarize for you.</span></span>
-<span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">]</span></span>
+<code class="sourceCode R"><span><span class="va">mydata</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">united</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">mydata</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">toks</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span>
 <span><span class="va">dfm</span>    <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">toks</span><span class="op">)</span></span>
@@ -163,45 +161,12 @@ Cloud Research program. OpenAI calls require a personal API key.</p>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>OPENAI_API_KEY <span class="op">=</span> <span class="st">"&lt;openai-api-key&gt;"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>GEMINI_API_KEY <span class="op">=</span> <span class="st">"&lt;gemini-api-key&gt;"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Or use .env file in project root</span></span>
-<span><span class="co"># OPENAI_API_KEY=&lt;openai-api-key&gt;</span></span>
-<span><span class="co"># GEMINI_API_KEY=&lt;gemini-api-key&gt;</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="unified-llm-api">Unified LLM API<a class="anchor" aria-label="anchor" href="#unified-llm-api"></a>
-</h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Provider-agnostic (recommended)</span></span>
-<span><span class="va">response</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/call_llm_api.html">call_llm_api</a></span><span class="op">(</span></span>
-<span>  provider <span class="op">=</span> <span class="st">"openai"</span>,</span>
-<span>  system_prompt <span class="op">=</span> <span class="st">"You are a helpful assistant."</span>,</span>
-<span>  user_prompt <span class="op">=</span> <span class="st">"Summarize this text..."</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Provider-specific</span></span>
-<span><span class="fu"><a href="../reference/call_openai_chat.html">call_openai_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gpt-4.1-mini"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/call_gemini_chat.html">call_gemini_chat</a></span><span class="op">(</span><span class="va">system_prompt</span>, <span class="va">user_prompt</span>, model <span class="op">=</span> <span class="st">"gemini-2.5-flash"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="embeddings-rag">Embeddings &amp; RAG<a class="anchor" aria-label="anchor" href="#embeddings-rag"></a>
-</h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Web-based embeddings (OpenAI, Gemini)</span></span>
-<span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_api_embeddings.html">get_api_embeddings</a></span><span class="op">(</span><span class="va">texts</span>, provider <span class="op">=</span> <span class="st">"openai"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Local embeddings (sentence-transformers)</span></span>
-<span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_embeddings.html">generate_embeddings</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># RAG search over a document corpus</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_rag_search.html">run_rag_search</a></span><span class="op">(</span></span>
-<span>  query <span class="op">=</span> <span class="st">"What are the main findings?"</span>,</span>
-<span>  documents <span class="op">=</span> <span class="va">my_docs</span>,</span>
-<span>  provider <span class="op">=</span> <span class="st">"openai"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<p>Set keys via <code>.Renviron</code> (persistent) or
+<code><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv()</a></code> (session). The cloud chat, embedding, and RAG
+functions (<code><a href="../reference/call_llm_api.html">call_llm_api()</a></code>, <code><a href="../reference/call_openai_chat.html">call_openai_chat()</a></code>,
+<code><a href="../reference/call_gemini_chat.html">call_gemini_chat()</a></code>, <code><a href="../reference/get_api_embeddings.html">get_api_embeddings()</a></code>,
+<code><a href="../reference/run_rag_search.html">run_rag_search()</a></code>) require an API key and network access;
+see their reference pages for usage.</p>
 </div>
 <div class="section level2">
 <h2 id="default-models">Default Models<a class="anchor" aria-label="anchor" href="#default-models"></a>
