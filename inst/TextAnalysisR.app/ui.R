@@ -15,6 +15,7 @@ is_remote_ui <- is_web || is_docker
 
 
 ui <- fluidPage(
+  lang = "en",
   useShinyjs(),
   shinybusy::add_busy_spinner(
     spin = "fading-circle",
@@ -29,8 +30,7 @@ ui <- fluidPage(
     tags$meta(name = "description", content = "TextAnalysisR: A text mining workflow tool"),
     tags$link(rel = "icon", type = "image/png", href = "logo.png"),
     tags$script(HTML(
-      "document.documentElement.lang = 'en';
-       document.querySelectorAll('title').forEach(function(t, i) {
+      "document.querySelectorAll('title').forEach(function(t, i) {
          if (i > 0 || !t.textContent.trim()) t.remove();
        });"
     )),
@@ -225,6 +225,7 @@ ui <- fluidPage(
     id = "main-content",
     role = "main",
     tabindex = "-1",
+    tags$h1("TextAnalysisR", class = "sr-only"),
     navbarPage(
       "TextAnalysisR",
       id = "main_navbar",

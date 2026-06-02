@@ -9,7 +9,6 @@ calculate_text_readability(
   metrics = c("flesch", "flesch_kincaid", "gunning_fog"),
   include_lexical_diversity = TRUE,
   include_sentence_stats = TRUE,
-  dfm_for_lexdiv = NULL,
   doc_names = NULL
 )
 }
@@ -19,11 +18,10 @@ calculate_text_readability(
 \item{metrics}{Character vector of readability metrics to calculate.
 Options: "flesch", "flesch_kincaid", "gunning_fog", "smog", "ari", "coleman_liau"}
 
-\item{include_lexical_diversity}{Logical, include TTR and MTLD (default: TRUE)}
+\item{include_lexical_diversity}{Logical, include the MTLD lexical diversity
+index (default: TRUE)}
 
 \item{include_sentence_stats}{Logical, include average sentence length (default: TRUE)}
-
-\item{dfm_for_lexdiv}{Optional pre-computed DFM for lexical diversity calculation}
 
 \item{doc_names}{Optional character vector of document names}
 }

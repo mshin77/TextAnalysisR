@@ -1565,9 +1565,9 @@ plot_top_readability_documents <- function(readability_data,
 #' @param texts Character vector of texts to analyze
 #' @param metrics Character vector of readability metrics to calculate.
 #'   Options: "flesch", "flesch_kincaid", "gunning_fog", "smog", "ari", "coleman_liau"
-#' @param include_lexical_diversity Logical, include TTR and MTLD (default: TRUE)
+#' @param include_lexical_diversity Logical, include the MTLD lexical diversity
+#'   index (default: TRUE)
 #' @param include_sentence_stats Logical, include average sentence length (default: TRUE)
-#' @param dfm_for_lexdiv Optional pre-computed DFM for lexical diversity calculation
 #' @param doc_names Optional character vector of document names
 #'
 #' @return A data frame with document names and readability scores
@@ -1589,7 +1589,6 @@ calculate_text_readability <- function(texts,
                                       metrics = c("flesch", "flesch_kincaid", "gunning_fog"),
                                       include_lexical_diversity = TRUE,
                                       include_sentence_stats = TRUE,
-                                      dfm_for_lexdiv = NULL,
                                       doc_names = NULL) {
 
   if (!requireNamespace("quanteda.textstats", quietly = TRUE)) {
@@ -1658,39 +1657,21 @@ calculate_text_readability <- function(texts,
   }
 
   if (include_lexical_diversity) {
-    if (is.null(dfm_for_lexdiv)) {
-      toks <- quanteda::tokens(texts, remove_punct = TRUE)
-      dfm_for_lexdiv <- quanteda::dfm(toks)
-    }
-
-    tryCatch({
-      lexical_diversity <- quanteda.textstats::textstat_lexdiv(
-        dfm_for_lexdiv,
-        measure = c("TTR", "MTLD")
-      )
-
-      readability_scores$`Lexical Diversity (TTR)` <- NA
-      readability_scores$`Lexical Diversity (MTLD)` <- NA
-
-      if (nrow(lexical_diversity) == nrow(readability_scores)) {
-        readability_scores$`Lexical Diversity (TTR)` <- lexical_diversity$TTR
-        readability_scores$`Lexical Diversity (MTLD)` <- lexical_diversity$MTLD
-      } else {
-        warning(paste0("Could not calculate lexical diversity: row mismatch (",
-                       nrow(lexical_diversity), " vs ", nrow(readability_scores), ")"))
-      }
-    }, error = function(e) {
-      warning("Could not calculate lexical diversity: ", e$message)
-    })
+    # MTLD needs token order; compute per document, not from a DFM
+    toks <- quanteda::tokens(texts, remove_punct = TRUE)
+    mtld_values <- vapply(seq_len(quanteda::ndoc(toks)), function(i) {
+      .calc_mtld(as.character(toks[[i]]))
+    }, numeric(1))
+    readability_scores$`Lexical Diversity (MTLD)` <- as.numeric(mtld_values)
   }
 
   if (include_sentence_stats) {
     avg_sentence_length <- vapply(texts, function(t) {
-      sents <- unlist(strsplit(t, "[.!?]+"))
+      sents <- quanteda::tokens(t, what = "sentence")[[1]]
       sents <- sents[nzchar(trimws(sents))]
-      words <- unlist(strsplit(paste(sents, collapse = " "), "\\s+"))
       if (length(sents) == 0) return(NA_real_)
-      length(words) / length(sents)
+      words <- lengths(quanteda::tokens(sents, what = "word", remove_punct = TRUE))
+      sum(words) / length(sents)
     }, numeric(1))
     readability_scores$`Avg Sentence Length` <- avg_sentence_length
   }
@@ -2594,9 +2575,10 @@ parse_morphology_string <- function(data, features = NULL) {
 #' Calculate Log Odds Ratio Between Categories
 #'
 #' @description
-#' Computes log odds ratio to compare word frequencies between categories.
-#' Identifies words that are distinctively used in one category vs another.
-#' Uses Laplace smoothing to handle zero counts.
+#' Compares word frequencies between categories using a Laplace-smoothed log
+#' frequency ratio, ranked by z-score. Identifies words distinctively used in
+#' one category. For an informative-prior weighted log-odds, see
+#' [calculate_weighted_log_odds()].
 #'
 #' @param dfm_object A quanteda dfm object
 #' @param group_var Character, name of the grouping variable in docvars
@@ -2621,7 +2603,10 @@ parse_morphology_string <- function(data, features = NULL) {
 #'     \item odds2: Odds in category 2
 #'     \item odds_ratio: Ratio of odds
 #'     \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
+#'     \item variance: Variance of the log ratio, 1/(count1 + 1) + 1/(count2 + 1)
+#'     \item z_score: Log ratio divided by its standard error
 #'   }
+#'   Terms are ranked by absolute z-score.
 #'
 #' @concept lexical
 #' @export
@@ -2696,6 +2681,9 @@ calculate_log_odds_ratio <- function(dfm_object,
     odds_ratio <- odds1 / odds2
     log_odds <- log(odds_ratio)
 
+    variance <- 1 / (counts1 + 1) + 1 / (counts2 + 1)
+    z_score <- log_odds / sqrt(variance)
+
     result <- data.frame(
       term = names(counts1),
       category1 = level1,
@@ -2706,11 +2694,12 @@ calculate_log_odds_ratio <- function(dfm_object,
       odds2 = odds2,
       odds_ratio = odds_ratio,
       log_odds_ratio = log_odds,
+      variance = as.numeric(variance),
+      z_score = z_score,
       stringsAsFactors = FALSE
     )
 
-    # Get top terms by absolute log odds
-    result <- result[order(abs(result$log_odds_ratio), decreasing = TRUE), ]
+    result <- result[order(abs(result$z_score), decreasing = TRUE), ]
     utils::head(result, top_n)
   }
 
@@ -2764,7 +2753,9 @@ calculate_log_odds_ratio <- function(dfm_object,
       odds1 = numeric(),
       odds2 = numeric(),
       odds_ratio = numeric(),
-      log_odds_ratio = numeric()
+      log_odds_ratio = numeric(),
+      variance = numeric(),
+      z_score = numeric()
     ))
   }
 

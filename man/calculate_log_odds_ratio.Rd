@@ -43,12 +43,16 @@ Data frame with columns:
 \item odds2: Odds in category 2
 \item odds_ratio: Ratio of odds
 \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
+\item variance: Variance of the log ratio, 1/(count1 + 1) + 1/(count2 + 1)
+\item z_score: Log ratio divided by its standard error
 }
+Terms are ranked by absolute z-score.
 }
 \description{
-Computes log odds ratio to compare word frequencies between categories.
-Identifies words that are distinctively used in one category vs another.
-Uses Laplace smoothing to handle zero counts.
+Compares word frequencies between categories using a Laplace-smoothed log
+frequency ratio, ranked by z-score. Identifies words distinctively used in
+one category. For an informative-prior weighted log-odds, see
+\code{\link[=calculate_weighted_log_odds]{calculate_weighted_log_odds()}}.
 }
 \examples{
 \donttest{

@@ -9624,7 +9624,6 @@ server <- shinyServer(function(input, output, session) {
         metrics = selected_metrics,
         include_lexical_diversity = FALSE,
         include_sentence_stats = FALSE,
-        dfm_for_lexdiv = dfm_to_use,
         doc_names = doc_names
       )
 

@@ -83,6 +83,39 @@ test_that("calculate_text_readability works", {
   expect_s3_class(result, "data.frame")
   expect_true("Document" %in% names(result))
   expect_equal(nrow(result), 5)
+  expect_false("Lexical Diversity (TTR)" %in% names(result))
+  expect_true("Lexical Diversity (MTLD)" %in% names(result))
+})
+
+test_that("calculate_text_readability sentence count handles abbreviations", {
+  skip_if_not_installed("quanteda")
+  skip_if_not_installed("quanteda.textstats")
+
+  result <- calculate_text_readability(
+    texts = "Results from the U.S. were strong (e.g., Fig. 1). A second sentence follows.",
+    include_lexical_diversity = FALSE
+  )
+
+  expect_true("Avg Sentence Length" %in% names(result))
+  expect_gt(result$`Avg Sentence Length`, 4)
+})
+
+test_that("calculate_log_odds_ratio ranks by z-score", {
+  skip_if_not_installed("quanteda")
+
+  data(SpecialEduTech, package = "TextAnalysisR")
+  articles <- SpecialEduTech[1:20, ]
+  corp <- quanteda::corpus(
+    articles$abstract,
+    docvars = data.frame(reference_type = articles$reference_type)
+  )
+  dfm_object <- quanteda::dfm(quanteda::tokens(corp))
+
+  result <- calculate_log_odds_ratio(dfm_object, "reference_type", min_count = 2)
+
+  expect_true(all(c("variance", "z_score") %in% names(result)))
+  ranked <- abs(result$z_score)
+  expect_false(is.unsorted(rev(ranked)))
 })
 
 test_that("lexical_frequency_analysis works", {

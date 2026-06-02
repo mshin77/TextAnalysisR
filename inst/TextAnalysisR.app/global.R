@@ -1806,10 +1806,10 @@ lexical_analysis_ui_content <- function() {
               "log_odds_method",
               "Method",
               choices = c(
-                "Simple (Laplace smoothing)" = "simple",
-                "Weighted (Fightin' Words)" = "weighted"
+                "Weighted (Fightin' Words)" = "weighted",
+                "Simple (Laplace smoothing)" = "simple"
               ),
-              selected = "simple"
+              selected = "weighted"
             ),
             conditionalPanel(
               condition = "input.log_odds_method == 'simple'",
