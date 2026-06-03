@@ -130,15 +130,18 @@ results <- run_rag_search(
 
 ## Sentiment & Emotion
 
-`sentiment_lexicon_analysis()` scores documents with the Bing, AFINN, or NRC lexicon. NRC also yields
-discrete emotions for `plot_emotion_radar()`.
+`sentiment_lexicon_analysis()` scores documents with the Bing, AFINN, or NRC lexicon. The Bing
+example runs below.
 
 ```{r}
 sentiment <- sentiment_lexicon_analysis(dfm_object, lexicon = "bing")
 plot_sentiment_distribution(sentiment$document_sentiment)
 ```
 
-```{r}
+NRC also yields discrete emotions for `plot_emotion_radar()`. NRC downloads through `textdata` behind a
+license-gated prompt, so the emotion example is shown but not run.
+
+```{r, eval = FALSE}
 emotion <- sentiment_lexicon_analysis(dfm_object, lexicon = "nrc")
 plot_emotion_radar(emotion$emotion_scores)
 ```
