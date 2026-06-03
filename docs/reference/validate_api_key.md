@@ -1,0 +1,31 @@
+# Validate API Key Format
+
+Validates API key format for OpenAI or Gemini according to NIST IA-5(1).
+Auto-detects provider from key prefix and validates format requirements.
+
+## Usage
+
+``` r
+validate_api_key(api_key, strict = TRUE)
+```
+
+## Arguments
+
+- api_key:
+
+  Character string containing the API key
+
+- strict:
+
+  Logical, if TRUE performs additional validation checks
+
+## Value
+
+List with valid (logical), provider (character), and error (character if
+invalid)
+
+## NIST Compliance
+
+Implements NIST IA-5(1): Authenticator Management - Password-Based
+Authentication. Validates format, length, and character composition to
+prevent weak or malformed keys.

@@ -1,0 +1,54 @@
+:root {
+  --a11y-hover:    #ffffff;
+  --a11y-hover-bg: #0072B2;
+}
+
+.navbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #dee2e6;
+}
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: #222222 !important;
+  border-radius: 0.25rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar .nav-link.active,
+.navbar .nav-link[aria-current="page"],
+.navbar .navbar-brand:hover,
+.navbar .navbar-brand:focus,
+.navbar .dropdown-menu .dropdown-item:hover,
+.navbar .dropdown-menu .dropdown-item:focus,
+.navbar .dropdown-menu .dropdown-item.active {
+  color: var(--a11y-hover) !important;
+  background-color: var(--a11y-hover-bg) !important;
+}
+
+.template-reference-index hr {
+  display: none;
+}
+
+.template-home main > p:first-of-type img {
+  margin-top: 1rem;
+}
+
+.template-reference-index .section.level2 {
+  margin-top: 2.5rem;
+}
+
+.page-header img.logo {
+  display: none;
+}
+
+.table > :not(caption) > * > * {
+  border-bottom-width: 0;
+  box-shadow: none;
+}
+
+main a,
+main a:hover,
+main a:focus {
+  text-decoration: none;
+}
