@@ -35,14 +35,13 @@ detection and centrality metrics.
 ```{r}
 network <- word_co_occurrence_network(
   dfm_object,
-  co_occur_n = 30,
+  co_occur_n = 50,
   top_node_n = 30,
   node_label_size = 22,
   community_method = "leiden"
 )
 
 network$plot
-network$top_nodes
 network$table
 network$summary
 ```
@@ -54,13 +53,12 @@ network$summary
 ```{r}
 corr_network <- word_correlation_network(
   dfm_object,
-  common_term_n = 10,
-  corr_n = 0.4,
+  common_term_n = 15,
+  corr_n = 0.2,
   community_method = "leiden"
 )
 
 corr_network$plot
-corr_network$top_nodes
 corr_network$table
 ```
 

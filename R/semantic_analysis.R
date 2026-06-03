@@ -4079,7 +4079,7 @@ word_co_occurrence_network <- function(dfm_object,
     effective_top_node_n <- if (!is.null(local_top_node_n)) local_top_node_n else top_node_n
 
     term_co_occur <- data %>%
-      widyr::pairwise_count(term, document, sort = TRUE) %>%
+      widyr::pairwise_count(term, document, sort = TRUE, upper = FALSE) %>%
       dplyr::filter(n >= effective_co_occur_n)
 
     graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
@@ -4134,13 +4134,8 @@ word_co_occurrence_network <- function(dfm_object,
                     yend = layout_df$y[match(to, layout_df$label)],
                     cooccur_count = n) %>%
       dplyr::select(from, to, x, y, xend, yend, cooccur_count) %>%
-      dplyr::mutate(line_group = as.integer({
-        b <- unique(stats::quantile(cooccur_count, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
-        if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
-        cut(cooccur_count, breaks = b, include.lowest = TRUE)
-      }),
-      line_width = scales::rescale(line_group, to = c(1, 5)),
-      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
+      dplyr::mutate(line_width = scales::rescale(cooccur_count, to = c(0.3, 2)),
+                    alpha      = scales::rescale(cooccur_count, to = c(0.2, 0.9)))
 
     # Node size
     size_metric <- switch(node_size_by,
@@ -4153,8 +4148,7 @@ word_co_occurrence_network <- function(dfm_object,
 
     node_data <- layout_df %>%
       dplyr::mutate(
-        size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(8, 45)),
+        size = if (node_size_by == "fixed") 6 else scales::rescale(sqrt(size_metric), to = c(3, 10)),
         text_size = scales::rescale(log1p(size_metric), to = c(node_label_size - 8, node_label_size)),
         alpha = scales::rescale(log1p(size_metric), to = c(0.2, 1)),
         hover_text = paste("Word:", label,
@@ -4231,6 +4225,10 @@ word_co_occurrence_network <- function(dfm_object,
     }
 
     p <- p +
+      ggplot2::geom_text(data = top_nodes,
+                         ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+                         size = node_label_size / 5, color = "#0c1f4a",
+                         vjust = -0.7, show.legend = FALSE) +
       ggplot2::scale_size_identity() +
       ggplot2::theme_void(base_size = 12) +
       ggplot2::labs(title = "Word Co-occurrence Network") +
@@ -4507,7 +4505,7 @@ word_correlation_network <- function(dfm_object,
     term_cor <- data %>%
       dplyr::group_by(term) %>%
       dplyr::filter(dplyr::n() >= effective_common_term_n) %>%
-      widyr::pairwise_cor(term, document, sort = TRUE) %>%
+      widyr::pairwise_cor(term, document, sort = TRUE, upper = FALSE) %>%
       dplyr::ungroup() %>%
       dplyr::filter(correlation > effective_corr_n)
 
@@ -4563,13 +4561,8 @@ word_correlation_network <- function(dfm_object,
                     yend = layout_df$y[match(to, layout_df$label)],
                     correlation = correlation) %>%
       dplyr::select(from, to, x, y, xend, yend, correlation) %>%
-      dplyr::mutate(line_group = as.integer({
-        b <- unique(stats::quantile(correlation, probs = seq(0, 1, length.out = 6), na.rm = TRUE))
-        if (length(b) < 2) b <- c(b, b[length(b)] + 1e-6)
-        cut(correlation, breaks = b, include.lowest = TRUE)
-      }),
-      line_width = scales::rescale(line_group, to = c(1, 5)),
-      alpha      = scales::rescale(line_group, to = c(0.1, 0.3)))
+      dplyr::mutate(line_width = scales::rescale(correlation, to = c(0.3, 2)),
+                    alpha      = scales::rescale(correlation, to = c(0.2, 0.9)))
 
     # Node size
     size_metric <- switch(node_size_by,
@@ -4582,8 +4575,7 @@ word_correlation_network <- function(dfm_object,
 
     node_data <- layout_df %>%
       dplyr::mutate(
-        size_metric_log = log1p(size_metric),
-        size = if (node_size_by == "fixed") 20 else scales::rescale(size_metric_log, to = c(8, 45)),
+        size = if (node_size_by == "fixed") 6 else scales::rescale(sqrt(size_metric), to = c(3, 10)),
         text_size = scales::rescale(log1p(size_metric), to = c(node_label_size - 8, node_label_size)),
         alpha = scales::rescale(log1p(size_metric), to = c(0.2, 1)),
         hover_text = paste(
@@ -4661,6 +4653,10 @@ word_correlation_network <- function(dfm_object,
     }
 
     p <- p +
+      ggplot2::geom_text(data = top_nodes,
+                         ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+                         size = node_label_size / 5, color = "#0c1f4a",
+                         vjust = -0.7, show.legend = FALSE) +
       ggplot2::scale_size_identity() +
       ggplot2::theme_void(base_size = 12) +
       ggplot2::labs(title = "Word Correlation Network") +

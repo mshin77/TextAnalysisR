@@ -645,7 +645,7 @@ prep_texts <- function(united_tbl,
     if (verbose) {
       message("Text preprocessing completed in ", round(processing_time, 2), " seconds")
       message("Processed ", quanteda::ndoc(tokens), " documents with ",
-              quanteda::ntoken(tokens), " total tokens")
+              sum(quanteda::ntoken(tokens)), " total tokens")
     }
 
     return(tokens)
