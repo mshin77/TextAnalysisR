@@ -54,7 +54,7 @@ network$summary
 corr_network <- word_correlation_network(
   dfm_object,
   common_term_n = 15,
-  corr_n = 0.2,
+  corr_n = 0.3,
   community_method = "leiden"
 )
 
