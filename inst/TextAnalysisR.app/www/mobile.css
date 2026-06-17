@@ -1,5 +1,12 @@
 /* Mobile */
 @media (max-width: 768px) {
+  /* Hamburger on the top-left; the TTS/dark/translate controls are fixed top-right */
+  .navbar-toggle {
+    float: left !important;
+    margin-left: 15px;
+    margin-right: 0;
+  }
+
   .nav-tabs > li > a,
   .nav-pills > li > a {
     padding: 8px 12px;
