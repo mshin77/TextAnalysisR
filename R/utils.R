@@ -22,7 +22,7 @@ globalVariables(names = c(
   "entity", "estimate", "feature", "frequency", "from", "generated_content", "group", "size_metric_log",
   "interview_question", "item1", "item2", "label", "labeled_topic", "line_group",
   "lower", "max_corr", "max_count", "max_similarity", "metric_value", "min_corr",
-  "min_count", "model_type", "n", "n_words", "name", "negative", "rate ratio",
+  "min_count", "model_type", "n", "n_sentiment_words", "name", "negative", "rate ratio",
   "odds.ratio", "ord", "other_category", "other_id", "other_idx", "other_name",
   "p.value", "percent", "policy_recommendation", "pos", "positive", "proportion",
   "ref_id", "ref_idx", "ref_name", "research_question", "row_idx", "score",
@@ -529,6 +529,21 @@ run_text_workflow <- function(dataset_choice,
 #'   print(word_freq_results$plot)
 #'   print(word_freq_results$table)
 #' }
+# broom has no tidy method for zeroinfl; extract the count component
+.tidy_count_model <- function(model) {
+  if (!inherits(model, "zeroinfl")) {
+    return(broom::tidy(model))
+  }
+  cf <- summary(model)$coefficients$count
+  tibble::tibble(
+    term = rownames(cf),
+    estimate = cf[, 1],
+    std.error = cf[, 2],
+    statistic = cf[, 3],
+    p.value = cf[, 4]
+  )
+}
+
 calculate_word_frequency <- function(dfm_object,
                                  continuous_variable,
                                  selected_terms,
@@ -546,7 +561,13 @@ calculate_word_frequency <- function(dfm_object,
   }
 
   dfm_outcome_obj <- dfm_object
-  dfm_td <- tidytext::tidy(dfm_object)
+  # dense conversion keeps zero counts so regressions include all documents
+  dfm_selected <- quanteda::dfm_select(dfm_outcome_obj, pattern = selected_terms,
+                                       selection = "keep", valuetype = "fixed")
+  dfm_td <- quanteda::convert(dfm_selected, to = "data.frame")
+  names(dfm_td)[1] <- "document"
+  dfm_td <- tidyr::pivot_longer(dfm_td, cols = -"document",
+                                names_to = "term", values_to = "count")
 
   docvars_df <- quanteda::docvars(dfm_outcome_obj)
   docvars_df$document <- quanteda::docnames(dfm_outcome_obj)
@@ -670,10 +691,10 @@ calculate_word_frequency <- function(dfm_object,
         }
       }
 
-      tidy_result <- broom::tidy(model) %>%
+      tidy_result <- .tidy_count_model(model) %>%
         dplyr::mutate(
           `rate ratio` = exp(estimate),
-          var.diag = diag(vcov(model)),
+          var.diag = std.error^2,
           `std.error (rate ratio)` = ifelse(var.diag >= 0,
                                             sqrt(`rate ratio`^2 * var.diag),
                                             NA),
@@ -686,7 +707,7 @@ calculate_word_frequency <- function(dfm_object,
     dplyr::select(word, model_type, term, estimate, std.error,
                   `rate ratio`, `std.error (rate ratio)`, statistic, p.value) %>%
     rename(
-      logit = estimate,
+      `log(rate ratio)` = estimate,
       `z-statistic` = statistic
     )
 

@@ -7,14 +7,17 @@
 calculate_keyword_stability(keywords1, keywords2)
 }
 \arguments{
-\item{keywords1}{First set of keywords.}
+\item{keywords1}{List of keyword vectors, one per topic, from the first model.}
 
-\item{keywords2}{Second set of keywords.}
+\item{keywords2}{List of keyword vectors, one per topic, from the second model.}
 }
 \value{
-Stability score.
+Mean Jaccard similarity of matched topic pairs (0-1).
 }
 \description{
-Calculates stability between two sets of topic keywords.
+Calculates stability between the topic keyword sets of two independently
+fitted models. Topic numbering is arbitrary across fits, so topics are
+matched one-to-one by greedy assignment on the pairwise keyword Jaccard
+matrix before averaging matched-pair similarity.
 }
 \concept{topic-modeling}

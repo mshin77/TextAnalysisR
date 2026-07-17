@@ -31,7 +31,8 @@ NULL
     current_length <- i - start_idx + 1
     current_ttr <- unique_count / current_length
 
-    if (current_ttr <= factor_size) {
+    # factors under 10 tokens are textual blips, not counted
+    if (current_ttr <= factor_size && current_length >= 10) {
       factors <- factors + 1
       rm(list = ls(seen), envir = seen)
       unique_count <- 0
@@ -56,6 +57,14 @@ NULL
     .mtld_one_direction(tokens, factor_size),
     .mtld_one_direction(rev(tokens), factor_size)
   ), na.rm = TRUE)
+}
+
+.calc_hdd <- function(tokens, sample_size = 42) {
+  n_toks <- length(tokens)
+  if (n_toks < sample_size) return(NA_real_)
+  type_counts <- as.integer(table(tokens))
+  # probability each type appears in a random 42-token draw
+  sum((1 - stats::dhyper(0, type_counts, n_toks - type_counts, sample_size)) / sample_size)
 }
 
 #' Clear Lexical Diversity Cache
@@ -474,8 +483,8 @@ extract_named_entities <- function(tokens,
 #' @param x A quanteda DFM or tokens object. Tokens object is preferred for
 #'   accurate MTLD calculation since it preserves token order.
 #' @param measures Character vector of measures to calculate.
-#'   Default is "all" which includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR, and MTLD.
-#'   Most recommended: "MTLD" or "MATTR" for length-independent measures.
+#'   Default is "all" which includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR, MTLD, and HDD.
+#'   Most recommended: "MTLD", "MATTR", or "HDD" for length-independent measures.
 #' @param texts Optional character vector of original texts. Required for MTLD
 #'   calculation when using DFM input (since DFM loses token order).
 #' @param cache_key Optional cache key (e.g., from digest::digest) for caching
@@ -499,6 +508,9 @@ extract_named_entities <- function(tokens,
 #'   \item For MTLD accuracy, pass a tokens object (not DFM) as input
 #'   \item If using DFM, provide the 'texts' parameter for MTLD calculation
 #'   \item MATTR and MSTTR window sizes are automatically adjusted for short documents
+#'   \item Raw TTR falls mechanically as documents lengthen; compare TTR only
+#'     across documents of similar length
+#'   \item MTLD and MATTR are most reliable at 100+ tokens per document
 #'   \item Results are cached when cache_key is provided for repeated analysis
 #' }
 #'
@@ -552,12 +564,14 @@ lexical_diversity_analysis <- function(x,
   mtld_requested <- FALSE
   mattr_requested <- FALSE
   msttr_requested <- FALSE
+  hdd_requested <- FALSE
 
   if ("all" %in% measures) {
     measures_to_use <- quanteda_measures
     mtld_requested <- TRUE
     mattr_requested <- TRUE
     msttr_requested <- TRUE
+    hdd_requested <- TRUE
   } else {
     if ("MTLD" %in% measures) {
       mtld_requested <- TRUE
@@ -571,20 +585,25 @@ lexical_diversity_analysis <- function(x,
       msttr_requested <- TRUE
       measures <- setdiff(measures, "MSTTR")
     }
+    if ("HDD" %in% measures) {
+      hdd_requested <- TRUE
+      measures <- setdiff(measures, "HDD")
+    }
     measures_to_use <- intersect(measures, quanteda_measures)
   }
 
   is_tokens_input <- inherits(x, "tokens")
   seq_tokens <- NULL
-  if ((mtld_requested || mattr_requested || msttr_requested) && !is_tokens_input) {
+  if ((mtld_requested || mattr_requested || msttr_requested || hdd_requested) && !is_tokens_input) {
     if (!is.null(texts) && length(texts) == quanteda::ndoc(x)) {
       seq_tokens <- quanteda::tokens(texts, remove_punct = TRUE)
     } else {
-      message("MTLD/MATTR/MSTTR require sequential token order. DFM input loses token order. ",
+      message("MTLD/MATTR/MSTTR/HDD require sequential token order. DFM input loses token order. ",
               "Pass a tokens object or provide the 'texts' parameter. Skipping.")
       mtld_requested <- FALSE
       mattr_requested <- FALSE
       msttr_requested <- FALSE
+      hdd_requested <- FALSE
     }
   }
 
@@ -690,6 +709,20 @@ lexical_diversity_analysis <- function(x,
       })
     }
 
+    if (hdd_requested) {
+      tryCatch({
+        tokens_source <- if (is_tokens_input) x else seq_tokens
+
+        hdd_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
+          .calc_hdd(as.character(tokens_source[[i]]))
+        }, numeric(1))
+
+        lexdiv_results$HDD <- as.numeric(hdd_values)
+      }, error = function(e) {
+        message("HDD calculation failed: ", e$message, ". Skipping HDD.")
+      })
+    }
+
     if (!"document" %in% names(lexdiv_results)) {
       lexdiv_results$document <- quanteda::docnames(x)
     }
@@ -706,12 +739,13 @@ lexical_diversity_analysis <- function(x,
 
     # Add Average Sentence Length if texts provided
     if (!is.null(texts) && length(texts) == nrow(lexdiv_results)) {
+      # quanteda sentence tokenizer matches calculate_text_readability()
       avg_sentence_length <- vapply(texts, function(t) {
-        sents <- unlist(strsplit(t, "[.!?]+"))
+        sents <- quanteda::tokens(t, what = "sentence")[[1]]
         sents <- sents[nzchar(trimws(sents))]
-        words <- unlist(strsplit(paste(sents, collapse = " "), "\\s+"))
         if (length(sents) == 0) return(NA_real_)
-        length(words) / length(sents)
+        words <- sum(lengths(quanteda::tokens(sents, what = "word", remove_punct = TRUE)))
+        words / length(sents)
       }, numeric(1))
       lexdiv_results$`Avg Sentence Length` <- avg_sentence_length
       actual_measures <- c(actual_measures, "Avg Sentence Length")
@@ -1087,6 +1121,9 @@ plot_mwe_frequency <- function(mwe_data,
 #'
 #' @description
 #' Extracts top keywords from a document-feature matrix using TF-IDF weighting.
+#' Uses quanteda's default scheme (raw term counts, base-10 idf), which
+#' differs from tidytext's proportion-based tf; rankings favor terms in
+#' longer documents.
 #'
 #' @param dfm A quanteda dfm object
 #' @param top_n Number of top keywords to extract (default: 20)
@@ -1145,7 +1182,10 @@ extract_keywords_tfidf <- function(dfm,
 #' @param dfm A quanteda dfm object
 #' @param target Target document indices or logical vector
 #' @param top_n Number of top keywords to extract (default: 20)
-#' @param measure Keyness measure: "lr" (log-likelihood) or "chi2" (default: "lr")
+#' @param measure Keyness measure: "lr" (log-likelihood G-squared), "chi2",
+#'   "exact" (Fisher's exact odds ratio), or "pmi" (default: "lr")
+#' @param min_count Minimum total term frequency before computing keyness
+#'   (default: 0, no pruning)
 #'
 #' @return Data frame with columns: Keyword, Keyness_Score
 #'
@@ -1162,7 +1202,10 @@ extract_keywords_tfidf <- function(dfm,
 extract_keywords_keyness <- function(dfm,
                                      target,
                                      top_n = 20,
-                                     measure = "lr") {
+                                     measure = "lr",
+                                     min_count = 0) {
+
+  measure <- match.arg(measure, c("lr", "chi2", "exact", "pmi"))
 
   if (!requireNamespace("quanteda.textstats", quietly = TRUE)) {
     stop("Package 'quanteda.textstats' is required.")
@@ -1176,13 +1219,18 @@ extract_keywords_keyness <- function(dfm,
     ))
   }
 
+  # keyness statistics are unstable for very low-frequency terms
+  if (min_count > 0) {
+    dfm <- quanteda::dfm_trim(dfm, min_termfreq = min_count)
+  }
+
   keyness <- quanteda.textstats::textstat_keyness(
     dfm,
     target = target,
     measure = measure
   )
 
-  score_col <- if (measure == "chi2") "chi2" else if (measure == "exact") "p" else "G2"
+  score_col <- switch(measure, lr = "G2", chi2 = "chi2", exact = "exact", pmi = "pmi")
   keyness_top <- head(keyness[order(-abs(keyness[[score_col]])), ], min(top_n, nrow(keyness)))
 
   data.frame(
@@ -2575,9 +2623,9 @@ parse_morphology_string <- function(data, features = NULL) {
 #' Calculate Log Odds Ratio Between Categories
 #'
 #' @description
-#' Compares word frequencies between categories using a Laplace-smoothed log
-#' frequency ratio, ranked by z-score. Identifies words distinctively used in
-#' one category. For an informative-prior weighted log-odds, see
+#' Compares word usage between categories using the log-odds ratio with a
+#' uniform Dirichlet prior, ranked by z-score. Identifies words distinctively
+#' used in one category. For the informative-prior weighted log-odds, see
 #' [calculate_weighted_log_odds()].
 #'
 #' @param dfm_object A quanteda dfm object
@@ -2599,12 +2647,13 @@ parse_morphology_string <- function(data, features = NULL) {
 #'     \item category2: Second category in comparison
 #'     \item count1: Count in category 1
 #'     \item count2: Count in category 2
-#'     \item odds1: Odds in category 1
-#'     \item odds2: Odds in category 2
+#'     \item odds1: Smoothed odds in category 1, (count + 1) / (total + V - count - 1)
+#'     \item odds2: Smoothed odds in category 2
 #'     \item odds_ratio: Ratio of odds
 #'     \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
-#'     \item variance: Variance of the log ratio, 1/(count1 + 1) + 1/(count2 + 1)
-#'     \item z_score: Log ratio divided by its standard error
+#'     \item variance: Approximate variance of the log odds ratio
+#'     \item z_score: Log odds ratio divided by its standard error
+#'     \item significant: TRUE when |z| >= 1.96
 #'   }
 #'   Terms are ranked by absolute z-score.
 #'
@@ -2662,7 +2711,12 @@ calculate_log_odds_ratio <- function(dfm_object,
     counts1 <- Matrix::colSums(dfm_obj[idx1, , drop = FALSE])
     counts2 <- Matrix::colSums(dfm_obj[idx2, , drop = FALSE])
 
-    # Filter by minimum count
+    # Totals from the full vocabulary, before any filtering
+    n1 <- sum(counts1)
+    n2 <- sum(counts2)
+    vocab_size <- length(counts1)
+
+    # min_count filters which terms are reported, not the totals
     keep <- (counts1 + counts2) >= min_count
     counts1 <- counts1[keep]
     counts2 <- counts2[keep]
@@ -2671,17 +2725,15 @@ calculate_log_odds_ratio <- function(dfm_object,
       return(NULL)
     }
 
-    # Laplace smoothing (+1)
-    total1 <- sum(counts1) + length(counts1)
-    total2 <- sum(counts2) + length(counts2)
-
-    odds1 <- (counts1 + 1) / total1
-    odds2 <- (counts2 + 1) / total2
+    # smoothed odds with uniform Dirichlet prior (a_w = 1, a_0 = V)
+    odds1 <- (counts1 + 1) / (n1 + vocab_size - counts1 - 1)
+    odds2 <- (counts2 + 1) / (n2 + vocab_size - counts2 - 1)
 
     odds_ratio <- odds1 / odds2
     log_odds <- log(odds_ratio)
 
-    variance <- 1 / (counts1 + 1) + 1 / (counts2 + 1)
+    variance <- 1 / (counts1 + 1) + 1 / (n1 + vocab_size - counts1 - 1) +
+      1 / (counts2 + 1) + 1 / (n2 + vocab_size - counts2 - 1)
     z_score <- log_odds / sqrt(variance)
 
     result <- data.frame(
@@ -2696,6 +2748,7 @@ calculate_log_odds_ratio <- function(dfm_object,
       log_odds_ratio = log_odds,
       variance = as.numeric(variance),
       z_score = z_score,
+      significant = abs(z_score) >= 1.96,
       stringsAsFactors = FALSE
     )
 
@@ -2776,8 +2829,9 @@ calculate_log_odds_ratio <- function(dfm_object,
 #' @param top_n Number of top terms to return per group (default: 10)
 #' @param min_count Minimum total count for a term to be included (default: 5)
 #'
-#' @return A data frame with columns: group, feature, n, log_odds_weighted,
-#'   and log_odds (from tidylo::bind_log_odds)
+#' @return A data frame with the grouping variable, feature, n,
+#'   log_odds_weighted (from tidylo::bind_log_odds), and significant
+#'   (TRUE when |log_odds_weighted| >= 1.96)
 #'
 #' @references
 #' Monroe, B. L., Colaresi, M. P., & Quinn, K. M. (2008). Fightin' words:
@@ -2842,9 +2896,9 @@ calculate_weighted_log_odds <- function(dfm_object,
   # Aggregate by group and feature
   grouped_counts <- tidy_long %>%
     dplyr::group_by(.data[[group_var]], feature) %>%
-    dplyr::summarise(n = sum(count), .groups = "drop") %>%
-    dplyr::filter(n >= min_count)
+    dplyr::summarise(n = sum(count), .groups = "drop")
 
+  # group totals and the prior require the full vocabulary
   result <- tidylo::bind_log_odds(
     grouped_counts,
     set = !!rlang::sym(group_var),
@@ -2853,11 +2907,13 @@ calculate_weighted_log_odds <- function(dfm_object,
   )
 
   result <- result %>%
+    dplyr::filter(n >= min_count) %>%
     dplyr::group_by(.data[[group_var]]) %>%
     dplyr::slice_max(abs(.data$log_odds_weighted), n = top_n, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     dplyr::arrange(.data[[group_var]], dplyr::desc(abs(.data$log_odds_weighted)))
 
+  result$significant <- abs(result$log_odds_weighted) >= 1.96
   as.data.frame(result)
 }
 
@@ -3272,8 +3328,10 @@ plot_lexical_dispersion <- function(dispersion_data,
 #'     \item frequency: Total occurrences
 #'     \item doc_count: Number of documents containing term
 #'     \item doc_ratio: Proportion of documents containing term
-#'     \item juilland_d: Juilland's D dispersion (0-1, higher = more even)
-#'     \item rosengren_s: Rosengren's S dispersion
+#'     \item juilland_d: Juilland's D dispersion (0-1, higher = more even),
+#'       computed on within-document proportions
+#'     \item rosengren_s: Rosengren's S dispersion adjusted for document
+#'       sizes (1/n_docs to 1, higher = more even)
 #'   }
 #'
 #' @concept lexical
@@ -3285,6 +3343,8 @@ calculate_dispersion_metrics <- function(tokens_object, terms) {
   }
 
   n_docs <- length(tokens_object)
+  doc_lengths <- quanteda::ntoken(tokens_object)
+  corpus_size <- sum(doc_lengths)
 
   results <- lapply(terms, function(term) {
     term_lower <- tolower(term)
@@ -3298,19 +3358,22 @@ calculate_dispersion_metrics <- function(tokens_object, terms) {
     doc_count <- sum(doc_counts > 0)
     doc_ratio <- doc_count / n_docs
 
-    if (total_freq > 0 && n_docs > 1) {
-      cv <- stats::sd(doc_counts) / mean(doc_counts)
-      juilland_d <- 1 - (cv / sqrt(n_docs - 1))
+    # Juilland's D: population SD of within-document proportions
+    nonempty <- doc_lengths > 0
+    n_parts <- sum(nonempty)
+    if (total_freq > 0 && n_parts > 1) {
+      p <- doc_counts[nonempty] / doc_lengths[nonempty]
+      pop_sd <- sqrt(mean((p - mean(p))^2))
+      juilland_d <- 1 - (pop_sd / mean(p)) / sqrt(n_parts - 1)
       juilland_d <- max(0, min(1, juilland_d))
     } else {
       juilland_d <- NA_real_
     }
 
-    # Calculate Rosengren's S
-    if (total_freq > 0 && n_docs > 1) {
-      props <- doc_counts / total_freq
-      props <- props[props > 0]  # Only non-zero
-      rosengren_s <- exp(sum(props * log(props)) / (-log(n_docs)))
+    # size-adjusted Rosengren's S: (sum sqrt(s_i * v_i))^2 / f
+    if (total_freq > 0 && n_docs > 1 && corpus_size > 0) {
+      s <- doc_lengths / corpus_size
+      rosengren_s <- sum(sqrt(s * doc_counts))^2 / total_freq
     } else {
       rosengren_s <- NA_real_
     }

@@ -7351,46 +7351,20 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(united_tbl())) united_tbl() else mydata()
   })
 
-  observe({
-    req(colnames_cat())
-    updateSelectizeInput(session,
-                         "doc_var_co_occurrence",
-                         choices = c("None" = "None", colnames_cat()),
-                         selected = "None"
-    )
-  })
+  # re-send dropdown choices on navbar change, keeping valid selections
+  resend_choices <- function(id, choices, default) {
+    current <- isolate(input[[id]])
+    updateSelectizeInput(session, id, choices = choices,
+                         selected = if (!is.null(current) && current %in% choices) current else default)
+  }
 
   observe({
+    input$main_navbar
     req(colnames_cat())
-    updateSelectizeInput(session,
-                         "doc_var_correlation",
-                         choices = c("None" = "None", colnames_cat()),
-                         selected = "None"
-    )
-  })
-
-  observe({
-    req(colnames_cat())
-    updateSelectizeInput(session,
-                         "sentiment_group_var",
-                         choices = c("None" = "None", colnames_cat()),
-                         selected = "None"
-    )
-    updateSelectizeInput(session,
-                         "readability_group_var",
-                         choices = c("None" = "None", colnames_cat()),
-                         selected = "None"
-    )
-    updateSelectizeInput(session,
-                         "keyword_group_var",
-                         choices = c("None" = "None", colnames_cat()),
-                         selected = "None"
-    )
-    updateSelectizeInput(session,
-                         "tfidf_group_var",
-                         choices = c("None" = "None", colnames_cat()),
-                         selected = "None"
-    )
+    cats <- c("None" = "None", colnames_cat())
+    lapply(c("doc_var_co_occurrence", "doc_var_correlation", "sentiment_group_var",
+             "readability_group_var", "keyword_group_var", "tfidf_group_var"),
+           resend_choices, choices = cats, default = "None")
   })
 
   output$top_n_selector_cooccur <- renderUI({
@@ -8150,10 +8124,11 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observe({
+    input$main_navbar
     updateSelectInput(session,
                       "continuous_var_3",
                       choices = colnames_con(),
-                      selected = NULL
+                      selected = isolate(input$continuous_var_3)
     )
   })
 
@@ -8177,13 +8152,15 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observe({
+    input$main_navbar
     req(tstat_freq_over_con_var())
+    current <- isolate(input$type_terms)
     updateSelectizeInput(
       session,
       "type_terms",
       choices = tstat_freq_over_con_var(),
       options = list(create = TRUE),
-      selected = ""
+      selected = if (!is.null(current)) current else ""
     )
   })
 
@@ -8248,10 +8225,18 @@ server <- shinyServer(function(input, output, session) {
             req(input$continuous_var_3)
             req(vm)
 
+            # zero-count cells must stay in the regressions
+            con_var_levels <- unique(dfm_outcome_obj@docvars[[input$continuous_var_3]])
             con_var_term_counts <- dfm_td %>%
               tibble::as_tibble() %>%
+              filter(term %in% vm) %>%
               group_by(!!rlang::sym(input$continuous_var_3), term) %>%
-              summarise(word_frequency = sum(count), .groups = "drop")
+              summarise(word_frequency = sum(count), .groups = "drop") %>%
+              tidyr::complete(
+                !!rlang::sym(input$continuous_var_3) := con_var_levels,
+                term = vm,
+                fill = list(word_frequency = 0)
+              )
 
             significance_results <- con_var_term_counts %>%
               mutate(word = term) %>%
@@ -8351,10 +8336,10 @@ server <- shinyServer(function(input, output, session) {
                 }
               }
 
-              tidy_result <- broom::tidy(model) %>%
+              tidy_result <- TextAnalysisR:::.tidy_count_model(model) %>%
                 dplyr::mutate(
                   `rate ratio` = exp(estimate),
-                  var.diag = diag(vcov(model)),
+                  var.diag = std.error^2,
                   `std.error (rate ratio)` = ifelse(var.diag >= 0,
                                                     sqrt(`rate ratio`^2 * var.diag),
                                                     NA),
@@ -8369,7 +8354,7 @@ server <- shinyServer(function(input, output, session) {
               `rate ratio`, `std.error (rate ratio)`, statistic, p.value
             ) %>%
             rename(
-              logit = estimate,
+              `log(rate ratio)` = estimate,
               `z-statistic` = statistic
             ) %>%
             dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3)))
@@ -8465,49 +8450,19 @@ server <- shinyServer(function(input, output, session) {
   )
 
   observe({
+    input$main_navbar
     req(colnames_cat())
-    categorical_vars <- colnames_cat()
-
-    updateSelectizeInput(
-      session,
-      "sentiment_category_var",
-      choices = c("None" = "None", categorical_vars),
-      selected = "None"
-    )
-
-    updateSelectizeInput(
-      session,
-      "emotion_group_var",
-      choices = c("None" = "None", categorical_vars),
-      selected = "None"
-    )
+    cats <- c("None" = "None", colnames_cat())
+    lapply(c("sentiment_category_var", "emotion_group_var"),
+           resend_choices, choices = cats, default = "None")
   })
 
   observe({
+    input$main_navbar
     req(united_tbl())
-
     col_names <- c("None" = "", names(united_tbl()))
-
-    updateSelectizeInput(
-      session,
-      "sentiment_doc_id_var",
-      choices = col_names,
-      selected = ""
-    )
-
-    updateSelectizeInput(
-      session,
-      "readability_doc_id_var",
-      choices = col_names,
-      selected = ""
-    )
-
-    updateSelectizeInput(
-      session,
-      "lexdiv_doc_id_var",
-      choices = col_names,
-      selected = ""
-    )
+    lapply(c("sentiment_doc_id_var", "readability_doc_id_var", "lexdiv_doc_id_var"),
+           resend_choices, choices = col_names, default = "")
   })
 
   observeEvent(input$sentiment_category_var, {
@@ -9064,6 +9019,13 @@ server <- shinyServer(function(input, output, session) {
         )
       )
 
+      if (!is.null(sentiment_results$summary$token_match_rate)) {
+        coverage_data <- rbind(coverage_data, data.frame(
+          Metric = "Token Match Rate (lexicon coverage)",
+          Value = paste0(round(sentiment_results$summary$token_match_rate * 100, 1), "%")
+        ))
+      }
+
       sentiment_data <- data.frame(
         Metric = c("Sentiment Distribution (of analyzed):",
                    "  Positive Documents",
@@ -9510,15 +9472,6 @@ server <- shinyServer(function(input, output, session) {
     comparison_data = NULL
   )
 
-  observe({
-    req(colnames_cat())
-    updateSelectizeInput(
-      session,
-      "readability_group_var",
-      choices = c("None" = "None", colnames_cat()),
-      selected = "None"
-    )
-  })
 
   output$readability_metric_selector_ui <- renderUI({
     if (!readability_results$analyzed) {
@@ -9970,10 +9923,11 @@ server <- shinyServer(function(input, output, session) {
 
   # Update group variable choices
   observe({
+    input$main_navbar
     req(colnames_cat())
-    updateSelectizeInput(session, "log_odds_group_var",
-                         choices = c("Select variable" = "", colnames_cat()),
-                         selected = "")
+    resend_choices("log_odds_group_var",
+                   c("Select variable" = "", colnames_cat()),
+                   default = "")
   })
 
   # Update reference category choices based on selected group variable
@@ -11342,7 +11296,7 @@ server <- shinyServer(function(input, output, session) {
             )
 
             batch_embeddings <- tryCatch({
-              model$encode(batch_texts, show_progress_bar = FALSE)
+              model$encode(batch_texts, show_progress_bar = FALSE, normalize_embeddings = TRUE)
             }, error = function(e) {
               failed_batches <- failed_batches + 1
               showNotification(
@@ -11549,7 +11503,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       query_embedding <- tryCatch({
-        embedding <- model$encode(query, show_progress_bar = FALSE)
+        embedding <- model$encode(query, show_progress_bar = FALSE, normalize_embeddings = TRUE)
         if (!is.null(embedding)) {
           numpy <- reticulate::import("numpy")
           numpy$reshape(embedding, list(1L, -1L))
@@ -17995,7 +17949,8 @@ server <- shinyServer(function(input, output, session) {
               max.em.its = input$stm_max_em_its_search,
               emtol = 1e-04,
               cores = n_cores,
-              control = list(alpha = 1)
+              # alpha only feeds the LDA Gibbs initializer
+              control = if (identical(input$stm_init_type_search, "LDA")) list(alpha = 1) else list()
             )
           }
         }, error = function(search_error) {
@@ -18620,11 +18575,12 @@ server <- shinyServer(function(input, output, session) {
 
 
   observe({
+    input$main_navbar
     req(colnames_cat())
     updateSelectizeInput(session,
                          "stm_categorical_var_2",
                          choices = colnames_cat(),
-                         selected = NULL,
+                         selected = isolate(input$stm_categorical_var_2),
                          server = TRUE
     )
   })
@@ -18879,7 +18835,8 @@ server <- shinyServer(function(input, output, session) {
             kappa.prior = input$stm_kappa_prior_K,
             max.em.its = input$stm_max_em_its_K,
             emtol = 1e-04,
-            control = list(alpha = 50 / K_num)
+            # alpha only feeds the LDA Gibbs initializer
+            control = if (identical(init_type_to_use, "LDA")) list(alpha = 50 / K_num) else list()
           )
         }, error = function(init_error) {
           if (grepl("chol|decomposition|singular", init_error$message, ignore.case = TRUE)) {

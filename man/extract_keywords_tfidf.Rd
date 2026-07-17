@@ -18,6 +18,9 @@ Data frame with columns: Keyword, TF_IDF_Score, Frequency
 }
 \description{
 Extracts top keywords from a document-feature matrix using TF-IDF weighting.
+Uses quanteda's default scheme (raw term counts, base-10 idf), which
+differs from tidytext's proportion-based tf; rankings favor terms in
+longer documents.
 }
 \examples{
 \donttest{

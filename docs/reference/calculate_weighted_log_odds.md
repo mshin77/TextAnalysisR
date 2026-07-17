@@ -32,8 +32,9 @@ calculate_weighted_log_odds(dfm_object, group_var, top_n = 10, min_count = 5)
 
 ## Value
 
-A data frame with columns: group, feature, n, log_odds_weighted, and
-log_odds (from tidylo::bind_log_odds)
+A data frame with columns: group, feature, n, log_odds_weighted,
+log_odds (from tidylo::bind_log_odds), and significant (TRUE when
+\|log_odds_weighted\| \>= 1.96)
 
 ## References
 

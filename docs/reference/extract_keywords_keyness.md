@@ -6,7 +6,13 @@ log-likelihood ratio (G-squared).
 ## Usage
 
 ``` r
-extract_keywords_keyness(dfm, target, top_n = 20, measure = "lr")
+extract_keywords_keyness(
+  dfm,
+  target,
+  top_n = 20,
+  measure = "lr",
+  min_count = 0
+)
 ```
 
 ## Arguments
@@ -25,7 +31,13 @@ extract_keywords_keyness(dfm, target, top_n = 20, measure = "lr")
 
 - measure:
 
-  Keyness measure: "lr" (log-likelihood) or "chi2" (default: "lr")
+  Keyness measure: "lr" (log-likelihood G-squared), "chi2", "exact"
+  (Fisher's exact odds ratio), or "pmi" (default: "lr")
+
+- min_count:
+
+  Minimum total term frequency before computing keyness (default: 0, no
+  pruning)
 
 ## Value
 

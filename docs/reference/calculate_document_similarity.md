@@ -27,7 +27,7 @@ calculate_document_similarity(
 
 - document_feature_type:
 
-  Feature extraction type: "words", "ngrams", "embeddings", or "topics".
+  Feature extraction type: "words", "ngrams", or "embeddings".
 
 - semantic_ngram_range:
 
@@ -98,7 +98,7 @@ A list containing:
 #> Using word-based features...
 #> Step 2: Calculating similarity matrix...
 #> Step 3: Calculating metrics...
-#> Document similarity analysis completed in 0.57 seconds
+#> Document similarity analysis completed in 0.23 seconds
 #> Documents analyzed: 5
 #> Feature dimensions: 30
 

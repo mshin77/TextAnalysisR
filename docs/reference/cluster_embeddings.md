@@ -16,9 +16,10 @@ cluster_embeddings(
   umap_n_components = 10,
   umap_metric = "cosine",
   dbscan_eps = 0,
-  dbscan_min_samples = 5,
+  dbscan_min_samples = NULL,
   reduce_outliers = TRUE,
   outlier_strategy = "centroid",
+  outlier_threshold = 0,
   seed = 123,
   verbose = TRUE
 )
@@ -64,18 +65,27 @@ cluster_embeddings(
 
 - dbscan_min_samples:
 
-  The minimum samples for DBSCAN (default: 5).
+  The minimum samples for DBSCAN. Default NULL sets
+  `umap_n_components + 1` (dimensions-plus-one rule of thumb).
 
 - reduce_outliers:
 
   Logical, if TRUE, reassigns noise points (cluster 0) to nearest
-  cluster (default: TRUE).
+  cluster (default: TRUE). Set FALSE to keep density-based noise labels.
 
 - outlier_strategy:
 
   Strategy for outlier reduction: "centroid" (default, Euclidean
-  distance in UMAP space) or "embeddings" (cosine similarity in original
-  space). Follows BERTopic methodology.
+  nearest-centroid in UMAP space; package-specific heuristic) or
+  "embeddings" (cosine similarity to cluster mean in original embedding
+  space, matching the BERTopic "embeddings" strategy).
+
+- outlier_threshold:
+
+  Minimum similarity for reassigning a noise point (default: 0, reassign
+  all). For "embeddings" this is cosine similarity; for "centroid" it
+  applies to 1 / (1 + euclidean distance). Points below the threshold
+  keep cluster label 0.
 
 - seed:
 
@@ -88,6 +98,11 @@ cluster_embeddings(
 ## Value
 
 A list containing cluster assignments, method used, and quality metrics.
+For `method = "umap_dbscan"` with `reduce_outliers = TRUE`, the list
+also reports how noise points were reassigned: `outlier_strategy`
+("embeddings" or "centroid"), `outlier_metric` ("cosine" or
+"euclidean"), `outlier_space` ("original embedding space" or "UMAP
+space"), and `outliers_reassigned` (count).
 
 ## Examples
 

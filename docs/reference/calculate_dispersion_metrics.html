@@ -82,8 +82,10 @@ evenly distributed they are across the corpus.</p>
 <li><p>frequency: Total occurrences</p></li>
 <li><p>doc_count: Number of documents containing term</p></li>
 <li><p>doc_ratio: Proportion of documents containing term</p></li>
-<li><p>juilland_d: Juilland's D dispersion (0-1, higher = more even)</p></li>
-<li><p>rosengren_s: Rosengren's S dispersion</p></li>
+<li><p>juilland_d: Juilland's D dispersion (0-1, higher = more even),
+computed on within-document proportions</p></li>
+<li><p>rosengren_s: Rosengren's S dispersion adjusted for document
+sizes (1/n_docs to 1, higher = more even)</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

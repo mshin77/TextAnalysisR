@@ -118,8 +118,8 @@ plot_keyword_comparison(keywords, top_n = 10)
 ## Lexical Diversity
 
 [`lexical_diversity_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.md)
-reports vocabulary-richness indices. MTLD and MATTR are stable across
-text lengths; TTR and CTTR are length-sensitive.
+reports vocabulary-richness indices. MTLD, MATTR, and HDD are stable
+across text lengths; TTR and CTTR are length-sensitive.
 
 ``` r
 
@@ -129,13 +129,14 @@ plot_lexical_diversity_distribution(diversity$lexical_diversity, metric = "TTR")
 
 ![](lexical_analysis_files/figure-html/unnamed-chunk-9-1.png)
 
-| Metric | Description                 | Note                    |
-|--------|-----------------------------|-------------------------|
-| TTR    | Types / Tokens              | Length-sensitive        |
-| CTTR   | Types / sqrt(2 × Tokens)    | Partly length-corrected |
-| MATTR  | Moving-average TTR          | Stable across lengths   |
-| MTLD   | Mean length maintaining TTR | Length-independent      |
-| Maas   | Log-based index             | Lower = more diverse    |
+| Metric | Description | Note |
+|----|----|----|
+| TTR | Types / Tokens | Length-sensitive |
+| CTTR | Types / sqrt(2 × Tokens) | Partly length-corrected |
+| MATTR | Moving-average TTR | Stable across lengths |
+| MTLD | Mean length maintaining TTR | Length-independent |
+| HDD | Hypergeometric sampling probability | Length-independent, needs 42+ tokens |
+| Maas | Log-based index | Lower = more diverse |
 
 ## Readability
 
@@ -163,8 +164,8 @@ plot_readability_distribution(readability, metric = "flesch")
 ## Log Odds Ratio
 
 [`calculate_log_odds_ratio()`](https://mshin77.github.io/TextAnalysisR/reference/calculate_log_odds_ratio.md)
-compares term frequencies between categories to find distinctive
-vocabulary.
+compares word odds between categories using a Dirichlet-smoothed
+log-odds ratio to find distinctive vocabulary.
 
 ``` r
 

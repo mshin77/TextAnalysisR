@@ -11,7 +11,8 @@ generate_semantic_topic_keywords(
   texts,
   topic_assignments,
   n_keywords = 10,
-  method = "c-tfidf"
+  method = "c-tfidf",
+  diversity = 0.5
 )
 ```
 
@@ -33,6 +34,11 @@ generate_semantic_topic_keywords(
 
   The representation method: "c-tfidf" (default), "tfidf", "mmr", or
   "frequency".
+
+- diversity:
+
+  Diversity weight for "mmr" between 0 and 1 (default: 0.5). MMR selects
+  terms by (1 - diversity) \* relevance - diversity \* redundancy.
 
 ## Value
 

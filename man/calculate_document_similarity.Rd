@@ -18,7 +18,7 @@ calculate_document_similarity(
 \arguments{
 \item{texts}{A character vector of texts to compare.}
 
-\item{document_feature_type}{Feature extraction type: "words", "ngrams", "embeddings", or "topics".}
+\item{document_feature_type}{Feature extraction type: "words", "ngrams", or "embeddings".}
 
 \item{semantic_ngram_range}{Integer, n-gram range for ngram features (default: 2).}
 

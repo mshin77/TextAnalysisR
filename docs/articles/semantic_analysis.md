@@ -23,7 +23,8 @@ dfm_object <- quanteda::dfm(tokens)
 
 [`word_co_occurrence_network()`](https://mshin77.github.io/TextAnalysisR/reference/word_co_occurrence_network.md)
 builds a network of words that co-occur across documents, with community
-detection and centrality metrics.
+detection and centrality metrics. Edges weight by raw counts;
+`edge_metric = "pmi"` corrects the bias toward generic frequent words.
 
 ``` r
 
@@ -65,7 +66,7 @@ patterns.
 corr_network <- word_correlation_network(
   dfm_object,
   common_term_n = 15,
-  corr_n = 0.2,
+  corr_n = 0.3,
   community_method = "leiden"
 )
 
@@ -168,9 +169,8 @@ results <- run_rag_search(
 ## Sentiment & Emotion
 
 [`sentiment_lexicon_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/sentiment_lexicon_analysis.md)
-scores documents with the Bing, AFINN, or NRC lexicon. NRC also yields
-discrete emotions for
-[`plot_emotion_radar()`](https://mshin77.github.io/TextAnalysisR/reference/plot_emotion_radar.md).
+scores documents with the Bing, AFINN, or NRC lexicon. The Bing example
+runs below.
 
 ``` r
 
@@ -180,13 +180,16 @@ plot_sentiment_distribution(sentiment$document_sentiment)
 
 ![](semantic_analysis_files/figure-html/unnamed-chunk-7-1.png)
 
+NRC also yields discrete emotions for
+[`plot_emotion_radar()`](https://mshin77.github.io/TextAnalysisR/reference/plot_emotion_radar.md).
+NRC downloads through `textdata` behind a license-gated prompt, so the
+emotion example is shown but not run.
+
 ``` r
 
 emotion <- sentiment_lexicon_analysis(dfm_object, lexicon = "nrc")
 plot_emotion_radar(emotion$emotion_scores)
 ```
-
-![](semantic_analysis_files/figure-html/unnamed-chunk-8-1.png)
 
 [`plot_sentiment_by_category()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_by_category.md)
 compares sentiment across a metadata category after joining it to the
@@ -258,10 +261,10 @@ head(coords$reduced_data)
 ```
 
     ##        
-    ## docs          PC1        PC2
-    ##   text1 -1.718002 -2.7258645
-    ##   text2 -1.063163 -1.6155706
-    ##   text3 -1.275526 -0.5355708
-    ##   text4 -2.250666 -3.0168685
-    ##   text5 -2.300703 -2.6293223
-    ##   text6  3.205013 21.3830433
+    ## docs           PC1         PC2
+    ##   text1 -3.9896707 -2.36735259
+    ##   text2  0.8763364 -2.46112657
+    ##   text3  1.4292531 -0.70404832
+    ##   text4 -5.6720672  0.33713049
+    ##   text5 -5.5639779  0.01396902
+    ##   text6 -0.6661668  4.07350397

@@ -4,6 +4,12 @@ Performs lexicon-based sentiment analysis on a DFM object using tidytext
 lexicons. Supports AFINN, Bing, and NRC lexicons with scoring and
 emotion analysis.
 
+Tokens absent from the lexicon are ignored (not treated as neutral);
+`summary_stats$token_match_rate` reports the share of corpus tokens the
+lexicon covered. AFINN classification uses a +/- 0.5 band on the
+per-sentiment-word average (`avg_sentiment`); `n_sentiment_words` counts
+matched sentiment tokens, not document length.
+
 ## Usage
 
 ``` r

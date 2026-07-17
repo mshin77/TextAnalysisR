@@ -11,8 +11,8 @@ lexical_diversity_analysis(x, measures = "all", texts = NULL, cache_key = NULL)
 accurate MTLD calculation since it preserves token order.}
 
 \item{measures}{Character vector of measures to calculate.
-Default is "all" which includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR, and MTLD.
-Most recommended: "MTLD" or "MATTR" for length-independent measures.}
+Default is "all" which includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR, MTLD, and HDD.
+Most recommended: "MTLD", "MATTR", or "HDD" for length-independent measures.}
 
 \item{texts}{Optional character vector of original texts. Required for MTLD
 calculation when using DFM input (since DFM loses token order).}
@@ -44,6 +44,9 @@ Important notes:
 \item For MTLD accuracy, pass a tokens object (not DFM) as input
 \item If using DFM, provide the 'texts' parameter for MTLD calculation
 \item MATTR and MSTTR window sizes are automatically adjusted for short documents
+\item Raw TTR falls mechanically as documents lengthen; compare TTR only
+across documents of similar length
+\item MTLD and MATTR are most reliable at 100+ tokens per document
 \item Results are cached when cache_key is provided for repeated analysis
 }
 }

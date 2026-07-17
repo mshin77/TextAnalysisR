@@ -1,7 +1,9 @@
 # Extract Keywords Using TF-IDF
 
 Extracts top keywords from a document-feature matrix using TF-IDF
-weighting.
+weighting. Uses quanteda's default scheme (raw term counts, base-10
+idf), which differs from tidytext's proportion-based tf; rankings favor
+terms in longer documents.
 
 ## Usage
 

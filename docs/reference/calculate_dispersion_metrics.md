@@ -31,6 +31,8 @@ Data frame with columns:
 
 - doc_ratio: Proportion of documents containing term
 
-- juilland_d: Juilland's D dispersion (0-1, higher = more even)
+- juilland_d: Juilland's D dispersion (0-1, higher = more even),
+  computed on within-document proportions
 
-- rosengren_s: Rosengren's S dispersion
+- rosengren_s: Rosengren's S dispersion adjusted for document sizes
+  (1/n_docs to 1, higher = more even)

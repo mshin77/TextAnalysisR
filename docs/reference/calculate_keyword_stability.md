@@ -1,6 +1,9 @@
 # Calculate Keyword Stability
 
-Calculates stability between two sets of topic keywords.
+Calculates stability between the topic keyword sets of two independently
+fitted models. Topic numbering is arbitrary across fits, so topics are
+matched one-to-one by greedy assignment on the pairwise keyword Jaccard
+matrix before averaging matched-pair similarity.
 
 ## Usage
 
@@ -12,12 +15,12 @@ calculate_keyword_stability(keywords1, keywords2)
 
 - keywords1:
 
-  First set of keywords.
+  List of keyword vectors, one per topic, from the first model.
 
 - keywords2:
 
-  Second set of keywords.
+  List of keyword vectors, one per topic, from the second model.
 
 ## Value
 
-Stability score.
+Mean Jaccard similarity of matched topic pairs (0-1).

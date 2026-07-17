@@ -48,9 +48,9 @@ A list containing the reduced dimensions, method used, and additional metadata.
 \description{
 This function performs dimensionality reduction using various methods
 including PCA, t-SNE, and UMAP.
-For efficiency and consistency, PCA preprocessing is always performed first,
-and t-SNE/UMAP use the PCA results as input.
-This follows best practices for high-dimensional data analysis.
+UMAP runs directly on inputs with 1000 or fewer features (e.g. dense
+embeddings); PCA pre-reduction applies to wider inputs and to the PCA and
+t-SNE methods.
 }
 \examples{
 if (interactive()) {

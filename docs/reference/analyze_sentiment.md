@@ -1,7 +1,11 @@
 # Analyze Text Sentiment
 
 Performs sentiment analysis on text data using the syuzhet package.
-Returns sentiment scores and classifications.
+Classification uses the per-token average score with a +/- 0.05 neutral
+band, so document length does not drive polarity. Lexicon methods score
+words in isolation; negation, irony, and idioms are not handled. For
+negation-sensitive text, see
+[`analyze_sentiment_llm()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.md).
 
 ## Usage
 
@@ -18,7 +22,8 @@ analyze_sentiment(texts, method = "syuzhet", doc_ids = NULL)
 - method:
 
   Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc"
-  (default: "syuzhet")
+  (default: "syuzhet"). The "syuzhet" method scores each matched
+  dictionary word once per document regardless of repetition.
 
 - doc_ids:
 
@@ -38,7 +43,15 @@ A data frame with columns:
 
 - sentiment_score:
 
-  Numeric sentiment score
+  Raw summed sentiment score (length-dependent)
+
+- n_tokens:
+
+  Number of whitespace-delimited tokens
+
+- avg_sentiment:
+
+  sentiment_score / n_tokens
 
 - sentiment:
 
@@ -73,16 +86,16 @@ print(sentiment_results)
 #> 8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      The purpose of the present study was to discover whether or not there was a significant difference in the math achievement of two groups of ninth grade learning disabled students, one of which was given microcomputer-assisted instruction in math, while controlling for the variables of pretest math achievement level, Performance IQ, Full Scale IQ, sex, and race. The study involved 55 students. Subjects in the Experimental and Control groups were mainstreamed into the regular Fundamental Math I class, and all subjects attended one special education resource class for tutorial assistance. Subjects in the Experimental group received 20 minutes of microcomputer-assisted instruction in math once a week. Subjects in the Control group received no microcomputer-assisted instruction. Both groups received treatment for 15 weeks. The math computation subtest of the California Achievement Test was administered as a pretest prior to the commencement of the study in order to control for initial differences in math achievement level and as a posttest at the completion of the treatment program. Analysis of the data revealed the following conclusions: (1) Students receiving computer-assisted instruction in math exhibited significant gains in achievement when compared to students receiving only traditional math instruction in the regular classroom. Significance at the .05 and .01 level was obtained. (2) The independent variables of group membership, pretest math achievement level, Performance IQ, Full Scale IQ, sex, and race were found to be significant predictors of posttest math achievement when testing at the .05 level. (3) Upon separate analysis, only the predictor variables of pretest math achievement level and Performance IQ were found to be independently related.
 #> 9                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  The effectiveness of two drill and practice methods, computer-assisted instruction and workbook, was compared using six learning disabled and six normal learning students. Both instructional methods provided highly structured drill and practice of multiplication facts, but differed on several important dimensions: immediacy of feedback, individually-tailored practice of problems, and mode of presentation. A combination group/single-subject methodological approach was employed to determine any idiosyncratic or group performance differences between drill and practice methods or any group differences between learning disabled and normal students. While overall, few differences were found between the instructional methods, they did differ with respect to when learning occurred. Also, individual data suggest that for some of the students, performance varied according to the type of drill and practice employed. The performance of learning disabled and normal subjects was surprisingly similar across measures.
 #> 10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   The article analyzes computer software for learning disabled students in the areas of language arts, math, social studies, science, and miscellaneous skills (such as reasoning and problem solving). Software is evaluated in terms of general aspects (including reading and interest level methodology, curricular considerations, and student-computer interaction.
-#>    sentiment_score sentiment
-#> 1             3.35  positive
-#> 2             1.40  positive
-#> 3             1.80  positive
-#> 4             1.60  positive
-#> 5             4.40  positive
-#> 6             8.05  positive
-#> 7             3.30  positive
-#> 8             9.90  positive
-#> 9             3.60  positive
-#> 10            2.90  positive
+#>    sentiment_score n_tokens avg_sentiment sentiment
+#> 1             3.35       82    0.04085366   neutral
+#> 2             1.40       24    0.05833333  positive
+#> 3             1.80       32    0.05625000  positive
+#> 4             1.60       43    0.03720930   neutral
+#> 5             4.40       99    0.04444444   neutral
+#> 6             8.05      347    0.02319885   neutral
+#> 7             3.30       51    0.06470588  positive
+#> 8             9.90      264    0.03750000   neutral
+#> 9             3.60      135    0.02666667   neutral
+#> 10            2.90       47    0.06170213  positive
 # }
 ```

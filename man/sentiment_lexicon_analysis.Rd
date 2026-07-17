@@ -39,6 +39,13 @@ A list containing:
 \description{
 Performs lexicon-based sentiment analysis on a DFM object using tidytext lexicons.
 Supports AFINN, Bing, and NRC lexicons with scoring and emotion analysis.
+
+Tokens absent from the lexicon are ignored (not treated as neutral);
+\code{summary_stats$token_match_rate} reports the share of corpus tokens
+the lexicon covered. AFINN classification uses a +/- 0.5 band on the
+per-sentiment-word average (\code{avg_sentiment}); its
+\code{n_sentiment_words} column counts matched sentiment tokens, not
+document length.
 }
 \examples{
 \donttest{

@@ -122,12 +122,12 @@ fit_embedding_model(
 - tsne_perplexity:
 
   Perplexity parameter for t-SNE (default: 30). Only used when method
-  includes "tsne".
+  includes "tsne"; t-SNE output is 2-dimensional.
 
 - pca_dims:
 
-  Number of PCA components for dimensionality reduction (default: 50).
-  Only used when method includes "pca".
+  Number of PCA components kept for clustering (default: 50). Only used
+  when method includes "pca".
 
 - dbscan_eps:
 
@@ -141,11 +141,16 @@ fit_embedding_model(
 - representation_method:
 
   The method for topic representation: "c-tfidf", "tfidf", "mmr",
-  "frequency" (default: "c-tfidf").
+  "frequency" (default: "c-tfidf"). Applies only to the R fallback
+  backend and the "embedding_clustering", "semantic_lda", and
+  "hierarchical_semantic" methods; the Python BERTopic backend
+  ("umap_hdbscan") uses BERTopic's native c-TF-IDF representation.
 
 - diversity:
 
-  Topic diversity parameter between 0 and 1 (default: 0.5).
+  Diversity weight between 0 and 1 for the "mmr" representation
+  (default: 0.5). Higher values penalize redundant terms more strongly.
+  Applies to the R backend; ignored by the Python BERTopic backend.
 
 - reduce_outliers:
 

@@ -22,9 +22,9 @@ lexical_diversity_analysis(x, measures = "all", texts = NULL, cache_key = NULL)
 - measures:
 
   Character vector of measures to calculate. Default is "all" which
-  includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR, and
-  MTLD. Most recommended: "MTLD" or "MATTR" for length-independent
-  measures.
+  includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR,
+  MTLD, and HDD. Most recommended: "MTLD", "MATTR", or "HDD" for
+  length-independent measures.
 
 - texts:
 
@@ -62,6 +62,11 @@ Important notes:
 
 - MATTR and MSTTR window sizes are automatically adjusted for short
   documents
+
+- Raw TTR falls mechanically as documents lengthen; compare TTR only
+  across documents of similar length
+
+- MTLD and MATTR are most reliable at 100+ tokens per document
 
 - Results are cached when cache_key is provided for repeated analysis
 
@@ -115,22 +120,22 @@ print(lex_div)
 #> 3   27.173913 0.016129032 0.08291562 0.2175393 3.771555  8.684327  40.96000
 #> 4  126.750000 0.004429679 0.04406190 0.1260642 7.028498 16.183714 172.57333
 #> 5   16.747423 0.015666873 0.08980964 0.2453621 3.694732  8.507436  57.53291
-#> 6   10.842130 0.016394848 0.11246497 0.2351436 4.268454  9.828479  65.30157
+#> 6   10.842130 0.016394848 0.11246497 0.2351436 4.268454  9.828479  71.37616
 #> 7  101.250000 0.005490196 0.05261336 0.1365375 6.604754 15.208008 121.38000
 #> 8    9.083273 0.019113787 0.11845602 0.2483916 3.908323  8.999247  64.44045
 #> 9   19.277108 0.015032680 0.09886904 0.2250022 4.209816  9.693460  73.67553
 #> 10  59.259259 0.009250694 0.07301004 0.1582722 5.594022 12.880713 123.70400
-#>        MATTR     MSTTR Avg Sentence Length
-#> 1  0.9319444 0.9166667            27.33333
-#> 2  0.9166667 0.9166667            24.00000
-#> 3  0.7962963 0.7500000            16.00000
-#> 4  0.9520833 0.9583333            21.50000
-#> 5  0.9144737 0.8854167            24.75000
-#> 6  0.8797582 0.8541667            21.68750
-#> 7  0.9553571 0.9583333            17.00000
-#> 8  0.8915975 0.8977273            18.85714
-#> 9  0.8727876 0.8750000            22.50000
-#> 10 0.9392361 1.0000000            23.50000
+#>        MATTR     MSTTR       HDD Avg Sentence Length
+#> 1  0.9319444 0.9166667 0.8622512            27.66667
+#> 2  0.9166667 0.9166667        NA            24.00000
+#> 3  0.7962963 0.7500000        NA            16.00000
+#> 4  0.9520833 0.9583333 0.9318937            21.50000
+#> 5  0.9144737 0.8854167 0.7757072            24.75000
+#> 6  0.8797582 0.8541667 0.8173608            21.68750
+#> 7  0.9553571 0.9583333 0.9005762            17.00000
+#> 8  0.8915975 0.8977273 0.7917416            24.00000
+#> 9  0.8727876 0.8750000 0.7919821            22.66667
+#> 10 0.9392361 1.0000000 0.9007746            23.50000
 #> 
 #> $summary_stats
 #> $summary_stats$n_documents
@@ -142,7 +147,7 @@ print(lex_div)
 #>  [7] "K"                   "I"                   "D"                  
 #> [10] "Vm"                  "Maas"                "lgV0"               
 #> [13] "lgeV0"               "MTLD"                "MATTR"              
-#> [16] "MSTTR"               "Avg Sentence Length"
+#> [16] "MSTTR"               "HDD"                 "Avg Sentence Length"
 #> 
 #> $summary_stats$TTR_mean
 #> [1] 0.7166172
@@ -262,13 +267,13 @@ print(lex_div)
 #> [1] 2.817271
 #> 
 #> $summary_stats$MTLD_mean
-#> [1] 90.737
+#> [1] 91.34446
 #> 
 #> $summary_stats$MTLD_median
 #> [1] 77.15776
 #> 
 #> $summary_stats$MTLD_sd
-#> [1] 39.86723
+#> [1] 39.48101
 #> 
 #> $summary_stats$MATTR_mean
 #> [1] 0.9050201
@@ -288,14 +293,23 @@ print(lex_div)
 #> $summary_stats$MSTTR_sd
 #> [1] 0.06895207
 #> 
+#> $summary_stats$HDD_mean
+#> [1] 0.8465359
+#> 
+#> $summary_stats$HDD_median
+#> [1] 0.839806
+#> 
+#> $summary_stats$HDD_sd
+#> [1] 0.06004944
+#> 
 #> $summary_stats$`Avg Sentence Length_mean`
-#> [1] 21.7128
+#> [1] 22.27708
 #> 
 #> $summary_stats$`Avg Sentence Length_median`
-#> [1] 22.09375
+#> [1] 23.08333
 #> 
 #> $summary_stats$`Avg Sentence Length_sd`
-#> [1] 3.541928
+#> [1] 3.511061
 #> 
 #> 
 # }

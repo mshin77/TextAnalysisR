@@ -7,6 +7,15 @@
 \format{
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 490 rows and 6 columns.
 }
+\source{
+Bibliographic records compiled and coded by the author for
+Shin, M., Ok, M. W., Choo, S., Hossain, G., Bryant, D. P., & Kang, E.
+(2023). A content analysis of research on technology use for teaching
+mathematics to students with disabilities: Word networks and topic
+modeling. \emph{International Journal of STEM Education}, 10, Article 23.
+\doi{10.1186/s40594-023-00414-x}. Shared as open data at
+\url{https://github.com/mshin77/math-tech-sped}.
+}
 \usage{
 SpecialEduTech
 }

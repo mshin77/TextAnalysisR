@@ -22,6 +22,9 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
   if (is.null(coords) || is.null(clusters)) return(NA_real_)
   if (length(unique(clusters)) < 2 || nrow(coords) < 2) return(NA_real_)
   if (!requireNamespace("cluster", quietly = TRUE)) return(NA_real_)
+  # L2-normalize so euclidean dist matches the cosine space clustering used
+  norms <- pmax(sqrt(rowSums(coords^2)), 1e-12)
+  coords <- coords / norms
   tryCatch(
     mean(cluster::silhouette(as.integer(as.factor(clusters)), stats::dist(coords))[, 3]),
     error = function(e) NA_real_
@@ -31,7 +34,9 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
 
 #' @title Find Optimal Number of Topics
 #' @description Searches for the optimal number of topics (K) using stm::searchK.
-#'   Produces diagnostic plots to help select the best K value.
+#'   Produces diagnostic plots to help select the best K value. The default
+#'   spectral initialization is deterministic; with LDA or random
+#'   initialization, fit several seeds per K before selecting a model.
 #' @param dfm_object A quanteda dfm object to be used for topic modeling.
 #' @param topic_range A vector of K values to test (e.g., 2:10).
 #' @param max.em.its Maximum number of EM iterations (default: 75).
@@ -717,12 +722,18 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #' @param umap_min_dist The minimum distance for UMAP (default: 0.0). Use 0.0 for tight, well-separated clusters. Use 0.1+ for visualization purposes. Range: 0.0-0.99.
 #' @param umap_n_components The number of UMAP components (default: 5).
 #' @param umap_metric Distance metric for UMAP: "cosine" (recommended for text) or "euclidean" (default: "cosine").
-#' @param tsne_perplexity Perplexity parameter for t-SNE (default: 30). Only used when method includes "tsne".
-#' @param pca_dims Number of PCA components for dimensionality reduction (default: 50). Only used when method includes "pca".
+#' @param tsne_perplexity Perplexity parameter for t-SNE (default: 30). Only used when method includes "tsne"; t-SNE output is 2-dimensional.
+#' @param pca_dims Number of PCA components kept for clustering (default: 50). Only used when method includes "pca".
 #' @param dbscan_eps Epsilon parameter for DBSCAN (default: 0.5). Neighborhood size for density-based clustering.
 #' @param dbscan_minpts Minimum points for DBSCAN core points (default: 5).
 #' @param representation_method The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").
-#' @param diversity Topic diversity parameter between 0 and 1 (default: 0.5).
+#'   Applies only to the R fallback backend and the "embedding_clustering",
+#'   "semantic_lda", and "hierarchical_semantic" methods; the Python BERTopic
+#'   backend ("umap_hdbscan") uses BERTopic's native c-TF-IDF representation.
+#' @param diversity Diversity weight between 0 and 1 for the "mmr"
+#'   representation (default: 0.5). Higher values penalize redundant terms
+#'   more strongly. Applies to the R backend; ignored by the Python BERTopic
+#'   backend.
 #' @param reduce_outliers Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).
 #' @param outlier_strategy Strategy for outlier reduction using BERTopic:
 #'   "probabilities" (default, uses topic probabilities), "c-tf-idf" (uses
@@ -824,6 +835,7 @@ fit_embedding_model <- function(texts,
       dbscan_minpts = dbscan_minpts,
       min_topic_size = min_topic_size,
       representation_method = representation_method,
+      diversity = diversity,
       reduce_outliers = reduce_outliers,
       seed = seed,
       verbose = verbose,
@@ -885,7 +897,7 @@ fit_embedding_model <- function(texts,
       for (i in seq(1, n_docs, by = batch_size)) {
         end_idx <- min(i + batch_size - 1, n_docs)
         batch_texts <- valid_texts[i:end_idx]
-        batch_embeddings <- model$encode(batch_texts, show_progress_bar = FALSE)
+        batch_embeddings <- model$encode(batch_texts, show_progress_bar = FALSE, normalize_embeddings = TRUE)
         embeddings_list[[length(embeddings_list) + 1]] <- batch_embeddings
       }
 
@@ -1038,7 +1050,8 @@ fit_embedding_model <- function(texts,
           texts = valid_texts,
           topic_assignments = topic_assignments,
           n_keywords = 10,
-          method = representation_method
+          method = representation_method,
+          diversity = diversity
         )
 
         list(
@@ -1053,7 +1066,7 @@ fit_embedding_model <- function(texts,
       "semantic_lda" = {
         if (verbose) message("Step 2: Performing semantic LDA...")
 
-        pca_result <- stats::prcomp(embeddings, center = TRUE, scale. = TRUE, rank. = min(50, ncol(embeddings)))
+        pca_result <- stats::prcomp(embeddings, center = TRUE, scale. = FALSE, rank. = min(50, ncol(embeddings)))
         reduced_embeddings <- pca_result$x
 
         kmeans_result <- stats::kmeans(reduced_embeddings, centers = n_topics, nstart = 25)
@@ -1063,7 +1076,8 @@ fit_embedding_model <- function(texts,
           texts = valid_texts,
           topic_assignments = topic_assignments,
           n_keywords = 10,
-          method = representation_method
+          method = representation_method,
+          diversity = diversity
         )
 
         list(
@@ -1088,7 +1102,8 @@ fit_embedding_model <- function(texts,
           texts = valid_texts,
           topic_assignments = topic_assignments,
           n_keywords = 10,
-          method = representation_method
+          method = representation_method,
+          diversity = diversity
         )
 
         list(
@@ -1148,6 +1163,7 @@ fit_embedding_model <- function(texts,
                                    dbscan_minpts = 5,
                                    min_topic_size = 10,
                                    representation_method = "c-tfidf",
+                                   diversity = 0.5,
                                    reduce_outliers = TRUE,
                                    seed = 123,
                                    verbose = TRUE,
@@ -1207,7 +1223,7 @@ fit_embedding_model <- function(texts,
       for (i in seq(1, n_docs, by = batch_size)) {
         end_idx <- min(i + batch_size - 1, n_docs)
         batch_texts <- valid_texts[i:end_idx]
-        batch_embeddings <- model$encode(batch_texts, show_progress_bar = FALSE)
+        batch_embeddings <- model$encode(batch_texts, show_progress_bar = FALSE, normalize_embeddings = TRUE)
         embeddings_list[[length(embeddings_list) + 1]] <- batch_embeddings
       }
 
@@ -1243,9 +1259,9 @@ fit_embedding_model <- function(texts,
         tsne_result$Y
       },
       "pca" = {
-        pca_result <- stats::prcomp(embeddings, center = TRUE, scale. = TRUE,
+        pca_result <- stats::prcomp(embeddings, center = TRUE, scale. = FALSE,
                                     rank. = min(pca_dims, ncol(embeddings)))
-        pca_result$x[, seq_len(min(2, ncol(pca_result$x)))]
+        pca_result$x[, seq_len(min(pca_dims, ncol(pca_result$x))), drop = FALSE]
       },
       {
         if (!requireNamespace("umap", quietly = TRUE)) {
@@ -1349,7 +1365,8 @@ fit_embedding_model <- function(texts,
       texts = valid_texts,
       topic_assignments = clusters,
       n_keywords = 10,
-      method = representation_method
+      method = representation_method,
+      diversity = diversity
     )
 
     if (verbose) message("Step 5: Calculating quality metrics...")
@@ -1500,7 +1517,7 @@ find_topic_matches <- function(topic_model,
     }
     sentence_transformers <- reticulate::import("sentence_transformers")
     model <- sentence_transformers$SentenceTransformer(embedding_model)
-    query_embedding <- model$encode(query, show_progress_bar = FALSE)
+    query_embedding <- model$encode(query, show_progress_bar = FALSE, normalize_embeddings = TRUE)
 
     if ("beta" %in% names(topic_model) || "theta" %in% names(topic_model)) {
       message("Using STM model...")
@@ -1520,7 +1537,7 @@ find_topic_matches <- function(topic_model,
           dplyr::pull(term)
 
         topic_text <- paste(topic_terms, collapse = " ")
-        topic_embedding <- model$encode(topic_text, show_progress_bar = FALSE)
+        topic_embedding <- model$encode(topic_text, show_progress_bar = FALSE, normalize_embeddings = TRUE)
         topic_representations[[as.character(topic)]] <- topic_embedding
       }
 
@@ -1641,7 +1658,8 @@ calculate_npmi <- function(top_terms_list, dfm, top_k = 10, epsilon = 1e-12) {
       p_j <- doc_freq[j] / n_docs
       co <- sum(sub_dtm[, i] * sub_dtm[, j])
       p_ij <- co / n_docs
-      if (p_ij < epsilon) return(0)
+      # NPMI lower bound: words that never co-occur score -1
+      if (p_ij < epsilon) return(-1)
       pmi <- log(p_ij / (p_i * p_j + epsilon))
       pmi / (-log(p_ij + epsilon))
     }, numeric(1))
@@ -1869,6 +1887,7 @@ auto_tune_embedding_topics <- function(
 #'
 #' @param texts Character vector of documents to analyze.
 #' @param n_runs Number of model runs with different seeds (default: 5).
+#'   More runs give a steadier stability estimate.
 #' @param embedding_model Embedding model name (default: "all-MiniLM-L6-v2").
 #' @param select_best Logical, if TRUE, returns the best model by quality (default: TRUE).
 #' @param base_seed Base random seed; each run uses base_seed + (run - 1).
@@ -1975,6 +1994,15 @@ assess_embedding_stability <- function(
 
   if (verbose) message("  Computing stability metrics...")
 
+  # degenerate single-cluster runs distort mean ARI
+  degenerate <- vapply(models, function(m) {
+    length(unique(m$topic_assignments[m$topic_assignments >= 0])) <= 1
+  }, logical(1))
+  if (any(degenerate) && sum(!degenerate) >= 2) {
+    if (verbose) message("  Excluding ", sum(degenerate), " degenerate run(s)")
+    models <- models[!degenerate]
+  }
+
   # Calculate pairwise Adjusted Rand Index
   n_successful <- length(models)
   ari_values <- c()
@@ -2033,6 +2061,7 @@ assess_embedding_stability <- function(
   best_model <- if (select_best) models[[best_idx]] else NULL
 
   # Determine stability status and recommendation
+  # 0.8 / 0.6 / 0.4 tiers are package heuristics, not published cutoffs
   is_stable <- !is.na(stability_metrics$mean_ari) && stability_metrics$mean_ari >= 0.6
 
   recommendation <- if (is.na(stability_metrics$mean_ari)) {
@@ -2077,6 +2106,8 @@ assess_embedding_stability <- function(
 #' @param topic_assignments A vector of topic assignments.
 #' @param n_keywords The number of keywords to extract per topic (default: 10).
 #' @param method The representation method: "c-tfidf" (default), "tfidf", "mmr", or "frequency".
+#' @param diversity Diversity weight for "mmr" between 0 and 1 (default: 0.5).
+#'   MMR selects terms by (1 - diversity) * relevance - diversity * redundancy.
 #'
 #' @return A list of keywords for each topic.
 #'
@@ -2084,44 +2115,81 @@ assess_embedding_stability <- function(
 generate_semantic_topic_keywords <- function(texts,
                                             topic_assignments,
                                             n_keywords = 10,
-                                            method = "c-tfidf") {
+                                            method = "c-tfidf",
+                                            diversity = 0.5) {
 
   tryCatch({
     unique_topics <- sort(unique(topic_assignments[topic_assignments >= 0]))
     topic_keywords <- list()
 
-    if (method == "c-tfidf") {
-      topic_docs <- lapply(unique_topics, function(topic) {
+    if (method %in% c("c-tfidf", "mmr")) {
+      topic_docs <- vapply(unique_topics, function(topic) {
         paste(texts[topic_assignments == topic], collapse = " ")
-      })
+      }, character(1))
 
-      corpus <- quanteda::corpus(unlist(topic_docs))
-      tokens <- quanteda::tokens(corpus,
-                                 remove_punct = TRUE,
-                                 remove_numbers = TRUE,
-                                 remove_symbols = TRUE)
-      tokens <- quanteda::tokens_tolower(tokens)
-      tokens <- quanteda::tokens_remove(tokens, quanteda::stopwords("english"))
+      class_tokens <- quanteda::tokens(quanteda::corpus(topic_docs),
+                                       remove_punct = TRUE,
+                                       remove_numbers = TRUE,
+                                       remove_symbols = TRUE)
+      class_tokens <- quanteda::tokens_tolower(class_tokens)
+      class_tokens <- quanteda::tokens_remove(class_tokens, quanteda::stopwords("english"))
 
-      dfm <- quanteda::dfm(tokens)
+      # c-TF-IDF: W_tc = tf_tc * log(1 + A / tf_t), A = mean words per class
+      tf_mat <- as.matrix(quanteda::dfm(class_tokens))
+      avg_class_size <- mean(rowSums(tf_mat))
+      term_totals <- colSums(tf_mat)
+      ctfidf_mat <- sweep(tf_mat, 2, log(1 + avg_class_size / term_totals), `*`)
 
-      tf_matrix <- quanteda::dfm_weight(dfm, scheme = "prop")
+      if (method == "c-tfidf") {
+        for (i in seq_along(unique_topics)) {
+          scores <- ctfidf_mat[i, ]
+          scores <- scores[is.finite(scores)]
+          top_idx <- order(scores, decreasing = TRUE)[seq_len(min(n_keywords, length(scores)))]
+          topic_keywords[[as.character(unique_topics[i])]] <- names(scores)[top_idx]
+        }
+      } else {
+        doc_tokens <- quanteda::tokens(quanteda::corpus(texts),
+                                       remove_punct = TRUE,
+                                       remove_numbers = TRUE,
+                                       remove_symbols = TRUE)
+        doc_tokens <- quanteda::tokens_tolower(doc_tokens)
+        doc_tokens <- quanteda::tokens_remove(doc_tokens, quanteda::stopwords("english"))
+        doc_dfm <- quanteda::dfm(doc_tokens)
 
-      n_topics <- length(unique_topics)
-      doc_freq <- quanteda::docfreq(dfm)
-      idf <- log(n_topics / pmax(doc_freq, 1))  # Avoid log(0)
+        lambda <- 1 - diversity
+        for (i in seq_along(unique_topics)) {
+          topic <- unique_topics[i]
+          relevance <- ctfidf_mat[i, ]
+          relevance <- relevance[relevance > 0 & is.finite(relevance)]
 
-      # Vectorized c-TF-IDF computation
-      tf_mat <- as.matrix(tf_matrix)
-      ctfidf_mat <- sweep(tf_mat, 2, idf, `*`)
+          # candidate pool of 3x keywords bounds the pairwise similarity cost
+          n_candidates <- min(3 * n_keywords, length(relevance))
+          candidates <- names(sort(relevance, decreasing = TRUE))[seq_len(n_candidates)]
+          candidates <- intersect(candidates, colnames(doc_dfm))
 
-      # Extract top keywords for each topic in one pass
-      for (i in seq_along(unique_topics)) {
-        topic <- unique_topics[i]
-        scores <- ctfidf_mat[i, ]
-        scores <- scores[!is.na(scores) & is.finite(scores)]
-        top_idx <- order(scores, decreasing = TRUE)[seq_len(min(n_keywords, length(scores)))]
-        topic_keywords[[as.character(topic)]] <- names(scores)[top_idx]
+          if (length(candidates) == 0) {
+            topic_keywords[[as.character(topic)]] <- character(0)
+            next
+          }
+
+          # redundancy = cosine between term occurrence vectors over topic docs
+          occurrence <- as.matrix(doc_dfm[which(topic_assignments == topic), candidates, drop = FALSE])
+          unit_cols <- sweep(occurrence, 2, pmax(sqrt(colSums(occurrence^2)), 1e-12), `/`)
+          term_sim <- crossprod(unit_cols)
+
+          rel <- relevance[candidates] / max(relevance[candidates])
+          selected <- candidates[which.max(rel)]
+          remaining <- setdiff(candidates, selected)
+
+          while (length(selected) < min(n_keywords, length(candidates)) && length(remaining) > 0) {
+            max_sim <- apply(term_sim[remaining, selected, drop = FALSE], 1, max)
+            mmr_score <- lambda * rel[remaining] - (1 - lambda) * max_sim
+            pick <- remaining[which.max(mmr_score)]
+            selected <- c(selected, pick)
+            remaining <- setdiff(remaining, pick)
+          }
+          topic_keywords[[as.character(topic)]] <- selected
+        }
       }
 
     } else if (method == "tfidf") {
@@ -2149,51 +2217,6 @@ generate_semantic_topic_keywords <- function(texts,
 
         top_terms <- names(head(mean_tfidf, n_keywords))
         topic_keywords[[as.character(topic)]] <- top_terms
-      }
-
-    } else if (method == "mmr") {
-      for (topic in unique_topics) {
-        topic_texts <- texts[topic_assignments == topic]
-
-        if (length(topic_texts) < 1) {
-          topic_keywords[[as.character(topic)]] <- character(0)
-          next
-        }
-
-        corpus <- quanteda::corpus(topic_texts)
-        tokens <- quanteda::tokens(corpus,
-                                   remove_punct = TRUE,
-                                   remove_numbers = TRUE)
-        tokens <- quanteda::tokens_tolower(tokens)
-        tokens <- quanteda::tokens_remove(tokens, quanteda::stopwords("english"))
-
-        dfm <- quanteda::dfm(tokens)
-
-        term_freq <- colSums(as.matrix(dfm))
-        term_freq <- sort(term_freq, decreasing = TRUE)
-
-        selected_terms <- character(0)
-        candidates <- names(term_freq)
-
-        if (length(candidates) > 0) {
-          selected_terms <- c(selected_terms, candidates[1])
-          candidates <- candidates[-1]
-        }
-
-        while (length(selected_terms) < n_keywords && length(candidates) > 0) {
-          dissimilar <- !startsWith(candidates, substr(selected_terms[length(selected_terms)], 1, 3))
-
-          if (any(dissimilar)) {
-            next_term <- candidates[dissimilar][1]
-          } else {
-            next_term <- candidates[1]
-          }
-
-          selected_terms <- c(selected_terms, next_term)
-          candidates <- setdiff(candidates, next_term)
-        }
-
-        topic_keywords[[as.character(topic)]] <- selected_terms
       }
 
     } else {
@@ -2490,11 +2513,15 @@ calculate_coherence <- function(embeddings, topic_assignments) {
 #' @title Calculate Topic Stability
 #'
 #' @description
-#' Calculates stability of topics across time periods.
+#' Calculates stability of topics across consecutive time periods. Each
+#' period is fitted independently, so topics are matched one-to-one on
+#' keyword Jaccard similarity before scoring
+#' (see [calculate_keyword_stability()]).
 #'
 #' @param temporal_results Results from temporal analysis.
 #'
-#' @return Stability metrics.
+#' @return Stability metrics: matched-pair stability per consecutive-period
+#'   transition and their mean.
 #'
 #' @concept topic-modeling
 #' @export
@@ -2523,24 +2550,37 @@ calculate_topic_stability <- function(temporal_results) {
 #' @title Calculate Keyword Stability
 #'
 #' @description
-#' Calculates stability between two sets of topic keywords.
+#' Calculates stability between the topic keyword sets of two independently
+#' fitted models. Topic numbering is arbitrary across fits, so topics are
+#' matched one-to-one by greedy assignment on the pairwise keyword Jaccard
+#' matrix before averaging matched-pair similarity.
 #'
-#' @param keywords1 First set of keywords.
-#' @param keywords2 Second set of keywords.
+#' @param keywords1 List of keyword vectors, one per topic, from the first model.
+#' @param keywords2 List of keyword vectors, one per topic, from the second model.
 #'
-#' @return Stability score.
+#' @return Mean Jaccard similarity of matched topic pairs (0-1).
 #'
 #' @concept topic-modeling
 #' @export
 calculate_keyword_stability <- function(keywords1, keywords2) {
 
-  all_keywords1 <- unlist(keywords1)
-  all_keywords2 <- unlist(keywords2)
+  if (length(keywords1) == 0 || length(keywords2) == 0) {
+    return(0)
+  }
 
-  intersection <- length(intersect(all_keywords1, all_keywords2))
-  union <- length(union(all_keywords1, all_keywords2))
+  jaccard <- calculate_topic_correspondence(keywords1, keywords2)$correspondence_matrix
 
-  return(if (union > 0) intersection / union else 0)
+  # greedy one-to-one matching: repeatedly pair the most similar topics
+  n_matches <- min(nrow(jaccard), ncol(jaccard))
+  matched <- numeric(n_matches)
+  for (k in seq_len(n_matches)) {
+    best <- arrayInd(which.max(jaccard), dim(jaccard))
+    matched[k] <- jaccard[best[1], best[2]]
+    jaccard[best[1], ] <- -Inf
+    jaccard[, best[2]] <- -Inf
+  }
+
+  mean(matched)
 }
 
 #' @title Calculate Topic-Cluster Correspondence
@@ -2722,153 +2762,6 @@ identify_topic_trends <- function(temporal_results, ...) {
   )
 }
 
-#' @title Fit Topic Prevalence Model
-#'
-#' @description
-#' Fits a count regression model to topic prevalence data, auto-selecting between
-#' Poisson, Negative Binomial, and Zero-Inflated Negative Binomial based on
-#' dispersion ratio and zero-inflation diagnostics.
-#'
-#' @param topic_proportions Numeric vector of topic proportions (0-1) for one topic.
-#' @param metadata Data frame of document-level covariates.
-#' @param formula Model formula (character or formula object). Response variable is
-#'   created internally as \code{topic_count}.
-#' @param model_type Model selection strategy: \code{"auto"} (default), \code{"poisson"},
-#'   \code{"negbin"}, or \code{"zeroinfl"}.
-#' @param zero_inflation_threshold Proportion of zeros above which a zero-inflated
-#'   model is attempted (default: 0.5).
-#' @param count_multiplier Multiplier to convert proportions to pseudo-counts
-#'   (default: 1000).
-#' @param max_iterations Maximum iterations for model fitting (default: 200).
-#'
-#' @return List containing:
-#'   \itemize{
-#'     \item \code{model}: Fitted model object
-#'     \item \code{summary}: Tidy summary with odds ratios
-#'     \item \code{model_type}: Selected model type
-#'     \item \code{diagnostics}: Zero proportion, dispersion ratio, mean/variance
-#'     \item \code{formula}: Formula used
-#'   }
-#'
-#' @concept topic-modeling
-#' @export
-fit_topic_prevalence_model <- function(topic_proportions,
-                                      metadata,
-                                      formula,
-                                      model_type = "auto",
-                                      zero_inflation_threshold = 0.5,
-                                      count_multiplier = 1000,
-                                      max_iterations = 200) {
-
-  if (!requireNamespace("broom", quietly = TRUE)) {
-    stop("Package 'broom' is required. Please install it.")
-  }
-
-  if (is.character(formula)) {
-    formula <- as.formula(formula)
-  }
-
-  model_data <- metadata
-  model_data$topic_count <- round(topic_proportions * count_multiplier)
-
-  mean_count <- mean(model_data$topic_count, na.rm = TRUE)
-  var_count <- var(model_data$topic_count, na.rm = TRUE)
-  dispersion_ratio <- ifelse(mean_count != 0, var_count / mean_count, NA)
-  prop_zero <- mean(model_data$topic_count == 0, na.rm = TRUE)
-
-  diagnostics <- list(
-    zero_proportion = prop_zero,
-    dispersion_ratio = dispersion_ratio,
-    mean_count = mean_count,
-    var_count = var_count
-  )
-
-  fitted_model <- NULL
-  final_model_type <- NULL
-
-  if (model_type == "auto") {
-    if (prop_zero > zero_inflation_threshold) {
-      if (requireNamespace("pscl", quietly = TRUE)) {
-        fitted_model <- tryCatch({
-          pscl::zeroinfl(formula, data = model_data, dist = "negbin", link = "logit")
-        }, error = function(e) NULL)
-
-        if (!is.null(fitted_model)) {
-          final_model_type <- "Zero-Inflated Negative Binomial"
-        }
-      }
-    }
-
-    if (is.null(fitted_model) && dispersion_ratio > 1.5) {
-      if (requireNamespace("MASS", quietly = TRUE)) {
-        fitted_model <- tryCatch({
-          MASS::glm.nb(formula, data = model_data,
-                      control = glm.control(maxit = max_iterations))
-        }, error = function(e) NULL)
-
-        if (!is.null(fitted_model)) {
-          final_model_type <- "Negative Binomial"
-        }
-      }
-    }
-
-    if (is.null(fitted_model)) {
-      fitted_model <- glm(formula, family = poisson(link = "log"),
-                         data = model_data,
-                         control = glm.control(maxit = max_iterations))
-      final_model_type <- "Poisson"
-    }
-
-  } else if (model_type == "zeroinfl") {
-    if (!requireNamespace("pscl", quietly = TRUE)) {
-      stop("Package 'pscl' is required for zero-inflated models.")
-    }
-    fitted_model <- pscl::zeroinfl(formula, data = model_data,
-                                   dist = "negbin", link = "logit")
-    final_model_type <- "Zero-Inflated Negative Binomial"
-
-  } else if (model_type == "negbin") {
-    if (!requireNamespace("MASS", quietly = TRUE)) {
-      stop("Package 'MASS' is required for negative binomial models.")
-    }
-    fitted_model <- MASS::glm.nb(formula, data = model_data,
-                                control = glm.control(maxit = max_iterations))
-    final_model_type <- "Negative Binomial"
-
-  } else if (model_type == "poisson") {
-    fitted_model <- glm(formula, family = poisson(link = "log"),
-                       data = model_data,
-                       control = glm.control(maxit = max_iterations))
-    final_model_type <- "Poisson"
-
-  } else {
-    stop("Invalid model_type. Choose 'auto', 'poisson', 'negbin', or 'zeroinfl'.")
-  }
-
-  tidy_result <- broom::tidy(fitted_model)
-  tidy_result$odds_ratio <- exp(tidy_result$estimate)
-
-  if (!is.null(vcov(fitted_model))) {
-    var_diag <- diag(vcov(fitted_model))
-    tidy_result$var_diag <- var_diag
-    tidy_result$std_error_odds <- ifelse(
-      var_diag >= 0,
-      sqrt(tidy_result$odds_ratio^2 * var_diag),
-      NA
-    )
-  }
-
-  tidy_result$model_type <- final_model_type
-
-  list(
-    model = fitted_model,
-    summary = tidy_result,
-    model_type = final_model_type,
-    diagnostics = diagnostics,
-    formula = formula
-  )
-}
-
 
 #' Plot Topic Model Quality Metrics
 #'
@@ -2988,7 +2881,7 @@ plot_model_comparison <- function(search_results,
     y_values <- comparison_data$residual
     x_label <- "Semantic Coherence"
     y_label <- "Residual"
-    auto_title <- "Coherence-Residual Trade-off (run searchK with heldout for exclusivity)"
+    auto_title <- "Coherence-Residual Trade-off (exclusivity unavailable for content-covariate models)"
   } else {
     x_values <- comparison_data$lbound
     y_values <- comparison_data$residual

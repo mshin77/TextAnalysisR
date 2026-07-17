@@ -36,11 +36,15 @@ word_correlation_network(
 
 - common_term_n:
 
-  Minimum number of common terms for filtering terms (default: 130).
+  Minimum number of documents a term must appear in (default: 130). This
+  prefilter prevents spurious high correlations from rare words; lower
+  it for small corpora.
 
 - corr_n:
 
-  Minimum correlation value for filtering terms (default: 0.4).
+  Minimum phi correlation for keeping an edge (default: 0.4). A
+  heuristic default; report edge counts across nearby thresholds to
+  check sensitivity.
 
 - top_node_n:
 

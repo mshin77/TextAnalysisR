@@ -30,7 +30,8 @@ dfm_object <- quanteda::dfm(tokens)
 ## Word Co-occurrence
 
 `word_co_occurrence_network()` builds a network of words that co-occur across documents, with community
-detection and centrality metrics.
+detection and centrality metrics. Edges weight by raw counts; `edge_metric = "pmi"` corrects the bias
+toward generic frequent words.
 
 ```{r}
 network <- word_co_occurrence_network(

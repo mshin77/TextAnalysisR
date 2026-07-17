@@ -55,9 +55,15 @@ fit_embedding_topics(
 
 \item{umap_n_components}{The number of UMAP components (default: 5).}
 
-\item{representation_method}{The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").}
+\item{representation_method}{The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").
+Applies only to the R fallback backend and the "embedding_clustering",
+"semantic_lda", and "hierarchical_semantic" methods; the Python BERTopic
+backend ("umap_hdbscan") uses BERTopic's native c-TF-IDF representation.}
 
-\item{diversity}{Topic diversity parameter between 0 and 1 (default: 0.5).}
+\item{diversity}{Diversity weight between 0 and 1 for the "mmr"
+representation (default: 0.5). Higher values penalize redundant terms
+more strongly. Applies to the R backend; ignored by the Python BERTopic
+backend.}
 
 \item{reduce_outliers}{Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).}
 

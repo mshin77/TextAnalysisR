@@ -49,7 +49,7 @@ NULL
 #' computed unless disabled.
 #'
 #' @param texts A character vector of texts to compare.
-#' @param document_feature_type Feature extraction type: "words", "ngrams", "embeddings", or "topics".
+#' @param document_feature_type Feature extraction type: "words", "ngrams", or "embeddings".
 #' @param semantic_ngram_range Integer, n-gram range for ngram features (default: 2).
 #' @param similarity_method Similarity calculation method: "cosine", "jaccard", "euclidean", "manhattan".
 #' @param use_embeddings Logical, use embedding-based similarity (default: FALSE).
@@ -170,7 +170,7 @@ calculate_document_similarity <- function(texts,
         for (i in seq(1, n_docs, by = batch_size)) {
           end_idx <- min(i + batch_size - 1, n_docs)
           batch_texts <- valid_texts[i:end_idx]
-          batch_embeddings <- model$encode(batch_texts, show_progress_bar = FALSE)
+          batch_embeddings <- model$encode(batch_texts, show_progress_bar = FALSE, normalize_embeddings = TRUE)
           embeddings_list[[length(embeddings_list) + 1]] <- batch_embeddings
         }
 
@@ -402,9 +402,9 @@ fit_semantic_model <- function(texts,
 #' @description
 #' This function performs dimensionality reduction using various methods
 #' including PCA, t-SNE, and UMAP.
-#' For efficiency and consistency, PCA preprocessing is always performed first,
-#' and t-SNE/UMAP use the PCA results as input.
-#' This follows best practices for high-dimensional data analysis.
+#' UMAP runs directly on inputs with 1000 or fewer features (e.g. dense
+#' embeddings); PCA pre-reduction applies to wider inputs and to the PCA and
+#' t-SNE methods.
 #'
 #' @param data_matrix A numeric matrix where rows represent documents and
 #'   columns represent features.
@@ -476,14 +476,12 @@ reduce_dimensions <- function(data_matrix,
   start_time <- Sys.time()
 
   withr::with_seed(seed, tryCatch({
-    if (verbose) message("Performing PCA preprocessing...")
-
     col_vars <- apply(data_matrix, 2, var, na.rm = TRUE)
     constant_cols <- which(col_vars == 0 | is.na(col_vars))
 
     if (length(constant_cols) > 0) {
       if (verbose) message(paste("Removing", length(constant_cols),
-                                 "constant/zero columns before PCA"))
+                                 "constant/zero columns"))
       data_matrix <- data_matrix[, -constant_cols, drop = FALSE]
     }
 
@@ -494,7 +492,15 @@ reduce_dimensions <- function(data_matrix,
     max_components <- min(nrow(data_matrix) - 1, ncol(data_matrix), pca_dims)
     pca_dims_actual <- min(pca_dims, max_components)
 
-    pca_result <- stats::prcomp(data_matrix, center = TRUE, scale. = TRUE, rank. = pca_dims_actual)
+    # z-scored PCA distorts cosine geometry; UMAP takes dense embeddings
+    # directly, PCA pre-reduction only speeds up wide sparse inputs
+    needs_pca <- method %in% c("PCA", "t-SNE") || ncol(data_matrix) > 1000
+    pca_result <- NULL
+    if (needs_pca) {
+      if (verbose) message("Performing PCA preprocessing...")
+      pca_result <- stats::prcomp(data_matrix, center = TRUE, scale. = FALSE,
+                                  rank. = pca_dims_actual)
+    }
 
 
     result <- switch(method,
@@ -540,7 +546,9 @@ reduce_dimensions <- function(data_matrix,
         )
       },
       "UMAP" = {
-        if (verbose) message("Performing UMAP on PCA results...")
+        umap_input <- if (is.null(pca_result)) data_matrix else pca_result$x
+        if (verbose) message("Performing UMAP on ",
+                             if (is.null(pca_result)) "original features..." else "PCA results...")
 
         if (requireNamespace("umap", quietly = TRUE)) {
           safe_n_neighbors <- min(umap_neighbors, nrow(data_matrix) - 1, 15)
@@ -552,7 +560,7 @@ reduce_dimensions <- function(data_matrix,
           umap_config$metric <- umap_metric
           umap_config$random_state <- seed
 
-          umap_result <- umap::umap(pca_result$x, config = umap_config)
+          umap_result <- umap::umap(umap_input, config = umap_config)
 
           list(
             reduced_data = umap_result$layout,
@@ -580,7 +588,7 @@ reduce_dimensions <- function(data_matrix,
             random_state = as.integer(seed)
           )
 
-          embedding <- reducer$fit_transform(pca_result$x)
+          embedding <- reducer$fit_transform(umap_input)
 
           list(
             reduced_data = embedding,
@@ -636,15 +644,27 @@ reduce_dimensions <- function(data_matrix,
 #' @param umap_n_components The number of UMAP components (default: 10).
 #' @param umap_metric The metric for UMAP (default: "cosine").
 #' @param dbscan_eps The eps parameter for DBSCAN. If 0, optimal value is determined automatically.
-#' @param dbscan_min_samples The minimum samples for DBSCAN (default: 5).
+#' @param dbscan_min_samples The minimum samples for DBSCAN. Default NULL sets
+#'   \code{umap_n_components + 1} (dimensions-plus-one rule of thumb).
 #' @param reduce_outliers Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).
+#'   Set FALSE to keep density-based noise labels.
 #' @param outlier_strategy Strategy for outlier reduction: "centroid" (default,
-#'   Euclidean distance in UMAP space) or "embeddings" (cosine similarity in
-#'   original space). Follows BERTopic methodology.
+#'   Euclidean nearest-centroid in UMAP space; package-specific heuristic) or
+#'   "embeddings" (cosine similarity to cluster mean in original embedding
+#'   space, matching the BERTopic "embeddings" strategy).
+#' @param outlier_threshold Minimum similarity for reassigning a noise point
+#'   (default: 0, reassign all). For "embeddings" this is cosine similarity;
+#'   for "centroid" it applies to 1 / (1 + euclidean distance). Points below
+#'   the threshold keep cluster label 0.
 #' @param seed Random seed for reproducibility (default: 123).
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
 #' @return A list containing cluster assignments, method used, and quality metrics.
+#'   For \code{method = "umap_dbscan"} with \code{reduce_outliers = TRUE}, the list
+#'   also reports how noise points were reassigned: \code{outlier_strategy}
+#'   ("embeddings" or "centroid"), \code{outlier_metric} ("cosine" or "euclidean"),
+#'   \code{outlier_space} ("original embedding space" or "UMAP space"), and
+#'   \code{outliers_reassigned} (count).
 #'
 #' @concept semantic
 #' @export
@@ -694,14 +714,29 @@ cluster_embeddings <- function(data_matrix,
                                        umap_n_components = 10,
                                        umap_metric = "cosine",
                                        dbscan_eps = 0,
-                                       dbscan_min_samples = 5,
+                                       dbscan_min_samples = NULL,
                                        reduce_outliers = TRUE,
                                        outlier_strategy = "centroid",
+                                       outlier_threshold = 0,
                                        seed = 123,
                                        verbose = TRUE) {
 
+  # minPts rule of thumb: dimensions + 1
+  if (is.null(dbscan_min_samples)) {
+    dbscan_min_samples <- umap_n_components + 1
+  }
+
   if (verbose) {
     message("Starting clustering analysis with method: ", method)
+  }
+
+  # scale() yields NaN on zero-variance columns, crashing kmeans/hclust
+  col_vars <- apply(data_matrix, 2, stats::var)
+  constant_cols <- is.na(col_vars) | col_vars == 0
+  if (any(constant_cols)) {
+    if (all(constant_cols)) stop("data_matrix has no columns with non-zero variance")
+    data_matrix <- data_matrix[, !constant_cols, drop = FALSE]
+    if (verbose) message("Removed ", sum(constant_cols), " zero-variance columns")
   }
 
   start_time <- Sys.time()
@@ -746,12 +781,17 @@ cluster_embeddings <- function(data_matrix,
 
         outliers_reassigned <- 0
         outlier_strategy_used <- outlier_strategy
+        outlier_metric <- if (outlier_strategy == "embeddings") "cosine" else "euclidean"
+        outlier_space  <- if (outlier_strategy == "embeddings") "original embedding" else "UMAP"
         if (reduce_outliers && any(clusters == 0) && n_clusters_found > 0) {
-          if (verbose) message("Reassigning ", sum(clusters == 0), " noise points using '", outlier_strategy, "' strategy...")
+          if (verbose) message("Reassigning up to ", sum(clusters == 0), " noise points to nearest cluster (",
+                               outlier_metric, " in ", outlier_space, " space, threshold ",
+                               outlier_threshold, ")...")
 
           noise_idx <- which(clusters == 0)
           valid_clusters <- unique(clusters[clusters > 0])
 
+          # points below outlier_threshold keep noise label 0
           if (outlier_strategy == "embeddings") {
             embedding_centroids <- sapply(valid_clusters, function(cl) {
               colMeans(data_matrix[clusters == cl, , drop = FALSE])
@@ -762,7 +802,10 @@ cluster_embeddings <- function(data_matrix,
             for (idx in noise_idx) {
               point <- data_matrix[idx, ]
               similarities <- apply(embedding_centroids, 1, function(c) .cosine_sim(point, c))
-              clusters[idx] <- valid_clusters[which.max(similarities)]
+              if (max(similarities) >= outlier_threshold) {
+                clusters[idx] <- valid_clusters[which.max(similarities)]
+                outliers_reassigned <- outliers_reassigned + 1
+              }
             }
           } else {
             centroids <- sapply(valid_clusters, function(cl) {
@@ -774,10 +817,13 @@ cluster_embeddings <- function(data_matrix,
             for (idx in noise_idx) {
               point <- umap_result$reduced_data[idx, ]
               distances <- apply(centroids, 1, function(c) sqrt(sum((point - c)^2)))
-              clusters[idx] <- valid_clusters[which.min(distances)]
+              # bounded similarity transform of euclidean distance
+              if (1 / (1 + min(distances)) >= outlier_threshold) {
+                clusters[idx] <- valid_clusters[which.min(distances)]
+                outliers_reassigned <- outliers_reassigned + 1
+              }
             }
           }
-          outliers_reassigned <- length(noise_idx)
         }
 
         list(
@@ -787,10 +833,12 @@ cluster_embeddings <- function(data_matrix,
           umap_embedding = umap_result$reduced_data,
           dbscan_result = dbscan_result,
           auto_detected = auto_eps,
-          detection_method = if (auto_eps) "Knee Point Detection" else "Manual",
+          detection_method = if (auto_eps) "90th percentile of kNN distances" else "Manual",
           noise_ratio = noise_ratio,
           reduce_outliers = reduce_outliers,
           outlier_strategy = if (reduce_outliers) outlier_strategy_used else NA_character_,
+          outlier_metric = if (reduce_outliers) outlier_metric else NA_character_,
+          outlier_space = if (reduce_outliers) paste0(outlier_space, " space") else NA_character_,
           outliers_reassigned = outliers_reassigned,
           parameters = list(
             eps = dbscan_eps,
@@ -931,13 +979,16 @@ cluster_embeddings <- function(data_matrix,
 #' @title Generate Embeddings
 #'
 #' @description
-#' Generates embeddings for texts using sentence transformers.
+#' Generates L2-normalized embeddings for texts using sentence transformers.
 #'
 #' @param texts A character vector of texts.
 #' @param model Sentence transformer model name (default: "all-MiniLM-L6-v2").
+#'   Newer small models (e.g. "BAAI/bge-small-en-v1.5") often score higher on
+#'   retrieval benchmarks but expect instruction prefixes this function does
+#'   not add.
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
-#' @return A matrix of embeddings.
+#' @return A matrix of L2-normalized embeddings.
 #'
 #' @concept semantic
 #' @export
@@ -952,7 +1003,7 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
   tryCatch({
     sentence_transformers <- reticulate::import("sentence_transformers")
     embedding_model <- sentence_transformers$SentenceTransformer(model)
-    embeddings <- embedding_model$encode(texts, show_progress_bar = verbose)
+    embeddings <- embedding_model$encode(texts, show_progress_bar = verbose, normalize_embeddings = TRUE)
 
     if (verbose) message("Embeddings generated successfully")
 
@@ -2071,17 +2122,24 @@ analyze_similarity_gaps <- function(similarity_data,
 #'
 #' @description
 #' Performs sentiment analysis on text data using the syuzhet package.
-#' Returns sentiment scores and classifications.
+#' Classification uses the per-token average score with a +/- 0.05 neutral
+#' band, so document length does not drive polarity. Lexicon methods score
+#' words in isolation; negation, irony, and idioms are not handled. For
+#' negation-sensitive text, see [analyze_sentiment_llm()].
 #'
 #' @param texts Character vector of texts to analyze
-#' @param method Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc" (default: "syuzhet")
+#' @param method Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc" (default: "syuzhet").
+#'   The "syuzhet" method scores each matched dictionary word once per
+#'   document regardless of repetition.
 #' @param doc_ids Optional character vector of document identifiers (default: NULL)
 #'
 #' @return A data frame with columns:
 #'   \describe{
 #'     \item{document}{Document identifier}
 #'     \item{text}{Original text}
-#'     \item{sentiment_score}{Numeric sentiment score}
+#'     \item{sentiment_score}{Raw summed sentiment score (length-dependent)}
+#'     \item{n_tokens}{Number of whitespace-delimited tokens}
+#'     \item{avg_sentiment}{sentiment_score / n_tokens}
 #'     \item{sentiment}{Classification: "positive", "negative", or "neutral"}
 #'   }
 #'
@@ -2107,16 +2165,21 @@ analyze_sentiment <- function(texts,
   }
 
   sentiment_scores <- syuzhet::get_sentiment(texts, method = method)
+  n_tokens <- vapply(strsplit(texts, "\\s+"), function(x) sum(nzchar(x)), integer(1))
+  avg_sentiment <- ifelse(n_tokens > 0, sentiment_scores / n_tokens, 0)
 
-  sentiment_classification <- ifelse(
-    sentiment_scores > 0, "positive",
-    ifelse(sentiment_scores < 0, "negative", "neutral")
+  sentiment_classification <- dplyr::case_when(
+    avg_sentiment >= 0.05 ~ "positive",
+    avg_sentiment <= -0.05 ~ "negative",
+    .default = "neutral"
   )
 
   data.frame(
     document = doc_ids,
     text = texts,
     sentiment_score = sentiment_scores,
+    n_tokens = n_tokens,
+    avg_sentiment = avg_sentiment,
     sentiment = sentiment_classification,
     stringsAsFactors = FALSE
   )
@@ -2312,6 +2375,13 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #' Performs lexicon-based sentiment analysis on a DFM object using tidytext lexicons.
 #' Supports AFINN, Bing, and NRC lexicons with scoring and emotion analysis.
 #'
+#' Tokens absent from the lexicon are ignored (not treated as neutral);
+#' \code{summary_stats$token_match_rate} reports the share of corpus tokens
+#' the lexicon covered. AFINN classification uses a +/- 0.5 band on the
+#' per-sentiment-word average (\code{avg_sentiment}); its
+#' \code{n_sentiment_words} column counts matched sentiment tokens, not
+#' document length.
+#'
 #' @param dfm_object A quanteda DFM object (unigram)
 #' @param lexicon Lexicon to use: "afinn", "bing", or "nrc" (default: "bing")
 #' @param texts_df Optional data frame with original texts and metadata (default: NULL)
@@ -2369,12 +2439,20 @@ sentiment_lexicon_analysis <- function(dfm_object,
   tidy_dfm <- tidytext::tidy(dfm_object)
   lexicon_name <- tolower(lexicon)
 
-  sentiment_lexicon <- switch(
-    lexicon_name,
-    "afinn" = tidytext::get_sentiments("afinn"),
-    "bing" = tidytext::get_sentiments("bing"),
-    "nrc" = tidytext::get_sentiments("nrc"),
+  if (!lexicon_name %in% c("afinn", "bing", "nrc")) {
     stop("Invalid lexicon. Choose 'afinn', 'bing', or 'nrc'.")
+  }
+
+  # afinn/nrc download through textdata behind an interactive license prompt
+  sentiment_lexicon <- tryCatch(
+    tidytext::get_sentiments(lexicon_name),
+    error = function(e) {
+      stop("Lexicon '", lexicon_name, "' is unavailable: ", conditionMessage(e),
+           "\nThe 'afinn' and 'nrc' lexicons require a one-time interactive ",
+           "download. Run tidytext::get_sentiments(\"", lexicon_name,
+           "\") in an interactive session to accept the license.",
+           call. = FALSE)
+    }
   )
 
   doc_names <- quanteda::docnames(dfm_object)
@@ -2385,8 +2463,9 @@ sentiment_lexicon_analysis <- function(dfm_object,
       dplyr::group_by(document) %>%
       dplyr::summarise(
         sentiment_score = sum(value * count, na.rm = TRUE),
-        n_words = sum(count),
-        avg_sentiment = sentiment_score / n_words,
+        n_sentiment_words = sum(count),
+        avg_sentiment = sentiment_score / n_sentiment_words,
+        # +/- 0.5 marks mild valence on the AFINN -5..5 scale
         sentiment = dplyr::case_when(
           avg_sentiment > 0.5 ~ "positive",
           avg_sentiment < -0.5 ~ "negative",
@@ -2460,11 +2539,19 @@ sentiment_lexicon_analysis <- function(dfm_object,
   total_docs_in_corpus <- length(doc_names)
   docs_analyzed <- dplyr::n_distinct(doc_sentiment$document)
 
+  # token match rate
+  total_tokens <- sum(tidy_dfm$count)
+  matched_tokens <- tidy_dfm %>%
+    dplyr::semi_join(sentiment_lexicon, by = c("term" = "word")) %>%
+    dplyr::pull(count) %>%
+    sum()
+
   summary_stats <- list(
     total_documents = total_docs_in_corpus,
     documents_analyzed = docs_analyzed,
     documents_without_sentiment = total_docs_in_corpus - docs_analyzed,
     coverage_percentage = round((docs_analyzed / total_docs_in_corpus) * 100, 1),
+    token_match_rate = round(if (total_tokens > 0) matched_tokens / total_tokens else NA_real_, 3),
     positive_docs = sum(doc_sentiment$sentiment == "positive", na.rm = TRUE),
     negative_docs = sum(doc_sentiment$sentiment == "negative", na.rm = TRUE),
     neutral_docs = sum(doc_sentiment$sentiment == "neutral", na.rm = TRUE),
@@ -2614,6 +2701,10 @@ sentiment_embedding_analysis <- function(texts,
 #' Analyzes sentiment using Large Language Models (OpenAI or Gemini).
 #' Provides nuanced sentiment understanding including sarcasm detection,
 #' mixed emotions, and contextual interpretation that lexicon-based methods miss.
+#'
+#' Requests use temperature 0, which makes outputs near-deterministic but
+#' not fully reproducible across runs or model versions; record the returned
+#' \code{model_used} field when reporting results.
 #'
 #' @param texts Character vector of texts to analyze.
 #' @param doc_names Optional character vector of document names (default: text1, text2, ...).
@@ -3914,7 +4005,11 @@ run_rag_search <- function(
 #'
 #' @param dfm_object A quanteda document-feature matrix (dfm).
 #' @param doc_var A document-level metadata variable (default: NULL).
-#' @param co_occur_n Minimum co-occurrence count (default: 50).
+#' @param co_occur_n Minimum co-occurrence count (default: 50). A heuristic
+#'   default; vary it to check edge-count sensitivity.
+#' @param edge_metric Edge weight: "count" (default, raw co-occurrence) or
+#'   "pmi" (pointwise mutual information, correcting the bias toward generic
+#'   high-frequency words; only positive-PMI pairs are kept).
 #' @param top_node_n Number of top nodes to display (default: 30).
 #' @param nrows Number of rows to display in the table (default: 1).
 #' @param height The height of the resulting Plotly plot, in pixels (default: 800).
@@ -3933,7 +4028,7 @@ run_rag_search <- function(
 #' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tibble as_tibble
 #' @importFrom tidytext tidy
-#' @importFrom widyr pairwise_count
+#' @importFrom widyr pairwise_count pairwise_pmi
 #' @importFrom scales rescale
 #' @importFrom stats quantile setNames
 #' @importFrom DT datatable formatStyle
@@ -3972,6 +4067,7 @@ run_rag_search <- function(
 word_co_occurrence_network <- function(dfm_object,
                                        doc_var = NULL,
                                        co_occur_n = 50,
+                                       edge_metric = c("count", "pmi"),
                                        top_node_n = 30,
                                        nrows = 1,
                                        height = 800,
@@ -3982,6 +4078,8 @@ word_co_occurrence_network <- function(dfm_object,
                                        node_color_by = "community",
                                        seed = 123,
                                        category_params = NULL) {
+
+  edge_metric <- match.arg(edge_metric)
 
   if (!requireNamespace("htmltools", quietly = TRUE) ||
       !requireNamespace("RColorBrewer", quietly = TRUE)) {
@@ -4082,6 +4180,16 @@ word_co_occurrence_network <- function(dfm_object,
       widyr::pairwise_count(term, document, sort = TRUE, upper = FALSE) %>%
       dplyr::filter(n >= effective_co_occur_n)
 
+    # count floor controls rare-pair PMI inflation
+    if (edge_metric == "pmi") {
+      term_pmi <- data %>%
+        widyr::pairwise_pmi(term, document, sort = FALSE)
+      term_co_occur <- term_co_occur %>%
+        dplyr::inner_join(term_pmi, by = c("item1", "item2")) %>%
+        dplyr::filter(.data$pmi > 0) %>%
+        dplyr::mutate(n = .data$pmi)
+    }
+
     graph <- igraph::graph_from_data_frame(term_co_occur, directed = FALSE)
     if (igraph::vcount(graph) == 0) {
       message("No co-occurrence relationships meet the threshold.")
@@ -4105,7 +4213,8 @@ word_co_occurrence_network <- function(dfm_object,
     community_result <- if (community_method == "louvain") {
       igraph::cluster_louvain(graph)
     } else {
-      igraph::cluster_leiden(graph)
+      # modularity objective matches the reported modularity statistic
+      igraph::cluster_leiden(graph, objective_function = "modularity")
     }
     igraph::V(graph)$community <- community_result$membership
 
@@ -4334,8 +4443,12 @@ word_co_occurrence_network <- function(dfm_object,
 #'
 #' @param dfm_object A quanteda document-feature matrix (dfm).
 #' @param doc_var A document-level metadata variable (default: NULL).
-#' @param common_term_n Minimum number of common terms for filtering terms (default: 130).
-#' @param corr_n Minimum correlation value for filtering terms (default: 0.4).
+#' @param common_term_n Minimum number of documents a term must appear in
+#'   (default: 130). This prefilter prevents spurious high correlations from
+#'   rare words; lower it for small corpora.
+#' @param corr_n Minimum phi correlation for keeping an edge (default: 0.4).
+#'   A heuristic default; report edge counts across nearby thresholds to
+#'   check sensitivity.
 #' @param top_node_n Number of top nodes to display (default: 40).
 #' @param nrows Number of rows to display in the table (default: 1).
 #' @param height The height of the resulting Plotly plot, in pixels (default: 1000).
@@ -4532,7 +4645,8 @@ word_correlation_network <- function(dfm_object,
     community_result <- if (community_method == "louvain") {
       igraph::cluster_louvain(graph)
     } else {
-      igraph::cluster_leiden(graph)
+      # modularity objective matches the reported modularity statistic
+      igraph::cluster_leiden(graph, objective_function = "modularity")
     }
     igraph::V(graph)$community <- community_result$membership
 

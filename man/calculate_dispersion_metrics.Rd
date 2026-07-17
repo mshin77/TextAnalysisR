@@ -18,8 +18,10 @@ Data frame with columns:
 \item frequency: Total occurrences
 \item doc_count: Number of documents containing term
 \item doc_ratio: Proportion of documents containing term
-\item juilland_d: Juilland's D dispersion (0-1, higher = more even)
-\item rosengren_s: Rosengren's S dispersion
+\item juilland_d: Juilland's D dispersion (0-1, higher = more even),
+computed on within-document proportions
+\item rosengren_s: Rosengren's S dispersion adjusted for document
+sizes (1/n_docs to 1, higher = more even)
 }
 }
 \description{

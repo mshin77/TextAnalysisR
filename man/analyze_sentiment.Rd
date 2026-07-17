@@ -9,7 +9,9 @@ analyze_sentiment(texts, method = "syuzhet", doc_ids = NULL)
 \arguments{
 \item{texts}{Character vector of texts to analyze}
 
-\item{method}{Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc" (default: "syuzhet")}
+\item{method}{Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc" (default: "syuzhet").
+The "syuzhet" method scores each matched dictionary word once per
+document regardless of repetition.}
 
 \item{doc_ids}{Optional character vector of document identifiers (default: NULL)}
 }
@@ -18,13 +20,18 @@ A data frame with columns:
 \describe{
 \item{document}{Document identifier}
 \item{text}{Original text}
-\item{sentiment_score}{Numeric sentiment score}
+\item{sentiment_score}{Raw summed sentiment score (length-dependent)}
+\item{n_tokens}{Number of whitespace-delimited tokens}
+\item{avg_sentiment}{sentiment_score / n_tokens}
 \item{sentiment}{Classification: "positive", "negative", or "neutral"}
 }
 }
 \description{
 Performs sentiment analysis on text data using the syuzhet package.
-Returns sentiment scores and classifications.
+Classification uses the per-token average score with a +/- 0.05 neutral
+band, so document length does not drive polarity. Lexicon methods score
+words in isolation; negation, irony, and idioms are not handled. For
+negation-sensitive text, see \code{\link[=analyze_sentiment_llm]{analyze_sentiment_llm()}}.
 }
 \examples{
 \donttest{

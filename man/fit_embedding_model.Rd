@@ -69,17 +69,23 @@ fit_embedding_model(
 
 \item{umap_metric}{Distance metric for UMAP: "cosine" (recommended for text) or "euclidean" (default: "cosine").}
 
-\item{tsne_perplexity}{Perplexity parameter for t-SNE (default: 30). Only used when method includes "tsne".}
+\item{tsne_perplexity}{Perplexity parameter for t-SNE (default: 30). Only used when method includes "tsne"; t-SNE output is 2-dimensional.}
 
-\item{pca_dims}{Number of PCA components for dimensionality reduction (default: 50). Only used when method includes "pca".}
+\item{pca_dims}{Number of PCA components kept for clustering (default: 50). Only used when method includes "pca".}
 
 \item{dbscan_eps}{Epsilon parameter for DBSCAN (default: 0.5). Neighborhood size for density-based clustering.}
 
 \item{dbscan_minpts}{Minimum points for DBSCAN core points (default: 5).}
 
-\item{representation_method}{The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").}
+\item{representation_method}{The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").
+Applies only to the R fallback backend and the "embedding_clustering",
+"semantic_lda", and "hierarchical_semantic" methods; the Python BERTopic
+backend ("umap_hdbscan") uses BERTopic's native c-TF-IDF representation.}
 
-\item{diversity}{Topic diversity parameter between 0 and 1 (default: 0.5).}
+\item{diversity}{Diversity weight between 0 and 1 for the "mmr"
+representation (default: 0.5). Higher values penalize redundant terms
+more strongly. Applies to the R backend; ignored by the Python BERTopic
+backend.}
 
 \item{reduce_outliers}{Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).}
 

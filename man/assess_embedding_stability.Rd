@@ -17,7 +17,8 @@ assess_embedding_stability(
 \arguments{
 \item{texts}{Character vector of documents to analyze.}
 
-\item{n_runs}{Number of model runs with different seeds (default: 5).}
+\item{n_runs}{Number of model runs with different seeds (default: 5).
+More runs give a steadier stability estimate.}
 
 \item{embedding_model}{Embedding model name (default: "all-MiniLM-L6-v2").}
 

@@ -8,6 +8,7 @@ word_co_occurrence_network(
   dfm_object,
   doc_var = NULL,
   co_occur_n = 50,
+  edge_metric = c("count", "pmi"),
   top_node_n = 30,
   nrows = 1,
   height = 800,
@@ -25,7 +26,12 @@ word_co_occurrence_network(
 
 \item{doc_var}{A document-level metadata variable (default: NULL).}
 
-\item{co_occur_n}{Minimum co-occurrence count (default: 50).}
+\item{co_occur_n}{Minimum co-occurrence count (default: 50). A heuristic
+default; vary it to check edge-count sensitivity.}
+
+\item{edge_metric}{Edge weight: "count" (default, raw co-occurrence) or
+"pmi" (pointwise mutual information, correcting the bias toward generic
+high-frequency words; only positive-PMI pairs are kept).}
 
 \item{top_node_n}{Number of top nodes to display (default: 30).}
 

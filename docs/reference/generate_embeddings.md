@@ -1,6 +1,7 @@
 # Generate Embeddings
 
-Generates embeddings for texts using sentence transformers.
+Generates L2-normalized embeddings for texts using sentence
+transformers.
 
 ## Usage
 
@@ -16,7 +17,10 @@ generate_embeddings(texts, model = "all-MiniLM-L6-v2", verbose = TRUE)
 
 - model:
 
-  Sentence transformer model name (default: "all-MiniLM-L6-v2").
+  Sentence transformer model name (default: "all-MiniLM-L6-v2"). Newer
+  small models (e.g. "BAAI/bge-small-en-v1.5") often score higher on
+  retrieval benchmarks but expect instruction prefixes this function
+  does not add.
 
 - verbose:
 
@@ -24,4 +28,4 @@ generate_embeddings(texts, model = "all-MiniLM-L6-v2", verbose = TRUE)
 
 ## Value
 
-A matrix of embeddings.
+A matrix of L2-normalized embeddings.

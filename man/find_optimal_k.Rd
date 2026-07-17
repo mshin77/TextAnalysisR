@@ -48,7 +48,9 @@ A list containing search results and diagnostic plots.
 }
 \description{
 Searches for the optimal number of topics (K) using stm::searchK.
-Produces diagnostic plots to help select the best K value.
+Produces diagnostic plots to help select the best K value. The default
+spectral initialization is deterministic; with LDA or random
+initialization, fit several seeds per K before selecting a model.
 }
 \seealso{
 \code{\link[=plot_quality_metrics]{plot_quality_metrics()}} to visualize topic-count diagnostics; \code{stm::stm()} to fit the chosen model; \code{\link[=fit_embedding_model]{fit_embedding_model()}} for an embedding-based alternative to STM

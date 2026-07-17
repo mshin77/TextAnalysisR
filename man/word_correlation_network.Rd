@@ -26,9 +26,13 @@ word_correlation_network(
 
 \item{doc_var}{A document-level metadata variable (default: NULL).}
 
-\item{common_term_n}{Minimum number of common terms for filtering terms (default: 130).}
+\item{common_term_n}{Minimum number of documents a term must appear in
+(default: 130). This prefilter prevents spurious high correlations from
+rare words; lower it for small corpora.}
 
-\item{corr_n}{Minimum correlation value for filtering terms (default: 0.4).}
+\item{corr_n}{Minimum phi correlation for keeping an edge (default: 0.4).
+A heuristic default; report edge counts across nearby thresholds to
+check sensitivity.}
 
 \item{top_node_n}{Number of top nodes to display (default: 40).}
 

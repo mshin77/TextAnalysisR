@@ -27,7 +27,8 @@ assess_embedding_stability(
 
 - n_runs:
 
-  Number of model runs with different seeds (default: 5).
+  Number of model runs with different seeds (default: 5). More runs give
+  a steadier stability estimate.
 
 - embedding_model:
 

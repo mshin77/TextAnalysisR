@@ -8,7 +8,8 @@ generate_semantic_topic_keywords(
   texts,
   topic_assignments,
   n_keywords = 10,
-  method = "c-tfidf"
+  method = "c-tfidf",
+  diversity = 0.5
 )
 }
 \arguments{
@@ -19,6 +20,9 @@ generate_semantic_topic_keywords(
 \item{n_keywords}{The number of keywords to extract per topic (default: 10).}
 
 \item{method}{The representation method: "c-tfidf" (default), "tfidf", "mmr", or "frequency".}
+
+\item{diversity}{Diversity weight for "mmr" between 0 and 1 (default: 0.5).
+MMR selects terms by (1 - diversity) * relevance - diversity * redundancy.}
 }
 \value{
 A list of keywords for each topic.

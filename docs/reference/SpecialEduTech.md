@@ -14,6 +14,16 @@ SpecialEduTech
 An object of class `tbl_df` (inherits from `tbl`, `data.frame`) with 490
 rows and 6 columns.
 
+## Source
+
+Bibliographic records compiled and coded by the author for Shin, M., Ok,
+M. W., Choo, S., Hossain, G., Bryant, D. P., & Kang, E. (2023). A
+content analysis of research on technology use for teaching mathematics
+to students with disabilities: Word networks and topic modeling.
+*International Journal of STEM Education*, 10, Article 23.
+[doi:10.1186/s40594-023-00414-x](https://doi.org/10.1186/s40594-023-00414-x)
+. Shared as open data at <https://github.com/mshin77/math-tech-sped>.
+
 ## Examples
 
 ``` r

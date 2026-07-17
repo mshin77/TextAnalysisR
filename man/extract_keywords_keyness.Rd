@@ -4,7 +4,13 @@
 \alias{extract_keywords_keyness}
 \title{Extract Keywords Using Statistical Keyness}
 \usage{
-extract_keywords_keyness(dfm, target, top_n = 20, measure = "lr")
+extract_keywords_keyness(
+  dfm,
+  target,
+  top_n = 20,
+  measure = "lr",
+  min_count = 0
+)
 }
 \arguments{
 \item{dfm}{A quanteda dfm object}
@@ -13,7 +19,11 @@ extract_keywords_keyness(dfm, target, top_n = 20, measure = "lr")
 
 \item{top_n}{Number of top keywords to extract (default: 20)}
 
-\item{measure}{Keyness measure: "lr" (log-likelihood) or "chi2" (default: "lr")}
+\item{measure}{Keyness measure: "lr" (log-likelihood G-squared), "chi2",
+"exact" (Fisher's exact odds ratio), or "pmi" (default: "lr")}
+
+\item{min_count}{Minimum total term frequency before computing keyness
+(default: 0, no pruning)}
 }
 \value{
 Data frame with columns: Keyword, Keyness_Score

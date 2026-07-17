@@ -105,14 +105,14 @@ A list containing processed data, tokens, DFM, and metadata.
 #>  ...preserving elisions
 #>  ...removing separators, punctuation, symbols, numbers, URLs 
 #>  ...6,736 unique types
-#>  ...complete, elapsed time: 0.25 seconds.
+#>  ...complete, elapsed time: 0.28 seconds.
 #> Finished constructing tokens from 490 documents
 #> Converting to lowercase...
 #> Applying minimum character filter...
-#> Text preprocessing completed in 0.38 seconds
+#> Text preprocessing completed in 0.43 seconds
 #> Processed 490 documents with 94039 total tokens
 #> Step 5: Creating document-feature matrix...
-#> Complete text mining workflow finished in 0.99 seconds
+#> Complete text mining workflow finished in 0.98 seconds
 #> Documents processed: 490
 #> Features identified: 5078
 # }

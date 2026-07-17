@@ -81,8 +81,8 @@ accurate MTLD calculation since it preserves token order.</p></dd>
 
 <dt id="arg-measures">measures<a class="anchor" aria-label="anchor" href="#arg-measures"></a></dt>
 <dd><p>Character vector of measures to calculate.
-Default is "all" which includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR, and MTLD.
-Most recommended: "MTLD" or "MATTR" for length-independent measures.</p></dd>
+Default is "all" which includes: TTR, C, R, CTTR, U, S, K, I, D, Vm, Maas, MATTR, MSTTR, MTLD, and HDD.
+Most recommended: "MTLD", "MATTR", or "HDD" for length-independent measures.</p></dd>
 
 
 <dt id="arg-texts">texts<a class="anchor" aria-label="anchor" href="#arg-texts"></a></dt>
@@ -109,6 +109,9 @@ This provides a length-independent measure of lexical diversity.</p>
 <p>Important notes:</p><ul><li><p>For MTLD accuracy, pass a tokens object (not DFM) as input</p></li>
 <li><p>If using DFM, provide the 'texts' parameter for MTLD calculation</p></li>
 <li><p>MATTR and MSTTR window sizes are automatically adjusted for short documents</p></li>
+<li><p>Raw TTR falls mechanically as documents lengthen; compare TTR only
+across documents of similar length</p></li>
+<li><p>MTLD and MATTR are most reliable at 100+ tokens per document</p></li>
 <li><p>Results are cached when cache_key is provided for repeated analysis</p></li>
 </ul></div>
     <div class="section level2">
@@ -156,22 +159,22 @@ Behavior Research Methods, 42(2), 381-392.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3   27.173913 0.016129032 0.08291562 0.2175393 3.771555  8.684327  40.96000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  126.750000 0.004429679 0.04406190 0.1260642 7.028498 16.183714 172.57333</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5   16.747423 0.015666873 0.08980964 0.2453621 3.694732  8.507436  57.53291</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   10.842130 0.016394848 0.11246497 0.2351436 4.268454  9.828479  65.30157</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   10.842130 0.016394848 0.11246497 0.2351436 4.268454  9.828479  71.37616</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7  101.250000 0.005490196 0.05261336 0.1365375 6.604754 15.208008 121.38000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8    9.083273 0.019113787 0.11845602 0.2483916 3.908323  8.999247  64.44045</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 9   19.277108 0.015032680 0.09886904 0.2250022 4.209816  9.693460  73.67553</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10  59.259259 0.009250694 0.07301004 0.1582722 5.594022 12.880713 123.70400</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        MATTR     MSTTR Avg Sentence Length</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.9319444 0.9166667            27.33333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.9166667 0.9166667            24.00000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.7962963 0.7500000            16.00000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.9520833 0.9583333            21.50000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.9144737 0.8854167            24.75000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.8797582 0.8541667            21.68750</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7  0.9553571 0.9583333            17.00000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8  0.8915975 0.8977273            18.85714</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  0.8727876 0.8750000            22.50000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 0.9392361 1.0000000            23.50000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        MATTR     MSTTR       HDD Avg Sentence Length</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.9319444 0.9166667 0.8622512            27.66667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.9166667 0.9166667        NA            24.00000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.7962963 0.7500000        NA            16.00000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.9520833 0.9583333 0.9318937            21.50000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.9144737 0.8854167 0.7757072            24.75000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.8797582 0.8541667 0.8173608            21.68750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  0.9553571 0.9583333 0.9005762            17.00000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  0.8915975 0.8977273 0.7917416            24.00000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9  0.8727876 0.8750000 0.7919821            22.66667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 0.9392361 1.0000000 0.9007746            23.50000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$n_documents</span>
@@ -183,7 +186,7 @@ Behavior Research Methods, 42(2), 381-392.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "K"                   "I"                   "D"                  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [10] "Vm"                  "Maas"                "lgV0"               </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [13] "lgeV0"               "MTLD"                "MATTR"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "MSTTR"               "Avg Sentence Length"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "MSTTR"               "HDD"                 "Avg Sentence Length"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$TTR_mean</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7166172</span>
@@ -303,13 +306,13 @@ Behavior Research Methods, 42(2), 381-392.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.817271</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MTLD_mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 90.737</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 91.34446</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MTLD_median</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 77.15776</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MTLD_sd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 39.86723</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 39.48101</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MATTR_mean</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9050201</span>
@@ -329,14 +332,23 @@ Behavior Research Methods, 42(2), 381-392.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$MSTTR_sd</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.06895207</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$HDD_mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8465359</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$HDD_median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.839806</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$HDD_sd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.06004944</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$`Avg Sentence Length_mean`</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 21.7128</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 22.27708</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$`Avg Sentence Length_median`</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 22.09375</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 23.08333</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $summary_stats$`Avg Sentence Length_sd`</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.541928</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.511061</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

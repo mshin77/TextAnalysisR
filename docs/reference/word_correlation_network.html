@@ -89,11 +89,15 @@
 
 
 <dt id="arg-common-term-n">common_term_n<a class="anchor" aria-label="anchor" href="#arg-common-term-n"></a></dt>
-<dd><p>Minimum number of common terms for filtering terms (default: 130).</p></dd>
+<dd><p>Minimum number of documents a term must appear in
+(default: 130). This prefilter prevents spurious high correlations from
+rare words; lower it for small corpora.</p></dd>
 
 
 <dt id="arg-corr-n">corr_n<a class="anchor" aria-label="anchor" href="#arg-corr-n"></a></dt>
-<dd><p>Minimum correlation value for filtering terms (default: 0.4).</p></dd>
+<dd><p>Minimum phi correlation for keeping an edge (default: 0.4).
+A heuristic default; report edge counts across nearby thresholds to
+check sensitivity.</p></dd>
 
 
 <dt id="arg-top-node-n">top_node_n<a class="anchor" aria-label="anchor" href="#arg-top-node-n"></a></dt>

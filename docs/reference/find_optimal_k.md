@@ -1,7 +1,9 @@
 # Find Optimal Number of Topics
 
 Searches for the optimal number of topics (K) using stm::searchK.
-Produces diagnostic plots to help select the best K value.
+Produces diagnostic plots to help select the best K value. The default
+spectral initialization is deterministic; with LDA or random
+initialization, fit several seeds per K before selecting a model.
 
 ## Usage
 

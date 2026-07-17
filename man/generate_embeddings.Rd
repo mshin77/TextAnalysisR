@@ -9,14 +9,17 @@ generate_embeddings(texts, model = "all-MiniLM-L6-v2", verbose = TRUE)
 \arguments{
 \item{texts}{A character vector of texts.}
 
-\item{model}{Sentence transformer model name (default: "all-MiniLM-L6-v2").}
+\item{model}{Sentence transformer model name (default: "all-MiniLM-L6-v2").
+Newer small models (e.g. "BAAI/bge-small-en-v1.5") often score higher on
+retrieval benchmarks but expect instruction prefixes this function does
+not add.}
 
 \item{verbose}{Logical, if TRUE, prints progress messages.}
 }
 \value{
-A matrix of embeddings.
+A matrix of L2-normalized embeddings.
 }
 \description{
-Generates embeddings for texts using sentence transformers.
+Generates L2-normalized embeddings for texts using sentence transformers.
 }
 \concept{semantic}

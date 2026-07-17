@@ -39,19 +39,20 @@ Data frame with columns:
 \item category2: Second category in comparison
 \item count1: Count in category 1
 \item count2: Count in category 2
-\item odds1: Odds in category 1
-\item odds2: Odds in category 2
+\item odds1: Smoothed odds in category 1, (count + 1) / (total + V - count - 1)
+\item odds2: Smoothed odds in category 2
 \item odds_ratio: Ratio of odds
 \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
-\item variance: Variance of the log ratio, 1/(count1 + 1) + 1/(count2 + 1)
-\item z_score: Log ratio divided by its standard error
+\item variance: Approximate variance of the log odds ratio
+\item z_score: Log odds ratio divided by its standard error
+\item significant: TRUE when |z| >= 1.96
 }
 Terms are ranked by absolute z-score.
 }
 \description{
-Compares word frequencies between categories using a Laplace-smoothed log
-frequency ratio, ranked by z-score. Identifies words distinctively used in
-one category. For an informative-prior weighted log-odds, see
+Compares word usage between categories using the log-odds ratio with a
+uniform Dirichlet prior, ranked by z-score. Identifies words distinctively
+used in one category. For the informative-prior weighted log-odds, see
 \code{\link[=calculate_weighted_log_odds]{calculate_weighted_log_odds()}}.
 }
 \examples{

@@ -134,11 +134,17 @@
 
 
 <dt id="arg-representation-method">representation_method<a class="anchor" aria-label="anchor" href="#arg-representation-method"></a></dt>
-<dd><p>The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").</p></dd>
+<dd><p>The method for topic representation: "c-tfidf", "tfidf", "mmr", "frequency" (default: "c-tfidf").
+Applies only to the R fallback backend and the "embedding_clustering",
+"semantic_lda", and "hierarchical_semantic" methods; the Python BERTopic
+backend ("umap_hdbscan") uses BERTopic's native c-TF-IDF representation.</p></dd>
 
 
 <dt id="arg-diversity">diversity<a class="anchor" aria-label="anchor" href="#arg-diversity"></a></dt>
-<dd><p>Topic diversity parameter between 0 and 1 (default: 0.5).</p></dd>
+<dd><p>Diversity weight between 0 and 1 for the "mmr"
+representation (default: 0.5). Higher values penalize redundant terms
+more strongly. Applies to the R backend; ignored by the Python BERTopic
+backend.</p></dd>
 
 
 <dt id="arg-reduce-outliers">reduce_outliers<a class="anchor" aria-label="anchor" href="#arg-reduce-outliers"></a></dt>

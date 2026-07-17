@@ -10,9 +10,13 @@ calculate_topic_stability(temporal_results)
 \item{temporal_results}{Results from temporal analysis.}
 }
 \value{
-Stability metrics.
+Stability metrics: matched-pair stability per consecutive-period
+transition and their mean.
 }
 \description{
-Calculates stability of topics across time periods.
+Calculates stability of topics across consecutive time periods. Each
+period is fitted independently, so topics are matched one-to-one on
+keyword Jaccard similarity before scoring
+(see \code{\link[=calculate_keyword_stability]{calculate_keyword_stability()}}).
 }
 \concept{topic-modeling}

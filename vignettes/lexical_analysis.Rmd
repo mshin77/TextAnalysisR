@@ -101,8 +101,8 @@ plot_keyword_comparison(keywords, top_n = 10)
 
 ## Lexical Diversity
 
-`lexical_diversity_analysis()` reports vocabulary-richness indices. MTLD and MATTR are stable across text
-lengths; TTR and CTTR are length-sensitive.
+`lexical_diversity_analysis()` reports vocabulary-richness indices. MTLD, MATTR, and HDD are stable
+across text lengths; TTR and CTTR are length-sensitive.
 
 ```{r}
 diversity <- lexical_diversity_analysis(dfm_object)
@@ -115,6 +115,7 @@ plot_lexical_diversity_distribution(diversity$lexical_diversity, metric = "TTR")
 | CTTR | Types / sqrt(2 × Tokens) | Partly length-corrected |
 | MATTR | Moving-average TTR | Stable across lengths |
 | MTLD | Mean length maintaining TTR | Length-independent |
+| HDD | Hypergeometric sampling probability | Length-independent, needs 42+ tokens |
 | Maas | Log-based index | Lower = more diverse |
 
 ## Readability
@@ -138,7 +139,8 @@ plot_readability_distribution(readability, metric = "flesch")
 
 ## Log Odds Ratio
 
-`calculate_log_odds_ratio()` compares term frequencies between categories to find distinctive vocabulary.
+`calculate_log_odds_ratio()` compares word odds between categories using a Dirichlet-smoothed
+log-odds ratio to find distinctive vocabulary.
 
 ```{r}
 log_odds <- calculate_log_odds_ratio(

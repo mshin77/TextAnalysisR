@@ -13,9 +13,10 @@ cluster_embeddings(
   umap_n_components = 10,
   umap_metric = "cosine",
   dbscan_eps = 0,
-  dbscan_min_samples = 5,
+  dbscan_min_samples = NULL,
   reduce_outliers = TRUE,
   outlier_strategy = "centroid",
+  outlier_threshold = 0,
   seed = 123,
   verbose = TRUE
 )
@@ -40,13 +41,21 @@ If 0, optimal number is determined automatically.}
 
 \item{dbscan_eps}{The eps parameter for DBSCAN. If 0, optimal value is determined automatically.}
 
-\item{dbscan_min_samples}{The minimum samples for DBSCAN (default: 5).}
+\item{dbscan_min_samples}{The minimum samples for DBSCAN. Default NULL sets
+\code{umap_n_components + 1} (dimensions-plus-one rule of thumb).}
 
-\item{reduce_outliers}{Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).}
+\item{reduce_outliers}{Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).
+Set FALSE to keep density-based noise labels.}
 
 \item{outlier_strategy}{Strategy for outlier reduction: "centroid" (default,
-Euclidean distance in UMAP space) or "embeddings" (cosine similarity in
-original space). Follows BERTopic methodology.}
+Euclidean nearest-centroid in UMAP space; package-specific heuristic) or
+"embeddings" (cosine similarity to cluster mean in original embedding
+space, matching the BERTopic "embeddings" strategy).}
+
+\item{outlier_threshold}{Minimum similarity for reassigning a noise point
+(default: 0, reassign all). For "embeddings" this is cosine similarity;
+for "centroid" it applies to 1 / (1 + euclidean distance). Points below
+the threshold keep cluster label 0.}
 
 \item{seed}{Random seed for reproducibility (default: 123).}
 
@@ -54,6 +63,11 @@ original space). Follows BERTopic methodology.}
 }
 \value{
 A list containing cluster assignments, method used, and quality metrics.
+For \code{method = "umap_dbscan"} with \code{reduce_outliers = TRUE}, the list
+also reports how noise points were reassigned: \code{outlier_strategy}
+("embeddings" or "centroid"), \code{outlier_metric} ("cosine" or "euclidean"),
+\code{outlier_space} ("original embedding space" or "UMAP space"), and
+\code{outliers_reassigned} (count).
 }
 \description{
 This function performs clustering analysis using various methods, ordered

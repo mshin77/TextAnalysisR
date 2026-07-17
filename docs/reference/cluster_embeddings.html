@@ -76,9 +76,10 @@ k-means (simplest), hierarchical (intermediate), and UMAP+DBSCAN
 <span>  umap_n_components <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  umap_metric <span class="op">=</span> <span class="st">"cosine"</span>,</span>
 <span>  dbscan_eps <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  dbscan_min_samples <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  dbscan_min_samples <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  reduce_outliers <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  outlier_strategy <span class="op">=</span> <span class="st">"centroid"</span>,</span>
+<span>  outlier_threshold <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">123</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -124,17 +125,27 @@ If 0, optimal number is determined automatically.</p></dd>
 
 
 <dt id="arg-dbscan-min-samples">dbscan_min_samples<a class="anchor" aria-label="anchor" href="#arg-dbscan-min-samples"></a></dt>
-<dd><p>The minimum samples for DBSCAN (default: 5).</p></dd>
+<dd><p>The minimum samples for DBSCAN. Default NULL sets
+<code>umap_n_components + 1</code> (dimensions-plus-one rule of thumb).</p></dd>
 
 
 <dt id="arg-reduce-outliers">reduce_outliers<a class="anchor" aria-label="anchor" href="#arg-reduce-outliers"></a></dt>
-<dd><p>Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).</p></dd>
+<dd><p>Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).
+Set FALSE to keep density-based noise labels.</p></dd>
 
 
 <dt id="arg-outlier-strategy">outlier_strategy<a class="anchor" aria-label="anchor" href="#arg-outlier-strategy"></a></dt>
 <dd><p>Strategy for outlier reduction: "centroid" (default,
-Euclidean distance in UMAP space) or "embeddings" (cosine similarity in
-original space). Follows BERTopic methodology.</p></dd>
+Euclidean nearest-centroid in UMAP space; package-specific heuristic) or
+"embeddings" (cosine similarity to cluster mean in original embedding
+space, matching the BERTopic "embeddings" strategy).</p></dd>
+
+
+<dt id="arg-outlier-threshold">outlier_threshold<a class="anchor" aria-label="anchor" href="#arg-outlier-threshold"></a></dt>
+<dd><p>Minimum similarity for reassigning a noise point
+(default: 0, reassign all). For "embeddings" this is cosine similarity;
+for "centroid" it applies to 1 / (1 + euclidean distance). Points below
+the threshold keep cluster label 0.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -147,7 +158,12 @@ original space). Follows BERTopic methodology.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing cluster assignments, method used, and quality metrics.</p>
+    <p>A list containing cluster assignments, method used, and quality metrics.
+For <code>method = "umap_dbscan"</code> with <code>reduce_outliers = TRUE</code>, the list
+also reports how noise points were reassigned: <code>outlier_strategy</code>
+("embeddings" or "centroid"), <code>outlier_metric</code> ("cosine" or "euclidean"),
+<code>outlier_space</code> ("original embedding space" or "UMAP space"), and
+<code>outliers_reassigned</code> (count).</p>
     </div>
 
     <div class="section level2">

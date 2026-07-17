@@ -191,13 +191,18 @@ term frequency for the top keywords.</p>
 <h2 id="lexical-diversity">Lexical Diversity<a class="anchor" aria-label="anchor" href="#lexical-diversity"></a>
 </h2>
 <p><code><a href="../reference/lexical_diversity_analysis.html">lexical_diversity_analysis()</a></code> reports vocabulary-richness
-indices. MTLD and MATTR are stable across text lengths; TTR and CTTR are
-length-sensitive.</p>
+indices. MTLD, MATTR, and HDD are stable across text lengths; TTR and
+CTTR are length-sensitive.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diversity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lexical_diversity_analysis.html">lexical_diversity_analysis</a></span><span class="op">(</span><span class="va">dfm_object</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_lexical_diversity_distribution.html">plot_lexical_diversity_distribution</a></span><span class="op">(</span><span class="va">diversity</span><span class="op">$</span><span class="va">lexical_diversity</span>, metric <span class="op">=</span> <span class="st">"TTR"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lexical_analysis_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
-<table class="table">
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="29%">
+<col width="48%">
+<col width="22%">
+</colgroup>
 <thead><tr class="header">
 <th>Metric</th>
 <th>Description</th>
@@ -225,6 +230,11 @@ length-sensitive.</p>
 <td>Length-independent</td>
 </tr>
 <tr class="odd">
+<td>HDD</td>
+<td>Hypergeometric sampling probability</td>
+<td>Length-independent, needs 42+ tokens</td>
+</tr>
+<tr class="even">
 <td>Maas</td>
 <td>Log-based index</td>
 <td>Lower = more diverse</td>
@@ -289,8 +299,9 @@ reading-ease indices from sentence and word structure.</p>
 <div class="section level2">
 <h2 id="log-odds-ratio">Log Odds Ratio<a class="anchor" aria-label="anchor" href="#log-odds-ratio"></a>
 </h2>
-<p><code><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio()</a></code> compares term frequencies
-between categories to find distinctive vocabulary.</p>
+<p><code><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio()</a></code> compares word odds between
+categories using a Dirichlet-smoothed log-odds ratio to find distinctive
+vocabulary.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">log_odds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculate_log_odds_ratio.html">calculate_log_odds_ratio</a></span><span class="op">(</span></span>
 <span>  <span class="va">dfm_object</span>,</span>

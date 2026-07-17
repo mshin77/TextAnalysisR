@@ -5,6 +5,10 @@ Provides nuanced sentiment understanding including sarcasm detection,
 mixed emotions, and contextual interpretation that lexicon-based methods
 miss.
 
+Requests use temperature 0, which makes outputs near-deterministic but
+not fully reproducible across runs or model versions; record the
+returned `model_used` field when reporting results.
+
 ## Usage
 
 ``` r
