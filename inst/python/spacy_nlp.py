@@ -292,11 +292,13 @@ class SpacyNLP:
             for comp in ["ner", "entity_ruler"]:
                 if comp in self.nlp.pipe_names:
                     disable_components.append(comp)
+        temp_sentencizer = False
         if not include_dependency:
             if "parser" in self.nlp.pipe_names:
                 disable_components.append("parser")
                 if "sentencizer" not in self.nlp.pipe_names:
                     self.nlp.add_pipe("sentencizer")
+                    temp_sentencizer = True
 
         # Use nlp.pipe() for efficient batch processing with disabled components
         pipe_context = self.nlp.select_pipes(disable=disable_components) if disable_components else nullcontext()
@@ -350,6 +352,8 @@ class SpacyNLP:
 
                     results.append(row)
 
+        if temp_sentencizer:
+            self.nlp.remove_pipe("sentencizer")
         return _to_r_safe_df(pd.DataFrame(results))
 
     def lemmatize(
@@ -658,8 +662,9 @@ class SpacyNLP:
             top_indices = np.argsort(similarities)[::-1][:top_n + 10]
 
             results = []
+            vector_keys = list(self.nlp.vocab.vectors.keys())
             for idx in top_indices:
-                key_id = self.nlp.vocab.vectors.keys()[idx]
+                key_id = vector_keys[idx]
                 similar_word = self.nlp.vocab.strings[key_id]
                 if similar_word.lower() != word.lower() and similar_word.isalpha():
                     results.append({

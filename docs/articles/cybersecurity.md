@@ -28,8 +28,8 @@ TextAnalysisR includes built-in security features.
 - Masked input field with format validation
 - Transmitted via secure headers only
 
-**Environment Variable:** add `OPENAI_API_KEY=...` to `.Renviron`, or
-set in-session:
+Environment Variable: add `OPENAI_API_KEY=...` to `.Renviron`, or set
+in-session:
 
 ``` r
 

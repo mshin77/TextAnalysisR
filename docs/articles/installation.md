@@ -28,6 +28,17 @@ head(SpecialEduTech[, c("title", "year")], 3)
     ## 2 The effects of computer-assisted instruction for mastery of multiplicat…  1981
     ## 3 Computer Assisted Instruction with Learning Disabled Students             1981
 
+## Choose a Setup
+
+| Goal | Setup |
+|----|----|
+| Small datasets in the browser | Web app at [textanalysisr.org](https://www.textanalysisr.org) |
+| Full analyses and large datasets | [`install.packages()`](https://rdrr.io/r/utils/install.packages.html) below |
+| spaCy annotation and local transformer models | [`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md) after installing |
+
+Python is optional. Core analyses run in plain R; cloud AI providers
+(OpenAI, Gemini) can substitute for local models with an API key.
+
 ## R Package
 
 ``` r
@@ -38,7 +49,7 @@ library(TextAnalysisR)
 run_app()
 ```
 
-**Requirements:** R \>= 4.0, RStudio recommended
+Requirements: R \>= 4.0, RStudio recommended
 
 ## Web App
 

@@ -28,7 +28,7 @@ sentiment analysis.
 automatically:
 
 1.  Creates virtual environment `textanalysisr-env`
-2.  Installs **spacy** and **pdfplumber**
+2.  Installs `spacy` and `pdfplumber`
 3.  Downloads spaCy English model (`en_core_web_sm`)
 
 Uses virtualenv (or conda if available).

@@ -107,6 +107,39 @@
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> The effects of computer-assisted instruction for mastery of multiplicat…  <span style="text-decoration: underline;">1</span>981</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> Computer Assisted Instruction with Learning Disabled Students             <span style="text-decoration: underline;">1</span>981</span></span></code></pre>
 <div class="section level2">
+<h2 id="choose-a-setup">Choose a Setup<a class="anchor" aria-label="anchor" href="#choose-a-setup"></a>
+</h2>
+<table class="table">
+<colgroup>
+<col width="46%">
+<col width="53%">
+</colgroup>
+<thead><tr class="header">
+<th>Goal</th>
+<th>Setup</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Small datasets in the browser</td>
+<td>Web app at <a href="https://www.textanalysisr.org" class="external-link">textanalysisr.org</a>
+</td>
+</tr>
+<tr class="even">
+<td>Full analyses and large datasets</td>
+<td>
+<code><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages()</a></code> below</td>
+</tr>
+<tr class="odd">
+<td>spaCy annotation and local transformer models</td>
+<td>
+<code><a href="../reference/setup_python_env.html">setup_python_env()</a></code> after installing</td>
+</tr>
+</tbody>
+</table>
+<p>Python is optional. Core analyses run in plain R; cloud AI providers
+(OpenAI, Gemini) can substitute for local models with an API key.</p>
+</div>
+<div class="section level2">
 <h2 id="r-package">R Package<a class="anchor" aria-label="anchor" href="#r-package"></a>
 </h2>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
@@ -114,7 +147,7 @@
 <span>  repos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"https://mshin77.r-universe.dev"</span>, <span class="st">"https://cloud.r-project.org"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/run_app.html">run_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Requirements:</strong> R &gt;= 4.0, RStudio recommended</p>
+<p>Requirements: R &gt;= 4.0, RStudio recommended</p>
 </div>
 <div class="section level2">
 <h2 id="web-app">Web App<a class="anchor" aria-label="anchor" href="#web-app"></a>

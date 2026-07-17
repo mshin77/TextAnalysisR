@@ -22,8 +22,8 @@ analyze_sentiment(texts, method = "syuzhet", doc_ids = NULL)
 - method:
 
   Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc"
-  (default: "syuzhet"). The "syuzhet" method scores each matched
-  dictionary word once per document regardless of repetition.
+  (default: "syuzhet"). All methods score each matched dictionary word
+  once per document regardless of repetition.
 
 - doc_ids:
 

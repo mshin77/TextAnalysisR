@@ -93,8 +93,9 @@
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"mshin77/TextAnalysisR"</span>)</span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="first-time-python-setup">First-Time Python Setup<a class="anchor" aria-label="anchor" href="#first-time-python-setup"></a>
+<h2 id="first-time-python-setup-optional">First-Time Python Setup (Optional)<a class="anchor" aria-label="anchor" href="#first-time-python-setup-optional"></a>
 </h2>
+<p>Python is optional. Core analyses (topic modeling, keywords, lexical diversity, networks, sentiment lexicons) run in plain R. Use the local package for large datasets.</p>
 <p>Several functions (<code><a href="reference/lemmatize_tokens.html">lemmatize_tokens()</a></code>, <code><a href="reference/generate_embeddings.html">generate_embeddings()</a></code>, <code><a href="reference/cluster_embeddings.html">cluster_embeddings()</a></code>, PDF extraction, transformer-based analyses) require Python packages. Run this <strong>once</strong> after installing TextAnalysisR:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">library</span>(TextAnalysisR)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">setup_python_env</span>()</span></code></pre></div>

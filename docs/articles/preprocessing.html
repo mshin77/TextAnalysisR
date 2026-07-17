@@ -111,11 +111,13 @@
 <span><span class="va">tokens_clean</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/tokens_select.html" class="external-link">tokens_remove</a></span><span class="op">(</span><span class="va">tokens</span>, <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/stopwords/man/stopwords.html" class="external-link">stopwords</a></span><span class="op">(</span><span class="st">"en"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens_clean</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Unite Text Columns</strong></p>
+<div class="section level3">
+<h3 id="unite-text-columns">Unite Text Columns<a class="anchor" aria-label="anchor" href="#unite-text-columns"></a>
+</h3>
 <p>Unite combines multiple text columns into a single column for
 analysis. Useful when text content is spread across multiple fields that
 should be analyzed together.</p>
-<p><strong>Examples:</strong></p>
+<p>Examples:</p>
 <ul>
 <li>
 <strong>Survey Data:</strong> Combine multiple open-ended response
@@ -127,17 +129,19 @@ fields</li>
 <strong>Comments:</strong> Concatenate multiple comment or note
 columns</li>
 </ul>
-<p><strong>Usage:</strong> Select one or multiple text columns to
-combine. Columns are concatenated with spaces between them. The united
-column becomes the text source for all subsequent preprocessing and
-analysis steps.</p>
-<p><strong>Learn More:</strong> <a href="https://tidyr.tidyverse.org/reference/unite.html" class="external-link">tidyr Unite
+<p>Usage: Select one or multiple text columns to combine. Columns are
+concatenated with spaces between them. The united column becomes the
+text source for all subsequent preprocessing and analysis steps.</p>
+<p>Learn More: <a href="https://tidyr.tidyverse.org/reference/unite.html" class="external-link">tidyr Unite
 Function</a></p>
-<p><strong>Tokenization Options</strong></p>
+</div>
+<div class="section level3">
+<h3 id="tokenization-options">Tokenization Options<a class="anchor" aria-label="anchor" href="#tokenization-options"></a>
+</h3>
 <p>Tokenization segments continuous text into individual units (tokens),
 typically words, converting unstructured text into structured format for
 computational analysis.</p>
-<p><strong>Options:</strong></p>
+<p>Options:</p>
 <ul>
 <li>
 <strong>Lowercase:</strong> Convert all text to lowercase to treat
@@ -178,17 +182,19 @@ etc.)</li>
 </tr>
 </tbody>
 </table>
-<p><strong>Usage:</strong> Select preprocessing options based on the
-analysis goals. Sentence segmentation splits text into sentences before
-tokenization when sentence structure is important (e.g., sentiment
-analysis).</p>
-<p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/tokens.html" class="external-link">quanteda Tokens
+<p>Usage: Select preprocessing options based on the analysis goals.
+Sentence segmentation splits text into sentences before tokenization
+when sentence structure is important (e.g., sentiment analysis).</p>
+<p>Learn More: <a href="https://quanteda.io/reference/tokens.html" class="external-link">quanteda Tokens
 Documentation</a></p>
-<p><strong>Stopword Removal</strong></p>
+</div>
+<div class="section level3">
+<h3 id="stopword-removal">Stopword Removal<a class="anchor" aria-label="anchor" href="#stopword-removal"></a>
+</h3>
 <p>Stopwords are common words (e.g., “the”, “is”, “and”) that appear
 frequently but carry little meaningful content for analysis. Removing
 them reduces noise and improves focus on content-bearing words.</p>
-<p><strong>When to Remove:</strong></p>
+<p>When to Remove:</p>
 <ul>
 <li>
 <strong>Topic Modeling:</strong> Helps identify content themes by
@@ -200,17 +206,19 @@ to the top</li>
 <strong>Content Analysis:</strong> Focuses on substantive
 vocabulary</li>
 </ul>
-<p><strong>Usage:</strong> Use predefined stopword lists (e.g.,
-Snowball) or add custom words. For sentiment analysis or syntactic
-studies, consider keeping stopwords as they may carry important
-meaning.</p>
-<p><strong>Learn More:</strong> <a href="https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html" class="external-link">stopwords
+<p>Usage: Use predefined stopword lists (e.g., Snowball) or add custom
+words. For sentiment analysis or syntactic studies, consider keeping
+stopwords as they may carry important meaning.</p>
+<p>Learn More: <a href="https://search.r-project.org/CRAN/refmans/stopwords/html/stopwords.html" class="external-link">stopwords
 Package Documentation</a></p>
-<p><strong>Lemmatization</strong></p>
+</div>
+<div class="section level3">
+<h3 id="lemmatization">Lemmatization<a class="anchor" aria-label="anchor" href="#lemmatization"></a>
+</h3>
 <p>Lemmatization reduces words to their base or dictionary form (lemma).
 For example, “running”, “ran”, and “runs” all become “run”. This groups
 related word forms together for more meaningful analysis.</p>
-<p><strong>Comparison:</strong></p>
+<p>Comparison:</p>
 <ul>
 <li>
 <strong>Lemmatization:</strong> Uses linguistic knowledge to produce
@@ -222,18 +230,21 @@ valid dictionary words (studies → study)</li>
 <strong>Advantage:</strong> Lemmatization produces readable,
 meaningful base forms</li>
 </ul>
-<p><strong>Usage:</strong> Apply lemmatization after tokenization to
-consolidate word variants. Particularly useful for topic modeling and
-keyword extraction where grouping related forms improves
-interpretability. Requires Python with spaCy.</p>
-<p><strong>Learn More:</strong> <a href="https://spacy.io/usage/linguistic-features#lemmatization" class="external-link">spaCy
+<p>Usage: Apply lemmatization after tokenization to consolidate word
+variants. Particularly useful for topic modeling and keyword extraction
+where grouping related forms improves interpretability. Requires Python
+with spaCy.</p>
+<p>Learn More: <a href="https://spacy.io/usage/linguistic-features#lemmatization" class="external-link">spaCy
 Lemmatization Guide</a></p>
-<p><strong>Document-Feature Matrix (DFM)</strong></p>
+</div>
+<div class="section level3">
+<h3 id="document-feature-matrix-dfm">Document-Feature Matrix (DFM)<a class="anchor" aria-label="anchor" href="#document-feature-matrix-dfm"></a>
+</h3>
 <p>A Document-Feature Matrix (DFM) is a mathematical representation
 where rows are documents, columns are unique tokens (features), and
 cells contain frequency counts. It converts unstructured text into
 structured numerical format for computational analysis.</p>
-<p><strong>Process:</strong></p>
+<p>Process:</p>
 <ul>
 <li>
 <strong>Tokenization:</strong> Text is split into individual tokens
@@ -247,12 +258,13 @@ columns</li>
 <strong>Sparse Matrix:</strong> Efficient storage format for large
 corpora</li>
 </ul>
-<p><strong>Usage:</strong> The DFM is the foundation for all downstream
-analyses including keyword extraction, topic modeling, and semantic
-analysis. Create it after preprocessing (tokenization, stopword removal,
+<p>Usage: The DFM is the foundation for all downstream analyses
+including keyword extraction, topic modeling, and semantic analysis.
+Create it after preprocessing (tokenization, stopword removal,
 lemmatization).</p>
-<p><strong>Learn More:</strong> <a href="https://quanteda.io/reference/dfm.html" class="external-link">quanteda DFM
-Documentation</a></p>
+<p>Learn More: <a href="https://quanteda.io/reference/dfm.html" class="external-link">quanteda
+DFM Documentation</a></p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="multi-word-expressions">Multi-word Expressions<a class="anchor" aria-label="anchor" href="#multi-word-expressions"></a>

@@ -10,8 +10,8 @@ analyze_sentiment(texts, method = "syuzhet", doc_ids = NULL)
 \item{texts}{Character vector of texts to analyze}
 
 \item{method}{Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc" (default: "syuzhet").
-The "syuzhet" method scores each matched dictionary word once per
-document regardless of repetition.}
+All methods score each matched dictionary word once per document
+regardless of repetition.}
 
 \item{doc_ids}{Optional character vector of document identifiers (default: NULL)}
 }

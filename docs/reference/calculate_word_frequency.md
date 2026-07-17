@@ -80,6 +80,8 @@ for the standard frequency-by-doc plot
     height = 500,
     width = 900
   )
+#> Warning: NaNs produced
+#> Warning: NaNs produced
   print(word_freq_results$plot)
 
   print(word_freq_results$table)

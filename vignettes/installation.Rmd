@@ -20,6 +20,17 @@ nrow(SpecialEduTech)
 head(SpecialEduTech[, c("title", "year")], 3)
 ```
 
+## Choose a Setup
+
+| Goal | Setup |
+|------|-------|
+| Small datasets in the browser | Web app at [textanalysisr.org](https://www.textanalysisr.org) |
+| Full analyses and large datasets | `install.packages()` below |
+| spaCy annotation and local transformer models | `setup_python_env()` after installing |
+
+Python is optional. Core analyses run in plain R; cloud AI providers
+(OpenAI, Gemini) can substitute for local models with an API key.
+
 ## R Package
 
 ```{r, eval = FALSE}
@@ -29,7 +40,7 @@ library(TextAnalysisR)
 run_app()
 ```
 
-**Requirements:** R >= 4.0, RStudio recommended
+Requirements: R >= 4.0, RStudio recommended
 
 ## Web App
 

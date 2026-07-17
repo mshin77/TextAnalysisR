@@ -2064,6 +2064,10 @@ render_displacy_ent <- function(text, model = "en_core_web_sm", colors = NULL) {
     nlp <- spacy$load(model)
     doc <- nlp(text)
 
+    if (length(doc$ents) == 0) {
+      return("<div>No named entities detected in this text.</div>")
+    }
+
     options <- list()
     if (!is.null(colors) && length(colors) > 0) {
       options$colors <- colors
@@ -2871,32 +2875,17 @@ calculate_weighted_log_odds <- function(dfm_object,
     stop("group_var '", group_var, "' not found in document variables")
   }
 
-  # Get document variables
-  doc_vars <- quanteda::docvars(dfm_object)
-  doc_vars$doc_id <- quanteda::docnames(dfm_object)
-
-  # Convert DFM to tidy format
-  tidy_data <- quanteda::convert(dfm_object, to = "data.frame")
-  names(tidy_data)[1] <- "doc_id"
-
-  tidy_long <- tidyr::pivot_longer(
-    tidy_data,
-    cols = -"doc_id",
+  # sparse group aggregation keeps memory flat on large corpora
+  grouped_dfm <- quanteda::dfm_group(dfm_object,
+                                     groups = quanteda::docvars(dfm_object)[[group_var]])
+  grouped_counts <- quanteda::convert(grouped_dfm, to = "data.frame")
+  names(grouped_counts)[1] <- group_var
+  grouped_counts <- tidyr::pivot_longer(
+    grouped_counts,
+    cols = -dplyr::all_of(group_var),
     names_to = "feature",
-    values_to = "count"
+    values_to = "n"
   )
-
-  # Join with document variables
-  tidy_long <- dplyr::left_join(
-    tidy_long,
-    doc_vars[, c("doc_id", group_var)],
-    by = "doc_id"
-  )
-
-  # Aggregate by group and feature
-  grouped_counts <- tidy_long %>%
-    dplyr::group_by(.data[[group_var]], feature) %>%
-    dplyr::summarise(n = sum(count), .groups = "drop")
 
   # group totals and the prior require the full vocabulary
   result <- tidylo::bind_log_odds(

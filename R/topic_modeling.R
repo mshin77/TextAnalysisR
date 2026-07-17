@@ -921,7 +921,10 @@ fit_embedding_model <- function(texts,
 
         bertopic <- reticulate::import("bertopic")
 
-        nr_topics <- if (is.null(n_topics) || n_topics == "auto") NULL else as.integer(n_topics)
+        # "auto" requests BERTopic's automatic topic merging
+        nr_topics <- if (is.null(n_topics)) NULL
+          else if (identical(n_topics, "auto")) "auto"
+          else as.integer(n_topics)
 
         if (verbose) message("Initializing BERTopic model...")
 
@@ -948,7 +951,8 @@ fit_embedding_model <- function(texts,
 
         if (verbose) message("Fitting BERTopic model to ", length(valid_texts), " documents...")
 
-        fit_result <- topic_model$fit_transform(valid_texts)
+        # cluster on the already computed embeddings
+        fit_result <- topic_model$fit_transform(valid_texts, embeddings = embeddings)
         topic_assignments_raw <- fit_result[[1]]
         topic_probs <- fit_result[[2]]
 
@@ -977,6 +981,8 @@ fit_embedding_model <- function(texts,
               strategy = outlier_strategy,
               threshold = outlier_threshold
             )
+            # sync topic info with the new assignments
+            topic_model$update_topics(valid_texts, topics = new_topics)
             topic_assignments <- as.vector(new_topics) + 1
             outliers_reassigned <- length(outlier_docs) - sum(topic_assignments == 0)
           }

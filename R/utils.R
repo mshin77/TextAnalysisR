@@ -482,6 +482,21 @@ run_text_workflow <- function(dataset_choice,
   ))
 }
 
+# broom has no tidy method for zeroinfl; extract the count component
+.tidy_count_model <- function(model) {
+  if (!inherits(model, "zeroinfl")) {
+    return(broom::tidy(model))
+  }
+  cf <- summary(model)$coefficients$count
+  tibble::tibble(
+    term = rownames(cf),
+    estimate = cf[, 1],
+    std.error = cf[, 2],
+    statistic = cf[, 3],
+    p.value = cf[, 4]
+  )
+}
+
 #' @title Analyze and Visualize Word Frequencies Across a Continuous Variable
 #'
 #' @description
@@ -529,21 +544,6 @@ run_text_workflow <- function(dataset_choice,
 #'   print(word_freq_results$plot)
 #'   print(word_freq_results$table)
 #' }
-# broom has no tidy method for zeroinfl; extract the count component
-.tidy_count_model <- function(model) {
-  if (!inherits(model, "zeroinfl")) {
-    return(broom::tidy(model))
-  }
-  cf <- summary(model)$coefficients$count
-  tibble::tibble(
-    term = rownames(cf),
-    estimate = cf[, 1],
-    std.error = cf[, 2],
-    statistic = cf[, 3],
-    p.value = cf[, 4]
-  )
-}
-
 calculate_word_frequency <- function(dfm_object,
                                  continuous_variable,
                                  selected_terms,

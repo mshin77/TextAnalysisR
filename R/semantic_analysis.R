@@ -764,7 +764,8 @@ cluster_embeddings <- function(data_matrix,
 
         if (dbscan_eps == 0) {
           if (verbose) message("Determining optimal eps parameter...")
-          knn_dist <- dbscan::kNNdist(umap_result$reduced_data, k = dbscan_min_samples)
+          # kNNdist convention: k = minPts - 1 (a point is its own neighbor)
+          knn_dist <- dbscan::kNNdist(umap_result$reduced_data, k = max(1, dbscan_min_samples - 1))
           dbscan_eps <- stats::quantile(knn_dist, 0.9)
           auto_eps <- TRUE
         } else {
@@ -1463,6 +1464,7 @@ calculate_similarity_robust <- function(texts,
         verbose = FALSE
       )
 
+      if (is.null(dim(embeddings))) embeddings <- matrix(embeddings, nrow = 1)
       sklearn_metrics <- reticulate::import("sklearn.metrics.pairwise")
       similarity_matrix <- sklearn_metrics$cosine_similarity(embeddings)
       similarity_matrix <- as.matrix(similarity_matrix)
@@ -2129,8 +2131,8 @@ analyze_similarity_gaps <- function(similarity_data,
 #'
 #' @param texts Character vector of texts to analyze
 #' @param method Sentiment analysis method: "syuzhet", "bing", "afinn", or "nrc" (default: "syuzhet").
-#'   The "syuzhet" method scores each matched dictionary word once per
-#'   document regardless of repetition.
+#'   All methods score each matched dictionary word once per document
+#'   regardless of repetition.
 #' @param doc_ids Optional character vector of document identifiers (default: NULL)
 #'
 #' @return A data frame with columns:

@@ -36,7 +36,11 @@ Or the development version from
     install.packages("remotes")
     remotes::install_github("mshin77/TextAnalysisR")
 
-## First-Time Python Setup
+## First-Time Python Setup (Optional)
+
+Python is optional. Core analyses (topic modeling, keywords, lexical
+diversity, networks, sentiment lexicons) run in plain R. Use the local
+package for large datasets.
 
 Several functions (`lemmatize_tokens()`, `generate_embeddings()`,
 `cluster_embeddings()`, PDF extraction, transformer-based analyses)
