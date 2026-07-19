@@ -2056,6 +2056,7 @@ lexical_analysis_ui_content <- function() {
                 style = "color: #4269BF; margin-bottom: 10px;"
               ),
               div(
+                class = "custom-entity-row",
                 style = "display: flex; gap: 8px; align-items: flex-end;",
                 div(
                   style = "flex: 0 0 36px;",
@@ -2072,7 +2073,7 @@ lexical_analysis_ui_content <- function() {
                   textInput("custom_entity_name", HTML("<span class='sr-only'>Custom entity name</span>"), placeholder = "Type a New Entity")
                 ),
                 div(
-                  style = "flex: 0 0 auto; margin-bottom: 15px;",
+                  style = "flex: 0 0 auto;",
                   actionButton("apply_custom_entity", icon("plus"),
                     class = "btn-primary btn-sm",
                     style = "height: 34px; width: 34px; padding: 0;",

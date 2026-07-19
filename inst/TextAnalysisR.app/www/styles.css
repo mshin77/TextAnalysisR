@@ -807,6 +807,13 @@ code {
   font-size: 16px;
 }
 
+/* add custom entity: swatch/name/button share one row — drop per-input margin */
+.custom-entity-row { margin-bottom: 8px; }
+
+.custom-entity-row .form-group.shiny-input-container {
+  margin-bottom: 0;
+}
+
 input[type="file"] {
   font-size: 16px;
 }
