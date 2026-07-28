@@ -11979,26 +11979,22 @@ server <- shinyServer(function(input, output, session) {
     # Update categorical covariates for K Search
     updateSelectizeInput(session, "stm_categorical_var",
                          choices = colnames_cat(),
-                         selected = NULL,
-                         server = TRUE)
+                         selected = NULL)
 
     # Update continuous covariates for K Search
     updateSelectizeInput(session, "stm_continuous_var",
                          choices = colnames_con(),
-                         selected = NULL,
-                         server = TRUE)
+                         selected = NULL)
 
     # Update categorical covariates for STM Model (conditioned3 == 5)
     updateSelectizeInput(session, "stm_categorical_var_2",
                          choices = colnames_cat(),
-                         selected = NULL,
-                         server = TRUE)
+                         selected = NULL)
 
     # Update continuous covariates for STM Model (conditioned3 == 5)
     updateSelectizeInput(session, "stm_continuous_var_2",
                          choices = colnames_con(),
-                         selected = NULL,
-                         server = TRUE)
+                         selected = NULL)
   }, ignoreInit = FALSE)
 
   output$semantic_feature_space_selector <- renderUI({
