@@ -1037,7 +1037,9 @@ Focus on incorporating the most significant keywords while following the guideli
                     "AI Recommendation",
                     value = "ai_rec",
                     br(),
-                    uiOutput("ai_recommendation_output")
+                    uiOutput("ai_recommendation_output"),
+                    br(),
+                    DT::dataTableOutput("ai_recommendation_table")
                   )
                 )
               ),
@@ -1126,6 +1128,9 @@ Focus on incorporating the most significant keywords while following the guideli
                 uiOutput("topic_term_plot_uiOutput"),
                 br(),
                 uiOutput("topic_term_table_uiOutput"),
+                br(),
+                h4("Topic Summary"),
+                DT::dataTableOutput("topic_summary_insights"),
                 br()
               ),
               conditionalPanel(

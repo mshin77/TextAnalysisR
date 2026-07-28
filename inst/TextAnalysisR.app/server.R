@@ -151,7 +151,7 @@ server <- shinyServer(function(input, output, session) {
 
   gate_rate_limit <- function(where, notify = shiny::showNotification) {
     tryCatch({
-      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
+      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 20, window_seconds = 3600)
       TRUE
     }, error = function(e) {
       TextAnalysisR:::log_security_event("rate_limit_exceeded", where, session, "warning")
@@ -12434,7 +12434,23 @@ server <- shinyServer(function(input, output, session) {
         list(similarity_matrix = similarity_matrix, method = "words_cosine", embeddings = NULL)
       },
       error = function(e) {
-        showNotification(paste("✗ Words similarity error:", e$message), type = "error", duration = 5)
+        showNotification(paste("Words similarity error:", e$message), type = "error", duration = 5)
+        NULL
+      }
+    )
+  }
+
+  calculate_topics_similarity <- function() {
+    tryCatch(
+      {
+        model <- topic_model_result()
+        if (is.null(model)) return(NULL)
+        if (!"theta" %in% names(model)) return(NULL)
+        similarity_matrix <- TextAnalysisR::calculate_cosine_similarity(model$theta)
+        list(similarity_matrix = similarity_matrix, method = "topics_cosine", embeddings = NULL)
+      },
+      error = function(e) {
+        showNotification(paste("Topics similarity error:", e$message), type = "error", duration = 5)
         NULL
       }
     )
@@ -12464,7 +12480,7 @@ server <- shinyServer(function(input, output, session) {
         list(similarity_matrix = similarity_matrix, method = "ngrams_cosine", embeddings = NULL)
       },
       error = function(e) {
-        showNotification(paste("✗ N-grams similarity error:", e$message), type = "error", duration = 5)
+        showNotification(paste("N-grams similarity error:", e$message), type = "error", duration = 5)
         NULL
       }
     )
@@ -15762,7 +15778,7 @@ server <- shinyServer(function(input, output, session) {
   output$cooccur_feature_status <- renderUI({
     feature_space <- input$cooccur_feature_space %||% "words"
     dfm_available <- tryCatch({
-      dfm_obj <- dfm_reactive()
+      dfm_obj <- dfm_final()
       !is.null(dfm_obj) && inherits(dfm_obj, "dfm")
     }, error = function(e) FALSE)
     ngram_available <- tryCatch({
@@ -15797,7 +15813,7 @@ server <- shinyServer(function(input, output, session) {
   output$corr_feature_status <- renderUI({
     feature_space <- input$corr_feature_space %||% "words"
     dfm_available <- tryCatch({
-      dfm_obj <- dfm_reactive()
+      dfm_obj <- dfm_final()
       !is.null(dfm_obj) && inherits(dfm_obj, "dfm")
     }, error = function(e) FALSE)
     ngram_available <- tryCatch({
@@ -17851,7 +17867,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (length(terms) > 0) {
-      as.formula(paste("~", paste(terms, collapse = " + ")))
+      TextAnalysisR:::.build_covariate_formula(terms)
     } else {
       as.formula("~ 1")
     }
@@ -18663,7 +18679,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (length(terms) > 0) {
-      as.formula(paste("~", paste(terms, collapse = " + ")))
+      TextAnalysisR:::.build_covariate_formula(terms)
     } else {
       as.formula("~ 1")
     }
@@ -18782,7 +18798,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     prevalence_formula(if (length(terms) > 0) {
-      as.formula(paste("~", paste(terms, collapse = " + ")))
+      TextAnalysisR:::.build_covariate_formula(terms)
     } else {
       NULL
     })
@@ -19603,6 +19619,10 @@ server <- shinyServer(function(input, output, session) {
 
   get_top_term_number <- function() {
     input[[paste0("stm_top_term_number_", get_topic_measure())]] %||% 5
+  }
+
+  get_ncol_top_terms <- function() {
+    input$stm_ncol_top_terms %||% 2
   }
 
   stm_topic_terms <- reactive({
@@ -20967,7 +20987,7 @@ server <- shinyServer(function(input, output, session) {
         }
 
         prevalence_formula <- if (length(terms) > 0) {
-          as.formula(paste("~", paste(terms, collapse = " + ")))
+          TextAnalysisR:::.build_covariate_formula(terms)
         } else {
           NULL
         }

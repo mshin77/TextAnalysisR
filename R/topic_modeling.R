@@ -16,6 +16,12 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
   }
 }
 
+.build_covariate_formula <- function(terms) {
+  f <- stats::as.formula(paste("~", paste(terms, collapse = " + ")))
+  environment(f) <- list2env(list(s = stm::s), parent = globalenv())
+  f
+}
+
 .embedding_silhouette <- function(model) {
   coords <- model$embeddings
   clusters <- model$topic_assignments
@@ -89,7 +95,7 @@ find_optimal_k <- function(dfm_object,
     terms <- c(terms, continuous_var)
   }
   prevalence_formula <- if (length(terms) > 0) {
-    as.formula(paste("~", paste(terms, collapse = " + ")))
+    .build_covariate_formula(terms)
   } else {
     NULL
   }
