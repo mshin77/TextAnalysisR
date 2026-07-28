@@ -1,6 +1,8 @@
 <img src="man/figures/logo.png" alt="TextAnalysisR Logo" align="right" width="150px"/>
 
 [![R-CMD-check](https://github.com/mshin77/TextAnalysisR/workflows/R-CMD-check/badge.svg)](https://github.com/mshin77/TextAnalysisR/actions)
+[![CRAN status](https://www.r-pkg.org/badges/version/TextAnalysisR)](https://CRAN.R-project.org/package=TextAnalysisR)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/TextAnalysisR)](https://CRAN.R-project.org/package=TextAnalysisR)
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License:
@@ -23,6 +25,10 @@ and document clustering on transformer embeddings, an interactive
 retrieval-augmented generation.
 
 ## Installation
+
+From [CRAN](https://CRAN.R-project.org/package=TextAnalysisR):
+
+    install.packages("TextAnalysisR")
 
 From [R-universe](https://mshin77.r-universe.dev) (pre-built binaries
 for Windows, macOS, and Linux):
