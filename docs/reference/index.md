@@ -242,7 +242,7 @@ STM and embedding-based models, validation, and quality metrics
 LLM integration, embeddings, PDF extraction, and vision AI
 
 - [`call_llm_api()`](https://mshin77.github.io/TextAnalysisR/reference/call_llm_api.md)
-  : Call LLM API (Unified Wrapper)
+  : Call LLM API
 - [`check_vision_models()`](https://mshin77.github.io/TextAnalysisR/reference/check_vision_models.md)
   : Check Vision Model Availability
 - [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md)

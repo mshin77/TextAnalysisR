@@ -3244,7 +3244,7 @@ plot_topic_effects_continuous <- function(effects_data,
                                    "<br>Value:", round(effects_data$value, 3),
                                    "<br>Proportion:", sprintf("%.3f", effects_data$proportion))
 
-  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion, text = hover_text)) +
+  ggplot_obj <- ggplot2::ggplot(effects_data, ggplot2::aes(x = value, y = proportion, text = hover_text, group = topic_label)) +
     ggplot2::facet_wrap(~topic_label, ncol = ncol, scales = "free") +
     ggplot2::scale_y_continuous(labels = .number_labeller(3)) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = lower, ymax = upper), fill = "#337ab7", alpha = 0.2) +

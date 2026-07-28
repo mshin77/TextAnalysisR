@@ -861,7 +861,7 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
 #' @title Lexical Frequency Analysis
 #'
 #' @description
-#' Wrapper function for plot_word_frequency for lexical analysis.
+#' Plots word frequency for lexical analysis using plot_word_frequency.
 #'
 #' @param ... Arguments passed to plot_word_frequency
 #'
@@ -2126,7 +2126,7 @@ render_displacy_dep <- function(text, compact = TRUE, model = "en_core_web_sm") 
 # =============================================================================
 # spaCy NLP Interface Functions
 # =============================================================================
-# R wrapper functions for spaCy NLP via reticulate.
+# R functions calling spaCy NLP via reticulate.
 # Provides direct Python spaCy access for full control
 # over all spaCy features including morphology.
 

@@ -265,7 +265,7 @@ calculate_document_similarity <- function(texts,
 #'
 #' @description
 #' Performs semantic analysis including similarity, dimensionality reduction,
-#' and clustering. This is a high-level wrapper function.
+#' and clustering in a single call.
 #'
 #' @param texts A character vector of texts to analyze.
 #' @param analysis_types Types of analysis to perform: "similarity", "dimensionality_reduction", "clustering".
@@ -1016,7 +1016,7 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
 }
 
 #' @title Semantic Similarity Analysis
-#' @description Wrapper for calculate_document_similarity
+#' @description Runs document similarity analysis using calculate_document_similarity.
 #' @param ... Arguments passed to calculate_document_similarity
 #' @return Similarity analysis results
 #' @concept semantic

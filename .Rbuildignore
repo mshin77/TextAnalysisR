@@ -21,6 +21,7 @@ inst/TextAnalysisR\.app/\.claude$
 ^\.env\.example$
 ^\.positai$
 ^cran-comments\.md$
+^SECURITY\.md$
 ^\.lintr$
 ^tests/testthat/security\.log$
 ^scratch_.*\.R$

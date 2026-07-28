@@ -6,7 +6,7 @@ library(TextAnalysisR)
 packageVersion("TextAnalysisR")
 ```
 
-    ## [1] '0.1.4'
+    ## [1] '0.1.4.9000'
 
 ``` r
 

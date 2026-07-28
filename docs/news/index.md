@@ -2,6 +2,8 @@
 
 ## TextAnalysisR 0.1.4
 
+CRAN release: 2026-07-27
+
 - New `math_mode` argument in
   [`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md)
   keeps numbers, math operators, and symbols, and strips only

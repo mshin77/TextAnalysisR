@@ -13,6 +13,6 @@ lexical_frequency_analysis(...)
 A plotly bar chart of word frequencies
 }
 \description{
-Wrapper function for plot_word_frequency for lexical analysis.
+Plots word frequency for lexical analysis using plot_word_frequency.
 }
 \concept{lexical}

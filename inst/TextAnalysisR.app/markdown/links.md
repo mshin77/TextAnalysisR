@@ -7,7 +7,7 @@
 
 ## Applications
 
-- **R Package** (full features): `install.packages("TextAnalysisR", repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))`
+- **R Package** (full features): `install.packages("TextAnalysisR")`
 - **Web App** (core features): [textanalysisr.org](https://www.textanalysisr.org)
 
 ## Use Policy

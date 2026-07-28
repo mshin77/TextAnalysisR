@@ -49,7 +49,7 @@ A list containing results from requested analyses.
 }
 \description{
 Performs semantic analysis including similarity, dimensionality reduction,
-and clustering. This is a high-level wrapper function.
+and clustering in a single call.
 }
 \examples{
 if (interactive()) {

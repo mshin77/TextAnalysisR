@@ -1,7 +1,8 @@
-# Call LLM API (Unified Wrapper)
+# Call LLM API
 
-Unified wrapper for calling different LLM providers (OpenAI, Gemini).
-Automatically routes to the appropriate provider-specific function.
+Calls different LLM providers (OpenAI, Gemini) through a single
+interface. Automatically routes to the appropriate provider-specific
+function.
 
 ## Usage
 

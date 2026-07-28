@@ -130,7 +130,7 @@ head(tidytext::tidy(prep), 10)
 `stm::plot.estimateEffect(..., method = "pointestimate", omit.plot = TRUE)` returns the model-based
 estimate and 95% CI per topic and level, reshaped here into the columns the plot expects.
 
-```{r}
+```{r, fig.width = 8, fig.height = 9}
 ec <- stm::plot.estimateEffect(prep, "reference_type", method = "pointestimate",
                                model = model, omit.plot = TRUE)
 effects_cat <- do.call(rbind, lapply(seq_along(ec$topics), function(i) {
@@ -147,7 +147,7 @@ plot_topic_effects_categorical(effects_cat)
 `plot.estimateEffect()` call with `method = "continuous"` returns the estimate and CI over a grid of the
 covariate.
 
-```{r}
+```{r, fig.width = 8, fig.height = 9}
 en <- stm::plot.estimateEffect(prep, "year", method = "continuous",
                                model = model, omit.plot = TRUE)
 effects_cont <- do.call(rbind, lapply(seq_along(en$topics), function(i) {

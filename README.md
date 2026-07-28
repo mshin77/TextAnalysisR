@@ -2,7 +2,6 @@
 
 [![R-CMD-check](https://github.com/mshin77/TextAnalysisR/workflows/R-CMD-check/badge.svg)](https://github.com/mshin77/TextAnalysisR/actions)
 [![CRAN status](https://www.r-pkg.org/badges/version/TextAnalysisR)](https://CRAN.R-project.org/package=TextAnalysisR)
-[![CRAN downloads](https://cranlogs.r-pkg.org/badges/TextAnalysisR)](https://CRAN.R-project.org/package=TextAnalysisR)
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License:
@@ -26,41 +25,25 @@ retrieval-augmented generation.
 
 ## Installation
 
-From [CRAN](https://CRAN.R-project.org/package=TextAnalysisR):
+Release version from CRAN:
 
     install.packages("TextAnalysisR")
 
-From [R-universe](https://mshin77.r-universe.dev) (pre-built binaries
-for Windows, macOS, and Linux):
+Development version from R-universe:
 
-    install.packages("TextAnalysisR",
-      repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
+    install.packages("TextAnalysisR", repos = "https://mshin77.r-universe.dev")
 
-Or the development version from
-[GitHub](https://github.com/mshin77/TextAnalysisR):
+## Python Setup (Optional)
 
-    install.packages("remotes")
-    remotes::install_github("mshin77/TextAnalysisR")
-
-## First-Time Python Setup (Optional)
-
-Python is optional. Core analyses (topic modeling, keywords, lexical
-diversity, networks, sentiment lexicons) run in plain R. Use the local
-package for large datasets.
-
-Several functions (`lemmatize_tokens()`, `generate_embeddings()`,
-`cluster_embeddings()`, PDF extraction, transformer-based analyses)
-require Python packages. Run this **once** after installing
-TextAnalysisR:
+Core analyses run in plain R. Python is only needed for lemmatization,
+embeddings, clustering, PDF extraction, and transformer-based analyses.
+Run once after installing:
 
     library(TextAnalysisR)
     setup_python_env()
 
-This creates a dedicated virtualenv (`textanalysisr-env`), installs the
-packages listed in `inst/python/requirements.txt` (spaCy, pandas,
-pdfplumber, sentence-transformers, torch, umap-learn, hdbscan,
-scikit-learn, numba), and downloads the `en_core_web_sm` spaCy model.
-Restart R afterward. Check status anytime with `check_python_env()`.
+This sets up a dedicated virtualenv with the required Python packages.
+Restart R afterward; check status with `check_python_env()`.
 
 ## Load the TextAnalysisR Package
 

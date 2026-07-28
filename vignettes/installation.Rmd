@@ -33,11 +33,18 @@ Python is optional. Core analyses run in plain R; cloud AI providers
 
 ## R Package
 
+From CRAN:
+
 ```{r, eval = FALSE}
-install.packages("TextAnalysisR",
-  repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
+install.packages("TextAnalysisR")
 library(TextAnalysisR)
 run_app()
+```
+
+Development version from R-universe:
+
+```{r, eval = FALSE}
+install.packages("TextAnalysisR", repos = "https://mshin77.r-universe.dev")
 ```
 
 Requirements: R >= 4.0, RStudio recommended

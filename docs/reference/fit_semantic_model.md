@@ -1,7 +1,7 @@
 # Fit Semantic Model
 
 Performs semantic analysis including similarity, dimensionality
-reduction, and clustering. This is a high-level wrapper function.
+reduction, and clustering in a single call.
 
 ## Usage
 

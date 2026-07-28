@@ -1,6 +1,6 @@
 Package: TextAnalysisR
 Title: A Text Mining Workflow Tool
-Version: 0.1.4
+Version: 0.1.4.9000
 Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7907-9193"))

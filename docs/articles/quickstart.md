@@ -7,8 +7,7 @@ R code.
 
 ``` r
 
-install.packages("TextAnalysisR",
-  repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
+install.packages("TextAnalysisR")
 ```
 
 ## Launch App

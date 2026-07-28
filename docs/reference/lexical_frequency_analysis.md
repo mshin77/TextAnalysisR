@@ -1,6 +1,6 @@
 # Lexical Frequency Analysis
 
-Wrapper function for plot_word_frequency for lexical analysis.
+Plots word frequency for lexical analysis using plot_word_frequency.
 
 ## Usage
 

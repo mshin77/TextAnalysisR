@@ -13,7 +13,7 @@ semantic_similarity_analysis(...)
 Similarity analysis results
 }
 \description{
-Wrapper for calculate_document_similarity
+Runs document similarity analysis using calculate_document_similarity.
 }
 \seealso{
 \code{\link[=calculate_document_similarity]{calculate_document_similarity()}} for the core computation; \code{\link[=plot_similarity_heatmap]{plot_similarity_heatmap()}} to render the resulting matrix

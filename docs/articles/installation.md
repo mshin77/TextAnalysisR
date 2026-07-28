@@ -6,7 +6,7 @@ library(TextAnalysisR)
 packageVersion("TextAnalysisR")
 ```
 
-    ## [1] '0.1.4'
+    ## [1] '0.1.4.9000'
 
 ``` r
 
@@ -41,12 +41,20 @@ Python is optional. Core analyses run in plain R; cloud AI providers
 
 ## R Package
 
+From CRAN:
+
 ``` r
 
-install.packages("TextAnalysisR",
-  repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
+install.packages("TextAnalysisR")
 library(TextAnalysisR)
 run_app()
+```
+
+Development version from R-universe:
+
+``` r
+
+install.packages("TextAnalysisR", repos = "https://mshin77.r-universe.dev")
 ```
 
 Requirements: R \>= 4.0, RStudio recommended

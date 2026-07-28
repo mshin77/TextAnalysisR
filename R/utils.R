@@ -188,7 +188,7 @@ show_web_banner <- function(disabled = NULL) {
           "For full features: ",
           shiny::tags$code(
             style = "background: #F3F4F6; padding: 2px 6px; border-radius: 3px; font-size: 13px;",
-            "install.packages('TextAnalysisR', repos = c('https://mshin77.r-universe.dev', 'https://cloud.r-project.org'))"
+            "install.packages('TextAnalysisR')"
           )
         ),
         shiny::HTML(paste0("<ul style='margin: 5px 0; padding-left: 20px; color: #6B7280;'>", feature_list, "</ul>"))
@@ -1233,10 +1233,10 @@ call_gemini_chat <- function(system_prompt,
 }
 
 
-#' Call LLM API (Unified Wrapper)
+#' Call LLM API
 #'
 #' @description
-#' Unified wrapper for calling different LLM providers (OpenAI, Gemini).
+#' Calls different LLM providers (OpenAI, Gemini) through a single interface.
 #' Automatically routes to the appropriate provider-specific function.
 #'
 #' @param provider Character string: "openai" or "gemini"

@@ -1,6 +1,6 @@
 # Semantic Similarity Analysis
 
-Wrapper for calculate_document_similarity
+Runs document similarity analysis using calculate_document_similarity.
 
 ## Usage
 

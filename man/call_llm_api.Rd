@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{call_llm_api}
 \alias{call_llm_api}
-\title{Call LLM API (Unified Wrapper)}
+\title{Call LLM API}
 \usage{
 call_llm_api(
   provider = c("openai", "gemini"),
@@ -33,7 +33,7 @@ call_llm_api(
 Character string with the model's response
 }
 \description{
-Unified wrapper for calling different LLM providers (OpenAI, Gemini).
+Calls different LLM providers (OpenAI, Gemini) through a single interface.
 Automatically routes to the appropriate provider-specific function.
 }
 \examples{

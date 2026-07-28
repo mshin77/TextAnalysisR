@@ -1,10 +1,11 @@
 <img src="logo.png" alt="TextAnalysisR Logo" align="right" width="150px"/>
 
 [![R-CMD-check](https://github.com/mshin77/TextAnalysisR/workflows/R-CMD-check/badge.svg)](https://github.com/mshin77/TextAnalysisR/actions)
+[![CRAN status](https://www.r-pkg.org/badges/version/TextAnalysisR)](https://CRAN.R-project.org/package=TextAnalysisR)
 [![Project Status:
 Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License:
-GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+GPL-3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
 Text mining and natural language processing workflow for documents
 (`PDF`, `DOCX`, `XLSX`, `CSV`, `TXT`). Includes preprocessing via
@@ -24,8 +25,13 @@ retrieval-augmented generation.
 
 ## Installation
 
-    install.packages("TextAnalysisR",
-      repos = c("https://mshin77.r-universe.dev", "https://cloud.r-project.org"))
+Release version from CRAN:
+
+    install.packages("TextAnalysisR")
+
+Development version from R-universe:
+
+    install.packages("TextAnalysisR", repos = "https://mshin77.r-universe.dev")
 
 ## Load the TextAnalysisR Package
 
