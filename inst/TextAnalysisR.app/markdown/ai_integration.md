@@ -1,6 +1,6 @@
 ## AI Integration
 
-Gemini usage is free here, supported by the Google Cloud Research program. OpenAI requires your own API key.
+Gemini here uses Google Cloud Research credits — no key needed. OpenAI requires your own API key.
 
 TextAnalysisR provides AI/NLP capabilities via cloud-based providers.
 

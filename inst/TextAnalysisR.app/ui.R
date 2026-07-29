@@ -355,7 +355,12 @@ ui <- fluidPage(
                 tags$p(style = "margin: 0 0 6px 0; font-size: 16px; color: #5C6E88;",
                   tags$strong("OpenAI"), " \u2014 Cloud API. Enter key above or set ", tags$code("OPENAI_API_KEY"), " in .Renviron."),
                 tags$p(style = "margin: 0; font-size: 16px; color: #5C6E88;",
-                  tags$strong("Gemini"), " \u2014 Cloud API. Enter key above or set ", tags$code("GEMINI_API_KEY"), " in .Renviron.")
+                  tags$strong("Gemini"),
+                  if (has_server_gemini) {
+                    " \u2014 Cloud API. Google Cloud Research credits \u2014 no key needed here."
+                  } else {
+                    list(" \u2014 Cloud API. Enter key above or set ", tags$code("GEMINI_API_KEY"), " in .Renviron.")
+                  })
               )
             )
           )

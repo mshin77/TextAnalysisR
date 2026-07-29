@@ -6,14 +6,19 @@ server_gemini_key <- Sys.getenv("GEMINI_API_KEY", "")
 has_server_gemini <- nzchar(server_gemini_key)
 server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")
 
+.gemini_provider_label <- if (has_server_gemini) "Gemini" else "Gemini (API Key Required)"
+.llm_provider_choices <- c("OpenAI (API Key Required)" = "openai", "gemini")
+names(.llm_provider_choices)[2] <- .gemini_provider_label
+.llm_provider_default <- if (has_server_gemini) "gemini" else "openai"
+.embed_provider_choices <- c("Sentence Transformers (Python)" = "sentence-transformers", "OpenAI (API Key Required)" = "openai", "gemini")
+names(.embed_provider_choices)[3] <- .gemini_provider_label
+.embed_provider_default <- if (has_server_gemini) "gemini" else "sentence-transformers"
+
 shiny::enableBookmarking("disable")
 
 .password_input <- function(inputId, label, value = "", placeholder = NULL) {
   if (isTRUE(has_server_gemini) && grepl("gemini", inputId, ignore.case = TRUE)) {
-    return(tags$p(
-      style = "color: #475569; font-size: 13px; margin-bottom: 8px;",
-      "Usage is free here, supported by the Google Cloud Research program."
-    ))
+    placeholder <- "Optional — leave blank to use the provided key"
   }
   pw <- shiny::passwordInput(inputId, label, value = value, placeholder = placeholder)
   pw$children <- lapply(pw$children, function(ch) {
@@ -228,11 +233,8 @@ topic_modeling_ui_content <- function() {
             radioButtons(
               "stm_label_provider",
               "AI Provider:",
-              choices = c(
-                "OpenAI (API Key Required)" = "openai",
-                "Gemini (API Key Required)" = "gemini"
-              ),
-              selected = "openai",
+              choices = .llm_provider_choices,
+              selected = .llm_provider_default,
               inline = FALSE
             ),
             conditionalPanel(
@@ -402,11 +404,8 @@ Focus on incorporating the most significant keywords while following the guideli
             radioButtons(
               "k_rec_provider",
               "AI Provider:",
-              choices = c(
-                "OpenAI (API Key Required)" = "openai",
-                "Gemini (API Key Required)" = "gemini"
-              ),
-              selected = "openai",
+              choices = .llm_provider_choices,
+              selected = .llm_provider_default,
               inline = FALSE
             ),
 
@@ -563,11 +562,8 @@ Focus on incorporating the most significant keywords while following the guideli
             radioButtons(
               "content_provider",
               "AI Provider:",
-              choices = c(
-                "OpenAI (API Key Required)" = "openai",
-                "Gemini (API Key Required)" = "gemini"
-              ),
-              selected = "openai",
+              choices = .llm_provider_choices,
+              selected = .llm_provider_default,
               inline = FALSE
             ),
             conditionalPanel(
@@ -650,12 +646,8 @@ Focus on incorporating the most significant keywords while following the guideli
             radioButtons(
               "topic_embedding_provider",
               "AI Provider:",
-              choices = c(
-                "Sentence Transformers (Python)" = "sentence-transformers",
-                "OpenAI (API Key Required)" = "openai",
-                "Gemini (API Key Required)" = "gemini"
-              ),
-              selected = "sentence-transformers",
+              choices = .embed_provider_choices,
+              selected = .embed_provider_default,
               inline = FALSE
             ),
 
@@ -2616,12 +2608,8 @@ semantic_analysis_ui_content <- function() {
               radioButtons(
                 "embedding_provider",
                 "AI Provider:",
-                choices = c(
-                  "Sentence Transformers (Python)" = "sentence-transformers",
-                  "OpenAI (API Key Required)" = "openai",
-                  "Gemini (API Key Required)" = "gemini"
-                ),
-                selected = "sentence-transformers",
+                choices = .embed_provider_choices,
+                selected = .embed_provider_default,
                 inline = FALSE
               ),
               conditionalPanel(
@@ -2787,12 +2775,8 @@ semantic_analysis_ui_content <- function() {
               radioButtons(
                 "search_embedding_provider",
                 "AI Provider:",
-                choices = c(
-                  "Sentence Transformers (Python)" = "sentence-transformers",
-                  "OpenAI (API Key Required)" = "openai",
-                  "Gemini (API Key Required)" = "gemini"
-                ),
-                selected = "sentence-transformers"
+                choices = .embed_provider_choices,
+                selected = .embed_provider_default
               ),
               conditionalPanel(
                 condition = "input.search_embedding_provider == 'sentence-transformers'",
@@ -2857,11 +2841,8 @@ semantic_analysis_ui_content <- function() {
               radioButtons(
                 "rag_provider",
                 "AI Provider:",
-                choices = c(
-                  "OpenAI (API Key Required)" = "openai",
-                  "Gemini (API Key Required)" = "gemini"
-                ),
-                selected = "openai"
+                choices = .llm_provider_choices,
+                selected = .llm_provider_default
               ),
               conditionalPanel(
                 condition = "input.rag_provider == 'openai'",
@@ -3081,11 +3062,8 @@ semantic_analysis_ui_content <- function() {
             radioButtons(
               "cluster_label_provider",
               "AI Provider:",
-              choices = c(
-                "OpenAI (API Key Required)" = "openai",
-                "Gemini (API Key Required)" = "gemini"
-              ),
-              selected = "openai",
+              choices = .llm_provider_choices,
+              selected = .llm_provider_default,
               inline = FALSE
             ),
 
@@ -3191,11 +3169,8 @@ semantic_analysis_ui_content <- function() {
                 radioButtons(
                   "llm_sentiment_provider",
                   "AI Provider:",
-                  choices = c(
-                    "OpenAI (API Key Required)" = "openai",
-                    "Gemini (API Key Required)" = "gemini"
-                  ),
-                  selected = "openai",
+                  choices = .llm_provider_choices,
+                  selected = .llm_provider_default,
                   inline = FALSE
                 ),
                 uiOutput("llm_sentiment_model_ui"),

@@ -228,27 +228,6 @@ server <- shinyServer(function(input, output, session) {
     TextAnalysisR:::get_feature_status()
   })
 
-  observe({
-    if (!is_remote) return()
-    gemini_label <- if (has_server_gemini) "Gemini (free, Google Cloud Research)" else "Gemini (API Key Required)"
-    default_llm <- if (has_server_gemini) "gemini" else "openai"
-    default_embed <- if (has_server_gemini) "gemini" else "sentence-transformers"
-    llm_providers <- c("OpenAI (API Key Required)" = "openai", "Gemini" = "gemini")
-    names(llm_providers)[2] <- gemini_label
-    embed_providers <- c("Sentence Transformers (Python)" = "sentence-transformers",
-                         "OpenAI (API Key Required)" = "openai", "Gemini" = "gemini")
-    names(embed_providers)[3] <- gemini_label
-
-    updateRadioButtons(session, "embedding_provider", choices = embed_providers, selected = default_embed)
-    updateRadioButtons(session, "search_embedding_provider", choices = embed_providers, selected = default_embed)
-    updateRadioButtons(session, "topic_embedding_provider", choices = embed_providers, selected = default_embed)
-    updateRadioButtons(session, "rag_provider", choices = llm_providers, selected = default_llm)
-    updateRadioButtons(session, "cluster_label_provider", choices = llm_providers, selected = default_llm)
-    updateRadioButtons(session, "llm_sentiment_provider", choices = llm_providers, selected = default_llm)
-    updateRadioButtons(session, "stm_label_provider", choices = llm_providers, selected = default_llm)
-    updateRadioButtons(session, "k_rec_provider", choices = llm_providers, selected = default_llm)
-    updateRadioButtons(session, "content_provider", choices = llm_providers, selected = default_llm)
-  })
 
   # spaCy initialization status
   spacy_initialized <- reactiveVal(FALSE)
@@ -379,8 +358,8 @@ server <- shinyServer(function(input, output, session) {
         condition = "input.enable_multimodal == true",
         radioButtons("vision_provider",
           "Vision provider:",
-          choices = c("OpenAI (API Key Required)" = "openai", "Gemini (API Key Required)" = "gemini"),
-          selected = "openai",
+          choices = .llm_provider_choices,
+          selected = .llm_provider_default,
           inline = FALSE
         ),
         conditionalPanel(
