@@ -18588,20 +18588,15 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     input$main_navbar
-    req(colnames_cat())
-    updateSelectizeInput(session,
-                         "stm_categorical_var_2",
-                         choices = colnames_cat(),
-                         selected = isolate(input$stm_categorical_var_2)
-    )
-  })
-
-  observe({
-    updateSelectizeInput(session,
-                         "stm_continuous_var_2",
-                         choices = colnames_con(),
-                         selected = NULL
-    )
+    req(mydata())
+    updateSelectizeInput(session, "stm_categorical_var",
+                         choices = colnames_cat(), selected = isolate(input$stm_categorical_var))
+    updateSelectizeInput(session, "stm_continuous_var",
+                         choices = colnames_con(), selected = isolate(input$stm_continuous_var))
+    updateSelectizeInput(session, "stm_categorical_var_2",
+                         choices = colnames_cat(), selected = isolate(input$stm_categorical_var_2))
+    updateSelectizeInput(session, "stm_continuous_var_2",
+                         choices = colnames_con(), selected = isolate(input$stm_continuous_var_2))
   })
 
   topic_model_result <- reactiveVal(NULL)
