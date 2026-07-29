@@ -18592,8 +18592,7 @@ server <- shinyServer(function(input, output, session) {
     updateSelectizeInput(session,
                          "stm_categorical_var_2",
                          choices = colnames_cat(),
-                         selected = isolate(input$stm_categorical_var_2),
-                         server = TRUE
+                         selected = isolate(input$stm_categorical_var_2)
     )
   })
 
@@ -18601,8 +18600,7 @@ server <- shinyServer(function(input, output, session) {
     updateSelectizeInput(session,
                          "stm_continuous_var_2",
                          choices = colnames_con(),
-                         selected = NULL,
-                         server = TRUE
+                         selected = NULL
     )
   })
 
