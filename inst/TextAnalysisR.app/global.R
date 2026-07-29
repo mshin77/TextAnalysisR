@@ -18,7 +18,7 @@ shiny::enableBookmarking("disable")
 
 .password_input <- function(inputId, label, value = "", placeholder = NULL) {
   if (isTRUE(has_server_gemini) && grepl("gemini", inputId, ignore.case = TRUE)) {
-    placeholder <- "Optional — leave blank to use the provided key"
+    placeholder <- "AIza..."
   }
   pw <- shiny::passwordInput(inputId, label, value = value, placeholder = placeholder)
   pw$children <- lapply(pw$children, function(ch) {
