@@ -15,6 +15,20 @@ suppressPackageStartupMessages({
   library(quanteda)
 })
 
+# spectral init runs out of memory on vocab^2; downgrade to seeded LDA before the fit (the kill is uncatchable)
+.stm_spectral_vocab_limit <- 4000L
+
+guard_stm_init <- function(requested, vocab_n) {
+  if (is_remote && identical(requested, "Spectral") && vocab_n > .stm_spectral_vocab_limit) {
+    showNotification(
+      sprintf("Large vocabulary (%d terms): using LDA initialization to fit the hosted memory limit; results are reproducible. Full Spectral initialization is available in the R package.", vocab_n),
+      type = "warning", duration = 10
+    )
+    return("LDA")
+  }
+  requested
+}
+
 server <- shinyServer(function(input, output, session) {
   .old_session_options <- options(
     shiny.maxRequestSize = 100 * 1024^2,
@@ -17910,11 +17924,15 @@ server <- shinyServer(function(input, output, session) {
       }
     }
 
+    requested_search_init <- input$stm_init_type_search
+    search_init <- guard_stm_init(requested_search_init, length(out()$vocab))
+    forced_search_lda <- !identical(search_init, requested_search_init)
+
     # Check cache for searchK results
     current_params_hash <- digest::digest(list(
       dfm_hash = stm_conversion_cache$dfm_hash,
       K_range = K_range(),
-      init_type = input$stm_init_type_search,
+      init_type = search_init,
       prevalence = deparse(prevalence_formula_K_search()),
       gamma_prior = input$stm_gamma_prior_search,
       kappa_prior = input$stm_kappa_prior_search,
@@ -17934,7 +17952,7 @@ server <- shinyServer(function(input, output, session) {
     tryCatch(
       {
         result <- tryCatch({
-          if (is.null(prevalence_formula_K_search())) {
+          if (is.null(prevalence_formula_K_search()) && !forced_search_lda) {
             TextAnalysisR::find_optimal_k(
               dfm_object = dfm_obj,
               topic_range = K_range(),
@@ -17943,11 +17961,12 @@ server <- shinyServer(function(input, output, session) {
             )
           } else {
             n_cores <- if (.Platform$OS.type == "windows") 1L else max(1L, parallel::detectCores() - 1L)
+            if (forced_search_lda) set.seed(1234L)
             stm::searchK(
               data = out()$meta,
               documents = out()$documents,
               vocab = out()$vocab,
-              init.type = input$stm_init_type_search,
+              init.type = search_init,
               K = K_range(),
               prevalence = prevalence_formula_K_search(),
               verbose = TRUE,
@@ -17958,7 +17977,7 @@ server <- shinyServer(function(input, output, session) {
               emtol = 1e-04,
               cores = n_cores,
               # alpha only feeds the LDA Gibbs initializer
-              control = if (identical(input$stm_init_type_search, "LDA")) list(alpha = 1) else list()
+              control = if (identical(search_init, "LDA")) list(alpha = 1) else list()
             )
           }
         }, error = function(search_error) {
@@ -18822,9 +18841,12 @@ server <- shinyServer(function(input, output, session) {
           stop("All documents are empty after preprocessing. Please check text preprocessing steps.")
         }
 
-        init_type_to_use <- input$stm_init_type_K
+        requested_init <- input$stm_init_type_K
+        init_type_to_use <- guard_stm_init(requested_init, length(out()$vocab))
+        forced_lda <- !identical(init_type_to_use, requested_init)
 
         stm_result <- tryCatch({
+          if (forced_lda) set.seed(1234L)
           stm::stm(
             data = out()$meta,
             documents = out()$documents,
