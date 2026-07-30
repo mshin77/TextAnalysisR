@@ -1,8 +1,8 @@
 # Semantic Analysis
 
 Semantic analysis examines relationships of meaning between words and
-documents. The sections below follow the Shiny app’s **Semantic
-Analysis** tabs in order.
+documents. The sections below follow the Shiny app’s Semantic Analysis
+tabs in order.
 
 ## Setup
 

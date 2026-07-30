@@ -1,8 +1,8 @@
 # Lexical Analysis
 
 Lexical analysis examines word patterns, distinctiveness, and
-complexity. The sections below follow the Shiny app’s **Lexical
-Analysis** tabs in order.
+complexity. The sections below follow the Shiny app’s Lexical Analysis
+tabs in order.
 
 ## Setup
 
@@ -212,8 +212,8 @@ plot_lexical_dispersion(dispersion)
 
 ## Multi-Word Expressions
 
-Multi-word (n-gram) detection belongs to the **Preprocess → Multi-Word
-Dictionary** step in the app.
+Multi-word (n-gram) detection belongs to the Preprocess → Multi-Word
+Dictionary step in the app.
 [`detect_multi_words()`](https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.md)
 returns a collocations table to feed
 [`quanteda::tokens_compound()`](https://quanteda.io/reference/tokens_compound.html).

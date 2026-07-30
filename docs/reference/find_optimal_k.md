@@ -16,6 +16,7 @@ find_optimal_k(
   cores = 1,
   categorical_var = NULL,
   continuous_var = NULL,
+  init.type = "Spectral",
   height = 600,
   width = 800,
   verbose = TRUE,
@@ -55,6 +56,11 @@ find_optimal_k(
 
   Optional continuous variable(s) for prevalence.
 
+- init.type:
+
+  Initialization passed to stm::searchK: "Spectral", "LDA", or "Random"
+  (default: "Spectral").
+
 - height:
 
   Plot height in pixels (default: 600).
@@ -73,7 +79,7 @@ find_optimal_k(
 
 ## Value
 
-A list containing search results and diagnostic plots.
+A list with the search results, the model call, and the settings used.
 
 ## See also
 

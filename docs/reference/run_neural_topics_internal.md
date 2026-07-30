@@ -1,7 +1,7 @@
 # Neural Topic Modeling
 
 Implements neural topic modeling using deep learning architectures for
-improved topic discovery and representation learning.
+topic discovery and representation learning.
 
 ## Usage
 

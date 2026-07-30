@@ -1,5 +1,13 @@
 # Changelog
 
+## TextAnalysisR 0.1.4.9000 (development)
+
+- Added
+  [`estimate_topic_effects()`](https://mshin77.github.io/TextAnalysisR/reference/estimate_topic_effects.md)
+  for STM prevalence effects.
+- Fixed neural-classifier sentiment scoring.
+- Prevented the hosted app from crashing on large datasets.
+
 ## TextAnalysisR 0.1.4
 
 CRAN release: 2026-07-27

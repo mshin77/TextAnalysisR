@@ -11,8 +11,7 @@
 
 ## Network Security
 
-- Content Security Policy restricting script, style, and frame sources; clickjacking blocked via frame-ancestors
-- HTTP Strict Transport Security (HSTS), MIME-sniffing protection (nosniff), and referrer-policy restriction
+- Content Security Policy, HSTS, nosniff, frame-ancestors
 - HTTPS with TLS 1.2+ via Caddy/Cloudflare
 
 ## Data Protection

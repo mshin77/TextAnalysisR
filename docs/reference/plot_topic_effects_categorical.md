@@ -45,4 +45,4 @@ plot_topic_effects_categorical(
 
 ## Value
 
-A plotly object
+A ggplot object

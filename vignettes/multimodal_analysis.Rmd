@@ -39,8 +39,8 @@ Extract text from PDFs with charts, diagrams, and images using vision AI. R-nati
 
 `process_pdf_unified()` runs the full pipeline with automatic fallback:
 
-1. **Multimodal** (pdftools + vision LLM) -- extracts text and describes visual content
-2. **Text-only** (pdftools) -- fallback when no vision provider is set
+1. Multimodal (pdftools + vision LLM) -- extracts text and describes visual content
+2. Text-only (pdftools) -- fallback when no vision provider is set
 
 `describe_image()` describes a single base64-encoded PNG. Both require a vision-provider API key (OpenAI/Gemini) and network access; see their reference pages for usage.
 

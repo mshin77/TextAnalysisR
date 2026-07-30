@@ -132,8 +132,8 @@ fit_embedding_topics(
 - precomputed_embeddings:
 
   Optional matrix of pre-computed document embeddings. If provided,
-  skips embedding generation for improved performance. Must have the
-  same number of rows as the length of texts.
+  skips embedding generation to avoid recomputation. Must have the same
+  number of rows as the length of texts.
 
 ## Value
 

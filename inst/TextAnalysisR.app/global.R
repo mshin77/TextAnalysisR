@@ -2,6 +2,9 @@ is_web <- TextAnalysisR:::check_web_deployment()
 is_docker <- TextAnalysisR:::check_docker_deployment()
 is_remote <- is_web || is_docker
 
+# process-wide (not per-session) so a closing session cannot reset the limit for a concurrent one
+options(shiny.maxRequestSize = 100 * 1024^2, shiny.timeout = 300)
+
 server_gemini_key <- Sys.getenv("GEMINI_API_KEY", "")
 has_server_gemini <- nzchar(server_gemini_key)
 server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")

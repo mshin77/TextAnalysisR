@@ -31,7 +31,7 @@ plot_cluster_terms(
 \item{width}{Plot width in pixels (default: NULL for auto)}
 }
 \value{
-A plotly object
+A ggplot object
 }
 \description{
 Creates a horizontal bar plot showing the top terms in a cluster or document group.

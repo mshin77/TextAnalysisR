@@ -38,9 +38,9 @@ AI. R-native pipeline – no Python required.
 [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md)
 runs the full pipeline with automatic fallback:
 
-1.  **Multimodal** (pdftools + vision LLM) – extracts text and describes
+1.  Multimodal (pdftools + vision LLM) – extracts text and describes
     visual content
-2.  **Text-only** (pdftools) – fallback when no vision provider is set
+2.  Text-only (pdftools) – fallback when no vision provider is set
 
 [`describe_image()`](https://mshin77.github.io/TextAnalysisR/reference/describe_image.md)
 describes a single base64-encoded PNG. Both require a vision-provider

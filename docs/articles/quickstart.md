@@ -3,6 +3,12 @@
 TextAnalysisR provides text analysis through an interactive Shiny app or
 R code.
 
+## Language support
+
+Primary language: English. Preprocessing and STM are language-agnostic
+(stopwords for 50+); embeddings and AI features can be multilingual;
+spaCy and the sentiment lexicons are English-only.
+
 ## Install
 
 ``` r

@@ -16,10 +16,10 @@ Follows WCAG 2.1 Level AA standards with full keyboard navigation.
 
 ## Visual Features
 
-- **Dark Mode**: Toggle via moon/sun icon
-- **High Contrast**: 4.5:1+ ratio (WCAG AA)
-- **Resizable Text**: Up to 200%
-- **Reduced Motion**: Respects system preferences
+- Dark Mode: Toggle via moon/sun icon
+- High Contrast: 4.5:1+ ratio (WCAG AA)
+- Resizable Text: Up to 200%
+- Reduced Motion: Respects system preferences
 
 ## Translation & TTS
 

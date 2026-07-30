@@ -27,7 +27,7 @@ plot_topic_effects_continuous(
 \item{base_font_size}{Base font size in points for the plot theme (default: 11). Axis text and strip text will be base_font_size + 2.}
 }
 \value{
-A plotly object
+A ggplot object
 }
 \description{
 Creates a faceted plot showing how continuous variables affect topic proportions.

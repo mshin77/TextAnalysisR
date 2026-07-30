@@ -3,14 +3,14 @@
 Topic modeling discovers latent themes in a text collection. The Shiny
 app offers two types:
 
-- **Structural Topic Model (STM):** word-probability topics that
-  incorporate document metadata as covariates. Runs in R.
-- **Embedding-based topics:** transformer embeddings reduced and
-  clustered into topics. Best for short texts and multilingual content.
-  Requires Python (BERTopic) or an embedding API key.
+- Structural Topic Model (STM): word-probability topics that incorporate
+  document metadata as covariates. Runs in R.
+- Embedding-based topics: transformer embeddings reduced and clustered
+  into topics. Best for short texts and multilingual content. Requires
+  Python (BERTopic) or an embedding API key.
 
-The sections below follow the app’s **Topic Modeling** tabs in order,
-first with STM (run live on the bundled data) and then with the
+The sections below follow the app’s Topic Modeling tabs in order, first
+with STM (run live on the bundled data) and then with the
 embedding-based type.
 
 ## Setup

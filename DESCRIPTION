@@ -25,6 +25,7 @@ Imports:
     dplyr,
     DT,
     ggplot2,
+    grDevices,
     htmltools,
     htmlwidgets,
     igraph,
@@ -37,9 +38,12 @@ Imports:
     rlang,
     scales,
     shiny,
+    stats,
     tibble,
     tidyr,
     tidytext,
+    tools,
+    utils,
     widyr,
     withr
 Suggests:
@@ -66,6 +70,7 @@ Suggests:
     pdftools,
     progress,
     proxy,
+    pryr,
     pscl,
     purrr,
     readxl,
@@ -84,6 +89,7 @@ Suggests:
     testthat (>= 3.0.0),
     textdata,
     umap,
+    webshot2,
     plotly
 Depends: R (>= 4.0)
 SystemRequirements: Python (>= 3.8) with spaCy (>= 3.5) for

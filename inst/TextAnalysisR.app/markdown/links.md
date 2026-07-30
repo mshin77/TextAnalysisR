@@ -7,8 +7,8 @@
 
 ## Applications
 
-- **R Package** (full features): `install.packages("TextAnalysisR")`
-- **Web App** (core features): [textanalysisr.org](https://www.textanalysisr.org)
+- R Package (full features): `install.packages("TextAnalysisR")`
+- Web App (core features): [textanalysisr.org](https://www.textanalysisr.org)
 
 ## Use Policy
 

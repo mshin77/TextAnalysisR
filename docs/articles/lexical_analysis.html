@@ -91,8 +91,8 @@
     
     
 <p>Lexical analysis examines word patterns, distinctiveness, and
-complexity. The sections below follow the Shiny app’s <strong>Lexical
-Analysis</strong> tabs in order.</p>
+complexity. The sections below follow the Shiny app’s Lexical Analysis
+tabs in order.</p>
 <div class="section level2">
 <h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
@@ -336,10 +336,9 @@ terms appear across documents (an X-ray plot).</p>
 <div class="section level2">
 <h2 id="multi-word-expressions">Multi-Word Expressions<a class="anchor" aria-label="anchor" href="#multi-word-expressions"></a>
 </h2>
-<p>Multi-word (n-gram) detection belongs to the <strong>Preprocess →
-Multi-Word Dictionary</strong> step in the app.
-<code><a href="../reference/detect_multi_words.html">detect_multi_words()</a></code> returns a collocations table to feed
-<code><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">quanteda::tokens_compound()</a></code>.</p>
+<p>Multi-word (n-gram) detection belongs to the Preprocess → Multi-Word
+Dictionary step in the app. <code><a href="../reference/detect_multi_words.html">detect_multi_words()</a></code> returns a
+collocations table to feed <code><a href="https://quanteda.io/reference/tokens_compound.html" class="external-link">quanteda::tokens_compound()</a></code>.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">compounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_multi_words.html">detect_multi_words</a></span><span class="op">(</span><span class="va">tokens</span>, min_count <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">compounds</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>

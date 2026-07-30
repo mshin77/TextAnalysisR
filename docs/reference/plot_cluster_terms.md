@@ -50,4 +50,4 @@ plot_cluster_terms(
 
 ## Value
 
-A plotly object
+A ggplot object

@@ -18,9 +18,9 @@ Lexicons are cached locally after first download.
 
 ## Available Lexicons
 
-- **Bing**: Binary positive/negative classification
-- **AFINN**: Numeric sentiment intensity (-5 to +5)
-- **NRC**: Multi-label with 8 emotions + sentiment
+- Bing: Binary positive/negative classification
+- AFINN: Numeric sentiment intensity (-5 to +5)
+- NRC: Multi-label with 8 emotions + sentiment
 
 ## Features Enabled
 

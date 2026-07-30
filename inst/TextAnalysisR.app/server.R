@@ -29,10 +29,22 @@ guard_stm_init <- function(requested, vocab_n) {
   requested
 }
 
+# document-count ceiling for O(n^2) ops (embeddings, clustering, dim reduction) on memory-capped deployments
+.remote_doc_limit <- 3000L
+
+remote_doc_ok <- function(n, feature) {
+  if (is_remote && n > .remote_doc_limit) {
+    showNotification(
+      sprintf("%s over %d documents exceeds the hosted memory limit (this corpus has %d). Run large corpora in the R package.", feature, .remote_doc_limit, n),
+      type = "warning", duration = 10
+    )
+    return(FALSE)
+  }
+  TRUE
+}
+
 server <- shinyServer(function(input, output, session) {
   .old_session_options <- options(
-    shiny.maxRequestSize = 100 * 1024^2,
-    shiny.timeout = 300,
     digits = 4,
     scipen = 999,
     shiny.error = function() {
@@ -273,6 +285,10 @@ server <- shinyServer(function(input, output, session) {
 
   output$about_content <- renderUI({
     includeMarkdown("markdown/about.md")
+  })
+
+  output$language_content <- renderUI({
+    includeMarkdown("markdown/language.md")
   })
 
   output$installation_semantic_content <- renderUI({
@@ -11156,6 +11172,8 @@ server <- shinyServer(function(input, output, session) {
   compute_similarity_cached <- function(texts, method = "cosine", use_embeddings = FALSE, embedding_model = "all-MiniLM-L6-v2") {
     memory_monitor("similarity_analysis")
 
+    if (!remote_doc_ok(length(texts), "Document similarity")) return(NULL)
+
     package_result <- tryCatch({
       TextAnalysisR::calculate_document_similarity(
         texts = texts,
@@ -13422,6 +13440,11 @@ server <- shinyServer(function(input, output, session) {
       if (nrow(feature_matrix) < 2) {
         TextAnalysisR:::remove_notification_by_id("loadingDimRed")
         showNotification("At least 2 documents are required for dimensionality reduction.", type = "error", duration = 7)
+        return()
+      }
+
+      if (!remote_doc_ok(nrow(feature_matrix), "Dimensionality reduction")) {
+        TextAnalysisR:::remove_notification_by_id("loadingDimRed")
         return()
       }
 
@@ -17951,17 +17974,18 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch(
       {
+        if (!identical(search_init, "Spectral")) set.seed(1234L)
         result <- tryCatch({
           if (is.null(prevalence_formula_K_search()) && !forced_search_lda) {
             TextAnalysisR::find_optimal_k(
               dfm_object = dfm_obj,
               topic_range = K_range(),
               max.em.its = input$stm_max_em_its_search,
+              init.type = search_init,
               verbose = TRUE
             )
           } else {
             n_cores <- if (.Platform$OS.type == "windows") 1L else max(1L, parallel::detectCores() - 1L)
-            if (forced_search_lda) set.seed(1234L)
             stm::searchK(
               data = out()$meta,
               documents = out()$documents,
@@ -18846,7 +18870,7 @@ server <- shinyServer(function(input, output, session) {
         forced_lda <- !identical(init_type_to_use, requested_init)
 
         stm_result <- tryCatch({
-          if (forced_lda) set.seed(1234L)
+          if (!identical(init_type_to_use, "Spectral")) set.seed(1234L)
           stm::stm(
             data = out()$meta,
             documents = out()$documents,
@@ -19040,6 +19064,8 @@ server <- shinyServer(function(input, output, session) {
       ))
       return()
     }
+
+    if (!remote_doc_ok(nrow(united_tbl()), "Embedding-based topic modeling")) return()
 
     backend <- input$embedding_backend %||% "python"
 
@@ -21011,7 +21037,7 @@ server <- shinyServer(function(input, output, session) {
             metadata = out()$meta,
             documents = out()$documents,
             uncertainty = "Global",
-            prior = 1e-5
+            prior = NULL
           )
         } else {
           stmm <- NULL

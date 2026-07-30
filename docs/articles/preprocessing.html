@@ -119,15 +119,9 @@ analysis. Useful when text content is spread across multiple fields that
 should be analyzed together.</p>
 <p>Examples:</p>
 <ul>
-<li>
-<strong>Survey Data:</strong> Combine multiple open-ended response
-columns</li>
-<li>
-<strong>Multi-field Text:</strong> Merge title, abstract, and body
-fields</li>
-<li>
-<strong>Comments:</strong> Concatenate multiple comment or note
-columns</li>
+<li>Survey Data: Combine multiple open-ended response columns</li>
+<li>Multi-field Text: Merge title, abstract, and body fields</li>
+<li>Comments: Concatenate multiple comment or note columns</li>
 </ul>
 <p>Usage: Select one or multiple text columns to combine. Columns are
 concatenated with spaces between them. The united column becomes the
@@ -143,20 +137,14 @@ typically words, converting unstructured text into structured format for
 computational analysis.</p>
 <p>Options:</p>
 <ul>
-<li>
-<strong>Lowercase:</strong> Convert all text to lowercase to treat
-“Text” and “text” as identical</li>
-<li>
-<strong>Remove Punctuation:</strong> Strip punctuation marks like
-periods, commas, quotes</li>
-<li>
-<strong>Remove Numbers:</strong> Eliminate numeric digits (keep for
-technical texts)</li>
-<li>
-<strong>Remove Symbols:</strong> Remove special characters (@, #, $,
-etc.)</li>
-<li>
-<strong>Remove URLs:</strong> Identify and remove web addresses</li>
+<li>Lowercase: Convert all text to lowercase to treat “Text” and “text”
+as identical</li>
+<li>Remove Punctuation: Strip punctuation marks like periods, commas,
+quotes</li>
+<li>Remove Numbers: Eliminate numeric digits (keep for technical
+texts)</li>
+<li>Remove Symbols: Remove special characters (@, #, $, etc.)</li>
+<li>Remove URLs: Identify and remove web addresses</li>
 </ul>
 <table class="table">
 <thead><tr class="header">
@@ -196,15 +184,10 @@ frequently but carry little meaningful content for analysis. Removing
 them reduces noise and improves focus on content-bearing words.</p>
 <p>When to Remove:</p>
 <ul>
-<li>
-<strong>Topic Modeling:</strong> Helps identify content themes by
-removing function words</li>
-<li>
-<strong>Keyword Extraction:</strong> Ensures meaningful terms rise
-to the top</li>
-<li>
-<strong>Content Analysis:</strong> Focuses on substantive
-vocabulary</li>
+<li>Topic Modeling: Helps identify content themes by removing function
+words</li>
+<li>Keyword Extraction: Ensures meaningful terms rise to the top</li>
+<li>Content Analysis: Focuses on substantive vocabulary</li>
 </ul>
 <p>Usage: Use predefined stopword lists (e.g., Snowball) or add custom
 words. For sentiment analysis or syntactic studies, consider keeping
@@ -220,15 +203,12 @@ For example, “running”, “ran”, and “runs” all become “run”. This
 related word forms together for more meaningful analysis.</p>
 <p>Comparison:</p>
 <ul>
-<li>
-<strong>Lemmatization:</strong> Uses linguistic knowledge to produce
-valid dictionary words (studies → study)</li>
-<li>
-<strong>Stemming:</strong> Uses simple rules to chop word endings
-(studies → studi)</li>
-<li>
-<strong>Advantage:</strong> Lemmatization produces readable,
-meaningful base forms</li>
+<li>Lemmatization: Uses linguistic knowledge to produce valid dictionary
+words (studies → study)</li>
+<li>Stemming: Uses simple rules to chop word endings (studies →
+studi)</li>
+<li>Advantage: Lemmatization produces readable, meaningful base
+forms</li>
 </ul>
 <p>Usage: Apply lemmatization after tokenization to consolidate word
 variants. Particularly useful for topic modeling and keyword extraction
@@ -246,17 +226,10 @@ cells contain frequency counts. It converts unstructured text into
 structured numerical format for computational analysis.</p>
 <p>Process:</p>
 <ul>
-<li>
-<strong>Tokenization:</strong> Text is split into individual tokens
-(words)</li>
-<li>
-<strong>Vocabulary:</strong> All unique tokens form the matrix
-columns</li>
-<li>
-<strong>Counting:</strong> Each document-token pair is counted</li>
-<li>
-<strong>Sparse Matrix:</strong> Efficient storage format for large
-corpora</li>
+<li>Tokenization: Text is split into individual tokens (words)</li>
+<li>Vocabulary: All unique tokens form the matrix columns</li>
+<li>Counting: Each document-token pair is counted</li>
+<li>Sparse Matrix: Efficient storage format for large corpora</li>
 </ul>
 <p>Usage: The DFM is the foundation for all downstream analyses
 including keyword extraction, topic modeling, and semantic analysis.

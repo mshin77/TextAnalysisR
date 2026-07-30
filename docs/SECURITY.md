@@ -2,20 +2,16 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
 | Version | Supported |
 |---------|-----------|
-| 5.1.x   | ✅        |
-| 5.0.x   | ❌        |
-| 4.0.x   | ✅        |
-| \< 4.0  | ❌        |
+| 0.1.x   | Yes       |
+| \< 0.1  | No        |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted
-or declined, etc.
+Report vulnerabilities privately through GitHub Security Advisories
+(<https://github.com/mshin77/TextAnalysisR/security/advisories/new>) or
+by email to the maintainer (<shin.mikyung@gmail.com>). Expect an initial
+response within 14 days. Accepted issues are patched on the development
+branch and released to CRAN and R-universe; declined reports receive an
+explanation.

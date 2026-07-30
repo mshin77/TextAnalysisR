@@ -1,3 +1,9 @@
+# TextAnalysisR 0.1.4.9000 (development)
+
+- Added `estimate_topic_effects()` for STM prevalence effects.
+- Fixed neural-classifier sentiment scoring.
+- Prevented the hosted app from crashing on large datasets.
+
 # TextAnalysisR 0.1.4
 
 - New `math_mode` argument in `prep_texts()` keeps numbers, math

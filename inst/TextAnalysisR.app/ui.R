@@ -241,6 +241,7 @@ ui <- fluidPage(
                 class = "nav nav-pills nav-stacked",
                 id = "home_nav_menu",
                 tags$li(tags$a(href = "#about-tab", "data-toggle" = "tab", "About")),
+                tags$li(tags$a(href = "#language-tab", "data-toggle" = "tab", "Language")),
                 tags$li(tags$a(href = "#semantic-tab", "data-toggle" = "tab", "Semantic Analysis")),
                 tags$li(tags$a(href = "#lexicon-tab", "data-toggle" = "tab", "Sentiment Lexicons")),
                 tags$li(tags$a(href = "#cyber-tab", "data-toggle" = "tab", "Cybersecurity")),
@@ -255,6 +256,7 @@ ui <- fluidPage(
             tags$div(
               class = "tab-content",
               tags$div(id = "about-tab", class = "tab-pane", div(id = "about-content", class = "markdown-content", uiOutput("about_content"))),
+              tags$div(id = "language-tab", class = "tab-pane", div(id = "language-content", class = "markdown-content", uiOutput("language_content"))),
               tags$div(id = "semantic-tab", class = "tab-pane", div(id = "installation-semantic-content", class = "markdown-content", uiOutput("installation_semantic_content"))),
               tags$div(id = "lexicon-tab", class = "tab-pane", div(id = "installation-lexical-content", class = "markdown-content", uiOutput("installation_lexical_content"))),
               tags$div(id = "cyber-tab", class = "tab-pane", div(id = "cybersecurity-content", class = "markdown-content", uiOutput("cybersecurity_content"))),

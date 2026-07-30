@@ -114,7 +114,8 @@
 <tbody>
 <tr class="odd">
 <td>File uploads</td>
-<td>Extension whitelist, 50MB limit, malicious content scanning</td>
+<td>Extension whitelist, 100MB limit (50MB paste), malicious content
+scanning</td>
 </tr>
 <tr class="even">
 <td>Text and LLM inputs</td>
@@ -145,8 +146,8 @@ or persisted)</li>
 <h2 id="network-security">Network Security<a class="anchor" aria-label="anchor" href="#network-security"></a>
 </h2>
 <ul>
-<li>Content Security Policy, X-Frame-Options, SRI for CDN resources</li>
-<li>HTTPS with TLS 1.2+ via Nginx/Cloudflare</li>
+<li>Content Security Policy, HSTS, nosniff, frame-ancestors</li>
+<li>HTTPS with TLS 1.2+ via Caddy/Cloudflare</li>
 </ul>
 </div>
 <div class="section level2">
@@ -155,7 +156,8 @@ or persisted)</li>
 <ul>
 <li>Session-scoped with no persistent storage, cookies, or
 identifiers</li>
-<li>Rate limiting: 100 requests/hour per session</li>
+<li>Rate limiting: 100 uploads/hour, 20 AI requests/hour per
+session</li>
 <li>Security event logging with sanitized error messages</li>
 <li>Local processing option (FERPA/HIPAA compatible)</li>
 </ul>
@@ -165,7 +167,7 @@ identifiers</li>
 </h2>
 <ul>
 <li>Cloudflare DNS with DDoS protection</li>
-<li>Docker + Nginx deployment</li>
+<li>Docker + Caddy deployment</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

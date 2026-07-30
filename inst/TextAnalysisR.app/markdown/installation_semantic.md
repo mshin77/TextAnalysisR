@@ -4,7 +4,7 @@ Install Python dependencies for BERTopic and transformer-based semantic analysis
 
 ## Requirements
 
-- Python >= 3.7
+- Python >= 3.8
 - pip or conda package manager
 
 ## Installation via Python

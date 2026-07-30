@@ -12,7 +12,7 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
 Semantic analysis examines relationships of meaning between words and documents. The sections below
-follow the Shiny app's **Semantic Analysis** tabs in order.
+follow the Shiny app's Semantic Analysis tabs in order.
 
 ## Setup
 

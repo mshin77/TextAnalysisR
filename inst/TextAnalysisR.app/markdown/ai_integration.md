@@ -1,6 +1,6 @@
 ## AI Integration
 
-Gemini here uses Google Cloud Research credits — no key needed. OpenAI requires your own API key.
+Gemini here uses Google Cloud Research credits — no key needed. OpenAI requires a separate API key.
 
 TextAnalysisR provides AI/NLP capabilities via cloud-based providers.
 
@@ -30,13 +30,13 @@ TextAnalysisR provides AI/NLP capabilities via cloud-based providers.
 
 ### Features
 
-- **Topic Labels**: AI-suggested labels from topic model terms
-- **Content Generation**: Survey items, research questions, themes
-- **Cluster Labels**: AI-suggested names for document clusters
-- **RAG Search**: Question-answering over the document corpus
-- **Vision AI**: PDF image/chart extraction via OpenAI or Gemini (local R package only)
-- **Sentiment Analysis**: LLM-based or local transformer models
-- **Linguistic Analysis**: POS, NER, dependency parsing via spaCy
+- Topic Labels: AI-suggested labels from topic model terms
+- Content Generation: Survey items, research questions, themes
+- Cluster Labels: AI-suggested names for document clusters
+- RAG Search: Question-answering over the document corpus
+- Vision AI: PDF image/chart extraction via OpenAI or Gemini (local R package only)
+- Sentiment Analysis: LLM-based or local transformer models
+- Linguistic Analysis: POS, NER, dependency parsing via spaCy
 
 ### Setup
 

@@ -12,7 +12,7 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
 Lexical analysis examines word patterns, distinctiveness, and complexity. The sections below follow the
-Shiny app's **Lexical Analysis** tabs in order.
+Shiny app's Lexical Analysis tabs in order.
 
 ## Setup
 
@@ -175,7 +175,7 @@ plot_lexical_dispersion(dispersion)
 
 ## Multi-Word Expressions
 
-Multi-word (n-gram) detection belongs to the **Preprocess → Multi-Word Dictionary** step in the app.
+Multi-word (n-gram) detection belongs to the Preprocess → Multi-Word Dictionary step in the app.
 `detect_multi_words()` returns a collocations table to feed `quanteda::tokens_compound()`.
 
 ```{r}

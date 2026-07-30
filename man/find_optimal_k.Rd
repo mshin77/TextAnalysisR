@@ -12,6 +12,7 @@ find_optimal_k(
   cores = 1,
   categorical_var = NULL,
   continuous_var = NULL,
+  init.type = "Spectral",
   height = 600,
   width = 800,
   verbose = TRUE,
@@ -35,6 +36,8 @@ Set to higher values for faster searchK on multi-core systems.}
 
 \item{continuous_var}{Optional continuous variable(s) for prevalence.}
 
+\item{init.type}{Initialization passed to stm::searchK: "Spectral", "LDA", or "Random" (default: "Spectral").}
+
 \item{height}{Plot height in pixels (default: 600).}
 
 \item{width}{Plot width in pixels (default: 800).}
@@ -44,7 +47,7 @@ Set to higher values for faster searchK on multi-core systems.}
 \item{...}{Additional arguments passed to stm::searchK.}
 }
 \value{
-A list containing search results and diagnostic plots.
+A list with the search results, the model call, and the settings used.
 }
 \description{
 Searches for the optimal number of topics (K) using stm::searchK.

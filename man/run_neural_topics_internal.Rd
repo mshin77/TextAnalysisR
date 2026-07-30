@@ -33,8 +33,8 @@ run_neural_topics_internal(
 List containing neural topic model and diagnostics
 }
 \description{
-Implements neural topic modeling using deep learning architectures for improved
-topic discovery and representation learning.
+Implements neural topic modeling using deep learning architectures for topic
+discovery and representation learning.
 }
 \concept{topic-modeling}
 \keyword{internal}

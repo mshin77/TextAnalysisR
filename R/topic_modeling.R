@@ -223,11 +223,12 @@ estimate_topic_effects <- function(estimates, variable,
 #'   Set to higher values for faster searchK on multi-core systems.
 #' @param categorical_var Optional categorical variable(s) for prevalence.
 #' @param continuous_var Optional continuous variable(s) for prevalence.
+#' @param init.type Initialization passed to stm::searchK: "Spectral", "LDA", or "Random" (default: "Spectral").
 #' @param height Plot height in pixels (default: 600).
 #' @param width Plot width in pixels (default: 800).
 #' @param verbose Logical indicating whether to print progress (default: TRUE).
 #' @param ... Additional arguments passed to stm::searchK.
-#' @return A list containing search results and diagnostic plots.
+#' @return A list with the search results, the model call, and the settings used.
 #' @concept topic-modeling
 #' @seealso [plot_quality_metrics()] to visualize topic-count diagnostics; `stm::stm()` to fit the chosen model; [fit_embedding_model()] for an embedding-based alternative to STM
 #' @export
@@ -238,6 +239,7 @@ find_optimal_k <- function(dfm_object,
                            cores = 1,
                            categorical_var = NULL,
                            continuous_var = NULL,
+                           init.type = "Spectral",
                            height = 600,
                            width = 800,
                            verbose = TRUE, ...) {
@@ -278,7 +280,7 @@ find_optimal_k <- function(dfm_object,
       max.em.its = max.em.its,
       emtol = emtol,
       cores = cores,
-      init.type = "Spectral",
+      init.type = init.type,
       K = topic_range,
       prevalence = prevalence_formula,
       verbose = verbose,
@@ -808,8 +810,8 @@ calculate_topic_probability <- function(stm_model,
 #' @title Neural Topic Modeling
 #'
 #' @description
-#' Implements neural topic modeling using deep learning architectures for improved
-#' topic discovery and representation learning.
+#' Implements neural topic modeling using deep learning architectures for topic
+#' discovery and representation learning.
 #'
 #' @param texts Character vector of documents
 #' @param n_topics Number of topics to discover
@@ -922,7 +924,7 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #' @param seed Random seed for reproducibility (default: 123).
 #' @param verbose Logical, if TRUE, prints progress messages.
 #' @param precomputed_embeddings Optional matrix of pre-computed document embeddings.
-#'   If provided, skips embedding generation for improved performance. Must have
+#'   If provided, skips embedding generation to avoid recomputation. Must have
 #'   the same number of rows as the length of texts.
 #'
 #' @return A list containing topic assignments, topic keywords, and quality metrics.
@@ -3329,7 +3331,7 @@ plot_topic_probability <- function(gamma_data,
 #' @param title Plot title (default: "Category Effects")
 #' @param base_font_size Base font size in points for the plot theme (default: 11). Axis text and strip text will be base_font_size + 2.
 #'
-#' @return A plotly object
+#' @return A ggplot object
 #'
 #' @concept topic-modeling
 #' @export
@@ -3403,7 +3405,7 @@ plot_topic_effects_categorical <- function(effects_data,
 #' @param title Plot title (default: "Continuous Variable Effects")
 #' @param base_font_size Base font size in points for the plot theme (default: 11). Axis text and strip text will be base_font_size + 2.
 #'
-#' @return A plotly object
+#' @return A ggplot object
 #'
 #' @concept topic-modeling
 #' @export
@@ -3466,7 +3468,7 @@ plot_topic_effects_continuous <- function(effects_data,
 #' @param height Plot height in pixels (default: 500)
 #' @param width Plot width in pixels (default: NULL for auto)
 #'
-#' @return A plotly object
+#' @return A ggplot object
 #'
 #' @concept visualization
 #' @export

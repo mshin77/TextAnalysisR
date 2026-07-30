@@ -32,9 +32,9 @@ analyzed together.
 
 Examples:
 
-- **Survey Data:** Combine multiple open-ended response columns
-- **Multi-field Text:** Merge title, abstract, and body fields
-- **Comments:** Concatenate multiple comment or note columns
+- Survey Data: Combine multiple open-ended response columns
+- Multi-field Text: Merge title, abstract, and body fields
+- Comments: Concatenate multiple comment or note columns
 
 Usage: Select one or multiple text columns to combine. Columns are
 concatenated with spaces between them. The united column becomes the
@@ -51,14 +51,13 @@ computational analysis.
 
 Options:
 
-- **Lowercase:** Convert all text to lowercase to treat “Text” and
-  “text” as identical
-- **Remove Punctuation:** Strip punctuation marks like periods, commas,
+- Lowercase: Convert all text to lowercase to treat “Text” and “text” as
+  identical
+- Remove Punctuation: Strip punctuation marks like periods, commas,
   quotes
-- **Remove Numbers:** Eliminate numeric digits (keep for technical
-  texts)
-- **Remove Symbols:** Remove special characters (@, \#, \$, etc.)
-- **Remove URLs:** Identify and remove web addresses
+- Remove Numbers: Eliminate numeric digits (keep for technical texts)
+- Remove Symbols: Remove special characters (@, \#, \$, etc.)
+- Remove URLs: Identify and remove web addresses
 
 | Parameter        | Default | Use Case                     |
 |------------------|---------|------------------------------|
@@ -81,10 +80,10 @@ them reduces noise and improves focus on content-bearing words.
 
 When to Remove:
 
-- **Topic Modeling:** Helps identify content themes by removing function
+- Topic Modeling: Helps identify content themes by removing function
   words
-- **Keyword Extraction:** Ensures meaningful terms rise to the top
-- **Content Analysis:** Focuses on substantive vocabulary
+- Keyword Extraction: Ensures meaningful terms rise to the top
+- Content Analysis: Focuses on substantive vocabulary
 
 Usage: Use predefined stopword lists (e.g., Snowball) or add custom
 words. For sentiment analysis or syntactic studies, consider keeping
@@ -101,10 +100,10 @@ related word forms together for more meaningful analysis.
 
 Comparison:
 
-- **Lemmatization:** Uses linguistic knowledge to produce valid
-  dictionary words (studies → study)
-- **Stemming:** Uses simple rules to chop word endings (studies → studi)
-- **Advantage:** Lemmatization produces readable, meaningful base forms
+- Lemmatization: Uses linguistic knowledge to produce valid dictionary
+  words (studies → study)
+- Stemming: Uses simple rules to chop word endings (studies → studi)
+- Advantage: Lemmatization produces readable, meaningful base forms
 
 Usage: Apply lemmatization after tokenization to consolidate word
 variants. Particularly useful for topic modeling and keyword extraction
@@ -123,10 +122,10 @@ numerical format for computational analysis.
 
 Process:
 
-- **Tokenization:** Text is split into individual tokens (words)
-- **Vocabulary:** All unique tokens form the matrix columns
-- **Counting:** Each document-token pair is counted
-- **Sparse Matrix:** Efficient storage format for large corpora
+- Tokenization: Text is split into individual tokens (words)
+- Vocabulary: All unique tokens form the matrix columns
+- Counting: Each document-token pair is counted
+- Sparse Matrix: Efficient storage format for large corpora
 
 Usage: The DFM is the foundation for all downstream analyses including
 keyword extraction, topic modeling, and semantic analysis. Create it
