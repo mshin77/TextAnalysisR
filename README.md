@@ -60,7 +60,7 @@ Launch and browse the app on the local computer:
 ## Getting Started
 
 See [Quick
-Start](https://mshin77.github.io/TextAnalysisR//articles/quickstart.html)
+Start](https://mshin77.github.io/TextAnalysisR/articles/quickstart.html)
 for tutorials.
 
 ## Citation

@@ -34,7 +34,7 @@ TextAnalysisR provides AI/NLP capabilities via cloud-based providers.
 - **Content Generation**: Survey items, research questions, themes
 - **Cluster Labels**: AI-suggested names for document clusters
 - **RAG Search**: Question-answering over the document corpus
-- **Vision AI**: PDF image/chart extraction via OpenAI or Gemini
+- **Vision AI**: PDF image/chart extraction via OpenAI or Gemini (local R package only)
 - **Sentiment Analysis**: LLM-based or local transformer models
 - **Linguistic Analysis**: POS, NER, dependency parsing via spaCy
 

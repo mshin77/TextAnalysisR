@@ -212,6 +212,8 @@ STM and embedding-based models, validation, and quality metrics
   : Generate Content from Topic Terms
 - [`plot_topic_probability()`](https://mshin77.github.io/TextAnalysisR/reference/plot_topic_probability.md)
   : Plot Per-Document Per-Topic Probabilities
+- [`estimate_topic_effects()`](https://mshin77.github.io/TextAnalysisR/reference/estimate_topic_effects.md)
+  : Estimate topic prevalence effects from an STM model
 - [`plot_topic_effects_categorical()`](https://mshin77.github.io/TextAnalysisR/reference/plot_topic_effects_categorical.md)
   : Plot Topic Effects for Categorical Variables
 - [`plot_topic_effects_continuous()`](https://mshin77.github.io/TextAnalysisR/reference/plot_topic_effects_continuous.md)

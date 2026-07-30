@@ -71,7 +71,7 @@ run_app()
 ## Getting Started
 
 See [Quick
-Start](https://mshin77.github.io/TextAnalysisR//articles/quickstart.html)
+Start](https://mshin77.github.io/TextAnalysisR/articles/quickstart.html)
 for tutorials.
 
 ## Citation

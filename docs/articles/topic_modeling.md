@@ -285,21 +285,15 @@ head(tidytext::tidy(prep), 10)
 
 ## Categorical Covariates
 
+[`estimate_topic_effects()`](https://mshin77.github.io/TextAnalysisR/reference/estimate_topic_effects.md)
+returns the model-based estimate and 95% interval per topic and level
+for a categorical covariate;
 [`plot_topic_effects_categorical()`](https://mshin77.github.io/TextAnalysisR/reference/plot_topic_effects_categorical.md)
-plots topic proportions across the levels of a categorical covariate.
-`stm::plot.estimateEffect(..., method = "pointestimate", omit.plot = TRUE)`
-returns the model-based estimate and 95% CI per topic and level,
-reshaped here into the columns the plot expects.
+plots them across the levels.
 
 ``` r
 
-ec <- stm::plot.estimateEffect(prep, "reference_type", method = "pointestimate",
-                               model = model, omit.plot = TRUE)
-effects_cat <- do.call(rbind, lapply(seq_along(ec$topics), function(i) {
-  data.frame(topic = ec$topics[i], value = as.character(ec$uvals),
-             proportion = as.numeric(ec$means[[i]]),
-             lower = as.numeric(ec$cis[[i]][1, ]), upper = as.numeric(ec$cis[[i]][2, ]))
-}))
+effects_cat <- estimate_topic_effects(prep, "reference_type", type = "pointestimate")
 plot_topic_effects_categorical(effects_cat)
 ```
 
@@ -307,20 +301,15 @@ plot_topic_effects_categorical(effects_cat)
 
 ## Continuous Covariates
 
+[`estimate_topic_effects()`](https://mshin77.github.io/TextAnalysisR/reference/estimate_topic_effects.md)
+with `type = "continuous"` returns the estimate and interval over a grid
+of a continuous covariate;
 [`plot_topic_effects_continuous()`](https://mshin77.github.io/TextAnalysisR/reference/plot_topic_effects_continuous.md)
-plots topic proportions across a continuous covariate. The same
-`plot.estimateEffect()` call with `method = "continuous"` returns the
-estimate and CI over a grid of the covariate.
+plots them.
 
 ``` r
 
-en <- stm::plot.estimateEffect(prep, "year", method = "continuous",
-                               model = model, omit.plot = TRUE)
-effects_cont <- do.call(rbind, lapply(seq_along(en$topics), function(i) {
-  data.frame(topic = en$topics[i], value = en$x,
-             proportion = as.numeric(en$means[[i]]),
-             lower = as.numeric(en$ci[[i]][1, ]), upper = as.numeric(en$ci[[i]][2, ]))
-}))
+effects_cont <- estimate_topic_effects(prep, "year", type = "continuous")
 plot_topic_effects_continuous(effects_cont)
 ```
 
