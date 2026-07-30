@@ -45,6 +45,7 @@ Imports:
 Suggests:
     aricode,
     tidylo,
+    betareg,
     broom,
     patchwork,
     cluster,

@@ -17276,7 +17276,7 @@ server <- shinyServer(function(input, output, session) {
         x = 0.5,
         y = -0.1,
         showarrow = FALSE,
-        font = list(size = 12, color = "#666")
+        font = list(size = 12, color = "#4a5568")
       )
     }
 
@@ -17782,6 +17782,21 @@ server <- shinyServer(function(input, output, session) {
     result
   })
 
+  get_prevalence_terms <- function(terms) {
+    custom <- input$stm_custom_prevalence
+    if (is.null(custom)) return(terms)
+    custom <- sub("^\\s*~\\s*", "", trimws(custom))
+    if (!nzchar(custom)) return(terms)
+    meta <- tryCatch(out()$meta, error = function(e) NULL)
+    if (is.null(meta)) return(terms)
+    err <- TextAnalysisR:::.validate_custom_formula(custom, names(meta))
+    if (!is.null(err)) {
+      showNotification(paste("Custom formula ignored -", err), type = "warning", duration = 8)
+      return(terms)
+    }
+    custom
+  }
+
   prevalence_formula_K_search <- reactive({
     categorical_var <- if (!is.null(input$stm_categorical_var)) {
       trimws(unlist(strsplit(as.character(input$stm_categorical_var), ",")))
@@ -17840,6 +17855,8 @@ server <- shinyServer(function(input, output, session) {
         }
       }
     }
+
+    terms <- get_prevalence_terms(terms)
 
     if (length(terms) > 0) {
       TextAnalysisR:::.build_covariate_formula(terms)
@@ -18645,6 +18662,8 @@ server <- shinyServer(function(input, output, session) {
         }
       }
     }
+
+    terms <- get_prevalence_terms(terms)
 
     if (length(terms) > 0) {
       TextAnalysisR:::.build_covariate_formula(terms)
@@ -20954,6 +20973,8 @@ server <- shinyServer(function(input, output, session) {
           }
         }
 
+        terms <- get_prevalence_terms(terms)
+
         prevalence_formula <- if (length(terms) > 0) {
           TextAnalysisR:::.build_covariate_formula(terms)
         } else {
@@ -21043,10 +21064,17 @@ server <- shinyServer(function(input, output, session) {
     }
     tryCatch(
       {
-        stminsights::get_effects(
+        if ((input$stm_effect_method %||% "stm") == "beta")
+          showNotification("Fitting Beta regression over posterior draws...", id = "beta_effect", duration = NULL, type = "message")
+        on.exit(try(removeNotification("beta_effect"), silent = TRUE), add = TRUE)
+        TextAnalysisR::estimate_topic_effects(
           estimates = stm_effect_estimates(),
           variable = input$stm_effect_cat_btn,
-          type = "pointestimate"
+          type = "pointestimate",
+          method = input$stm_effect_method %||% "stm",
+          interval = input$stm_effect_interval %||% "eti",
+          model = topic_model_result(),
+          documents = out()$documents
         )
       },
       error = function(e) {
@@ -21126,10 +21154,17 @@ server <- shinyServer(function(input, output, session) {
     }
     tryCatch(
       {
-        stminsights::get_effects(
+        if ((input$stm_effect_method %||% "stm") == "beta")
+          showNotification("Fitting Beta regression over posterior draws...", id = "beta_effect", duration = NULL, type = "message")
+        on.exit(try(removeNotification("beta_effect"), silent = TRUE), add = TRUE)
+        TextAnalysisR::estimate_topic_effects(
           estimates = stm_effect_estimates(),
           variable = input$stm_effect_con_btn,
-          type = "continuous"
+          type = "continuous",
+          method = input$stm_effect_method %||% "stm",
+          interval = input$stm_effect_interval %||% "eti",
+          model = topic_model_result(),
+          documents = out()$documents
         )
       },
       error = function(e) {

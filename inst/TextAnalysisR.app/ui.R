@@ -276,7 +276,7 @@ ui <- fluidPage(
             tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
             style = "color: #4269BF; margin-bottom: 10px;"
           ),
-          tags$p(style = "font-size: 16px; color: #666;", "API keys entered here apply to all AI features. You can also enter keys per-feature."),
+          tags$p(class = "text-muted", style = "font-size: 16px;", "API keys entered here apply to all AI features. You can also enter keys per-feature."),
           .password_input("global_openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
           .password_input("global_gemini_api_key", "Gemini API Key:", placeholder = "AIza..."),
           tags$hr(),
@@ -284,7 +284,7 @@ ui <- fluidPage(
             HTML("<strong>Usage Log</strong>"),
             style = "color: #4269BF; margin-bottom: 10px;"
           ),
-          tags$p(style = "font-size: 16px; color: #666;", "Track which AI models were used (for reproducibility reporting)."),
+          tags$p(class = "text-muted", style = "font-size: 16px;", "Track which AI models were used (for reproducibility reporting)."),
           downloadButton("download_ai_log", "Download Log as CSV", class = "btn-secondary btn-block")
         ),
         mainPanel(

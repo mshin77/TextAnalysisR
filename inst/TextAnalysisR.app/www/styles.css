@@ -534,6 +534,22 @@ a.shiny-bound-input.action-button:hover {
   background-color: transparent !important;
 }
 
+/* Guide info icons: match the primary theme blue, transparent background, both themes.
+   Covers both FA4/5 (fa-info-circle) and FA6 canonical (fa-circle-info) class names. */
+a.action-button .fa-info-circle,
+a.action-button .fa-circle-info,
+a.action-link .fa-info-circle,
+a.action-link .fa-circle-info {
+  color: #4269BF !important;
+  background-color: transparent !important;
+}
+[data-theme="dark"] a.action-button .fa-info-circle,
+[data-theme="dark"] a.action-button .fa-circle-info,
+[data-theme="dark"] a.action-link .fa-info-circle,
+[data-theme="dark"] a.action-link .fa-circle-info {
+  color: #60A5FA !important;
+}
+
 .btn:hover,
 .btn:focus,
 .btn:active {

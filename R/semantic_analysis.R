@@ -2570,6 +2570,16 @@ sentiment_lexicon_analysis <- function(dfm_object,
 }
 
 
+.sentiment_sign <- function(label) {
+  label <- tolower(trimws(label))
+  if (label == "positive") return(1)
+  if (label == "negative") return(-1)
+  if (label == "neutral") return(0)
+  stars <- suppressWarnings(as.integer(sub("\\s*stars?$", "", label)))
+  if (!is.na(stars)) return((stars - 3) / 2)
+  NA_real_
+}
+
 #' Embedding-based Sentiment Analysis
 #'
 #' @description
@@ -2648,21 +2658,10 @@ sentiment_embedding_analysis <- function(texts,
       stringsAsFactors = FALSE
     )
 
-    doc_sentiment$sentiment_score <- ifelse(
-      doc_sentiment$label == "positive",
-      doc_sentiment$confidence,
-      -doc_sentiment$confidence
-    )
-
-    doc_sentiment$sentiment <- doc_sentiment$label
-
-    if ("neg" %in% doc_sentiment$label || "negative" %in% doc_sentiment$label) {
-      doc_sentiment$sentiment <- ifelse(
-        doc_sentiment$label %in% c("neg", "negative"),
-        "negative",
-        "positive"
-      )
-    }
+    signs <- vapply(doc_sentiment$label, .sentiment_sign, numeric(1))
+    doc_sentiment$sentiment_score <- signs * doc_sentiment$confidence
+    doc_sentiment$sentiment <- ifelse(is.na(signs) | signs == 0, "neutral",
+                                      ifelse(signs > 0, "positive", "negative"))
 
     summary_stats <- list(
       total_documents = length(texts),

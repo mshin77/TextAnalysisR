@@ -9,7 +9,7 @@ server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")
 .gemini_provider_label <- if (has_server_gemini) "Gemini" else "Gemini (API Key Required)"
 .llm_provider_choices <- c("OpenAI (API Key Required)" = "openai", "gemini")
 names(.llm_provider_choices)[2] <- .gemini_provider_label
-.llm_provider_default <- if (has_server_gemini) "gemini" else "openai"
+.llm_provider_default <- "gemini"
 .embed_provider_choices <- c("Sentence Transformers (Python)" = "sentence-transformers", "OpenAI (API Key Required)" = "openai", "gemini")
 names(.embed_provider_choices)[3] <- .gemini_provider_label
 .embed_provider_default <- if (has_server_gemini) "gemini" else "sentence-transformers"
@@ -202,6 +202,29 @@ topic_modeling_ui_content <- function() {
               multiple = TRUE,
               options = list(placeholder = "Optional")
             ),
+            tags$details(
+              style = "margin: 4px 0 12px 0;",
+              tags$summary(
+                style = "cursor: pointer; color: #3A6DBA; font-weight: 500;",
+                "Advanced: write the prevalence formula"
+              ),
+              tags$div(
+                style = "margin-top: 8px;",
+                textAreaInput(
+                  "stm_custom_prevalence",
+                  label = NULL,
+                  value = "",
+                  placeholder = "e.g. reference_type + s(year, df = 4)",
+                  width = "100%",
+                  rows = 2
+                ),
+                tags$small(
+                  class = "text-muted",
+                  "Leave blank to use the covariates above. When set, this governs K search, model fit, and effects. ",
+                  "Allowed: variable names, + * : interactions, and I(), s(), ns(), bs(), poly(), factor(), log(), sqrt()."
+                )
+              )
+            ),
             selectInput("stm_init_type_K", "Initialization type",
               choices = c("Spectral", "LDA", "Random", "Custom"),
               selected = "Spectral"
@@ -384,6 +407,23 @@ Focus on incorporating the most significant keywords while following the guideli
               style = "margin-bottom: 15px;",
               tags$i(class = "fa fa-check-circle status-icon status-icon-purple"),
               "Choose covariates in the Word-Topic tab"
+            ),
+            radioButtons(
+              "stm_effect_method",
+              "Effect method",
+              choices = c("STM (method of composition)" = "stm", "Beta regression, bounded to (0,1)" = "beta"),
+              selected = "stm"
+            ),
+            radioButtons(
+              "stm_effect_interval",
+              "Interval",
+              choices = c("Equal-tailed" = "eti", "Highest posterior density" = "hpd"),
+              selected = "eti"
+            ),
+            tags$small(
+              class = "text-muted",
+              style = "display: block; margin-bottom: 15px;",
+              "Equal-tailed matches base STM. HPD is tighter for skewed proportions (default with Beta)."
             ),
             div(
               style = "display: flex; gap: 10px; margin-bottom: 15px;",
@@ -669,7 +709,8 @@ Focus on incorporating the most significant keywords while following the guideli
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
               tags$p(
-                style = "font-size: 16px; color: #666;",
+                class = "text-muted",
+                style = "font-size: 16px;",
                 "Requires Python + sentence-transformers"
               )
             ),
@@ -2603,7 +2644,7 @@ semantic_analysis_ui_content <- function() {
             conditionalPanel(
               condition = "input.semantic_feature_space == 'embeddings'",
               tags$label("Embedding Configuration", style = "font-weight: 600; margin-bottom: 8px; display: block; color: #4269BF;"),
-              tags$p(style = "font-size: 16px; color: #666; margin-bottom: 10px;", "Document-to-document similarity using vector embeddings."),
+              tags$p(class = "text-muted", style = "font-size: 16px; margin-bottom: 10px;", "Document-to-document similarity using vector embeddings."),
               uiOutput("embedding_status_ui"),
               radioButtons(
                 "embedding_provider",
@@ -2630,7 +2671,8 @@ semantic_analysis_ui_content <- function() {
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 tags$p(
-                  style = "font-size: 16px; color: #666;",
+                  class = "text-muted",
+                  style = "font-size: 16px;",
                   "Requires Python + sentence-transformers."
                 )
               ),
@@ -2753,7 +2795,7 @@ semantic_analysis_ui_content <- function() {
 
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'search'",
-            tags$p(style = "font-size: 16px; color: #666; margin-bottom: 10px;", "Query-to-document retrieval across your corpus."),
+            tags$p(class = "text-muted", style = "font-size: 16px; margin-bottom: 10px;", "Query-to-document retrieval across your corpus."),
             selectInput(
               "search_method",
               "Search method:",
@@ -2796,7 +2838,8 @@ semantic_analysis_ui_content <- function() {
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
                 tags$p(
-                  style = "font-size: 16px; color: #666;",
+                  class = "text-muted",
+                  style = "font-size: 16px;",
                   "Requires Python + sentence-transformers."
                 )
               ),
@@ -3135,6 +3178,11 @@ semantic_analysis_ui_content <- function() {
                 ),
                 selected = "lexicon",
                 inline = FALSE
+              ),
+              tags$small(
+                class = "text-muted",
+                style = "display: block; margin-bottom: 12px;",
+                "Each method is domain-specific — check it fits your text and spot-check results."
               ),
               conditionalPanel(
                 condition = "input.sentiment_method == 'lexicon'",

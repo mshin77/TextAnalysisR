@@ -18,6 +18,7 @@ inst/TextAnalysisR\.app/\.claude$
 ^run_checks\.R$
 ^\.Renviron$
 ^check_package\.R$
+^\.env$
 ^\.env\.example$
 ^\.positai$
 ^cran-comments\.md$
