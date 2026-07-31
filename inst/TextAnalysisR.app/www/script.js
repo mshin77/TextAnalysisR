@@ -40,7 +40,12 @@ var ttsState = {
     utterance: null,
     isActive: false,
     isPaused: false,
-    voices: []
+    voices: [],
+    blocks: null,
+    blockIndex: 0,
+    lang: 'en',
+    voice: null,
+    charBudget: 5000
 };
 
 function loadVoices() {
@@ -126,64 +131,116 @@ window.toggleTTS = function() {
     }
 }
 
+function collectReadableBlocks() {
+    var container = document.getElementById('main-content');
+    if (!container) return [];
+    var sel = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,td,dd,dt,figcaption';
+    var excl = 'nav,.navbar,.nav,.nav-pills,[role="tablist"],[role="navigation"],script,style,[aria-hidden="true"]';
+    return Array.prototype.slice.call(container.querySelectorAll(sel)).filter(function(el) {
+        if (el.closest(excl)) return false;
+        if (el.querySelector(sel)) return false;
+        if ((el.innerText || '').trim().length < 2) return false;
+        var cs = getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+        if (el.offsetParent === null) return false;
+        return true;
+    });
+}
+
+function clearTTSHighlight() {
+    var el = document.querySelector('.tts-reading');
+    if (el) el.classList.remove('tts-reading');
+}
+
+function speakPlain(text, lang, voice) {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    if (voice) u.voice = voice;
+    u.onstart = function() { ttsState.isActive = true; ttsState.isPaused = false; updateTTSIcon(); };
+    u.onend = function() { ttsState.isActive = false; ttsState.isPaused = false; updateTTSIcon(); };
+    u.onerror = function() { ttsState.isActive = false; ttsState.isPaused = false; updateTTSIcon(); };
+    ttsState.blocks = null;
+    ttsState.utterance = u;
+    ttsState.synth.speak(u);
+}
+
+function speakNextBlock() {
+    clearTTSHighlight();
+    if (!ttsState.isActive || !ttsState.blocks || ttsState.blockIndex >= ttsState.blocks.length) {
+        ttsState.isActive = false;
+        ttsState.isPaused = false;
+        updateTTSIcon();
+        return;
+    }
+    var el = ttsState.blocks[ttsState.blockIndex];
+    var text = (el.innerText || '').trim();
+    if (!text || ttsState.charBudget <= 0) {
+        ttsState.blockIndex++;
+        speakNextBlock();
+        return;
+    }
+    if (text.length > ttsState.charBudget) text = text.substring(0, ttsState.charBudget);
+    ttsState.charBudget -= text.length;
+
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = ttsState.lang;
+    if (ttsState.voice) u.voice = ttsState.voice;
+    u.onstart = function() {
+        el.classList.add('tts-reading');
+        try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { el.scrollIntoView(); }
+    };
+    u.onend = function() {
+        el.classList.remove('tts-reading');
+        ttsState.blockIndex++;
+        speakNextBlock();
+    };
+    u.onerror = function() {
+        el.classList.remove('tts-reading');
+        ttsState.blockIndex++;
+        speakNextBlock();
+    };
+    ttsState.utterance = u;
+    ttsState.synth.speak(u);
+}
+
 function startTTS() {
     if (ttsState.synth.speaking) {
         ttsState.synth.cancel();
     }
 
     loadVoices();
+    clearTTSHighlight();
 
-    var textToRead = '';
+    var lang = detectCurrentLanguage();
+    var voice = selectBestVoice(lang);
 
-    if (window.getSelection && window.getSelection().toString()) {
-        textToRead = window.getSelection().toString();
-    } else {
-        var mainContent = document.getElementById('main-content');
-        if (mainContent) {
-            textToRead = mainContent.innerText || mainContent.textContent;
-        }
-    }
-
-    textToRead = textToRead.trim();
-
-    if (!textToRead) {
-        alert('No text found to read.');
+    // an explicit text selection is read as-is (the browser already highlights it)
+    var selText = (window.getSelection && window.getSelection().toString())
+        ? window.getSelection().toString().trim() : '';
+    if (selText) {
+        speakPlain(selText.substring(0, 5000), lang, voice);
         return;
     }
 
-    if (textToRead.length > 5000) {
-        textToRead = textToRead.substring(0, 5000);
+    // read-along: one utterance per content block, highlighting the current block
+    var blocks = collectReadableBlocks();
+    if (blocks.length === 0) {
+        var mc = document.getElementById('main-content');
+        var txt = mc ? (mc.innerText || '').trim() : '';
+        if (!txt) { alert('No text found to read.'); return; }
+        speakPlain(txt.substring(0, 5000), lang, voice);
+        return;
     }
 
-    ttsState.utterance = new SpeechSynthesisUtterance(textToRead);
-
-    var currentLang = detectCurrentLanguage();
-    ttsState.utterance.lang = currentLang;
-
-    var selectedVoice = selectBestVoice(currentLang);
-    if (selectedVoice) {
-        ttsState.utterance.voice = selectedVoice;
-    }
-
-    ttsState.utterance.onstart = function() {
-        ttsState.isActive = true;
-        ttsState.isPaused = false;
-        updateTTSIcon();
-    };
-
-    ttsState.utterance.onend = function() {
-        ttsState.isActive = false;
-        ttsState.isPaused = false;
-        updateTTSIcon();
-    };
-
-    ttsState.utterance.onerror = function() {
-        ttsState.isActive = false;
-        ttsState.isPaused = false;
-        updateTTSIcon();
-    };
-
-    ttsState.synth.speak(ttsState.utterance);
+    ttsState.blocks = blocks;
+    ttsState.blockIndex = 0;
+    ttsState.lang = lang;
+    ttsState.voice = voice;
+    ttsState.charBudget = 5000;
+    ttsState.isActive = true;
+    ttsState.isPaused = false;
+    updateTTSIcon();
+    speakNextBlock();
 }
 
 function pauseTTS() {
@@ -203,9 +260,12 @@ function pauseTTS() {
 
 function stopTTS() {
     if (ttsState.synth) {
-        ttsState.synth.cancel();
         ttsState.isActive = false;
         ttsState.isPaused = false;
+        ttsState.blocks = null;
+        ttsState.blockIndex = 0;
+        ttsState.synth.cancel();
+        clearTTSHighlight();
         updateTTSIcon();
         announceToScreenReader('Text to speech stopped');
     }
