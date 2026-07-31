@@ -2750,19 +2750,16 @@ a.action-link[title*="Info"]:hover {
   color: #6b7280;
 }
 
-/* TTS read-along: current block highlight */
+/* TTS read-along: current block focus outline (no fill, no layout shift) */
 .tts-reading {
-  background-color: #fef08a;
-  color: #1f2937;
-  border-radius: 3px;
-  box-shadow: 0 0 0 3px #fef08a;
+  outline: 2px solid #ca8a04;
+  outline-offset: 2px;
+  border-radius: 5px;
   scroll-margin: 120px;
 }
 
 [data-theme="dark"] .tts-reading {
-  background-color: #5b4b00 !important;
-  color: #fde68a !important;
-  box-shadow: 0 0 0 3px #5b4b00 !important;
+  outline-color: #facc15;
 }
 
 /* ============================================
