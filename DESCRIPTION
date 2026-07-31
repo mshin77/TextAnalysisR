@@ -70,7 +70,6 @@ Suggests:
     pdftools,
     progress,
     proxy,
-    pryr,
     pscl,
     purrr,
     readxl,
