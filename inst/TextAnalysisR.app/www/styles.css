@@ -2723,8 +2723,8 @@ a.action-link[title*="Info"]:hover {
 
 /* Dark mode language menu */
 [data-theme="dark"] #translate_dropdown {
-  background: #1f1f1f;
-  border-color: #333;
+  background: #1f1f1f !important;
+  border-color: #333 !important;
 }
 
 [data-theme="dark"] .lang-btn {
@@ -2745,8 +2745,8 @@ a.action-link[title*="Info"]:hover {
 }
 
 [data-theme="dark"] .translate-attribution {
-  background: #1a1a1a;
-  border-color: #333;
+  background: #1a1a1a !important;
+  border-color: #333 !important;
   color: #6b7280;
 }
 
