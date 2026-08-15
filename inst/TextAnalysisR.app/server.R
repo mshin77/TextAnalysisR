@@ -8775,6 +8775,11 @@ server <- shinyServer(function(input, output, session) {
       texts_vec <- texts_df$united_texts
       doc_names <- if ("doc_id" %in% names(texts_df)) texts_df$doc_id else paste0("doc", seq_len(nrow(texts_df)))
 
+      if (!remote_doc_ok(length(texts_vec), "Neural sentiment analysis")) {
+        TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
+        return()
+      }
+
       model_name <- pick_model(input$neural_sentiment_model, "distilbert-base-uncased-finetuned-sst-2-english")
       use_gpu <- FALSE  # GPU disabled for stability - CPU inference is sufficient for most use cases
 
@@ -8892,6 +8897,11 @@ server <- shinyServer(function(input, output, session) {
 
       texts_vec <- texts_df$united_texts
       doc_names <- if ("doc_id" %in% names(texts_df)) texts_df$doc_id else paste0("doc", seq_len(nrow(texts_df)))
+
+      if (!remote_doc_ok(length(texts_vec), "LLM sentiment analysis")) {
+        TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
+        return()
+      }
 
       model_name <- input$llm_sentiment_model
       log_ai_usage("LLM Sentiment", provider, model_name)
@@ -12144,7 +12154,7 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(api_key) && !nzchar(api_key)) api_key <- NULL
 
     log_ai_usage("Embeddings", provider, model_name)
-    loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "..."))
+    loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "... This may briefly slow the app for other users."))
 
     tryCatch({
       embeddings <- TextAnalysisR::get_best_embeddings(
@@ -13642,6 +13652,11 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
+      if (!remote_doc_ok(nrow(feature_matrix), "Document clustering")) {
+        TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
+        return()
+      }
+
       dup_rows <- duplicated(feature_matrix)
       if (any(dup_rows)) {
         dup_count <- sum(dup_rows)
@@ -13929,6 +13944,10 @@ server <- shinyServer(function(input, output, session) {
 
     if (nrow(feature_matrix) < 3) {
       showNotification("Need at least 3 documents for parameter optimization", type = "error", duration = 10)
+      return()
+    }
+
+    if (!remote_doc_ok(nrow(feature_matrix), "Parameter optimization")) {
       return()
     }
 
@@ -18508,7 +18527,7 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    showNotification(HTML(paste("Fitting STM model with K =", input$K_number, "topics...<br>This may take several minutes.")),
+    showNotification(HTML(paste("Fitting STM model with K =", input$K_number, "topics...<br>This may take several minutes and briefly slow the app for other users.")),
                      type = "message", duration = NULL, id = "stm_model_notification")
 
     stm_model_trigger(isolate(stm_model_trigger()) + 1)
@@ -18792,7 +18811,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     TextAnalysisR:::show_loading_notification(HTML(paste0(
-      "Running embedding-based topic modeling (", backend, " backend) with ", n_topics_msg, " topics...<br>This may take several minutes."
+      "Running embedding-based topic modeling (", backend, " backend) with ", n_topics_msg, " topics...<br>This may take several minutes and briefly slow the app for other users."
     )), id = "embedding_model_notification")
 
     tryCatch({
