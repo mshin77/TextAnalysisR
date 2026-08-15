@@ -2,7 +2,7 @@
 % Please edit documentation in R/semantic_analysis.R
 \name{sentiment_embedding_analysis}
 \alias{sentiment_embedding_analysis}
-\title{Embedding-based Sentiment Analysis}
+\title{Embedding-Based Sentiment Analysis}
 \usage{
 sentiment_embedding_analysis(
   texts,

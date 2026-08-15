@@ -8,6 +8,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/multimodal_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/preprocessing.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/python_environment.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/articles/qualitative_coding.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/quickstart.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/semantic_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/articles/topic_modeling.html</loc></url>
@@ -21,6 +22,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_sentiment_llm.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/analyze_similarity_gaps.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/apply_codes.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/apply_standard_plotly_layout.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/assess_embedding_stability.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/auto_tune_embedding_topics.html</loc></url>
@@ -62,6 +64,9 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/clean_similarity_matrix.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/clear_lexdiv_cache.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/cluster_embedding_topics.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/code_agreement.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/code_retest.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_analysis_datatable.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_aria_label.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/create_empty_plot_message.html</loc></url>
@@ -71,6 +76,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image_gemini.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/describe_image_openai.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/detect_language.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/detect_multi_words.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type_py.html</loc></url>
@@ -134,6 +140,7 @@
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_diversity_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/lexical_frequency_analysis.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/log_security_event.html</loc></url>
+<url><loc>https://mshin77.github.io/TextAnalysisR/reference/merge_codes.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/parse_morphology_string.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/pipe.html</loc></url>
 <url><loc>https://mshin77.github.io/TextAnalysisR/reference/plot_cluster_terms.html</loc></url>

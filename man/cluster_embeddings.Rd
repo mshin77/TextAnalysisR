@@ -2,7 +2,7 @@
 % Please edit documentation in R/semantic_analysis.R
 \name{cluster_embeddings}
 \alias{cluster_embeddings}
-\title{Embedding-based Document Clustering}
+\title{Embedding-Based Document Clustering}
 \usage{
 cluster_embeddings(
   data_matrix,

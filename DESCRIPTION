@@ -59,6 +59,7 @@ Suggests:
     dbscan,
     digest,
     httr,
+    irr,
     jsonlite,
     knitr,
     markdown,

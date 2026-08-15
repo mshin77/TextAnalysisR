@@ -1183,7 +1183,8 @@ call_gemini_chat <- function(system_prompt,
       temperature = temperature,
       maxOutputTokens = max_tokens,
       thinkingConfig = list(
-        thinkingBudget = 1024
+        # thinking tokens count against maxOutputTokens; a budget here starves short replies
+        thinkingBudget = if (max_tokens < 512) 0L else 1024L
       )
     )
   )
@@ -1229,7 +1230,18 @@ call_gemini_chat <- function(system_prompt,
     }
   }
 
-  stop("Unexpected response structure from Gemini API")
+  finish <- tryCatch(res_json$candidates[[1]]$finishReason, error = function(e) NULL)
+  thoughts <- tryCatch(res_json$usageMetadata$thoughtsTokenCount, error = function(e) NULL)
+  if (identical(finish, "MAX_TOKENS")) {
+    stop(sprintf(
+      "Gemini returned no text: hit maxOutputTokens (%d) after %s thinking tokens. Raise max_tokens or disable thinking.",
+      max_tokens, thoughts %||% 0), call. = FALSE)
+  }
+  if (identical(finish, "SAFETY") || identical(finish, "PROHIBITED_CONTENT")) {
+    stop("Gemini blocked the response (finishReason: ", finish, ").", call. = FALSE)
+  }
+  stop("Unexpected response structure from Gemini API",
+       if (!is.null(finish)) paste0(" (finishReason: ", finish, ")") else "", call. = FALSE)
 }
 
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/topic_modeling.R
 \name{run_neural_topics_internal}
 \alias{run_neural_topics_internal}
-\title{Neural Topic Modeling}
+\title{Neural Topic Modeling (deprecated)}
 \usage{
 run_neural_topics_internal(
   texts,
@@ -19,22 +19,23 @@ run_neural_topics_internal(
 
 \item{n_topics}{Number of topics to discover}
 
-\item{hidden_layers}{Number of hidden layers in neural network}
+\item{hidden_layers}{Ignored.}
 
-\item{hidden_units}{Number of units per hidden layer}
+\item{hidden_units}{Ignored.}
 
-\item{dropout_rate}{Dropout rate for regularization}
+\item{dropout_rate}{Ignored.}
 
 \item{embedding_model}{Transformer model for initial embeddings}
 
 \item{seed}{Random seed for reproducibility}
 }
 \value{
-List containing neural topic model and diagnostics
+See \code{\link[=cluster_embedding_topics]{cluster_embedding_topics()}}.
 }
 \description{
-Implements neural topic modeling using deep learning architectures for topic
-discovery and representation learning.
+Deprecated. Use \code{\link[=cluster_embedding_topics]{cluster_embedding_topics()}}. The \code{hidden_layers},
+\code{hidden_units}, and \code{dropout_rate} arguments never affected the result
+and are ignored.
 }
 \concept{topic-modeling}
 \keyword{internal}

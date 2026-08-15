@@ -2,7 +2,7 @@
 % Please edit documentation in R/topic_modeling.R
 \name{fit_embedding_topics}
 \alias{fit_embedding_topics}
-\title{Embedding-based Topic Modeling (Deprecated)}
+\title{Embedding-Based Topic Modeling (Deprecated)}
 \usage{
 fit_embedding_topics(
   texts,

@@ -2781,3 +2781,28 @@ a.action-link[title*="Info"]:hover {
   border-color: #5F7088 !important;
 }
 
+
+/* subtabs */
+.nav-tabs>li>a {
+  font-size: 14px;
+  padding: 8px 10px;
+}
+
+/* qc buttons */
+.qc-btn-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.qc-btn-row .btn {
+  flex: 1;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* mid-width sidebar */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .row > .col-sm-3 { width: 33.333%; }
+  .row > .col-sm-9 { width: 66.667%; }
+}

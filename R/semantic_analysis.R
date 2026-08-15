@@ -625,7 +625,7 @@ reduce_dimensions <- function(data_matrix,
   }))
 }
 
-#' @title Embedding-based Document Clustering
+#' @title Embedding-Based Document Clustering
 #'
 #' @description
 #' This function performs clustering analysis using various methods, ordered
@@ -2580,7 +2580,7 @@ sentiment_lexicon_analysis <- function(dfm_object,
   NA_real_
 }
 
-#' Embedding-based Sentiment Analysis
+#' Embedding-Based Sentiment Analysis
 #'
 #' @description
 #' Performs sentiment analysis using transformer-based embeddings and neural models.

@@ -133,14 +133,15 @@ prep_texts(
 - math_mode:
 
   Logical; if `TRUE`, preserve math content (numbers, operators,
-  symbols) by forcing `remove_punct`, `remove_symbols`, and
-  `remove_numbers` all to `FALSE`, then strip only sentence-end
+  symbols, and single-character tokens such as labels and units) by
+  forcing `remove_punct`, `remove_symbols`, and `remove_numbers` all to
+  `FALSE` and `min_char` to `1`, then strip only sentence-end
   punctuation such as periods, commas, question marks, exclamation
   marks, colons, semicolons, parentheses, brackets, braces, quotation
-  marks, em dashes, and en dashes. The `min_char` default of 2 still
-  applies, so noisy single-character tokens are dropped; pass
-  `min_char = 1` to keep them. Use for math or STEM corpora where
-  multi-character operators and numerals carry meaning (default: FALSE).
+  marks, em dashes, and en dashes. Any explicitly supplied `min_char` is
+  overridden. Use for math or STEM corpora where operators, numerals,
+  one-letter labels ("angle A"), and one-letter units ("5 m") carry
+  meaning (default: FALSE).
 
 - verbose:
 

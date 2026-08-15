@@ -28,6 +28,7 @@
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
+    <li><a class="dropdown-item" href="../articles/qualitative_coding.html">Qualitative Coding</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
@@ -152,30 +153,29 @@ check sensitivity.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">df</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united_tbl</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">word_correlation_network_results</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">word_correlation_network</span><span class="op">(</span></span></span>
-<span class="r-in"><span>                                      <span class="va">dfm_object</span>,</span></span>
-<span class="r-in"><span>                                      doc_var <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
-<span class="r-in"><span>                                      common_term_n <span class="op">=</span> <span class="fl">30</span>,</span></span>
-<span class="r-in"><span>                                      corr_n <span class="op">=</span> <span class="fl">0.4</span>,</span></span>
-<span class="r-in"><span>                                      top_node_n <span class="op">=</span> <span class="fl">40</span>,</span></span>
-<span class="r-in"><span>                                      nrows <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>                                      height <span class="op">=</span> <span class="fl">1000</span>,</span></span>
-<span class="r-in"><span>                                      width <span class="op">=</span> <span class="fl">900</span>,</span></span>
-<span class="r-in"><span>                                      community_method <span class="op">=</span> <span class="st">"leiden"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">word_correlation_network_results</span><span class="op">$</span><span class="va">plot</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">word_correlation_network_results</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">word_correlation_network_results</span><span class="op">$</span><span class="va">summary</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-</code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="va"><a href="SpecialEduTech.html">SpecialEduTech</a></span></span>
+<span></span>
+<span>  <span class="va">united_tbl</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="unite_cols.html">unite_cols</a></span><span class="op">(</span><span class="va">df</span>, listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"abstract"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">tokens</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu"><a href="prep_texts.html">prep_texts</a></span><span class="op">(</span><span class="va">united_tbl</span>, text_field <span class="op">=</span> <span class="st">"united_texts"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">dfm_object</span> <span class="op">&lt;-</span> <span class="fu">quanteda</span><span class="fu">::</span><span class="fu"><a href="https://quanteda.io/reference/dfm.html" class="external-link">dfm</a></span><span class="op">(</span><span class="va">tokens</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">word_correlation_network_results</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">word_correlation_network</span><span class="op">(</span></span>
+<span>                                      <span class="va">dfm_object</span>,</span>
+<span>                                      doc_var <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                                      common_term_n <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>                                      corr_n <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>                                      top_node_n <span class="op">=</span> <span class="fl">40</span>,</span>
+<span>                                      nrows <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                                      height <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                                      width <span class="op">=</span> <span class="fl">900</span>,</span>
+<span>                                      community_method <span class="op">=</span> <span class="st">"leiden"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">word_correlation_network_results</span><span class="op">$</span><span class="va">plot</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">word_correlation_network_results</span><span class="op">$</span><span class="va">table</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">word_correlation_network_results</span><span class="op">$</span><span class="va">summary</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

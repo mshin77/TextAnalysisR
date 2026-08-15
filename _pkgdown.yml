@@ -16,6 +16,7 @@ reference:
   contents:
   - unite_cols
   - prep_texts
+  - detect_language
   - lemmatize_tokens
   - spacy_lemmatize
   - detect_multi_words
@@ -100,6 +101,7 @@ reference:
   contents:
   - find_optimal_k
   - starts_with("fit_")
+  - cluster_embedding_topics
   - auto_tune_embedding_topics
   - assess_embedding_stability
   - get_topic_terms
@@ -125,6 +127,14 @@ reference:
   - calculate_cross_similarity
   - analyze_similarity_gaps
   - extract_cross_category_similarities
+
+- title: "Qualitative Coding"
+  desc: "AI-assisted codebook application and inter-coder agreement"
+  contents:
+  - apply_codes
+  - code_retest
+  - code_agreement
+  - merge_codes
 
 - title: "AI & Multimodal"
   desc: "LLM integration, embeddings, PDF extraction, and vision AI"
@@ -154,7 +164,7 @@ reference:
   - lexical_analysis
   - "`%>%`"
   - run_text_workflow
-  - starts_with("run_")
+  - run_neural_topics_internal
   - init_spacy_nlp
   - spacy_extract_entities
   - spacy_parse_full
@@ -245,6 +255,7 @@ articles:
   - lexical_analysis
   - semantic_analysis
   - topic_modeling
+  - qualitative_coding
 
 - title: "Extensions"
   navbar: ~
@@ -279,6 +290,8 @@ navbar:
         href: articles/semantic_analysis.html
       - text: Topic Modeling
         href: articles/topic_modeling.html
+      - text: Qualitative Coding
+        href: articles/qualitative_coding.html
     extensions:
       text: Extensions
       menu:

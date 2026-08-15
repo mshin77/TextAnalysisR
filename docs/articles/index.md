@@ -17,6 +17,8 @@
   Analysis](https://mshin77.github.io/TextAnalysisR/articles/semantic_analysis.md):
 - [Topic
   Modeling](https://mshin77.github.io/TextAnalysisR/articles/topic_modeling.md):
+- [Qualitative
+  Coding](https://mshin77.github.io/TextAnalysisR/articles/qualitative_coding.md):
 
 ### Extensions
 

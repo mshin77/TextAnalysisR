@@ -131,6 +131,42 @@ using transformer embeddings and calculating cosine similarity scores.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">similar_topics</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Auto-detected backend: python</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting semantic-based topic modeling...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Method: umap_hdbscan</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Number of topics: 8</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Backend: Python (BERTopic)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 1: Generating document embeddings...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing 490 documents with embeddings...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 2: Performing BERTopic-based topic modeling...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Initializing BERTopic model...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Fitting BERTopic model to 490 documents...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reassigning 96 outlier documents using 'probabilities' strategy...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Extracting topic information...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 3: Calculating quality metrics...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Semantic topic modeling completed in 35.36 seconds</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Topics identified: 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Using semantic topic model...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $similar_topics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3 5 1 2 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $similarity_scores</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.4414300 0.4295595 0.3969501 0.3744162 0.3547794</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $query</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mathematical learning"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $method</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cosine"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $topic_terms</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   topic                                   top_terms</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3              problem, the, solving, of, and</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2                  the, of, and, students, in</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4                    video, to, the, with, of</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1                  the, and, of, to, students</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5 virtual, manipulatives, the, students, with</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

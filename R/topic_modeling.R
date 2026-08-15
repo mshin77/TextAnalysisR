@@ -807,69 +807,76 @@ calculate_topic_probability <- function(stm_model,
     dplyr::mutate(gamma = round(gamma, 3))
 }
 
-#' @title Neural Topic Modeling
+#' @title Embedding-Based Topic Discovery
 #'
 #' @description
-#' Implements neural topic modeling using deep learning architectures for topic
-#' discovery and representation learning.
+#' Groups documents into topics by clustering transformer embeddings, with
+#' per-topic cohesion diagnostics.
 #'
 #' @param texts Character vector of documents
 #' @param n_topics Number of topics to discover
-#' @param hidden_layers Number of hidden layers in neural network
-#' @param hidden_units Number of units per hidden layer
-#' @param dropout_rate Dropout rate for regularization
 #' @param embedding_model Transformer model for initial embeddings
 #' @param seed Random seed for reproducibility
 #'
-#' @return List containing neural topic model and diagnostics
+#' @return List with topic assignments and diagnostics. The cohesion values
+#'   are mean pairwise cosine similarity of document embeddings within each
+#'   topic cluster (embedding-space compactness), not lexical coherence
+#'   measures such as C_v or NPMI.
+#'
+#' @seealso [find_optimal_k()] and [auto_tune_embedding_topics()] for
+#'   choosing `n_topics`.
+#' @concept topic-modeling
+#' @export
+cluster_embedding_topics <- function(texts, n_topics = 10,
+                                     embedding_model = "all-MiniLM-L6-v2",
+                                     seed = 123) {
+  result <- fit_embedding_model(
+    texts = texts,
+    method = "embedding_clustering",
+    n_topics = n_topics,
+    embedding_model = embedding_model,
+    seed = seed
+  )
+  cohesion <- tryCatch(
+    calculate_coherence(result$embeddings, result$topic_assignments),
+    error = function(e) NULL
+  )
+  result$method <- "embedding_clustering"
+  result$diagnostics <- if (is.null(cohesion)) NULL else list(topic_quality = list(
+    embedding_cohesion = cohesion$coherence_scores,
+    mean_embedding_cohesion = cohesion$mean_coherence
+  ))
+  result
+}
+
+#' @title Neural Topic Modeling (deprecated)
+#'
+#' @description
+#' Deprecated. Use [cluster_embedding_topics()]. The `hidden_layers`,
+#' `hidden_units`, and `dropout_rate` arguments never affected the result
+#' and are ignored.
+#'
+#' @param texts Character vector of documents
+#' @param n_topics Number of topics to discover
+#' @param hidden_layers Ignored.
+#' @param hidden_units Ignored.
+#' @param dropout_rate Ignored.
+#' @param embedding_model Transformer model for initial embeddings
+#' @param seed Random seed for reproducibility
+#'
+#' @return See [cluster_embedding_topics()].
 #' @concept topic-modeling
 #' @keywords internal
 #' @export
 run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
-                                           hidden_units = 100, dropout_rate = 0.2,
-                                           embedding_model = "all-MiniLM-L6-v2", seed = 123) {
-
-  tryCatch({
-    base_result <- fit_embedding_model(
-      texts = texts,
-      method = "embedding_clustering",
-      n_topics = n_topics,
-      embedding_model = embedding_model,
-      seed = seed
-    )
-
-    coherence <- calculate_coherence(base_result$embeddings, base_result$topic_assignments)
-
-    diagnostics <- list(
-      architecture = list(
-        hidden_layers = hidden_layers,
-        hidden_units = hidden_units,
-        dropout_rate = dropout_rate
-      ),
-      topic_quality = list(
-        neural_coherence = coherence$coherence_scores,
-        mean_coherence = coherence$mean_coherence
-      )
-    )
-
-    result <- base_result
-    result$method <- "neural_topic_model"
-    result$diagnostics <- diagnostics
-    result$architecture <- list(hidden_layers = hidden_layers,
-                                hidden_units = hidden_units,
-                                dropout_rate = dropout_rate)
-
-    return(result)
-
-  }, error = function(e) {
-    warning("Neural topic modeling failed, falling back to base method: ", e$message)
-    return(fit_embedding_model(texts = texts, method = "embedding_clustering",
-                                   n_topics = n_topics,
-                                 embedding_model = embedding_model, seed = seed))
-  })
+                                       hidden_units = 100, dropout_rate = 0.2,
+                                       embedding_model = "all-MiniLM-L6-v2", seed = 123) {
+  .Deprecated("cluster_embedding_topics")
+  cluster_embedding_topics(texts = texts, n_topics = n_topics,
+                           embedding_model = embedding_model, seed = seed)
 }
 
-#' @title Fit Embedding-based Topic Model
+#' @title Fit Embedding-Based Topic Model
 #'
 #' @description
 #' This function performs embedding-based topic modeling using transformer embeddings
@@ -1593,7 +1600,7 @@ fit_embedding_model <- function(texts,
 }
 
 
-#' @title Embedding-based Topic Modeling (Deprecated)
+#' @title Embedding-Based Topic Modeling (Deprecated)
 #' @description
 #' This function is deprecated. Please use [fit_embedding_model()] instead.
 #' @inheritParams fit_embedding_model

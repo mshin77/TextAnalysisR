@@ -485,6 +485,31 @@ unite_cols <- function(df, listed_vars) {
 }
 
 
+#' @keywords internal
+.normalize_math_notation <- function(x) {
+  out <- as.character(x)
+  if (length(out) == 0) return(out)
+  na <- is.na(out)
+  out[na] <- ""
+  out <- gsub("\\\\frac\\{([^{}]+)\\}\\{([^{}]+)\\}", "\\1/\\2", out, perl = TRUE)
+  out <- gsub("\\\\sqrt\\{([^{}]+)\\}", "sqrt(\\1)", out, perl = TRUE)
+  out <- gsub("\\^\\{(\\w+)\\}", "^\\1", out, perl = TRUE)
+  out <- gsub("\\^\\((\\w+)\\)", "^\\1", out, perl = TRUE)
+  out <- gsub("\\\\times|\u00d7", "*", out, perl = TRUE)
+  out <- gsub("\\\\cdot", "*", out, perl = TRUE)
+  out <- gsub("\\\\div|\u00f7", "/", out, perl = TRUE)
+  out <- gsub("\\\\leq|\u2264", "<=", out, perl = TRUE)
+  out <- gsub("\\\\geq|\u2265", ">=", out, perl = TRUE)
+  out <- gsub("\\\\neq|\u2260", "!=", out, perl = TRUE)
+  out <- gsub("\\\\pm|\u00b1", "+/-", out, perl = TRUE)
+  out <- gsub("\\\\([a-zA-Z]+)", "\\1", out, perl = TRUE)
+  out[na] <- NA_character_
+  out
+}
+
+#' @keywords internal
+.math_operator_phrases <- c("> =", "< =", "! =", "= =", "+ / -")
+
 #' @title Preprocess Text Data
 #'
 #' @description
@@ -517,7 +542,7 @@ unite_cols <- function(df, listed_vars) {
 #' @param stopwords_language Character; language for stopwords (default: "en").
 #' @param custom_stopwords Character vector; additional words to remove (default: NULL).
 #' @param custom_valuetype Character; valuetype for custom_stopwords pattern matching, one of "glob", "regex", or "fixed" (default: "glob").
-#' @param math_mode Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE}, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. The \code{min_char} default of 2 still applies, so noisy single-character tokens are dropped; pass \code{min_char = 1} to keep them. Use for math or STEM corpora where multi-character operators and numerals carry meaning (default: FALSE).
+#' @param math_mode Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols, and single-character tokens such as labels and units) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE} and \code{min_char} to \code{1}, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. Any explicitly supplied \code{min_char} is overridden. Use for math or STEM corpora where operators, numerals, one-letter labels ("angle A"), and one-letter units ("5 m") carry meaning (default: FALSE).
 #' @param verbose Logical; print verbose output (default: FALSE).
 #' @param ... Additional arguments passed to \code{quanteda::tokens}.
 #'
@@ -555,6 +580,7 @@ unite_cols <- function(df, listed_vars) {
 #'                                          verbose = FALSE)
 #' print(tokens)
 #' }
+
 prep_texts <- function(united_tbl,
                              text_field = "united_texts",
                              min_char = 2,
@@ -583,6 +609,9 @@ prep_texts <- function(united_tbl,
     remove_symbols <- FALSE
     remove_numbers <- FALSE
     min_char       <- 1L
+    if (text_field %in% names(united_tbl)) {
+      united_tbl[[text_field]] <- .normalize_math_notation(united_tbl[[text_field]])
+    }
   }
 
   start_time <- Sys.time()
@@ -632,9 +661,14 @@ prep_texts <- function(united_tbl,
     }
 
     if (math_mode) {
-      if (verbose) message("Math mode: stripping sentence-end punctuation (keeping math operators)...")
-      sentence_punct <- c(".", ",", "?", "!", ":", ";", "(", ")", "[", "]",
-                          "{", "}", "\"", "'", "`", "''", "``", "...",
+      if (verbose) message("Math mode: rejoining multi-character operators...")
+      tokens <- quanteda::tokens_compound(
+        tokens, pattern = quanteda::phrase(.math_operator_phrases),
+        concatenator = "", join = FALSE)
+
+      if (verbose) message("Math mode: stripping sentence-end punctuation (keeping operators and grouping)...")
+      sentence_punct <- c(".", ",", "?", "!", ":", ";",
+                          "\"", "'", "`", "''", "``", "...",
                           "\u2014", "\u2013")
       tokens <- quanteda::tokens_remove(tokens, pattern = sentence_punct,
                                         valuetype = "fixed", verbose = FALSE)
@@ -1427,4 +1461,49 @@ check_vision_models <- function(provider = "gemini", api_key = NULL) {
     available = FALSE,
     message = paste("Unknown provider:", provider)
   ))
+}
+
+#' @title Detect Corpus Language From Stopword Overlap
+#'
+#' @description
+#' Scores texts against snowball stopword lists and ranks candidate languages by
+#' the share of tokens matching each list. Uses only the `stopwords` package, so
+#' no language-detection dependency is added. Accuracy is good for European
+#' languages given a few hundred tokens, and poor for very short texts or
+#' languages absent from snowball; treat the result as a suggestion.
+#'
+#' @param texts Character vector of documents.
+#' @param languages Candidate language codes (default: all snowball languages).
+#' @param sample_n Maximum documents to sample (default 200).
+#' @param seed Seed for sampling.
+#'
+#' @return A tibble of `language` and `score` (share of tokens matching that
+#'   language's stopwords), ranked best first, or `NULL` when no tokens are
+#'   found. Ties and low scores mean the corpus language is unclear.
+#'
+#' @seealso [prep_texts()] for the `stopwords_language` argument this informs.
+#' @concept preprocessing
+#' @export
+detect_language <- function(texts,
+                            languages = stopwords::stopwords_getlanguages("snowball"),
+                            sample_n = 200, seed = 123) {
+  texts <- as.character(texts)
+  texts <- texts[!is.na(texts) & nzchar(trimws(texts))]
+  if (length(texts) == 0) return(NULL)
+  if (length(texts) > sample_n) {
+    texts <- withr::with_seed(seed, sample(texts, sample_n))
+  }
+  toks <- unlist(strsplit(tolower(paste(texts, collapse = " ")), "[^[:alpha:]']+"))
+  toks <- toks[nzchar(toks)]
+  if (length(toks) == 0) return(NULL)
+
+  scores <- vapply(languages, function(lg) {
+    sw <- tryCatch(stopwords::stopwords(lg, source = "snowball"), error = function(e) NULL)
+    if (is.null(sw)) return(NA_real_)
+    mean(toks %in% tolower(sw))
+  }, numeric(1))
+
+  out <- tibble::tibble(language = languages, score = unname(scores))
+  out <- out[!is.na(out$score), , drop = FALSE]
+  out[order(-out$score), , drop = FALSE]
 }

@@ -68,7 +68,7 @@ prep_texts(
 
 \item{custom_valuetype}{Character; valuetype for custom_stopwords pattern matching, one of "glob", "regex", or "fixed" (default: "glob").}
 
-\item{math_mode}{Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE}, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. The \code{min_char} default of 2 still applies, so noisy single-character tokens are dropped; pass \code{min_char = 1} to keep them. Use for math or STEM corpora where multi-character operators and numerals carry meaning (default: FALSE).}
+\item{math_mode}{Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols, and single-character tokens such as labels and units) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE} and \code{min_char} to \code{1}, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. Any explicitly supplied \code{min_char} is overridden. Use for math or STEM corpora where operators, numerals, one-letter labels ("angle A"), and one-letter units ("5 m") carry meaning (default: FALSE).}
 
 \item{verbose}{Logical; print verbose output (default: FALSE).}
 

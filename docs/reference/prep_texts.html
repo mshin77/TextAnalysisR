@@ -189,7 +189,7 @@ This function serves as the foundation for all subsequent text analysis workflow
 
 
 <dt id="arg-math-mode">math_mode<a class="anchor" aria-label="anchor" href="#arg-math-mode"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, preserve math content (numbers, operators, symbols) by forcing <code>remove_punct</code>, <code>remove_symbols</code>, and <code>remove_numbers</code> all to <code>FALSE</code>, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. The <code>min_char</code> default of 2 still applies, so noisy single-character tokens are dropped; pass <code>min_char = 1</code> to keep them. Use for math or STEM corpora where multi-character operators and numerals carry meaning (default: FALSE).</p></dd>
+<dd><p>Logical; if <code>TRUE</code>, preserve math content (numbers, operators, symbols, and single-character tokens such as labels and units) by forcing <code>remove_punct</code>, <code>remove_symbols</code>, and <code>remove_numbers</code> all to <code>FALSE</code> and <code>min_char</code> to <code>1</code>, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. Any explicitly supplied <code>min_char</code> is overridden. Use for math or STEM corpora where operators, numerals, one-letter labels ("angle A"), and one-letter units ("5 m") carry meaning (default: FALSE).</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

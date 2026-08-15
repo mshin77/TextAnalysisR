@@ -616,6 +616,17 @@ Supports:
                 placeholder = "Type to add more or modify"
               )
             ),
+            selectInput(
+              "stopwords_language",
+              "Stopword language",
+              choices = .stopword_languages,
+              selected = "en"
+            ),
+            div(
+              style = "margin-top: -8px; margin-bottom: 12px;",
+              actionLink("detect_stopwords_language", "Detect from corpus", icon = icon("wand-magic-sparkles"),
+                         style = "font-size: 13px;")
+            ),
             div(
               class = "stopwords-container",
               style = "max-height: 400px; overflow-y: auto;",
@@ -869,6 +880,10 @@ Supports:
     tabPanel(
       "Topic Modeling",
       uiOutput("topic_modeling_ui")
+    ),
+    tabPanel(
+      "Qualitative Coding",
+      uiOutput("qualitative_coding_ui")
     )
   )
   )

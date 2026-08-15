@@ -5,9 +5,9 @@ R code.
 
 ## Language support
 
-Primary language: English. Preprocessing and STM are language-agnostic
-(stopwords for 50+); embeddings and AI features can be multilingual;
-spaCy and the sentiment lexicons are English-only.
+Primary language: English. Preprocessing and STM work with many
+languages (stopwords for 50+); embeddings and AI features can be
+multilingual; spaCy and the sentiment lexicons are English-only.
 
 ## Install
 

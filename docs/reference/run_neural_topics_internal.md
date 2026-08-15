@@ -1,7 +1,9 @@
-# Neural Topic Modeling
+# Neural Topic Modeling (deprecated)
 
-Implements neural topic modeling using deep learning architectures for
-topic discovery and representation learning.
+Deprecated. Use
+[`cluster_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embedding_topics.md).
+The `hidden_layers`, `hidden_units`, and `dropout_rate` arguments never
+affected the result and are ignored.
 
 ## Usage
 
@@ -29,15 +31,15 @@ run_neural_topics_internal(
 
 - hidden_layers:
 
-  Number of hidden layers in neural network
+  Ignored.
 
 - hidden_units:
 
-  Number of units per hidden layer
+  Ignored.
 
 - dropout_rate:
 
-  Dropout rate for regularization
+  Ignored.
 
 - embedding_model:
 
@@ -49,4 +51,5 @@ run_neural_topics_internal(
 
 ## Value
 
-List containing neural topic model and diagnostics
+See
+[`cluster_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embedding_topics.md).

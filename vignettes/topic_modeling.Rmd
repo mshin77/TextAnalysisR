@@ -144,7 +144,7 @@ effects_cont <- estimate_topic_effects(prep, "year", type = "continuous")
 plot_topic_effects_continuous(effects_cont)
 ```
 
-## Embedding-based Topics
+## Embedding-Based Topics
 
 The second type embeds documents with a transformer, reduces dimensionality, and clusters the
 embeddings into topics. `get_best_embeddings()` produces the embeddings and `fit_embedding_model()`

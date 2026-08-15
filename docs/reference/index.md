@@ -21,6 +21,8 @@ Text preparation and feature extraction
   : Unite Text Columns
 - [`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md)
   : Preprocess Text Data
+- [`detect_language()`](https://mshin77.github.io/TextAnalysisR/reference/detect_language.md)
+  : Detect Corpus Language From Stopword Overlap
 - [`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md)
   : Lemmatize Tokens with Batch Processing
 - [`spacy_lemmatize()`](https://mshin77.github.io/TextAnalysisR/reference/spacy_lemmatize.md)
@@ -188,6 +190,8 @@ STM and embedding-based models, validation, and quality metrics
   : Fit Semantic Model
 - [`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md)
   : Fit Temporal Topic Model
+- [`cluster_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embedding_topics.md)
+  : Embedding-Based Topic Discovery
 - [`auto_tune_embedding_topics()`](https://mshin77.github.io/TextAnalysisR/reference/auto_tune_embedding_topics.md)
   : Auto-tune BERTopic Hyperparameters
 - [`assess_embedding_stability()`](https://mshin77.github.io/TextAnalysisR/reference/assess_embedding_stability.md)
@@ -238,6 +242,19 @@ STM and embedding-based models, validation, and quality metrics
   : Analyze Similarity Gaps Between Categories
 - [`extract_cross_category_similarities()`](https://mshin77.github.io/TextAnalysisR/reference/extract_cross_category_similarities.md)
   : Extract Cross-Category Similarities from Full Similarity Matrix
+
+## Qualitative Coding
+
+AI-assisted codebook application and inter-coder agreement
+
+- [`apply_codes()`](https://mshin77.github.io/TextAnalysisR/reference/apply_codes.md)
+  : Apply a Codebook to Texts
+- [`code_retest()`](https://mshin77.github.io/TextAnalysisR/reference/code_retest.md)
+  : AI Coding Retest Stability
+- [`code_agreement()`](https://mshin77.github.io/TextAnalysisR/reference/code_agreement.md)
+  : Inter-Coder Agreement From Code Assignments
+- [`merge_codes()`](https://mshin77.github.io/TextAnalysisR/reference/merge_codes.md)
+  : Combine Coder Assignment Files
 
 ## AI & Multimodal
 
