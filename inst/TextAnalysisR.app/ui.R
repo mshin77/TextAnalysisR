@@ -314,6 +314,11 @@ ui <- fluidPage(
                 ),
                 tags$tbody(
                   tags$tr(
+                    tags$td("Stopword Language Detection"),
+                    tags$td("OpenAI, Gemini (falls back to a local heuristic without a key)"),
+                    tags$td("Preprocess")
+                  ),
+                  tags$tr(
                     tags$td("Document Similarity"),
                     tags$td("Sentence Transformers, OpenAI, Gemini"),
                     tags$td("Semantic Analysis")
@@ -334,8 +339,18 @@ ui <- fluidPage(
                     tags$td("Semantic Analysis")
                   ),
                   tags$tr(
+                    tags$td("Cluster Labels"),
+                    tags$td("OpenAI, Gemini"),
+                    tags$td("Semantic Analysis")
+                  ),
+                  tags$tr(
                     tags$td("Topic Modeling Embeddings"),
                     tags$td("Sentence Transformers, OpenAI, Gemini"),
+                    tags$td("Topic Modeling")
+                  ),
+                  tags$tr(
+                    tags$td("K Recommendation"),
+                    tags$td("OpenAI, Gemini"),
                     tags$td("Topic Modeling")
                   ),
                   tags$tr(
@@ -347,6 +362,16 @@ ui <- fluidPage(
                     tags$td("Vision OCR"),
                     tags$td("OpenAI, Gemini"),
                     tags$td("Upload")
+                  ),
+                  tags$tr(
+                    tags$td("Qualitative Coding Suggestions"),
+                    tags$td("OpenAI, Gemini"),
+                    tags$td("Qualitative Coding")
+                  ),
+                  tags$tr(
+                    tags$td("Qualitative Coding Retest"),
+                    tags$td("OpenAI, Gemini"),
+                    tags$td("Qualitative Coding")
                   )
                 )
               ),
@@ -624,8 +649,8 @@ Supports:
             ),
             div(
               style = "margin-top: -8px; margin-bottom: 12px;",
-              actionLink("detect_stopwords_language", "Detect from corpus", icon = icon("wand-magic-sparkles"),
-                         style = "font-size: 13px;")
+              actionLink("detect_stopwords_language", "Detect from corpus", icon = icon("wand-magic-sparkles", class = "icon-ai"),
+                         style = "font-size: 16px;")
             ),
             div(
               class = "stopwords-container",

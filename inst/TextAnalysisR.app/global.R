@@ -415,7 +415,7 @@ Focus on incorporating the most significant keywords while following the guideli
               "Temperature (creativity level)",
               min = 0, max = 1, value = 0.5, step = 0.1
             ),
-            actionButton("topic_generate_labels", HTML("<i class=\"fas fa-wand-magic-sparkles\"></i> Generate Labels"), class = "btn-primary btn-block"),
+            actionButton("topic_generate_labels", HTML("<i class=\"fas fa-wand-magic-sparkles icon-ai\"></i> Generate Labels"), class = "btn-primary btn-block"),
             tags$hr(),
             textInput(
               "stm_label_topics",
@@ -552,7 +552,7 @@ Focus on incorporating the most significant keywords while following the guideli
             ),
             actionButton(
               "generate_k_recommendation",
-              HTML("<i class=\"fas fa-wand-magic-sparkles\"></i> Generate Recommendation"),
+              HTML("<i class=\"fas fa-wand-magic-sparkles icon-ai\"></i> Generate Recommendation"),
               class = "btn-primary btn-block"
             )
           ),
@@ -704,7 +704,7 @@ Focus on incorporating the most significant keywords while following the guideli
             ),
             actionButton(
               "generate_topic_content",
-              HTML("<i class=\"fas fa-pen-fancy\"></i> Generate Content"),
+              HTML("<i class=\"fas fa-wand-magic-sparkles icon-ai\"></i> Generate Content"),
               class = "btn-primary btn-block",
               style = "margin-top: 15px;"
             )
@@ -2772,7 +2772,7 @@ semantic_analysis_ui_content <- function() {
               ),
               div(
                 style = "margin-bottom: 15px;",
-                actionButton("generate_embeddings", "Generate Embeddings", class = "btn-primary btn-block", icon = icon("brain"))
+                actionButton("generate_embeddings", "Generate Embeddings", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
               ),
               tags$hr(style = "margin: 10px 0; border-color: #dee2e6;")
             ),
@@ -3212,7 +3212,7 @@ semantic_analysis_ui_content <- function() {
               "generate_cluster_labels",
               "Generate Labels with AI",
               class = "btn-primary btn-block",
-              icon = icon("wand-magic-sparkles")
+              icon = icon("wand-magic-sparkles", class = "icon-ai")
             )
             )
           ),
@@ -3290,7 +3290,7 @@ semantic_analysis_ui_content <- function() {
                   max = 20,
                   step = 1
                 ),
-                actionButton("run_llm_sentiment", "Analyze with LLM", class = "btn-primary btn-block", icon = icon("robot"))
+                actionButton("run_llm_sentiment", "Analyze with LLM", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
               )
             ),
             conditionalPanel(
@@ -4068,7 +4068,7 @@ qualitative_coding_ui_content <- function() {
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         ),
-        actionButton("qc_suggest", "Suggest Codes", class = "btn-primary btn-block")
+        actionButton("qc_suggest", "Suggest Codes", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
       ),
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_review'",
@@ -4123,7 +4123,7 @@ qualitative_coding_ui_content <- function() {
         tags$h5(strong("AI retest stability"), style = "color: #4269BF; margin-bottom: 10px;"),
         numericInput("qc_retest_runs", "Runs", value = 2, min = 2, max = 5, step = 1),
         numericInput("qc_retest_sample", "Documents to sample", value = 10, min = 2, max = 100, step = 1),
-        actionButton("qc_run_retest", "Run Retest", class = "btn-primary btn-block")
+        actionButton("qc_run_retest", "Run Retest", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
       )
     ),
     mainPanel(
@@ -4169,7 +4169,7 @@ qualitative_coding_ui_content <- function() {
               condition = "output.has_qc_suggestions == false",
               div(
                 style = "padding: 60px 40px; text-align: center;",
-                tags$i(class = "fas fa-robot", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
+                tags$i(class = "fas fa-wand-magic-sparkles", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                 tags$p(
                   "Build a codebook, process documents (Semantic Analysis, Setup), then click ",
                   tags$strong("'Suggest Codes'", style = "color: #4269BF;"),

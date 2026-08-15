@@ -1507,3 +1507,118 @@ detect_language <- function(texts,
   out <- out[!is.na(out$score), , drop = FALSE]
   out[order(-out$score), , drop = FALSE]
 }
+
+#' @title Detect Corpus Language With an LLM
+#'
+#' @description
+#' Identifies the dominant language of a text sample by asking an LLM (OpenAI
+#' or Gemini) to pick one name from a candidate list. More accurate than
+#' [detect_language()] on short texts, mixed-language corpora, or languages
+#' with sparse snowball stopword coverage, at the cost of an API call.
+#'
+#' @param texts Character vector of documents.
+#' @param languages Named character vector of candidate languages (name =
+#'   display name, value = language code), e.g. `c(English = "en", French =
+#'   "fr")`.
+#' @param provider One of `"auto"`, `"openai"`, `"gemini"`. `"auto"` picks
+#'   whichever of `OPENAI_API_KEY` / `GEMINI_API_KEY` is set, or the key
+#'   implied by `api_key`'s prefix.
+#' @param model Model name (default depends on provider).
+#' @param api_key API key; falls back to the provider's environment variable.
+#' @param sample_n Maximum documents to sample for the prompt (default 200).
+#' @param seed Seed for sampling.
+#' @param verbose Logical, print status messages (default TRUE).
+#'
+#' @return A one-row tibble with `language` (code) and `provider`, or `NULL`
+#'   when no provider/key is available or the response doesn't match a
+#'   candidate.
+#'
+#' @seealso [detect_language()] for the local, no-API alternative; [call_llm_api()] for the direct provider call.
+#' @concept preprocessing
+#' @concept ai
+#' @export
+#'
+#' @examples
+#' if (interactive()) {
+#' detect_language_llm(
+#'   c("Bonjour, comment allez-vous?", "Je suis ravi de vous rencontrer."),
+#'   languages = c(English = "en", French = "fr", Spanish = "es"),
+#'   provider = "openai",
+#'   api_key = Sys.getenv("OPENAI_API_KEY")
+#' )
+#' }
+detect_language_llm <- function(texts,
+                                 languages,
+                                 provider = c("auto", "openai", "gemini"),
+                                 model = NULL,
+                                 api_key = NULL,
+                                 sample_n = 200,
+                                 seed = 123,
+                                 verbose = TRUE) {
+  provider <- match.arg(provider)
+
+  texts <- as.character(texts)
+  texts <- texts[!is.na(texts) & nzchar(trimws(texts))]
+  if (length(texts) == 0) return(NULL)
+  if (length(texts) > sample_n) {
+    texts <- withr::with_seed(seed, sample(texts, sample_n))
+  }
+  sample_text <- substr(paste(texts, collapse = " "), 1, 2000)
+
+  if (provider == "auto") {
+    if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
+      provider <- "openai"
+    } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
+      provider <- "gemini"
+    } else {
+      if (verbose) message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
+      return(NULL)
+    }
+  }
+
+  setup <- .resolve_llm_setup(
+    provider, model, api_key,
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite"),
+    strict_validate = TRUE
+  )
+  if (is.null(setup)) return(NULL)
+  model <- setup$model
+  api_key <- setup$api_key
+
+  prompt <- paste0(
+    "Identify the dominant language of the text sample below. Respond with ONLY ",
+    "one language name from this list, exactly as written, nothing else: ",
+    paste(names(languages), collapse = ", "), ".\n\nText sample:\n", sample_text
+  )
+
+  if (verbose) message("Detecting corpus language using ", provider, " (", model, ")...")
+
+  response_text <- tryCatch(
+    call_llm_api(
+      provider = provider,
+      system_prompt = "You are a precise language identification assistant. Respond with only the language name, no punctuation or explanation.",
+      user_prompt = prompt,
+      model = model,
+      temperature = 0,
+      max_tokens = 10,
+      api_key = api_key
+    ),
+    error = function(e) {
+      if (verbose) message("Language detection failed: ", e$message)
+      NULL
+    }
+  )
+  if (is.null(response_text) || !nzchar(trimws(response_text))) return(NULL)
+
+  detected <- trimws(response_text)
+  match_idx <- which(tolower(names(languages)) == tolower(detected))
+  if (length(match_idx) == 0) {
+    match_idx <- which(vapply(names(languages), function(nm) grepl(nm, detected, ignore.case = TRUE), logical(1)))
+  }
+  if (length(match_idx) == 0) {
+    if (verbose) message("Response did not match a candidate language: ", detected)
+    return(NULL)
+  }
+
+  tibble::tibble(language = unname(languages[match_idx[1]]), provider = provider, model = model)
+}

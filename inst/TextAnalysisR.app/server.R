@@ -21435,6 +21435,36 @@ server <- shinyServer(function(input, output, session) {
       showNotification("Unite text columns first.", type = "warning", duration = 7)
       return()
     }
+
+    openai_key <- get_api_key("openai")
+    gemini_key <- get_api_key("gemini")
+    ai_provider <- if (nzchar(openai_key)) "openai" else if (nzchar(gemini_key)) "gemini" else NULL
+
+    ai_res <- if (!is.null(ai_provider)) {
+      tryCatch(
+        TextAnalysisR::detect_language_llm(
+          txt, languages = .stopword_languages,
+          provider = ai_provider,
+          api_key = if (ai_provider == "openai") openai_key else gemini_key,
+          verbose = FALSE
+        ),
+        error = function(e) NULL
+      )
+    } else {
+      NULL
+    }
+
+    if (!is.null(ai_res)) {
+      log_ai_usage("Language Detection", ai_res$provider[1], ai_res$model[1])
+      top <- ai_res$language[1]
+      updateSelectInput(session, "stopwords_language", selected = top)
+      label <- names(.stopword_languages)[match(top, .stopword_languages)]
+      showNotification(
+        sprintf("Detected %s using AI (%s).", label %||% top, ai_res$provider[1]),
+        type = "message", duration = 9)
+      return()
+    }
+
     res <- TextAnalysisR::detect_language(txt)
     if (is.null(res) || is.na(res$language[1]) || res$score[1] < 0.05) {
       showNotification("Language not identified. Select one manually.", type = "warning", duration = 7)
@@ -21444,9 +21474,10 @@ server <- shinyServer(function(input, output, session) {
     updateSelectInput(session, "stopwords_language", selected = top)
     label <- names(.stopword_languages)[match(top, .stopword_languages)]
     showNotification(
-      sprintf("Detected %s (%.0f%% of tokens matched). Runner-up: %s.",
+      sprintf("Detected %s (%.0f%% of tokens matched). Runner-up: %s.%s",
               label %||% top, 100 * res$score[1],
-              names(.stopword_languages)[match(res$language[2], .stopword_languages)] %||% "none"),
+              names(.stopword_languages)[match(res$language[2], .stopword_languages)] %||% "none",
+              if (is.null(ai_provider)) " Add an API key in AI Setup for more accurate detection." else ""),
       type = "message", duration = 9)
   })
 

@@ -44,6 +44,12 @@
   --color-warning: #B15319;
   --color-error: #DC2626;
   --color-info: #1E71A1;
+  --color-ai: #6B46C1;
+}
+
+/* Shared marker for AI/LLM-powered actions (wand-magic-sparkles icon) */
+.icon-ai {
+  color: var(--color-ai);
 }
 
 h1,
@@ -367,6 +373,7 @@ body {
 
 [data-theme="dark"] .status-icon-purple { color: #A78BFA; }
 [data-theme="dark"] .status-icon-green-alt { color: #4ADE80; }
+[data-theme="dark"] .icon-ai { color: #A78BFA; }
 
 /* --- LEGACY CLASSES (for backward compatibility) --- */
 .alert-warning-custom {
