@@ -47,7 +47,7 @@
   --color-ai: #6B46C1;
 }
 
-/* Shared marker for AI/LLM-powered actions (wand-magic-sparkles icon) */
+/* Shared marker for AI/LLM-powered actions (sparkle glyph) */
 .icon-ai {
   color: var(--color-ai);
 }

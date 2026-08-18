@@ -63,6 +63,11 @@ shiny::enableBookmarking("disable")
   }, character(1), USE.NAMES = FALSE)
 }
 
+.ai_mark <- function() {
+  shiny::tags$i("✦", class = "icon-ai", `aria-hidden` = "true",
+                style = "font-style: normal; margin-right: 6px;")
+}
+
 .password_input <- function(inputId, label, value = "", placeholder = NULL) {
   if (isTRUE(has_server_gemini) && grepl("gemini", inputId, ignore.case = TRUE)) {
     placeholder <- "AIza..."
@@ -415,7 +420,7 @@ Focus on incorporating the most significant keywords while following the guideli
               "Temperature (creativity level)",
               min = 0, max = 1, value = 0.5, step = 0.1
             ),
-            actionButton("topic_generate_labels", HTML("<i class=\"fas fa-wand-magic-sparkles icon-ai\"></i> Generate Labels"), class = "btn-primary btn-block"),
+            actionButton("topic_generate_labels", tagList(.ai_mark(), "Generate Labels"), class = "btn-primary btn-block"),
             tags$hr(),
             textInput(
               "stm_label_topics",
@@ -552,7 +557,7 @@ Focus on incorporating the most significant keywords while following the guideli
             ),
             actionButton(
               "generate_k_recommendation",
-              HTML("<i class=\"fas fa-wand-magic-sparkles icon-ai\"></i> Generate Recommendation"),
+              tagList(.ai_mark(), "Generate Recommendation"),
               class = "btn-primary btn-block"
             )
           ),
@@ -704,7 +709,7 @@ Focus on incorporating the most significant keywords while following the guideli
             ),
             actionButton(
               "generate_topic_content",
-              HTML("<i class=\"fas fa-wand-magic-sparkles icon-ai\"></i> Generate Content"),
+              tagList(.ai_mark(), "Generate Content"),
               class = "btn-primary btn-block",
               style = "margin-top: 15px;"
             )
@@ -715,12 +720,20 @@ Focus on incorporating the most significant keywords while following the guideli
 
             selectInput(
               "embedding_backend",
-              "Backend:",
+              "Method:",
               choices = c(
-                "Python (BERTopic, recommended)" = "python",
-                "R (no Python required)" = "r"
+                "Emerged (Python, BERTopic)" = "python",
+                "Emerged (R, no Python required)" = "r",
+                "Specified (you set the number)" = "fixed"
               ),
               selected = "python"
+            ),
+            tags$p(
+              tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
+              "Emerged: the number of topics comes from the data, and documents that fit no ",
+              "group are left unassigned. Specified: you set the number, and every document ",
+              "is placed in one of them.",
+              style = "font-size: 13px; color: #475569; margin-top: -6px;"
             ),
 
             uiOutput("embedding_topic_provider_status"),
@@ -925,22 +938,9 @@ Focus on incorporating the most significant keywords while following the guideli
                 "Clustering method:",
                 choices = c(
                   "DBSCAN (density-based)" = "dbscan",
-                  "K-means" = "kmeans",
-                  "Hierarchical" = "hierarchical",
                   "HDBSCAN" = "hdbscan"
                 ),
                 selected = "dbscan"
-              ),
-
-              conditionalPanel(
-                condition = "input.embedding_method_r == 'kmeans' || input.embedding_method_r == 'hierarchical'",
-                numericInput(
-                  "embedding_r_n_topics",
-                  "Number of clusters:",
-                  value = 5,
-                  min = 2,
-                  max = 50
-                )
               ),
 
               conditionalPanel(
@@ -975,8 +975,44 @@ Focus on incorporating the most significant keywords while following the guideli
 
               checkboxInput(
                 "embedding_r_reduce_outliers",
-                "Reduce outliers (for DBSCAN/HDBSCAN)",
+                "Reduce outliers",
                 value = TRUE
+              )
+            ),
+
+            conditionalPanel(
+              condition = "input.embedding_backend == 'fixed'",
+              numericInput(
+                "embedding_fixed_n_topics",
+                "Number of topics:",
+                value = 10,
+                min = 2,
+                max = 50,
+                step = 1
+              ),
+              selectInput(
+                "embedding_fixed_clustering",
+                "Clustering algorithm:",
+                choices = c(
+                  "K-means" = "kmeans",
+                  "Hierarchical" = "hierarchical"
+                ),
+                selected = "kmeans"
+              ),
+              sliderInput(
+                "embedding_fixed_min_topic_size",
+                "Min topic size:",
+                value = 3,
+                min = 2,
+                max = 50
+              ),
+
+              conditionalPanel(
+                condition = "output.has_semantic_cluster_count == true",
+                actionLink("embedding_use_cluster_count",
+                           textOutput("semantic_cluster_count_label", inline = TRUE)),
+                tags$p("Carries the group count found in Semantic Analysis.",
+                       style = "font-size: 13px; color: #475569; margin-top: 2px;")
               )
             ),
 
@@ -2772,7 +2808,7 @@ semantic_analysis_ui_content <- function() {
               ),
               div(
                 style = "margin-bottom: 15px;",
-                actionButton("generate_embeddings", "Generate Embeddings", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
+                actionButton("generate_embeddings", "Generate Embeddings", class = "btn-primary btn-block", icon = .ai_mark())
               ),
               tags$hr(style = "margin: 10px 0; border-color: #dee2e6;")
             ),
@@ -3045,15 +3081,14 @@ semantic_analysis_ui_content <- function() {
                   choices = c(
                     "K-means" = "kmeans",
                     "Hierarchical" = "hierarchical",
-                    "DBSCAN (Density-based)" = "dbscan",
-                    "Neural Topic Model" = "neural",
-                    "Semantic Topic Modeling (All-in-one)" = "semantic_unified"
+                    "DBSCAN (Density-based)" = "dbscan"
                   ),
                   selected = "kmeans"
                 ),
                 tags$p(
                   tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
-                  tags$strong("Note:"), " Neural and Semantic models use transformer embeddings.",
+                  tags$strong("Note:"), " Clustering groups documents by similarity. For themes ",
+                  "described by keywords, use the Topic Modeling tab.",
                   style = "font-size: 16px; color: #6b7280; margin-top: 5px;"
                 ),
                 conditionalPanel(
@@ -3067,48 +3102,6 @@ semantic_analysis_ui_content <- function() {
                     step = 1
                   )
                 ),
-                conditionalPanel(
-                  condition = "input.semantic_cluster_method == 'neural'",
-                  numericInput(
-                    "neural_n_topics",
-                    "Number of topics",
-                    value = 10,
-                    min = 2,
-                    max = 50,
-                    step = 1
-                  )
-                ),
-                conditionalPanel(
-                  condition = "input.semantic_cluster_method == 'semantic_unified'",
-                  tags$h5("Unified Semantic Topic Modeling", style = "color: #10B981; font-weight: bold; margin-bottom: 10px;"),
-                  tags$p("Combines multiple approaches for stable topic modeling",
-                        style = "font-size: 16px; color: #6b7280; margin-bottom: 10px;"),
-                  selectInput(
-                    "unified_method",
-                    "Base method",
-                    choices = c(
-                      "Embedding + Clustering" = "embedding_clustering",
-                      "Similarity-based Grouping" = "similarity_grouping"
-                    ),
-                    selected = "embedding_clustering"
-                  ),
-                  numericInput(
-                    "unified_n_topics",
-                    "Number of topics",
-                    value = 10,
-                    min = 2,
-                    max = 30,
-                    step = 1
-                  ),
-                  sliderInput(
-                    "unified_min_topic_size",
-                    "Minimum topic size",
-                    value = 3,
-                    min = 2,
-                    max = 10,
-                    step = 1
-                  )
-                )
               )
             ),
 
@@ -3212,7 +3205,7 @@ semantic_analysis_ui_content <- function() {
               "generate_cluster_labels",
               "Generate Labels with AI",
               class = "btn-primary btn-block",
-              icon = icon("wand-magic-sparkles", class = "icon-ai")
+              icon = .ai_mark()
             )
             )
           ),
@@ -3290,7 +3283,7 @@ semantic_analysis_ui_content <- function() {
                   max = 20,
                   step = 1
                 ),
-                actionButton("run_llm_sentiment", "Analyze with LLM", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
+                actionButton("run_llm_sentiment", "Analyze with LLM", class = "btn-primary btn-block", icon = .ai_mark())
               )
             ),
             conditionalPanel(
@@ -4027,11 +4020,18 @@ qualitative_coding_ui_content <- function() {
         ),
         radioButtons(
           "qc_unit", "Unit of analysis",
-          choices = c("Paragraph" = "paragraph", "Sentence" = "sentence", "Document" = "document"),
-          selected = "paragraph"
+          choices = c("Sentence" = "sentence", "Paragraph" = "paragraph", "Document" = "document"),
+          selected = "sentence"
         ),
         sliderInput("qc_max_codes", "Max codes per unit", min = 1, max = 5, value = 3, step = 1),
         sliderInput("qc_n_docs", "Documents to code", min = 1, max = 500, value = 20, step = 1),
+        conditionalPanel(
+          condition = "output.has_topic_assignments == true",
+          checkboxInput("qc_stratify_by_topic",
+                        "Spread the sample across topics", value = TRUE),
+          tags$p("Draws proportionally from each topic instead of taking the first documents.",
+                 style = "font-size: 13px; color: #475569; margin-top: -8px;")
+        ),
         radioButtons(
           "qc_provider", "AI Provider:",
           choices = .llm_provider_choices,
@@ -4068,7 +4068,7 @@ qualitative_coding_ui_content <- function() {
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         ),
-        actionButton("qc_suggest", "Suggest Codes", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
+        actionButton("qc_suggest", "Suggest Codes", class = "btn-primary btn-block", icon = .ai_mark())
       ),
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_review'",
@@ -4079,7 +4079,7 @@ qualitative_coding_ui_content <- function() {
           "Select rows, then accept or reject. Double-click the code cell to correct it; edits count as confirmed."
         ),
         textInput("qc_coder_name", "Coder name", value = "coder1"),
-        tags$p("Selected rows", style = "font-size: 13px; color: #64748B; margin-bottom: 4px;"),
+        tags$label("Selected rows", class = "control-label"),
         div(
           class = "qc-btn-row",
           actionButton("qc_accept_selected", "Accept", class = "btn-primary"),
@@ -4088,7 +4088,16 @@ qualitative_coding_ui_content <- function() {
         ),
         actionButton("qc_accept_pending", "Accept all pending", class = "btn-default btn-block"),
         tags$hr(style = "margin: 16px 0 12px;"),
-        tags$p("Export accepted", style = "font-size: 13px; color: #64748B; margin-bottom: 4px;"),
+        conditionalPanel(
+          condition = "output.has_uncoded_units == true",
+          tags$label("Units the codebook did not reach", class = "control-label"),
+          uiOutput("qc_uncoded_summary"),
+          downloadButton("qc_download_uncoded", "Export uncoded", class = "btn-default btn-block"),
+          tags$p("Read these for content the codebook misses; recurring themes belong in a revision.",
+                 style = "font-size: 13px; color: #475569; margin-top: 6px;"),
+          tags$hr(style = "margin: 16px 0 12px;")
+        ),
+        tags$label("Export accepted", class = "control-label"),
         div(
           class = "qc-btn-row",
           downloadButton("qc_download_accepted_csv", "CSV", class = "btn-default"),
@@ -4103,7 +4112,10 @@ qualitative_coding_ui_content <- function() {
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
           "Combine coder files exported from the Review tab, then compute chance-corrected agreement."
         ),
-        fileInput("qc_coder_files", "Coder files (RDS)", accept = c(".rds"), multiple = TRUE),
+        fileInput("qc_coder_files", "Coder files",
+                  accept = c(".rds", ".csv", ".xlsx", ".xls", ".txt"), multiple = TRUE),
+        tags$p("One file per coder, exported from the Review tab.",
+               style = "font-size: 13px; color: #475569; margin-top: -8px;"),
         checkboxInput("qc_include_own", "Include accepted rows from this session", value = TRUE),
         radioButtons(
           "qc_align", "Unit alignment",
@@ -4123,7 +4135,7 @@ qualitative_coding_ui_content <- function() {
         tags$h5(strong("AI retest stability"), style = "color: #4269BF; margin-bottom: 10px;"),
         numericInput("qc_retest_runs", "Runs", value = 2, min = 2, max = 5, step = 1),
         numericInput("qc_retest_sample", "Documents to sample", value = 10, min = 2, max = 100, step = 1),
-        actionButton("qc_run_retest", "Run Retest", class = "btn-primary btn-block", icon = icon("wand-magic-sparkles", class = "icon-ai"))
+        actionButton("qc_run_retest", "Run Retest", class = "btn-primary btn-block", icon = .ai_mark())
       )
     ),
     mainPanel(
@@ -4169,7 +4181,7 @@ qualitative_coding_ui_content <- function() {
               condition = "output.has_qc_suggestions == false",
               div(
                 style = "padding: 60px 40px; text-align: center;",
-                tags$i(class = "fas fa-wand-magic-sparkles", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
+                tags$i("✦", class = "icon-ai", `aria-hidden` = "true", style = "font-style: normal; font-size: 48px; opacity: 0.35; margin-bottom: 20px; display: block;"),
                 tags$p(
                   "Build a codebook, process documents (Semantic Analysis, Setup), then click ",
                   tags$strong("'Suggest Codes'", style = "color: #4269BF;"),

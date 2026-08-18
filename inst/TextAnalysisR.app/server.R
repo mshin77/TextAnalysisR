@@ -14104,7 +14104,7 @@ server <- shinyServer(function(input, output, session) {
       "dbscan" = if (has_dimred_results) paste("DBSCAN on", dimred_results$last_method) else "DBSCAN",
       "kmeans" = "K-means",
       "hierarchical" = "Hierarchical",
-      "neural" = "Neural Topic Model",
+      "embedding" = "Similarity + K-means Topics",
       "semantic_unified" = "Unified Semantic Topic Modeling"
     )
 
@@ -14195,27 +14195,27 @@ server <- shinyServer(function(input, output, session) {
             embeddings = unified_result$embeddings,
             similarity_matrix = unified_result$similarity_matrix
           )
-        } else if (cluster_method == "neural") {
+        } else if (cluster_method == "embedding") {
           texts <- document_display_data()$combined_text
 
-          neural_result <- TextAnalysisR::cluster_embedding_topics(
+          embedding_result <- TextAnalysisR::cluster_embedding_topics(
             texts = texts,
-            n_topics = input$neural_n_topics,
+            n_topics = input$embedding_n_topics,
             embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2",
             seed = input$semantic_cluster_seed
           )
 
-          analysis_results$neural_topic_model <- neural_result
+          analysis_results$embedding_topic_model <- embedding_result
 
           list(
-            clusters = neural_result$topic_assignments,
-            method = "neural",
-            n_clusters = neural_result$n_topics,
-            n_clusters_found = neural_result$n_topics,
+            clusters = embedding_result$topic_assignments,
+            method = "embedding",
+            n_clusters = embedding_result$n_topics,
+            n_clusters_found = embedding_result$n_topics,
             auto_detected = FALSE,
-            detection_method = "Neural Topic Model",
-            topics = neural_result$topics,
-            topic_keywords = neural_result$topic_keywords
+            detection_method = "Similarity + K-means Topics",
+            topics = embedding_result$topics,
+            topic_keywords = embedding_result$topic_keywords
           )
         } else if (cluster_method == "dbscan" && !is.null(existing_embedding)) {
           compute_clustering(
@@ -17381,7 +17381,7 @@ server <- shinyServer(function(input, output, session) {
 
   analysis_results <- reactiveValues(
     ai_labels = NULL,
-    neural_topic_model = NULL
+    embedding_topic_model = NULL
   )
 
 
@@ -18371,6 +18371,30 @@ server <- shinyServer(function(input, output, session) {
   })
 
   topic_model_result <- reactiveVal(NULL)
+
+  # step 5: carry the Semantic Analysis group count into the fixed-count branch
+  semantic_cluster_count <- reactive({
+    cl <- comparison_results$clustering
+    n <- cl$n_clusters_found %||% cl$n_clusters
+    if (is.null(n) || !is.finite(n) || n < 2) NULL else as.integer(n)
+  })
+
+  output$has_semantic_cluster_count <- reactive({
+    !is.null(semantic_cluster_count())
+  })
+  outputOptions(output, "has_semantic_cluster_count", suspendWhenHidden = FALSE)
+
+  output$semantic_cluster_count_label <- renderText({
+    n <- semantic_cluster_count()
+    if (is.null(n)) "" else paste0("Use ", n, " from Semantic Analysis")
+  })
+
+  observeEvent(input$embedding_use_cluster_count, {
+    n <- semantic_cluster_count()
+    if (is.null(n)) return()
+    updateNumericInput(session, "embedding_fixed_n_topics", value = n)
+    showNotification(paste0("Number of topics set to ", n, "."), type = "message", duration = 5)
+  })
   topic_model_type <- reactiveVal(NULL)
   previous_K_number <- reactiveVal(NULL)
   previous_categorical_var_2 <- reactiveVal(NULL)
@@ -18803,8 +18827,10 @@ server <- shinyServer(function(input, output, session) {
       dimred <- input$embedding_dimred_method %||% "umap"
       cluster <- input$embedding_method_r %||% "dbscan"
       method <- paste0(dimred, "_", cluster)
-      n_topics <- input$embedding_r_n_topics %||% 5
-      n_topics_msg <- if (cluster %in% c("dbscan", "hdbscan")) "automatic" else n_topics
+      n_topics_msg <- "automatic"
+    } else if (backend == "fixed") {
+      method <- "embedding_clustering"
+      n_topics_msg <- input$embedding_fixed_n_topics %||% 10
     } else {
       method <- "umap_hdbscan"
       n_topics_msg <- "automatic"
@@ -18866,12 +18892,20 @@ server <- shinyServer(function(input, output, session) {
       log_ai_usage("Topic Modeling Embeddings", provider, model_name)
 
       raw_output <- capture.output({
-        if (backend == "r") {
+        if (backend == "fixed") {
+          embedding_result <- TextAnalysisR::cluster_embedding_topics(
+            texts = texts,
+            n_topics = input$embedding_fixed_n_topics %||% 10,
+            embedding_model = model_name,
+            clustering_method = input$embedding_fixed_clustering %||% "kmeans",
+            min_topic_size = input$embedding_fixed_min_topic_size %||% 3,
+            seed = 123
+          )
+        } else if (backend == "r") {
           embedding_result <- TextAnalysisR::fit_embedding_model(
             texts = texts,
             method = method,
             backend = "r",
-            n_topics = input$embedding_r_n_topics %||% 5,
             embedding_model = model_name,
             umap_neighbors = input$embedding_r_umap_neighbors %||% 15,
             umap_n_components = input$embedding_r_umap_n_components %||% 5,
@@ -21107,6 +21141,7 @@ server <- shinyServer(function(input, output, session) {
 
   qc_codebook <- reactiveVal(NULL)
   qc_suggestions <- reactiveVal(NULL)
+  qc_coded_texts <- reactiveVal(NULL)
   qc_agreement <- reactiveVal(NULL)
   qc_retest <- reactiveVal(NULL)
 
@@ -21114,6 +21149,12 @@ server <- shinyServer(function(input, output, session) {
     !is.null(qc_codebook()) && nrow(qc_codebook()) > 0
   })
   outputOptions(output, "has_qc_codebook", suspendWhenHidden = FALSE)
+
+  output$has_topic_assignments <- reactive({
+    tm <- topic_model_result()
+    !is.null(tm) && !is.null(tm$topic_assignments)
+  })
+  outputOptions(output, "has_topic_assignments", suspendWhenHidden = FALSE)
 
   output$has_qc_suggestions <- reactive({
     !is.null(qc_suggestions()) && nrow(qc_suggestions()) > 0
@@ -21202,7 +21243,18 @@ server <- shinyServer(function(input, output, session) {
     texts <- docs_data$combined_text
     names(texts) <- paste0("doc", seq_along(texts))
     n <- min(length(texts), input$qc_n_docs %||% 20)
-    list(texts = texts[seq_len(n)],
+    idx <- seq_len(n)
+    tm <- topic_model_result()
+    if (isTRUE(input$qc_stratify_by_topic) && !is.null(tm$topic_assignments) &&
+        length(tm$topic_assignments) == length(texts)) {
+      # proportional draw per topic so no topic is missed by taking the first n
+      by_topic <- split(seq_along(texts), as.character(tm$topic_assignments))
+      quota <- pmax(1, round(n * lengths(by_topic) / length(texts)))
+      picked <- unlist(Map(function(ids, k) ids[seq_len(min(k, length(ids)))],
+                           by_topic, quota), use.names = FALSE)
+      idx <- sort(head(unique(picked), n))
+    }
+    list(texts = texts[idx],
          codebook = cb[nzchar(cb$code), , drop = FALSE],
          provider = provider, model = model, api_key = api_key)
   }
@@ -21214,7 +21266,7 @@ server <- shinyServer(function(input, output, session) {
     out <- tryCatch(
       TextAnalysisR::apply_codes(
         texts = request$texts, codebook = request$codebook,
-        unit = input$qc_unit %||% "paragraph",
+        unit = input$qc_unit %||% "sentence",
         max_codes = input$qc_max_codes %||% 3,
         provider = request$provider, model = request$model,
         api_key = request$api_key, delay = 0.5, verbose = FALSE),
@@ -21231,8 +21283,39 @@ server <- shinyServer(function(input, output, session) {
     }, character(1))
     out$status <- ifelse(is.na(out$code), "no code", "pending")
     qc_suggestions(out)
+    qc_coded_texts(request$texts)
     TextAnalysisR:::show_completion_notification("Code suggestions ready. Confirm them in the Review tab.")
   })
+
+  # step 7: the units the codebook did not reach
+  qc_uncoded <- reactive({
+    sg <- qc_suggestions()
+    txt <- qc_coded_texts()
+    if (is.null(sg) || nrow(sg) == 0 || is.null(txt)) return(NULL)
+    bare <- TextAnalysisR::uncoded_units(sg, txt)
+    if (nrow(bare) == 0) return(NULL)
+    bare
+  })
+
+  output$has_uncoded_units <- reactive({
+    !is.null(qc_uncoded())
+  })
+  outputOptions(output, "has_uncoded_units", suspendWhenHidden = FALSE)
+
+  output$qc_uncoded_summary <- renderUI({
+    u <- qc_uncoded()
+    sg <- qc_suggestions()
+    if (is.null(u) || is.null(sg)) return(NULL)
+    total <- length(unique(sg$unit_id))
+    pct <- round(100 * nrow(u) / max(total, 1))
+    tags$p(paste0(nrow(u), " of ", total, " units (", pct, "%) received no code."),
+           style = "font-size: 13px; color: #475569; margin-bottom: 8px;")
+  })
+
+  output$qc_download_uncoded <- downloadHandler(
+    filename = function() paste0("uncoded-units-", Sys.Date(), ".csv"),
+    content = function(file) utils::write.csv(qc_uncoded(), file, row.names = FALSE)
+  )
 
   output$qc_suggest_summary <- renderUI({
     req(qc_suggestions())
@@ -21337,8 +21420,17 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$qc_run_agreement, {
     parts <- list()
     if (!is.null(input$qc_coder_files)) {
-      parts <- lapply(input$qc_coder_files$datapath, function(p) {
-        tryCatch(readRDS(p), error = function(e) NULL)
+      up <- input$qc_coder_files
+      # datapath drops the original extension, which picks the reader
+      parts <- lapply(seq_len(nrow(up)), function(i) {
+        ext <- tolower(tools::file_ext(up$name[i]))
+        dest <- file.path(tempdir(), paste0("qc_coder_", i, ".", ext))
+        file.copy(up$datapath[i], dest, overwrite = TRUE)
+        tryCatch(TextAnalysisR::merge_codes(dest), error = function(e) {
+          showNotification(paste0("Could not read ", up$name[i], ": ", e$message),
+                           type = "error", duration = 10)
+          NULL
+        })
       })
       parts <- Filter(Negate(is.null), parts)
     }
@@ -21399,7 +21491,7 @@ server <- shinyServer(function(input, output, session) {
         texts = request$texts, codebook = request$codebook,
         n_runs = input$qc_retest_runs %||% 2,
         sample_n = input$qc_retest_sample %||% 10,
-        unit = input$qc_unit %||% "paragraph",
+        unit = input$qc_unit %||% "sentence",
         max_codes = input$qc_max_codes %||% 3,
         provider = request$provider, model = request$model,
         api_key = request$api_key, delay = 0.5, verbose = FALSE),

@@ -816,6 +816,10 @@ calculate_topic_probability <- function(stm_model,
 #' @param texts Character vector of documents
 #' @param n_topics Number of topics to discover
 #' @param embedding_model Transformer model for initial embeddings
+#' @param clustering_method Algorithm applied to the embedding similarity
+#'   matrix: "kmeans" (default) or "hierarchical". Both honour `n_topics` and
+#'   assign every document.
+#' @param min_topic_size Minimum documents per topic.
 #' @param seed Random seed for reproducibility
 #'
 #' @return List with topic assignments and diagnostics. The cohesion values
@@ -824,17 +828,23 @@ calculate_topic_probability <- function(stm_model,
 #'   measures such as C_v or NPMI.
 #'
 #' @seealso [find_optimal_k()] and [auto_tune_embedding_topics()] for
-#'   choosing `n_topics`.
+#'   choosing `n_topics`; [fit_embedding_model()] for the UMAP and HDBSCAN
+#'   pipeline that derives the topic count from density instead.
 #' @concept topic-modeling
 #' @export
 cluster_embedding_topics <- function(texts, n_topics = 10,
                                      embedding_model = "all-MiniLM-L6-v2",
+                                     clustering_method = c("kmeans", "hierarchical"),
+                                     min_topic_size = 3,
                                      seed = 123) {
+  clustering_method <- match.arg(clustering_method)
   result <- fit_embedding_model(
     texts = texts,
     method = "embedding_clustering",
     n_topics = n_topics,
     embedding_model = embedding_model,
+    clustering_method = clustering_method,
+    min_topic_size = min_topic_size,
     seed = seed
   )
   cohesion <- tryCatch(
@@ -842,6 +852,7 @@ cluster_embedding_topics <- function(texts, n_topics = 10,
     error = function(e) NULL
   )
   result$method <- "embedding_clustering"
+  result$clustering_method <- clustering_method
   result$diagnostics <- if (is.null(cohesion)) NULL else list(topic_quality = list(
     embedding_cohesion = cohesion$coherence_scores,
     mean_embedding_cohesion = cohesion$mean_coherence
@@ -2340,6 +2351,8 @@ generate_semantic_topic_keywords <- function(texts,
           topic_keywords[[as.character(unique_topics[i])]] <- names(scores)[top_idx]
         }
       } else {
+        # dropping NA would desync texts from assignments, so blank them
+        texts[is.na(texts)] <- ""
         doc_tokens <- quanteda::tokens(quanteda::corpus(texts),
                                        remove_punct = TRUE,
                                        remove_numbers = TRUE,

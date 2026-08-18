@@ -7,13 +7,15 @@
 merge_codes(files)
 }
 \arguments{
-\item{files}{Character vector of \code{.rds} paths, or a list of data frames.}
+\item{files}{Character vector of paths, or a list of data frames. Paths may
+be \code{.rds}, \code{.csv}, \code{.txt}, \code{.tsv}, \code{.xlsx}, or \code{.xls}; the extension picks
+the reader. Excel files need the readxl package.}
 }
 \value{
 A tibble of combined, de-duplicated assignments.
 }
 \description{
-Reads per-coder assignment files (each a saved assignments tibble) and binds
+Reads per-coder assignment files (each a saved assignments table) and binds
 them into one long assignments table for \code{\link[=code_agreement]{code_agreement()}}. Supports the
 async workflow where each coder codes a copy and exports it.
 }

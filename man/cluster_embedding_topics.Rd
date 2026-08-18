@@ -8,6 +8,8 @@ cluster_embedding_topics(
   texts,
   n_topics = 10,
   embedding_model = "all-MiniLM-L6-v2",
+  clustering_method = c("kmeans", "hierarchical"),
+  min_topic_size = 3,
   seed = 123
 )
 }
@@ -17,6 +19,12 @@ cluster_embedding_topics(
 \item{n_topics}{Number of topics to discover}
 
 \item{embedding_model}{Transformer model for initial embeddings}
+
+\item{clustering_method}{Algorithm applied to the embedding similarity
+matrix: "kmeans" (default) or "hierarchical". Both honour \code{n_topics} and
+assign every document.}
+
+\item{min_topic_size}{Minimum documents per topic.}
 
 \item{seed}{Random seed for reproducibility}
 }
@@ -32,6 +40,7 @@ per-topic cohesion diagnostics.
 }
 \seealso{
 \code{\link[=find_optimal_k]{find_optimal_k()}} and \code{\link[=auto_tune_embedding_topics]{auto_tune_embedding_topics()}} for
-choosing \code{n_topics}.
+choosing \code{n_topics}; \code{\link[=fit_embedding_model]{fit_embedding_model()}} for the UMAP and HDBSCAN
+pipeline that derives the topic count from density instead.
 }
 \concept{topic-modeling}

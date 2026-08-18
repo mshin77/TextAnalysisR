@@ -439,11 +439,17 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #'   "union" (uncoded units count as missing). Grid alignment only.
 #' @param by_code Logical; also report per-code agreement.
 #' @param align "grid" (default) or "coverage".
+#' @param codebook_authors Character vector of `coder` values that wrote or
+#'   revised the codebook. When supplied, metrics are also computed among the
+#'   remaining coders alone. Agreement with a coder who shaped the coding frame
+#'   reflects that shared calibration, so the two figures answer different
+#'   questions. Ignored when `align = "coverage"`.
 #'
 #' @return A list with `overall`, `by_code` (NULL when `by_code` is FALSE),
-#'   and `disagree`. For grid alignment these are the metric, per-code, and
-#'   disagreement tables; for coverage they hold per-coder-pair span coverage
-#'   and the uncovered spans.
+#'   `disagree`, and `independent` (NULL unless `codebook_authors` is supplied
+#'   and at least two other coders remain). For grid alignment these are the
+#'   metric, per-code, and disagreement tables; for coverage they hold
+#'   per-coder-pair span coverage and the uncovered spans.
 #'
 #' @seealso [apply_codes()] to produce assignments; [merge_codes()] to combine
 #'   coders; [code_retest()] for AI stability.
@@ -453,7 +459,8 @@ code_agreement <- function(assignments,
                            metrics = c("alpha", "kappa", "ac1", "pabak", "percent"),
                            units = c("intersection", "union"),
                            by_code = TRUE,
-                           align = c("grid", "coverage")) {
+                           align = c("grid", "coverage"),
+                           codebook_authors = NULL) {
   metrics <- match.arg(metrics, several.ok = TRUE)
   units <- match.arg(units)
   align <- match.arg(align)
@@ -470,21 +477,106 @@ code_agreement <- function(assignments,
   if (nrow(ratings) == 0 || ncol(ratings) < 2) {
     stop("At least two coders with shared units are required.", call. = FALSE)
   }
+  others <- setdiff(colnames(ratings), codebook_authors)
+  independent <- if (!is.null(codebook_authors) && length(others) >= 2) {
+    .agreement_metrics(ratings[, others, drop = FALSE], metrics)
+  } else {
+    NULL
+  }
   list(
     overall = .agreement_metrics(ratings, metrics),
     by_code = if (by_code) .agreement_by_code(ratings, metrics) else NULL,
-    disagree = .qc_disagreements(ratings)
+    disagree = .qc_disagreements(ratings),
+    independent = independent
   )
+}
+
+#' @title Units With No Code Assigned
+#'
+#' @description
+#' Returns the units [apply_codes()] left uncoded, paired with their text.
+#' These units are the ones a codebook does not reach. Reviewing them shows
+#' whether content recurs in the corpus that the coding frame omits, and is the
+#' step that keeps a codebook-constrained analysis from reporting only what the
+#' codebook was built to find.
+#'
+#' @param assignments Tibble from [apply_codes()], with `doc_id`, `unit_id`,
+#'   `start`, `end`, and `code`.
+#' @param texts Character vector of the documents passed to [apply_codes()].
+#'   Names become `doc_id`; unnamed vectors are keyed by position.
+#'
+#' @return A tibble of `doc_id`, `unit_id`, `start`, `end`, and `unit_text`,
+#'   one row per uncoded unit, ordered as in `assignments`. Zero rows when every
+#'   unit received at least one code.
+#'
+#' @seealso [apply_codes()] to produce assignments.
+#' @concept qualitative-coding
+#' @export
+uncoded_units <- function(assignments, texts) {
+  need <- c("doc_id", "unit_id", "start", "end", "code")
+  miss <- setdiff(need, names(assignments))
+  if (length(miss) > 0) {
+    stop("assignments is missing column(s): ", paste(miss, collapse = ", "), call. = FALSE)
+  }
+  empty <- tibble::tibble(doc_id = character(0), unit_id = character(0),
+                          start = integer(0), end = integer(0),
+                          unit_text = character(0))
+  if (nrow(assignments) == 0) return(empty)
+
+  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  lookup <- stats::setNames(as.character(texts), doc_id)
+
+  bare <- assignments %>%
+    dplyr::group_by(.data$unit_id) %>%
+    dplyr::filter(all(is.na(.data$code))) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup()
+  if (nrow(bare) == 0) return(empty)
+
+  keys <- as.character(bare$doc_id)
+  out <- tibble::tibble(
+    doc_id = keys,
+    unit_id = as.character(bare$unit_id),
+    start = as.integer(bare$start),
+    end = as.integer(bare$end),
+    unit_text = unname(substr(lookup[keys], bare$start, bare$end))
+  )
+  return(out)
+}
+
+#' @keywords internal
+.read_assignments <- function(path) {
+  ext <- tolower(tools::file_ext(path))
+  out <- switch(
+    ext,
+    rds = readRDS(path),
+    csv = utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE),
+    txt = ,
+    tsv = utils::read.delim(path, stringsAsFactors = FALSE, check.names = FALSE),
+    xls = ,
+    xlsx = {
+      if (!requireNamespace("readxl", quietly = TRUE)) {
+        stop("Package 'readxl' is required to read '", ext,
+             "' files. Install with install.packages('readxl').", call. = FALSE)
+      }
+      as.data.frame(readxl::read_excel(path), stringsAsFactors = FALSE)
+    },
+    stop("Unsupported coder file type '", ext,
+         "'. Use rds, csv, txt, tsv, xlsx, or xls.", call. = FALSE)
+  )
+  return(out)
 }
 
 #' @title Combine Coder Assignment Files
 #'
 #' @description
-#' Reads per-coder assignment files (each a saved assignments tibble) and binds
+#' Reads per-coder assignment files (each a saved assignments table) and binds
 #' them into one long assignments table for [code_agreement()]. Supports the
 #' async workflow where each coder codes a copy and exports it.
 #'
-#' @param files Character vector of `.rds` paths, or a list of data frames.
+#' @param files Character vector of paths, or a list of data frames. Paths may
+#'   be `.rds`, `.csv`, `.txt`, `.tsv`, `.xlsx`, or `.xls`; the extension picks
+#'   the reader. Excel files need the readxl package.
 #'
 #' @return A tibble of combined, de-duplicated assignments.
 #'
@@ -493,6 +585,6 @@ code_agreement <- function(assignments,
 #' @export
 merge_codes <- function(files) {
   if (is.data.frame(files)) files <- list(files)
-  parts <- lapply(files, function(f) if (is.data.frame(f)) f else readRDS(f))
-  dplyr::distinct(dplyr::bind_rows(parts))
+  parts <- lapply(files, function(f) if (is.data.frame(f)) f else .read_assignments(f))
+  return(dplyr::distinct(dplyr::bind_rows(parts)))
 }

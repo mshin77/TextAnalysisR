@@ -9,7 +9,8 @@ code_agreement(
   metrics = c("alpha", "kappa", "ac1", "pabak", "percent"),
   units = c("intersection", "union"),
   by_code = TRUE,
-  align = c("grid", "coverage")
+  align = c("grid", "coverage"),
+  codebook_authors = NULL
 )
 }
 \arguments{
@@ -26,12 +27,19 @@ requires \code{start} and \code{end}.}
 \item{by_code}{Logical; also report per-code agreement.}
 
 \item{align}{"grid" (default) or "coverage".}
+
+\item{codebook_authors}{Character vector of \code{coder} values that wrote or
+revised the codebook. When supplied, metrics are also computed among the
+remaining coders alone. Agreement with a coder who shaped the coding frame
+reflects that shared calibration, so the two figures answer different
+questions. Ignored when \code{align = "coverage"}.}
 }
 \value{
 A list with \code{overall}, \code{by_code} (NULL when \code{by_code} is FALSE),
-and \code{disagree}. For grid alignment these are the metric, per-code, and
-disagreement tables; for coverage they hold per-coder-pair span coverage
-and the uncovered spans.
+\code{disagree}, and \code{independent} (NULL unless \code{codebook_authors} is supplied
+and at least two other coders remain). For grid alignment these are the
+metric, per-code, and disagreement tables; for coverage they hold
+per-coder-pair span coverage and the uncovered spans.
 }
 \description{
 Chance-corrected agreement between two or more coders' code assignments.

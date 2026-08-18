@@ -359,3 +359,112 @@ test_that("merge_codes accepts a single bare data frame", {
   out <- merge_codes(a1)
   expect_equal(nrow(out), 1)
 })
+
+.qc_authored <- function() {
+  tibble::tibble(
+    doc_id = rep(c("d1", "d2", "d3", "d4"), each = 3),
+    code   = c("a", "a", "a",
+               "a", "a", "b",
+               "a", "b", "a",
+               "b", "b", "b"),
+    coder  = rep(c("author", "c2", "c3"), times = 4)
+  )
+}
+
+test_that("code_agreement returns NULL independent without codebook_authors", {
+  skip_if_not_installed("irr")
+  res <- code_agreement(.qc_assignments())
+  expect_null(res$independent)
+})
+
+test_that("code_agreement scores the non-author coders separately", {
+  skip_if_not_installed("irr")
+  res <- code_agreement(.qc_authored(), codebook_authors = "author")
+  expect_s3_class(res$independent, "tbl_df")
+  expect_setequal(res$independent$metric, res$overall$metric)
+  expect_true(all(res$independent$n == 4))
+})
+
+test_that("code_agreement drops independent when fewer than two others remain", {
+  skip_if_not_installed("irr")
+  res <- code_agreement(.qc_assignments(), codebook_authors = "c1")
+  expect_null(res$independent)
+})
+
+test_that("code_agreement ignores codebook_authors under coverage alignment", {
+  a <- tibble::tibble(
+    doc_id = c("d1", "d1"),
+    code   = c("a", "a"),
+    coder  = c("c1", "c2"),
+    start  = c(1L, 3L),
+    end    = c(10L, 12L)
+  )
+  res <- code_agreement(a, align = "coverage", codebook_authors = "c1")
+  expect_named(res, c("overall", "by_code", "disagree"))
+})
+
+.qc_coded <- function() {
+  tibble::tibble(
+    doc_id  = c("d1", "d1", "d2"),
+    unit_id = c("d1.1", "d1.2", "d2.1"),
+    start   = c(1L, 13L, 1L),
+    end     = c(11L, 22L, 6L),
+    code    = c("a", NA_character_, NA_character_)
+  )
+}
+
+test_that("uncoded_units returns the uncoded units with their text", {
+  texts <- c(d1 = "first unit. second one", d2 = "lonely")
+  out <- uncoded_units(.qc_coded(), texts)
+  expect_equal(out$unit_id, c("d1.2", "d2.1"))
+  expect_equal(out$unit_text, c("second one", "lonely"))
+  expect_type(out$start, "integer")
+})
+
+test_that("uncoded_units keeps a unit only when every code is NA", {
+  a <- tibble::tibble(
+    doc_id  = c("d1", "d1"),
+    unit_id = c("d1.1", "d1.1"),
+    start   = c(1L, 1L),
+    end     = c(5L, 5L),
+    code    = c("a", NA_character_)
+  )
+  expect_equal(nrow(uncoded_units(a, c(d1 = "hello"))), 0L)
+})
+
+test_that("uncoded_units returns zero rows when every unit is coded", {
+  a <- .qc_coded()
+  a$code <- c("a", "b", "c")
+  out <- uncoded_units(a, c(d1 = "first unit. second one", d2 = "lonely"))
+  expect_equal(nrow(out), 0L)
+  expect_named(out, c("doc_id", "unit_id", "start", "end", "unit_text"))
+})
+
+test_that("uncoded_units keys unnamed texts by position", {
+  a <- tibble::tibble(doc_id = "1", unit_id = "1.1", start = 1L, end = 5L,
+                      code = NA_character_)
+  expect_equal(uncoded_units(a, "hello there")$unit_text, "hello")
+})
+
+test_that("uncoded_units errors on missing columns", {
+  expect_error(uncoded_units(tibble::tibble(doc_id = "d1"), c(d1 = "x")),
+               "missing column")
+})
+
+test_that("merge_codes reads csv and rds paths by extension", {
+  a <- tibble::tibble(doc_id = "d1", code = "a", coder = "c1")
+  b <- tibble::tibble(doc_id = "d1", code = "a", coder = "c2")
+  p_rds <- withr::local_tempfile(fileext = ".rds")
+  p_csv <- withr::local_tempfile(fileext = ".csv")
+  saveRDS(a, p_rds)
+  utils::write.csv(b, p_csv, row.names = FALSE)
+  out <- merge_codes(c(p_rds, p_csv))
+  expect_equal(nrow(out), 2L)
+  expect_setequal(out$coder, c("c1", "c2"))
+})
+
+test_that("merge_codes rejects an unsupported extension", {
+  p <- withr::local_tempfile(fileext = ".docx")
+  file.create(p)
+  expect_error(merge_codes(p), "Unsupported coder file type")
+})

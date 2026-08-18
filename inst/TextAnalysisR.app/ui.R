@@ -649,7 +649,7 @@ Supports:
             ),
             div(
               style = "margin-top: -8px; margin-bottom: 12px;",
-              actionLink("detect_stopwords_language", "Detect from corpus", icon = icon("wand-magic-sparkles", class = "icon-ai"),
+              actionLink("detect_stopwords_language", "Detect from corpus", icon = .ai_mark(),
                          style = "font-size: 16px;")
             ),
             div(

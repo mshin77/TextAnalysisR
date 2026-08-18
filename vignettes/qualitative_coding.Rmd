@@ -98,6 +98,31 @@ stability <- code_retest(texts, codebook, n_runs = 2, sample_n = 20)
 stability$summary
 ```
 
+A codebook only reaches what it was built to reach. `uncoded_units()` returns the units that
+received no code, with the text sliced from the character offsets recorded during coding.
+
+```{r}
+suggestions <- tibble::tibble(
+  doc_id  = c("d1", "d1", "d2"),
+  unit_id = c("d1.1", "d1.2", "d2.1"),
+  start   = c(1L, 30L, 1L),
+  end     = c(28L, 62L, 34L),
+  code    = c("access", NA_character_, NA_character_)
+)
+
+texts <- c(
+  d1 = "Screen readers open the text. The course never covered any of it.",
+  d2 = "Nobody explains who pays for it."
+)
+
+uncoded_units(suggestions, texts)
+```
+
+Reading this residue answers a different question from agreement: not whether coders applied the
+frame consistently, but whether the frame misses content that recurs. Categories that appear
+repeatedly here belong in a revised codebook or in the reporting as findings outside the original
+frame.
+
 ## 4. Agreement
 
 `code_agreement()` takes assignments from two or more coders and reports chance-corrected agreement.
@@ -131,6 +156,20 @@ Per-code agreement shows which codes carry the disagreement.
 ```{r}
 agreement$by_code
 ```
+
+### Coders who wrote the codebook
+
+A coder who wrote or revised the codebook has already calibrated against it, so agreement with that
+coder measures shared calibration as much as shared judgement. Naming those coders in
+`codebook_authors` adds an `independent` table computed among the remaining coders alone.
+
+```{r eval = FALSE}
+agreement <- code_agreement(assignments, codebook_authors = "c1")
+agreement$independent
+```
+
+Report both. A gap between `overall` and `independent` indicates the frame is harder to apply
+without having helped build it.
 
 ### Coders who segment differently
 

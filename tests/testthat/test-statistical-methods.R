@@ -51,6 +51,7 @@ test_that("weighted log odds uses full-vocabulary totals", {
   skip_if_not_installed("tidylo")
 
   abstracts <- TextAnalysisR::SpecialEduTech[1:40, ]
+  abstracts$abstract[is.na(abstracts$abstract)] <- ""
   corp <- quanteda::corpus(
     abstracts$abstract,
     docvars = data.frame(reference_type = abstracts$reference_type)
@@ -85,6 +86,7 @@ test_that("weighted log odds uses full-vocabulary totals", {
 
 test_that("log odds ratio returns finite Monroe-style estimates", {
   abstracts <- TextAnalysisR::SpecialEduTech[1:40, ]
+  abstracts$abstract[is.na(abstracts$abstract)] <- ""
   corp <- quanteda::corpus(
     abstracts$abstract,
     docvars = data.frame(reference_type = abstracts$reference_type)
