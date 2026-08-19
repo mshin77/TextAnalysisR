@@ -21,7 +21,7 @@ Steps that call an AI provider are shown as code rather than run. The rest run o
 library(TextAnalysisR)
 ```
 
-## 1. Codebook
+## Codebook
 
 A data frame with `code` and `definition`, plus an optional `example`.
 
@@ -42,7 +42,7 @@ codebook <- tibble::tibble(
 codebook
 ```
 
-## 2. AI coding
+## AI Coding
 
 `apply_codes()` splits each document into units, sends each unit with the codebook, and returns one
 row per unit-code pair.
@@ -68,7 +68,7 @@ suggestions <- apply_codes(
 
 Columns `start` and `end` give character offsets of the unit inside its document.
 
-## 3. Review
+## Review
 
 Only accepted and edited rows reach the export.
 
@@ -107,7 +107,7 @@ texts <- c(
 uncoded_units(suggestions, texts)
 ```
 
-## 4. Agreement
+## Agreement
 
 `code_agreement()` takes assignments from two or more coders.
 
@@ -196,7 +196,7 @@ code_agreement(spans, align = "coverage")$overall
 `c2`'s span sits inside `c1`'s first one. One of `c1`'s two spans was matched, so 0.50; `c2`'s only
 span was matched, so 1.00. Both directions are reported.
 
-## 5. Combining coder files
+## Combining Coder Files
 
 ```{r eval = FALSE}
 combined <- merge_codes(c("coder1.csv", "coder2.xlsx"))

@@ -12,7 +12,7 @@ rest run on synthetic data.
 library(TextAnalysisR)
 ```
 
-## 1. Codebook
+## Codebook
 
 A data frame with `code` and `definition`, plus an optional `example`.
 
@@ -41,7 +41,7 @@ codebook
     ## 2 instruction Teaching methods, strategies, or curriculum delivery       the te…
     ## 3 assessment  Measurement of student performance or progress             progre…
 
-## 2. AI coding
+## AI Coding
 
 [`apply_codes()`](https://mshin77.github.io/TextAnalysisR/reference/apply_codes.md)
 splits each document into units, sends each unit with the codebook, and
@@ -70,7 +70,7 @@ suggestions <- apply_codes(
 Columns `start` and `end` give character offsets of the unit inside its
 document.
 
-## 3. Review
+## Review
 
 Only accepted and edited rows reach the export.
 
@@ -120,7 +120,7 @@ uncoded_units(suggestions, texts)
     ## 1 d1     d1.2       68   128 Teachers report growing confidence after the train…
     ## 2 d2     d2.1        1    74 The review summarizes methodological features acro…
 
-## 4. Agreement
+## Agreement
 
 [`code_agreement()`](https://mshin77.github.io/TextAnalysisR/reference/code_agreement.md)
 takes assignments from two or more coders.
@@ -269,7 +269,7 @@ code_agreement(spans, align = "coverage")$overall
 matched, so 0.50; `c2`’s only span was matched, so 1.00. Both directions
 are reported.
 
-## 5. Combining coder files
+## Combining Coder Files
 
 ``` r
 
