@@ -52,6 +52,7 @@ metrics and units are ignored)."><meta property="og:image" content="https://mshi
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
+    <li><a class="dropdown-item" href="../articles/qualitative_coding.html">Qualitative Coding</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
@@ -99,7 +100,8 @@ spans that overlap a same-code span from the other is reported instead
 <span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"alpha"</span>, <span class="st">"kappa"</span>, <span class="st">"ac1"</span>, <span class="st">"pabak"</span>, <span class="st">"percent"</span><span class="op">)</span>,</span>
 <span>  units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"intersection"</span>, <span class="st">"union"</span><span class="op">)</span>,</span>
 <span>  by_code <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  align <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grid"</span>, <span class="st">"coverage"</span><span class="op">)</span></span>
+<span>  align <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grid"</span>, <span class="st">"coverage"</span><span class="op">)</span>,</span>
+<span>  codebook_authors <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -115,7 +117,8 @@ requires <code>start</code> and <code>end</code>.</p></dd>
 
 <dt id="arg-metrics">metrics<a class="anchor" aria-label="anchor" href="#arg-metrics"></a></dt>
 <dd><p>Metrics to report: any of "alpha", "kappa", "ac1", "pabak",
-"percent" (all by default). Grid alignment only.</p></dd>
+"percent" (all by default). Grid alignment only. <code>pabak</code> is defined for
+two coders and returns <code>NA</code> for more.</p></dd>
 
 
 <dt id="arg-units">units<a class="anchor" aria-label="anchor" href="#arg-units"></a></dt>
@@ -130,13 +133,26 @@ requires <code>start</code> and <code>end</code>.</p></dd>
 <dt id="arg-align">align<a class="anchor" aria-label="anchor" href="#arg-align"></a></dt>
 <dd><p>"grid" (default) or "coverage".</p></dd>
 
+
+<dt id="arg-codebook-authors">codebook_authors<a class="anchor" aria-label="anchor" href="#arg-codebook-authors"></a></dt>
+<dd><p>Character vector of <code>coder</code> values that wrote or
+revised the codebook. When supplied, metrics are also computed among the
+remaining coders alone. Agreement with a coder who shaped the coding frame
+reflects that shared calibration, so the two figures answer different
+questions. Ignored when <code>align = "coverage"</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>overall</code>, <code>by_code</code> (NULL when <code>by_code</code> is FALSE),
-and <code>disagree</code>. For grid alignment these are the metric, per-code, and
-disagreement tables; for coverage they hold per-coder-pair span coverage
-and the uncovered spans.</p>
+<code>disagree</code>, and <code>independent</code> (NULL unless <code>codebook_authors</code> is supplied
+and at least two other coders remain). For grid alignment these are the
+metric, per-code, and disagreement tables; for coverage they hold
+per-coder-pair span coverage and the uncovered spans. In the metric tables
+<code>n</code> counts the units each statistic was computed on: units carrying a code
+from every coder for <code>percent</code>, <code>pabak</code>, and <code>kappa</code>; units carrying a code
+from at least two for <code>ac1</code> and <code>alpha</code>. <code>n</code> is <code>NA</code> wherever the estimate
+is.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

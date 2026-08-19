@@ -30,6 +30,7 @@ Attempts embeddings first, falls back to Jaccard similarity if needed."><meta pr
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
+    <li><a class="dropdown-item" href="../articles/qualitative_coding.html">Qualitative Coding</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
@@ -112,21 +113,6 @@ Attempts embeddings first, falls back to Jaccard similarity if needed.</p>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">similarity_result</span><span class="op">$</span><span class="va">similarity_matrix</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">similarity_result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           doc1      doc2      doc3      doc4      doc5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> doc1 1.0000000 0.4501718 0.5835429 0.3628276 0.2077256</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> doc2 0.4501718 1.0000000 0.7147079 0.4205060 0.2643311</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> doc3 0.5835429 0.7147079 1.0000000 0.4971649 0.3400415</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> doc4 0.3628276 0.4205060 0.4971649 1.0000000 0.6805842</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> doc5 0.2077256 0.2643311 0.3400415 0.6805842 1.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $attempted_methods</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "embeddings"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> character(0)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $computation_time</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.542172</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

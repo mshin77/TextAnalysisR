@@ -19,8 +19,8 @@ head(dispersion)
     ## 4  text3 instruction 0.6857143         35
     ## 5  text5    learning 0.7904762        105
 
-Python enables features: NLP with spaCy, embeddings, and neural
-sentiment analysis.
+Python enables features: NLP with spaCy, embeddings, and
+transformer-based sentiment analysis.
 
 ## Quick Setup
 
@@ -65,7 +65,7 @@ python -m spacy download en_core_web_lg
 
 ## Deep Learning (Optional)
 
-For embeddings and neural sentiment:
+For embeddings and transformer-based sentiment:
 
 ``` bash
 pip install sentence-transformers transformers torch

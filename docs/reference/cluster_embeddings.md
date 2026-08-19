@@ -1,4 +1,4 @@
-# Embedding-based Document Clustering
+# Embedding-Based Document Clustering
 
 This function performs clustering analysis using various methods,
 ordered from simple to detailed: k-means (simplest), hierarchical

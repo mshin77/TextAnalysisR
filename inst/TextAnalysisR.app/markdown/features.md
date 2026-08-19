@@ -7,7 +7,7 @@
 - Word frequency analysis
 - Log odds ratio comparison between categories
 - Lexical dispersion visualization
-- Sentiment analysis (lexicon and neural)
+- Sentiment analysis (lexicon and transformer)
 - Topic modeling (STM)
 - Co-occurrence networks with node attribute controls
 - Correlation networks with node attribute controls

@@ -34,6 +34,7 @@ all configurations for efficiency."><meta property="og:image" content="https://m
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
+    <li><a class="dropdown-item" href="../articles/qualitative_coding.html">Qualitative Coding</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
@@ -145,25 +146,6 @@ all configurations for efficiency.</p>
 <span class="r-in"><span>  <span class="co"># Use the best model</span></span></span>
 <span class="r-in"><span>  <span class="va">best_model</span> <span class="op">&lt;-</span> <span class="va">tuning_result</span><span class="op">$</span><span class="va">best_model</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting hyperparameter auto-tuning for embedding topics...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Testing 6 hyperparameter configurations</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Generating embeddings (one-time cost)...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   [1/6] Testing: n_neighbors=15, min_cluster_size=3, method=leaf</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     Configuration failed: Error in semantic topic modeling: TypeError: Cannot use scipy.linalg.eigh for sparse A with k &gt;= N. Use scipy.linalg.eigh(A.toarray()) or reduce k.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;">Run `reticulate::py_last_error()` for details.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   [2/6] Testing: n_neighbors=15, min_cluster_size=5, method=leaf</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     Configuration failed: Need at least 5 non-empty texts for analysis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   [3/6] Testing: n_neighbors=10, min_cluster_size=3, method=leaf</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     Configuration failed: Error in semantic topic modeling: TypeError: Cannot use scipy.linalg.eigh for sparse A with k &gt;= N. Use scipy.linalg.eigh(A.toarray()) or reduce k.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;">Run `reticulate::py_last_error()` for details.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   [4/6] Testing: n_neighbors=15, min_cluster_size=3, method=eom</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     Configuration failed: Error in semantic topic modeling: TypeError: Cannot use scipy.linalg.eigh for sparse A with k &gt;= N. Use scipy.linalg.eigh(A.toarray()) or reduce k.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #555555;">Run `reticulate::py_last_error()` for details.</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   [5/6] Testing: n_neighbors=10, min_cluster_size=10, method=eom</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     Configuration failed: Need at least 10 non-empty texts for analysis</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   [6/6] Testing: n_neighbors=10, min_cluster_size=5, method=leaf</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>     Configuration failed: Need at least 5 non-empty texts for analysis</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in auto_tune_embedding_topics(texts = texts, n_trials = 6, metric = "silhouette",     verbose = TRUE):</span> All configurations failed. Check your data and Python dependencies.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

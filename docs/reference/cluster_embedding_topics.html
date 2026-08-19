@@ -30,6 +30,7 @@ per-topic cohesion diagnostics."><meta property="og:image" content="https://mshi
     <li><a class="dropdown-item" href="../articles/lexical_analysis.html">Lexical Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/semantic_analysis.html">Semantic Analysis</a></li>
     <li><a class="dropdown-item" href="../articles/topic_modeling.html">Topic Modeling</a></li>
+    <li><a class="dropdown-item" href="../articles/qualitative_coding.html">Qualitative Coding</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-extensions" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Extensions</button>
@@ -65,6 +66,8 @@ per-topic cohesion diagnostics.</p>
 <span>  <span class="va">texts</span>,</span>
 <span>  n_topics <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  embedding_model <span class="op">=</span> <span class="st">"all-MiniLM-L6-v2"</span>,</span>
+<span>  clustering_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kmeans"</span>, <span class="st">"hierarchical"</span><span class="op">)</span>,</span>
+<span>  min_topic_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">123</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -85,6 +88,16 @@ per-topic cohesion diagnostics.</p>
 <dd><p>Transformer model for initial embeddings</p></dd>
 
 
+<dt id="arg-clustering-method">clustering_method<a class="anchor" aria-label="anchor" href="#arg-clustering-method"></a></dt>
+<dd><p>Algorithm applied to the embedding similarity
+matrix: "kmeans" (default) or "hierarchical". Both honour <code>n_topics</code> and
+assign every document.</p></dd>
+
+
+<dt id="arg-min-topic-size">min_topic_size<a class="anchor" aria-label="anchor" href="#arg-min-topic-size"></a></dt>
+<dd><p>Minimum documents per topic.</p></dd>
+
+
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>Random seed for reproducibility</p></dd>
 
@@ -99,7 +112,8 @@ measures such as C_v or NPMI.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="find_optimal_k.html">find_optimal_k()</a></code> and <code><a href="auto_tune_embedding_topics.html">auto_tune_embedding_topics()</a></code> for
-choosing <code>n_topics</code>.</p></div>
+choosing <code>n_topics</code>; <code><a href="fit_embedding_model.html">fit_embedding_model()</a></code> for the UMAP and HDBSCAN
+pipeline that derives the topic count from density instead.</p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

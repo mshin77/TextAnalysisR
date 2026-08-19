@@ -11,14 +11,15 @@ validate_categories(
   folds = 5,
   k = 5,
   balance = c("none", "downsample"),
+  unassigned = 0,
   seed = 123
 )
 }
 \arguments{
 \item{embeddings}{Numeric matrix or data frame, one row per document.}
 
-\item{categories}{Category labels, one per row. \code{NA} and \code{-1} are excluded;
-place them first with \code{\link[=assign_noise]{assign_noise()}}.}
+\item{categories}{Category labels, one per row. \code{NA} and any value in
+\code{unassigned} are excluded; place them first with \code{\link[=assign_noise]{assign_noise()}}.}
 
 \item{method}{"knn" (default) or "multinom".}
 
@@ -28,6 +29,10 @@ place them first with \code{\link[=assign_noise]{assign_noise()}}.}
 
 \item{balance}{"none" (default) or "downsample" to equalize category sizes
 within each training fold.}
+
+\item{unassigned}{Label marking a document as unassigned, excluded before
+fitting. Defaults to \code{0}, which \code{\link[=fit_embedding_model]{fit_embedding_model()}} emits for outliers.
+Pass \code{-1} for output from tools that use that convention.}
 
 \item{seed}{Random seed for fold assignment and downsampling.}
 }
@@ -48,4 +53,4 @@ merging or revision.
 \code{\link[=align_categories]{align_categories()}} to compare human codes against machine clusters;
 \code{\link[=fit_embedding_model]{fit_embedding_model()}} to produce the categories being tested.
 }
-\concept{topic-modeling}
+\concept{qualitative-coding}

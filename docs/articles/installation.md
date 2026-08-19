@@ -77,7 +77,7 @@ Python with
 
 ### Python Features
 
-For embeddings and neural sentiment analysis, run
+For embeddings and transformer-based sentiment analysis, run
 [`setup_python_env()`](https://mshin77.github.io/TextAnalysisR/reference/setup_python_env.md).
 Requires Python 3.9+.
 

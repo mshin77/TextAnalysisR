@@ -16,6 +16,7 @@ reference:
   contents:
   - unite_cols
   - prep_texts
+  - split_texts
   - detect_language
   - lemmatize_tokens
   - spacy_lemmatize
@@ -129,13 +130,20 @@ reference:
   - extract_cross_category_similarities
 
 - title: "Qualitative Coding"
-  desc: "AI-assisted codebook application and inter-coder agreement"
+  desc: "Codebook application, agreement, refinement trail, and category confirmation"
   contents:
   - apply_codes
   - code_retest
   - code_agreement
   - uncoded_units
   - merge_codes
+  - add_memo
+  - get_memos
+  - log_round
+  - round_summary
+  - validate_categories
+  - assign_noise
+  - align_categories
 
 - title: "AI & Multimodal"
   desc: "LLM integration, embeddings, PDF extraction, and vision AI"
@@ -149,6 +157,8 @@ reference:
   - get_content_type_prompt
   - get_content_type_user_template
   - process_pdf_unified
+  - extract_tables_from_pdf_py
+  - detect_language_llm
   - starts_with("detect_pdf")
 
 - title: "Data"

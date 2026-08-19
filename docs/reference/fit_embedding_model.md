@@ -1,4 +1,4 @@
-# Fit Embedding-based Topic Model
+# Fit Embedding-Based Topic Model
 
 This function performs embedding-based topic modeling using transformer
 embeddings and specialized clustering techniques. Supports two backends:

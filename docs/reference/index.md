@@ -21,6 +21,8 @@ Text preparation and feature extraction
   : Unite Text Columns
 - [`prep_texts()`](https://mshin77.github.io/TextAnalysisR/reference/prep_texts.md)
   : Preprocess Text Data
+- [`split_texts()`](https://mshin77.github.io/TextAnalysisR/reference/split_texts.md)
+  : Split Texts Into Units of Analysis
 - [`detect_language()`](https://mshin77.github.io/TextAnalysisR/reference/detect_language.md)
   : Detect Corpus Language From Stopword Overlap
 - [`lemmatize_tokens()`](https://mshin77.github.io/TextAnalysisR/reference/lemmatize_tokens.md)
@@ -117,7 +119,7 @@ Lexicon and embedding-based sentiment
 - [`sentiment_lexicon_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/sentiment_lexicon_analysis.md)
   : Analyze Sentiment Using Tidytext Lexicons
 - [`sentiment_embedding_analysis()`](https://mshin77.github.io/TextAnalysisR/reference/sentiment_embedding_analysis.md)
-  : Embedding-based Sentiment Analysis
+  : Embedding-Based Sentiment Analysis
 - [`plot_sentiment_boxplot()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_boxplot.md)
   : Plot Sentiment Box Plot by Category
 - [`plot_sentiment_by_category()`](https://mshin77.github.io/TextAnalysisR/reference/plot_sentiment_by_category.md)
@@ -154,7 +156,7 @@ Similarity, clustering, and networks
 - [`semantic_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/semantic_document_clustering.md)
   : Semantic Document Clustering
 - [`cluster_embeddings()`](https://mshin77.github.io/TextAnalysisR/reference/cluster_embeddings.md)
-  : Embedding-based Document Clustering
+  : Embedding-Based Document Clustering
 - [`analyze_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/analyze_document_clustering.md)
   : Analyze Document Clustering
 - [`export_document_clustering()`](https://mshin77.github.io/TextAnalysisR/reference/export_document_clustering.md)
@@ -185,7 +187,7 @@ STM and embedding-based models, validation, and quality metrics
 - [`find_optimal_k()`](https://mshin77.github.io/TextAnalysisR/reference/find_optimal_k.md)
   : Find Optimal Number of Topics
 - [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md)
-  : Fit Embedding-based Topic Model
+  : Fit Embedding-Based Topic Model
 - [`fit_semantic_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_semantic_model.md)
   : Fit Semantic Model
 - [`fit_temporal_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_temporal_model.md)
@@ -245,7 +247,8 @@ STM and embedding-based models, validation, and quality metrics
 
 ## Qualitative Coding
 
-AI-assisted codebook application and inter-coder agreement
+Codebook application, agreement, refinement trail, and category
+confirmation
 
 - [`apply_codes()`](https://mshin77.github.io/TextAnalysisR/reference/apply_codes.md)
   : Apply a Codebook to Texts
@@ -253,8 +256,24 @@ AI-assisted codebook application and inter-coder agreement
   : AI Coding Retest Stability
 - [`code_agreement()`](https://mshin77.github.io/TextAnalysisR/reference/code_agreement.md)
   : Inter-Coder Agreement From Code Assignments
+- [`uncoded_units()`](https://mshin77.github.io/TextAnalysisR/reference/uncoded_units.md)
+  : Units With No Code Assigned
 - [`merge_codes()`](https://mshin77.github.io/TextAnalysisR/reference/merge_codes.md)
   : Combine Coder Assignment Files
+- [`add_memo()`](https://mshin77.github.io/TextAnalysisR/reference/add_memo.md)
+  : Attach an Analytic Memo to a Unit or Category
+- [`get_memos()`](https://mshin77.github.io/TextAnalysisR/reference/get_memos.md)
+  : Retrieve Analytic Memos
+- [`log_round()`](https://mshin77.github.io/TextAnalysisR/reference/log_round.md)
+  : Record a Refinement Round
+- [`round_summary()`](https://mshin77.github.io/TextAnalysisR/reference/round_summary.md)
+  : Coverage Trend Across Refinement Rounds
+- [`validate_categories()`](https://mshin77.github.io/TextAnalysisR/reference/validate_categories.md)
+  : Confirm Categories With Supervised Learning
+- [`assign_noise()`](https://mshin77.github.io/TextAnalysisR/reference/assign_noise.md)
+  : Assign Unclustered Documents to Confirmed Categories
+- [`align_categories()`](https://mshin77.github.io/TextAnalysisR/reference/align_categories.md)
+  : Compare Human Codes With Machine Categories
 
 ## AI & Multimodal
 
@@ -278,6 +297,10 @@ LLM integration, embeddings, PDF extraction, and vision AI
   : Get Default User Prompt Template for Content Type
 - [`process_pdf_unified()`](https://mshin77.github.io/TextAnalysisR/reference/process_pdf_unified.md)
   : Process PDF File (Unified Entry Point)
+- [`extract_tables_from_pdf_py()`](https://mshin77.github.io/TextAnalysisR/reference/extract_tables_from_pdf_py.md)
+  : Extract Tables from PDF using Python
+- [`detect_language_llm()`](https://mshin77.github.io/TextAnalysisR/reference/detect_language_llm.md)
+  : Detect Corpus Language With an LLM
 - [`detect_pdf_content_type()`](https://mshin77.github.io/TextAnalysisR/reference/detect_pdf_content_type.md)
   : Detect PDF Content Type
 

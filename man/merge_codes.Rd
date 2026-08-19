@@ -8,7 +8,7 @@ merge_codes(files)
 }
 \arguments{
 \item{files}{Character vector of paths, or a list of data frames. Paths may
-be \code{.rds}, \code{.csv}, \code{.txt}, \code{.tsv}, \code{.xlsx}, or \code{.xls}; the extension picks
+be \code{.csv}, \code{.xlsx}, \code{.xls}, \code{.txt}, \code{.tsv}, or \code{.rds}; the extension picks
 the reader. Excel files need the readxl package.}
 }
 \value{

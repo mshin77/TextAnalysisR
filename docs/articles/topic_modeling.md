@@ -315,7 +315,7 @@ plot_topic_effects_continuous(effects_cont)
 
 ![](topic_modeling_files/figure-html/unnamed-chunk-10-1.png)
 
-## Embedding-based Topics
+## Embedding-Based Topics
 
 The second type embeds documents with a transformer, reduces
 dimensionality, and clusters the embeddings into topics.

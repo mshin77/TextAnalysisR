@@ -1,10 +1,10 @@
 # Apply a Codebook to Texts
 
 Suggests codes for each unit of text from a supplied codebook using an
-AI provider (OpenAI or Gemini). Documents are split into units
-(paragraphs by default) before coding, and each unit receives zero or
-more codes. Output is a set of suggestions for human confirmation, not
-final codes.
+AI provider (OpenAI or Gemini). Documents are split into sentences,
+paragraphs, or whole documents before coding, and each unit receives
+zero or more codes. Output is a set of suggestions for human
+confirmation, not final codes.
 
 ## Usage
 
@@ -36,8 +36,8 @@ apply_codes(
 
 - unit:
 
-  Unit of analysis: "paragraph" (default, split on blank lines),
-  "sentence", or "document" (one unit per element of `texts`).
+  Unit of analysis: "sentence", "paragraph" (default, split on blank
+  lines), or "document" (one unit per element of `texts`).
 
 - max_codes:
 

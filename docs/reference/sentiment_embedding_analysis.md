@@ -1,9 +1,9 @@
-# Embedding-based Sentiment Analysis
+# Embedding-Based Sentiment Analysis
 
-Performs sentiment analysis using transformer-based embeddings and
-neural models. This approach uses pre-trained language models for
-contextual sentiment detection without requiring sentiment lexicons.
-Particularly effective for handling:
+Performs sentiment analysis with a fine-tuned transformer classifier.
+This approach uses pre-trained language models for contextual sentiment
+detection without requiring sentiment lexicons. Particularly effective
+for handling:
 
 - Complex contextual sentiment
 

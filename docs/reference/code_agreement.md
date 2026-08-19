@@ -24,7 +24,8 @@ code_agreement(
   metrics = c("alpha", "kappa", "ac1", "pabak", "percent"),
   units = c("intersection", "union"),
   by_code = TRUE,
-  align = c("grid", "coverage")
+  align = c("grid", "coverage"),
+  codebook_authors = NULL
 )
 ```
 
@@ -39,7 +40,8 @@ code_agreement(
 - metrics:
 
   Metrics to report: any of "alpha", "kappa", "ac1", "pabak", "percent"
-  (all by default). Grid alignment only.
+  (all by default). Grid alignment only. `pabak` is defined for two
+  coders and returns `NA` for more.
 
 - units:
 
@@ -54,12 +56,25 @@ code_agreement(
 
   "grid" (default) or "coverage".
 
+- codebook_authors:
+
+  Character vector of `coder` values that wrote or revised the codebook.
+  When supplied, metrics are also computed among the remaining coders
+  alone. Agreement with a coder who shaped the coding frame reflects
+  that shared calibration, so the two figures answer different
+  questions. Ignored when `align = "coverage"`.
+
 ## Value
 
-A list with `overall`, `by_code` (NULL when `by_code` is FALSE), and
-`disagree`. For grid alignment these are the metric, per-code, and
-disagreement tables; for coverage they hold per-coder-pair span coverage
-and the uncovered spans.
+A list with `overall`, `by_code` (NULL when `by_code` is FALSE),
+`disagree`, and `independent` (NULL unless `codebook_authors` is
+supplied and at least two other coders remain). For grid alignment these
+are the metric, per-code, and disagreement tables; for coverage they
+hold per-coder-pair span coverage and the uncovered spans. In the metric
+tables `n` counts the units each statistic was computed on: units
+carrying a code from every coder for `percent`, `pabak`, and `kappa`;
+units carrying a code from at least two for `ac1` and `alpha`. `n` is
+`NA` wherever the estimate is.
 
 ## See also
 

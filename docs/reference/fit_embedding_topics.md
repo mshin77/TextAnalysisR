@@ -1,4 +1,4 @@
-# Embedding-based Topic Modeling (Deprecated)
+# Embedding-Based Topic Modeling (Deprecated)
 
 This function is deprecated. Please use
 [`fit_embedding_model()`](https://mshin77.github.io/TextAnalysisR/reference/fit_embedding_model.md)

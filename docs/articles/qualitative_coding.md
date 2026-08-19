@@ -1,27 +1,20 @@
 # Qualitative Coding
 
-Qualitative coding assigns codes from a codebook to units of text, then
-measures how far coders agree. AI supplies suggestions; a human
-confirms, corrects, or rejects each one, and only reviewed rows are
-exported. Nothing is coded silently.
+Codes from a codebook are assigned to units of text, then inter-coder
+agreement is measured. AI supplies suggestions; a human confirms,
+corrects, or rejects each one, and only reviewed rows are exported.
 
-The sections below follow the app’s Qualitative Coding tabs in order.
-Agreement and merging run live on constructed data. The coding steps
-call an AI provider, so they are shown as code rather than run here.
+Steps that call an AI provider are shown as code rather than run. The
+rest run on synthetic data.
 
 ``` r
 
 library(TextAnalysisR)
-packageVersion("TextAnalysisR")
 ```
-
-    ## [1] '0.1.4.9000'
 
 ## 1. Codebook
 
-A codebook is a data frame with `code` and `definition` columns, plus an
-optional `example`. Definitions carry most of the weight: a code without
-one gives the model nothing to match against.
+A data frame with `code` and `definition`, plus an optional `example`.
 
 ``` r
 
@@ -48,10 +41,6 @@ codebook
     ## 2 instruction Teaching methods, strategies, or curriculum delivery       the te…
     ## 3 assessment  Measurement of student performance or progress             progre…
 
-Topic labels make reasonable starting codes. The mapping is many-to-many
-rather than one-to-one, so treat seeded codes as a draft to edit rather
-than a finished scheme.
-
 ## 2. AI coding
 
 [`apply_codes()`](https://mshin77.github.io/TextAnalysisR/reference/apply_codes.md)
@@ -72,24 +61,18 @@ suggestions <- apply_codes(
 )
 ```
 
-Three arguments decide what the output means.
-
 | Argument | Effect |
 |----|----|
-| `unit` | Splits on paragraphs, sentences, or whole documents. Paragraph is the usual unit of analysis. |
+| `unit` | Splits on sentences, paragraphs, or whole documents. Paragraph is the usual unit of analysis. |
 | `max_codes` | Allows a unit to carry none, one, or several codes. A unit that fits nothing returns `NA`. |
 | `provider` | Selects OpenAI or Gemini. `auto` picks whichever key is available. |
 
-Output columns `start` and `end` give character offsets of the unit
-inside its document, so a suggestion can be traced back to the exact
-text it came from.
+Columns `start` and `end` give character offsets of the unit inside its
+document.
 
 ## 3. Review
 
-Suggestions are not results. In the app each row carries a status of
-pending, accepted, edited, or rejected, and only accepted and edited
-rows reach the export. Working from R, filter on confidence and read the
-units before keeping anything.
+Only accepted and edited rows reach the export.
 
 ``` r
 
@@ -97,11 +80,9 @@ accepted <- suggestions[!is.na(suggestions$code) & suggestions$confidence > 0.7,
 accepted$coder <- "coder1"
 ```
 
-Low-temperature settings do not guarantee stable output.
 [`code_retest()`](https://mshin77.github.io/TextAnalysisR/reference/code_retest.md)
 codes the same sample more than once and reports how often the runs
-agree, next to a baseline from shuffled labels. Retest agreement close
-to that baseline means the codes are not reproducible enough to analyze.
+agree, next to a baseline from shuffled labels.
 
 ``` r
 
@@ -109,15 +90,127 @@ stability <- code_retest(texts, codebook, n_runs = 2, sample_n = 20)
 stability$summary
 ```
 
-## 4. Agreement
-
-[`code_agreement()`](https://mshin77.github.io/TextAnalysisR/reference/code_agreement.md)
-takes assignments from two or more coders and reports chance-corrected
-agreement.
+[`uncoded_units()`](https://mshin77.github.io/TextAnalysisR/reference/uncoded_units.md)
+returns the units that received no code, with the text sliced from the
+recorded offsets.
 
 ``` r
 
+# synthetic units, paraphrased from the corpus
+suggestions <- tibble::tibble(
+  doc_id  = c("d1", "d1", "d2"),
+  unit_id = c("d1.1", "d1.2", "d2.1"),
+  start   = c(1L, 68L, 1L),
+  end     = c(66L, 128L, 74L),
+  code    = c("access", NA_character_, NA_character_)
+)
+
+texts <- c(
+  d1 = paste("Text-to-speech tools give students access to grade-level readings.",
+             "Teachers report growing confidence after the training series."),
+  d2 = "The review summarizes methodological features across the included studies."
+)
+
+uncoded_units(suggestions, texts)
+```
+
+    ## # A tibble: 2 × 5
+    ##   doc_id unit_id start   end unit_text                                          
+    ##   <chr>  <chr>   <int> <int> <chr>                                              
+    ## 1 d1     d1.2       68   128 Teachers report growing confidence after the train…
+    ## 2 d2     d2.1        1    74 The review summarizes methodological features acro…
+
+## 4. Agreement
+
+[`code_agreement()`](https://mshin77.github.io/TextAnalysisR/reference/code_agreement.md)
+takes assignments from two or more coders.
+
+``` r
+
+# synthetic assignments
 assignments <- tibble::tibble(
+  doc_id = rep(paste0("doc", 1:10), each = 2),
+  code   = c("access", "access", "access", "access", "access", "access",
+             "instruction", "instruction", "instruction", "instruction",
+             "instruction", "assessment", "assessment", "assessment",
+             "assessment", "assessment", "assessment", "access",
+             "access", "access"),
+  coder  = rep(c("c1", "c2"), times = 10)
+)
+
+agreement <- code_agreement(assignments)
+agreement$overall
+```
+
+    ## # A tibble: 5 × 3
+    ##   metric  estimate     n
+    ##   <chr>      <dbl> <int>
+    ## 1 percent    0.8      10
+    ## 2 pabak      0.6      10
+    ## 3 ac1        0.705    10
+    ## 4 kappa      0.692    10
+    ## 5 alpha      0.705    10
+
+`n` is how many units each statistic used.
+
+| `metric` | Reads as |
+|----|----|
+| `percent` | Raw share of units both coders labeled identically. No correction for chance. |
+| `pabak` | Prevalence-adjusted bias-adjusted kappa: percent agreement rescaled to the -1 to 1 range. |
+| `ac1` | Gwet’s agreement coefficient. Chance-corrected, stable when one code dominates. |
+| `kappa` | Cohen’s kappa for two coders, Fleiss’ for more. Chance-corrected against observed marginals. |
+| `alpha` | Krippendorff’s alpha. Chance-corrected, handles missing units. |
+
+Which units the coders differed on:
+
+``` r
+
+agreement$disagree
+```
+
+    ## # A tibble: 2 × 3
+    ##   doc_id c1          c2        
+    ##   <chr>  <chr>       <chr>     
+    ## 1 doc6   instruction assessment
+    ## 2 doc9   assessment  access
+
+Which codes carry those disagreements:
+
+``` r
+
+agreement$by_code
+```
+
+    ## # A tibble: 15 × 4
+    ##    code        metric  estimate     n
+    ##    <chr>       <chr>      <dbl> <int>
+    ##  1 access      percent    0.9      10
+    ##  2 access      pabak      0.8      10
+    ##  3 access      ac1        0.802    10
+    ##  4 access      kappa      0.8      10
+    ##  5 access      alpha      0.808    10
+    ##  6 assessment  percent    0.8      10
+    ##  7 assessment  pabak      0.6      10
+    ##  8 assessment  ac1        0.655    10
+    ##  9 assessment  kappa      0.524    10
+    ## 10 assessment  alpha      0.548    10
+    ## 11 instruction percent    0.9      10
+    ## 12 instruction pabak      0.8      10
+    ## 13 instruction ac1        0.84     10
+    ## 14 instruction kappa      0.737    10
+    ## 15 instruction alpha      0.747    10
+
+Each code is scored as a yes/no indicator, so a two-code corpus returns
+the same figures twice, one indicator being the other’s complement.
+
+Chance-corrected statistics turn negative when observed agreement falls
+below what the marginals predict, which happens when nearly every unit
+carries the same code:
+
+``` r
+
+# synthetic assignments, one code dominating
+skewed <- tibble::tibble(
   doc_id = rep(paste0("doc", 1:8), each = 2),
   code   = c("access", "access", "access", "access", "access", "access",
              "access", "access", "access", "access", "access", "access",
@@ -125,8 +218,7 @@ assignments <- tibble::tibble(
   coder  = rep(c("c1", "c2"), times = 8)
 )
 
-agreement <- code_agreement(assignments)
-agreement$overall
+code_agreement(skewed, by_code = FALSE)$overall
 ```
 
     ## # A tibble: 5 × 3
@@ -138,58 +230,24 @@ agreement$overall
     ## 4 kappa    -0.143      8
     ## 5 alpha    -0.0714     8
 
-Percent agreement is high here while kappa is near zero. That gap is the
-kappa paradox: when one code dominates, expected agreement approaches
-observed agreement and kappa collapses even though the coders rarely
-disagree. Gwet’s AC1 and PABAK stay interpretable under that skew, which
-is why all five statistics are reported together rather than kappa
-alone.
+Chance alone accounts for 0.78 against an observed 0.75, so `kappa`
+lands at -0.14. Only `percent` is bounded at zero.
 
-Disagreements are listed separately so the underlying units can be
-re-read.
+`codebook_authors` adds an `independent` table computed among the
+remaining coders alone.
 
 ``` r
 
-agreement$disagree
+code_agreement(assignments, codebook_authors = "c1")$independent
 ```
 
-    ## # A tibble: 2 × 3
-    ##   doc_id c1          c2         
-    ##   <chr>  <chr>       <chr>      
-    ## 1 doc7   access      instruction
-    ## 2 doc8   instruction access
-
-Per-code agreement shows which codes carry the disagreement.
+Everything above assumes coders shared units. When each coder highlights
+their own stretch of text, `align = "coverage"` compares the highlights
+instead. `start` and `end` are character positions.
 
 ``` r
 
-agreement$by_code
-```
-
-    ## # A tibble: 10 × 4
-    ##    code        metric  estimate     n
-    ##    <chr>       <chr>      <dbl> <int>
-    ##  1 access      percent   0.75       8
-    ##  2 access      pabak     0.5        8
-    ##  3 access      ac1       0.68       8
-    ##  4 access      kappa    -0.143      8
-    ##  5 access      alpha    -0.0714     8
-    ##  6 instruction percent   0.75       8
-    ##  7 instruction pabak     0.5        8
-    ##  8 instruction ac1       0.68       8
-    ##  9 instruction kappa    -0.143      8
-    ## 10 instruction alpha    -0.0714     8
-
-### Coders who segment differently
-
-Grid alignment assumes coders share units. When each coder marks their
-own spans, boundaries rarely match, and pivoting on unit identity would
-compare rows that describe different text. Coverage alignment instead
-reports, for each ordered coder pair, the share of one coder’s spans
-that overlap a same-code span from the other.
-
-``` r
-
+# synthetic spans
 spans <- tibble::tibble(
   doc_id = c("doc1", "doc1", "doc1"),
   coder  = c("c1", "c1", "c2"),
@@ -207,27 +265,14 @@ code_agreement(spans, align = "coverage")$overall
     ## 1 c1    c2    coverage      0.5     2
     ## 2 c2    c1    coverage      1       1
 
-Coverage is directional. One coder marking broad spans that contain
-another’s narrow ones scores differently in each direction, and that
-asymmetry is informative rather than a defect.
+`c2`’s span sits inside `c1`’s first one. One of `c1`’s two spans was
+matched, so 0.50; `c2`’s only span was matched, so 1.00. Both directions
+are reported.
 
-## Combining coder files
-
-Each coder exports their accepted rows;
-[`merge_codes()`](https://mshin77.github.io/TextAnalysisR/reference/merge_codes.md)
-binds the files into one table for
-[`code_agreement()`](https://mshin77.github.io/TextAnalysisR/reference/code_agreement.md).
+## 5. Combining coder files
 
 ``` r
 
-combined <- merge_codes(c("coder1.rds", "coder2.rds"))
+combined <- merge_codes(c("coder1.csv", "coder2.xlsx"))
 code_agreement(combined)$overall
 ```
-
-## Reporting
-
-Report the unit of analysis, how many units were coded, which agreement
-statistic was used and why, and the share of AI suggestions a human
-changed. The last figure is what separates assisted coding from
-automated labeling, and it is only available when review status is
-recorded.

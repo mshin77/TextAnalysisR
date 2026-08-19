@@ -22,7 +22,7 @@ dispersion <- calculate_lexical_dispersion(
 head(dispersion)
 ```
 
-Python enables features: NLP with spaCy, embeddings, and neural sentiment analysis.
+Python enables features: NLP with spaCy, embeddings, and transformer-based sentiment analysis.
 
 ## Quick Setup
 
@@ -59,7 +59,7 @@ python -m spacy download en_core_web_lg
 
 ## Deep Learning (Optional)
 
-For embeddings and neural sentiment:
+For embeddings and transformer-based sentiment:
 
 ```bash
 pip install sentence-transformers transformers torch

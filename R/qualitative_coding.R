@@ -45,6 +45,46 @@
   tibble::tibble(unit_text = parts, start = bounds[1, ], end = bounds[2, ])
 }
 
+#' @title Split Texts Into Units of Analysis
+#'
+#' @description
+#' Cuts each document into the unit every stage of an analysis should share.
+#' Character offsets are returned alongside each unit, so any span stays
+#' recoverable from the original text.
+#'
+#' @param texts Character vector of documents, optionally named. Names become
+#'   `doc_id`; positions are used when absent.
+#' @param unit "sentence" (default), "paragraph", or "document". Paragraphs split
+#'   on blank lines; sentences split after `.`, `!`, or `?`.
+#'
+#' @return A tibble with `doc_id`, `unit_id`, `unit_text`, `start`, and `end`.
+#'   `unit_id` is the `doc_id` itself for whole documents, and `doc_id.n`
+#'   otherwise. Empty and missing documents contribute no rows.
+#'
+#' @seealso [apply_codes()], which splits with this before coding;
+#'   [uncoded_units()] for the units a codebook did not reach.
+#' @concept preprocessing
+#' @export
+split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
+  unit <- match.arg(unit)
+  empty <- tibble::tibble(doc_id = character(0), unit_id = character(0),
+                          unit_text = character(0), start = integer(0),
+                          end = integer(0))
+  if (length(texts) == 0) return(empty)
+  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  texts <- as.character(texts)
+
+  out <- dplyr::bind_rows(lapply(seq_along(texts), function(i) {
+    u <- .split_units(texts[i], unit)
+    if (nrow(u) == 0) return(NULL)
+    u$doc_id <- doc_id[i]
+    u$unit_id <- if (unit == "document") doc_id[i] else paste0(doc_id[i], ".", seq_len(nrow(u)))
+    u
+  }))
+  if (is.null(out) || nrow(out) == 0) return(empty)
+  return(out[, c("doc_id", "unit_id", "unit_text", "start", "end")])
+}
+
 #' @keywords internal
 .parse_codes_response <- function(response, valid_codes, max_codes) {
   none <- tibble::tibble(code = NA_character_, confidence = NA_real_, rationale = NA_character_)
@@ -83,15 +123,15 @@
 #'
 #' @description
 #' Suggests codes for each unit of text from a supplied codebook using an AI
-#' provider (OpenAI or Gemini). Documents are split into units (paragraphs by
-#' default) before coding, and each unit receives zero or more codes. Output
-#' is a set of suggestions for human confirmation, not final codes.
+#' provider (OpenAI or Gemini). Documents are split into sentences, paragraphs,
+#' or whole documents before coding, and each unit receives zero or more codes.
+#' Output is a set of suggestions for human confirmation, not final codes.
 #'
 #' @param texts Character vector of documents. Names become `doc_id`.
 #' @param codebook Data frame with `code` and `definition` columns; optional
 #'   `example` and `color`.
-#' @param unit Unit of analysis: "paragraph" (default, split on blank lines),
-#'   "sentence", or "document" (one unit per element of `texts`).
+#' @param unit Unit of analysis: "sentence", "paragraph" (default, split on
+#'   blank lines), or "document" (one unit per element of `texts`).
 #' @param max_codes Maximum codes per unit (default 3). Units where no code
 #'   fits return one row with `code = NA`.
 #' @param provider AI provider: "auto" (default), "openai", or "gemini".
@@ -128,14 +168,8 @@ apply_codes <- function(texts, codebook,
   doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
   texts <- as.character(texts)
 
-  units_tbl <- dplyr::bind_rows(lapply(seq_along(texts), function(i) {
-    u <- .split_units(texts[i], unit)
-    if (nrow(u) == 0) return(NULL)
-    u$doc_id <- doc_id[i]
-    u$unit_id <- if (unit == "document") doc_id[i] else paste0(doc_id[i], ".", seq_len(nrow(u)))
-    u
-  }))
-  if (is.null(units_tbl) || nrow(units_tbl) == 0) {
+  units_tbl <- split_texts(stats::setNames(texts, doc_id), unit)
+  if (nrow(units_tbl) == 0) {
     stop("texts contain no codable units.", call. = FALSE)
   }
 
@@ -332,15 +366,18 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 
 #' @keywords internal
 .agreement_metrics <- function(ratings, metrics) {
+  shared <- sum(stats::complete.cases(ratings))
+  paired <- sum(rowSums(!is.na(ratings)) >= 2)
   vals <- list()
-  if ("percent" %in% metrics) vals$percent <- .percent_agreement(ratings)
-  if ("pabak" %in% metrics)   vals$pabak   <- .pabak(ratings)
-  if ("ac1" %in% metrics)     vals$ac1     <- .gwet_ac1(ratings)
-  if ("kappa" %in% metrics)   vals$kappa   <- .kappa_estimate(ratings)
-  if ("alpha" %in% metrics)   vals$alpha   <- .alpha_estimate(ratings)
-  tibble::tibble(metric = names(vals),
-                 estimate = unlist(vals, use.names = FALSE),
-                 n = nrow(ratings))
+  if ("percent" %in% metrics) vals$percent <- c(.percent_agreement(ratings), shared)
+  if ("pabak" %in% metrics)   vals$pabak   <- c(.pabak(ratings), shared)
+  if ("ac1" %in% metrics)     vals$ac1     <- c(.gwet_ac1(ratings), paired)
+  if ("kappa" %in% metrics)   vals$kappa   <- c(.kappa_estimate(ratings), shared)
+  if ("alpha" %in% metrics)   vals$alpha   <- c(.alpha_estimate(ratings), paired)
+  estimate <- vapply(vals, `[`, numeric(1), 1L, USE.NAMES = FALSE)
+  n <- vapply(vals, `[`, numeric(1), 2L, USE.NAMES = FALSE)
+  n[is.na(estimate)] <- NA_real_
+  tibble::tibble(metric = names(vals), estimate = estimate, n = as.integer(n))
 }
 
 #' @keywords internal
@@ -434,7 +471,8 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #'   `unit_id` and `confidence` are used when present. Coverage additionally
 #'   requires `start` and `end`.
 #' @param metrics Metrics to report: any of "alpha", "kappa", "ac1", "pabak",
-#'   "percent" (all by default). Grid alignment only.
+#'   "percent" (all by default). Grid alignment only. `pabak` is defined for
+#'   two coders and returns `NA` for more.
 #' @param units "intersection" (default, units coded by every coder) or
 #'   "union" (uncoded units count as missing). Grid alignment only.
 #' @param by_code Logical; also report per-code agreement.
@@ -449,7 +487,11 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #'   `disagree`, and `independent` (NULL unless `codebook_authors` is supplied
 #'   and at least two other coders remain). For grid alignment these are the
 #'   metric, per-code, and disagreement tables; for coverage they hold
-#'   per-coder-pair span coverage and the uncovered spans.
+#'   per-coder-pair span coverage and the uncovered spans. In the metric tables
+#'   `n` counts the units each statistic was computed on: units carrying a code
+#'   from every coder for `percent`, `pabak`, and `kappa`; units carrying a code
+#'   from at least two for `ac1` and `alpha`. `n` is `NA` wherever the estimate
+#'   is.
 #'
 #' @seealso [apply_codes()] to produce assignments; [merge_codes()] to combine
 #'   coders; [code_retest()] for AI stability.
@@ -562,7 +604,7 @@ uncoded_units <- function(assignments, texts) {
       as.data.frame(readxl::read_excel(path), stringsAsFactors = FALSE)
     },
     stop("Unsupported coder file type '", ext,
-         "'. Use rds, csv, txt, tsv, xlsx, or xls.", call. = FALSE)
+         "'. Use csv, xlsx, xls, txt, tsv, or rds.", call. = FALSE)
   )
   return(out)
 }
@@ -575,7 +617,7 @@ uncoded_units <- function(assignments, texts) {
 #' async workflow where each coder codes a copy and exports it.
 #'
 #' @param files Character vector of paths, or a list of data frames. Paths may
-#'   be `.rds`, `.csv`, `.txt`, `.tsv`, `.xlsx`, or `.xls`; the extension picks
+#'   be `.csv`, `.xlsx`, `.xls`, `.txt`, `.tsv`, or `.rds`; the extension picks
 #'   the reader. Excel files need the readxl package.
 #'
 #' @return A tibble of combined, de-duplicated assignments.

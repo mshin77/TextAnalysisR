@@ -91,25 +91,19 @@
 
     
     
-<p>Qualitative coding assigns codes from a codebook to units of text,
-then measures how far coders agree. AI supplies suggestions; a human
-confirms, corrects, or rejects each one, and only reviewed rows are
-exported. Nothing is coded silently.</p>
-<p>The sections below follow the app’s Qualitative Coding tabs in order.
-Agreement and merging run live on constructed data. The coding steps
-call an AI provider, so they are shown as code rather than run here.</p>
+<p>Codes from a codebook are assigned to units of text, then inter-coder
+agreement is measured. AI supplies suggestions; a human confirms,
+corrects, or rejects each one, and only reviewed rows are exported.</p>
+<p>Steps that call an AI provider are shown as code rather than run. The
+rest run on synthetic data.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"TextAnalysisR"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] '0.1.4.9000'</span></span></code></pre>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mshin77.github.io/TextAnalysisR/">TextAnalysisR</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="codebook">1. Codebook<a class="anchor" aria-label="anchor" href="#codebook"></a>
 </h2>
-<p>A codebook is a data frame with <code>code</code> and
-<code>definition</code> columns, plus an optional <code>example</code>.
-Definitions carry most of the weight: a code without one gives the model
-nothing to match against.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>A data frame with <code>code</code> and <code>definition</code>, plus
+an optional <code>example</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">codebook</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"access"</span>, <span class="st">"instruction"</span>, <span class="st">"assessment"</span><span class="op">)</span>,</span>
 <span>  definition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -130,16 +124,13 @@ nothing to match against.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">1</span> access      Availability of technology, materials, or services to stu… tablet…</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> instruction Teaching methods, strategies, or curriculum delivery       the te…</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> assessment  Measurement of student performance or progress             progre…</span></span></code></pre>
-<p>Topic labels make reasonable starting codes. The mapping is
-many-to-many rather than one-to-one, so treat seeded codes as a draft to
-edit rather than a finished scheme.</p>
 </div>
 <div class="section level2">
 <h2 id="ai-coding">2. AI coding<a class="anchor" aria-label="anchor" href="#ai-coding"></a>
 </h2>
 <p><code><a href="../reference/apply_codes.html">apply_codes()</a></code> splits each document into units, sends
 each unit with the codebook, and returns one row per unit-code pair.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">texts</span> <span class="op">&lt;-</span> <span class="va">SpecialEduTech</span><span class="op">$</span><span class="va">abstract</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"doc"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -150,7 +141,6 @@ each unit with the codebook, and returns one row per unit-code pair.</p>
 <span>  max_codes <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"gemini"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Three arguments decide what the output means.</p>
 <table class="table">
 <colgroup>
 <col width="55%">
@@ -163,7 +153,7 @@ each unit with the codebook, and returns one row per unit-code pair.</p>
 <tbody>
 <tr class="odd">
 <td><code>unit</code></td>
-<td>Splits on paragraphs, sentences, or whole documents. Paragraph is
+<td>Splits on sentences, paragraphs, or whole documents. Paragraph is
 the usual unit of analysis.</td>
 </tr>
 <tr class="even">
@@ -178,36 +168,149 @@ available.</td>
 </tr>
 </tbody>
 </table>
-<p>Output columns <code>start</code> and <code>end</code> give character
-offsets of the unit inside its document, so a suggestion can be traced
-back to the exact text it came from.</p>
+<p>Columns <code>start</code> and <code>end</code> give character
+offsets of the unit inside its document.</p>
 </div>
 <div class="section level2">
 <h2 id="review">3. Review<a class="anchor" aria-label="anchor" href="#review"></a>
 </h2>
-<p>Suggestions are not results. In the app each row carries a status of
-pending, accepted, edited, or rejected, and only accepted and edited
-rows reach the export. Working from R, filter on confidence and read the
-units before keeping anything.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p>Only accepted and edited rows reach the export.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">accepted</span> <span class="op">&lt;-</span> <span class="va">suggestions</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">suggestions</span><span class="op">$</span><span class="va">code</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">suggestions</span><span class="op">$</span><span class="va">confidence</span> <span class="op">&gt;</span> <span class="fl">0.7</span>, <span class="op">]</span></span>
 <span><span class="va">accepted</span><span class="op">$</span><span class="va">coder</span> <span class="op">&lt;-</span> <span class="st">"coder1"</span></span></code></pre></div>
-<p>Low-temperature settings do not guarantee stable output.
-<code><a href="../reference/code_retest.html">code_retest()</a></code> codes the same sample more than once and
+<p><code><a href="../reference/code_retest.html">code_retest()</a></code> codes the same sample more than once and
 reports how often the runs agree, next to a baseline from shuffled
-labels. Retest agreement close to that baseline means the codes are not
-reproducible enough to analyze.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+labels.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stability</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/code_retest.html">code_retest</a></span><span class="op">(</span><span class="va">texts</span>, <span class="va">codebook</span>, n_runs <span class="op">=</span> <span class="fl">2</span>, sample_n <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="va">stability</span><span class="op">$</span><span class="va">summary</span></span></code></pre></div>
+<p><code><a href="../reference/uncoded_units.html">uncoded_units()</a></code> returns the units that received no code,
+with the text sliced from the recorded offsets.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># synthetic units, paraphrased from the corpus</span></span>
+<span><span class="va">suggestions</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span>  doc_id  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"d1"</span>, <span class="st">"d1"</span>, <span class="st">"d2"</span><span class="op">)</span>,</span>
+<span>  unit_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"d1.1"</span>, <span class="st">"d1.2"</span>, <span class="st">"d2.1"</span><span class="op">)</span>,</span>
+<span>  start   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">68L</span>, <span class="fl">1L</span><span class="op">)</span>,</span>
+<span>  end     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">66L</span>, <span class="fl">128L</span>, <span class="fl">74L</span><span class="op">)</span>,</span>
+<span>  code    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"access"</span>, <span class="cn">NA_character_</span>, <span class="cn">NA_character_</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">texts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  d1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Text-to-speech tools give students access to grade-level readings."</span>,</span>
+<span>             <span class="st">"Teachers report growing confidence after the training series."</span><span class="op">)</span>,</span>
+<span>  d2 <span class="op">=</span> <span class="st">"The review summarizes methodological features across the included studies."</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/uncoded_units.html">uncoded_units</a></span><span class="op">(</span><span class="va">suggestions</span>, <span class="va">texts</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 5</span></span></span>
+<span><span class="co">##   doc_id unit_id start   end unit_text                                          </span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                              </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> d1     d1.2       68   128 Teachers report growing confidence after the train…</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> d2     d2.1        1    74 The review summarizes methodological features acro…</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="agreement">4. Agreement<a class="anchor" aria-label="anchor" href="#agreement"></a>
 </h2>
 <p><code><a href="../reference/code_agreement.html">code_agreement()</a></code> takes assignments from two or more
-coders and reports chance-corrected agreement.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">assignments</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+coders.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># synthetic assignments</span></span>
+<span><span class="va">assignments</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span>  doc_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"doc"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  code   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>,</span>
+<span>             <span class="st">"instruction"</span>, <span class="st">"instruction"</span>, <span class="st">"instruction"</span>, <span class="st">"instruction"</span>,</span>
+<span>             <span class="st">"instruction"</span>, <span class="st">"assessment"</span>, <span class="st">"assessment"</span>, <span class="st">"assessment"</span>,</span>
+<span>             <span class="st">"assessment"</span>, <span class="st">"assessment"</span>, <span class="st">"assessment"</span>, <span class="st">"access"</span>,</span>
+<span>             <span class="st">"access"</span>, <span class="st">"access"</span><span class="op">)</span>,</span>
+<span>  coder  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"c1"</span>, <span class="st">"c2"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">agreement</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/code_agreement.html">code_agreement</a></span><span class="op">(</span><span class="va">assignments</span><span class="op">)</span></span>
+<span><span class="va">agreement</span><span class="op">$</span><span class="va">overall</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 5 × 3</span></span></span>
+<span><span class="co">##   metric  estimate     n</span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> percent    0.8      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> pabak      0.6      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">3</span> ac1        0.705    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">4</span> kappa      0.692    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">5</span> alpha      0.705    10</span></span></code></pre>
+<p><code>n</code> is how many units each statistic used.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th><code>metric</code></th>
+<th>Reads as</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>percent</code></td>
+<td>Raw share of units both coders labeled identically. No correction
+for chance.</td>
+</tr>
+<tr class="even">
+<td><code>pabak</code></td>
+<td>Prevalence-adjusted bias-adjusted kappa: percent agreement rescaled
+to the -1 to 1 range.</td>
+</tr>
+<tr class="odd">
+<td><code>ac1</code></td>
+<td>Gwet’s agreement coefficient. Chance-corrected, stable when one code
+dominates.</td>
+</tr>
+<tr class="even">
+<td><code>kappa</code></td>
+<td>Cohen’s kappa for two coders, Fleiss’ for more. Chance-corrected
+against observed marginals.</td>
+</tr>
+<tr class="odd">
+<td><code>alpha</code></td>
+<td>Krippendorff’s alpha. Chance-corrected, handles missing units.</td>
+</tr>
+</tbody>
+</table>
+<p>Which units the coders differed on:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">agreement</span><span class="op">$</span><span class="va">disagree</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
+<span><span class="co">##   doc_id c1          c2        </span></span>
+<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     </span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">1</span> doc6   instruction assessment</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">2</span> doc9   assessment  access</span></span></code></pre>
+<p>Which codes carry those disagreements:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">agreement</span><span class="op">$</span><span class="va">by_code</span></span></code></pre></div>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 15 × 4</span></span></span>
+<span><span class="co">##    code        metric  estimate     n</span></span>
+<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> access      percent    0.9      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> access      pabak      0.8      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> access      ac1        0.802    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> access      kappa      0.8      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> access      alpha      0.808    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> assessment  percent    0.8      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> assessment  pabak      0.6      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> assessment  ac1        0.655    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> assessment  kappa      0.524    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span> assessment  alpha      0.548    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">11</span> instruction percent    0.9      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">12</span> instruction pabak      0.8      10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">13</span> instruction ac1        0.84     10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">14</span> instruction kappa      0.737    10</span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">15</span> instruction alpha      0.747    10</span></span></code></pre>
+<p>Each code is scored as a yes/no indicator, so a two-code corpus
+returns the same figures twice, one indicator being the other’s
+complement.</p>
+<p>Chance-corrected statistics turn negative when observed agreement
+falls below what the marginals predict, which happens when nearly every
+unit carries the same code:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># synthetic assignments, one code dominating</span></span>
+<span><span class="va">skewed</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  doc_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"doc"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  code   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>,</span>
 <span>             <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>, <span class="st">"access"</span>,</span>
@@ -215,8 +318,7 @@ coders and reports chance-corrected agreement.</p>
 <span>  coder  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"c1"</span>, <span class="st">"c2"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">agreement</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/code_agreement.html">code_agreement</a></span><span class="op">(</span><span class="va">assignments</span><span class="op">)</span></span>
-<span><span class="va">agreement</span><span class="op">$</span><span class="va">overall</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/code_agreement.html">code_agreement</a></span><span class="op">(</span><span class="va">skewed</span>, by_code <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 5 × 3</span></span></span>
 <span><span class="co">##   metric  estimate     n</span></span>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
@@ -225,47 +327,20 @@ coders and reports chance-corrected agreement.</p>
 <span><span class="co">## <span style="color: #BCBCBC;">3</span> ac1       0.68       8</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">4</span> kappa    -<span style="color: #BB0000;">0.143</span>      8</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">5</span> alpha    -<span style="color: #BB0000;">0.071</span><span style="color: #BB0000; text-decoration: underline;">4</span>     8</span></span></code></pre>
-<p>Percent agreement is high here while kappa is near zero. That gap is
-the kappa paradox: when one code dominates, expected agreement
-approaches observed agreement and kappa collapses even though the coders
-rarely disagree. Gwet’s AC1 and PABAK stay interpretable under that
-skew, which is why all five statistics are reported together rather than
-kappa alone.</p>
-<p>Disagreements are listed separately so the underlying units can be
-re-read.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">agreement</span><span class="op">$</span><span class="va">disagree</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 2 × 3</span></span></span>
-<span><span class="co">##   doc_id c1          c2         </span></span>
-<span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">1</span> doc7   access      instruction</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">2</span> doc8   instruction access</span></span></code></pre>
-<p>Per-code agreement shows which codes carry the disagreement.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">agreement</span><span class="op">$</span><span class="va">by_code</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 10 × 4</span></span></span>
-<span><span class="co">##    code        metric  estimate     n</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> access      percent   0.75       8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> access      pabak     0.5        8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> access      ac1       0.68       8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> access      kappa    -<span style="color: #BB0000;">0.143</span>      8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> access      alpha    -<span style="color: #BB0000;">0.071</span><span style="color: #BB0000; text-decoration: underline;">4</span>     8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> instruction percent   0.75       8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> instruction pabak     0.5        8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> instruction ac1       0.68       8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> instruction kappa    -<span style="color: #BB0000;">0.143</span>      8</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> instruction alpha    -<span style="color: #BB0000;">0.071</span><span style="color: #BB0000; text-decoration: underline;">4</span>     8</span></span></code></pre>
-<div class="section level3">
-<h3 id="coders-who-segment-differently">Coders who segment differently<a class="anchor" aria-label="anchor" href="#coders-who-segment-differently"></a>
-</h3>
-<p>Grid alignment assumes coders share units. When each coder marks
-their own spans, boundaries rarely match, and pivoting on unit identity
-would compare rows that describe different text. Coverage alignment
-instead reports, for each ordered coder pair, the share of one coder’s
-spans that overlap a same-code span from the other.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">spans</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<p>Chance alone accounts for 0.78 against an observed 0.75, so
+<code>kappa</code> lands at -0.14. Only <code>percent</code> is bounded
+at zero.</p>
+<p><code>codebook_authors</code> adds an <code>independent</code> table
+computed among the remaining coders alone.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/code_agreement.html">code_agreement</a></span><span class="op">(</span><span class="va">assignments</span>, codebook_authors <span class="op">=</span> <span class="st">"c1"</span><span class="op">)</span><span class="op">$</span><span class="va">independent</span></span></code></pre></div>
+<p>Everything above assumes coders shared units. When each coder
+highlights their own stretch of text, <code>align = "coverage"</code>
+compares the highlights instead. <code>start</code> and <code>end</code>
+are character positions.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># synthetic spans</span></span>
+<span><span class="va">spans</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  doc_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"doc1"</span>, <span class="st">"doc1"</span>, <span class="st">"doc1"</span><span class="op">)</span>,</span>
 <span>  coder  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"c1"</span>, <span class="st">"c1"</span>, <span class="st">"c2"</span><span class="op">)</span>,</span>
 <span>  code   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"access"</span>, <span class="st">"instruction"</span>, <span class="st">"access"</span><span class="op">)</span>,</span>
@@ -279,28 +354,16 @@ spans that overlap a same-code span from the other.</p>
 <span><span class="co">##   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">1</span> c1    c2    coverage      0.5     2</span></span>
 <span><span class="co">## <span style="color: #BCBCBC;">2</span> c2    c1    coverage      1       1</span></span></code></pre>
-<p>Coverage is directional. One coder marking broad spans that contain
-another’s narrow ones scores differently in each direction, and that
-asymmetry is informative rather than a defect.</p>
-</div>
+<p><code>c2</code>’s span sits inside <code>c1</code>’s first one. One
+of <code>c1</code>’s two spans was matched, so 0.50; <code>c2</code>’s
+only span was matched, so 1.00. Both directions are reported.</p>
 </div>
 <div class="section level2">
-<h2 id="combining-coder-files">Combining coder files<a class="anchor" aria-label="anchor" href="#combining-coder-files"></a>
+<h2 id="combining-coder-files">5. Combining coder files<a class="anchor" aria-label="anchor" href="#combining-coder-files"></a>
 </h2>
-<p>Each coder exports their accepted rows; <code><a href="../reference/merge_codes.html">merge_codes()</a></code>
-binds the files into one table for <code><a href="../reference/code_agreement.html">code_agreement()</a></code>.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_codes.html">merge_codes</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"coder1.rds"</span>, <span class="st">"coder2.rds"</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_codes.html">merge_codes</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"coder1.csv"</span>, <span class="st">"coder2.xlsx"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/code_agreement.html">code_agreement</a></span><span class="op">(</span><span class="va">combined</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="reporting">Reporting<a class="anchor" aria-label="anchor" href="#reporting"></a>
-</h2>
-<p>Report the unit of analysis, how many units were coded, which
-agreement statistic was used and why, and the share of AI suggestions a
-human changed. The last figure is what separates assisted coding from
-automated labeling, and it is only available when review status is
-recorded.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

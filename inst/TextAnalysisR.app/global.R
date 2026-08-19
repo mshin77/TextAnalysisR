@@ -181,6 +181,11 @@ topic_modeling_ui_content <- function() {
           conditionalPanel(
             condition = "input.topic_modeling_path == 'probability' && input.conditioned3 == 5",
             tags$h5(strong("Structural topic model"), style = "color: #4269BF; margin-bottom: 10px;"),
+            tags$p(
+              tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
+              "Runs on whole documents; covariate estimates need one row per respondent.",
+              style = "font-size: 13px; color: #475569; margin-bottom: 12px;"
+            ),
             uiOutput("stm_k_selector_uiOutput"),
             selectInput(
               "stm_topic_measure",
@@ -736,6 +741,16 @@ Focus on incorporating the most significant keywords while following the guideli
               style = "font-size: 13px; color: #475569; margin-top: -6px;"
             ),
 
+            conditionalPanel(
+              condition = "output.has_residue_texts == true",
+              div(
+                style = "border: 1px dashed #B4531E; background: #FBF0E9; border-radius: 5px; padding: 10px 12px; margin-bottom: 14px;",
+                textOutput("residue_texts_label"),
+                actionLink("clear_residue_texts", "Use the full corpus instead",
+                           style = "font-size: 13px;")
+              )
+            ),
+
             uiOutput("embedding_topic_provider_status"),
 
             conditionalPanel(
@@ -1016,7 +1031,24 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
 
-            actionButton("embedding_run", "Run Model", class = "btn-primary btn-block")
+            actionButton("embedding_run", "Run Model", class = "btn-primary btn-block"),
+
+            conditionalPanel(
+              condition = "output.has_embedding_categories == true",
+              tags$hr(style = "margin: 16px 0 12px;"),
+              tags$label("Confirm categories", class = "control-label"),
+              tags$p("Tests whether a classifier recovers the categories from the text alone. A category it cannot recover may belong with another.",
+                     style = "font-size: 13px; color: #475569; margin-top: 2px;"),
+              selectInput(
+                "confirm_balance",
+                "Balance categories:",
+                choices = c("No" = "none", "Downsample" = "downsample"),
+                selected = "none"
+              ),
+              actionButton("confirm_categories", "Confirm Categories",
+                           class = "btn-primary btn-block"),
+              uiOutput("confirm_categories_result")
+            )
           ),
 
           conditionalPanel(
@@ -4018,10 +4050,12 @@ qualitative_coding_ui_content <- function() {
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
           "AI output is a suggestion. Each code needs review before export."
         ),
-        radioButtons(
-          "qc_unit", "Unit of analysis",
-          choices = c("Sentence" = "sentence", "Paragraph" = "paragraph", "Document" = "document"),
-          selected = "sentence"
+        tags$div(
+          class = "status-main-info",
+          tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
+          "Unit of analysis: ",
+          tags$strong(textOutput("analysis_unit_label", inline = TRUE)),
+          ". Set it under Preprocess, Select columns, so every stage uses the same one."
         ),
         sliderInput("qc_max_codes", "Max codes per unit", min = 1, max = 5, value = 3, step = 1),
         sliderInput("qc_n_docs", "Documents to code", min = 1, max = 500, value = 20, step = 1),
@@ -4092,8 +4126,10 @@ qualitative_coding_ui_content <- function() {
           condition = "output.has_uncoded_units == true",
           tags$label("Units the codebook did not reach", class = "control-label"),
           uiOutput("qc_uncoded_summary"),
+          actionButton("qc_cluster_uncoded", "Cluster uncoded units",
+                       class = "btn-warning btn-block"),
           downloadButton("qc_download_uncoded", "Export uncoded", class = "btn-default btn-block"),
-          tags$p("Read these for content the codebook misses; recurring themes belong in a revision.",
+          tags$p("Clustering sends the residue to Topic Modeling as the next round. Read these for content the codebook misses; recurring themes belong in a revision.",
                  style = "font-size: 13px; color: #475569; margin-top: 6px;"),
           tags$hr(style = "margin: 16px 0 12px;")
         ),
@@ -4101,7 +4137,7 @@ qualitative_coding_ui_content <- function() {
         div(
           class = "qc-btn-row",
           downloadButton("qc_download_accepted_csv", "CSV", class = "btn-default"),
-          downloadButton("qc_download_accepted_rds", "RDS", class = "btn-default")
+          downloadButton("qc_download_accepted_xlsx", "Excel", class = "btn-default")
         )
       ),
       conditionalPanel(
@@ -4113,7 +4149,7 @@ qualitative_coding_ui_content <- function() {
           "Combine coder files exported from the Review tab, then compute chance-corrected agreement."
         ),
         fileInput("qc_coder_files", "Coder files",
-                  accept = c(".rds", ".csv", ".xlsx", ".xls", ".txt"), multiple = TRUE),
+                  accept = c(".csv", ".xlsx", ".xls", ".txt", ".rds"), multiple = TRUE),
         tags$p("One file per coder, exported from the Review tab.",
                style = "font-size: 13px; color: #475569; margin-top: -8px;"),
         checkboxInput("qc_include_own", "Include accepted rows from this session", value = TRUE),

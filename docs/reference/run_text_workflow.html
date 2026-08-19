@@ -152,26 +152,49 @@ pipeline programmatically.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># \donttest{</span></span>
-<span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span>
-<span>    dataset_choice <span class="op">=</span> <span class="st">"Upload an Example Dataset"</span>,</span>
-<span>    listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co"># }</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">file_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>filepath <span class="op">=</span> <span class="st">"path/to/file.xlsx"</span><span class="op">)</span></span>
-<span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span>
-<span>    dataset_choice <span class="op">=</span> <span class="st">"Upload Your File"</span>,</span>
-<span>    file_info <span class="op">=</span> <span class="va">file_info</span>,</span>
-<span>    listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"column1"</span>, <span class="st">"column2"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span>
-<span>    dataset_choice <span class="op">=</span> <span class="st">"Copy and Paste Text"</span>,</span>
-<span>    text_input <span class="op">=</span> <span class="st">"Your text content here"</span>,</span>
-<span>    listed_vars <span class="op">=</span> <span class="st">"text"</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    dataset_choice <span class="op">=</span> <span class="st">"Upload an Example Dataset"</span>,</span></span>
+<span class="r-in"><span>    listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"title"</span>, <span class="st">"keyword"</span>, <span class="st">"abstract"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting complete text mining workflow...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 1: Processing files...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 2: Uniting text columns...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 3: Preprocessing texts...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating corpus...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Tokenizing texts...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating a tokens from a corpus object...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...starting tokenization</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...tokenizing 1 of 1 blocks</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...preserving elisions</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...removing separators, punctuation, symbols, numbers, URLs </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...6,736 unique types</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  ...complete, elapsed time: 0.27 seconds.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finished constructing tokens from 490 documents</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Converting to lowercase...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Applying minimum character filter...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Text preprocessing completed in 0.37 seconds</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processed 490 documents with 94039 total tokens</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Step 5: Creating document-feature matrix...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Complete text mining workflow finished in 0.93 seconds</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Documents processed: 490</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Features identified: 5078</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">file_info</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>filepath <span class="op">=</span> <span class="st">"path/to/file.xlsx"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    dataset_choice <span class="op">=</span> <span class="st">"Upload Your File"</span>,</span></span>
+<span class="r-in"><span>    file_info <span class="op">=</span> <span class="va">file_info</span>,</span></span>
+<span class="r-in"><span>    listed_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"column1"</span>, <span class="st">"column2"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="va">workflow_result</span> <span class="op">&lt;-</span> <span class="fu">TextAnalysisR</span><span class="fu">::</span><span class="fu">run_text_workflow</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    dataset_choice <span class="op">=</span> <span class="st">"Copy and Paste Text"</span>,</span></span>
+<span class="r-in"><span>    text_input <span class="op">=</span> <span class="st">"Your text content here"</span>,</span></span>
+<span class="r-in"><span>    listed_vars <span class="op">=</span> <span class="st">"text"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -23,8 +23,8 @@ apply_codes(
 \item{codebook}{Data frame with \code{code} and \code{definition} columns; optional
 \code{example} and \code{color}.}
 
-\item{unit}{Unit of analysis: "paragraph" (default, split on blank lines),
-"sentence", or "document" (one unit per element of \code{texts}).}
+\item{unit}{Unit of analysis: "sentence", "paragraph" (default, split on
+blank lines), or "document" (one unit per element of \code{texts}).}
 
 \item{max_codes}{Maximum codes per unit (default 3). Units where no code
 fits return one row with \code{code = NA}.}
@@ -49,9 +49,9 @@ provider key is available.
 }
 \description{
 Suggests codes for each unit of text from a supplied codebook using an AI
-provider (OpenAI or Gemini). Documents are split into units (paragraphs by
-default) before coding, and each unit receives zero or more codes. Output
-is a set of suggestions for human confirmation, not final codes.
+provider (OpenAI or Gemini). Documents are split into sentences, paragraphs,
+or whole documents before coding, and each unit receives zero or more codes.
+Output is a set of suggestions for human confirmation, not final codes.
 }
 \seealso{
 \code{\link[=code_retest]{code_retest()}} for AI stability; \code{\link[=code_agreement]{code_agreement()}} for

@@ -69,13 +69,16 @@
 #' merging or revision.
 #'
 #' @param embeddings Numeric matrix or data frame, one row per document.
-#' @param categories Category labels, one per row. `NA` and `-1` are excluded;
-#'   place them first with [assign_noise()].
+#' @param categories Category labels, one per row. `NA` and any value in
+#'   `unassigned` are excluded; place them first with [assign_noise()].
 #' @param method "knn" (default) or "multinom".
 #' @param folds Cross-validation folds (default 5), stratified by category.
 #' @param k Neighbours for `method = "knn"` (default 5).
 #' @param balance "none" (default) or "downsample" to equalize category sizes
 #'   within each training fold.
+#' @param unassigned Label marking a document as unassigned, excluded before
+#'   fitting. Defaults to `0`, which [fit_embedding_model()] emits for outliers.
+#'   Pass `-1` for output from tools that use that convention.
 #' @param seed Random seed for fold assignment and downsampling.
 #'
 #' @return A list with `overall` (accuracy, macro and weighted F1, counts),
@@ -86,12 +89,13 @@
 #' @seealso [assign_noise()] to place unassigned documents before confirming;
 #'   [align_categories()] to compare human codes against machine clusters;
 #'   [fit_embedding_model()] to produce the categories being tested.
-#' @concept topic-modeling
+#' @concept qualitative-coding
 #' @export
 validate_categories <- function(embeddings, categories,
                                 method = c("knn", "multinom"),
                                 folds = 5, k = 5,
                                 balance = c("none", "downsample"),
+                                unassigned = 0,
                                 seed = 123) {
   method <- match.arg(method)
   balance <- match.arg(balance)
@@ -102,7 +106,7 @@ validate_categories <- function(embeddings, categories,
     stop("categories must have one value per row of embeddings.", call. = FALSE)
   }
 
-  keep <- !is.na(y) & y != "-1"
+  keep <- !is.na(y) & !(y %in% as.character(unassigned))
   x <- x[keep, , drop = FALSE]
   y <- y[keep]
   n_excluded <- sum(!keep)
@@ -161,28 +165,32 @@ validate_categories <- function(embeddings, categories,
 #' visible, and `max_distance` leaves distant documents unassigned.
 #'
 #' @param embeddings Numeric matrix or data frame, one row per document.
-#' @param categories Category labels; `NA` or `-1` marks a document unassigned.
+#' @param categories Category labels; `NA` or any value in `unassigned` marks a
+#'   document as not yet placed.
 #' @param k Neighbours to consult (default 5).
 #' @param max_distance Cosine distance beyond which a document stays
 #'   unassigned. `NULL` (default) places every document.
+#' @param unassigned Label marking a document as not yet placed. Defaults to `0`,
+#'   which [fit_embedding_model()] emits for outliers.
 #'
 #' @return A tibble with `index`, `assigned`, and `distance`, one row per
 #'   previously unassigned document.
 #'
 #' @seealso [validate_categories()] to test the categories afterwards.
-#' @concept topic-modeling
+#' @concept qualitative-coding
 #' @export
-assign_noise <- function(embeddings, categories, k = 5, max_distance = NULL) {
+assign_noise <- function(embeddings, categories, k = 5, max_distance = NULL,
+                         unassigned = 0) {
   x <- as.matrix(embeddings)
   y <- as.character(categories)
   if (length(y) != nrow(x)) {
     stop("categories must have one value per row of embeddings.", call. = FALSE)
   }
-  unassigned <- which(is.na(y) | y == "-1")
+  idx_unassigned <- which(is.na(y) | y %in% as.character(unassigned))
   empty <- tibble::tibble(index = integer(0), assigned = character(0),
                           distance = numeric(0))
-  if (length(unassigned) == 0) return(empty)
-  known <- setdiff(seq_along(y), unassigned)
+  if (length(idx_unassigned) == 0) return(empty)
+  known <- setdiff(seq_along(y), idx_unassigned)
   if (length(known) == 0) {
     stop("No confirmed categories to assign to.", call. = FALSE)
   }
@@ -190,14 +198,14 @@ assign_noise <- function(embeddings, categories, k = 5, max_distance = NULL) {
   norm <- sqrt(rowSums(x^2))
   norm[norm == 0] <- 1
   xn <- x / norm
-  sim <- xn[unassigned, , drop = FALSE] %*% t(xn[known, , drop = FALSE])
+  sim <- xn[idx_unassigned, , drop = FALSE] %*% t(xn[known, , drop = FALSE])
 
-  rows <- lapply(seq_along(unassigned), function(i) {
+  rows <- lapply(seq_along(idx_unassigned), function(i) {
     ord <- order(sim[i, ], decreasing = TRUE)[seq_len(min(k, length(known)))]
     labs <- y[known][ord]
     best <- names(sort(table(labs), decreasing = TRUE))[1]
     d <- 1 - mean(sim[i, ord][labs == best])
-    tibble::tibble(index = unassigned[i], assigned = best, distance = d)
+    tibble::tibble(index = idx_unassigned[i], assigned = best, distance = d)
   })
   out <- dplyr::bind_rows(rows)
   if (!is.null(max_distance)) {
@@ -215,6 +223,8 @@ assign_noise <- function(embeddings, categories, k = 5, max_distance = NULL) {
 #'
 #' @param human Vector of human-assigned categories.
 #' @param machine Vector of model-assigned categories, same length and order.
+#' @param unassigned Label marking a document as unassigned in either vector,
+#'   dropped before comparison. Defaults to `0`.
 #'
 #' @return A list with `crosstab` (human against machine), `adjusted_rand`,
 #'   `best_match` (each human category paired with the machine category it
@@ -222,15 +232,16 @@ assign_noise <- function(embeddings, categories, k = 5, max_distance = NULL) {
 #'   and `n` (documents compared, excluding missing values).
 #'
 #' @seealso [validate_categories()] for supervised confirmation.
-#' @concept topic-modeling
+#' @concept qualitative-coding
 #' @export
-align_categories <- function(human, machine) {
+align_categories <- function(human, machine, unassigned = 0) {
   h <- as.character(human)
   m <- as.character(machine)
   if (length(h) != length(m)) {
     stop("human and machine must be the same length.", call. = FALSE)
   }
-  keep <- !is.na(h) & !is.na(m) & h != "-1" & m != "-1"
+  drop <- as.character(unassigned)
+  keep <- !is.na(h) & !is.na(m) & !(h %in% drop) & !(m %in% drop)
   h <- h[keep]
   m <- m[keep]
   if (length(h) == 0) stop("No documents with both labels.", call. = FALSE)

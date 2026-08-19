@@ -303,6 +303,33 @@ test_that("code_agreement pivots on unit_id when present", {
   expect_equal(res$disagree$doc_id, "d1.2")
 })
 
+test_that("code_agreement counts only the units each metric used", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = c("d1", "d1", "d2", "d2", "d3", "d3", "d4", "d5"),
+    code   = c("x", "x", "x", "y", "y", "y", "x", "x"),
+    coder  = c("c1", "c2", "c1", "c2", "c1", "c2", "c1", "c1")
+  )
+  union <- code_agreement(a, units = "union", by_code = FALSE)$overall
+  shared <- code_agreement(a, units = "intersection", by_code = FALSE)$overall
+  expect_true(all(union$n == 3))
+  expect_equal(union$n, shared$n)
+  expect_equal(union$estimate, shared$estimate)
+})
+
+test_that("code_agreement reports no pabak or n for more than two coders", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = rep(paste0("d", 1:4), each = 3),
+    code   = c("x", "x", "x", "x", "x", "y", "y", "y", "y", "x", "x", "x"),
+    coder  = rep(c("c1", "c2", "c3"), times = 4)
+  )
+  res <- code_agreement(a, by_code = FALSE)$overall
+  expect_true(is.na(res$estimate[res$metric == "pabak"]))
+  expect_true(is.na(res$n[res$metric == "pabak"]))
+  expect_equal(res$n[res$metric == "percent"], 4L)
+})
+
 test_that("code_agreement keeps the highest-confidence code per unit and coder", {
   skip_if_not_installed("irr")
   a <- tibble::tibble(
@@ -467,4 +494,54 @@ test_that("merge_codes rejects an unsupported extension", {
   p <- withr::local_tempfile(fileext = ".docx")
   file.create(p)
   expect_error(merge_codes(p), "Unsupported coder file type")
+})
+
+# split_texts
+
+test_that("split_texts returns one row per document in document mode", {
+  out <- split_texts(c(a = "One. Two.", b = "Three."), unit = "document")
+  expect_equal(nrow(out), 2)
+  expect_equal(out$doc_id, c("a", "b"))
+  expect_equal(out$unit_id, c("a", "b"))
+  expect_equal(out$start, c(1L, 1L))
+})
+
+test_that("split_texts splits sentences and numbers units within a document", {
+  out <- split_texts(c(a = "One. Two more."), unit = "sentence")
+  expect_equal(out$unit_text, c("One.", "Two more."))
+  expect_equal(out$unit_id, c("a.1", "a.2"))
+  expect_equal(out$doc_id, c("a", "a"))
+})
+
+test_that("split_texts offsets recover the unit from the original text", {
+  txt <- c(a = "First one. Second here! Third?")
+  out <- split_texts(txt, unit = "sentence")
+  for (i in seq_len(nrow(out))) {
+    expect_equal(unname(substr(txt, out$start[i], out$end[i])), out$unit_text[i])
+  }
+})
+
+test_that("split_texts falls back to positions when texts are unnamed", {
+  out <- split_texts(c("One.", "Two."), unit = "document")
+  expect_equal(out$doc_id, c("1", "2"))
+})
+
+test_that("split_texts drops empty and missing documents", {
+  out <- split_texts(c(a = "Real text.", b = "", c = NA_character_), unit = "document")
+  expect_equal(out$doc_id, "a")
+})
+
+test_that("split_texts returns an empty table for empty input", {
+  out <- split_texts(character(0), unit = "sentence")
+  expect_equal(nrow(out), 0)
+  expect_named(out, c("doc_id", "unit_id", "unit_text", "start", "end"))
+})
+
+test_that("split_texts splits paragraphs on blank lines", {
+  out <- split_texts(c(a = "First para.\n\nSecond para."), unit = "paragraph")
+  expect_equal(out$unit_text, c("First para.", "Second para."))
+})
+
+test_that("split_texts rejects an unknown unit", {
+  expect_error(split_texts(c(a = "text"), unit = "clause"))
 })

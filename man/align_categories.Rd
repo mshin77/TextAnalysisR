@@ -4,12 +4,15 @@
 \alias{align_categories}
 \title{Compare Human Codes With Machine Categories}
 \usage{
-align_categories(human, machine)
+align_categories(human, machine, unassigned = 0)
 }
 \arguments{
 \item{human}{Vector of human-assigned categories.}
 
 \item{machine}{Vector of model-assigned categories, same length and order.}
+
+\item{unassigned}{Label marking a document as unassigned in either vector,
+dropped before comparison. Defaults to \code{0}.}
 }
 \value{
 A list with \code{crosstab} (human against machine), \code{adjusted_rand},
@@ -25,4 +28,4 @@ require the two schemes to share labels or count.
 \seealso{
 \code{\link[=validate_categories]{validate_categories()}} for supervised confirmation.
 }
-\concept{topic-modeling}
+\concept{qualitative-coding}

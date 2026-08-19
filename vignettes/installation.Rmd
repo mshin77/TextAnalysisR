@@ -63,7 +63,7 @@ For lemmatization, POS tagging, and named entity recognition, set up Python with
 
 ### Python Features
 
-For embeddings and neural sentiment analysis, run `setup_python_env()`. Requires Python 3.9+.
+For embeddings and transformer-based sentiment analysis, run `setup_python_env()`. Requires Python 3.9+.
 
 ## Troubleshooting
 

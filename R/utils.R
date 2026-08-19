@@ -216,7 +216,7 @@ require_feature <- function(feature, session = NULL) {
     "python" = "Python not configured. Run setup_python_env().",
     "pdf_tables" = "PDF tables require Python. Run setup_python_env().",
     "embeddings" = "Embeddings require sentence-transformers. Run: pip install sentence-transformers torch",
-    "sentiment_transformer" = "Neural sentiment requires transformers. Run: pip install transformers torch",
+    "sentiment_transformer" = "Transformer sentiment requires transformers. Run: pip install transformers torch",
     paste0("Feature '", feature, "' not available.")
   )
 

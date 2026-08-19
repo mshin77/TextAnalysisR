@@ -2,6 +2,8 @@
 
 ## TextAnalysisR 0.1.4.9000 (development)
 
+- Inter-coder agreement reports the unit count each statistic used.
+- Coded assignments export as CSV or Excel.
 - Added
   [`estimate_topic_effects()`](https://mshin77.github.io/TextAnalysisR/reference/estimate_topic_effects.md)
   for STM prevalence effects.

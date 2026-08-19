@@ -88,16 +88,16 @@ test_that("validate_categories returns the documented structure", {
   expect_equal(sum(res$by_category$support), length(f$y))
 })
 
-test_that("validate_categories excludes NA and -1 and counts them", {
+test_that("validate_categories excludes NA and the unassigned label", {
   skip_if_not_installed("class")
   f <- .confirm_fixture()
   y <- f$y
   y[1:3] <- NA
-  y[13:14] <- "-1"
+  y[13:14] <- "0"
   res <- validate_categories(f$x, y, folds = 4)
   expect_equal(res$overall$n_excluded, 5)
   expect_equal(res$overall$n_documents, length(y) - 5)
-  expect_false(any(c("-1", NA) %in% res$predictions$actual))
+  expect_false(any(c("0", NA) %in% res$predictions$actual))
 })
 
 test_that("validate_categories drops a category smaller than the fold count", {
@@ -180,10 +180,10 @@ test_that("assign_noise places NA rows with their nearest category", {
   expect_true(all(out$distance >= 0))
 })
 
-test_that("assign_noise treats -1 as unassigned", {
+test_that("assign_noise treats the unassigned label as not yet placed", {
   f <- .confirm_fixture()
   y <- f$y
-  y[13] <- "-1"
+  y[13] <- "0"
   out <- assign_noise(f$x, y)
   expect_equal(out$index, 13L)
   expect_equal(out$assigned, "c2")
@@ -259,7 +259,7 @@ test_that("align_categories reports the dominant overlap per human category", {
 
 test_that("align_categories excludes rows missing either label", {
   human <- c("a", "a", NA, "b", "b")
-  machine <- c("x", "x", "y", "-1", "y")
+  machine <- c("x", "x", "y", "0", "y")
   res <- align_categories(human, machine)
   expect_equal(res$n, 3)
   expect_equal(dim(res$crosstab), c(2L, 2L))
@@ -276,4 +276,62 @@ test_that("align_categories errors on a length mismatch", {
 
 test_that("align_categories errors when no document carries both labels", {
   expect_error(align_categories(c(NA, NA), c("x", "y")), "No documents")
+})
+
+# the package's own outlier label
+
+test_that("validate_categories excludes the package's 0 outlier label by default", {
+  skip_if_not_installed("class")
+  f <- .confirm_fixture()
+  y <- f$y
+  y[1:5] <- "0"
+  res <- validate_categories(f$x, y, folds = 4)
+  expect_equal(res$overall$n_excluded, 5)
+  expect_false("0" %in% res$by_category$category)
+})
+
+test_that("validate_categories honours a different unassigned label", {
+  skip_if_not_installed("class")
+  f <- .confirm_fixture()
+  y <- f$y
+  y[1:5] <- "-1"
+  res <- validate_categories(f$x, y, folds = 4, unassigned = -1)
+  expect_equal(res$overall$n_excluded, 5)
+  expect_false("-1" %in% res$by_category$category)
+})
+
+test_that("validate_categories keeps 0 when told a different sentinel", {
+  skip_if_not_installed("class")
+  f <- .confirm_fixture()
+  y <- f$y
+  y[1:12] <- "0"
+  res <- validate_categories(f$x, y, folds = 4, unassigned = -1)
+  expect_equal(res$overall$n_excluded, 0)
+  expect_true("0" %in% res$by_category$category)
+})
+
+test_that("assign_noise places the package's 0 outliers", {
+  f <- .confirm_fixture()
+  y <- f$y
+  y[c(1, 13, 25)] <- "0"
+  out <- assign_noise(f$x, y)
+  expect_equal(out$index, c(1L, 13L, 25L))
+  expect_equal(out$assigned, c("c1", "c2", "c3"))
+})
+
+test_that("align_categories drops 0 from either vector by default", {
+  human <- c("a", "a", "0", "b", "b")
+  machine <- c("x", "x", "y", "0", "y")
+  res <- align_categories(human, machine)
+  expect_equal(res$n, 3)
+})
+
+test_that("discovery output feeds confirmation without a phantom category", {
+  skip_if_not_installed("class")
+  f <- .confirm_fixture()
+  # fit_embedding_model shifts BERTopic labels by one, so outliers arrive as 0
+  emitted <- ifelse(seq_along(f$y) %in% 1:20, 0L, match(f$y, sort(unique(f$y))))
+  res <- validate_categories(f$x, emitted, folds = 4)
+  expect_equal(res$overall$n_excluded, 20)
+  expect_equal(res$overall$n_categories, length(setdiff(unique(emitted), 0)))
 })

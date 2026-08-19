@@ -467,7 +467,21 @@ Supports:
               label = NULL,
               choices = NULL
             )),
-            actionButton("apply", "Apply", class = "btn-primary btn-block")
+            actionButton("apply", "Apply", class = "btn-primary btn-block"),
+            tags$hr(style = "margin: 16px 0 12px;"),
+            tags$h5(
+              tags$strong("Unit of analysis"),
+              style = "color: #4269BF; margin-bottom: 8px;"
+            ),
+            selectInput(
+              "analysis_unit",
+              label = NULL,
+              choices = c("Sentences" = "sentence", "Paragraphs" = "paragraph",
+                          "Whole documents" = "document"),
+              selected = "paragraph"
+            ),
+            tags$p("Splits on sentences, paragraphs, or whole documents. Paragraph is the usual unit of analysis. Clustering, topic modeling, and coding all read this. Changing it after a model runs makes that model's categories describe different objects.",
+                   style = "font-size: 13px; color: #475569; margin-top: -8px;")
           ),
           conditionalPanel(
             condition = "input.conditioned == 2",

@@ -8653,7 +8653,7 @@ server <- shinyServer(function(input, output, session) {
       if (feature_type == "embeddings") {
         if (!TextAnalysisR:::check_feature("embeddings")) {
           TextAnalysisR:::remove_notification_by_id("sentiment_loading")
-          showNotification("Embedding-based sentiment requires Python. Please use lexicon method.", type = "warning", duration = 7)
+          showNotification("Transformer sentiment requires Python. Please use the lexicon method.", type = "warning", duration = 7)
           return()
         }
 
@@ -8678,7 +8678,7 @@ server <- shinyServer(function(input, output, session) {
           TextAnalysisR:::remove_notification_by_id("sentiment_loading")
           TextAnalysisR:::show_error_notification(
             paste0(
-              "Embedding-based sentiment error: ", e$message, ". ",
+              "Transformer sentiment error: ", e$message, ". ",
               "Please ensure Python transformers library is installed. See Setup > Installation."
             )
           )
@@ -8752,15 +8752,15 @@ server <- shinyServer(function(input, output, session) {
     })
   })
 
-  # Neural sentiment analysis handler
+  # transformer sentiment analysis handler
   observeEvent(input$run_neural_sentiment, {
-    TextAnalysisR:::show_loading_notification("Running neural sentiment analysis...", id = "neural_sentiment_loading")
+    TextAnalysisR:::show_loading_notification("Running transformer sentiment analysis...", id = "neural_sentiment_loading")
 
     tryCatch({
       # Check Python availability
       if (!TextAnalysisR:::check_feature("python")) {
         TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
-        TextAnalysisR:::show_error_notification("Neural sentiment requires Python. Please run TextAnalysisR::setup_python_env()")
+        TextAnalysisR:::show_error_notification("Transformer sentiment requires Python. Please run TextAnalysisR::setup_python_env()")
         return()
       }
 
@@ -8775,7 +8775,7 @@ server <- shinyServer(function(input, output, session) {
       texts_vec <- texts_df$united_texts
       doc_names <- if ("doc_id" %in% names(texts_df)) texts_df$doc_id else paste0("doc", seq_len(nrow(texts_df)))
 
-      if (!remote_doc_ok(length(texts_vec), "Neural sentiment analysis")) {
+      if (!remote_doc_ok(length(texts_vec), "Transformer sentiment analysis")) {
         TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
         return()
       }
@@ -8793,7 +8793,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (is.null(sentiment_analysis_results)) {
         TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
-        TextAnalysisR:::show_error_notification("Neural sentiment analysis returned no results.")
+        TextAnalysisR:::show_error_notification("Transformer sentiment analysis returned no results.")
         return()
       }
 
@@ -8813,12 +8813,12 @@ server <- shinyServer(function(input, output, session) {
       )
 
       TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
-      TextAnalysisR:::show_completion_notification(paste("Neural sentiment analysis complete using",
+      TextAnalysisR:::show_completion_notification(paste("Transformer sentiment analysis complete using",
                                          gsub(".*/", "", model_name), "model"))
 
     }, error = function(e) {
       TextAnalysisR:::remove_notification_by_id("neural_sentiment_loading")
-      TextAnalysisR:::show_error_notification(paste("Neural sentiment error:", e$message))
+      TextAnalysisR:::show_error_notification(paste("Transformer sentiment error:", e$message))
     })
   })
 
@@ -15248,7 +15248,7 @@ server <- shinyServer(function(input, output, session) {
           tags$strong("What it does:"), " Captures deep semantic meaning using AI. Understands context, synonyms, and complex relationships between concepts."
         ),
         tags$p(style = "margin-bottom: 8px;",
-          tags$strong("How it works:"), " Uses transformer neural networks (MiniLM) to create dense vector representations that encode semantic meaning."
+          tags$strong("How it works:"), " Uses transformer models (MiniLM) to create dense vector representations that encode semantic meaning."
         ),
         tags$p(style = "margin-bottom: 0;",
           tags$strong("Best for:"), " Most accurate semantic matching, understanding paraphrases, detecting subtle meaning differences."
@@ -18797,6 +18797,97 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
+  # the corpus at the chosen unit; every analysis stage reads this, not the raw column
+  analysis_texts <- reactive({
+    raw <- united_tbl()$united_texts
+    named <- stats::setNames(raw, paste0("doc", seq_along(raw)))
+    unit <- input$analysis_unit %||% "paragraph"
+    if (unit == "document") return(named)
+    split <- TextAnalysisR::split_texts(named, unit)
+    return(stats::setNames(split$unit_text, split$unit_id))
+  })
+
+  # step 3 of the loop: do the categories survive a classifier that never saw them?
+  confirm_categories_result <- reactiveVal(NULL)
+
+  output$has_embedding_categories <- reactive({
+    model <- topic_model_result()
+    !is.null(model) && !is.null(model$topic_assignments) &&
+      !is.null(embeddings_cache$embeddings)
+  })
+  outputOptions(output, "has_embedding_categories", suspendWhenHidden = FALSE)
+
+  observeEvent(input$confirm_categories, {
+    model <- topic_model_result()
+    emb <- embeddings_cache$embeddings
+    if (is.null(model) || is.null(model$topic_assignments) || is.null(emb)) {
+      showNotification("Run an embedding-based topic model first.",
+                       type = "warning", duration = 7)
+      return()
+    }
+    if (nrow(emb) != length(model$topic_assignments)) {
+      showNotification("Cached embeddings do not match the current model. Re-run the model.",
+                       type = "warning", duration = 10)
+      return()
+    }
+    TextAnalysisR:::show_loading_notification("Confirming categories...",
+                                              id = "confirmCategoriesLoading")
+    # a dropped small category warns; report it without losing the result
+    warned <- NULL
+    res <- tryCatch(
+      withCallingHandlers(
+        TextAnalysisR::validate_categories(
+          embeddings = emb,
+          categories = model$topic_assignments,
+          balance = input$confirm_balance %||% "none"),
+        warning = function(w) {
+          warned <<- conditionMessage(w)
+          invokeRestart("muffleWarning")
+        }),
+      error = function(e) {
+        showNotification(paste("Confirmation error:", e$message),
+                         type = "error", duration = 10)
+        NULL
+      }
+    )
+    TextAnalysisR:::remove_notification_by_id("confirmCategoriesLoading")
+    if (!is.null(warned)) {
+      showNotification(paste("Confirmation note:", warned),
+                       type = "warning", duration = 10)
+    }
+    confirm_categories_result(res)
+  })
+
+  output$confirm_categories_result <- renderUI({
+    res <- confirm_categories_result()
+    if (is.null(res)) return(NULL)
+    by_cat <- res$by_category[order(res$by_category$f1, na.last = TRUE), , drop = FALSE]
+    rows <- lapply(seq_len(nrow(by_cat)), function(i) {
+      tags$tr(
+        tags$td(by_cat$category[i], style = "padding: 3px 8px 3px 0;"),
+        tags$td(by_cat$support[i], style = "padding: 3px 8px; text-align: right;"),
+        tags$td(sprintf("%.2f", by_cat$f1[i]),
+                style = "padding: 3px 0; text-align: right;")
+      )
+    })
+    div(
+      style = "margin-top: 14px; font-size: 13px; color: #475569;",
+      tags$p(sprintf("Accuracy %.2f across %d categories, %d documents.",
+                     res$overall$accuracy, res$overall$n_categories,
+                     res$overall$n_documents),
+             style = "margin-bottom: 8px;"),
+      tags$table(
+        style = "width: 100%; font-size: 13px;",
+        tags$thead(tags$tr(
+          tags$th("Category", style = "text-align: left; padding-bottom: 4px;"),
+          tags$th("n", style = "text-align: right; padding-bottom: 4px;"),
+          tags$th("F1", style = "text-align: right; padding-bottom: 4px;"))),
+        tags$tbody(rows)),
+      tags$p("A low score on a small category usually means it overlaps another, not that coding failed.",
+             style = "margin-top: 8px;")
+    )
+  })
+
   observeEvent(input$embedding_run, {
     embedding_displayed(FALSE)
 
@@ -18841,7 +18932,8 @@ server <- shinyServer(function(input, output, session) {
     )), id = "embedding_model_notification")
 
     tryCatch({
-      texts <- united_tbl()$united_texts
+      # a pending residue is the next round, and already sits at the chosen unit
+      texts <- residue_texts() %||% analysis_texts()
       start_time <- Sys.time()
 
       provider <- input$topic_embedding_provider %||% "sentence-transformers"
@@ -18970,6 +19062,7 @@ server <- shinyServer(function(input, output, session) {
       })
 
       topic_model_result(embedding_result)
+      confirm_categories_result(NULL)
       topic_model_type("embedding")
 
       output$embedding_topics_info <- renderUI({
@@ -19330,7 +19423,8 @@ server <- shinyServer(function(input, output, session) {
     }
 
     model <- topic_model_result()
-    texts <- united_tbl()$united_texts
+    # indexed by topic_assignments, so it must be the same units the model saw
+    texts <- analysis_texts()
 
     topic_docs <- which(model$topic_assignments == selected_topic)
 
@@ -21142,6 +21236,28 @@ server <- shinyServer(function(input, output, session) {
   qc_codebook <- reactiveVal(NULL)
   qc_suggestions <- reactiveVal(NULL)
   qc_coded_texts <- reactiveVal(NULL)
+  residue_texts <- reactiveVal(NULL)
+
+  output$analysis_unit_label <- renderText({
+    switch(input$analysis_unit %||% "paragraph",
+           sentence = "sentence", paragraph = "paragraph", "whole document")
+  })
+
+  # categories found at one grain do not describe another, so nothing survives the change
+  observeEvent(input$analysis_unit, {
+    stale <- !is.null(topic_model_result()) || !is.null(embeddings_cache$embeddings) ||
+      !is.null(qc_suggestions())
+    if (!stale) return()
+    clear_embeddings_cache()
+    topic_model_result(NULL)
+    confirm_categories_result(NULL)
+    qc_suggestions(NULL)
+    qc_coded_texts(NULL)
+    residue_texts(NULL)
+    showNotification(
+      "Unit of analysis changed. The topic model and any codes were cleared, because categories found at one grain do not describe another.",
+      type = "warning", duration = 12)
+  }, ignoreInit = TRUE)
   qc_agreement <- reactiveVal(NULL)
   qc_retest <- reactiveVal(NULL)
 
@@ -21266,7 +21382,7 @@ server <- shinyServer(function(input, output, session) {
     out <- tryCatch(
       TextAnalysisR::apply_codes(
         texts = request$texts, codebook = request$codebook,
-        unit = input$qc_unit %||% "sentence",
+        unit = input$analysis_unit %||% "paragraph",
         max_codes = input$qc_max_codes %||% 3,
         provider = request$provider, model = request$model,
         api_key = request$api_key, delay = 0.5, verbose = FALSE),
@@ -21310,6 +21426,34 @@ server <- shinyServer(function(input, output, session) {
     pct <- round(100 * nrow(u) / max(total, 1))
     tags$p(paste0(nrow(u), " of ", total, " units (", pct, "%) received no code."),
            style = "font-size: 13px; color: #475569; margin-bottom: 8px;")
+  })
+
+  observeEvent(input$qc_cluster_uncoded, {
+    u <- qc_uncoded()
+    if (is.null(u) || nrow(u) == 0) {
+      showNotification("No uncoded units to cluster.", type = "warning", duration = 7)
+      return()
+    }
+    residue_texts(stats::setNames(u$unit_text, paste0("residue", seq_len(nrow(u)))))
+    showNotification(
+      paste0(nrow(u), " uncoded units sent to Topic Modeling. Run the model there to open the next round."),
+      type = "message", duration = 10)
+  })
+
+  output$has_residue_texts <- reactive({
+    !is.null(residue_texts())
+  })
+  outputOptions(output, "has_residue_texts", suspendWhenHidden = FALSE)
+
+  output$residue_texts_label <- renderText({
+    n <- length(residue_texts())
+    paste0("Next round: running on ", n, " uncoded units, not the full corpus.")
+  })
+
+  observeEvent(input$clear_residue_texts, {
+    residue_texts(NULL)
+    showNotification("Topic Modeling restored to the full corpus.",
+                     type = "message", duration = 5)
   })
 
   output$qc_download_uncoded <- downloadHandler(
@@ -21408,12 +21552,12 @@ server <- shinyServer(function(input, output, session) {
     }
   )
 
-  output$qc_download_accepted_rds <- downloadHandler(
-    filename = function() paste0("coded_", trimws(input$qc_coder_name %||% "coder1"), "_", Sys.Date(), ".rds"),
+  output$qc_download_accepted_xlsx <- downloadHandler(
+    filename = function() paste0("coded_", trimws(input$qc_coder_name %||% "coder1"), "_", Sys.Date(), ".xlsx"),
     content = function(file) {
       a <- qc_accepted()
       req(nrow(a) > 0)
-      saveRDS(a, file)
+      openxlsx::write.xlsx(a, file)
     }
   )
 
@@ -21491,7 +21635,7 @@ server <- shinyServer(function(input, output, session) {
         texts = request$texts, codebook = request$codebook,
         n_runs = input$qc_retest_runs %||% 2,
         sample_n = input$qc_retest_sample %||% 10,
-        unit = input$qc_unit %||% "sentence",
+        unit = input$analysis_unit %||% "paragraph",
         max_codes = input$qc_max_codes %||% 3,
         provider = request$provider, model = request$model,
         api_key = request$api_key, delay = 0.5, verbose = FALSE),

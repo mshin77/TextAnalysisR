@@ -4,17 +4,27 @@
 \alias{assign_noise}
 \title{Assign Unclustered Documents to Confirmed Categories}
 \usage{
-assign_noise(embeddings, categories, k = 5, max_distance = NULL)
+assign_noise(
+  embeddings,
+  categories,
+  k = 5,
+  max_distance = NULL,
+  unassigned = 0
+)
 }
 \arguments{
 \item{embeddings}{Numeric matrix or data frame, one row per document.}
 
-\item{categories}{Category labels; \code{NA} or \code{-1} marks a document unassigned.}
+\item{categories}{Category labels; \code{NA} or any value in \code{unassigned} marks a
+document as not yet placed.}
 
 \item{k}{Neighbours to consult (default 5).}
 
 \item{max_distance}{Cosine distance beyond which a document stays
 unassigned. \code{NULL} (default) places every document.}
+
+\item{unassigned}{Label marking a document as not yet placed. Defaults to \code{0},
+which \code{\link[=fit_embedding_model]{fit_embedding_model()}} emits for outliers.}
 }
 \value{
 A tibble with \code{index}, \code{assigned}, and \code{distance}, one row per
@@ -28,4 +38,4 @@ visible, and \code{max_distance} leaves distant documents unassigned.
 \seealso{
 \code{\link[=validate_categories]{validate_categories()}} to test the categories afterwards.
 }
-\concept{topic-modeling}
+\concept{qualitative-coding}

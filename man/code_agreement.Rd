@@ -19,7 +19,8 @@ code_agreement(
 requires \code{start} and \code{end}.}
 
 \item{metrics}{Metrics to report: any of "alpha", "kappa", "ac1", "pabak",
-"percent" (all by default). Grid alignment only.}
+"percent" (all by default). Grid alignment only. \code{pabak} is defined for
+two coders and returns \code{NA} for more.}
 
 \item{units}{"intersection" (default, units coded by every coder) or
 "union" (uncoded units count as missing). Grid alignment only.}
@@ -39,7 +40,11 @@ A list with \code{overall}, \code{by_code} (NULL when \code{by_code} is FALSE),
 \code{disagree}, and \code{independent} (NULL unless \code{codebook_authors} is supplied
 and at least two other coders remain). For grid alignment these are the
 metric, per-code, and disagreement tables; for coverage they hold
-per-coder-pair span coverage and the uncovered spans.
+per-coder-pair span coverage and the uncovered spans. In the metric tables
+\code{n} counts the units each statistic was computed on: units carrying a code
+from every coder for \code{percent}, \code{pabak}, and \code{kappa}; units carrying a code
+from at least two for \code{ac1} and \code{alpha}. \code{n} is \code{NA} wherever the estimate
+is.
 }
 \description{
 Chance-corrected agreement between two or more coders' code assignments.

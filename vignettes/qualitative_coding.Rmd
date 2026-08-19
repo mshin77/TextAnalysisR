@@ -11,23 +11,19 @@ vignette: >
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
-Qualitative coding assigns codes from a codebook to units of text, then measures how far coders
-agree. AI supplies suggestions; a human confirms, corrects, or rejects each one, and only reviewed
-rows are exported. Nothing is coded silently.
+Codes from a codebook are assigned to units of text, then inter-coder agreement is measured. AI
+supplies suggestions; a human confirms, corrects, or rejects each one, and only reviewed rows are
+exported.
 
-The sections below follow the app's Qualitative Coding tabs in order. Agreement and merging run
-live on constructed data. The coding steps call an AI provider, so they are shown as code rather
-than run here.
+Steps that call an AI provider are shown as code rather than run. The rest run on synthetic data.
 
 ```{r}
 library(TextAnalysisR)
-packageVersion("TextAnalysisR")
 ```
 
 ## 1. Codebook
 
-A codebook is a data frame with `code` and `definition` columns, plus an optional `example`.
-Definitions carry most of the weight: a code without one gives the model nothing to match against.
+A data frame with `code` and `definition`, plus an optional `example`.
 
 ```{r}
 codebook <- tibble::tibble(
@@ -45,9 +41,6 @@ codebook <- tibble::tibble(
 )
 codebook
 ```
-
-Topic labels make reasonable starting codes. The mapping is many-to-many rather than one-to-one, so
-treat seeded codes as a draft to edit rather than a finished scheme.
 
 ## 2. AI coding
 
@@ -67,68 +60,104 @@ suggestions <- apply_codes(
 )
 ```
 
-Three arguments decide what the output means.
-
 | Argument | Effect |
 |----------|--------|
-| `unit` | Splits on paragraphs, sentences, or whole documents. Paragraph is the usual unit of analysis. |
+| `unit` | Splits on sentences, paragraphs, or whole documents. Paragraph is the usual unit of analysis. |
 | `max_codes` | Allows a unit to carry none, one, or several codes. A unit that fits nothing returns `NA`. |
 | `provider` | Selects OpenAI or Gemini. `auto` picks whichever key is available. |
 
-Output columns `start` and `end` give character offsets of the unit inside its document, so a
-suggestion can be traced back to the exact text it came from.
+Columns `start` and `end` give character offsets of the unit inside its document.
 
 ## 3. Review
 
-Suggestions are not results. In the app each row carries a status of pending, accepted, edited, or
-rejected, and only accepted and edited rows reach the export. Working from R, filter on confidence
-and read the units before keeping anything.
+Only accepted and edited rows reach the export.
 
 ```{r eval = FALSE}
 accepted <- suggestions[!is.na(suggestions$code) & suggestions$confidence > 0.7, ]
 accepted$coder <- "coder1"
 ```
 
-Low-temperature settings do not guarantee stable output. `code_retest()` codes the same sample more
-than once and reports how often the runs agree, next to a baseline from shuffled labels. Retest
-agreement close to that baseline means the codes are not reproducible enough to analyze.
+`code_retest()` codes the same sample more than once and reports how often the runs agree, next to a
+baseline from shuffled labels.
 
 ```{r eval = FALSE}
 stability <- code_retest(texts, codebook, n_runs = 2, sample_n = 20)
 stability$summary
 ```
 
-A codebook only reaches what it was built to reach. `uncoded_units()` returns the units that
-received no code, with the text sliced from the character offsets recorded during coding.
+`uncoded_units()` returns the units that received no code, with the text sliced from the recorded
+offsets.
 
 ```{r}
+# synthetic units, paraphrased from the corpus
 suggestions <- tibble::tibble(
   doc_id  = c("d1", "d1", "d2"),
   unit_id = c("d1.1", "d1.2", "d2.1"),
-  start   = c(1L, 30L, 1L),
-  end     = c(28L, 62L, 34L),
+  start   = c(1L, 68L, 1L),
+  end     = c(66L, 128L, 74L),
   code    = c("access", NA_character_, NA_character_)
 )
 
 texts <- c(
-  d1 = "Screen readers open the text. The course never covered any of it.",
-  d2 = "Nobody explains who pays for it."
+  d1 = paste("Text-to-speech tools give students access to grade-level readings.",
+             "Teachers report growing confidence after the training series."),
+  d2 = "The review summarizes methodological features across the included studies."
 )
 
 uncoded_units(suggestions, texts)
 ```
 
-Reading this residue answers a different question from agreement: not whether coders applied the
-frame consistently, but whether the frame misses content that recurs. Categories that appear
-repeatedly here belong in a revised codebook or in the reporting as findings outside the original
-frame.
-
 ## 4. Agreement
 
-`code_agreement()` takes assignments from two or more coders and reports chance-corrected agreement.
+`code_agreement()` takes assignments from two or more coders.
 
 ```{r}
+# synthetic assignments
 assignments <- tibble::tibble(
+  doc_id = rep(paste0("doc", 1:10), each = 2),
+  code   = c("access", "access", "access", "access", "access", "access",
+             "instruction", "instruction", "instruction", "instruction",
+             "instruction", "assessment", "assessment", "assessment",
+             "assessment", "assessment", "assessment", "access",
+             "access", "access"),
+  coder  = rep(c("c1", "c2"), times = 10)
+)
+
+agreement <- code_agreement(assignments)
+agreement$overall
+```
+
+`n` is how many units each statistic used.
+
+| `metric` | Reads as |
+|----------|----------|
+| `percent` | Raw share of units both coders labeled identically. No correction for chance. |
+| `pabak` | Prevalence-adjusted bias-adjusted kappa: percent agreement rescaled to the -1 to 1 range. |
+| `ac1` | Gwet's agreement coefficient. Chance-corrected, stable when one code dominates. |
+| `kappa` | Cohen's kappa for two coders, Fleiss' for more. Chance-corrected against observed marginals. |
+| `alpha` | Krippendorff's alpha. Chance-corrected, handles missing units. |
+
+Which units the coders differed on:
+
+```{r}
+agreement$disagree
+```
+
+Which codes carry those disagreements:
+
+```{r}
+agreement$by_code
+```
+
+Each code is scored as a yes/no indicator, so a two-code corpus returns the same figures twice, one
+indicator being the other's complement.
+
+Chance-corrected statistics turn negative when observed agreement falls below what the marginals
+predict, which happens when nearly every unit carries the same code:
+
+```{r}
+# synthetic assignments, one code dominating
+skewed <- tibble::tibble(
   doc_id = rep(paste0("doc", 1:8), each = 2),
   code   = c("access", "access", "access", "access", "access", "access",
              "access", "access", "access", "access", "access", "access",
@@ -136,49 +165,23 @@ assignments <- tibble::tibble(
   coder  = rep(c("c1", "c2"), times = 8)
 )
 
-agreement <- code_agreement(assignments)
-agreement$overall
+code_agreement(skewed, by_code = FALSE)$overall
 ```
 
-Percent agreement is high here while kappa is near zero. That gap is the kappa paradox: when one
-code dominates, expected agreement approaches observed agreement and kappa collapses even though
-the coders rarely disagree. Gwet's AC1 and PABAK stay interpretable under that skew, which is why
-all five statistics are reported together rather than kappa alone.
+Chance alone accounts for 0.78 against an observed 0.75, so `kappa` lands at -0.14. Only `percent`
+is bounded at zero.
 
-Disagreements are listed separately so the underlying units can be re-read.
-
-```{r}
-agreement$disagree
-```
-
-Per-code agreement shows which codes carry the disagreement.
-
-```{r}
-agreement$by_code
-```
-
-### Coders who wrote the codebook
-
-A coder who wrote or revised the codebook has already calibrated against it, so agreement with that
-coder measures shared calibration as much as shared judgement. Naming those coders in
 `codebook_authors` adds an `independent` table computed among the remaining coders alone.
 
 ```{r eval = FALSE}
-agreement <- code_agreement(assignments, codebook_authors = "c1")
-agreement$independent
+code_agreement(assignments, codebook_authors = "c1")$independent
 ```
 
-Report both. A gap between `overall` and `independent` indicates the frame is harder to apply
-without having helped build it.
-
-### Coders who segment differently
-
-Grid alignment assumes coders share units. When each coder marks their own spans, boundaries rarely
-match, and pivoting on unit identity would compare rows that describe different text. Coverage
-alignment instead reports, for each ordered coder pair, the share of one coder's spans that overlap
-a same-code span from the other.
+Everything above assumes coders shared units. When each coder highlights their own stretch of text,
+`align = "coverage"` compares the highlights instead. `start` and `end` are character positions.
 
 ```{r}
+# synthetic spans
 spans <- tibble::tibble(
   doc_id = c("doc1", "doc1", "doc1"),
   coder  = c("c1", "c1", "c2"),
@@ -190,21 +193,12 @@ spans <- tibble::tibble(
 code_agreement(spans, align = "coverage")$overall
 ```
 
-Coverage is directional. One coder marking broad spans that contain another's narrow ones scores
-differently in each direction, and that asymmetry is informative rather than a defect.
+`c2`'s span sits inside `c1`'s first one. One of `c1`'s two spans was matched, so 0.50; `c2`'s only
+span was matched, so 1.00. Both directions are reported.
 
-## Combining coder files
-
-Each coder exports their accepted rows; `merge_codes()` binds the files into one table for
-`code_agreement()`.
+## 5. Combining coder files
 
 ```{r eval = FALSE}
-combined <- merge_codes(c("coder1.rds", "coder2.rds"))
+combined <- merge_codes(c("coder1.csv", "coder2.xlsx"))
 code_agreement(combined)$overall
 ```
-
-## Reporting
-
-Report the unit of analysis, how many units were coded, which agreement statistic was used and why,
-and the share of AI suggestions a human changed. The last figure is what separates assisted coding
-from automated labeling, and it is only available when review status is recorded.

@@ -1,6 +1,6 @@
 # Combine Coder Assignment Files
 
-Reads per-coder assignment files (each a saved assignments tibble) and
+Reads per-coder assignment files (each a saved assignments table) and
 binds them into one long assignments table for
 [`code_agreement()`](https://mshin77.github.io/TextAnalysisR/reference/code_agreement.md).
 Supports the async workflow where each coder codes a copy and exports
@@ -16,7 +16,9 @@ merge_codes(files)
 
 - files:
 
-  Character vector of `.rds` paths, or a list of data frames.
+  Character vector of paths, or a list of data frames. Paths may be
+  `.csv`, `.xlsx`, `.xls`, `.txt`, `.tsv`, or `.rds`; the extension
+  picks the reader. Excel files need the readxl package.
 
 ## Value
 
