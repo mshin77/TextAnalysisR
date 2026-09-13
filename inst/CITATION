@@ -4,11 +4,12 @@ bibentry(
   author   = person("Mikyung", "Shin", email = "shin.mikyung@gmail.com",
                     comment = c(ORCID = "0000-0001-7907-9193")),
   year     = 2026,
-  note     = "R package version 0.1.4",
+  note     = paste("R package version", meta$Version),
   url      = "https://github.com/mshin77/TextAnalysisR",
   textVersion = paste(
     "Shin, M. (2026).",
-    "TextAnalysisR: A text mining workflow tool (R package version 0.1.4) [Computer software].",
+    paste0("TextAnalysisR: A text mining workflow tool (R package version ",
+           meta$Version, ") [Computer software]."),
     "https://github.com/mshin77/TextAnalysisR"
   )
 )
