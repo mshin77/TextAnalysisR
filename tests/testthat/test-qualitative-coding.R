@@ -75,7 +75,7 @@ test_that(".parse_codes_response clamps confidence and dedupes codes", {
   r <- '{"assignments": [{"code": "a", "confidence": 1.7}, {"code": "a", "confidence": 0.2}]}'
   out <- TextAnalysisR:::.parse_codes_response(r, valid_codes = "a", max_codes = 3)
   expect_equal(nrow(out), 1)
-  expect_equal(out$confidence, 1)
+  expect_true(is.na(out$confidence))
 })
 
 test_that(".parse_codes_response returns one NA row for empty array or bad input", {
@@ -117,7 +117,8 @@ test_that("apply_codes returns one row per unit-code pair with a mocked provider
     codebook = cb, provider = "openai", api_key = "sk-test",
     delay = 0, verbose = FALSE
   )
-  expect_named(out, c("doc_id", "unit_id", "start", "end", "code", "confidence", "rationale"))
+  expect_named(out, c("doc_id", "unit_id", "start", "end", "code", "confidence",
+                      "rationale", "status", "error"))
   expect_equal(nrow(out), 3)
   expect_equal(out$unit_id, c("d1.1", "d1.2", "d2.1"))
   expect_equal(out$code, rep("a", 3))
@@ -544,4 +545,126 @@ test_that("split_texts splits paragraphs on blank lines", {
 
 test_that("split_texts rejects an unknown unit", {
   expect_error(split_texts(c(a = "text"), unit = "clause"))
+})
+
+test_that("parser marks an empty assignment list as none", {
+  out <- TextAnalysisR:::.parse_codes_response('{"assignments": []}', c("a", "b"), 3)
+  expect_equal(out$status, "none")
+  expect_true(is.na(out$code))
+  expect_true(is.na(out$error))
+})
+
+test_that("parser marks unparsable output as none", {
+  out <- TextAnalysisR:::.parse_codes_response("no json here", c("a"), 3)
+  expect_equal(out$status, "none")
+})
+
+test_that("parser keeps the most confident codes, not the first", {
+  json <- paste0('{"assignments": [{"code": "a", "confidence": 0.1}, ',
+                 '{"code": "b", "confidence": 0.9}]}')
+  out <- TextAnalysisR:::.parse_codes_response(json, c("a", "b"), 1)
+  expect_equal(out$code, "b")
+  expect_equal(out$confidence, 0.9)
+})
+
+test_that("parser drops an out-of-range confidence but keeps the code", {
+  json <- '{"assignments": [{"code": "a", "confidence": 85}]}'
+  out <- TextAnalysisR:::.parse_codes_response(json, c("a"), 3)
+  expect_equal(out$code, "a")
+  expect_true(is.na(out$confidence))
+  expect_true(out$offscale)
+})
+
+test_that("parser leaves proportions alone", {
+  json <- '{"assignments": [{"code": "a", "confidence": 0.85}]}'
+  out <- TextAnalysisR:::.parse_codes_response(json, c("a"), 3)
+  expect_equal(out$confidence, 0.85)
+  expect_false(out$offscale)
+})
+
+test_that("parser ranks a usable confidence above a dropped one", {
+  json <- paste0('{"assignments": [{"code": "a", "confidence": 50}, ',
+                 '{"code": "b", "confidence": 0.4}]}')
+  out <- TextAnalysisR:::.parse_codes_response(json, c("a", "b"), 1)
+  expect_equal(out$code, "b")
+})
+
+test_that("apply_codes warns when a confidence is out of range", {
+  cb <- tibble::tibble(code = "a", definition = "d")
+  local_mocked_bindings(
+    call_llm_api = function(...) '{"assignments": [{"code": "a", "confidence": 85}]}',
+    .package = "TextAnalysisR"
+  )
+  expect_warning(
+    apply_codes(texts = c(d1 = "One sentence."), codebook = cb, unit = "sentence",
+                provider = "openai", api_key = "k", delay = 0, verbose = FALSE),
+    "outside 0 to 1"
+  )
+})
+
+test_that("apply_codes reports a failed call as error, not as an uncoded unit", {
+  cb <- tibble::tibble(code = "a", definition = "d")
+  local_mocked_bindings(
+    call_llm_api = function(...) stop("provider unreachable"),
+    .package = "TextAnalysisR"
+  )
+  out <- suppressWarnings(
+    apply_codes(texts = c(d1 = "One sentence."), codebook = cb, unit = "sentence",
+                provider = "openai", api_key = "k", delay = 0, verbose = FALSE)
+  )
+  expect_equal(out$status, "error")
+  expect_match(out$error, "unreachable")
+  expect_equal(nrow(uncoded_units(out, c(d1 = "One sentence."))), 0)
+})
+
+test_that("apply_codes reports a declined unit as uncoded", {
+  cb <- tibble::tibble(code = "a", definition = "d")
+  local_mocked_bindings(
+    call_llm_api = function(...) '{"assignments": []}',
+    .package = "TextAnalysisR"
+  )
+  out <- apply_codes(texts = c(d1 = "One sentence."), codebook = cb, unit = "sentence",
+                     provider = "openai", api_key = "k", delay = 0, verbose = FALSE)
+  expect_equal(out$status, "none")
+  expect_equal(nrow(uncoded_units(out, c(d1 = "One sentence."))), 1)
+})
+
+test_that("apply_codes warns when a call fails", {
+  cb <- tibble::tibble(code = "a", definition = "d")
+  local_mocked_bindings(
+    call_llm_api = function(...) stop("boom"),
+    .package = "TextAnalysisR"
+  )
+  expect_warning(
+    apply_codes(texts = c(d1 = "One sentence."), codebook = cb, unit = "sentence",
+                provider = "openai", api_key = "k", delay = 0, verbose = FALSE),
+    "failed to reach the provider"
+  )
+})
+
+test_that("max_tokens scales with max_codes", {
+  cb <- tibble::tibble(code = c("a", "b"), definition = c("d", "e"))
+  seen <- NULL
+  local_mocked_bindings(
+    call_llm_api = function(..., max_tokens) {
+      seen <<- max_tokens
+      '{"assignments": []}'
+    },
+    .package = "TextAnalysisR"
+  )
+  apply_codes(texts = c(d1 = "One."), codebook = cb, unit = "sentence", max_codes = 5,
+              provider = "openai", api_key = "k", delay = 0, verbose = FALSE)
+  expect_equal(seen, 520L)
+})
+
+test_that("merge_codes warns when a source is off the 0 to 1 scale", {
+  a <- tibble::tibble(doc_id = "d1", code = "a", coder = "c1", confidence = 0.8)
+  b <- tibble::tibble(doc_id = "d1", code = "a", coder = "c2", confidence = 80)
+  expect_warning(merge_codes(list(a, b)), "outside 0 to 1")
+})
+
+test_that("merge_codes stays quiet when every source is in range", {
+  a <- tibble::tibble(doc_id = "d1", code = "a", coder = "c1", confidence = 0.8)
+  b <- tibble::tibble(doc_id = "d1", code = "a", coder = "c2", confidence = NA_real_)
+  expect_silent(merge_codes(list(a, b)))
 })

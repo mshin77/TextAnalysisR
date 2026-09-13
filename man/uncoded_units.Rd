@@ -8,7 +8,7 @@ uncoded_units(assignments, texts)
 }
 \arguments{
 \item{assignments}{Tibble from \code{\link[=apply_codes]{apply_codes()}}, with \code{doc_id}, \code{unit_id},
-\code{start}, \code{end}, and \code{code}.}
+\code{start}, \code{end}, and \code{code}. Units with \code{status} "error" are excluded.}
 
 \item{texts}{Character vector of the documents passed to \code{\link[=apply_codes]{apply_codes()}}.
 Names become \code{doc_id}; unnamed vectors are keyed by position.}

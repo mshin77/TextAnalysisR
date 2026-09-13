@@ -21397,7 +21397,9 @@ server <- shinyServer(function(input, output, session) {
       s <- substr(request$texts[[out$doc_id[i]]], out$start[i], out$end[i])
       if (nchar(s) > 160) paste0(substr(s, 1, 157), "...") else s
     }, character(1))
-    out$status <- ifelse(is.na(out$code), "no code", "pending")
+    reached <- if ("status" %in% names(out)) out$status != "error" else rep(TRUE, nrow(out))
+    out$status <- ifelse(!reached, "call failed",
+                         ifelse(is.na(out$code), "no code", "pending"))
     qc_suggestions(out)
     qc_coded_texts(request$texts)
     TextAnalysisR:::show_completion_notification("Code suggestions ready. Confirm them in the Review tab.")

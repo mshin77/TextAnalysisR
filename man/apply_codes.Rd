@@ -13,6 +13,7 @@ apply_codes(
   model = NULL,
   temperature = 0,
   api_key = NULL,
+  max_tokens = NULL,
   delay = 1,
   verbose = TRUE
 )
@@ -37,6 +38,8 @@ fits return one row with \code{code = NA}.}
 
 \item{api_key}{Optional API key; falls back to the provider env var.}
 
+\item{max_tokens}{Response token cap; \code{NULL} (default) scales with \code{max_codes}.}
+
 \item{delay}{Seconds to wait between provider calls (default 1).}
 
 \item{verbose}{Logical; print per-unit progress (default TRUE).}
@@ -44,8 +47,9 @@ fits return one row with \code{code = NA}.}
 \value{
 A tibble with one row per unit-code pair: \code{doc_id}, \code{unit_id},
 \code{start}, \code{end} (character offsets of the unit within its document),
-\code{code}, \code{confidence}, \code{rationale}. Returns \code{invisible(NULL)} when no
-provider key is available.
+\code{code}, \code{confidence} (0 to 1, \code{NA} when none was returned or the value was
+off scale), \code{rationale}, \code{status} ("ok", "none", or "error"), and \code{error}.
+Returns \code{invisible(NULL)} when no provider key is available.
 }
 \description{
 Suggests codes for each unit of text from a supplied codebook using an AI

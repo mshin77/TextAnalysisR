@@ -73,8 +73,8 @@ Columns `start` and `end` give character offsets of the unit inside its document
 Only accepted and edited rows reach the export.
 
 ```{r eval = FALSE}
-accepted <- suggestions[!is.na(suggestions$code) & suggestions$confidence > 0.7, ]
-accepted$coder <- "coder1"
+review <- subset(suggestions, status == "ok")
+review$coder <- "coder1"
 ```
 
 `code_retest()` codes the same sample more than once and reports how often the runs agree, next to a

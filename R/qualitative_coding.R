@@ -87,7 +87,9 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
 
 #' @keywords internal
 .parse_codes_response <- function(response, valid_codes, max_codes) {
-  none <- tibble::tibble(code = NA_character_, confidence = NA_real_, rationale = NA_character_)
+  none <- tibble::tibble(code = NA_character_, confidence = NA_real_,
+                         rationale = NA_character_, status = "none",
+                         error = NA_character_, offscale = FALSE)
   start <- regexpr("\\{", response)
   end <- regexpr("\\}(?=[^}]*$)", response, perl = TRUE)
   if (start < 1 || end < 1 || end < start) return(none)
@@ -100,13 +102,13 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
   a$code <- as.character(a$code)
   a <- a[!is.na(a$code) & a$code %in% valid_codes & !duplicated(a$code), , drop = FALSE]
   if (nrow(a) == 0) return(none)
-  a <- a[seq_len(min(nrow(a), max_codes)), , drop = FALSE]
   conf <- if ("confidence" %in% names(a)) suppressWarnings(as.numeric(a$confidence)) else rep(NA_real_, nrow(a))
-  tibble::tibble(
-    code = a$code,
-    confidence = pmin(1, pmax(0, conf)),
-    rationale = if ("rationale" %in% names(a)) as.character(a$rationale) else NA_character_
-  )
+  offscale <- !is.na(conf) & (conf < 0 | conf > 1)
+  conf[offscale] <- NA_real_
+  keep <- order(conf, decreasing = TRUE, na.last = TRUE)[seq_len(min(nrow(a), max_codes))]
+  rationale <- if ("rationale" %in% names(a)) as.character(a$rationale)[keep] else NA_character_
+  tibble::tibble(code = a$code[keep], confidence = conf[keep], rationale = rationale,
+                 status = "ok", error = NA_character_, offscale = any(offscale))
 }
 
 #' @keywords internal
@@ -138,13 +140,15 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
 #' @param model Optional model id; provider default when NULL.
 #' @param temperature Sampling temperature (default 0 for reproducibility).
 #' @param api_key Optional API key; falls back to the provider env var.
+#' @param max_tokens Response token cap; `NULL` (default) scales with `max_codes`.
 #' @param delay Seconds to wait between provider calls (default 1).
 #' @param verbose Logical; print per-unit progress (default TRUE).
 #'
 #' @return A tibble with one row per unit-code pair: `doc_id`, `unit_id`,
 #'   `start`, `end` (character offsets of the unit within its document),
-#'   `code`, `confidence`, `rationale`. Returns `invisible(NULL)` when no
-#'   provider key is available.
+#'   `code`, `confidence` (0 to 1, `NA` when none was returned or the value was
+#'   off scale), `rationale`, `status` ("ok", "none", or "error"), and `error`.
+#'   Returns `invisible(NULL)` when no provider key is available.
 #'
 #' @seealso [code_retest()] for AI stability; [code_agreement()] for
 #'   inter-coder reliability; [call_llm_api()] for the direct provider call.
@@ -155,10 +159,11 @@ apply_codes <- function(texts, codebook,
                         max_codes = 3,
                         provider = c("auto", "openai", "gemini"),
                         model = NULL, temperature = 0, api_key = NULL,
-                        delay = 1, verbose = TRUE) {
+                        max_tokens = NULL, delay = 1, verbose = TRUE) {
   unit <- match.arg(unit)
   provider <- match.arg(provider)
   max_codes <- max(1L, as.integer(max_codes))
+  max_tokens <- if (is.null(max_tokens)) 120L + 80L * max_codes else as.integer(max_tokens)
   if (!requireNamespace("httr", quietly = TRUE) ||
       !requireNamespace("jsonlite", quietly = TRUE)) {
     stop("The 'httr' and 'jsonlite' packages are required. ",
@@ -198,7 +203,7 @@ apply_codes <- function(texts, codebook,
     "Assign between zero and ", max_codes, " codes from the codebook to the text. ",
     "Codebook:\n", .codebook_prompt(codebook),
     "\n\nReturn ONLY a JSON object: {\"assignments\": [{\"code\": \"<code>\", ",
-    "\"confidence\": <0-1>, \"rationale\": \"<short reason>\"}]}. ",
+    "\"confidence\": <number between 0 and 1, such as 0.85>, \"rationale\": \"<short reason>\"}]}. ",
     "Use an empty array when no code fits.")
 
   valid_codes <- codebook$code
@@ -209,18 +214,31 @@ apply_codes <- function(texts, codebook,
       response <- call_llm_api(
         provider = provider, system_prompt = system_prompt,
         user_prompt = units_tbl$unit_text[i], model = model,
-        temperature = temperature, max_tokens = 300, api_key = api_key)
+        temperature = temperature, max_tokens = max_tokens, api_key = api_key)
       .parse_codes_response(response, valid_codes, max_codes)
     }, error = function(e) {
-      tibble::tibble(code = NA_character_, confidence = NA_real_, rationale = NA_character_)
+      tibble::tibble(code = NA_character_, confidence = NA_real_,
+                     rationale = NA_character_, status = "error",
+                     error = conditionMessage(e), offscale = FALSE)
     })
     if (i < n_units) Sys.sleep(delay)
     tibble::tibble(
       doc_id = units_tbl$doc_id[i], unit_id = units_tbl$unit_id[i],
       start = units_tbl$start[i], end = units_tbl$end[i],
-      code = parsed$code, confidence = parsed$confidence, rationale = parsed$rationale)
+      code = parsed$code, confidence = parsed$confidence, rationale = parsed$rationale,
+      status = parsed$status, error = parsed$error, offscale = parsed$offscale)
   })
-  dplyr::bind_rows(rows)
+  out <- dplyr::bind_rows(rows)
+  failed <- length(unique(out$unit_id[out$status == "error"]))
+  if (failed > 0) {
+    warning(sprintf("%d of %d units failed to reach the provider; status is 'error' for those rows.",
+                    failed, n_units), call. = FALSE)
+  }
+  if (any(out$offscale)) {
+    warning("Confidence values outside 0 to 1 were dropped; those rows keep the code with confidence NA.",
+            call. = FALSE)
+  }
+  out[, setdiff(names(out), "offscale")]
 }
 
 #' @title AI Coding Retest Stability
@@ -543,7 +561,7 @@ code_agreement <- function(assignments,
 #' codebook was built to find.
 #'
 #' @param assignments Tibble from [apply_codes()], with `doc_id`, `unit_id`,
-#'   `start`, `end`, and `code`.
+#'   `start`, `end`, and `code`. Units with `status` "error" are excluded.
 #' @param texts Character vector of the documents passed to [apply_codes()].
 #'   Names become `doc_id`; unnamed vectors are keyed by position.
 #'
@@ -568,7 +586,14 @@ uncoded_units <- function(assignments, texts) {
   doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
   lookup <- stats::setNames(as.character(texts), doc_id)
 
-  bare <- assignments %>%
+  reached <- if ("status" %in% names(assignments)) {
+    assignments[assignments$status != "error", , drop = FALSE]
+  } else {
+    assignments
+  }
+  if (nrow(reached) == 0) return(empty)
+
+  bare <- reached %>%
     dplyr::group_by(.data$unit_id) %>%
     dplyr::filter(all(is.na(.data$code))) %>%
     dplyr::slice(1) %>%
@@ -628,5 +653,14 @@ uncoded_units <- function(assignments, texts) {
 merge_codes <- function(files) {
   if (is.data.frame(files)) files <- list(files)
   parts <- lapply(files, function(f) if (is.data.frame(f)) f else .read_assignments(f))
+  offscale <- vapply(parts, function(p) {
+    if (!"confidence" %in% names(p)) return(FALSE)
+    conf <- suppressWarnings(as.numeric(p$confidence))
+    any(!is.na(conf) & (conf < 0 | conf > 1))
+  }, logical(1))
+  if (any(offscale)) {
+    warning(sprintf("%d of %d sources carry confidence outside 0 to 1; agreement sorts on that column.",
+                    sum(offscale), length(parts)), call. = FALSE)
+  }
   return(dplyr::distinct(dplyr::bind_rows(parts)))
 }
