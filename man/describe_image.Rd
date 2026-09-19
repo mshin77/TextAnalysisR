@@ -11,7 +11,8 @@ describe_image(
   api_key = NULL,
   prompt =
     "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
-  timeout = 120
+  timeout = 120,
+  mime_type = "image/png"
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ describe_image(
 \item{prompt}{Character: Description prompt}
 
 \item{timeout}{Numeric: Request timeout in seconds (default: 120)}
+
+\item{mime_type}{Character: Image media type, such as "image/png" or "image/jpeg"}
 }
 \value{
 Character string description, or NULL on failure

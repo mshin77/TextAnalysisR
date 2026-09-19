@@ -121,6 +121,182 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
   paste(lines, collapse = "\n")
 }
 
+#' @keywords internal
+.resolve_provider <- function(provider, api_key) {
+  env <- c(openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
+  prefix <- c(openai = "^sk-", gemini = "^AIza")
+  from_key <- if (is.null(api_key)) {
+    character(0)
+  } else {
+    names(prefix)[vapply(prefix, grepl, logical(1), x = api_key)]
+  }
+  if (provider == "auto") provider <- c(from_key, names(env)[nzchar(Sys.getenv(env))])[1]
+  if (is.na(provider)) {
+    message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
+    return(NULL)
+  }
+  if (is.null(api_key)) api_key <- Sys.getenv(env[[provider]])
+  if (!nzchar(api_key)) return(.notify_missing_api_key(provider))
+  list(provider = provider, api_key = api_key)
+}
+
+#' @keywords internal
+.codes_seen <- function(book, assigned, k) {
+  if (nrow(book) == 0) return("none yet")
+  used <- tabulate(match(assigned, book$code), nbins = nrow(book))
+  keep <- utils::head(order(used, decreasing = TRUE), min(nrow(book), k))
+  paste(sprintf("- %s: %s", book$code[keep], book$definition[keep]), collapse = "\n")
+}
+
+#' @keywords internal
+.parse_new_code <- function(response, existing) {
+  none <- list(code = NA_character_, definition = NA_character_,
+               opened_new = FALSE, status = "none")
+  start <- regexpr("\\{", response)
+  end <- regexpr("\\}(?=[^}]*$)", response, perl = TRUE)
+  if (start < 1 || end < 1 || end < start) return(none)
+  parsed <- tryCatch(
+    jsonlite::fromJSON(substr(response, start, end), simplifyVector = TRUE),
+    error = function(e) NULL
+  )
+  code <- trimws(as.character(parsed$code)[1])
+  if (is.na(code) || !nzchar(code)) return(none)
+  hit <- match(tolower(code), tolower(existing))
+  if (!is.na(hit)) {
+    return(list(code = existing[hit], definition = NA_character_,
+                opened_new = FALSE, status = "ok"))
+  }
+  definition <- trimws(as.character(parsed$definition)[1])
+  if (is.na(definition) || !nzchar(definition)) return(none)
+  list(code = code, definition = definition, opened_new = TRUE, status = "ok")
+}
+
+#' @title Build a Codebook From Texts
+#'
+#' @description
+#' Reads one unit of text at a time with the codebook so far in view, and either
+#' reuses a code already in it or opens a new one. The codebook is an output
+#' here, not an input as in [apply_codes()]. Supplying `codebook` seeds the
+#' reading, which also covers starting from a priori codes or continuing a
+#' stopped run. Categories are proposed for human review, not settled.
+#'
+#' @param texts Character vector of documents. Names become `doc_id`.
+#' @param codebook Optional data frame with `code` and `definition` columns to
+#'   start from; `NULL` (default) starts empty.
+#' @param unit Unit of analysis: "sentence" (default), "paragraph" (split on
+#'   blank lines), or "document" (one unit per element of `texts`).
+#' @param order Unit ids giving the reading sequence; `NULL` (default) reads
+#'   in corpus order. Generation is sequential, so the units read first shape
+#'   the frame the rest are matched against.
+#' @param context_k Maximum codes shown in the prompt, most-used first; `Inf`
+#'   (default) shows all. Capping keeps the reuse decision legible as the
+#'   codebook grows.
+#' @param stop_after Stop once this many consecutive units open no new code;
+#'   `Inf` (default) reads the whole corpus.
+#' @param provider AI provider: "auto" (default), "openai", or "gemini".
+#' @param model Optional model id; provider default when NULL.
+#' @param temperature Sampling temperature (default 0 for reproducibility).
+#' @param api_key Optional API key; falls back to the provider env var.
+#' @param max_tokens Response token cap (default 200).
+#' @param delay Seconds to wait between provider calls (default 1).
+#' @param verbose Logical; print per-unit progress (default TRUE).
+#'
+#' @return A list with `codebook` (tibble of `code`, `definition`,
+#'   `first_unit`) and `trace` (one row per unit read: `position`, `doc_id`,
+#'   `unit_id`, `assigned`, `opened_new`, `n_categories`, `status`), one row
+#'   per unit read in reading order. The trace shows where categories stopped
+#'   accumulating. Returns `invisible(NULL)` when no provider key is
+#'   available.
+#'
+#' @seealso [apply_codes()] to code a corpus once the codebook is settled;
+#'   [uncoded_units()] for what a codebook does not reach.
+#' @concept qualitative-coding
+#' @export
+generate_codes <- function(texts, codebook = NULL,
+                           unit = c("sentence", "paragraph", "document"),
+                           order = NULL, context_k = Inf, stop_after = Inf,
+                           provider = c("auto", "openai", "gemini"),
+                           model = NULL, temperature = 0, api_key = NULL,
+                           max_tokens = 200, delay = 1, verbose = TRUE) {
+  unit <- match.arg(unit)
+  provider <- match.arg(provider)
+  if (!requireNamespace("httr", quietly = TRUE) ||
+      !requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("The 'httr' and 'jsonlite' packages are required. ",
+         "Install with install.packages(c('httr', 'jsonlite')).", call. = FALSE)
+  }
+  book <- tibble::tibble(code = character(0), definition = character(0),
+                         first_unit = character(0))
+  if (!is.null(codebook)) {
+    seeded <- .validate_codebook(codebook)
+    book <- tibble::tibble(code = seeded$code, definition = seeded$definition,
+                           first_unit = NA_character_)
+  }
+  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  units_tbl <- split_texts(stats::setNames(as.character(texts), doc_id), unit)
+  if (nrow(units_tbl) == 0) {
+    stop("texts contain no codable units.", call. = FALSE)
+  }
+  reading <- if (is.null(order)) {
+    seq_len(nrow(units_tbl))
+  } else {
+    stats::na.omit(match(as.character(order), units_tbl$unit_id))
+  }
+  if (length(reading) == 0) {
+    stop("order matches no unit ids; see the unit_id column of split_texts().",
+         call. = FALSE)
+  }
+  resolved <- .resolve_provider(provider, api_key)
+  if (is.null(resolved)) return(invisible(NULL))
+
+  n_units <- length(reading)
+  assigned <- character(0)
+  rows <- vector("list", n_units)
+  quiet <- 0L
+  for (p in seq_len(n_units)) {
+    i <- reading[p]
+    if (verbose) message("Reading unit ", p, " of ", n_units)
+    parsed <- tryCatch({
+      response <- call_llm_api(
+        provider = resolved$provider,
+        system_prompt = paste0(
+          "Read one unit of text and give a short code naming what it is about. ",
+          "Reuse a code from the list when one fits; otherwise open one new code. ",
+          "Codes so far:\n", .codes_seen(book, assigned, context_k),
+          "\n\nReturn ONLY a JSON object: {\"code\": \"<code>\", ",
+          "\"definition\": \"<one sentence, required only for a new code>\"}. ",
+          "Return an empty code when the unit carries nothing codable."),
+        user_prompt = units_tbl$unit_text[i], model = model,
+        temperature = temperature, max_tokens = max_tokens,
+        api_key = resolved$api_key)
+      .parse_new_code(response, book$code)
+    }, error = function(e) {
+      list(code = NA_character_, definition = NA_character_,
+           opened_new = FALSE, status = "error")
+    })
+    if (isTRUE(parsed$opened_new)) {
+      book <- tibble::add_row(book, code = parsed$code,
+                              definition = parsed$definition,
+                              first_unit = units_tbl$unit_text[i])
+    }
+    assigned <- c(assigned, parsed$code)
+    rows[[p]] <- tibble::tibble(
+      position = p, doc_id = units_tbl$doc_id[i], unit_id = units_tbl$unit_id[i],
+      assigned = parsed$code, opened_new = isTRUE(parsed$opened_new),
+      n_categories = nrow(book), status = parsed$status)
+    quiet <- if (isTRUE(parsed$opened_new)) 0L else quiet + 1L
+    if (quiet >= stop_after) break
+    if (p < n_units) Sys.sleep(delay)
+  }
+  trace <- dplyr::bind_rows(rows)
+  failed <- sum(trace$status == "error")
+  if (failed > 0) {
+    warning(sprintf("%d of %d units failed to reach the provider; status is 'error' for those rows.",
+                    failed, nrow(trace)), call. = FALSE)
+  }
+  list(codebook = book, trace = trace)
+}
+
 #' @title Apply a Codebook to Texts
 #'
 #' @description
@@ -178,26 +354,10 @@ apply_codes <- function(texts, codebook,
     stop("texts contain no codable units.", call. = FALSE)
   }
 
-  if (provider == "auto") {
-    provider <- if (!is.null(api_key) && grepl("^sk-", api_key)) {
-      "openai"
-    } else if (!is.null(api_key) && grepl("^AIza", api_key)) {
-      "gemini"
-    } else if (nzchar(Sys.getenv("OPENAI_API_KEY"))) {
-      "openai"
-    } else if (nzchar(Sys.getenv("GEMINI_API_KEY"))) {
-      "gemini"
-    } else {
-      message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
-      return(invisible(NULL))
-    }
-  }
-  if (is.null(api_key)) {
-    api_key <- switch(provider,
-      "openai" = Sys.getenv("OPENAI_API_KEY"),
-      "gemini" = Sys.getenv("GEMINI_API_KEY"))
-  }
-  if (!nzchar(api_key)) return(.notify_missing_api_key(provider))
+  resolved <- .resolve_provider(provider, api_key)
+  if (is.null(resolved)) return(invisible(NULL))
+  provider <- resolved$provider
+  api_key <- resolved$api_key
 
   system_prompt <- paste0(
     "Assign between zero and ", max_codes, " codes from the codebook to the text. ",
@@ -244,12 +404,9 @@ apply_codes <- function(texts, codebook,
 #' @title AI Coding Retest Stability
 #'
 #' @description
-#' Codes the same sample of texts more than once at identical settings and
-#' reports how often the runs agree, next to a shuffled-label baseline. Low
-#' temperature does not guarantee stable output, so retest agreement is
-#' measured rather than assumed. The baseline shows the agreement expected if
-#' codes were unrelated to the texts; retest agreement should sit well above
-#' it.
+#' Codes the same sample more than once at identical settings and reports how
+#' often the runs agree, against a shuffled-label baseline. Low temperature
+#' does not guarantee stable output, so stability is measured, not assumed.
 #'
 #' @param texts Character vector of documents. Names become `doc_id`.
 #' @param codebook Data frame with `code` and `definition` columns.
@@ -475,16 +632,6 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #' agreement, Gwet's AC1, and PABAK computed inline. AC1 and PABAK stay stable
 #' under skewed code prevalence, where kappa collapses (the kappa paradox).
 #'
-#' With `align = "grid"` (default), coders are assumed to share units: rows
-#' pivot on `unit_id` when present, else `doc_id`. When a coder assigned more
-#' than one code to a unit, the highest-confidence code is kept (first row
-#' when no `confidence` column exists); per-code multi-label agreement is in
-#' `by_code`. With `align = "coverage"`, coders may have different span
-#' boundaries: for each ordered coder pair, the proportion of one coder's
-#' spans that overlap a same-code span from the other is reported instead
-#' (chance-corrected metrics do not apply across unaligned units, so
-#' `metrics` and `units` are ignored).
-#'
 #' @param assignments Data frame with `doc_id`, `code`, and `coder` columns.
 #'   `unit_id` and `confidence` are used when present. Coverage additionally
 #'   requires `start` and `end`.
@@ -494,7 +641,9 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #' @param units "intersection" (default, units coded by every coder) or
 #'   "union" (uncoded units count as missing). Grid alignment only.
 #' @param by_code Logical; also report per-code agreement.
-#' @param align "grid" (default) or "coverage".
+#' @param align "grid" (default) when coders share units, "coverage" when each
+#'   marked its own spans. Grid keeps the highest-confidence code where a coder
+#'   gave several; coverage reports span overlap and ignores `metrics`/`units`.
 #' @param codebook_authors Character vector of `coder` values that wrote or
 #'   revised the codebook. When supplied, metrics are also computed among the
 #'   remaining coders alone. Agreement with a coder who shaped the coding frame
@@ -555,10 +704,8 @@ code_agreement <- function(assignments,
 #'
 #' @description
 #' Returns the units [apply_codes()] left uncoded, paired with their text.
-#' These units are the ones a codebook does not reach. Reviewing them shows
-#' whether content recurs in the corpus that the coding frame omits, and is the
-#' step that keeps a codebook-constrained analysis from reporting only what the
-#' codebook was built to find.
+#' Reading them is what shows whether the corpus carries content the coding
+#' frame omits.
 #'
 #' @param assignments Tibble from [apply_codes()], with `doc_id`, `unit_id`,
 #'   `start`, `end`, and `code`. Units with `status` "error" are excluded.
@@ -608,6 +755,8 @@ uncoded_units <- function(assignments, texts) {
     end = as.integer(bare$end),
     unit_text = unname(substr(lookup[keys], bare$start, bare$end))
   )
+  chr <- vapply(out, is.character, logical(1))
+  out[chr] <- lapply(out[chr], to_utf8)
   return(out)
 }
 
@@ -617,9 +766,11 @@ uncoded_units <- function(assignments, texts) {
   out <- switch(
     ext,
     rds = readRDS(path),
-    csv = utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE),
+    csv = utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE,
+                          fileEncoding = sniff_encoding(path)),
     txt = ,
-    tsv = utils::read.delim(path, stringsAsFactors = FALSE, check.names = FALSE),
+    tsv = utils::read.delim(path, stringsAsFactors = FALSE, check.names = FALSE,
+                            fileEncoding = sniff_encoding(path)),
     xls = ,
     xlsx = {
       if (!requireNamespace("readxl", quietly = TRUE)) {

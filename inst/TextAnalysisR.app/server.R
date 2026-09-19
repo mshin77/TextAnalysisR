@@ -99,6 +99,12 @@ server <- shinyServer(function(input, output, session) {
   })
 
   `%||%` <- function(a, b) if (is.null(a)) b else a
+  .utf8_df <- function(df) {
+    chr <- vapply(df, is.character, logical(1))
+    df[chr] <- lapply(df[chr], TextAnalysisR::to_utf8)
+    df
+  }
+
 
   pick_model <- function(chosen, default) {
     if (is.null(chosen) || !nzchar(chosen)) default else chosen
@@ -503,9 +509,15 @@ server <- shinyServer(function(input, output, session) {
     tryCatch({
       TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
 
-      file_data <- input$file[1, ]
-      file_info_check <- list(name = file_data$name, size = file_data$size, datapath = file_data$datapath)
-      TextAnalysisR:::validate_file_upload(file_info_check)
+      invisible(lapply(seq_len(nrow(input$file)), function(i) {
+        row <- input$file[i, ]
+        tryCatch(
+          TextAnalysisR:::validate_file_upload(
+            list(name = row$name, size = row$size, datapath = row$datapath)
+          ),
+          error = function(e) stop(row$name, ": ", conditionMessage(e), call. = FALSE)
+        )
+      }))
 
       file_validated(TRUE)
 
@@ -521,6 +533,22 @@ server <- shinyServer(function(input, output, session) {
     })
   })
 
+  image_exts <- c("png", "jpg", "jpeg", "webp", "gif")
+
+  read_plain_file <- function(path, ext) {
+    if (!ext %in% c("csv", "txt")) return(NULL)
+    tryCatch({
+      if (ext == "csv") {
+        .utf8_df(read.csv(path, stringsAsFactors = FALSE, fill = TRUE,
+                          fileEncoding = TextAnalysisR::sniff_encoding(path)))
+      } else {
+        lines <- trimws(readr::read_lines(
+          path, locale = readr::locale(encoding = TextAnalysisR::sniff_encoding(path)), progress = FALSE))
+        data.frame(text = lines[nzchar(lines)], stringsAsFactors = FALSE)
+      }
+    }, error = function(e) NULL)
+  }
+
   observeEvent(file_validated(), {
     req(isTRUE(file_validated()))
     req(input$file)
@@ -530,313 +558,206 @@ server <- shinyServer(function(input, output, session) {
         stop("Invalid file upload data")
       }
 
-      file_data <- input$file[1, ]
-
       required_cols <- c("name", "size", "type", "datapath")
-      missing_cols <- setdiff(required_cols, names(file_data))
+      missing_cols <- setdiff(required_cols, names(input$file))
       if (length(missing_cols) > 0) {
         stop("Missing file information: ", paste(missing_cols, collapse = ", "))
       }
 
-      file_size_mb <- file_data$size / (1024^2)
-      if (file_size_mb > 100) {
+      total_mb <- sum(input$file$size) / (1024^2)
+      if (total_mb > 100) {
         showModal(modalDialog(
-          title = tags$div(
-            style = "color: #f59e0b;",
-            icon("exclamation-triangle"),
-            " File Too Large"
-          ),
-          paste("The uploaded file is", round(file_size_mb, 2), "MB. Please upload a file smaller than 100MB."),
-          easyClose = TRUE,
-          footer = modalButton("Close")
+          title = tags$div(style = "color: #f59e0b;", icon("exclamation-triangle"), " Upload Too Large"),
+          paste0("The selected files total ", round(total_mb, 2),
+                 " MB. Keep the combined upload under 100MB."),
+          easyClose = TRUE, footer = modalButton("Close")
         ))
         return()
       }
 
-      if (file_size_mb > 50) {
-        TextAnalysisR:::show_loading_notification("Processing large file...", id = "loadingFile")
-      }
+      absent <- input$file$name[!file.exists(input$file$datapath)]
+      if (length(absent) > 0) stop("File not found: ", paste(absent, collapse = ", "))
 
-      if (!file.exists(file_data$datapath)) {
-        stop("File not found")
-      }
-
-      file_info <- data.frame(filepath = file_data$datapath, stringsAsFactors = FALSE)
-
-      if (file.info(file_data$datapath)$size == 0) {
-        stop("File is empty")
-      }
+      empty <- input$file$name[file.info(input$file$datapath)$size == 0]
+      if (length(empty) > 0) stop("File is empty: ", paste(empty, collapse = ", "))
 
       if (!requireNamespace("TextAnalysisR", quietly = TRUE)) {
         stop("TextAnalysisR package is not available")
       }
-
       if (!exists("import_files", where = asNamespace("TextAnalysisR"))) {
         stop("TextAnalysisR::import_files function not found")
       }
 
-      file_extension <- tolower(tools::file_ext(file_data$name))
+      exts <- tolower(tools::file_ext(input$file$name))
+      use_multimodal <- isolate(isTRUE(input$enable_multimodal))
+      needs_vision <- any(exts %in% image_exts) || (use_multimodal && any(exts == "pdf"))
 
-      if (file_extension == "pdf") {
-        use_multimodal <- isolate(isTRUE(input$enable_multimodal))
+      vision_provider <- isolate(input$vision_provider %||% "openai")
+      api_key <- switch(vision_provider,
+        "openai" = isolate(get_api_key("openai", input$openai_api_key)),
+        "gemini" = isolate(get_api_key("gemini", input$gemini_vision_api_key)),
+        NULL
+      )
+      vision_model <- switch(vision_provider,
+        "openai" = isolate(pick_model(input$openai_vision_model, "gpt-4.1")),
+        "gemini" = isolate(pick_model(input$gemini_vision_model, "gemini-2.5-flash")),
+        NULL
+      )
 
-        loading_msg <- if (use_multimodal) {
-          "Extracting text and analyzing images/charts..."
-        } else {
-          "Processing PDF file..."
+      if (needs_vision) {
+        if (is.null(api_key) || !nzchar(api_key)) {
+          stop("A ", vision_provider, " API key is required to read images. Enter one in the sidebar.")
         }
-        TextAnalysisR:::show_loading_notification(loading_msg, id = "processingPDF")
+        log_ai_usage("Vision OCR", vision_provider, vision_model)
+      }
 
-        vision_provider <- isolate(input$vision_provider %||% "openai")
-        api_key <- switch(vision_provider,
-          "openai" = isolate(get_api_key("openai", input$openai_api_key)),
-          "gemini" = isolate(get_api_key("gemini", input$gemini_vision_api_key)),
-          NULL
-        )
-        vision_model <- switch(vision_provider,
-          "openai" = isolate(pick_model(input$openai_vision_model, "gpt-4.1")),
-          "gemini" = isolate(pick_model(input$gemini_vision_model, "gemini-2.5-flash")),
-          NULL
-        )
-        if (use_multimodal) log_ai_usage("Vision OCR", vision_provider, vision_model)
+      TextAnalysisR:::show_loading_notification(
+        if (needs_vision) "Reading files and describing images..."
+        else paste0("Processing ", nrow(input$file),
+                    if (nrow(input$file) == 1) " file..." else " files..."),
+        id = "loadingFile"
+      )
 
-        pdf_result <- tryCatch({
-          TextAnalysisR::process_pdf_unified(
-            file_path = file_data$datapath,
-            use_multimodal = use_multimodal,
-            vision_provider = vision_provider,
-            vision_model = vision_model,
-            api_key = api_key,
-            describe_images = TRUE
+      ingest_one <- function(i) {
+        row <- input$file[i, ]
+        ext <- tolower(tools::file_ext(row$name))
+        label <- tools::file_path_sans_ext(basename(row$name))
+
+        if (ext %in% image_exts) {
+          df <- tryCatch(
+            TextAnalysisR::import_images(
+              file_paths = row$datapath,
+              provider = vision_provider,
+              model = vision_model,
+              api_key = api_key,
+              labels = label
+            ),
+            error = function(e) NULL
           )
-        }, error = function(e) {
-          list(
-            success = FALSE,
-            type = "error",
-            method = "none",
-            message = paste("PDF processing error:", e$message)
-          )
-        })
-
-        try(removeNotification("processingPDF"), silent = TRUE)
-
-        if (!pdf_result$success) {
-          error_type <- pdf_result$type %||% "error"
-
-          if (error_type == "prerequisite_error") {
-            showModal(modalDialog(
-              title = tags$div(
-                style = "color: #f59e0b;",
-                icon("exclamation-triangle"),
-                " Multimodal Extraction - Setup Required"
-              ),
-              tags$div(
-                style = "white-space: pre-wrap; font-family: monospace; font-size: 16px;",
-                pdf_result$message
-              ),
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            ))
-          } else if (error_type == "extraction_error") {
-            showModal(modalDialog(
-              title = tags$div(
-                style = "color: #dc2626;",
-                icon("times-circle"),
-                " Multimodal Extraction Error"
-              ),
-              tags$div(
-                style = "white-space: pre-wrap; font-family: monospace; font-size: 16px;",
-                pdf_result$message
-              ),
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            ))
-          } else {
-            showModal(modalDialog(
-              title = tags$div(
-                style = "color: #dc2626;",
-                icon("times-circle"),
-                " PDF Processing Failed"
-              ),
-              pdf_result$message,
-              easyClose = TRUE,
-              footer = modalButton("Close")
-            ))
+          if (is.null(df) || nrow(df) == 0) {
+            return(list(note = paste0(row$name, ": the vision model returned no description")))
           }
-          return()
+          return(list(data = df, images = nrow(df)))
         }
 
-        if (pdf_result$type == "multimodal") {
-          num_described <- pdf_result$num_images %||% 0
-          if (num_described == 0) {
-            showNotification(
-              HTML(paste0(
-                "⚠ Multimodal extraction completed but no images were described.<br>",
-                "The API call may have failed. Check your API key and try again."
-              )),
-              type = "warning",
-              duration = 5
+        if (ext == "pdf") {
+          res <- tryCatch(
+            TextAnalysisR::process_pdf_unified(
+              file_path = row$datapath,
+              use_multimodal = use_multimodal,
+              vision_provider = vision_provider,
+              vision_model = vision_model,
+              api_key = api_key,
+              describe_images = TRUE
+            ),
+            error = function(e) list(success = FALSE, message = conditionMessage(e))
+          )
+          if (!isTRUE(res$success)) {
+            return(list(note = paste0(row$name, ": ", res$message %||% "PDF extraction failed")))
+          }
+          df <- res$data
+          if (!"category" %in% names(df)) df$category <- label
+          return(list(data = df, images = res$num_images %||% 0))
+        }
+
+        df <- tryCatch(
+          suppressWarnings(suppressMessages(
+            TextAnalysisR::import_files(
+              "Upload Your File",
+              file_info = data.frame(filepath = row$datapath, stringsAsFactors = FALSE)
             )
-          } else {
-            showNotification(
-              HTML(paste0(
-                "✓ Multimodal extraction: ", num_described, " images<br>",
-                "Provider: ", pdf_result$vision_provider
-              )),
-              type = "message",
-              duration = 8
-            )
-          }
-        } else {
-          showNotification(
-            paste0("✓ ", pdf_result$message),
-            type = "message",
-            duration = 5
-          )
-
-          if (!use_multimodal) {
-            tryCatch({
-              page_count <- pdftools::pdf_info(file_data$datapath)$pages
-              text_chars <- sum(nchar(pdf_result$data$text))
-              chars_per_page <- if (page_count > 0) text_chars / page_count else text_chars
-              if (chars_per_page < 200 && page_count > 0) {
-                showNotification(
-                  "This PDF has limited text per page and may contain charts or images. Enable 'Image/chart extraction' for better results.",
-                  type = "warning", duration = 5
-                )
-              }
-            }, error = function(e) NULL)
-          }
-        }
-
-        result <- pdf_result$data
-        if (!"category" %in% names(result)) {
-          result$category <- rep("Uploaded_PDF", nrow(result))
-        }
-
-      } else {
-        result <- tryCatch(
-          {
-            suppressWarnings(suppressMessages({
-              TextAnalysisR::import_files(input$dataset_choice, file_info = file_info)
-            }))
-          },
-          error = function(e) {
-            if (file_extension %in% c("csv", "txt")) {
-              if (file_extension == "csv") {
-                data <- read.csv(file_data$datapath, stringsAsFactors = FALSE, quote = "\"", fill = TRUE)
-              } else {
-                lines <- readLines(file_data$datapath)
-                data <- data.frame(
-                  text = lines[lines != ""],
-                  category = rep("Uploaded", length(lines[lines != ""])),
-                  stringsAsFactors = FALSE
-                )
-              }
-
-              if (!"text" %in% names(data)) {
-                if (ncol(data) >= 1) {
-                  names(data)[1] <- "text"
-                }
-                if (ncol(data) >= 2 && !"category" %in% names(data)) {
-                  names(data)[2] <- "category"
-                }
-              }
-
-              return(data)
-            } else {
-              stop("Unsupported file format. Please upload CSV, TXT, or PDF files.")
-            }
-          }
+          )),
+          error = function(e) NULL
         )
+
+        if (is.null(df) || nrow(df) == 0) df <- read_plain_file(row$datapath, ext)
+
+        if (is.null(df) || nrow(df) == 0) {
+          return(list(note = paste0(row$name, ": no readable text found")))
+        }
+
+        if (!"text" %in% names(df) && ncol(df) >= 1) names(df)[1] <- "text"
+        if (!"category" %in% names(df)) df$category <- label
+        list(data = df)
       }
 
-      if (is.null(result)) {
-        stop("Unable to process file")
-      }
-
-      if (!is.data.frame(result)) {
-        stop("File processing did not return a valid data frame")
-      }
-
-      if (nrow(result) == 0) {
-        stop("File processing returned an empty data frame")
-      }
+      parts <- lapply(seq_len(nrow(input$file)), ingest_one)
 
       try(removeNotification("loadingFile"), silent = TRUE)
+
+      frames <- Filter(Negate(is.null), lapply(parts, function(p) p$data))
+      notes <- unlist(lapply(parts, function(p) p$note))
+
+      if (length(frames) == 0) {
+        stop(if (length(notes) > 0) paste(notes, collapse = "\n") else "Unable to process the upload")
+      }
+
+      result <- dplyr::bind_rows(frames)
+
+      if (!"text" %in% names(result)) stop("File processing produced no text column")
+
+      result <- result[!is.na(result$text) & nzchar(trimws(result$text)), , drop = FALSE]
+      if (nrow(result) == 0) stop("File processing returned no text")
+
+      described <- sum(unlist(lapply(parts, function(p) p$images %||% 0)))
+
+      TextAnalysisR:::show_completion_notification(
+        paste0("Loaded ", nrow(result), " documents from ", length(frames),
+               if (length(frames) == 1) " file" else " files",
+               if (described > 0) paste0(" (", described, " images described)") else "")
+      )
+
+      if (length(notes) > 0) {
+        showModal(modalDialog(
+          title = tags$div(style = "color: #f59e0b;", icon("exclamation-triangle"), " Some Files Were Skipped"),
+          tags$div(style = "white-space: pre-wrap; font-size: 16px;", paste(notes, collapse = "\n\n")),
+          easyClose = TRUE, footer = modalButton("Close")
+        ))
+      }
 
       file_upload_result(result)
 
     }, error = function(e) {
       try(removeNotification("loadingFile"), silent = TRUE)
 
-      cat("File processing error debug\\n")
-      cat("Error message:", e$message, "\n")
-      cat("Error class:", class(e), "\n")
-      if (!is.null(e$call)) cat("Error call:", deparse(e$call), "\n")
-      if (exists("input") && !is.null(input$file)) {
-        cat("File name:", input$file$name, "\n")
-        cat("File size:", input$file$size, "bytes\n")
-        cat("File type:", input$file$type, "\n")
-        cat("File datapath:", input$file$datapath, "\n")
-        cat("File exists:", file.exists(input$file$datapath), "\n")
-      }
-      cat("=== END DEBUG ===\n")
-
-      error_msg <- if (nzchar(e$message)) {
-        e$message
-      } else {
-        "Unknown error occurred while processing the file. Check console for details."
-      }
-
       showModal(modalDialog(
-        title = tags$div(
-          style = "color: #dc2626;",
-          icon("times-circle"),
-          " Error"
+        title = tags$div(style = "color: #dc2626;", icon("times-circle"), " Error"),
+        tags$div(
+          style = "white-space: pre-wrap; font-size: 16px;",
+          if (nzchar(e$message)) e$message else "Unknown error while processing the upload."
         ),
-        error_msg,
         easyClose = TRUE,
         footer = modalButton("Close")
       ))
     })
   }, ignoreInit = TRUE)
 
-  mydata <- reactive({
-    req(input$dataset_choice)
+  output$upload_manifest <- renderUI({
+    req(input$file)
+    tags$ul(
+      style = "margin: -8px 0 12px 0; padding-left: 18px;",
+      lapply(seq_len(nrow(input$file)), function(i) {
+        ext <- tolower(tools::file_ext(input$file$name[i]))
+        tags$li(
+          style = "font-size: 13px; color: #475569;",
+          input$file$name[i],
+          tags$span(paste0(" (", round(input$file$size[i] / 1024), " KB)"),
+                    style = "color: #94a3b8;"),
+          if (ext %in% image_exts) {
+            tags$span(" vision", style = "color: #9C3AD7; font-weight: 600;")
+          }
+        )
+      })
+    )
+  })
 
-    tryCatch(
-      {
-        if (input$dataset_choice == "Upload an Example Dataset") {
-          example_data <- NULL
-
-          tryCatch(
-            {
-              example_data <- TextAnalysisR::SpecialEduTech
-            },
-            error = function(e) {
-              tryCatch(
-                {
-                  data("SpecialEduTech", package = "TextAnalysisR", envir = environment())
-                  if (exists("SpecialEduTech")) {
-                    example_data <- SpecialEduTech
-                  }
-                },
-                error = function(e) {
-                  example_data <- get("SpecialEduTech", envir = asNamespace("TextAnalysisR"))
-                }
-              )
-            }
-          )
-
-          return(example_data)
-        } else if (input$dataset_choice == "Copy and Paste Text") {
-          if (is.null(input$text_input) || is.na(input$text_input) ||
-              nchar(trimws(input$text_input)) == 0) {
+  parse_pasted_text <- function(text_content) {
+          if (is.null(text_content) || is.na(text_content) ||
+              nchar(trimws(text_content)) == 0) {
             return(NULL)
           }
 
-          text_content <- trimws(input$text_input)
+          text_content <- trimws(text_content)
           text_content <- TextAnalysisR:::sanitize_text_input(text_content)
 
           text_size_mb <- nchar(text_content) / (1024^2) * 2
@@ -919,9 +840,9 @@ server <- shinyServer(function(input, output, session) {
                   csv_content <- paste(lines_with_delim, collapse = "\n")
 
                   if (detected_delimiter == "\t") {
-                    data <- read.delim(textConnection(csv_content), stringsAsFactors = FALSE, check.names = FALSE, quote = "", fill = TRUE, header = TRUE)
+                    data <- .utf8_df(read.delim(textConnection(csv_content), stringsAsFactors = FALSE, check.names = FALSE, quote = "", fill = TRUE, header = TRUE))
                   } else {
-                    data <- read.csv(textConnection(csv_content), sep = detected_delimiter, stringsAsFactors = FALSE, check.names = FALSE, quote = "", fill = TRUE, header = TRUE)
+                    data <- .utf8_df(read.csv(textConnection(csv_content), sep = detected_delimiter, stringsAsFactors = FALSE, check.names = FALSE, quote = "", fill = TRUE, header = TRUE))
                   }
 
                   col_names <- names(data)
@@ -967,7 +888,7 @@ server <- shinyServer(function(input, output, session) {
             error = function(e) {
               result <- tryCatch(
                 {
-                  suppressWarnings(TextAnalysisR::import_files(input$dataset_choice, text_input = text_content))
+                  suppressWarnings(TextAnalysisR::import_files("Copy and Paste Text", text_input = text_content))
                 },
                 error = function(e2) {
                   text_lines <- strsplit(text_content, "\n")[[1]]
@@ -996,6 +917,70 @@ server <- shinyServer(function(input, output, session) {
               return(result)
             }
           )
+  }
+
+  paste_stack <- reactiveVal(NULL)
+
+  observeEvent(input$add_paste, {
+    parsed <- parse_pasted_text(input$text_input)
+    if (is.null(parsed) || nrow(parsed) == 0) return()
+    parsed$category <- if ("category" %in% names(parsed)) parsed$category else "Custom"
+    paste_stack(dplyr::bind_rows(paste_stack(), parsed))
+    updateTextAreaInput(session, "text_input", value = "")
+    TextAnalysisR:::show_completion_notification(
+      paste0("Added ", nrow(parsed), " documents. Corpus now holds ", nrow(paste_stack()), ".")
+    )
+  })
+
+  observeEvent(input$clear_pastes, {
+    paste_stack(NULL)
+    updateTextAreaInput(session, "text_input", value = "")
+  })
+
+  output$paste_manifest <- renderUI({
+    stack <- paste_stack()
+    if (is.null(stack) || nrow(stack) == 0) return(NULL)
+    labels <- unique(stack$category)
+    tags$div(
+      style = "font-size: 13px; color: #475569; margin-bottom: 12px;",
+      tags$strong(paste0(nrow(stack), " documents")),
+      tags$span(paste0(" across ", length(labels), if (length(labels) == 1) " batch" else " batches"),
+                style = "color: #94a3b8;")
+    )
+  })
+
+  mydata <- reactive({
+    req(input$dataset_choice)
+
+    tryCatch(
+      {
+        if (input$dataset_choice == "Upload an Example Dataset") {
+          example_data <- NULL
+
+          tryCatch(
+            {
+              example_data <- TextAnalysisR::SpecialEduTech
+            },
+            error = function(e) {
+              tryCatch(
+                {
+                  data("SpecialEduTech", package = "TextAnalysisR", envir = environment())
+                  if (exists("SpecialEduTech")) {
+                    example_data <- SpecialEduTech
+                  }
+                },
+                error = function(e) {
+                  example_data <- get("SpecialEduTech", envir = asNamespace("TextAnalysisR"))
+                }
+              )
+            }
+          )
+
+          return(example_data)
+        } else if (input$dataset_choice == "Copy and Paste Text") {
+          stack <- paste_stack()
+          if (!is.null(stack) && nrow(stack) > 0) return(stack)
+          parse_pasted_text(input$text_input)
         } else if (input$dataset_choice == "Upload Your File") {
           return(file_upload_result())
         } else {
@@ -1437,9 +1422,11 @@ server <- shinyServer(function(input, output, session) {
 
     ext <- tools::file_ext(input$custom_dict$name)
     terms <- if (tolower(ext) == "csv") {
-      read.csv(input$custom_dict$datapath, stringsAsFactors = FALSE)[[1]]
+      TextAnalysisR::to_utf8(read.csv(input$custom_dict$datapath, stringsAsFactors = FALSE,
+                                   fileEncoding = TextAnalysisR::sniff_encoding(input$custom_dict$datapath))[[1]])
     } else {
-      readLines(input$custom_dict$datapath, warn = FALSE)
+      readr::read_lines(input$custom_dict$datapath, progress = FALSE,
+                        locale = readr::locale(encoding = TextAnalysisR::sniff_encoding(input$custom_dict$datapath)))
     }
     terms <- trimws(terms)
     terms[nzchar(terms)]
@@ -1449,16 +1436,13 @@ server <- shinyServer(function(input, output, session) {
     isTRUE(input$use_custom_dict)
   })
 
-  ngram_stats <- reactiveValues(
-    full_stats = NULL,
-    collocation_list = NULL
-  )
+  ngram_stats <- reactiveVal(NULL)
 
   output$dynamic_ngram_checkboxes <- renderUI({
     ngram_counts <- list("2" = 0, "3" = 0, "4" = 0, "5" = 0)
 
-    if (!is.null(ngram_stats$full_stats) && nrow(ngram_stats$full_stats) > 0) {
-      stats_df <- ngram_stats$full_stats
+    if (!is.null(ngram_stats()) && nrow(ngram_stats()) > 0) {
+      stats_df <- ngram_stats()
       stats_df$ngram_length <- sapply(strsplit(stats_df$collocation, " "), length)
       counts_table <- table(stats_df$ngram_length)
 
@@ -1487,7 +1471,6 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  ngram_stats <- reactiveVal(NULL)
   top_20_preselected <- reactiveVal(NULL)
 
   output$has_ngram_detection_results <- reactive({
@@ -4339,7 +4322,8 @@ server <- shinyServer(function(input, output, session) {
       if (grepl("\\.xlsx$", file_name, ignore.case = TRUE)) {
         df <- readxl::read_excel(file_path)
       } else if (grepl("\\.csv$", file_name, ignore.case = TRUE)) {
-        df <- utils::read.csv(file_path, stringsAsFactors = FALSE)
+        df <- .utf8_df(utils::read.csv(file_path, stringsAsFactors = FALSE,
+                                       fileEncoding = TextAnalysisR::sniff_encoding(file_path)))
       } else {
         showNotification("Please upload an Excel (.xlsx) or CSV (.csv) file", type = "error")
         return()
@@ -6727,7 +6711,8 @@ server <- shinyServer(function(input, output, session) {
       file_ext <- tools::file_ext(input$codebook_upload$name)
 
       if (file_ext == "csv") {
-        codebook <- read.csv(file_path, stringsAsFactors = FALSE)
+        codebook <- .utf8_df(read.csv(file_path, stringsAsFactors = FALSE,
+                                      fileEncoding = TextAnalysisR::sniff_encoding(file_path)))
       } else if (file_ext %in% c("xlsx", "xls")) {
         codebook <- readxl::read_excel(file_path)
       } else {
@@ -7379,7 +7364,7 @@ server <- shinyServer(function(input, output, session) {
     input$main_navbar
     req(colnames_cat())
     cats <- c("None" = "None", colnames_cat())
-    lapply(c("doc_var_co_occurrence", "doc_var_correlation", "sentiment_group_var",
+    lapply(c("doc_var_co_occurrence", "doc_var_correlation", "sentiment_group_var", "wordcloud_group_var",
              "readability_group_var", "keyword_group_var", "tfidf_group_var"),
            resend_choices, choices = cats, default = "None")
   })
@@ -7741,13 +7726,12 @@ server <- shinyServer(function(input, output, session) {
   output$word_co_occurrence_network_plot_uiOutput <- renderUI({
     result <- word_co_occurrence_network_results()
     if (is.null(result)) {
-      return(tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$p(
-          "Click 'Plot Network' to generate co-occurrence network visualization.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
-        )
-      ))
+      return(.tab_placeholder(
+               "circle-nodes",
+               "Click ",
+               .hl("'Plot Network'"),
+               " to generate co-occurrence network visualization."
+             ))
     }
     w <- input$width_word_co_occurrence_network_plot %||% 900
     h <- input$height_word_co_occurrence_network_plot %||% 800
@@ -7763,13 +7747,7 @@ server <- shinyServer(function(input, output, session) {
   output$word_co_occurrence_network_table_uiOutput <- renderUI({
     result <- word_co_occurrence_network_results()
     if (is.null(result)) {
-      return(tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$p(
-          "Network centrality table will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
-        )
-      ))
+      return(.tab_placeholder("table", "Network centrality table will appear after generating the network."))
     }
     result$table
   })
@@ -7777,13 +7755,7 @@ server <- shinyServer(function(input, output, session) {
   output$word_co_occurrence_network_summary_uiOutput <- renderUI({
     result <- word_co_occurrence_network_results()
     if (is.null(result)) {
-      return(tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$p(
-          "Network statistics will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
-        )
-      ))
+      return(.tab_placeholder("chart-simple", "Network statistics will appear after generating the network."))
     }
     result$summary
   })
@@ -8087,13 +8059,12 @@ server <- shinyServer(function(input, output, session) {
   output$word_correlation_network_plot_uiOutput <- renderUI({
     result <- word_correlation_network_results()
     if (is.null(result)) {
-      return(tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$p(
-          "Click 'Plot Network' to generate correlation network visualization.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
-        )
-      ))
+      return(.tab_placeholder(
+               "circle-nodes",
+               "Click ",
+               .hl("'Plot Network'"),
+               " to generate correlation network visualization."
+             ))
     }
     w <- input$width_word_correlation_network_plot %||% 900
     h <- input$height_word_correlation_network_plot %||% 1000
@@ -8109,13 +8080,7 @@ server <- shinyServer(function(input, output, session) {
   output$word_correlation_network_table_uiOutput <- renderUI({
     result <- word_correlation_network_results()
     if (is.null(result)) {
-      return(tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$p(
-          "Network centrality table will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
-        )
-      ))
+      return(.tab_placeholder("table", "Network centrality table will appear after generating the network."))
     }
     result$table
   })
@@ -8123,13 +8088,7 @@ server <- shinyServer(function(input, output, session) {
   output$word_correlation_network_summary_uiOutput <- renderUI({
     result <- word_correlation_network_results()
     if (is.null(result)) {
-      return(tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$p(
-          "Network statistics will appear after generating the network.",
-          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569;"
-        )
-      ))
+      return(.tab_placeholder("chart-simple", "Network statistics will appear after generating the network."))
     }
     result$summary
   })
@@ -8462,6 +8421,7 @@ server <- shinyServer(function(input, output, session) {
     original_data = NULL,
     document_sentiment = NULL,
     emotion_scores = NULL,
+    word_contributions = NULL,
     summary = NULL,
     grouped = NULL
   )
@@ -8612,6 +8572,7 @@ server <- shinyServer(function(input, output, session) {
       sentiment_results$data <- NULL
       sentiment_results$document_data <- NULL
       sentiment_results$emotion_scores <- NULL
+      sentiment_results$word_contributions <- NULL
       sentiment_results$summary <- NULL
       sentiment_results$grouped <- NULL
 
@@ -8690,6 +8651,29 @@ server <- shinyServer(function(input, output, session) {
           return()
         }
 
+      } else if (lexicon_name == "sentimentr") {
+        if (!"united_texts" %in% names(texts_df)) {
+          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
+          showNotification("Text column not found. Please unite text columns first.", type = "error", duration = 10)
+          return()
+        }
+
+        doc_names <- if ("doc_id" %in% names(texts_df)) texts_df$doc_id else quanteda::docnames(dfm_obj)
+
+        sentiment_analysis_results <- tryCatch(
+          TextAnalysisR::sentiment_valence_analysis(
+            texts = texts_df$united_texts,
+            doc_names = doc_names
+          ),
+          error = function(e) {
+            TextAnalysisR:::remove_notification_by_id("sentiment_loading")
+            TextAnalysisR:::show_error_notification(paste("Valence sentiment error:", e$message))
+            NULL
+          }
+        )
+
+        if (is.null(sentiment_analysis_results)) return()
+
       } else {
         tryCatch({
           test_lexicon <- tidytext::get_sentiments(lexicon_name)
@@ -8734,6 +8718,7 @@ server <- shinyServer(function(input, output, session) {
       sentiment_results$document_data <- doc_sentiment
       sentiment_results$original_data <- texts_df
       sentiment_results$emotion_scores <- emotion_data
+      sentiment_results$word_contributions <- sentiment_analysis_results$word_contributions
       sentiment_results$summary <- summary_stats
       sentiment_results$grouped <- NULL
 
@@ -8973,6 +8958,18 @@ server <- shinyServer(function(input, output, session) {
       return(plot_error("Click 'Analyze Sentiment' to generate results."))
     }
     gg_to_plotly(plot_sentiment_distribution(sentiment_results$data))
+  })
+
+  output$sentiment_contribution_plot <- plotly::renderPlotly({
+    if (!sentiment_results$analyzed) {
+      return(plot_error("Click 'Analyze Sentiment' to generate results."))
+    }
+    contributions <- sentiment_results$word_contributions
+    if (is.null(contributions) || nrow(contributions) == 0) {
+      return(plot_error("No lexicon words matched this corpus."))
+    }
+    gg_to_plotly(plot_sentiment_contribution(contributions,
+                                             top_n = input$sentiment_top_words %||% 20))
   })
 
   output$sentiment_by_category_plot <- plotly::renderPlotly({
@@ -9295,22 +9292,24 @@ server <- shinyServer(function(input, output, session) {
           )
         ),
         br(),
+        tags$h5(strong("Words Behind the Scores"), style = "color: #4269BF;"),
+        tags$p("Which words moved the score, negative left and positive right. A word scored on its everyday sense rather than its meaning here is a sign the lexicon does not fit this corpus.",
+               style = "font-size: 13px; color: #475569; max-width: 900px;"),
+        fluidRow(
+          column(12,
+            plotly::plotlyOutput("sentiment_contribution_plot", height = "460px", width = "100%")
+          )
+        ),
+        br(),
         tags$h5(strong("Summary Statistics"), style = "color: #4269BF;"),
         DT::dataTableOutput("sentiment_summary_table")
       )
     } else {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-chart-bar", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Configure settings and click ",
-            tags$strong("'Analyze Sentiment'", style = "color: #4269BF;"),
-            " to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
+      .tab_placeholder(
+        "chart-bar",
+        "Configure settings and click ",
+        .hl("'Analyze Sentiment'"),
+        " to generate results"
       )
     }
   })
@@ -9330,31 +9329,12 @@ server <- shinyServer(function(input, output, session) {
         DT::dataTableOutput("sentiment_category_table")
       )
     } else if (sentiment_results$analyzed) {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-layer-group", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Select a category variable in the sidebar to see sentiment analysis by category",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
+      .tab_placeholder(
+        "layer-group",
+        "Select a category variable in the sidebar to see sentiment analysis by category"
       )
     } else {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-arrow-left", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Run sentiment analysis from the ",
-            tags$strong("Overall Sentiment", style = "color: #4269BF;"),
-            " tab first",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
-      )
+      .tab_placeholder("arrow-left", "Run sentiment analysis from the ", .hl("Overall Sentiment"), " tab first")
     }
   })
 
@@ -9367,19 +9347,7 @@ server <- shinyServer(function(input, output, session) {
         DT::dataTableOutput("document_sentiment_table")
       )
     } else {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-arrow-left", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Run sentiment analysis from the ",
-            tags$strong("Overall Sentiment", style = "color: #4269BF;"),
-            " tab first",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
-      )
+      .tab_placeholder("arrow-left", "Run sentiment analysis from the ", .hl("Overall Sentiment"), " tab first")
     }
   })
 
@@ -9431,33 +9399,9 @@ server <- shinyServer(function(input, output, session) {
         )
       )
     } else if (sentiment_results$analyzed) {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-book", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "See ",
-            tags$strong("NRC Lexicon", style = "color: #4269BF;"),
-            " setup instructions in the sidebar",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
-      )
+      .tab_placeholder("book", "See ", .hl("NRC Lexicon"), " setup instructions in the sidebar")
     } else {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-arrow-left", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Run sentiment analysis from the ",
-            tags$strong("Overall Sentiment", style = "color: #4269BF;"),
-            " tab first",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
-      )
+      .tab_placeholder("arrow-left", "Run sentiment analysis from the ", .hl("Overall Sentiment"), " tab first")
     }
   })
 
@@ -9713,18 +9657,11 @@ server <- shinyServer(function(input, output, session) {
         DT::dataTableOutput("readability_metrics_table")
       )
     } else {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-book-reader", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Configure settings and click ",
-            tags$strong("'Analyze'", style = "color: #4269BF;"),
-            " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
+      .tab_placeholder(
+        "book-reader",
+        "Configure settings and click ",
+        .hl("'Analyze'"),
+        " button to generate results"
       )
     }
   })
@@ -9784,18 +9721,12 @@ server <- shinyServer(function(input, output, session) {
       )
     } else {
       tagList(
-        tags$div(
-          style = "padding: 60px 40px; text-align: center;",
-          tags$div(
-            style = "max-width: 500px; margin: 0 auto;",
-            tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-            tags$p(
-              "Click ",
-              tags$strong("'Analyze'", style = "color: #4269BF;"),
-              " in the sidebar to calculate lexical diversity metrics",
-              style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-            )
-          )
+        .tab_placeholder(
+          "chart-line",
+          "Click ",
+          .hl("'Analyze'"),
+          " in the sidebar to calculate lexical diversity metrics",
+          width = 500
         )
       )
     }
@@ -10091,7 +10022,7 @@ server <- shinyServer(function(input, output, session) {
     } else {
       div(
         style = "padding: 40px; text-align: center;",
-        tags$i(class = "fa fa-info-circle", style = "font-size: 36px; color: #CBD5E1;"),
+        tags$i(class = "fa fa-info-circle", style = "font-size: 48px; color: #CBD5E1;"),
         tags$p("No log odds data available", style = "color: #475569; margin-top: 10px;")
       )
     }
@@ -10196,7 +10127,7 @@ server <- shinyServer(function(input, output, session) {
 
       updateSelectizeInput(session, "dispersion_terms",
         choices = sorted_vocab,
-        server = TRUE
+        server = FALSE
       )
     }
   })
@@ -10351,7 +10282,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (quanteda::ndoc(dfm_obj) > 1) {
         group_var <- input$tfidf_group_var
-        keyness_top_n <- input$textrank_top_n %||% 15
+        keyness_top_n <- input$keyness_top_n %||% 15
 
         if (!is.null(group_var) && group_var != "None" && group_var != "") {
           dfm_docvars <- quanteda::docvars(dfm_obj)
@@ -10431,7 +10362,7 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  output$textrank_keywords_plot <- plotly::renderPlotly({
+  output$keyness_keywords_plot <- plotly::renderPlotly({
     if (!keyword_results$analyzed) {
       return(plot_error("Run keyword extraction to see results"))
     }
@@ -10441,7 +10372,7 @@ server <- shinyServer(function(input, output, session) {
     ))
   })
 
-  output$textrank_keywords_table <- renderDT({
+  output$keyness_keywords_table <- renderDT({
     req(keyword_results$analyzed)
     {
       if (nrow(keyword_results$keyness_data) == 0) {
@@ -10479,44 +10410,20 @@ server <- shinyServer(function(input, output, session) {
         DT::dataTableOutput("tfidf_keywords_table")
       )
     } else {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-key", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Configure settings and click ",
-            tags$strong("'Extract'", style = "color: #4269BF;"),
-            " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
-      )
+      .tab_placeholder("key", "Configure settings and click ", .hl("'Extract'"), " button to generate results")
     }
   })
 
-  output$keywords_textrank_uiOutput <- renderUI({
+  output$keywords_keyness_uiOutput <- renderUI({
     if (keyword_results$analyzed) {
       tagList(
         br(),
-        plotly::plotlyOutput("textrank_keywords_plot", height = "500px", width = "100%"),
+        plotly::plotlyOutput("keyness_keywords_plot", height = "500px", width = "100%"),
         br(),
-        DT::dataTableOutput("textrank_keywords_table")
+        DT::dataTableOutput("keyness_keywords_table")
       )
     } else{
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-key", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Configure settings and click ",
-            tags$strong("'Extract'", style = "color: #4269BF;"),
-            " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
-      )
+      .tab_placeholder("key", "Configure settings and click ", .hl("'Extract'"), " button to generate results")
     }
   })
 
@@ -10563,19 +10470,7 @@ server <- shinyServer(function(input, output, session) {
         DT::dataTableOutput("keyword_comparison_table")
       )
     } else {
-      tags$div(
-        style = "padding: 60px 40px; text-align: center;",
-        tags$div(
-          style = "max-width: 400px; margin: 0 auto;",
-          tags$i(class = "fa fa-key", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-          tags$p(
-            "Configure settings and click ",
-            tags$strong("'Extract'", style = "color: #4269BF;"),
-            " button to generate results",
-            style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-          )
-        )
-      )
+      .tab_placeholder("key", "Configure settings and click ", .hl("'Extract'"), " button to generate results")
     }
   })
 
@@ -12745,7 +12640,7 @@ server <- shinyServer(function(input, output, session) {
 
         final_output <- c(
           paste("Feature type:", tools::toTitleCase(feature_type)),
-          paste("Documents processed:", n_docs),
+          paste("Units processed:", n_docs),
           paste("Similarity method:", comparison_results$results[[feature_type]]$method),
           paste("Cache status:", if (is_cached_result) "Using cached results" else "Newly calculated"),
           "",
@@ -15693,7 +15588,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$has_clusters <- reactive({
-    !is.null(document_clustering_results$clusters)
+    !is.null(document_clustering_results$clusters) || !is.null(comparison_results$clustering)
   })
   outputOptions(output, "has_clusters", suspendWhenHidden = FALSE)
 
@@ -17142,6 +17037,78 @@ server <- shinyServer(function(input, output, session) {
       )
     )
   })
+
+  wordcloud_freq <- eventReactive(input$run_wordcloud, {
+    dfm_obj <- get_available_dfm()
+    validate(need(!is.null(dfm_obj), "Process documents in the 1. Setup tab first."))
+
+    grp <- input$wordcloud_group_var %||% "None"
+    use_grp <- grp != "None" && grp %in% names(quanteda::docvars(dfm_obj))
+
+    freq <- if (use_grp) {
+      quanteda.textstats::textstat_frequency(dfm_obj, groups = quanteda::docvars(dfm_obj)[[grp]])
+    } else {
+      quanteda.textstats::textstat_frequency(dfm_obj)
+    }
+
+    freq$weight <- if ((input$wordcloud_metric %||% "frequency") == "docfreq") {
+      freq$docfreq
+    } else {
+      freq$frequency
+    }
+
+    freq <- freq[freq$frequency >= (input$wordcloud_min_freq %||% 1), , drop = FALSE]
+    validate(need(nrow(freq) > 0, "No terms meet the minimum frequency."))
+
+    n <- input$wordcloud_max_words %||% 100
+    freq <- do.call(rbind, lapply(
+      split(freq, as.character(freq$group)),
+      function(d) utils::head(d[order(-d$weight), , drop = FALSE], n)
+    ))
+
+    if (!use_grp) freq$group <- "All documents"
+    freq
+  }, ignoreNULL = FALSE)
+
+  output$semantic_wordcloud <- renderPlot({
+    validate(need(
+      requireNamespace("ggwordcloud", quietly = TRUE),
+      "The ggwordcloud package is required for this plot. Install it with install.packages(\"ggwordcloud\")."
+    ))
+
+    freq <- wordcloud_freq()
+    groups <- unique(as.character(freq$group))
+
+    withr::with_seed(1234, {
+      p <- ggplot2::ggplot(freq, ggplot2::aes(label = feature, size = weight, color = weight)) +
+        ggwordcloud::geom_text_wordcloud(rm_outside = TRUE, shape = "circle", eccentricity = 1) +
+        ggplot2::scale_size_area(max_size = if (length(groups) > 1) 16 else 26) +
+        ggplot2::scale_color_distiller(palette = input$wordcloud_palette %||% "Blues",
+                                       direction = 1) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(
+          plot.background = ggplot2::element_rect(fill = "white", color = NA),
+          strip.text = ggplot2::element_text(size = 14, color = "#4269BF", face = "bold")
+        )
+
+      if (length(groups) > 1) p <- p + ggplot2::facet_wrap(~ group)
+      p
+    })
+  })
+
+  output$semantic_wordcloud_table <- DT::renderDataTable({
+    freq <- wordcloud_freq()
+    out <- data.frame(
+      Group = as.character(freq$group),
+      Term = freq$feature,
+      Frequency = freq$frequency,
+      Documents = freq$docfreq
+    )
+    if (length(unique(out$Group)) == 1) out$Group <- NULL
+
+    DT::datatable(out, rownames = FALSE, options = list(pageLength = 10, dom = "tip"))
+  })
+
 
   output$clustering_warning <- renderUI({
     NULL
@@ -19077,7 +19044,7 @@ server <- shinyServer(function(input, output, session) {
             ),
             tags$table(
               style = "width: 100%; font-size: 16px;",
-              tags$tr(tags$td("Documents:"), tags$td(style = "text-align: right; font-weight: 500;", n_docs)),
+              tags$tr(tags$td("Units:"), tags$td(style = "text-align: right; font-weight: 500;", n_docs)),
               tags$tr(tags$td("Topics found:"), tags$td(style = "text-align: right; font-weight: 500;", n_topics)),
               tags$tr(tags$td("Outliers:"), tags$td(style = "text-align: right; font-weight: 500;", paste0(n_outliers, " (", round(100 * n_outliers / n_docs, 1), "%)")))
             )
@@ -19135,7 +19102,7 @@ server <- shinyServer(function(input, output, session) {
 
       output$topic_term_message <- renderUI({
         tags$div(
-          style = "padding: 12px 16px; background: #f0f7ff; border-left: 4px solid #337ab7; margin-bottom: 16px; font-size: 15px;",
+          style = "padding: 12px 16px; background: #f0f7ff; border-left: 4px solid #337ab7; margin-bottom: 16px; font-size: 16px;",
           tags$strong("Embedding-Based Topic Model Summary: "),
           paste0(n_topics, " topics discovered from ", n_docs, " documents"),
           if (n_outliers > 0) paste0(" (", n_outliers, " outliers, ", outlier_pct, "%)") else NULL
@@ -19449,13 +19416,13 @@ server <- shinyServer(function(input, output, session) {
 
       output$embedding_quote_table <- DT::renderDataTable({
         data.frame(
-          `Document ID` = closest_indices,
+          `Unit ID` = closest_indices,
           `Example Text` = substr(example_texts, 1, 500),
           stringsAsFactors = FALSE
         )
       }, options = list(pageLength = 5))
     } else {
-      showNotification("No documents found for this topic.", type = "warning", duration = 7)
+      showNotification("No units found for this topic.", type = "warning", duration = 7)
     }
   })
 
@@ -21290,7 +21257,8 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$qc_codebook_file, {
     cb <- tryCatch(
-      utils::read.csv(input$qc_codebook_file$datapath, stringsAsFactors = FALSE),
+      .utf8_df(utils::read.csv(input$qc_codebook_file$datapath, stringsAsFactors = FALSE,
+                               fileEncoding = TextAnalysisR::sniff_encoding(input$qc_codebook_file$datapath))),
       error = function(e) NULL
     )
     if (is.null(cb) || !all(c("code", "definition") %in% names(cb))) {
@@ -21474,7 +21442,7 @@ server <- shinyServer(function(input, output, session) {
         length(unique(s$unit_id[s$status == "no code"]))),
         style = "font-size: 16px; color: #334155;"),
       tags$p("Confirm or correct each suggestion in the Review tab; only reviewed rows export.",
-             style = "font-size: 14px; color: #475569;")
+             style = "font-size: 13px; color: #475569;")
     )
   })
 
@@ -21741,7 +21709,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (isFALSE(st$installed)) {
       div(style = "background: #FAEEDA; border-radius: 4px; padding: 8px; font-size: 13px; color: #633806; margin-bottom: 10px;",
           icon("triangle-exclamation"), " Not installed. Run:",
-          tags$div(style = "font-family: monospace; font-size: 12px; margin-top: 4px; color: #412402;",
+          tags$div(style = "font-family: monospace; font-size: 13px; margin-top: 4px; color: #412402;",
                    paste("python -m spacy download", st$model)))
     } else {
       div(style = "background: #F1F5F9; border-radius: 4px; padding: 6px 8px; font-size: 13px; color: #475569; margin-bottom: 10px;",

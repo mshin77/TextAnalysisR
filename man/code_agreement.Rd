@@ -27,7 +27,9 @@ two coders and returns \code{NA} for more.}
 
 \item{by_code}{Logical; also report per-code agreement.}
 
-\item{align}{"grid" (default) or "coverage".}
+\item{align}{"grid" (default) when coders share units, "coverage" when each
+marked its own spans. Grid keeps the highest-confidence code where a coder
+gave several; coverage reports span overlap and ignores \code{metrics}/\code{units}.}
 
 \item{codebook_authors}{Character vector of \code{coder} values that wrote or
 revised the codebook. When supplied, metrics are also computed among the
@@ -51,16 +53,6 @@ Chance-corrected agreement between two or more coders' code assignments.
 Reports Krippendorff's alpha and Cohen's/Fleiss' kappa (via irr) plus percent
 agreement, Gwet's AC1, and PABAK computed inline. AC1 and PABAK stay stable
 under skewed code prevalence, where kappa collapses (the kappa paradox).
-
-With \code{align = "grid"} (default), coders are assumed to share units: rows
-pivot on \code{unit_id} when present, else \code{doc_id}. When a coder assigned more
-than one code to a unit, the highest-confidence code is kept (first row
-when no \code{confidence} column exists); per-code multi-label agreement is in
-\code{by_code}. With \code{align = "coverage"}, coders may have different span
-boundaries: for each ordered coder pair, the proportion of one coder's
-spans that overlap a same-code span from the other is reported instead
-(chance-corrected metrics do not apply across unaligned units, so
-\code{metrics} and \code{units} are ignored).
 }
 \seealso{
 \code{\link[=apply_codes]{apply_codes()}} to produce assignments; \code{\link[=merge_codes]{merge_codes()}} to combine

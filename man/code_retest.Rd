@@ -26,12 +26,9 @@ n_runs) and \code{runs} (all assignments, with a \code{run} column), or
 \code{invisible(NULL)} when fewer than two runs complete.
 }
 \description{
-Codes the same sample of texts more than once at identical settings and
-reports how often the runs agree, next to a shuffled-label baseline. Low
-temperature does not guarantee stable output, so retest agreement is
-measured rather than assumed. The baseline shows the agreement expected if
-codes were unrelated to the texts; retest agreement should sit well above
-it.
+Codes the same sample more than once at identical settings and reports how
+often the runs agree, against a shuffled-label baseline. Low temperature
+does not guarantee stable output, so stability is measured, not assumed.
 }
 \seealso{
 \code{\link[=apply_codes]{apply_codes()}}; \code{\link[=code_agreement]{code_agreement()}} for human inter-coder

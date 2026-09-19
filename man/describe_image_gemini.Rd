@@ -10,7 +10,8 @@ describe_image_gemini(
     "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
   model = "gemini-2.5-flash",
   max_tokens = 500,
-  api_key
+  api_key,
+  mime_type = "image/png"
 )
 }
 \arguments{

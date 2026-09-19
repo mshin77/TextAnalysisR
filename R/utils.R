@@ -324,7 +324,8 @@ calculate_cosine_similarity <- function(matrix_data) {
 #' @param message The message to display
 #' @param color Color for the text (default: "#ef4444")
 #' @return A plotly plot object displaying the message
-#' @keywords internal
+#' @concept utilities
+#' @export
 plot_error <- function(message, color = "#ef4444") {
   if (!requireNamespace("plotly", quietly = TRUE)) {
     stop("plotly package is required for this function. ",
@@ -1349,7 +1350,8 @@ describe_image_openai <- function(image_base64,
                                   prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                                   model = "gpt-4.1",
                                   max_tokens = 500,
-                                  api_key) {
+                                  api_key,
+                                  mime_type = "image/png") {
   if (!requireNamespace("httr", quietly = TRUE) ||
       !requireNamespace("jsonlite", quietly = TRUE)) {
     return(NULL)
@@ -1366,7 +1368,7 @@ describe_image_openai <- function(image_base64,
             list(
               type = "image_url",
               image_url = list(
-                url = paste0("data:image/png;base64,", image_base64)
+                url = paste0("data:", mime_type, ";base64,", image_base64)
               )
             )
           )
@@ -1417,7 +1419,8 @@ describe_image_gemini <- function(image_base64,
                                   prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                                   model = "gemini-2.5-flash",
                                   max_tokens = 500,
-                                  api_key) {
+                                  api_key,
+                                  mime_type = "image/png") {
   if (!requireNamespace("httr", quietly = TRUE) ||
       !requireNamespace("jsonlite", quietly = TRUE)) {
     return(NULL)
@@ -1431,7 +1434,7 @@ describe_image_gemini <- function(image_base64,
             list(text = prompt),
             list(
               inline_data = list(
-                mime_type = "image/png",
+                mime_type = mime_type,
                 data = image_base64
               )
             )
@@ -1501,6 +1504,7 @@ describe_image_gemini <- function(image_base64,
 #' @param api_key Character: API key (required for openai/gemini)
 #' @param prompt Character: Description prompt
 #' @param timeout Numeric: Request timeout in seconds (default: 120)
+#' @param mime_type Character: Image media type, such as "image/png" or "image/jpeg"
 #'
 #' @return Character string description, or NULL on failure
 #'
@@ -1511,7 +1515,8 @@ describe_image <- function(image_base64,
                            model = NULL,
                            api_key = NULL,
                            prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
-                           timeout = 120) {
+                           timeout = 120,
+                           mime_type = "image/png") {
   if (is.null(model)) {
     model <- switch(provider,
       "openai" = "gpt-4.1",
@@ -1521,8 +1526,10 @@ describe_image <- function(image_base64,
   }
 
   switch(provider,
-    "openai" = describe_image_openai(image_base64, prompt, model, api_key = api_key),
-    "gemini" = describe_image_gemini(image_base64, prompt, model, api_key = api_key),
+    "openai" = describe_image_openai(image_base64, prompt, model, api_key = api_key,
+                                     mime_type = mime_type),
+    "gemini" = describe_image_gemini(image_base64, prompt, model, api_key = api_key,
+                                     mime_type = mime_type),
     NULL
   )
 }
@@ -1796,16 +1803,17 @@ validate_file_upload <- function(file_info) {
     stop("No file provided")
   }
 
-  allowed_extensions <- c(".csv", ".xlsx", ".txt", ".rds", ".pdf", ".docx")
-  ext <- tools::file_ext(file_info$name)
+  allowed_extensions <- c(".csv", ".xlsx", ".xls", ".xlsm", ".txt", ".rds",
+                          ".pdf", ".docx", ".png", ".jpg", ".jpeg", ".webp", ".gif")
+  ext <- tolower(tools::file_ext(file_info$name))
 
-  if (!paste0(".", tolower(ext)) %in% allowed_extensions) {
-    stop("Invalid file type. Allowed types: CSV, XLSX, TXT, RDS, PDF, DOCX")
+  if (!paste0(".", ext) %in% allowed_extensions) {
+    stop("Invalid file type. Allowed types: CSV, XLSX, XLS, XLSM, TXT, RDS, PDF, DOCX, PNG, JPG, JPEG, WEBP, GIF")
   }
 
-  max_size <- 50 * 1024 * 1024
+  max_size <- 100 * 1024 * 1024
   if (file_info$size > max_size) {
-    stop("File size exceeds maximum limit of 50MB")
+    stop("File size exceeds maximum limit of 100MB")
   }
 
   if (ext %in% c("csv", "txt")) {

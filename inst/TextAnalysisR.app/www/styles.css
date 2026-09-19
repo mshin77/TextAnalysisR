@@ -2791,8 +2791,8 @@ a.action-link[title*="Info"]:hover {
 
 /* subtabs */
 .nav-tabs>li>a {
-  font-size: 14px;
-  padding: 8px 10px;
+  font-size: 16px;
+  padding: 8px 12px;
 }
 
 /* qc buttons */
@@ -2813,3 +2813,11 @@ a.action-link[title*="Info"]:hover {
   .row > .col-sm-3 { width: 33.333%; }
   .row > .col-sm-9 { width: 66.667%; }
 }
+
+.tab-pane .tabbable > .nav-tabs {
+  margin-top: 10px;
+}
+
+.pal-opt { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
+.pal-bar { width: 72px; height: 14px; border-radius: 3px; flex: 0 0 auto;
+           border: 1px solid rgba(0, 0, 0, 0.12); }

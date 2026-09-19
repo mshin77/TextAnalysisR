@@ -25,3 +25,5 @@ __pycache__/
 *.js.map
 *.css.map
 *.min.map
+*.Rcheck/
+*.tar.gz

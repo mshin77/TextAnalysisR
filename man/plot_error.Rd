@@ -17,4 +17,4 @@ A plotly plot object displaying the message
 \description{
 Creates a plotly error/status plot with a message
 }
-\keyword{internal}
+\concept{utilities}

@@ -1,6 +1,6 @@
 Package: TextAnalysisR
 Title: A Text Mining Workflow Tool
-Version: 0.1.5
+Version: 0.1.5.9000
 Authors@R:
     person("Mikyung", "Shin", , "shin.mikyung@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7907-9193"))
@@ -35,6 +35,7 @@ Imports:
     quanteda,
     quanteda.textstats,
     RColorBrewer,
+    readr,
     rlang,
     scales,
     shiny,
@@ -59,6 +60,7 @@ Suggests:
     covr,
     dbscan,
     digest,
+    ggwordcloud,
     httr,
     irr,
     jsonlite,
@@ -77,6 +79,7 @@ Suggests:
     purrr,
     readxl,
     reticulate (>= 1.28),
+    sentimentr,
     rmarkdown,
     roxygen2,
     Rtsne,
@@ -102,4 +105,4 @@ URL: https://mshin77.github.io/TextAnalysisR/,
 BugReports: https://github.com/mshin77/TextAnalysisR/issues
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0

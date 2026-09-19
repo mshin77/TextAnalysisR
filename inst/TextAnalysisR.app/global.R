@@ -68,6 +68,55 @@ shiny::enableBookmarking("disable")
                 style = "font-style: normal; margin-right: 6px;")
 }
 
+.palette_input <- function(inputId, label, selected = "Blues") {
+  pals <- c("Blues", "Purples", "Greens", "Oranges", "Reds", "Greys",
+            "BuGn", "YlOrRd", "PuRd", "RdBu", "BrBG", "PRGn", "RdYlBu")
+  labels <- c("Blues", "Purples", "Greens", "Oranges", "Reds", "Greys",
+              "Blue-Green", "Yellow-Orange-Red", "Purple-Red",
+              "Red-Blue", "Brown-Teal", "Purple-Green", "Red-Yellow-Blue")
+  opts <- lapply(seq_along(pals), function(i) {
+    cols <- RColorBrewer::brewer.pal(5, pals[i])
+    list(value = pals[i], label = labels[i],
+         gradient = paste0("linear-gradient(to right,", paste(cols, collapse = ","), ")"))
+  })
+  swatch <- "function(item, escape) {
+    return '<div class=\"pal-opt\"><span class=\"pal-bar\" style=\"background:' +
+      item.gradient + '\"></span>' + escape(item.label) + '</div>';
+  }"
+  selectizeInput(
+    inputId, label, choices = NULL, selected = selected,
+    options = list(
+      options = opts, valueField = "value", labelField = "label",
+      searchField = "label", items = list(selected),
+      render = I(paste0("{option: ", swatch, ", item: ", swatch, "}"))
+    )
+  )
+}
+.hl <- function(x) tags$strong(x, style = "color: #4269BF;")
+
+.tab_placeholder <- function(icon_name, ..., width = 400) {
+  icon_tag <- if (is.null(icon_name)) {
+    NULL
+  } else if (inherits(icon_name, "shiny.tag")) {
+    icon_name
+  } else {
+    tags$i(class = paste0("fa fa-", icon_name), `aria-hidden` = "true",
+           style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;")
+  }
+  body <- tags$p(...,
+                 style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;")
+  inner <- if (is.null(width)) {
+    tagList(icon_tag, body)
+  } else {
+    div(style = paste0("max-width: ", width, "px; margin: 0 auto;"), icon_tag, body)
+  }
+  div(style = "padding: 60px 40px; text-align: center;", inner)
+}
+
+.cluster_placeholder <- function(icon_name, heading, hint) {
+  .tab_placeholder(icon_name, paste0(heading, ". "), hint)
+}
+
 .password_input <- function(inputId, label, value = "", placeholder = NULL) {
   if (isTRUE(has_server_gemini) && grepl("gemini", inputId, ignore.case = TRUE)) {
     placeholder <- "AIza..."
@@ -1143,8 +1192,10 @@ Focus on incorporating the most significant keywords while following the guideli
                   id = "searchKSubtabs",
                   tabPanel(
                     "Diagnostic Plots",
+                    icon = icon("chart-line"),
                     value = "diagnostic",
                     br(),
+                    .tab_placeholder("chart-line", "Fit models across a range of topic numbers, then click ", .hl("'Run Diagnostics'"), " to compare them"),
                     uiOutput("topic_search_message"),
                     br(),
                     fluidRow(
@@ -1158,8 +1209,10 @@ Focus on incorporating the most significant keywords while following the guideli
                   ),
                   tabPanel(
                     "Quality Comparison",
+                    icon = icon("scale-balanced"),
                     value = "quality",
                     br(),
+                    .tab_placeholder("scale-balanced", "Run diagnostics first, then click ", .hl("'Compare'"), " to rank candidate models"),
                     wellPanel(
                       style = "background-color: #f0f8ff; border: 1px solid #4682b4;",
                       p("Overall Score = Coherence(z) + Exclusivity(z) - Residual(z) + Heldout(z)",
@@ -1177,12 +1230,15 @@ Focus on incorporating the most significant keywords while following the guideli
                   ),
                   tabPanel(
                     "Coherence vs Exclusivity",
+                    icon = icon("braille"),
                     value = "comparison",
                     br(),
+                    .tab_placeholder("braille", "Run diagnostics to plot coherence against exclusivity for each model"),
                     uiOutput("model_comparison_plot_uiOutput")
                   ),
                   tabPanel(
                     "AI Recommendation",
+                    icon = icon("wand-magic-sparkles"),
                     value = "ai_rec",
                     br(),
                     uiOutput("ai_recommendation_output"),
@@ -1193,34 +1249,20 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "output.has_search_k_results == false && input.topic_modeling_path == 'probability'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-search-plus", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Configure K range and click ",
-                      tags$strong("'Search K'", style = "color: #4269BF;"),
-                      " to find optimal topic numbers",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "search-plus",
+                  "Configure K range and click ",
+                  .hl("'Search K'"),
+                  " to find optimal topic numbers"
                 )
               ),
               conditionalPanel(
                 condition = "input.topic_modeling_path == 'embedding'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-cogs", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Configure settings and click ",
-                      tags$strong("'Run Model'", style = "color: #4269BF;"),
-                      " to discover topics",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "cogs",
+                  "Configure settings and click ",
+                  .hl("'Run Model'"),
+                  " to discover topics"
                 )
               ),
             ),
@@ -1289,34 +1331,22 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "output.has_word_topic_results == false && input.topic_modeling_path == 'probability'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Search K, and then click ",
-                      tags$strong("'Display'", style = "color: #4269BF;"),
-                      " to view word-topic distributions",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "project-diagram",
+                  "Search K,
+                  and then click ",
+                  .hl("'Display'"),
+                  " to view word-topic distributions"
                 )
               ),
               conditionalPanel(
                 condition = "output.has_word_topic_results == false && input.topic_modeling_path == 'embedding'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Run model, then click ",
-                      tags$strong("'Display'", style = "color: #4269BF;"),
-                      " to view topic keywords",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "project-diagram",
+                  "Run model,
+                  then click ",
+                  .hl("'Display'"),
+                  " to view topic keywords"
                 )
               ),
             ),
@@ -1334,15 +1364,13 @@ Focus on incorporating the most significant keywords while following the guideli
                 ),
                 conditionalPanel(
                   condition = "output.has_generated_content == false",
-                  div(
-                    style = "padding: 60px 40px; text-align: center;",
+                  .tab_placeholder(
                     tags$i(class = "fas fa-file-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Run topic modeling first, then configure settings in the sidebar and click ",
-                      tags$strong("'Generate Content'", style = "color: #4269BF;"),
-                      " to create content from your topics.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
+                    "Run topic modeling first,
+                    then configure settings in the sidebar and click ",
+                    .hl("'Generate Content'"),
+                    " to create content from your topics.",
+                    width = NULL
                   )
                 )
               )
@@ -1402,34 +1430,20 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "output.has_document_topic_results == false && input.topic_modeling_path == 'probability'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-file-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Complete ",
-                      tags$strong("Word-Topic tab", style = "color: #4269BF;"),
-                      " to view document-topic distributions",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "file-alt",
+                  "Complete ",
+                  .hl("Word-Topic tab"),
+                  " to view document-topic distributions"
                 )
               ),
               conditionalPanel(
                 condition = "output.has_document_topic_results == false && input.topic_modeling_path == 'embedding'",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-file-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Complete ",
-                      tags$strong("Word-Topic tab", style = "color: #4269BF;"),
-                      " to view document-topic distributions",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "file-alt",
+                  "Complete ",
+                  .hl("Word-Topic tab"),
+                  " to view document-topic distributions"
                 )
               ),
             ),
@@ -1446,17 +1460,10 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "output.has_quotes == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-quote-right", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Run topic model and select a topic to view ",
-                      tags$strong("representative quotes", style = "color: #4269BF;"),
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "quote-right",
+                  "Run topic model and select a topic to view ",
+                  .hl("representative quotes")
                 )
               )
             ),
@@ -1469,18 +1476,11 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "output.has_effect_estimates == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-calculator", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Click ",
-                      tags$strong("'Estimate'", style = "color: #4269BF;"),
-                      " button to generate effect estimates",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "calculator",
+                  "Click ",
+                  .hl("'Estimate'"),
+                  " button to generate effect estimates"
                 )
               )
             ),
@@ -1538,18 +1538,13 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "output.has_categorical_plot == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-chart-bar", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Estimate effects, select categorical covariate, then click ",
-                      tags$strong("'Display'", style = "color: #4269BF;"),
-                      " to visualize topic prevalence by categories",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "chart-bar",
+                  "Estimate effects,
+                  select categorical covariate,
+                  then click ",
+                  .hl("'Display'"),
+                  " to visualize topic prevalence by categories"
                 )
               )
             ),
@@ -1607,18 +1602,13 @@ Focus on incorporating the most significant keywords while following the guideli
               ),
               conditionalPanel(
                 condition = "output.has_continuous_plot == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Estimate effects, select continuous covariate, then click ",
-                      tags$strong("'Display'", style = "color: #4269BF;"),
-                      " to visualize topic prevalence trends",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "chart-line",
+                  "Estimate effects,
+                  select continuous covariate,
+                  then click ",
+                  .hl("'Display'"),
+                  " to visualize topic prevalence trends"
                 )
               )
             )
@@ -1921,9 +1911,9 @@ lexical_analysis_ui_content <- function() {
               )
             ),
             conditionalPanel(
-              condition = "input.keywords_subtabs == 'textrank'",
+              condition = "input.keywords_subtabs == 'keyness'",
               sliderInput(
-                "textrank_top_n",
+                "keyness_top_n",
                 "Number of keywords",
                 value = 15,
                 min = 1,
@@ -2338,7 +2328,6 @@ lexical_analysis_ui_content <- function() {
             tabPanel(
               "1. Annotation",
               value = 1,
-              br(),
               tabsetPanel(
                 id = "linguistic_subtabs",
                 tabPanel(
@@ -2347,20 +2336,15 @@ lexical_analysis_ui_content <- function() {
                   br(),
                   conditionalPanel(
                     condition = "output.lemma_ready == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 500px; margin: 0 auto;",
-                        tags$i(class = "fa fa-spell-check", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "Click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " to run spaCy linguistic analysis, or ",
-                          tags$strong("'Skip'", style = "color: #4269BF;"),
-                          " to use standard tokenization.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "spell-check",
+                      "Click ",
+                      .hl("'Apply'"),
+                      " to run spaCy linguistic analysis,
+                      or ",
+                      .hl("'Skip'"),
+                      " to use standard tokenization.",
+                      width = 500
                     )
                   ),
                   conditionalPanel(
@@ -2379,20 +2363,15 @@ lexical_analysis_ui_content <- function() {
                   br(),
                   conditionalPanel(
                     condition = "output.pos_ready == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 500px; margin: 0 auto;",
-                        tags$i(class = "fa fa-tags", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "First, click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " on the Word Forms tab to run spaCy analysis. Then configure and click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " here to view POS tags.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "tags",
+                      "First,
+                      click ",
+                      .hl("'Apply'"),
+                      " on the Word Forms tab to run spaCy analysis. Then configure and click ",
+                      .hl("'Apply'"),
+                      " here to view POS tags.",
+                      width = 500
                     )
                   ),
                   conditionalPanel(
@@ -2408,18 +2387,13 @@ lexical_analysis_ui_content <- function() {
                   br(),
                   conditionalPanel(
                     condition = "output.morph_ready == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 500px; margin: 0 auto;",
-                        tags$i(class = "fa fa-puzzle-piece", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "First, run POS tagging on the Word Forms tab. Then select morphological features in the sidebar and click ",
-                          tags$strong("'Analyze Morphology'", style = "color: #4269BF;"),
-                          " to extract features.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "puzzle-piece",
+                      "First,
+                      run POS tagging on the Word Forms tab. Then select morphological features in the sidebar and click ",
+                      .hl("'Analyze Morphology'"),
+                      " to extract features.",
+                      width = 500
                     )
                   ),
                   conditionalPanel(
@@ -2461,18 +2435,18 @@ lexical_analysis_ui_content <- function() {
                         ),
                         conditionalPanel(
                           condition = "output.has_additional_features == false",
-                          div(style = "padding: 60px 40px; text-align: center;",
-                            div(style = "max-width: 400px; margin: 0 auto;",
-                              tags$i(class = "fa fa-language", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", `aria-hidden` = "true"),
-                              tags$p("Select Case, Mood, or Aspect checkboxes from the sidebar to display additional morphological features.",
-                                style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;")
-                            )
+                          .tab_placeholder(
+                            "language",
+                            "Select Case,
+                            Mood,
+                            or Aspect checkboxes from the sidebar to display additional morphological features."
                           )
                         )
                       ),
                       tabPanel(
                         "Summary Table",
                         br(),
+                        .tab_placeholder("table", "Annotate the corpus, then the per-document counts appear here"),
                         DT::dataTableOutput("morph_summary_table")
                       )
                     )
@@ -2484,18 +2458,12 @@ lexical_analysis_ui_content <- function() {
                   br(),
                   conditionalPanel(
                     condition = "output.dependencies_ready == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 500px; margin: 0 auto;",
-                        tags$i(class = "fa fa-sitemap", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "Click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " on the Word Forms tab to run spaCy analysis and extract dependency parsing data.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "sitemap",
+                      "Click ",
+                      .hl("'Apply'"),
+                      " on the Word Forms tab to run spaCy analysis and extract dependency parsing data.",
+                      width = 500
                     )
                   ),
                   conditionalPanel(
@@ -2523,34 +2491,22 @@ lexical_analysis_ui_content <- function() {
                   br(),
                   conditionalPanel(
                     condition = "output.spacy_ready == false",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 500px; margin: 0 auto;",
-                        tags$i(class = "fa fa-id-badge", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "Click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " on the Word Forms tab to run spaCy analysis.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "id-badge",
+                      "Click ",
+                      .hl("'Apply'"),
+                      " on the Word Forms tab to run spaCy analysis.",
+                      width = 500
                     )
                   ),
                   conditionalPanel(
                     condition = "output.ner_pending == true",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 500px; margin: 0 auto;",
-                        tags$i(class = "fa fa-id-badge", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                        tags$p(
-                          "Click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " to extract named entities.",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "id-badge",
+                      "Click ",
+                      .hl("'Apply'"),
+                      " to extract named entities.",
+                      width = 500
                     )
                   ),
                   conditionalPanel(
@@ -2596,25 +2552,19 @@ lexical_analysis_ui_content <- function() {
               ),
               conditionalPanel(
                 condition = "output.has_frequency_plot == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Select terms, continuous variable, and click ",
-                      tags$strong("'Plot Terms'", style = "color: #4269BF;"),
-                      " to analyze frequency trends",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "chart-line",
+                  "Select terms,
+                  continuous variable,
+                  and click ",
+                  .hl("'Plot Terms'"),
+                  " to analyze frequency trends"
                 )
               )
             ),
             tabPanel(
               "3. Keywords",
               value = 3,
-              br(),
               tabsetPanel(
                 id = "keywords_subtabs",
                 tabPanel(
@@ -2624,8 +2574,8 @@ lexical_analysis_ui_content <- function() {
                 ),
                 tabPanel(
                   "Statistical Keyness",
-                  value = "textrank",
-                  uiOutput("keywords_textrank_uiOutput")
+                  value = "keyness",
+                  uiOutput("keywords_keyness_uiOutput")
                 ),
                 tabPanel(
                   "Comparison",
@@ -2652,19 +2602,12 @@ lexical_analysis_ui_content <- function() {
               br(),
               conditionalPanel(
                 condition = "output.log_odds_ready == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 500px; margin: 0 auto;",
-                    tags$i(class = "fa fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Select a grouping variable and click ",
-                      tags$strong("'Calculate'", style = "color: #4269BF;"),
-                      " to compare word usage between categories.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    ),
-
-                  )
+                .tab_placeholder(
+                  "balance-scale",
+                  "Select a grouping variable and click ",
+                  .hl("'Calculate'"),
+                  " to compare word usage between categories.",
+                  width = 500
                 )
               ),
               conditionalPanel(
@@ -2680,19 +2623,12 @@ lexical_analysis_ui_content <- function() {
               br(),
               conditionalPanel(
                 condition = "output.dispersion_ready == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 500px; margin: 0 auto;",
-                    tags$i(class = "fa fa-chart-line", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Select terms in the sidebar and click ",
-                      tags$strong("'Analyze'", style = "color: #4269BF;"),
-                      " to visualize their dispersion across documents.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    ),
-
-                  )
+                .tab_placeholder(
+                  "chart-line",
+                  "Select terms in the sidebar and click ",
+                  .hl("'Analyze'"),
+                  " to visualize their dispersion across documents.",
+                  width = 500
                 )
               ),
               conditionalPanel(
@@ -3247,7 +3183,7 @@ semantic_analysis_ui_content <- function() {
 
             uiOutput("sentiment_status_message"),
             conditionalPanel(
-              condition = "input.sentiment_subtabs == 'overall'",
+              condition = "input.semantic_analysis_tabs == 'sentiment'",
               radioButtons(
                 "sentiment_method",
                 "Analysis method",
@@ -3261,8 +3197,8 @@ semantic_analysis_ui_content <- function() {
               ),
               tags$small(
                 class = "text-muted",
-                style = "display: block; margin-bottom: 12px;",
-                "Each method is domain-specific — check it fits your text and spot-check results."
+                style = "font-size: 16px; display: block; margin-bottom: 12px;",
+                "Each method is domain-specific — check it fits the text and spot-check results."
               ),
               conditionalPanel(
                 condition = "input.sentiment_method == 'lexicon'",
@@ -3270,13 +3206,24 @@ semantic_analysis_ui_content <- function() {
                   "sentiment_lexicon",
                   "Sentiment lexicon",
                   choices = c(
+                    "Valence shifters (sentimentr)" = "sentimentr",
                     "AFINN" = "afinn",
                     "Bing" = "bing",
                     "NRC" = "nrc"
                   ),
-                  selected = "bing"
+                  selected = "sentimentr"
                 ),
-                actionButton("run_sentiment_analysis", "Analyze Sentiment", class = "btn-primary btn-block")
+                conditionalPanel(
+                  condition = "input.sentiment_lexicon == 'sentimentr'",
+                  tags$p(
+                    class = "text-muted",
+                    style = "font-size: 13px; margin: -8px 0 12px 0;",
+                    HTML("Weights each word by nearby negators and amplifiers. Scores are unbounded, so compare within this corpus. <a href='https://github.com/trinker/sentimentr' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;'>Source</a>")
+                  )
+                ),
+                actionButton("run_sentiment_analysis", "Analyze Sentiment", class = "btn-primary btn-block"),
+                sliderInput("sentiment_top_words", "Words behind the scores",
+                            min = 5, max = 40, value = 20, step = 5)
               ),
               conditionalPanel(
                 condition = "input.sentiment_method == 'neural'",
@@ -3376,6 +3323,36 @@ semantic_analysis_ui_content <- function() {
                 options = list(placeholder = "Optional")
               )
             )
+          ),
+          conditionalPanel(
+            condition = "input.semantic_analysis_tabs == 'wordcloud'",
+            tags$h5(HTML("<strong>Word Cloud</strong> <a href='https://lepennec.github.io/ggwordcloud/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin-bottom: 10px;"),
+            selectizeInput(
+              "wordcloud_group_var",
+              "Compare by",
+              choices = c("None" = "None"),
+              selected = "None"
+            ),
+            selectInput(
+              "wordcloud_metric",
+              "Size words by",
+              choices = c("Term frequency" = "frequency",
+                          "Document frequency" = "docfreq"),
+              selected = "frequency"
+            ),
+            sliderInput(
+              "wordcloud_max_words",
+              "Words to show",
+              value = 100, min = 10, max = 300, step = 10
+            ),
+            numericInput(
+              "wordcloud_min_freq",
+              "Minimum frequency",
+              value = 3, min = 1, step = 1
+            ),
+            .palette_input("wordcloud_palette", "Color scale"),
+            actionButton("run_wordcloud", "Generate", class = "btn-primary btn-block",
+                         icon = icon("cloud"))
           ),
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'cooccurrence'",
@@ -3613,23 +3590,31 @@ semantic_analysis_ui_content <- function() {
               ),
               conditionalPanel(
                 condition = "output.has_documents == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-upload", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Load data and process documents in the ",
-                      tags$strong("1. Setup", style = "color: #4269BF;"),
-                      " tab first",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "upload",
+                  "Load data and process documents in the ",
+                  .hl("1. Setup"),
+                  " tab first"
                 )
               )
             ),
             tabPanel(
-              "2. Co-occurrence",
+              "2. Word cloud",
+              value = "wordcloud",
+              br(),
+              conditionalPanel(
+                condition = "output.has_documents == false",
+                .tab_placeholder("cloud", "Process documents in the ", .hl("1. Setup"), " tab first")
+              ),
+              conditionalPanel(
+                condition = "output.has_documents == true",
+                shiny::plotOutput("semantic_wordcloud", height = "620px"),
+                br(),
+                DT::dataTableOutput("semantic_wordcloud_table")
+              )
+            ),
+            tabPanel(
+              "3. Word co-occurrence",
               value = "cooccurrence",
               bsCollapse(
                 open = 0,
@@ -3680,37 +3665,36 @@ semantic_analysis_ui_content <- function() {
                   id = "word_co_occur_subTab",
                   tabPanel(
                     "Plot",
+                    icon = icon("chart-area"),
+                  .tab_placeholder("chart-area", "Set a co-occurrence threshold and click ", .hl("'Plot'"), " to draw the network"),
                     uiOutput("word_co_occurrence_network_plot_uiOutput")
                   ),
                   tabPanel(
                     "Table",
+                    icon = icon("table"),
+                  .tab_placeholder("table", "Build a co-occurrence network, then its term pairs appear here"),
                     uiOutput("word_co_occurrence_network_table_uiOutput")
                   ),
                   tabPanel(
                     "Summary",
+                    icon = icon("clipboard-list"),
+                  .tab_placeholder("clipboard-list", "Build a co-occurrence network to summarize its structure here"),
                     uiOutput("word_co_occurrence_network_summary_uiOutput")
                   )
                 )
               ),
               conditionalPanel(
                 condition = "output.has_cooccurrence_plot == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-project-diagram", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Configure settings and click ",
-                      tags$strong("'Plot Network'", style = "color: #4269BF;"),
-                      " to visualize word co-occurrence",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "project-diagram",
+                  "Configure settings and click ",
+                  .hl("'Plot Network'"),
+                  " to visualize word co-occurrence"
                 )
               )
             ),
             tabPanel(
-              "3. Correlation",
+              "4. Word correlation",
               value = "correlation",
               bsCollapse(
                 open = 0,
@@ -3761,68 +3745,48 @@ semantic_analysis_ui_content <- function() {
                   id = "word_correlation_subTab",
                   tabPanel(
                     "Plot",
+                    icon = icon("chart-area"),
+                  .tab_placeholder("chart-area", "Set a correlation threshold and click ", .hl("'Plot'"), " to draw the network"),
                     uiOutput("word_correlation_network_plot_uiOutput")
                   ),
                   tabPanel(
                     "Table",
+                    icon = icon("table"),
+                  .tab_placeholder("table", "Build a correlation network, then its term pairs appear here"),
                     uiOutput("word_correlation_network_table_uiOutput")
                   ),
                   tabPanel(
                     "Summary",
+                    icon = icon("clipboard-list"),
+                  .tab_placeholder("clipboard-list", "Build a correlation network to summarize its structure here"),
                     uiOutput("word_correlation_network_summary_uiOutput")
                   )
                 )
               ),
               conditionalPanel(
                 condition = "output.has_correlation_plot == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-share-alt", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Configure settings and click ",
-                      tags$strong("'Plot Network'", style = "color: #4269BF;"),
-                      " to visualize word correlation",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "share-alt",
+                  "Configure settings and click ",
+                  .hl("'Plot Network'"),
+                  " to visualize word correlation"
                 )
               )
             ),
             tabPanel(
-              "4. Similarity",
+              "5. Similarity",
               value = "similarity",
               conditionalPanel(
                 condition = "output.has_documents == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-cog", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Process documents in the ",
-                      tags$strong("1. Setup", style = "color: #4269BF;"),
-                      " tab first",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
-                )
+                .tab_placeholder("cog", "Process documents in the ", .hl("1. Setup"), " tab first")
               ),
               conditionalPanel(
                 condition = "output.has_documents == true && output.has_similarity_calculation == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-calculator", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Configure settings and click ",
-                      tags$strong("'Calculate'", style = "color: #4269BF;"),
-                      " to begin analysis",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "calculator",
+                  "Configure settings and click ",
+                  .hl("'Calculate'"),
+                  " to begin analysis"
                 )
               ),
               conditionalPanel(
@@ -3839,35 +3803,21 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "5. Comparative",
+              "6. Comparative",
               value = "comparative",
               br(),
               conditionalPanel(
                 condition = "output.has_documents == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 500px; margin: 0 auto;",
-                    tags$i(class = "fa fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Upload data to enable Comparative Analysis",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
-                )
+                .tab_placeholder("balance-scale", "Upload data to enable Comparative Analysis", width = 500)
               ),
               conditionalPanel(
                 condition = "output.has_documents == true && output.has_gap_analysis == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 500px; margin: 0 auto;",
-                    tags$i(class = "fa fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Run Comparative Analysis from the sidebar to compare categories and identify unique content, gaps, and cross-category opportunities.",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "balance-scale",
+                  "Run Comparative Analysis from the sidebar to compare categories and identify unique content,
+                  gaps,
+                  and cross-category opportunities.",
+                  width = 500
                 )
               ),
               conditionalPanel(
@@ -3878,32 +3828,41 @@ semantic_analysis_ui_content <- function() {
                   id = "gap_analysis_tabs",
                   tabPanel(
                     "Summary",
+                    icon = icon("clipboard-list"),
                     br(),
+                    .tab_placeholder("clipboard-list", "Select two categories and click ", .hl("'Compare'"), " to summarize the gap"),
                     DT::dataTableOutput("gap_summary_stats")
                   ),
                   tabPanel(
                     "Heatmap",
+                    icon = icon("grip"),
                     br(),
+                    .tab_placeholder("grip", "Select two categories and click ", .hl("'Compare'"), " to shade shared terms"),
                     tags$p("Cross-category similarity heatmap comparing reference documents against other categories.",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
                     plotly::plotlyOutput("gap_cross_category_heatmap", height = "600px")
                   ),
                   tabPanel(
                     "Unique (Reference)",
+                    icon = icon("circle-half-stroke"),
                     br(),
+                    .tab_placeholder("circle-half-stroke", "Terms found only in the reference category appear here after a comparison"),
                     tags$p("Reference items with low similarity to all comparison categories (distinctive content).",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
                     DT::dataTableOutput("gap_unique_items")
                   ),
                   tabPanel(
                     "Missing (Comparison)",
+                    icon = icon("circle-minus"),
                     br(),
+                    .tab_placeholder("circle-minus", "Terms absent from the comparison category appear here after a comparison"),
                     tags$p("Comparison category items not well-covered by reference category (content gaps).",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
                     DT::dataTableOutput("gap_missing_items")
                   ),
                   tabPanel(
                     "Cross-Category",
+                    icon = icon("shuffle"),
                     br(),
                     tags$p("Items with moderate similarity - potential for cross-category learning or transfer.",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
@@ -3913,38 +3872,19 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "6. Search",
+              "7. Search",
               value = "search",
               conditionalPanel(
                 condition = "output.has_documents == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-cog", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Process documents in the ",
-                      tags$strong("1. Setup", style = "color: #4269BF;"),
-                      " tab first",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
-                )
+                .tab_placeholder("cog", "Process documents in the ", .hl("1. Setup"), " tab first")
               ),
               conditionalPanel(
                 condition = "output.has_documents == true && output.has_search_results == false",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-search", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                    tags$p(
-                      "Enter a search query and click ",
-                      tags$strong("'Search'", style = "color: #4269BF;"),
-                      " to see results",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "search",
+                  "Enter a search query and click ",
+                  .hl("'Search'"),
+                  " to see results"
                 )
               ),
               conditionalPanel(
@@ -3956,9 +3896,8 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "7. Sentiment",
+              "8. Sentiment",
               value = "sentiment",
-              br(),
               tabsetPanel(
                 id = "sentiment_subtabs",
                 tabPanel(
@@ -3984,33 +3923,55 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "8. Groups",
+              "9. Document Groups",
               value = "clustering",
-              br(),
-              uiOutput("clustering_warning"),
-              uiOutput("clustering_quality_metrics"),
-              br(),
               tabsetPanel(
                 id = "clustering_subtabs",
                 tabPanel(
                   "Map",
                   br(),
-                  plotly::plotlyOutput("semantic_cluster_plot", height = "600px")
+                  conditionalPanel(
+                    condition = "output.has_clusters == false",
+                    .cluster_placeholder(
+                      "circle-nodes",
+                      "Documents that use similar language, placed near each other",
+                      "Run clustering in Semantic Analysis to draw the map.")
+                  ),
+                  plotly::plotlyOutput("semantic_cluster_plot", height = "600px"),
+                  br(),
+                  uiOutput("clustering_quality_metrics")
                 ),
                 tabPanel(
                   "Groups Table",
                   br(),
+                  conditionalPanel(
+                    condition = "output.has_clusters == false",
+                    .cluster_placeholder(
+                      "table-list",
+                      "One row per group, with its size and defining terms",
+                      "Run clustering in Semantic Analysis to fill the table.")
+                  ),
                   DT::dataTableOutput("semantic_cluster_table")
                 ),
                 tabPanel(
                   "Group Details",
                   br(),
-                  selectInput("selected_cluster_group", "Select a group", choices = NULL),
-                  uiOutput("cluster_group_summary"),
-                  br(),
-                  plotly::plotlyOutput("cluster_terms_plot", height = "400px"),
-                  br(),
-                  DT::dataTableOutput("cluster_sample_docs")
+                  conditionalPanel(
+                    condition = "output.has_clusters == false",
+                    .cluster_placeholder(
+                      "magnifying-glass-chart",
+                      "The terms and documents behind one group",
+                      "Run clustering in Semantic Analysis, then pick a group.")
+                  ),
+                  conditionalPanel(
+                    condition = "output.has_clusters == true",
+                    selectInput("selected_cluster_group", "Select a group", choices = NULL),
+                    uiOutput("cluster_group_summary"),
+                    br(),
+                    plotly::plotlyOutput("cluster_terms_plot", height = "400px"),
+                    br(),
+                    DT::dataTableOutput("cluster_sample_docs")
+                  )
                 )
               )
             )
@@ -4034,7 +3995,7 @@ qualitative_coding_ui_content <- function() {
         ),
         fileInput("qc_codebook_file", "Upload codebook (CSV)", accept = c(".csv")),
         tags$p("Columns: code, definition, optional example.",
-               style = "font-size: 13px; color: #475569; margin-top: -8px;"),
+               style = "font-size: 16px; color: #475569; margin-top: -4px;"),
         actionButton("qc_add_code", "Add Row", class = "btn-primary btn-block"),
         br(),
         conditionalPanel(
@@ -4055,10 +4016,10 @@ qualitative_coding_ui_content <- function() {
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
           "Unit of analysis: ",
           tags$strong(textOutput("analysis_unit_label", inline = TRUE)),
-          ". Set it under Preprocess, Select columns, so every stage uses the same one."
+          ". Set it under Preprocess, Unite Texts."
         ),
         sliderInput("qc_max_codes", "Max codes per unit", min = 1, max = 5, value = 3, step = 1),
-        sliderInput("qc_n_docs", "Documents to code", min = 1, max = 500, value = 20, step = 1),
+        sliderInput("qc_n_docs", "Rows to code", min = 1, max = 500, value = 20, step = 1),
         conditionalPanel(
           condition = "output.has_topic_assignments == true",
           checkboxInput("qc_stratify_by_topic",
@@ -4187,19 +4148,18 @@ qualitative_coding_ui_content <- function() {
             conditionalPanel(
               condition = "output.has_qc_codebook == true",
               tags$p("Double-click a cell to edit. Codes without definitions weaken AI suggestions.",
-                     style = "font-size: 14px; color: #475569; margin-top: 10px;")
+                     style = "font-size: 16px; color: #475569; margin-top: 10px;")
             ),
             conditionalPanel(
               condition = "output.has_qc_codebook == false",
-              div(
-                style = "padding: 60px 40px; text-align: center;",
+              .tab_placeholder(
                 tags$i(class = "fas fa-book", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                tags$p(
-                  "Upload a codebook CSV, click ",
-                  tags$strong("'Add Row'", style = "color: #4269BF;"),
-                  ", or seed codes from AI topic labels generated in Topic Modeling.",
-                  style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                )
+                "Upload a codebook CSV,
+                click ",
+                .hl("'Add Row'"),
+                ",
+                or seed codes from AI topic labels generated in Topic Modeling.",
+                width = NULL
               )
             )
           )
@@ -4215,15 +4175,14 @@ qualitative_coding_ui_content <- function() {
             ),
             conditionalPanel(
               condition = "output.has_qc_suggestions == false",
-              div(
-                style = "padding: 60px 40px; text-align: center;",
+              .tab_placeholder(
                 tags$i("✦", class = "icon-ai", `aria-hidden` = "true", style = "font-style: normal; font-size: 48px; opacity: 0.35; margin-bottom: 20px; display: block;"),
-                tags$p(
-                  "Build a codebook, process documents (Semantic Analysis, Setup), then click ",
-                  tags$strong("'Suggest Codes'", style = "color: #4269BF;"),
-                  " to draft code suggestions for review.",
-                  style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                )
+                "Build a codebook,
+                process documents (Semantic Analysis, Setup),
+                then click ",
+                .hl("'Suggest Codes'"),
+                " to draft code suggestions for review.",
+                width = NULL
               )
             )
           )
@@ -4236,15 +4195,12 @@ qualitative_coding_ui_content <- function() {
             DT::dataTableOutput("qc_review_table"),
             conditionalPanel(
               condition = "output.has_qc_suggestions == false",
-              div(
-                style = "padding: 60px 40px; text-align: center;",
+              .tab_placeholder(
                 tags$i(class = "fas fa-user-check", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                tags$p(
-                  "Suggestions appear here after ",
-                  tags$strong("'Suggest Codes'", style = "color: #4269BF;"),
-                  " runs. Nothing exports without review.",
-                  style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                )
+                "Suggestions appear here after ",
+                .hl("'Suggest Codes'"),
+                " runs. Nothing exports without review.",
+                width = NULL
               )
             )
           )
@@ -4279,15 +4235,13 @@ qualitative_coding_ui_content <- function() {
             DT::dataTableOutput("qc_retest_table"),
             conditionalPanel(
               condition = "output.has_qc_agreement == false && output.has_qc_retest == false",
-              div(
-                style = "padding: 60px 40px; text-align: center;",
+              .tab_placeholder(
                 tags$i(class = "fas fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                tags$p(
-                  "Combine coder files and click ",
-                  tags$strong("'Compute Agreement'", style = "color: #4269BF;"),
-                  ", or run the AI retest to measure suggestion stability.",
-                  style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                )
+                "Combine coder files and click ",
+                .hl("'Compute Agreement'"),
+                ",
+                or run the AI retest to measure suggestion stability.",
+                width = NULL
               )
             )
           )

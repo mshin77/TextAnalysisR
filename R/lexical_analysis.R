@@ -3090,18 +3090,21 @@ plot_weighted_log_odds <- function(weighted_data,
                                           fill = direction, text = hover_text)) +
     ggplot2::geom_col() +
     ggplot2::geom_vline(xintercept = 0, linetype = "dotted", color = "#94A3B8") +
-    ggplot2::facet_wrap(stats::as.formula(paste("~", group_col)), scales = "free_y") +
+    ggplot2::facet_wrap(stats::as.formula(paste("~", group_col)), scales = "free_y",
+                        labeller = ggplot2::label_wrap_gen(width = 30)) +
     tidytext::scale_y_reordered() +
     ggplot2::scale_fill_manual(values = c("positive" = color_positive,
                                           "negative" = color_negative),
                                guide = "none") +
-    ggplot2::labs(x = "Log Odds (Weighted)", y = "", title = title) +
+    ggplot2::labs(x = "Log Odds (Weighted)", y = "",
+                  title = paste(strwrap(title, width = 60), collapse = "\n")) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a", hjust = 0.5),
       axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
       axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
-      strip.text = ggplot2::element_text(size = 12, color = "#0c1f4a")
+      strip.text = ggplot2::element_text(size = 10, color = "#0c1f4a", lineheight = 1.1),
+      panel.spacing = ggplot2::unit(1.2, "lines")
     )
 }
 

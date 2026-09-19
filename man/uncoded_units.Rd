@@ -20,10 +20,8 @@ unit received at least one code.
 }
 \description{
 Returns the units \code{\link[=apply_codes]{apply_codes()}} left uncoded, paired with their text.
-These units are the ones a codebook does not reach. Reviewing them shows
-whether content recurs in the corpus that the coding frame omits, and is the
-step that keeps a codebook-constrained analysis from reporting only what the
-codebook was built to find.
+Reading them is what shows whether the corpus carries content the coding
+frame omits.
 }
 \seealso{
 \code{\link[=apply_codes]{apply_codes()}} to produce assignments.

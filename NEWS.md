@@ -1,3 +1,8 @@
+# TextAnalysisR 0.1.5.9000
+
+- A codebook can be built from the texts instead of supplied.
+- Sentiment analysis reports which words moved the score.
+
 # TextAnalysisR 0.1.5
 
 - Coded output tells a declined unit from a failed call.

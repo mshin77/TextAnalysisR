@@ -668,3 +668,96 @@ test_that("merge_codes stays quiet when every source is in range", {
   b <- tibble::tibble(doc_id = "d1", code = "a", coder = "c2", confidence = NA_real_)
   expect_silent(merge_codes(list(a, b)))
 })
+
+test_that(".parse_new_code reuses an existing code regardless of case", {
+  out <- TextAnalysisR:::.parse_new_code('{"code": "AA"}', c("aa", "bb"))
+  expect_equal(out$code, "aa")
+  expect_false(out$opened_new)
+  expect_equal(out$status, "ok")
+})
+
+test_that(".parse_new_code opens a code only when a definition comes with it", {
+  with_def <- TextAnalysisR:::.parse_new_code(
+    '{"code": "cc", "definition": "d3"}', c("aa", "bb"))
+  expect_true(with_def$opened_new)
+  expect_equal(with_def$definition, "d3")
+
+  no_def <- TextAnalysisR:::.parse_new_code('{"code": "cc"}', c("aa", "bb"))
+  expect_true(is.na(no_def$code))
+  expect_equal(no_def$status, "none")
+})
+
+test_that(".parse_new_code returns none for an empty code or unparsable text", {
+  expect_equal(TextAnalysisR:::.parse_new_code('{"code": ""}', "aa")$status, "none")
+  expect_equal(TextAnalysisR:::.parse_new_code("no json here", "aa")$status, "none")
+})
+
+test_that(".codes_seen caps the listing at the most-used codes", {
+  book <- tibble::tibble(code = c("aa", "bb"), definition = c("d1", "d2"))
+  expect_equal(TextAnalysisR:::.codes_seen(book[0, ], character(0), Inf), "none yet")
+  expect_match(TextAnalysisR:::.codes_seen(book, c("aa", "bb", "bb"), Inf), "aa")
+  capped <- TextAnalysisR:::.codes_seen(book, c("aa", "bb", "bb"), 1)
+  expect_match(capped, "bb")
+  expect_false(grepl("aa", capped))
+})
+
+test_that("generate_codes rejects a seed codebook with duplicate codes", {
+  cb <- tibble::tibble(code = c("a", "a"), definition = c("d1", "d2"))
+  expect_error(generate_codes("Some text.", codebook = cb), "duplicate")
+})
+
+test_that("generate_codes errors when the texts hold no units", {
+  expect_error(generate_codes(c(doc1 = "   ")), "no codable units")
+})
+
+test_that("generate_codes returns NULL when no provider key is available", {
+  withr::with_envvar(c(OPENAI_API_KEY = "", GEMINI_API_KEY = ""), {
+    expect_message(out <- generate_codes("A codable sentence.", verbose = FALSE))
+    expect_null(out)
+  })
+})
+
+test_that("apply_codes still returns NULL when no provider key is available", {
+  cb <- tibble::tibble(code = "a", definition = "def a")
+  withr::with_envvar(c(OPENAI_API_KEY = "", GEMINI_API_KEY = ""), {
+    expect_message(out <- apply_codes("A codable sentence.", cb, verbose = FALSE))
+    expect_null(out)
+  })
+})
+
+test_that("generate_codes rejects an order matching no unit ids", {
+  expect_error(generate_codes("A sentence.", order = "nope"), "matches no unit")
+})
+
+test_that("generate_codes reads in the supplied order", {
+  skip_if_not_installed("httr")
+  skip_if_not_installed("jsonlite")
+  fake <- function(..., user_prompt) {
+    sprintf('{"code": "%s", "definition": "d"}', substr(user_prompt, 1, 3))
+  }
+  testthat::local_mocked_bindings(call_llm_api = fake, .package = "TextAnalysisR")
+  texts <- c(d1 = "aaa one. bbb two. ccc three.")
+  ids <- split_texts(texts, "sentence")$unit_id
+  fwd <- generate_codes(texts, unit = "sentence", provider = "openai",
+                        api_key = "sk-test", delay = 0, verbose = FALSE)
+  rev <- generate_codes(texts, unit = "sentence", order = rev(ids),
+                        provider = "openai", api_key = "sk-test",
+                        delay = 0, verbose = FALSE)
+  expect_equal(fwd$trace$unit_id, ids)
+  expect_equal(rev$trace$unit_id, rev(ids))
+  expect_setequal(fwd$codebook$code, rev$codebook$code)
+})
+
+test_that("generate_codes stops after a run of units that open nothing", {
+  skip_if_not_installed("httr")
+  skip_if_not_installed("jsonlite")
+  fake <- function(...) '{"code": "same", "definition": "d"}'
+  testthat::local_mocked_bindings(call_llm_api = fake, .package = "TextAnalysisR")
+  texts <- c(d1 = "One. Two. Three. Four. Five.")
+  out <- generate_codes(texts, unit = "sentence", stop_after = 2,
+                        provider = "openai", api_key = "sk-test",
+                        delay = 0, verbose = FALSE)
+  expect_equal(nrow(out$trace), 3)
+  expect_equal(nrow(out$codebook), 1)
+  expect_equal(out$trace$position, 1:3)
+})

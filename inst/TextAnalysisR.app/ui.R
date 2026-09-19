@@ -413,8 +413,13 @@ ui <- fluidPage(
             options = list(placeholder = "Select dataset", loadThrottle = 0)
           ),
           fileInput("file", "File upload",
-            multiple = FALSE,
-            accept = c(".xlsx", ".xls", ".xlsm", ".csv", ".pdf", ".docx", ".txt")
+            multiple = TRUE,
+            accept = c(".xlsx", ".xls", ".xlsm", ".csv", ".pdf", ".docx", ".txt",
+                       ".png", ".jpg", ".jpeg", ".webp")
+          ),
+          conditionalPanel(
+            condition = "input.dataset_choice == 'Upload Your File'",
+            uiOutput("upload_manifest")
           ),
           conditionalPanel(
             condition = "input.dataset_choice == 'Upload Your File'",
@@ -435,13 +440,24 @@ Supports:
 • Plain text
 • Tabular data (Excel, CSV, web tables)"
               )
-            )
+            ),
+            div(
+              style = "display: flex; gap: 10px; margin-bottom: 10px;",
+              div(style = "flex: 1;",
+                actionButton("add_paste", "Add", class = "btn-primary btn-block", icon = icon("plus"))),
+              div(style = "flex: 1;",
+                actionButton("clear_pastes", "Clear all", class = "btn-default btn-block"))
+            ),
+            uiOutput("paste_manifest")
           ),
           tags$div(
             class = "limits-info-box status-step-purple",
             style = "margin-top: 0;",
             tags$i(class = "fa fa-info-circle limits-icon status-icon status-icon-purple"),
-            tags$strong("Limits:", class = "limits-title"), " Max 100MB file upload, 50MB paste. Optimal: 1K-5K documents"
+            tags$strong("Limits:", class = "limits-title"), " Max 100MB file upload, 50MB paste. Optimal: 1K-5K rows",
+            tags$br(),
+            tags$strong("Unit of analysis:", class = "limits-title"),
+            " One row is one document. Split rows into sentences under Preprocess, Unite Texts."
           )
         ),
         mainPanel(
@@ -476,11 +492,12 @@ Supports:
             selectInput(
               "analysis_unit",
               label = NULL,
-              choices = c("Sentences" = "sentence", "Paragraphs" = "paragraph",
-                          "Whole documents" = "document"),
-              selected = "paragraph"
+              choices = c("Sentences" = "sentence",
+                          "Paragraphs (split on blank lines)" = "paragraph",
+                          "Whole rows" = "document"),
+              selected = "sentence"
             ),
-            tags$p("Splits on sentences, paragraphs, or whole documents. Paragraph is the usual unit of analysis. Clustering, topic modeling, and coding all read this. Changing it after a model runs makes that model's categories describe different objects.",
+            tags$p("Embedding topic modeling and AI coding read this. Lexical analysis, STM topic modeling, and clustering always run on whole rows. Paragraph splitting needs a blank line inside the text, which spreadsheet responses rarely carry, so it usually leaves one unit per row. Changing it after a model runs makes that model's categories describe different objects.",
                    style = "font-size: 13px; color: #475569; margin-top: -8px;")
           ),
           conditionalPanel(
@@ -706,18 +723,11 @@ Supports:
               ),
               conditionalPanel(
                 condition = "!output.has_united_table_results",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-columns", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Select columns and click ",
-                      tags$strong("'Apply'", style = "color: #4269BF;"),
-                      " to unite text columns",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "columns",
+                  "Select columns and click ",
+                  .hl("'Apply'"),
+                  " to unite text columns"
                 )
               )
             ),
@@ -730,19 +740,7 @@ Supports:
               ),
               conditionalPanel(
                 condition = "!output.has_preprocess_results",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-cut", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Configure options and click ",
-                      tags$strong("'Apply'", style = "color: #4269BF;"),
-                      " to tokenize texts",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
-                )
+                .tab_placeholder("cut", "Configure options and click ", .hl("'Apply'"), " to tokenize texts")
               )
             ),
             tabPanel(
@@ -773,18 +771,11 @@ Supports:
               ),
               conditionalPanel(
                 condition = "!output.has_stopword_results",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-filter", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Select stopwords and click ",
-                      tags$strong("'Apply'", style = "color: #4269BF;"),
-                      " to remove common words",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
+                .tab_placeholder(
+                  "filter",
+                  "Select stopwords and click ",
+                  .hl("'Apply'"),
+                  " to remove common words"
                 )
               )
             ),
@@ -805,18 +796,11 @@ Supports:
                   ),
                   conditionalPanel(
                     condition = "!output.has_ngram_detection_results",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 400px; margin: 0 auto;",
-                        tags$i(class = "fa fa-search", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                        tags$p(
-                          "Configure settings and click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " to detect multi-words",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "search",
+                      "Configure settings and click ",
+                      .hl("'Apply'"),
+                      " to detect multi-words"
                     )
                   )
                 ),
@@ -844,18 +828,11 @@ Supports:
                   ),
                   conditionalPanel(
                     condition = "!output.has_dictionary_results",
-                    div(
-                      style = "padding: 60px 40px; text-align: center;",
-                      div(
-                        style = "max-width: 400px; margin: 0 auto;",
-                        tags$i(class = "fa fa-link", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                        tags$p(
-                          "Select n-grams and click ",
-                          tags$strong("'Apply'", style = "color: #4269BF;"),
-                          " to compound multi-words",
-                          style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                        )
-                      )
+                    .tab_placeholder(
+                      "link",
+                      "Select n-grams and click ",
+                      .hl("'Apply'"),
+                      " to compound multi-words"
                     )
                   )
                 )
@@ -889,19 +866,7 @@ Supports:
               ),
               conditionalPanel(
                 condition = "!output.has_dfm_results",
-                div(
-                  style = "padding: 60px 40px; text-align: center;",
-                  div(
-                    style = "max-width: 400px; margin: 0 auto;",
-                    tags$i(class = "fa fa-table", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;", "aria-hidden" = "true"),
-                    tags$p(
-                      "Click ",
-                      tags$strong("'Process'", style = "color: #4269BF;"),
-                      " to create document-feature matrix",
-                      style = "font-size: 18px; font-weight: 400; line-height: 1.7; color: #475569; margin: 0;"
-                    )
-                  )
-                )
+                .tab_placeholder("table", "Click ", .hl("'Process'"), " to create document-feature matrix")
               )
             )
           )

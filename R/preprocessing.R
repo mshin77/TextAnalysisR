@@ -101,6 +101,87 @@ get_available_tokens <- function(final_tokens = NULL,
   NULL
 }
 
+#' @title Detect a File's Text Encoding
+#'
+#' @description
+#' Reads the byte-order mark, and falls back to a UTF-8 validity check, to pick
+#' the encoding a file should be read with. Excel and several survey platforms
+#' export UTF-16, which fails to read as UTF-8.
+#'
+#' @param path Path to a text file.
+#'
+#' @return One of "UTF-8", "UTF-16LE", "UTF-16BE", or "windows-1252".
+#'
+#' @seealso [to_utf8()] to repair strings already in memory.
+#' @concept preprocessing
+#' @export
+sniff_encoding <- function(path) {
+  raw <- readBin(path, "raw", n = 4L)
+  bom <- list(c(0xEF, 0xBB, 0xBF), c(0xFF, 0xFE), c(0xFE, 0xFF))
+  enc <- c("UTF-8", "UTF-16LE", "UTF-16BE")
+  hit <- vapply(bom, function(b) identical(as.integer(raw[seq_along(b)]), b), logical(1))
+  if (any(hit)) return(enc[which(hit)[1]])
+  txt <- suppressWarnings(readChar(path, file.info(path)$size, useBytes = TRUE))
+  if (!is.na(txt) && validUTF8(txt)) "UTF-8" else "windows-1252"
+}
+
+#' @keywords internal
+.utf8_cols <- function(df) {
+  chr <- vapply(df, is.character, logical(1))
+  df[chr] <- lapply(df[chr], to_utf8)
+  df
+}
+
+#' @keywords internal
+.read_encoded <- function(path) {
+  to_utf8(readr::read_lines(path, locale = readr::locale(encoding = sniff_encoding(path)),
+                             progress = FALSE))
+}
+
+#' @title Repair Text to UTF-8
+#'
+#' @description
+#' Re-encodes strings that are not valid UTF-8 and marks the result, so text
+#' from a file read at the system codepage cannot reach the tokenizer as
+#' undecodable bytes.
+#'
+#' @param x Character vector.
+#'
+#' @return A character vector, every element valid UTF-8. Bytes that cannot be
+#'   decoded become the currency sign, which is visible rather than silent.
+#'
+#' @seealso [sniff_encoding()] to pick the encoding before reading.
+#' @concept preprocessing
+#' @export
+to_utf8 <- function(x) {
+  x <- as.character(x)
+  bad <- !validUTF8(x)
+  x[bad] <- iconv(x[bad], from = "", to = "UTF-8", sub = "\u00a4")
+  x[is.na(x)] <- ""
+  enc2utf8(x)
+}
+
+#' @keywords internal
+.glyph_garbage_share <- function(x) {
+  tok <- unlist(strsplit(paste(x, collapse = " "), "[[:space:]]+"))
+  tok <- tok[nzchar(tok)]
+  if (length(tok) == 0) return(1)
+  junk <- grepl("[\u00a0-\u00ff]", tok) & grepl("[0-9]", tok)
+  junk <- junk | !grepl("[[:alpha:]]{2,}", tok)
+  mean(junk)
+}
+
+#' @keywords internal
+.stop_unusable_pdf <- function(lines, filepath) {
+  share <- .glyph_garbage_share(lines)
+  if (share < 0.6) return(invisible(TRUE))
+  stop(sprintf(
+    "'%s' has no usable text layer: %.0f%% of extracted tokens are glyph codes rather than words. %s",
+    basename(filepath), 100 * share,
+    "Run OCR on the file, or export it with embedded text, then upload again."),
+    call. = FALSE)
+}
+
 #' @title Process Files
 #'
 #' @description
@@ -168,7 +249,8 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
         if (ext %in% c("xlsx", "xls", "xlsm")) {
           readxl::read_excel(filepath, col_names = TRUE)
         } else if (ext == "csv") {
-          read.csv(filepath, header = TRUE, stringsAsFactors = FALSE)
+          .utf8_cols(read.csv(filepath, header = TRUE, stringsAsFactors = FALSE,
+                              fileEncoding = sub("^UTF-8$", "UTF-8-BOM", sniff_encoding(filepath))))
         } else if (ext == "pdf") {
           tryCatch({
             pages <- pdftools::pdf_text(filepath)
@@ -176,7 +258,8 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
               lines <- strsplit(page, "\n")[[1]]
               trimws(lines)
             }))
-            lines <- lines[lines != ""]
+            lines <- to_utf8(lines[lines != ""])
+            .stop_unusable_pdf(lines, filepath)
             data.frame(text = lines, stringsAsFactors = FALSE)
           }, error = function(e) {
             message("Error processing PDF file: ", filepath, ": ", e$message)
@@ -194,7 +277,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
           data.frame(text = lines, stringsAsFactors = FALSE)
         } else if (ext == "txt") {
           tryCatch({
-            lines <- readLines(filepath, warn = FALSE, encoding = "UTF-8")
+            lines <- .read_encoded(filepath)
             lines <- trimws(lines)
             lines <- lines[lines != ""]
             data.frame(text = lines, stringsAsFactors = FALSE)
@@ -221,6 +304,79 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
   }
 
   return(data)
+}
+
+
+#' @title Import Image Files as Text
+#'
+#' @description
+#' Converts image files into text documents by sending each image to a vision
+#' model and keeping the returned description and transcribed text as the
+#' document body. One row per image.
+#'
+#' @param file_paths Character vector of image file paths.
+#' @param provider Character: "openai" or "gemini".
+#' @param model Character: vision model name; the provider default is used when NULL.
+#' @param api_key Character: API key for the chosen provider.
+#' @param prompt Character: instruction passed to the vision model. `NULL`
+#'   (default) asks for a transcription of visible text followed by a
+#'   description of any chart, diagram, table, or figure.
+#' @param labels Character vector of document labels, defaulting to the file names.
+#'
+#' @return A tibble with `text` and `category` columns. Images the model could
+#'   not describe are dropped.
+#'
+#' @concept preprocessing
+#' @seealso [describe_image()] for the single-image call; [import_files()] for text formats
+#' @export
+import_images <- function(file_paths,
+                          provider = "gemini",
+                          model = NULL,
+                          api_key = NULL,
+                          prompt = NULL,
+                          labels = NULL) {
+  if (length(file_paths) == 0) {
+    return(tibble::tibble(text = character(0), category = character(0)))
+  }
+  if (is.null(prompt)) {
+    prompt <- paste("Transcribe all visible text in this image, then describe any",
+                    "chart, diagram, table, or figure it contains.")
+  }
+
+  if (is.null(labels)) labels <- basename(file_paths)
+
+  mime <- c(png = "image/png", jpg = "image/jpeg", jpeg = "image/jpeg",
+            webp = "image/webp", gif = "image/gif")
+
+  rows <- lapply(seq_along(file_paths), function(i) {
+    path <- file_paths[i]
+    ext <- tolower(tools::file_ext(path))
+    if (!ext %in% names(mime)) {
+      message("Unsupported image extension: ", ext)
+      return(NULL)
+    }
+    if (!file.exists(path)) return(NULL)
+
+    encoded <- tryCatch(
+      jsonlite::base64_enc(readBin(path, "raw", file.info(path)$size)),
+      error = function(e) NULL
+    )
+    if (is.null(encoded)) return(NULL)
+
+    desc <- describe_image(
+      image_base64 = encoded,
+      provider = provider,
+      model = model,
+      api_key = api_key,
+      prompt = prompt,
+      mime_type = mime[[ext]]
+    )
+    if (is.null(desc) || !nzchar(trimws(desc))) return(NULL)
+
+    tibble::tibble(text = trimws(desc), category = labels[i])
+  })
+
+  dplyr::bind_rows(Filter(Negate(is.null), rows))
 }
 
 
@@ -618,6 +774,7 @@ prep_texts <- function(united_tbl,
 
   tryCatch({
     if (verbose) message("Creating corpus...")
+    united_tbl[[text_field]] <- to_utf8(united_tbl[[text_field]])
     corp <- quanteda::corpus(united_tbl, text_field = text_field)
 
     if (verbose) message("Tokenizing texts...")

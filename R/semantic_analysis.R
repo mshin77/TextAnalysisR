@@ -2560,8 +2560,31 @@ sentiment_lexicon_analysis <- function(dfm_object,
     avg_sentiment_score = mean(doc_sentiment$sentiment_score, na.rm = TRUE)
   )
 
+  matched <- tidy_dfm %>%
+    dplyr::inner_join(sentiment_lexicon, by = c("term" = "word"),
+                      relationship = "many-to-many")
+
+  word_contributions <- if (lexicon_name == "afinn") {
+    matched %>%
+      dplyr::group_by(word = .data$term) %>%
+      dplyr::summarise(n = sum(.data$count),
+                       contribution = sum(.data$value * .data$count),
+                       .groups = "drop") %>%
+      dplyr::mutate(sentiment = ifelse(.data$contribution < 0, "negative", "positive"))
+  } else {
+    matched %>%
+      dplyr::filter(.data$sentiment %in% c("positive", "negative")) %>%
+      dplyr::group_by(word = .data$term, sentiment = .data$sentiment) %>%
+      dplyr::summarise(n = sum(.data$count), .groups = "drop") %>%
+      dplyr::mutate(contribution = ifelse(.data$sentiment == "negative", -.data$n, .data$n))
+  }
+
+  word_contributions <- word_contributions %>%
+    dplyr::arrange(dplyr::desc(abs(.data$contribution)))
+
   list(
     document_sentiment = doc_sentiment,
+    word_contributions = word_contributions,
     emotion_scores = emotion_data,
     summary_stats = summary_stats,
     lexicon_used = lexicon_name,
@@ -2569,6 +2592,165 @@ sentiment_lexicon_analysis <- function(dfm_object,
   )
 }
 
+#' Plot Word Contributions to Sentiment
+#'
+#' @description
+#' Ranks the words that moved the sentiment score and draws them as diverging
+#' bars, negative to the left and positive to the right. Document-level scores
+#' say how positive a corpus is; this says which words made it so, which is
+#' also how a lexicon misfire becomes visible. General-purpose lexicons are
+#' built on non-academic text, so a word carrying domain meaning in education
+#' research can be scored on its everyday sense instead.
+#'
+#' @param contributions Data frame with `word`, `contribution`, and `sentiment`
+#'   columns, as returned in `word_contributions` by
+#'   [sentiment_lexicon_analysis()].
+#' @param top_n Words to show, taken by absolute contribution (default 20).
+#' @param title Plot title.
+#'
+#' @return A ggplot2 diverging bar chart.
+#'
+#' @seealso [sentiment_lexicon_analysis()] for the input;
+#'   [plot_weighted_log_odds()] to compare word use between groups instead.
+#' @concept sentiment
+#' @export
+plot_sentiment_contribution <- function(contributions,
+                                        top_n = 20,
+                                        title = "Word Contributions to Sentiment") {
+  need <- c("word", "contribution", "sentiment")
+  miss <- setdiff(need, names(contributions))
+  if (length(miss) > 0) {
+    stop("contributions is missing column(s): ", paste(miss, collapse = ", "),
+         ". Use sentiment_lexicon_analysis() and pass word_contributions.",
+         call. = FALSE)
+  }
+  if (nrow(contributions) == 0) {
+    stop("contributions has no rows; no lexicon words matched the corpus.", call. = FALSE)
+  }
+
+  plot_df <- contributions %>%
+    dplyr::arrange(dplyr::desc(abs(.data$contribution))) %>%
+    utils::head(top_n) %>%
+    dplyr::mutate(word = stats::reorder(.data$word, .data$contribution))
+
+  colors <- get_sentiment_colors()
+
+  ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$contribution, y = .data$word,
+                                        fill = .data$sentiment)) +
+    ggplot2::geom_col() +
+    ggplot2::geom_vline(xintercept = 0, color = "#3B3B3B", linewidth = 0.4) +
+    ggplot2::scale_fill_manual(values = colors, guide = "none") +
+    ggplot2::labs(title = title, x = "Contribution to sentiment score", y = NULL) +
+    ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
+      axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
+      axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a"),
+      panel.grid.major.y = ggplot2::element_blank()
+    )
+}
+
+
+#' @title Valence-Shifter Sentiment Analysis
+#'
+#' @description
+#' Scores documents with sentimentr, which weights each polarized word by the
+#' negators, amplifiers, de-amplifiers, and adversative conjunctions around it
+#' before aggregating by sentence. Bare lexicon counting reads "not bad at all"
+#' as negative; this returns a positive value.
+#'
+#' Scores are unbounded, so compare within a corpus rather than against a fixed
+#' scale. `magnitude` is the mean absolute sentence score, computed here rather
+#' than returned by sentimentr.
+#'
+#' @param texts Character vector of document texts.
+#' @param doc_names Optional document identifiers, defaulting to positional names.
+#' @param neutral_cutoff Absolute score below which a document is called neutral.
+#'   Defaults to 0, classifying by sign only.
+#' @param polarity_dt Optional custom polarity table from
+#'   [sentimentr::update_polarity_table()]. The default table scores domain terms
+#'   such as "disability" and "intervention" as negative, so a corpus where those
+#'   are neutral descriptors needs its own table.
+#'
+#' @return A list with the same shape as [sentiment_lexicon_analysis()]:
+#'   \describe{
+#'     \item{document_sentiment}{Data frame with `document`, `sentiment_score`,
+#'       `magnitude`, `sentences`, and `sentiment`}
+#'     \item{emotion_scores}{NULL; valence scoring carries no emotion categories}
+#'     \item{summary_stats}{Document counts, coverage, polarized-token rate, mean score}
+#'     \item{lexicon_used}{"sentimentr"}
+#'     \item{feature_type}{"words"}
+#'   }
+#'
+#' @concept sentiment
+#' @seealso [sentiment_lexicon_analysis()] for bing/afinn/nrc scoring
+#' @export
+sentiment_valence_analysis <- function(texts,
+                                       doc_names = NULL,
+                                       neutral_cutoff = 0,
+                                       polarity_dt = NULL) {
+  if (!requireNamespace("sentimentr", quietly = TRUE)) {
+    stop("Package 'sentimentr' is required. Install it with install.packages('sentimentr').")
+  }
+
+  texts <- as.character(texts)
+  if (is.null(doc_names)) doc_names <- names(texts)
+  if (is.null(doc_names)) doc_names <- paste0("text", seq_along(texts))
+
+  sentences <- sentimentr::get_sentences(unname(texts))
+
+  score_args <- if (is.null(polarity_dt)) list() else list(polarity_dt = polarity_dt)
+
+  by_sentence <- do.call(sentimentr::sentiment, c(list(sentences), score_args))
+  by_doc <- do.call(sentimentr::sentiment_by, c(list(sentences), score_args))
+
+  per_doc <- as.data.frame(by_sentence) %>%
+    dplyr::group_by(.data$element_id) %>%
+    dplyr::summarise(
+      magnitude = mean(abs(.data$sentiment)),
+      sentences = dplyr::n(),
+      .groups = "drop"
+    )
+
+  doc_sentiment <- as.data.frame(by_doc) %>%
+    dplyr::left_join(per_doc, by = "element_id") %>%
+    dplyr::transmute(
+      document = doc_names[.data$element_id],
+      sentiment_score = .data$ave_sentiment,
+      magnitude = .data$magnitude,
+      sentences = .data$sentences,
+      sentiment = dplyr::case_when(
+        .data$ave_sentiment > neutral_cutoff ~ "positive",
+        .data$ave_sentiment < -neutral_cutoff ~ "negative",
+        TRUE ~ "neutral"
+      )
+    ) %>%
+    as.data.frame()
+
+  terms <- sentimentr::extract_sentiment_terms(sentences)
+  polarized <- sum(lengths(terms$negative)) + sum(lengths(terms$positive))
+  total_words <- sum(by_sentence$word_count, na.rm = TRUE)
+
+  summary_stats <- list(
+    total_documents = length(texts),
+    documents_analyzed = nrow(doc_sentiment),
+    documents_without_sentiment = length(texts) - nrow(doc_sentiment),
+    coverage_percentage = round((nrow(doc_sentiment) / length(texts)) * 100, 1),
+    token_match_rate = round(if (total_words > 0) polarized / total_words else NA_real_, 3),
+    positive_docs = sum(doc_sentiment$sentiment == "positive", na.rm = TRUE),
+    negative_docs = sum(doc_sentiment$sentiment == "negative", na.rm = TRUE),
+    neutral_docs = sum(doc_sentiment$sentiment == "neutral", na.rm = TRUE),
+    avg_sentiment_score = mean(doc_sentiment$sentiment_score, na.rm = TRUE)
+  )
+
+  list(
+    document_sentiment = doc_sentiment,
+    emotion_scores = NULL,
+    summary_stats = summary_stats,
+    lexicon_used = "sentimentr",
+    feature_type = "words"
+  )
+}
 
 .sentiment_sign <- function(label) {
   label <- tolower(trimws(label))

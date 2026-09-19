@@ -10,7 +10,8 @@ describe_image_openai(
     "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
   model = "gpt-4.1",
   max_tokens = 500,
-  api_key
+  api_key,
+  mime_type = "image/png"
 )
 }
 \arguments{
