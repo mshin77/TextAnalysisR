@@ -17,6 +17,32 @@ is_remote_ui <- is_web || is_docker
 ui <- fluidPage(
   lang = "en",
   useShinyjs(),
+  tags$div(
+    id = "app-splash",
+    tags$div(
+      class = "app-splash-box",
+      tags$div(class = "app-splash-dot"),
+      tags$p(class = "app-splash-title", "Starting TextAnalysisR"),
+      tags$p(class = "app-splash-note",
+             "Loading the workspace. The first open takes a few seconds.")
+    )
+  ),
+  tags$script(HTML(
+    "(function () {
+       if (document.body) document.body.classList.add('splash-on');
+       function hideSplash() {
+         var s = document.getElementById('app-splash');
+         if (document.body) document.body.classList.remove('splash-on');
+         if (!s) return;
+         s.id = 'app-splash-going';
+         s.style.opacity = '0';
+         setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 350);
+       }
+       $(document).one('shiny:idle', hideSplash);
+       $(document).one('shiny:connected', function () { setTimeout(hideSplash, 1200); });
+       setTimeout(hideSplash, 12000);
+     })();"
+  )),
   shinybusy::add_busy_spinner(
     spin = "fading-circle",
     position = "full-page",

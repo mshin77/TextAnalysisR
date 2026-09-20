@@ -94,7 +94,7 @@ server <- shinyServer(function(input, output, session) {
     spec <- lazy_tabs[[nm]]
     output[[spec$out]] <- renderUI({
       req(isTRUE(tab_loaded[[nm]]))
-      spec$content()
+      cached_ui(nm, spec$content)
     })
   })
 
@@ -152,7 +152,9 @@ server <- shinyServer(function(input, output, session) {
       ai_config$openai_api_key <- ""
       ai_config$gemini_api_key <- if (has_server_gemini) server_gemini_key else ""
     })
-    try(reticulate::py_run_string("import gc; gc.collect()"), silent = TRUE)
+    py_live <- isTRUE(tryCatch(reticulate::py_available(initialize = FALSE),
+                               error = function(e) FALSE))
+    if (py_live) try(reticulate::py_run_string("import gc; gc.collect()"), silent = TRUE)
   })
 
   get_api_key <- function(provider, feature_key = NULL) {
@@ -263,11 +265,6 @@ server <- shinyServer(function(input, output, session) {
     )))
   }
 
-  feature_status <- reactive({
-    TextAnalysisR:::get_feature_status()
-  })
-
-
   # spaCy initialization status
   spacy_initialized <- reactiveVal(FALSE)
   spacy_init_attempted <- reactiveVal(FALSE)
@@ -296,36 +293,11 @@ server <- shinyServer(function(input, output, session) {
 
   # Home tab
 
-  output$about_content <- renderUI({
-    includeMarkdown("markdown/about.md")
-  })
-
-  output$language_content <- renderUI({
-    includeMarkdown("markdown/language.md")
-  })
-
-  output$installation_semantic_content <- renderUI({
-    includeMarkdown("markdown/installation_semantic.md")
-  })
-
-  output$installation_lexical_content <- renderUI({
-    includeMarkdown("markdown/installation_lexical.md")
-  })
-
-  output$links_content <- renderUI({
-    includeMarkdown("markdown/links.md")
-  })
-
-  output$cybersecurity_content <- renderUI({
-    includeMarkdown("markdown/cybersecurity.md")
-  })
-
-  output$web_accessibility_content <- renderUI({
-    includeMarkdown("markdown/web_accessibility.md")
-  })
-
-  output$support_content <- renderUI({
-    includeMarkdown("markdown/support.md")
+  lapply(c("about", "language", "installation_semantic", "installation_lexical",
+           "links", "cybersecurity", "web_accessibility", "support"), function(nm) {
+    output[[paste0(nm, "_content")]] <- renderUI({
+      cached_ui(nm, function() includeMarkdown(file.path("markdown", paste0(nm, ".md"))))
+    })
   })
 
   # Lazy-loaded Python availability check (deferred until file upload UI is shown)
@@ -18726,10 +18698,7 @@ server <- shinyServer(function(input, output, session) {
     provider <- input$topic_embedding_provider %||% "sentence-transformers"
 
     if (provider == "sentence-transformers") {
-      python_ok <- isolate(tryCatch({
-        requireNamespace("reticulate", quietly = TRUE) &&
-          reticulate::py_module_available("sentence_transformers")
-      }, error = function(e) FALSE))
+      python_ok <- isTRUE(py_has_module("sentence_transformers"))
 
       if (python_ok) {
         tags$div(
@@ -18788,10 +18757,7 @@ server <- shinyServer(function(input, output, session) {
     req(input$topic_modeling_path == "embedding")
     req(input$embedding_backend == "python")
 
-    bertopic_ok <- isolate(tryCatch({
-      requireNamespace("reticulate", quietly = TRUE) &&
-        reticulate::py_module_available("bertopic")
-    }, error = function(e) FALSE))
+    bertopic_ok <- isTRUE(py_has_module("bertopic"))
 
     if (bertopic_ok) {
       tags$div(
@@ -21740,11 +21706,7 @@ server <- shinyServer(function(input, output, session) {
 
   spacy_model_installed <- reactive({
     model <- pick_model(input$spacy_model, "en_core_web_sm")
-    ok <- tryCatch({
-      reticulate::py_run_string(sprintf(
-        "import importlib.util as _u; _ok = _u.find_spec('%s') is not None", model))$`_ok`
-    }, error = function(e) NA)
-    list(model = model, installed = ok)
+    list(model = model, installed = py_has_module(model))
   })
 
   output$spacy_model_status <- renderUI({

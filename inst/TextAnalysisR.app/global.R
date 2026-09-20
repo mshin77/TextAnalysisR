@@ -2,6 +2,30 @@ is_web <- TextAnalysisR:::check_web_deployment()
 is_docker <- TextAnalysisR:::check_docker_deployment()
 is_remote <- is_web || is_docker
 
+# python module probe
+.py_modules <- new.env(parent = emptyenv())
+
+py_has_module <- function(name) {
+  if (!grepl("^[A-Za-z0-9_.]+$", name)) return(NA)
+  hit <- .py_modules[[name]]
+  if (!is.null(hit)) return(hit)
+  ok <- tryCatch(
+    reticulate::py_run_string(sprintf(
+      "import importlib.util as _u; _ok = _u.find_spec('%s') is not None", name))$`_ok`,
+    error = function(e) NA
+  )
+  if (!is.na(ok)) .py_modules[[name]] <- ok
+  ok
+}
+
+# tab ui cache
+.ui_cache <- new.env(parent = emptyenv())
+
+cached_ui <- function(name, build) {
+  if (is.null(.ui_cache[[name]])) .ui_cache[[name]] <- build()
+  .ui_cache[[name]]
+}
+
 # ai budget
 .ai_usage <- new.env(parent = emptyenv())
 .ai_usage$calls <- list()

@@ -2821,3 +2821,35 @@ a.action-link[title*="Info"]:hover {
 .pal-opt { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
 .pal-bar { width: 72px; height: 14px; border-radius: 3px; flex: 0 0 auto;
            border: 1px solid rgba(0, 0, 0, 0.12); }
+
+#app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  transition: opacity 0.35s ease;
+}
+
+.app-splash-box { text-align: center; max-width: 340px; padding: 0 16px; }
+
+.app-splash-dot {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 18px;
+  border: 3px solid #DCE6F5;
+  border-top-color: #4269BF;
+  border-radius: 50%;
+  animation: app-splash-spin 0.9s linear infinite;
+}
+
+@keyframes app-splash-spin { to { transform: rotate(360deg); } }
+
+.app-splash-title { font-size: 17px; font-weight: 600; color: #4269BF; margin: 0 0 6px; }
+
+.app-splash-note { font-size: 14px; color: #475569; margin: 0; line-height: 1.5; }
+
+body.splash-on .shinybusy,
+body.splash-on .shinybusy-overlay { display: none !important; }
