@@ -11,7 +11,7 @@ is_remote <- is_web || is_docker
 .ai_caps <- list(
   minute = as.integer(Sys.getenv("TEXTANALYSISR_AI_PER_MINUTE", "10")),
   hour = as.integer(Sys.getenv("TEXTANALYSISR_AI_PER_HOUR", "60")),
-  day = as.integer(Sys.getenv("TEXTANALYSISR_AI_PER_DAY", "200")),
+  day = as.integer(Sys.getenv("TEXTANALYSISR_AI_PER_DAY", "500")),
   site_day = as.integer(Sys.getenv("TEXTANALYSISR_AI_SITE_DAY", "3000"))
 )
 
