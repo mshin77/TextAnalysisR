@@ -1217,7 +1217,7 @@ Focus on incorporating the most significant keywords while following the guideli
               choices = NULL
             ),
             actionButton("embedding_quote", "Quote", class = "btn-primary btn-block")
-          ),
+          )
 
 
 
@@ -1345,7 +1345,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   .hl("'Run Model'"),
                   " to discover topics"
                 )
-              ),
+              )
             ),
             tabPanel(
               "2. Word-Topic",
@@ -1429,7 +1429,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   .hl("'Display'"),
                   " to view topic keywords"
                 )
-              ),
+              )
             ),
             tabPanel(
               "3. Generation",
@@ -1526,7 +1526,7 @@ Focus on incorporating the most significant keywords while following the guideli
                   .hl("Word-Topic tab"),
                   " to view document-topic distributions"
                 )
-              ),
+              )
             ),
             tabPanel(
               "5. Quotes",
@@ -3151,7 +3151,7 @@ semantic_analysis_ui_content <- function() {
                     max = 20,
                     step = 1
                   )
-                ),
+                )
               )
             ),
 

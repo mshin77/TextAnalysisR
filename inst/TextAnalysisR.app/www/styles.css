@@ -120,16 +120,7 @@ body {
 }
 
 /* Empty state icons - responsive and dark mode compatible */
-.empty-state-icon {
-  font-size: 48px;
-  color: #CBD5E1;
-  margin-bottom: 1.25rem;
-  display: block;
-}
 
-[data-theme="dark"] .empty-state-icon {
-  color: #475569;
-}
 
 /* Fix inline icon colors for dark mode */
 [data-theme="dark"] [style*="color: #CBD5E1"],

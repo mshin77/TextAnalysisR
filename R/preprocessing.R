@@ -505,6 +505,8 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
     stop("No extractable text found")
   }
 
+  .stop_unusable_pdf(lines, file_path)
+
   list(
     success = TRUE,
     data = data.frame(text = lines, stringsAsFactors = FALSE),
@@ -968,6 +970,8 @@ extract_text_from_pdf <- function(file_path) {
       return(NULL)
     }
 
+    .stop_unusable_pdf(text_pages, file_path)
+
     text_pages <- trimws(text_pages)
     text_pages <- gsub("\\s+", " ", text_pages)
 
@@ -1024,13 +1028,13 @@ extract_text_from_pdf <- function(file_path) {
 #' }
 detect_pdf_content_type <- function(file_path) {
   if (requireNamespace("pdftools", quietly = TRUE)) {
-    text <- tryCatch({
+    pages <- tryCatch({
       pdftools::pdf_text(file_path)
     }, error = function(e) NULL)
 
-    if (!is.null(text) && length(text) > 0) {
-      combined_text <- paste(text, collapse = " ")
-      if (nchar(trimws(combined_text)) > 50) {
+    if (!is.null(pages) && length(pages) > 0) {
+      if (nchar(trimws(paste(pages, collapse = " "))) > 50 &&
+          .glyph_garbage_share(pages) < 0.6) {
         return("text")
       }
     }

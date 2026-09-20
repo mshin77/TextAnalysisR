@@ -489,47 +489,6 @@ $(document).ready(function() {
     updateTTSIcon();
 });
 
-Shiny.addCustomMessageHandler('accessibleNotification', function(message) {
-    const {text, type = 'info', duration = null, id = null, dismissible = true, priority = 'polite'} = message;
-    const typeConfig = {
-        'error': {role: 'alert', icon: '⚠️', ariaLabel: 'Error: ', class: 'notification-error'},
-        'warning': {role: 'alert', icon: '⚡', ariaLabel: 'Warning: ', class: 'notification-warning'},
-        'success': {role: 'status', icon: '✓', ariaLabel: 'Success: ', class: 'notification-success'},
-        'info': {role: 'status', icon: 'ℹ️', ariaLabel: 'Information: ', class: 'notification-info'},
-        'progress': {role: 'status', icon: '⏳', ariaLabel: 'Processing: ', class: 'notification-progress'}
-    };
-    const config = typeConfig[type] || typeConfig['info'];
-    const notificationId = id || 'notification-' + Date.now();
-
-    $('#accessible-notifications').attr('aria-live', priority).text(config.ariaLabel + text);
-
-    const visualNotification = $('<div id="' + notificationId + '" class="notification ' + config.class + '" role="' + config.role + '" tabindex="-1" aria-label="' + config.ariaLabel + text + '"><div class="notification-content"><span class="notification-icon" aria-hidden="true">' + config.icon + '</span><span class="notification-text">' + text + '</span>' + (dismissible ? '<button class="notification-close" aria-label="Dismiss notification" title="Dismiss (Esc key)"><span aria-hidden="true">×</span></button>' : '') + '</div>' + (type === 'progress' ? '<div class="notification-progress-bar" role="progressbar" aria-label="Loading"></div>' : '') + '</div>');
-
-    if (id) $('#' + id).remove();
-    $('#visual-notifications').append(visualNotification);
-
-    if (type === 'error' || priority === 'assertive') visualNotification.focus();
-
-    if (dismissible) {
-        visualNotification.find('.notification-close').on('click', function() {
-            $('#' + notificationId).attr('aria-hidden', 'true').fadeOut(300, function() { $(this).remove(); });
-        });
-        visualNotification.on('keydown', function(e) {
-            if (e.key === 'Escape' || e.keyCode === 27) {
-                $('#' + notificationId).attr('aria-hidden', 'true').fadeOut(300, function() { $(this).remove(); });
-            }
-        });
-    }
-
-    if (duration !== null) {
-        const minDuration = 5000 + (text.length / 20) * 1000;
-        const actualDuration = Math.max(duration, minDuration);
-        setTimeout(function() {
-            $('#' + notificationId).attr('aria-hidden', 'true').fadeOut(300, function() { $(this).remove(); });
-        }, actualDuration);
-    }
-});
-
 Shiny.addCustomMessageHandler('dismissNotification', function(id) {
     $('#' + id).attr('aria-hidden', 'true').fadeOut(300, function() { $(this).remove(); });
 });
