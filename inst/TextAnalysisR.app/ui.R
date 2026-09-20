@@ -446,7 +446,7 @@ Supports:
               div(style = "flex: 1;",
                 actionButton("add_paste", "Add", class = "btn-primary btn-block", icon = icon("plus"))),
               div(style = "flex: 1;",
-                actionButton("clear_pastes", "Clear all", class = "btn-default btn-block"))
+                actionButton("clear_pastes", "Reset corpus", class = "btn-default btn-block"))
             ),
             uiOutput("paste_manifest")
           ),

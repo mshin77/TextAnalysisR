@@ -919,7 +919,27 @@ server <- shinyServer(function(input, output, session) {
           )
   }
 
+  reset_downstream <- function() {
+    for (rv in list(preprocessed_skip, processed_tokens, final_tokens,
+                    lemmatized_tokens, dfm_tokens, ngram_stats, compound_stats,
+                    top_20_preselected)) {
+      try(rv(NULL), silent = TRUE)
+    }
+  }
+
   paste_stack <- reactiveVal(NULL)
+
+  combined_corpus <- reactive({
+    parts <- list(file_upload_result(), paste_stack())
+    parts <- parts[!vapply(parts, function(x) is.null(x) || nrow(x) == 0, logical(1))]
+    if (length(parts) == 0) return(NULL)
+    tagged <- Map(function(df, src) {
+      df$source <- src
+      df
+    }, parts, c("file", "pasted")[seq_along(parts)])
+    dplyr::bind_rows(tagged)
+  })
+
 
   observeEvent(input$add_paste, {
     parsed <- parse_pasted_text(input$text_input)
@@ -928,23 +948,27 @@ server <- shinyServer(function(input, output, session) {
     paste_stack(dplyr::bind_rows(paste_stack(), parsed))
     updateTextAreaInput(session, "text_input", value = "")
     TextAnalysisR:::show_completion_notification(
-      paste0("Added ", nrow(parsed), " documents. Corpus now holds ", nrow(paste_stack()), ".")
+      paste0("Added ", nrow(parsed), " documents. Corpus now holds ", nrow(combined_corpus()), ".")
     )
   })
 
   observeEvent(input$clear_pastes, {
     paste_stack(NULL)
+    file_upload_result(NULL)
+    shinyjs::reset("file")
     updateTextAreaInput(session, "text_input", value = "")
+    reset_downstream()
+    TextAnalysisR:::show_completion_notification("Corpus cleared. Upload or paste to start again.")
   })
 
   output$paste_manifest <- renderUI({
-    stack <- paste_stack()
-    if (is.null(stack) || nrow(stack) == 0) return(NULL)
-    labels <- unique(stack$category)
+    corpus <- combined_corpus()
+    if (is.null(corpus) || nrow(corpus) == 0) return(NULL)
+    by_source <- table(corpus$source)
     tags$div(
       style = "font-size: 13px; color: #475569; margin-bottom: 12px;",
-      tags$strong(paste0(nrow(stack), " documents")),
-      tags$span(paste0(" across ", length(labels), if (length(labels) == 1) " batch" else " batches"),
+      tags$strong(paste0(nrow(corpus), " documents")),
+      tags$span(paste0(" (", paste(sprintf("%d %s", by_source, names(by_source)), collapse = ", "), ")"),
                 style = "color: #94a3b8;")
     )
   })
@@ -977,12 +1001,10 @@ server <- shinyServer(function(input, output, session) {
           )
 
           return(example_data)
-        } else if (input$dataset_choice == "Copy and Paste Text") {
-          stack <- paste_stack()
-          if (!is.null(stack) && nrow(stack) > 0) return(stack)
+        } else if (input$dataset_choice %in% c("Copy and Paste Text", "Upload Your File")) {
+          combined <- combined_corpus()
+          if (!is.null(combined) && nrow(combined) > 0) return(combined)
           parse_pasted_text(input$text_input)
-        } else if (input$dataset_choice == "Upload Your File") {
-          return(file_upload_result())
         } else {
           return(NULL)
         }
