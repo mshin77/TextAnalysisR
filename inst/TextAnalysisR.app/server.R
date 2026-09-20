@@ -253,7 +253,8 @@ server <- shinyServer(function(input, output, session) {
     stringsAsFactors = FALSE
   ))
 
-  log_ai_usage <- function(feature, provider, model) {
+  spend_ai_call <- function(feature, provider, model) {
+    guard_ai_usage(session)
     current <- ai_usage_log()
     ai_usage_log(rbind(current, data.frame(
       timestamp = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
@@ -590,7 +591,7 @@ server <- shinyServer(function(input, output, session) {
 
       exts <- tolower(tools::file_ext(input$file$name))
       use_multimodal <- isolate(isTRUE(input$enable_multimodal))
-      needs_vision <- any(exts %in% image_exts) || (use_multimodal && any(exts == "pdf"))
+      has_images <- any(exts %in% image_exts)
 
       vision_provider <- isolate(input$vision_provider %||% "openai")
       api_key <- switch(vision_provider,
@@ -604,12 +605,13 @@ server <- shinyServer(function(input, output, session) {
         NULL
       )
 
-      if (needs_vision) {
-        if (is.null(api_key) || !nzchar(api_key)) {
-          stop("A ", vision_provider, " API key is required to read images. Enter one in the sidebar.")
-        }
-        log_ai_usage("Vision OCR", vision_provider, vision_model)
+      has_key <- !is.null(api_key) && nzchar(api_key)
+      if (has_images && !has_key) {
+        stop("A ", vision_provider, " API key is required to read images. Enter one in the sidebar.")
       }
+
+      needs_vision <- has_images || (use_multimodal && has_key && any(exts == "pdf"))
+      if (needs_vision) spend_ai_call("Vision OCR", vision_provider, vision_model)
 
       TextAnalysisR:::show_loading_notification(
         if (needs_vision) "Reading files and describing images..."
@@ -635,16 +637,16 @@ server <- shinyServer(function(input, output, session) {
             error = function(e) NULL
           )
           if (is.null(df) || nrow(df) == 0) {
-            return(list(note = paste0(row$name, ": the vision model returned no description")))
+            return(list(note = stats::setNames("the vision model returned no description", row$name)))
           }
           return(list(data = df, images = nrow(df)))
         }
 
         if (ext == "pdf") {
-          res <- tryCatch(
+          read_pdf <- function(multimodal) tryCatch(
             TextAnalysisR::process_pdf_unified(
               file_path = row$datapath,
-              use_multimodal = use_multimodal,
+              use_multimodal = multimodal,
               vision_provider = vision_provider,
               vision_model = vision_model,
               api_key = api_key,
@@ -652,12 +654,20 @@ server <- shinyServer(function(input, output, session) {
             ),
             error = function(e) list(success = FALSE, message = conditionMessage(e))
           )
+
+          res <- read_pdf(use_multimodal)
+          text_only <- NULL
+          if (!isTRUE(res$success) && use_multimodal) {
+            res <- read_pdf(FALSE)
+            if (isTRUE(res$success)) text_only <- row$name
+          }
+
           if (!isTRUE(res$success)) {
-            return(list(note = paste0(row$name, ": ", res$message %||% "PDF extraction failed")))
+            return(list(note = stats::setNames(res$message %||% "PDF extraction failed", row$name)))
           }
           df <- res$data
           if (!"category" %in% names(df)) df$category <- label
-          return(list(data = df, images = res$num_images %||% 0))
+          return(list(data = df, images = res$num_images %||% 0, text_only = text_only))
         }
 
         df <- tryCatch(
@@ -673,7 +683,7 @@ server <- shinyServer(function(input, output, session) {
         if (is.null(df) || nrow(df) == 0) df <- read_plain_file(row$datapath, ext)
 
         if (is.null(df) || nrow(df) == 0) {
-          return(list(note = paste0(row$name, ": no readable text found")))
+          return(list(note = stats::setNames("no readable text found", row$name)))
         }
 
         if (!"text" %in% names(df) && ncol(df) >= 1) names(df)[1] <- "text"
@@ -687,9 +697,20 @@ server <- shinyServer(function(input, output, session) {
 
       frames <- Filter(Negate(is.null), lapply(parts, function(p) p$data))
       notes <- unlist(lapply(parts, function(p) p$note))
+      text_only <- unlist(lapply(parts, function(p) p$text_only))
+
+      if (length(text_only) > 0) {
+        TextAnalysisR:::show_warning_notification(
+          paste0("Read as text without image description: ", paste(text_only, collapse = ", "),
+                 ". Add a vision API key in the sidebar to describe charts and diagrams."),
+          duration = 8
+        )
+      }
 
       if (length(frames) == 0) {
-        stop(if (length(notes) > 0) paste(notes, collapse = "\n") else "Unable to process the upload")
+        skipped_files(notes)
+        stop(if (length(notes) > 0) paste0(names(notes), ": ", notes, collapse = "\n")
+             else "Unable to process the upload")
       }
 
       result <- dplyr::bind_rows(frames)
@@ -707,10 +728,13 @@ server <- shinyServer(function(input, output, session) {
                if (described > 0) paste0(" (", described, " images described)") else "")
       )
 
+      skipped_files(notes)
+
       if (length(notes) > 0) {
         showModal(modalDialog(
           title = tags$div(style = "color: #f59e0b;", icon("exclamation-triangle"), " Some Files Were Skipped"),
-          tags$div(style = "white-space: pre-wrap; font-size: 16px;", paste(notes, collapse = "\n\n")),
+          tags$div(style = "white-space: pre-wrap; font-size: 16px;",
+                   paste0(names(notes), ": ", notes, collapse = "\n\n")),
           easyClose = TRUE, footer = modalButton("Close")
         ))
       }
@@ -734,18 +758,23 @@ server <- shinyServer(function(input, output, session) {
 
   output$upload_manifest <- renderUI({
     req(input$file)
+    skipped <- skipped_files()
     tags$ul(
       style = "margin: -8px 0 12px 0; padding-left: 18px;",
       lapply(seq_len(nrow(input$file)), function(i) {
-        ext <- tolower(tools::file_ext(input$file$name[i]))
+        name <- input$file$name[i]
+        ext <- tolower(tools::file_ext(name))
+        reason <- if (name %in% names(skipped)) skipped[[name]] else NULL
         tags$li(
-          style = "font-size: 13px; color: #475569;",
-          input$file$name[i],
+          style = paste0("font-size: 13px; color: ",
+                         if (is.null(reason)) "#475569;" else "#b45309;"),
+          name,
           tags$span(paste0(" (", round(input$file$size[i] / 1024), " KB)"),
                     style = "color: #94a3b8;"),
-          if (ext %in% image_exts) {
+          if (ext %in% image_exts && is.null(reason)) {
             tags$span(" vision", style = "color: #9C3AD7; font-weight: 600;")
-          }
+          },
+          if (!is.null(reason)) tags$div(paste("not loaded:", reason))
         )
       })
     )
@@ -928,6 +957,7 @@ server <- shinyServer(function(input, output, session) {
   }
 
   paste_stack <- reactiveVal(NULL)
+  skipped_files <- reactiveVal(NULL)
 
   combined_corpus <- reactive({
     parts <- list(file_upload_result(), paste_stack())
@@ -955,6 +985,7 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$clear_pastes, {
     paste_stack(NULL)
     file_upload_result(NULL)
+    skipped_files(NULL)
     shinyjs::reset("file")
     updateTextAreaInput(session, "text_input", value = "")
     reset_downstream()
@@ -8912,7 +8943,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       model_name <- input$llm_sentiment_model
-      log_ai_usage("LLM Sentiment", provider, model_name)
+      spend_ai_call("LLM Sentiment", provider, model_name)
       batch_size <- input$llm_sentiment_batch_size %||% 5
       include_explanation <- input$llm_sentiment_explanation %||% TRUE
 
@@ -10130,28 +10161,21 @@ server <- shinyServer(function(input, output, session) {
   })
   outputOptions(output, "dispersion_ready", suspendWhenHidden = FALSE)
 
-  # Update term choices based on DFM (same source as Frequency Trends)
+  dispersion_vocab <- reactive({
+    dfm_to_use <- get_available_dfm()
+    if (is.null(dfm_to_use)) return(NULL)
+    head(quanteda.textstats::textstat_frequency(dfm_to_use)$feature, 100)
+  })
+
   observe({
-    dfm_to_use <- tryCatch(
-      dfm_outcome(),
-      error = function(e) tryCatch(
-        dfm_final(),
-        error = function(e2) tryCatch(
-          dfm_init(),
-          error = function(e3) NULL
-        )
-      )
-    )
+    updateSelectizeInput(session, "dispersion_terms",
+      choices = dispersion_vocab() %||% character(0), server = FALSE)
+  })
 
-    if (!is.null(dfm_to_use)) {
-      tstat_freq <- quanteda.textstats::textstat_frequency(dfm_to_use)
-      sorted_vocab <- head(tstat_freq$feature, 100)
-
-      updateSelectizeInput(session, "dispersion_terms",
-        choices = sorted_vocab,
-        server = FALSE
-      )
-    }
+  output$dispersion_terms_note <- renderUI({
+    if (!is.null(dispersion_vocab())) return(NULL)
+    tags$p("No terms yet. Process documents in the 1. Setup tab first.",
+           style = "font-size: 14px; color: #b45309; margin-bottom: 10px;")
   })
 
   # Run dispersion analysis
@@ -12071,7 +12095,7 @@ server <- shinyServer(function(input, output, session) {
     )
     if (!is.null(api_key) && !nzchar(api_key)) api_key <- NULL
 
-    log_ai_usage("Embeddings", provider, model_name)
+    spend_ai_call("Embeddings", provider, model_name)
     loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "... This may briefly slow the app for other users."))
 
     tryCatch({
@@ -12875,7 +12899,7 @@ server <- shinyServer(function(input, output, session) {
         chat_model <- pick_model(input$rag_gemini_model, "gemini-2.5-flash")
       }
 
-      log_ai_usage("RAG Search", provider, chat_model)
+      spend_ai_call("RAG Search", provider, chat_model)
       showNotification("Generating answer with LLM...", type = "message",
                        duration = NULL, id = "ragProgress")
 
@@ -12932,7 +12956,7 @@ server <- shinyServer(function(input, output, session) {
         )
         if (!is.null(search_api_key) && !nzchar(search_api_key)) search_api_key <- NULL
 
-        log_ai_usage("Search Embeddings", search_provider, search_model)
+        spend_ai_call("Search Embeddings", search_provider, search_model)
         loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", search_provider, "..."))
 
         embed_result <- tryCatch({
@@ -17412,7 +17436,7 @@ server <- shinyServer(function(input, output, session) {
       model <- pick_model(input$cluster_gemini_model, "gemini-2.5-flash")
     }
 
-    log_ai_usage("Cluster Labels", provider, model)
+    spend_ai_call("Cluster Labels", provider, model)
     TextAnalysisR:::show_loading_notification(paste("Generating AI labels using", provider, "..."), id = "loadingAILabels")
 
     tryCatch({
@@ -18048,7 +18072,7 @@ server <- shinyServer(function(input, output, session) {
       model <- pick_model(input$k_rec_gemini_model, "gemini-2.5-flash")
     }
 
-    log_ai_usage("K Recommendation", provider, model)
+    spend_ai_call("K Recommendation", provider, model)
 
     # Process metrics
     search_result <- K_search()
@@ -18971,7 +18995,7 @@ server <- shinyServer(function(input, output, session) {
         }
       }
 
-      log_ai_usage("Topic Modeling Embeddings", provider, model_name)
+      spend_ai_call("Topic Modeling Embeddings", provider, model_name)
 
       raw_output <- capture.output({
         if (backend == "fixed") {
@@ -19768,7 +19792,7 @@ server <- shinyServer(function(input, output, session) {
       model <- pick_model(input$stm_label_gemini_model, "gemini-2.5-flash")
     }
 
-    log_ai_usage("STM Labels", provider, model)
+    spend_ai_call("STM Labels", provider, model)
     shiny::showNotification("Generating topic labels...", type = "message", duration = NULL, id = "label_gen_notification")
 
     top_topic_terms <- stm_topic_terms() %>%
@@ -19875,7 +19899,7 @@ server <- shinyServer(function(input, output, session) {
       model <- pick_model(input$content_gemini_model, "gemini-2.5-flash")
     }
 
-    log_ai_usage("Content Generation", provider, model)
+    spend_ai_call("Content Generation", provider, model)
 
     # Generate content
     content_type <- input$content_type
@@ -21346,7 +21370,7 @@ server <- shinyServer(function(input, output, session) {
     if (!check_api_key(api_key, provider, feature)) return(NULL)
     model <- if (provider == "openai") input$qc_openai_model else input$qc_gemini_model
     if (is.null(model) || !nzchar(model)) model <- NULL
-    log_ai_usage(feature, provider, model %||% "default")
+    spend_ai_call(feature, provider, model %||% "default")
     texts <- docs_data$combined_text
     names(texts) <- paste0("doc", seq_along(texts))
     n <- min(length(texts), input$qc_n_docs %||% 20)
@@ -21684,7 +21708,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (!is.null(ai_res)) {
-      log_ai_usage("Language Detection", ai_res$provider[1], ai_res$model[1])
+      spend_ai_call("Language Detection", ai_res$provider[1], ai_res$model[1])
       top <- ai_res$language[1]
       updateSelectInput(session, "stopwords_language", selected = top)
       label <- names(.stopword_languages)[match(top, .stopword_languages)]

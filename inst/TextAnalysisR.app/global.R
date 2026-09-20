@@ -2,6 +2,64 @@ is_web <- TextAnalysisR:::check_web_deployment()
 is_docker <- TextAnalysisR:::check_docker_deployment()
 is_remote <- is_web || is_docker
 
+# ai budget
+.ai_usage <- new.env(parent = emptyenv())
+.ai_usage$calls <- list()
+.ai_usage$day <- as.Date(NA)
+.ai_usage$day_calls <- 0L
+
+.ai_caps <- list(
+  minute = as.integer(Sys.getenv("TEXTANALYSISR_AI_PER_MINUTE", "10")),
+  hour = as.integer(Sys.getenv("TEXTANALYSISR_AI_PER_HOUR", "60")),
+  day = as.integer(Sys.getenv("TEXTANALYSISR_AI_PER_DAY", "200")),
+  site_day = as.integer(Sys.getenv("TEXTANALYSISR_AI_SITE_DAY", "3000"))
+)
+
+client_id <- function(session) {
+  fwd <- session$request$HTTP_X_FORWARDED_FOR
+  ip <- if (!is.null(fwd) && nzchar(fwd)) trimws(strsplit(fwd, ",")[[1]][1])
+        else session$request$REMOTE_ADDR
+  if (is.null(ip) || !nzchar(ip)) "unknown" else ip
+}
+
+guard_ai_usage <- function(session) {
+  if (!is_remote) return(invisible(TRUE))
+
+  now <- Sys.time()
+  today <- Sys.Date()
+  if (!identical(.ai_usage$day, today)) {
+    .ai_usage$day <- today
+    .ai_usage$day_calls <- 0L
+    .ai_usage$calls <- list()
+  }
+
+  if (.ai_usage$day_calls >= .ai_caps$site_day) {
+    stop("The shared daily AI budget for this site is used up. ",
+         "Enter a personal API key in the sidebar, or try again tomorrow.", call. = FALSE)
+  }
+
+  id <- client_id(session)
+  seen <- .ai_usage$calls[[id]]
+  age <- if (length(seen) > 0) as.numeric(difftime(now, seen, units = "secs")) else numeric(0)
+  seen <- seen[age < 86400]
+  age <- age[age < 86400]
+
+  over <- c(minute = sum(age < 60) >= .ai_caps$minute,
+            hour = sum(age < 3600) >= .ai_caps$hour,
+            day = length(seen) >= .ai_caps$day)
+
+  if (any(over)) {
+    .ai_usage$calls[[id]] <- seen
+    stop(sprintf("AI request limit reached (per %s). Wait and try again, or enter a personal API key in the sidebar.",
+                 paste(names(over)[over], collapse = ", ")), call. = FALSE)
+  }
+
+  .ai_usage$calls[[id]] <- c(seen, now)
+  .ai_usage$day_calls <- .ai_usage$day_calls + 1L
+  invisible(TRUE)
+}
+
+
 # process-wide (not per-session) so a closing session cannot reset the limit for a concurrent one
 options(shiny.maxRequestSize = 100 * 1024^2, shiny.timeout = 300)
 
@@ -784,9 +842,8 @@ Focus on incorporating the most significant keywords while following the guideli
             ),
             tags$p(
               tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
-              "Emerged: the number of topics comes from the data, and documents that fit no ",
-              "group are left unassigned. Specified: you set the number, and every document ",
-              "is placed in one of them.",
+              "Emerged reads the topic count from the data and leaves poor fits unassigned. ",
+              "Specified fixes the count and assigns every document.",
               style = "font-size: 13px; color: #475569; margin-top: -6px;"
             ),
 
@@ -2014,9 +2071,10 @@ lexical_analysis_ui_content <- function() {
             condition = "input.conditioned2 == 7",
             tags$h5(HTML("<strong>Lexical Dispersion</strong>"), style = "color: #4269BF; margin-bottom: 10px;"),
             tags$p(
-              "Visualize where selected terms appear across documents in your corpus.",
+              "Visualize where selected terms appear across documents.",
               style = "font-size: 16px; color: #475569; margin-bottom: 10px;"
             ),
+            uiOutput("dispersion_terms_note"),
             selectizeInput(
               "dispersion_terms",
               "Terms",
@@ -2862,7 +2920,7 @@ semantic_analysis_ui_content <- function() {
 
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'search'",
-            tags$p(class = "text-muted", style = "font-size: 16px; margin-bottom: 10px;", "Query-to-document retrieval across your corpus."),
+            tags$p(class = "text-muted", style = "font-size: 16px; margin-bottom: 10px;", "Query-to-document retrieval across the corpus."),
             selectInput(
               "search_method",
               "Search method:",
@@ -3608,9 +3666,19 @@ semantic_analysis_ui_content <- function() {
               ),
               conditionalPanel(
                 condition = "output.has_documents == true",
-                shiny::plotOutput("semantic_wordcloud", height = "620px"),
-                br(),
-                DT::dataTableOutput("semantic_wordcloud_table")
+                tabsetPanel(
+                  id = "wordcloud_subTab",
+                  tabPanel(
+                    "Plot",
+                    br(),
+                    shiny::plotOutput("semantic_wordcloud", height = "620px")
+                  ),
+                  tabPanel(
+                    "Table",
+                    br(),
+                    DT::dataTableOutput("semantic_wordcloud_table")
+                  )
+                )
               )
             ),
             tabPanel(
@@ -3659,37 +3727,19 @@ semantic_analysis_ui_content <- function() {
                                 overflow: auto; }"
                 )
               ),
-              conditionalPanel(
-                condition = "output.has_cooccurrence_plot == true",
-                tabsetPanel(
-                  id = "word_co_occur_subTab",
-                  tabPanel(
-                    "Plot",
-                    icon = icon("chart-area"),
-                  .tab_placeholder("chart-area", "Set a co-occurrence threshold and click ", .hl("'Plot'"), " to draw the network"),
-                    uiOutput("word_co_occurrence_network_plot_uiOutput")
-                  ),
-                  tabPanel(
-                    "Table",
-                    icon = icon("table"),
-                  .tab_placeholder("table", "Build a co-occurrence network, then its term pairs appear here"),
-                    uiOutput("word_co_occurrence_network_table_uiOutput")
-                  ),
-                  tabPanel(
-                    "Summary",
-                    icon = icon("clipboard-list"),
-                  .tab_placeholder("clipboard-list", "Build a co-occurrence network to summarize its structure here"),
-                    uiOutput("word_co_occurrence_network_summary_uiOutput")
-                  )
-                )
-              ),
-              conditionalPanel(
-                condition = "output.has_cooccurrence_plot == false",
-                .tab_placeholder(
-                  "project-diagram",
-                  "Configure settings and click ",
-                  .hl("'Plot Network'"),
-                  " to visualize word co-occurrence"
+              tabsetPanel(
+                id = "word_co_occur_subTab",
+                tabPanel(
+                  "Plot",
+                  uiOutput("word_co_occurrence_network_plot_uiOutput")
+                ),
+                tabPanel(
+                  "Table",
+                  uiOutput("word_co_occurrence_network_table_uiOutput")
+                ),
+                tabPanel(
+                  "Summary",
+                  uiOutput("word_co_occurrence_network_summary_uiOutput")
                 )
               )
             ),
@@ -3739,37 +3789,19 @@ semantic_analysis_ui_content <- function() {
                                 overflow: auto; }"
                 )
               ),
-              conditionalPanel(
-                condition = "output.has_correlation_plot == true",
-                tabsetPanel(
-                  id = "word_correlation_subTab",
-                  tabPanel(
-                    "Plot",
-                    icon = icon("chart-area"),
-                  .tab_placeholder("chart-area", "Set a correlation threshold and click ", .hl("'Plot'"), " to draw the network"),
-                    uiOutput("word_correlation_network_plot_uiOutput")
-                  ),
-                  tabPanel(
-                    "Table",
-                    icon = icon("table"),
-                  .tab_placeholder("table", "Build a correlation network, then its term pairs appear here"),
-                    uiOutput("word_correlation_network_table_uiOutput")
-                  ),
-                  tabPanel(
-                    "Summary",
-                    icon = icon("clipboard-list"),
-                  .tab_placeholder("clipboard-list", "Build a correlation network to summarize its structure here"),
-                    uiOutput("word_correlation_network_summary_uiOutput")
-                  )
-                )
-              ),
-              conditionalPanel(
-                condition = "output.has_correlation_plot == false",
-                .tab_placeholder(
-                  "share-alt",
-                  "Configure settings and click ",
-                  .hl("'Plot Network'"),
-                  " to visualize word correlation"
+              tabsetPanel(
+                id = "word_correlation_subTab",
+                tabPanel(
+                  "Plot",
+                  uiOutput("word_correlation_network_plot_uiOutput")
+                ),
+                tabPanel(
+                  "Table",
+                  uiOutput("word_correlation_network_table_uiOutput")
+                ),
+                tabPanel(
+                  "Summary",
+                  uiOutput("word_correlation_network_summary_uiOutput")
                 )
               )
             ),
