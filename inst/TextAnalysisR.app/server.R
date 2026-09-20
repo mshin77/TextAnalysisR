@@ -10174,7 +10174,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$dispersion_terms_note <- renderUI({
     if (!is.null(dispersion_vocab())) return(NULL)
-    tags$p("No terms yet. Process documents in the 1. Setup tab first.",
+    tags$p("No terms yet. Create a DFM in the Preprocess tab first.",
            style = "font-size: 14px; color: #b45309; margin-bottom: 10px;")
   })
 
@@ -17086,7 +17086,7 @@ server <- shinyServer(function(input, output, session) {
 
   wordcloud_freq <- eventReactive(input$run_wordcloud, {
     dfm_obj <- get_available_dfm()
-    validate(need(!is.null(dfm_obj), "Process documents in the 1. Setup tab first."))
+    validate(need(!is.null(dfm_obj), "Create a DFM in the Preprocess tab first."))
 
     grp <- input$wordcloud_group_var %||% "None"
     use_grp <- grp != "None" && grp %in% names(quanteda::docvars(dfm_obj))
