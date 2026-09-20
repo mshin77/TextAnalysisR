@@ -602,7 +602,7 @@ button.btn.action-button:active {
 
 /* Shinybusy overlay */
 .shinybusy-overlay {
-  background-color: rgba(0, 0, 0, 0.15) !important;
+  background-color: transparent !important;
 }
 
 .shiny-notification {

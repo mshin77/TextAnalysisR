@@ -497,7 +497,7 @@ Supports:
                           "Whole rows" = "document"),
               selected = "sentence"
             ),
-            tags$p("Embedding topic modeling and AI coding read this. Lexical analysis, STM topic modeling, and clustering always run on whole rows. Paragraph splitting needs a blank line inside the text, which spreadsheet responses rarely carry, so it usually leaves one unit per row. Changing it after a model runs makes that model's categories describe different objects.",
+            tags$p("Read by embedding topic modeling and AI coding only; other stages use whole rows. Paragraph splitting needs a blank line, rare in spreadsheet text.",
                    style = "font-size: 13px; color: #475569; margin-top: -8px;")
           ),
           conditionalPanel(
