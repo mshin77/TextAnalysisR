@@ -697,6 +697,11 @@ server <- shinyServer(function(input, output, session) {
         if (is.null(df) || nrow(df) == 0) {
           df <- tryCatch(read_plain_file(row$datapath, ext),
                          error = function(e) { why <<- conditionMessage(e); NULL })
+          if (!is.null(df)) {
+            df[] <- lapply(df, function(col) {
+              if (is.character(col)) TextAnalysisR:::.repair_encoding(col) else col
+            })
+          }
         }
 
         if (is.null(df) || nrow(df) == 0) {

@@ -235,7 +235,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
     data <- tibble::as_tibble(data)
   } else if (dataset_choice == "Copy and Paste Text") {
     if (is.null(text_input)) stop("No text provided")
-    data <- tibble::tibble(text = text_input)
+    data <- tibble::tibble(text = .repair_encoding(text_input))
   } else if (dataset_choice == "Upload Your File") {
     if (is.null(file_info)) stop("No file provided")
 
@@ -295,6 +295,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
       })
 
       if (is.null(df)) return(NULL)
+      df[] <- lapply(df, function(col) if (is.character(col)) .repair_encoding(col) else col)
       tibble::as_tibble(df)
     })
 
