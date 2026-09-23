@@ -465,11 +465,6 @@ ui <- fluidPage(
                 "Drop duplicate articles",
                 value = FALSE
               )
-            ),
-            tags$p(
-              class = "text-muted",
-              style = "font-size: 13px; margin: -8px 0 12px 0;",
-              "Drops headers, copyright lines, indexing fields, and end markers that database exports wrap around each document. Other text passes through unchanged."
             )
           ),
           conditionalPanel(

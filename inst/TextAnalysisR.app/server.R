@@ -475,6 +475,7 @@ server <- shinyServer(function(input, output, session) {
 
   file_validated <- reactiveVal(NULL)
   file_upload_result <- reactiveVal(NULL)
+  loaded_files <- reactiveVal(NULL)
 
   observeEvent(input$file, {
     req(input$file)
@@ -724,7 +725,16 @@ server <- shinyServer(function(input, output, session) {
         list(data = df, dropped = dropped, articles = if (parsed_export) nrow(df) else 0L)
       }
 
-      parts <- lapply(seq_len(nrow(input$file)), ingest_one)
+      already <- loaded_files()
+      new_idx <- which(!(input$file$name %in% already$name))
+
+      if (length(new_idx) == 0) {
+        try(removeNotification("loadingFile"), silent = TRUE)
+        showNotification("Those files are already loaded.", type = "message", duration = 5)
+        return()
+      }
+
+      parts <- lapply(new_idx, ingest_one)
 
       try(removeNotification("loadingFile"), silent = TRUE)
 
@@ -782,7 +792,13 @@ server <- shinyServer(function(input, output, session) {
         ))
       }
 
-      file_upload_result(result)
+      loaded_files(dplyr::bind_rows(
+        already,
+        data.frame(name = input$file$name[new_idx],
+                   size = input$file$size[new_idx],
+                   stringsAsFactors = FALSE)
+      ))
+      file_upload_result(dplyr::bind_rows(file_upload_result(), result))
 
     }, error = function(e) {
       try(removeNotification("loadingFile"), silent = TRUE)
@@ -800,24 +816,31 @@ server <- shinyServer(function(input, output, session) {
   }, ignoreInit = TRUE)
 
   output$upload_manifest <- renderUI({
-    req(input$file)
+    files <- loaded_files()
+    req(!is.null(files), nrow(files) > 0)
     skipped <- skipped_files()
-    tags$ul(
-      style = "margin: -8px 0 12px 0; padding-left: 18px;",
-      lapply(seq_len(nrow(input$file)), function(i) {
-        name <- input$file$name[i]
-        ext <- tolower(tools::file_ext(name))
+
+    # keep the start and the extension, drop the middle
+    shorten <- function(x, head_n = 20, tail_n = 12) {
+      ifelse(nchar(x) <= head_n + tail_n + 3, x,
+             paste0(substr(x, 1, head_n), "...", substr(x, nchar(x) - tail_n + 1, nchar(x))))
+    }
+
+    tags$div(
+      style = "margin: -4px 0 12px 0;",
+      tags$div(
+        style = "font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 4px;",
+        paste0(nrow(files), if (nrow(files) == 1) " file" else " files",
+               " - ", round(sum(files$size) / 1024), " KB")
+      ),
+      lapply(seq_len(nrow(files)), function(i) {
+        name <- files$name[i]
         reason <- if (name %in% names(skipped)) skipped[[name]] else NULL
-        tags$li(
+        tags$div(
+          title = if (is.null(reason)) name else paste0(name, " - ", reason),
           style = paste0("font-size: 13px; color: ",
                          if (is.null(reason)) "#475569;" else "#b45309;"),
-          name,
-          tags$span(paste0(" (", round(input$file$size[i] / 1024), " KB)"),
-                    style = "color: #94a3b8;"),
-          if (ext %in% image_exts && is.null(reason)) {
-            tags$span(" vision", style = "color: #9C3AD7; font-weight: 600;")
-          },
-          if (!is.null(reason)) tags$div(paste("not loaded:", reason))
+          shorten(name)
         )
       })
     )
@@ -1028,6 +1051,7 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$clear_pastes, {
     paste_stack(NULL)
     file_upload_result(NULL)
+    loaded_files(NULL)
     skipped_files(NULL)
     shinyjs::reset("file")
     updateTextAreaInput(session, "text_input", value = "")
