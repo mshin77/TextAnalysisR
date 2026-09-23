@@ -355,6 +355,17 @@ remove_metadata_lines <- function(df, text_col = "text") {
 }
 
 
+# Curly punctuation destroyed at export time: U+FFFD re-encoded, leaving the
+# literal sequence on disk. Nothing can decode it back, so normalize instead --
+# apostrophe between letters, dropped elsewhere since quote direction is lost.
+.repair_encoding <- function(x) {
+  if (!length(x)) return(x)
+  broken <- "(ï¿½|�)+"
+  x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
+  gsub(broken, "", x, perl = TRUE)
+}
+
+
 #' @title Import a News-Database Export
 #'
 #' @description
@@ -395,9 +406,9 @@ import_news_export <- function(file_paths, dedupe = FALSE, threshold = 0.99) {
   pick <- function(nm) if (nm %in% names(meta)) as.character(meta[[nm]]) else NA_character_
 
   out <- data.frame(
-    text = trimws(arts$Article),
+    text = .repair_encoding(trimws(arts$Article)),
     category = pick("Newspaper"),
-    headline = pick("Headline"),
+    headline = .repair_encoding(pick("Headline")),
     newspaper = pick("Newspaper"),
     date = pick("Date"),
     section = pick("Section"),
