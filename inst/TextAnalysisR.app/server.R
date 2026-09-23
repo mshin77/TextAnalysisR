@@ -1133,10 +1133,16 @@ server <- shinyServer(function(input, output, session) {
 
     col_names <- colnames()
     if (!is.null(col_names)) {
+      # Outlet, date, section and author describe the document; uniting them into
+      # the text makes the outlet name the most frequent term. They stay available
+      # as grouping variables below.
+      unite_choices <- setdiff(col_names, c("newspaper", "date", "section", "author", "source"))
+      if (length(unite_choices) == 0) unite_choices <- col_names
+
       updateCheckboxGroupInput(
         session,
         "show_vars",
-        choices = col_names,
+        choices = unite_choices,
         selected = ""
       )
 
@@ -2602,6 +2608,15 @@ server <- shinyServer(function(input, output, session) {
 
     req(tokens_obj)
     dfm_obj <- quanteda::dfm(tokens_obj)
+
+    if (quanteda::nfeat(dfm_obj) == 0 || sum(dfm_obj) == 0) {
+      showNotification(
+        paste("Removing these stopwords leaves no terms.",
+              "Deselect some words, or load more documents."),
+        type = "warning", duration = 10
+      )
+      return(NULL)
+    }
 
     if (!is.null(quanteda::docvars(dfm_init()))) {
       quanteda::docvars(dfm_obj) <- quanteda::docvars(dfm_init())

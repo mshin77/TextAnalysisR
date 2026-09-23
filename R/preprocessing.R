@@ -361,7 +361,7 @@ remove_metadata_lines <- function(df, text_col = "text") {
 # apostrophe between letters, dropped elsewhere since quote direction is lost.
 .repair_encoding <- function(x) {
   if (!length(x)) return(x)
-  broken <- "(ï¿½|�)+"
+  broken <- "(\u00ef\u00bf\u00bd|\ufffd)+"
   x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
   gsub(broken, "", x, perl = TRUE)
 }
