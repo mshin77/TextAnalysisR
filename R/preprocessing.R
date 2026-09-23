@@ -223,13 +223,11 @@ to_utf8 <- function(x) {
 #' }
 import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
 
-  if (!requireNamespace("readxl", quietly = TRUE) ||
-      !requireNamespace("pdftools", quietly = TRUE) ||
-      !requireNamespace("officer", quietly = TRUE)) {
-    stop(
-      "The 'readxl', 'pdftools' and 'officer' packages are required for this functionality. ",
-      "Please install them using install.packages(c('readxl', 'pdftools', 'officer'))."
-    )
+  need_pkg <- function(pkg, ext) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop("Reading ", ext, " files requires the '", pkg, "' package. ",
+           "Install it with install.packages('", pkg, "').", call. = FALSE)
+    }
   }
 
   if (dataset_choice == "Upload an Example Dataset") {
@@ -247,11 +245,13 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
 
       df <- tryCatch({
         if (ext %in% c("xlsx", "xls", "xlsm")) {
+          need_pkg("readxl", "Excel")
           readxl::read_excel(filepath, col_names = TRUE)
         } else if (ext == "csv") {
           .utf8_cols(read.csv(filepath, header = TRUE, stringsAsFactors = FALSE,
                               fileEncoding = sub("^UTF-8$", "UTF-8-BOM", sniff_encoding(filepath))))
         } else if (ext == "pdf") {
+          need_pkg("pdftools", "PDF")
           tryCatch({
             pages <- pdftools::pdf_text(filepath)
             lines <- unlist(lapply(pages, function(page) {
@@ -266,6 +266,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
             data.frame(text = "", stringsAsFactors = FALSE)
           })
         } else if (ext == "docx") {
+          need_pkg("officer", "DOCX")
           # Note: This extracts text only. For image extraction from DOCX,
           # use process_docx_multimodal() function (requires Python + Vision API)
           doc <- officer::read_docx(filepath)
