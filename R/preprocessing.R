@@ -307,6 +307,158 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
 }
 
 
+#' @title Remove Database Metadata Lines
+#'
+#' @description
+#' Drops the header and trailer that database exports wrap around each document,
+#' keeping the title and body. The header runs from the source name to the `Body`
+#' marker; the trailer starts at `Classification`, `End of Document`, or the first
+#' indexing field such as `Subject:` or `Load-Date:`. Scattered copyright, length,
+#' byline, and dateline lines are dropped wherever they appear.
+#'
+#' @param df Data frame of ingested lines, one row per paragraph.
+#' @param text_col Name of the text column.
+#'
+#' @return `df` with metadata rows removed. Rows are kept when no markers are
+#'   found, so text from other sources passes through unchanged.
+#'
+#' @concept preprocessing
+#' @export
+remove_metadata_lines <- function(df, text_col = "text") {
+  if (!text_col %in% names(df) || nrow(df) == 0) return(df)
+
+  lines <- trimws(as.character(df[[text_col]]))
+  keep <- rep(TRUE, length(lines))
+
+  fields <- paste0(
+    "^(Load-Date|Language|Publication-Type|Journal Code|Subject|Industry|Person",
+    "|Company|Organization|Geographic|Ticker|Distribution|Graphic|Highlight",
+    "|Section|Byline|Length|Dateline|Notes|Series):"
+  )
+
+  body_start <- match("Body", lines)
+  if (!is.na(body_start)) {
+    keep[seq_len(body_start)] <- FALSE
+    keep[1] <- TRUE
+  }
+
+  trailer <- which(lines %in% c("Classification", "End of Document") | grepl(fields, lines))
+  trailer <- trailer[trailer > (if (is.na(body_start)) 0L else body_start)]
+  if (length(trailer) > 0) keep[seq(min(trailer), length(lines))] <- FALSE
+
+  keep <- keep &
+    !grepl("^(Copyright|All Rights Reserved)", lines) &
+    !grepl(fields, lines)
+
+  df[keep, , drop = FALSE]
+}
+
+
+#' @title Import a News-Database Export
+#'
+#' @description
+#' Parses a LexisNexis-style export with `LexisNexisTools`, returning one row per
+#' article with the body text separated from the headline, outlet, date, section,
+#' and author. Headline and outlet stay as their own fields rather than entering
+#' the body, so they can group or filter documents without inflating word counts.
+#'
+#' @param file_paths Character vector of export file paths (docx, txt, or pdf).
+#' @param dedupe Logical; drop near-duplicate articles, which database exports
+#'   carry when syndicated copy runs in several outlets.
+#' @param threshold Similarity above which two articles count as duplicates.
+#'
+#' @return A data frame with `text`, `category`, `headline`, `newspaper`, `date`,
+#'   `section`, and `author`, or NULL when nothing parses as an export.
+#'
+#' @concept preprocessing
+#' @seealso [import_files()] for ordinary documents; [remove_metadata_lines()] for
+#'   exports this cannot parse
+#' @export
+import_news_export <- function(file_paths, dedupe = FALSE, threshold = 0.99) {
+  if (!requireNamespace("LexisNexisTools", quietly = TRUE)) {
+    stop("Package 'LexisNexisTools' is required. Install it with install.packages('LexisNexisTools').")
+  }
+
+  parsed <- tryCatch(
+    suppressWarnings(suppressMessages(
+      LexisNexisTools::lnt_read(file_paths, verbose = FALSE)
+    )),
+    error = function(e) NULL
+  )
+  if (is.null(parsed)) return(NULL)
+
+  meta <- as.data.frame(parsed@meta, stringsAsFactors = FALSE)
+  arts <- as.data.frame(parsed@articles, stringsAsFactors = FALSE)
+  if (nrow(arts) == 0) return(NULL)
+
+  pick <- function(nm) if (nm %in% names(meta)) as.character(meta[[nm]]) else NA_character_
+
+  out <- data.frame(
+    text = trimws(arts$Article),
+    category = pick("Newspaper"),
+    headline = pick("Headline"),
+    newspaper = pick("Newspaper"),
+    date = pick("Date"),
+    section = pick("Section"),
+    author = pick("Author"),
+    stringsAsFactors = FALSE
+  )
+  out <- out[nzchar(out$text), , drop = FALSE]
+  if (nrow(out) == 0) return(NULL)
+
+  out$category[is.na(out$category) | !nzchar(out$category)] <- "Uploaded"
+
+  if (isTRUE(dedupe)) out <- drop_duplicate_articles(out, threshold = threshold)
+
+  out
+}
+
+
+#' @title Drop Duplicate Articles
+#'
+#' @description
+#' Removes near-duplicate articles, which database exports carry whenever
+#' syndicated copy runs in several outlets. Comparison is across the whole data
+#' frame, so this runs after all files are combined; one file at a time can never
+#' reveal a duplicate.
+#'
+#' @param df Data frame with one row per article.
+#' @param text_col Name of the body text column.
+#' @param date_col Name of the date column.
+#' @param threshold Similarity above which two articles count as duplicates.
+#'
+#' @return `df` with later copies of each duplicated article removed. Returns `df`
+#'   unchanged when it holds fewer than two rows or the comparison fails.
+#'
+#' @concept preprocessing
+#' @seealso [import_news_export()], which calls this when `dedupe = TRUE`
+#' @export
+drop_duplicate_articles <- function(df, text_col = "text", date_col = "date",
+                                    threshold = 0.99) {
+  if (!requireNamespace("LexisNexisTools", quietly = TRUE)) {
+    stop("Package 'LexisNexisTools' is required. Install it with install.packages('LexisNexisTools').")
+  }
+  if (is.null(df) || nrow(df) < 2 || !text_col %in% names(df)) return(df)
+
+  dates <- if (date_col %in% names(df)) df[[date_col]] else rep(NA, nrow(df))
+
+  dup <- tryCatch(
+    suppressWarnings(suppressMessages(
+      LexisNexisTools::lnt_similarity(
+        texts = df[[text_col]], dates = dates,
+        threshold = threshold, verbose = FALSE
+      )
+    )),
+    error = function(e) NULL
+  )
+  if (is.null(dup) || nrow(dup) == 0 || !"ID_duplicate" %in% names(dup)) return(df)
+
+  keep <- setdiff(seq_len(nrow(df)), unique(stats::na.omit(dup$ID_duplicate)))
+  if (length(keep) == 0) return(df)
+  df[keep, , drop = FALSE]
+}
+
+
 #' @title Import Image Files as Text
 #'
 #' @description

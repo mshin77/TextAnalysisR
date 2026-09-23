@@ -16,6 +16,8 @@ word_correlation_network(
   node_label_size = 22,
   community_method = "leiden",
   node_size_by = "degree",
+  node_palette = NULL,
+  edge_color = "#5C5CFF",
   node_color_by = "community",
   seed = 123,
   category_params = NULL
@@ -47,6 +49,10 @@ check sensitivity.}
 \item{community_method}{Community detection method: "leiden" (default) or "louvain".}
 
 \item{node_size_by}{Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").}
+
+\item{node_palette}{Character vector of hex colors for nodes; the default palette is used when NULL.}
+
+\item{edge_color}{Hex color for network edges.}
 
 \item{node_color_by}{Node coloring method: "community" or "centrality" (default: "community").}
 

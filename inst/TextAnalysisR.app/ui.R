@@ -445,7 +445,25 @@ ui <- fluidPage(
           ),
           conditionalPanel(
             condition = "input.dataset_choice == 'Upload Your File'",
-            uiOutput("upload_manifest")
+            uiOutput("upload_manifest"),
+            checkboxInput(
+              "remove_metadata",
+              "Remove database metadata lines",
+              value = TRUE
+            ),
+            conditionalPanel(
+              condition = "input.remove_metadata == true",
+              checkboxInput(
+                "dedupe_articles",
+                "Drop duplicate articles",
+                value = FALSE
+              )
+            ),
+            tags$p(
+              class = "text-muted",
+              style = "font-size: 13px; margin: -8px 0 12px 0;",
+              "Drops headers, copyright lines, indexing fields, and end markers that database exports wrap around each document. Other text passes through unchanged."
+            )
           ),
           conditionalPanel(
             condition = "input.dataset_choice == 'Upload Your File'",

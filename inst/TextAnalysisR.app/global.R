@@ -131,6 +131,15 @@ names(.embed_provider_choices)[3] <- .gemini_provider_label
 
 shiny::enableBookmarking("disable")
 
+# ragg is Shiny's default plot device; a broken system libtiff makes every renderPlot fail
+options(shiny.useragg = isTRUE(tryCatch({
+  f <- tempfile(fileext = ".png")
+  ragg::agg_png(f)
+  grDevices::dev.off()
+  unlink(f)
+  TRUE
+}, error = function(e) FALSE)))
+
 .spline_or_linear <- function(var, unique_values) {
   df <- min(4, unique_values - 1)
   if (df >= 3) paste0("s(", var, ", df = ", df, ")") else var
@@ -3433,6 +3442,38 @@ semantic_analysis_ui_content <- function() {
               value = 3, min = 1, step = 1
             ),
             .palette_input("wordcloud_palette", "Color scale"),
+            selectInput(
+              "wordcloud_shape",
+              "Shape",
+              choices = c("Circle" = "circle", "Cardioid" = "cardioid",
+                          "Diamond" = "diamond", "Square" = "square",
+                          "Triangle" = "triangle-upright",
+                          "Triangle (rotated)" = "triangle-forward",
+                          "Pentagon" = "pentagon", "Star" = "star"),
+              selected = "circle"
+            ),
+            selectInput(
+              "wordcloud_font",
+              "Font",
+              choices = c("Sans serif" = "sans", "Serif" = "serif",
+                          "Monospace" = "mono"),
+              selected = "sans"
+            ),
+            sliderInput(
+              "wordcloud_rotate",
+              "Words rotated",
+              value = 0, min = 0, max = 0.5, step = 0.05
+            ),
+            sliderInput(
+              "wordcloud_max_size",
+              "Largest word size",
+              value = 26, min = 8, max = 60, step = 2
+            ),
+            checkboxInput(
+              "wordcloud_area",
+              "Scale by area, not height",
+              value = FALSE
+            ),
             actionButton("run_wordcloud", "Generate", class = "btn-primary btn-block",
                          icon = icon("cloud"))
           ),
@@ -3489,6 +3530,44 @@ semantic_analysis_ui_content <- function() {
                 ),
                 selected = "degree"
               ),
+              selectInput(
+                "node_palette_cooccur",
+                "Color palette",
+                choices = c(
+                  "Default (Set2)" = "default",
+                  "Blues" = "blues",
+                  "Warm" = "warm",
+                  "Viridis" = "viridis",
+                  "Custom (pick below)" = "custom"
+                ),
+                selected = "default"
+              ),
+              conditionalPanel(
+                condition = "input.node_palette_cooccur == 'custom'",
+                div(
+                  style = "display: flex; gap: 8px; margin-bottom: 12px;",
+                  if (requireNamespace("colourpicker", quietly = TRUE)) {
+                    colourpicker::colourInput("node_hex1_cooccur", NULL, value = "#4269BF", showColour = "background")
+                  } else {
+                    textInput("node_hex1_cooccur", NULL, value = "#4269BF")
+                  },
+                  if (requireNamespace("colourpicker", quietly = TRUE)) {
+                    colourpicker::colourInput("node_hex2_cooccur", NULL, value = "#9C3AD7", showColour = "background")
+                  } else {
+                    textInput("node_hex2_cooccur", NULL, value = "#9C3AD7")
+                  },
+                  if (requireNamespace("colourpicker", quietly = TRUE)) {
+                    colourpicker::colourInput("node_hex3_cooccur", NULL, value = "#0C795A", showColour = "background")
+                  } else {
+                    textInput("node_hex3_cooccur", NULL, value = "#0C795A")
+                  }
+                )
+              ),
+              if (requireNamespace("colourpicker", quietly = TRUE)) {
+                colourpicker::colourInput("edge_color_cooccur", "Edge color", value = "#5C5CFF")
+              } else {
+                textInput("edge_color_cooccur", "Edge color", value = "#5C5CFF")
+              },
               selectInput(
                 "node_color_cooccur",
                 "Node color by",
@@ -3603,6 +3682,44 @@ semantic_analysis_ui_content <- function() {
                 ),
                 selected = "degree"
               ),
+              selectInput(
+                "node_palette_corr",
+                "Color palette",
+                choices = c(
+                  "Default (Set2)" = "default",
+                  "Blues" = "blues",
+                  "Warm" = "warm",
+                  "Viridis" = "viridis",
+                  "Custom (pick below)" = "custom"
+                ),
+                selected = "default"
+              ),
+              conditionalPanel(
+                condition = "input.node_palette_corr == 'custom'",
+                div(
+                  style = "display: flex; gap: 8px; margin-bottom: 12px;",
+                  if (requireNamespace("colourpicker", quietly = TRUE)) {
+                    colourpicker::colourInput("node_hex1_corr", NULL, value = "#4269BF", showColour = "background")
+                  } else {
+                    textInput("node_hex1_corr", NULL, value = "#4269BF")
+                  },
+                  if (requireNamespace("colourpicker", quietly = TRUE)) {
+                    colourpicker::colourInput("node_hex2_corr", NULL, value = "#9C3AD7", showColour = "background")
+                  } else {
+                    textInput("node_hex2_corr", NULL, value = "#9C3AD7")
+                  },
+                  if (requireNamespace("colourpicker", quietly = TRUE)) {
+                    colourpicker::colourInput("node_hex3_corr", NULL, value = "#0C795A", showColour = "background")
+                  } else {
+                    textInput("node_hex3_corr", NULL, value = "#0C795A")
+                  }
+                )
+              ),
+              if (requireNamespace("colourpicker", quietly = TRUE)) {
+                colourpicker::colourInput("edge_color_corr", "Edge color", value = "#5C5CFF")
+              } else {
+                textInput("edge_color_corr", "Edge color", value = "#5C5CFF")
+              },
               selectInput(
                 "node_color_corr",
                 "Node color by",

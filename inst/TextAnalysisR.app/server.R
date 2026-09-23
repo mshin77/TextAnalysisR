@@ -508,7 +508,35 @@ server <- shinyServer(function(input, output, session) {
 
   image_exts <- c("png", "jpg", "jpeg", "webp", "gif")
 
+  resolve_palette <- function(choice, hexes) {
+    switch(choice %||% "default",
+      "blues"   = c("#DCE6F5", "#7FA0D9", "#4269BF", "#1F3A6E"),
+      "warm"    = c("#FDD9A0", "#F6A04D", "#D9622B", "#8C2D0B"),
+      "viridis" = c("#440154", "#3B528B", "#21918C", "#5EC962", "#FDE725"),
+      "custom"  = hexes[nzchar(hexes)],
+      NULL
+    )
+  }
+
   read_plain_file <- function(path, ext) {
+    if (ext == "docx") {
+      if (!requireNamespace("officer", quietly = TRUE)) {
+        stop("Reading DOCX needs the officer package. Install it with install.packages('officer').",
+             call. = FALSE)
+      }
+      lines <- officer::docx_summary(officer::read_docx(path))$text
+      lines <- trimws(unlist(strsplit(lines, "\n")))
+      return(data.frame(text = lines[nzchar(lines)], stringsAsFactors = FALSE))
+    }
+
+    if (ext %in% c("xlsx", "xls", "xlsm")) {
+      if (!requireNamespace("readxl", quietly = TRUE)) {
+        stop("Reading Excel files needs the readxl package. Install it with install.packages('readxl').",
+             call. = FALSE)
+      }
+      return(as.data.frame(readxl::read_excel(path, col_names = TRUE)))
+    }
+
     if (!ext %in% c("csv", "txt")) return(NULL)
     tryCatch({
       if (ext == "csv") {
@@ -642,25 +670,53 @@ server <- shinyServer(function(input, output, session) {
           return(list(data = df, images = res$num_images %||% 0, text_only = text_only))
         }
 
-        df <- tryCatch(
-          suppressWarnings(suppressMessages(
-            TextAnalysisR::import_files(
-              "Upload Your File",
-              file_info = data.frame(filepath = row$datapath, stringsAsFactors = FALSE)
-            )
-          )),
-          error = function(e) NULL
-        )
+        df <- NULL
+        parsed_export <- FALSE
 
-        if (is.null(df) || nrow(df) == 0) df <- read_plain_file(row$datapath, ext)
+        if (isTRUE(input$remove_metadata) && ext %in% c("docx", "txt", "pdf")) {
+          df <- tryCatch(
+            TextAnalysisR::import_news_export(row$datapath),
+            error = function(e) NULL
+          )
+          parsed_export <- !is.null(df) && nrow(df) > 0
+        }
+
+        if (!parsed_export) {
+          df <- tryCatch(
+            suppressWarnings(suppressMessages(
+              TextAnalysisR::import_files(
+                "Upload Your File",
+                file_info = data.frame(filepath = row$datapath, stringsAsFactors = FALSE)
+              )
+            )),
+            error = function(e) NULL
+          )
+        }
+
+        why <- NULL
+        if (is.null(df) || nrow(df) == 0) {
+          df <- tryCatch(read_plain_file(row$datapath, ext),
+                         error = function(e) { why <<- conditionMessage(e); NULL })
+        }
 
         if (is.null(df) || nrow(df) == 0) {
-          return(list(note = stats::setNames("no readable text found", row$name)))
+          return(list(note = stats::setNames(why %||% "no readable text found", row$name)))
         }
 
         if (!"text" %in% names(df) && ncol(df) >= 1) names(df)[1] <- "text"
         if (!"category" %in% names(df)) df$category <- label
-        list(data = df)
+
+        dropped <- 0L
+        if (isTRUE(input$remove_metadata) && !parsed_export) {
+          before <- nrow(df)
+          df <- TextAnalysisR::remove_metadata_lines(df)
+          dropped <- before - nrow(df)
+        }
+        if (nrow(df) == 0) {
+          return(list(note = stats::setNames("only metadata found", row$name)))
+        }
+
+        list(data = df, dropped = dropped, articles = if (parsed_export) nrow(df) else 0L)
       }
 
       parts <- lapply(seq_len(nrow(input$file)), ingest_one)
@@ -687,17 +743,27 @@ server <- shinyServer(function(input, output, session) {
 
       result <- dplyr::bind_rows(frames)
 
+      deduped <- 0L
+      if (isTRUE(input$dedupe_articles) && "text" %in% names(result)) {
+        before <- nrow(result)
+        result <- TextAnalysisR::drop_duplicate_articles(result)
+        deduped <- before - nrow(result)
+      }
+
       if (!"text" %in% names(result)) stop("File processing produced no text column")
 
       result <- result[!is.na(result$text) & nzchar(trimws(result$text)), , drop = FALSE]
       if (nrow(result) == 0) stop("File processing returned no text")
 
       described <- sum(unlist(lapply(parts, function(p) p$images %||% 0)))
+      dropped <- sum(unlist(lapply(parts, function(p) p$dropped %||% 0)))
 
       TextAnalysisR:::show_completion_notification(
         paste0("Loaded ", nrow(result), " documents from ", length(frames),
                if (length(frames) == 1) " file" else " files",
-               if (described > 0) paste0(" (", described, " images described)") else "")
+               if (described > 0) paste0(" (", described, " images described)") else "",
+               if (dropped > 0) paste0(" — ", dropped, " metadata rows removed") else "",
+               if (deduped > 0) paste0(" — ", deduped, " duplicate articles removed") else "")
       )
 
       skipped_files(notes)
@@ -7680,6 +7746,11 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_cooccur %||% "leiden",
       node_size_by = input$node_size_cooccur %||% "degree",
       node_color_by = input$node_color_cooccur %||% "community",
+      node_palette = resolve_palette(input$node_palette_cooccur,
+                                     c(input$node_hex1_cooccur %||% "",
+                                       input$node_hex2_cooccur %||% "",
+                                       input$node_hex3_cooccur %||% "")),
+      edge_color = input$edge_color_cooccur %||% "#5C5CFF",
       seed = as.numeric(input$seed_cooccur %||% 123)
     )
 
@@ -7720,6 +7791,8 @@ server <- shinyServer(function(input, output, session) {
       input$community_method_cooccur,
       input$node_size_cooccur,
       input$node_color_cooccur,
+      input$node_palette_cooccur,
+      input$edge_color_cooccur,
       input$nrows_co_occurrence,
       input$width_word_co_occurrence_network_plot,
       input$height_word_co_occurrence_network_plot,
@@ -8012,6 +8085,11 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_corr %||% "leiden",
       node_size_by = input$node_size_corr %||% "degree",
       node_color_by = input$node_color_corr %||% "community",
+      node_palette = resolve_palette(input$node_palette_corr,
+                                     c(input$node_hex1_corr %||% "",
+                                       input$node_hex2_corr %||% "",
+                                       input$node_hex3_corr %||% "")),
+      edge_color = input$edge_color_corr %||% "#5C5CFF",
       seed = as.numeric(input$seed_corr %||% 123)
     )
 
@@ -8053,6 +8131,8 @@ server <- shinyServer(function(input, output, session) {
       input$community_method_corr,
       input$node_size_corr,
       input$node_color_corr,
+      input$node_palette_corr,
+      input$edge_color_corr,
       input$nrows_correlation,
       input$width_word_correlation_network_plot,
       input$height_word_correlation_network_plot,
@@ -17097,10 +17177,26 @@ server <- shinyServer(function(input, output, session) {
     freq <- wordcloud_freq()
     groups <- unique(as.character(freq$group))
 
+    rotate <- input$wordcloud_rotate %||% 0
+    freq$angle <- if (rotate > 0) {
+      sample(c(0, 90), nrow(freq), replace = TRUE, prob = c(1 - rotate, rotate))
+    } else 0
+
+    max_size <- input$wordcloud_max_size %||% 26
+    if (length(groups) > 1) max_size <- max(8, round(max_size * 0.6))
+
+    cloud_geom <- if (isTRUE(input$wordcloud_area)) {
+      ggwordcloud::geom_text_wordcloud_area
+    } else {
+      ggwordcloud::geom_text_wordcloud
+    }
+
     withr::with_seed(1234, {
-      p <- ggplot2::ggplot(freq, ggplot2::aes(label = feature, size = weight, color = weight)) +
-        ggwordcloud::geom_text_wordcloud(rm_outside = TRUE, shape = "circle", eccentricity = 1) +
-        ggplot2::scale_size_area(max_size = if (length(groups) > 1) 16 else 26) +
+      p <- ggplot2::ggplot(freq, ggplot2::aes(label = feature, size = weight,
+                                              color = weight, angle = .data$angle)) +
+        cloud_geom(rm_outside = TRUE, shape = input$wordcloud_shape %||% "circle",
+                   eccentricity = 1, family = input$wordcloud_font %||% "sans") +
+        ggplot2::scale_size_area(max_size = max_size) +
         ggplot2::scale_color_distiller(palette = input$wordcloud_palette %||% "Blues",
                                        direction = 1) +
         ggplot2::theme_minimal() +

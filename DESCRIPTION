@@ -65,6 +65,7 @@ Suggests:
     irr,
     jsonlite,
     knitr,
+    LexisNexisTools,
     markdown,
     MASS,
     moments,

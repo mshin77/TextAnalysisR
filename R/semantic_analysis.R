@@ -4181,6 +4181,14 @@ run_rag_search <- function(
 
 # Network Analysis Functions
 
+.node_palette <- function(n, colors = NULL) {
+  if (n <= 0) return(character(0))
+  base <- if (length(colors) > 0) colors else RColorBrewer::brewer.pal(8, "Set2")
+  if (length(base) >= n) base[seq_len(n)] else grDevices::colorRampPalette(base)(n)
+}
+
+
+
 #' @title Analyze and Visualize Word Co-occurrence Networks
 #'
 #' @description
@@ -4200,6 +4208,8 @@ run_rag_search <- function(
 #' @param node_label_size Maximum font size for node labels in pixels (default: 22).
 #' @param community_method Community detection method: "leiden" (default) or "louvain".
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
+#' @param node_palette Character vector of hex colors for nodes; the default palette is used when NULL.
+#' @param edge_color Hex color for network edges.
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
 #' @param seed Integer seed for the force-directed layout, so the plot is reproducible (default: 123).
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `co_occur_n` and `top_node_n` values for that category (default: NULL).
@@ -4258,6 +4268,8 @@ word_co_occurrence_network <- function(dfm_object,
                                        node_label_size = 22,
                                        community_method = "leiden",
                                        node_size_by = "degree",
+                                       node_palette = NULL,
+                                       edge_color = "#5C5CFF",
                                        node_color_by = "community",
                                        seed = 123,
                                        category_params = NULL) {
@@ -4460,17 +4472,8 @@ word_co_occurrence_network <- function(dfm_object,
         )
       )
 
-    # Create community palette
     n_communities <- length(unique(node_data$community))
-    if (n_communities >= 3 && n_communities <= 8) {
-      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
-    } else if (n_communities > 8) {
-      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-    } else if (n_communities > 0 && n_communities < 3) {
-      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
-    } else {
-      palette <- rep("#000000", n_communities)
-    }
+    palette <- .node_palette(n_communities, node_palette)
 
     node_data$community <- factor(node_data$community, levels = unique(node_data$community))
     community_levels <- levels(node_data$community)
@@ -4478,7 +4481,8 @@ word_co_occurrence_network <- function(dfm_object,
 
     # Determine node color based on node_color_by parameter
     if (node_color_by == "frequency") {
-      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
+      ramp <- if (length(node_palette) > 1) node_palette else "viridis"
+      node_data$color <- scales::col_numeric(ramp, domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
     } else {
       node_data$color <- palette[as.character(node_data$community)]
     }
@@ -4496,7 +4500,7 @@ word_co_occurrence_network <- function(dfm_object,
       ggplot2::geom_segment(data = edge_data,
                             ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
                                          linewidth = .data$line_width, alpha = .data$alpha),
-                            color = "#5C5CFF", show.legend = FALSE) +
+                            color = edge_color, show.legend = FALSE) +
       ggplot2::scale_linewidth_identity() +
       ggplot2::scale_alpha_identity()
 
@@ -4506,7 +4510,11 @@ word_co_occurrence_network <- function(dfm_object,
                             ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency,
                                          text = .data$hover_text),
                             stroke = 0.5) +
-        ggplot2::scale_color_viridis_c(name = "Frequency")
+        (if (length(node_palette) > 1) {
+          ggplot2::scale_color_gradientn(colors = node_palette, name = "Frequency")
+        } else {
+          ggplot2::scale_color_viridis_c(name = "Frequency")
+        })
     } else {
       p <- p +
         ggplot2::geom_point(data = node_data,
@@ -4639,6 +4647,8 @@ word_co_occurrence_network <- function(dfm_object,
 #' @param node_label_size Maximum font size for node labels in pixels (default: 22).
 #' @param community_method Community detection method: "leiden" (default) or "louvain".
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
+#' @param node_palette Character vector of hex colors for nodes; the default palette is used when NULL.
+#' @param edge_color Hex color for network edges.
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
 #' @param seed Integer seed for the force-directed layout, so the plot is reproducible (default: 123).
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `common_term_n`, `corr_n`, and `top_node_n` values for that category (default: NULL).
@@ -4698,6 +4708,8 @@ word_correlation_network <- function(dfm_object,
                                      node_label_size = 22,
                                      community_method = "leiden",
                                      node_size_by = "degree",
+                                     node_palette = NULL,
+                                     edge_color = "#5C5CFF",
                                      node_color_by = "community",
                                      seed = 123,
                                      category_params = NULL) {
@@ -4893,17 +4905,8 @@ word_correlation_network <- function(dfm_object,
         )
       )
 
-    # Create community palette
     n_communities <- length(unique(node_data$community))
-    if (n_communities >= 3 && n_communities <= 8) {
-      palette <- RColorBrewer::brewer.pal(n_communities, "Set2")
-    } else if (n_communities > 8) {
-      palette <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(8, "Set2"))(n_communities)
-    } else if (n_communities > 0 && n_communities < 3) {
-      palette <- RColorBrewer::brewer.pal(3, "Set2")[1:n_communities]
-    } else {
-      palette <- rep("#000000", n_communities)
-    }
+    palette <- .node_palette(n_communities, node_palette)
 
     node_data$community <- factor(node_data$community, levels = unique(node_data$community))
     community_levels <- levels(node_data$community)
@@ -4911,7 +4914,8 @@ word_correlation_network <- function(dfm_object,
 
     # Determine node color based on node_color_by parameter
     if (node_color_by == "frequency") {
-      node_data$color <- scales::col_numeric("viridis", domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
+      ramp <- if (length(node_palette) > 1) node_palette else "viridis"
+      node_data$color <- scales::col_numeric(ramp, domain = range(node_data$frequency, na.rm = TRUE))(node_data$frequency)
     } else {
       node_data$color <- palette[as.character(node_data$community)]
     }
@@ -4929,7 +4933,7 @@ word_correlation_network <- function(dfm_object,
       ggplot2::geom_segment(data = edge_data,
                             ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
                                          linewidth = .data$line_width, alpha = .data$alpha),
-                            color = "#5C5CFF", show.legend = FALSE) +
+                            color = edge_color, show.legend = FALSE) +
       ggplot2::scale_linewidth_identity() +
       ggplot2::scale_alpha_identity()
 
@@ -4939,7 +4943,11 @@ word_correlation_network <- function(dfm_object,
                             ggplot2::aes(x = .data$x, y = .data$y, size = .data$size, color = .data$frequency,
                                          text = .data$hover_text),
                             stroke = 0.5) +
-        ggplot2::scale_color_viridis_c(name = "Frequency")
+        (if (length(node_palette) > 1) {
+          ggplot2::scale_color_gradientn(colors = node_palette, name = "Frequency")
+        } else {
+          ggplot2::scale_color_viridis_c(name = "Frequency")
+        })
     } else {
       p <- p +
         ggplot2::geom_point(data = node_data,
