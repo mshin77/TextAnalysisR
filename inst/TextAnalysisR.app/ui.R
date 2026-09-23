@@ -30,7 +30,11 @@ ui <- fluidPage(
   tags$script(HTML(
     "(function () {
        if (document.body) document.body.classList.add('splash-on');
+       var done = false, quiet;
        function hideSplash() {
+         if (done) return;
+         done = true;
+         clearTimeout(quiet);
          var s = document.getElementById('app-splash');
          if (document.body) document.body.classList.remove('splash-on');
          if (!s) return;
@@ -38,9 +42,12 @@ ui <- fluidPage(
          s.style.opacity = '0';
          setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 350);
        }
-       $(document).one('shiny:idle', hideSplash);
-       $(document).one('shiny:connected', function () { setTimeout(hideSplash, 1200); });
-       setTimeout(hideSplash, 12000);
+       $(document).on('shiny:busy', function () { clearTimeout(quiet); });
+       $(document).on('shiny:idle', function () {
+         clearTimeout(quiet);
+         quiet = setTimeout(hideSplash, 800);
+       });
+       setTimeout(hideSplash, 30000);
      })();"
   )),
   shinybusy::add_busy_spinner(
