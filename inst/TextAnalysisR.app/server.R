@@ -17202,7 +17202,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (!use_grp) freq$group <- "All documents"
     freq
-  }, ignoreNULL = FALSE)
+  })
 
   output$semantic_wordcloud <- renderPlot({
     validate(need(
@@ -17259,6 +17259,9 @@ server <- shinyServer(function(input, output, session) {
 
     DT::datatable(out, rownames = FALSE, options = list(pageLength = 10, dom = "tip"))
   })
+
+  outputOptions(output, "semantic_wordcloud", suspendWhenHidden = FALSE)
+  outputOptions(output, "semantic_wordcloud_table", suspendWhenHidden = FALSE)
 
 
   output$clustering_warning <- renderUI({
