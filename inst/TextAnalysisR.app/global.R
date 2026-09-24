@@ -3744,11 +3744,11 @@ semantic_analysis_ui_content <- function() {
               value = "wordcloud",
               br(),
               conditionalPanel(
-                condition = "output.has_documents == false",
-                .tab_placeholder("cloud", "Process documents in the ", .hl("1. Setup"), " tab first")
+                condition = "output.has_dfm_results == false",
+                .tab_placeholder("cloud", "Create a document-feature matrix in the ", .hl("Preprocess"), " tab first")
               ),
               conditionalPanel(
-                condition = "output.has_documents == true",
+                condition = "output.has_dfm_results == true",
                 tabsetPanel(
                   id = "wordcloud_subTab",
                   tabPanel(
