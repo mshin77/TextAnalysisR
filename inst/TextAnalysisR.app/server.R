@@ -17231,7 +17231,8 @@ server <- shinyServer(function(input, output, session) {
       p <- ggplot2::ggplot(freq, ggplot2::aes(label = feature, size = weight,
                                               color = weight, angle = .data$angle)) +
         cloud_geom(rm_outside = TRUE, shape = input$wordcloud_shape %||% "circle",
-                   eccentricity = 1, family = input$wordcloud_font %||% "sans") +
+                   eccentricity = 1, family = input$wordcloud_font %||% "sans",
+                   use_richtext = FALSE) +
         ggplot2::scale_size_area(max_size = max_size) +
         ggplot2::scale_color_distiller(palette = input$wordcloud_palette %||% "Blues",
                                        direction = 1) +
