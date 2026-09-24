@@ -350,6 +350,7 @@ remove_metadata_lines <- function(df, text_col = "text") {
 
   keep <- keep &
     !grepl("^(Copyright|All Rights Reserved)", lines) &
+    !grepl("^Page [0-9]+ of [0-9]+$", lines) &
     !grepl(fields, lines)
 
   df[keep, , drop = FALSE]

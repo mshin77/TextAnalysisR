@@ -665,6 +665,21 @@ server <- shinyServer(function(input, output, session) {
             return(list(note = stats::setNames(res$message %||% "PDF extraction failed", row$name)))
           }
           df <- res$data
+
+          if (isTRUE(input$remove_metadata) && "text" %in% names(df)) {
+            lines <- trimws(TextAnalysisR:::.repair_encoding(as.character(df$text)))
+            ends <- which(grepl("^End of Document", lines))
+            if (length(ends) == 0) ends <- length(lines)
+            starts <- c(1, utils::head(ends, -1) + 1)
+            arts <- unlist(Map(function(a, b) {
+              part <- TextAnalysisR::remove_metadata_lines(
+                data.frame(text = lines[a:b], stringsAsFactors = FALSE))
+              paste(part$text, collapse = " ")
+            }, starts, ends))
+            arts <- arts[nzchar(trimws(arts))]
+            if (length(arts) > 0) df <- data.frame(text = arts, stringsAsFactors = FALSE)
+          }
+
           if (!"category" %in% names(df)) df$category <- label
           return(list(data = df, images = res$num_images %||% 0, text_only = text_only))
         }
