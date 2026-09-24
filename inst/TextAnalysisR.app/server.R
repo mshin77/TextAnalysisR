@@ -493,7 +493,7 @@ server <- shinyServer(function(input, output, session) {
         )
       }))
 
-      file_validated(TRUE)
+      file_validated(list(ok = TRUE, at = Sys.time()))
 
     }, error = function(e) {
       if (grepl("Rate limit", e$message)) {
@@ -503,19 +503,17 @@ server <- shinyServer(function(input, output, session) {
           paste("Reason:", e$message), session, "warning")
       }
       showNotification(paste("Upload failed:", e$message), type = "error", duration = 10)
-      file_validated(FALSE)
+      file_validated(list(ok = FALSE, at = Sys.time()))
     })
   })
 
   image_exts <- c("png", "jpg", "jpeg", "webp", "gif")
 
-  resolve_palette <- function(choice, hexes) {
-    switch(choice %||% "default",
-      "blues"   = c("#DCE6F5", "#7FA0D9", "#4269BF", "#1F3A6E"),
-      "warm"    = c("#FDD9A0", "#F6A04D", "#D9622B", "#8C2D0B"),
-      "viridis" = c("#440154", "#3B528B", "#21918C", "#5EC962", "#FDE725"),
-      "custom"  = hexes[nzchar(hexes)],
-      NULL
+  resolve_palette <- function(name) {
+    if (is.null(name) || !nzchar(name)) return(NULL)
+    tryCatch(
+      RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[name, "maxcolors"], name),
+      error = function(e) NULL
     )
   }
 
@@ -552,7 +550,7 @@ server <- shinyServer(function(input, output, session) {
   }
 
   observeEvent(file_validated(), {
-    req(isTRUE(file_validated()))
+    req(isTRUE(file_validated()$ok))
     req(input$file)
 
     tryCatch({
@@ -7790,10 +7788,7 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_cooccur %||% "leiden",
       node_size_by = input$node_size_cooccur %||% "degree",
       node_color_by = input$node_color_cooccur %||% "community",
-      node_palette = resolve_palette(input$node_palette_cooccur,
-                                     c(input$node_hex1_cooccur %||% "",
-                                       input$node_hex2_cooccur %||% "",
-                                       input$node_hex3_cooccur %||% "")),
+      node_palette = resolve_palette(input$node_palette_cooccur),
       edge_color = input$edge_color_cooccur %||% "#5C5CFF",
       seed = as.numeric(input$seed_cooccur %||% 123)
     )
@@ -8129,10 +8124,7 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_corr %||% "leiden",
       node_size_by = input$node_size_corr %||% "degree",
       node_color_by = input$node_color_corr %||% "community",
-      node_palette = resolve_palette(input$node_palette_corr,
-                                     c(input$node_hex1_corr %||% "",
-                                       input$node_hex2_corr %||% "",
-                                       input$node_hex3_corr %||% "")),
+      node_palette = resolve_palette(input$node_palette_corr),
       edge_color = input$edge_color_corr %||% "#5C5CFF",
       seed = as.numeric(input$seed_corr %||% 123)
     )

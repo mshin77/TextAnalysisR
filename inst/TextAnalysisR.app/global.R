@@ -3439,7 +3439,7 @@ semantic_analysis_ui_content <- function() {
             numericInput(
               "wordcloud_min_freq",
               "Minimum frequency",
-              value = 3, min = 1, step = 1
+              value = 1, min = 1, step = 1
             ),
             .palette_input("wordcloud_palette", "Color scale"),
             selectInput(
@@ -3530,41 +3530,12 @@ semantic_analysis_ui_content <- function() {
                 ),
                 selected = "degree"
               ),
-              selectInput(
-                "node_palette_cooccur",
-                "Color palette",
-                choices = c(
-                  "Default (Set2)" = "default",
-                  "Blues" = "blues",
-                  "Warm" = "warm",
-                  "Viridis" = "viridis",
-                  "Custom (pick below)" = "custom"
-                ),
-                selected = "default"
-              ),
-              conditionalPanel(
-                condition = "input.node_palette_cooccur == 'custom'",
-                div(
-                  style = "display: flex; gap: 8px; margin-bottom: 12px;",
-                  if (requireNamespace("colourpicker", quietly = TRUE)) {
-                    colourpicker::colourInput("node_hex1_cooccur", NULL, value = "#4269BF", showColour = "background")
-                  } else {
-                    textInput("node_hex1_cooccur", NULL, value = "#4269BF")
-                  },
-                  if (requireNamespace("colourpicker", quietly = TRUE)) {
-                    colourpicker::colourInput("node_hex2_cooccur", NULL, value = "#9C3AD7", showColour = "background")
-                  } else {
-                    textInput("node_hex2_cooccur", NULL, value = "#9C3AD7")
-                  },
-                  if (requireNamespace("colourpicker", quietly = TRUE)) {
-                    colourpicker::colourInput("node_hex3_cooccur", NULL, value = "#0C795A", showColour = "background")
-                  } else {
-                    textInput("node_hex3_cooccur", NULL, value = "#0C795A")
-                  }
-                )
-              ),
+              .palette_input("node_palette_cooccur", "Color palette"),
               if (requireNamespace("colourpicker", quietly = TRUE)) {
-                colourpicker::colourInput("edge_color_cooccur", "Edge color", value = "#5C5CFF")
+                colourpicker::colourInput("edge_color_cooccur", "Edge color", value = "#5C5CFF",
+                                          palette = "limited", showColour = "background",
+                                          allowedCols = c("#5C5CFF", "#4269BF", "#9C3AD7", "#0C795A",
+                                                          "#D9622B", "#B84D94", "#94A3B8", "#3B3B3B"))
               } else {
                 textInput("edge_color_cooccur", "Edge color", value = "#5C5CFF")
               },
@@ -3682,41 +3653,12 @@ semantic_analysis_ui_content <- function() {
                 ),
                 selected = "degree"
               ),
-              selectInput(
-                "node_palette_corr",
-                "Color palette",
-                choices = c(
-                  "Default (Set2)" = "default",
-                  "Blues" = "blues",
-                  "Warm" = "warm",
-                  "Viridis" = "viridis",
-                  "Custom (pick below)" = "custom"
-                ),
-                selected = "default"
-              ),
-              conditionalPanel(
-                condition = "input.node_palette_corr == 'custom'",
-                div(
-                  style = "display: flex; gap: 8px; margin-bottom: 12px;",
-                  if (requireNamespace("colourpicker", quietly = TRUE)) {
-                    colourpicker::colourInput("node_hex1_corr", NULL, value = "#4269BF", showColour = "background")
-                  } else {
-                    textInput("node_hex1_corr", NULL, value = "#4269BF")
-                  },
-                  if (requireNamespace("colourpicker", quietly = TRUE)) {
-                    colourpicker::colourInput("node_hex2_corr", NULL, value = "#9C3AD7", showColour = "background")
-                  } else {
-                    textInput("node_hex2_corr", NULL, value = "#9C3AD7")
-                  },
-                  if (requireNamespace("colourpicker", quietly = TRUE)) {
-                    colourpicker::colourInput("node_hex3_corr", NULL, value = "#0C795A", showColour = "background")
-                  } else {
-                    textInput("node_hex3_corr", NULL, value = "#0C795A")
-                  }
-                )
-              ),
+              .palette_input("node_palette_corr", "Color palette"),
               if (requireNamespace("colourpicker", quietly = TRUE)) {
-                colourpicker::colourInput("edge_color_corr", "Edge color", value = "#5C5CFF")
+                colourpicker::colourInput("edge_color_corr", "Edge color", value = "#5C5CFF",
+                                          palette = "limited", showColour = "background",
+                                          allowedCols = c("#5C5CFF", "#4269BF", "#9C3AD7", "#0C795A",
+                                                          "#D9622B", "#B84D94", "#94A3B8", "#3B3B3B"))
               } else {
                 textInput("edge_color_corr", "Edge color", value = "#5C5CFF")
               },
