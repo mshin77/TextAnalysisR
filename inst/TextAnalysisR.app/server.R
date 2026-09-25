@@ -517,6 +517,19 @@ server <- shinyServer(function(input, output, session) {
     )
   }
 
+  as_articles <- function(text_lines) {
+    lines <- trimws(TextAnalysisR:::.repair_encoding(as.character(text_lines)))
+    ends <- which(grepl("^End of Document", lines))
+    if (length(ends) == 0) ends <- length(lines)
+    starts <- c(1, utils::head(ends, -1) + 1)
+    arts <- unlist(Map(function(a, b) {
+      part <- TextAnalysisR::remove_metadata_lines(
+        data.frame(text = lines[a:b], stringsAsFactors = FALSE))
+      paste(part$text, collapse = " ")
+    }, starts, ends))
+    arts[nzchar(trimws(arts))]
+  }
+
   read_plain_file <- function(path, ext) {
     if (ext == "docx") {
       if (!requireNamespace("officer", quietly = TRUE)) {
@@ -667,16 +680,7 @@ server <- shinyServer(function(input, output, session) {
           df <- res$data
 
           if (isTRUE(input$remove_metadata) && "text" %in% names(df)) {
-            lines <- trimws(TextAnalysisR:::.repair_encoding(as.character(df$text)))
-            ends <- which(grepl("^End of Document", lines))
-            if (length(ends) == 0) ends <- length(lines)
-            starts <- c(1, utils::head(ends, -1) + 1)
-            arts <- unlist(Map(function(a, b) {
-              part <- TextAnalysisR::remove_metadata_lines(
-                data.frame(text = lines[a:b], stringsAsFactors = FALSE))
-              paste(part$text, collapse = " ")
-            }, starts, ends))
-            arts <- arts[nzchar(trimws(arts))]
+            arts <- as_articles(df$text)
             if (length(arts) > 0) df <- data.frame(text = arts, stringsAsFactors = FALSE)
           }
 
@@ -728,7 +732,12 @@ server <- shinyServer(function(input, output, session) {
         dropped <- 0L
         if (isTRUE(input$remove_metadata) && !parsed_export) {
           before <- nrow(df)
-          df <- TextAnalysisR::remove_metadata_lines(df)
+          arts <- as_articles(df$text)
+          if (length(arts) > 0) {
+            df <- data.frame(text = arts, stringsAsFactors = FALSE)
+          } else {
+            df <- TextAnalysisR::remove_metadata_lines(df)
+          }
           dropped <- before - nrow(df)
         }
         if (nrow(df) == 0) {
