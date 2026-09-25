@@ -509,14 +509,6 @@ server <- shinyServer(function(input, output, session) {
 
   image_exts <- c("png", "jpg", "jpeg", "webp", "gif")
 
-  resolve_palette <- function(name) {
-    if (is.null(name) || !nzchar(name)) return(NULL)
-    tryCatch(
-      RColorBrewer::brewer.pal(RColorBrewer::brewer.pal.info[name, "maxcolors"], name),
-      error = function(e) NULL
-    )
-  }
-
   as_articles <- function(text_lines) {
     lines <- trimws(TextAnalysisR:::.repair_encoding(as.character(text_lines)))
     ends <- which(grepl("^End of Document", lines))
@@ -7812,7 +7804,6 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_cooccur %||% "leiden",
       node_size_by = input$node_size_cooccur %||% "degree",
       node_color_by = input$node_color_cooccur %||% "community",
-      node_palette = resolve_palette(input$node_palette_cooccur),
       edge_color = input$edge_color_cooccur %||% "#5C5CFF",
       seed = as.numeric(input$seed_cooccur %||% 123)
     )
@@ -7854,7 +7845,6 @@ server <- shinyServer(function(input, output, session) {
       input$community_method_cooccur,
       input$node_size_cooccur,
       input$node_color_cooccur,
-      input$node_palette_cooccur,
       input$edge_color_cooccur,
       input$nrows_co_occurrence,
       input$width_word_co_occurrence_network_plot,
@@ -8148,7 +8138,6 @@ server <- shinyServer(function(input, output, session) {
       community_method = input$community_method_corr %||% "leiden",
       node_size_by = input$node_size_corr %||% "degree",
       node_color_by = input$node_color_corr %||% "community",
-      node_palette = resolve_palette(input$node_palette_corr),
       edge_color = input$edge_color_corr %||% "#5C5CFF",
       seed = as.numeric(input$seed_corr %||% 123)
     )
@@ -8191,7 +8180,6 @@ server <- shinyServer(function(input, output, session) {
       input$community_method_corr,
       input$node_size_corr,
       input$node_color_corr,
-      input$node_palette_corr,
       input$edge_color_corr,
       input$nrows_correlation,
       input$width_word_correlation_network_plot,

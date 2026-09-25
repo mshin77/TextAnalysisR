@@ -3530,10 +3530,9 @@ semantic_analysis_ui_content <- function() {
                 ),
                 selected = "degree"
               ),
-              .palette_input("node_palette_cooccur", "Color palette"),
               if (requireNamespace("colourpicker", quietly = TRUE)) {
                 colourpicker::colourInput("edge_color_cooccur", "Edge color", value = "#5C5CFF",
-                                          palette = "limited", showColour = "background",
+                                          palette = "limited",
                                           allowedCols = c("#5C5CFF", "#4269BF", "#9C3AD7", "#0C795A",
                                                           "#D9622B", "#B84D94", "#94A3B8", "#3B3B3B"))
               } else {
@@ -3653,10 +3652,9 @@ semantic_analysis_ui_content <- function() {
                 ),
                 selected = "degree"
               ),
-              .palette_input("node_palette_corr", "Color palette"),
               if (requireNamespace("colourpicker", quietly = TRUE)) {
                 colourpicker::colourInput("edge_color_corr", "Edge color", value = "#5C5CFF",
-                                          palette = "limited", showColour = "background",
+                                          palette = "limited",
                                           allowedCols = c("#5C5CFF", "#4269BF", "#9C3AD7", "#0C795A",
                                                           "#D9622B", "#B84D94", "#94A3B8", "#3B3B3B"))
               } else {
