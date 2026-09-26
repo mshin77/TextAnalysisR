@@ -2703,6 +2703,10 @@ server <- shinyServer(function(input, output, session) {
     buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
+  # both sit behind has_stopword_results, so they stay suspended until resumed
+  outputOptions(output, "stopword_plot", suspendWhenHidden = FALSE)
+  outputOptions(output, "stopword_table", suspendWhenHidden = FALSE)
+
   # Lexical analysis tab
 
   spacy_parsed <- reactiveVal(NULL)
