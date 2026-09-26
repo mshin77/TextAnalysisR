@@ -1348,13 +1348,12 @@ Focus on incorporating the most significant keywords while following the guideli
                     value = "ai_rec",
                     br(),
                     conditionalPanel(
-                      condition = "output.show_ai_recommendation == false",
+                      condition = "output.has_ai_recommendation == false",
                       .tab_placeholder(
                         "wand-magic-sparkles",
-                        "Run ",
-                        .hl("'Search K'"),
-                        " first, then click ",
-                        .hl("'Generate Recommendation'")
+                        "Click ",
+                        .hl("'Generate Recommendation'"),
+                        " in the sidebar for a suggested topic number"
                       )
                     ),
                     uiOutput("ai_recommendation_output"),

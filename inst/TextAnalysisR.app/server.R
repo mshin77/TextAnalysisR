@@ -103,16 +103,16 @@ server <- shinyServer(function(input, output, session) {
   # Discovery mode picks the algorithm and whether k is fixed or detected
   clustering_spec <- function() {
     approach <- input$clustering_approach %||% "auto"
-    if (identical(approach, "manual")) {
-      return(list(method = "kmeans", n = input$manual_n_clusters))
+    method <- input$semantic_cluster_method
+    k <- if (identical(approach, "manual")) {
+      input$manual_n_clusters
+    } else if (identical(approach, "method")) {
+      input$kmeans_n_clusters
+    } else {
+      NULL
     }
-    if (identical(approach, "method")) {
-      fixed_k <- identical(input$semantic_cluster_method, "kmeans") &&
-        !is.null(input$kmeans_n_clusters) && input$kmeans_n_clusters > 0
-      return(list(method = input$semantic_cluster_method,
-                  n = if (fixed_k) input$kmeans_n_clusters else NULL))
-    }
-    list(method = "kmeans", n = NULL)
+    use_k <- identical(method, "kmeans") && !is.null(k) && k > 0
+    list(method = method, n = if (use_k) k else NULL)
   }
   .utf8_df <- function(df) {
     chr <- vapply(df, is.character, logical(1))
@@ -3599,7 +3599,8 @@ server <- shinyServer(function(input, output, session) {
       class = "cell-border stripe"
     ) %>%
       DT::formatStyle("Feature", fontWeight = "bold") %>%
-      DT::formatRound("Percentage", digits = 1)
+      DT::formatRound("Percentage", digits = 1) %>%
+      DT::formatString("Percentage", suffix = "%")
   })
 
   # Morphology Info Modal
@@ -15856,10 +15857,10 @@ server <- shinyServer(function(input, output, session) {
   })
   outputOptions(output, "has_continuous_plot", suspendWhenHidden = FALSE)
 
-  output$show_ai_recommendation <- reactive({
-    !is.null(K_search())
+  output$has_ai_recommendation <- reactive({
+    !is.null(ai_recommendation())
   })
-  outputOptions(output, "show_ai_recommendation", suspendWhenHidden = FALSE)
+  outputOptions(output, "has_ai_recommendation", suspendWhenHidden = FALSE)
 
   output$has_search_k_results <- reactive({
     tryCatch({
