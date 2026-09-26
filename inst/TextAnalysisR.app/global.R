@@ -1285,15 +1285,6 @@ Focus on incorporating the most significant keywords while following the guideli
                     icon = icon("chart-line"),
                     value = "diagnostic",
                     br(),
-                    conditionalPanel(
-                      condition = "output.has_search_k_results == false",
-                      .tab_placeholder(
-                        "chart-line",
-                        "Pick a topic-number range and click ",
-                        .hl("'Search K'"),
-                        " to compare models"
-                      )
-                    ),
                     uiOutput("topic_search_message"),
                     br(),
                     fluidRow(
@@ -1323,15 +1314,6 @@ Focus on incorporating the most significant keywords while following the guideli
                       )
                     ),
                     br(),
-                    conditionalPanel(
-                      condition = "output.has_search_k_results == false",
-                      .tab_placeholder(
-                        "scale-balanced",
-                        "Run ",
-                        .hl("'Search K'"),
-                        " to rank candidate models"
-                      )
-                    ),
                     DT::dataTableOutput("quality_summary_table")
                   ),
                   tabPanel(
@@ -2546,13 +2528,6 @@ lexical_analysis_ui_content <- function() {
                       tabPanel(
                         "Summary Table",
                         br(),
-                        conditionalPanel(
-                          condition = "output.morph_ready == false",
-                          .tab_placeholder(
-                            "table",
-                            "Annotate the corpus, then the per-document counts appear here"
-                          )
-                        ),
                         DT::dataTableOutput("morph_summary_table")
                       )
                     )
@@ -3960,14 +3935,6 @@ semantic_analysis_ui_content <- function() {
                     "Summary",
                     icon = icon("clipboard-list"),
                     br(),
-                    conditionalPanel(
-                      condition = "output.has_gap_analysis == false",
-                      .tab_placeholder(
-                        "clipboard-list",
-                        "Pick a reference category and click ",
-                        .hl("'Run Comparative Analysis'")
-                      )
-                    ),
                     DT::dataTableOutput("gap_summary_stats")
                   ),
                   tabPanel(
@@ -3976,13 +3943,6 @@ semantic_analysis_ui_content <- function() {
                     br(),
                     tags$p("Cross-category similarity heatmap comparing reference documents against other categories.",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
-                    conditionalPanel(
-                      condition = "output.has_gap_analysis == false",
-                      .tab_placeholder(
-                        "grip",
-                        "Run a comparison to shade shared terms"
-                      )
-                    ),
                     plotly::plotlyOutput("gap_cross_category_heatmap", height = "600px")
                   ),
                   tabPanel(
@@ -3991,13 +3951,6 @@ semantic_analysis_ui_content <- function() {
                     br(),
                     tags$p("Reference items with low similarity to all comparison categories (distinctive content).",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
-                    conditionalPanel(
-                      condition = "output.has_gap_analysis == false",
-                      .tab_placeholder(
-                        "circle-half-stroke",
-                        "Terms found only in the reference category appear here after a comparison"
-                      )
-                    ),
                     DT::dataTableOutput("gap_unique_items")
                   ),
                   tabPanel(
@@ -4006,13 +3959,6 @@ semantic_analysis_ui_content <- function() {
                     br(),
                     tags$p("Comparison category items not well-covered by reference category (content gaps).",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
-                    conditionalPanel(
-                      condition = "output.has_gap_analysis == false",
-                      .tab_placeholder(
-                        "circle-minus",
-                        "Terms absent from the comparison category appear here after a comparison"
-                      )
-                    ),
                     DT::dataTableOutput("gap_missing_items")
                   ),
                   tabPanel(
