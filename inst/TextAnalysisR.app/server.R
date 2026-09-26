@@ -18541,6 +18541,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$topic_term_message <- renderUI({
+    if (embedding_shown()) return(embedding_view$message)
     formula_text <- if (is.null(prevalence_formula_K_n())) {
       "No document-level covariates"
     } else {
@@ -19181,6 +19182,15 @@ server <- shinyServer(function(input, output, session) {
 
 
 
+  # the embedding path shares the topic display slots with STM, so it stores its
+  # content here instead of rebinding outputs STM registered once at startup
+  embedding_view <- reactiveValues(active = FALSE, message = NULL, terms = NULL,
+                                   term_table = NULL, prevalence = NULL)
+
+  embedding_shown <- function() {
+    isTRUE(embedding_view$active) && identical(input$topic_modeling_path, "embedding")
+  }
+
   observeEvent(input$embedding_display, {
     if (is.null(topic_model_result())) {
       showNotification("Please run the embedding model first.", type = "warning", duration = 5)
@@ -19196,18 +19206,16 @@ server <- shinyServer(function(input, output, session) {
       n_outliers <- sum(model$topic_assignments == -1)
       outlier_pct <- round(100 * n_outliers / n_docs, 1)
 
-      output$topic_term_message <- renderUI({
-        tags$div(
-          style = "padding: 12px 16px; background: #f0f7ff; border-left: 4px solid #337ab7; margin-bottom: 16px; font-size: 16px;",
-          tags$strong("Embedding-Based Topic Model Summary: "),
-          paste0(n_topics, " topics discovered from ", n_docs, " documents"),
-          if (n_outliers > 0) paste0(" (", n_outliers, " outliers, ", outlier_pct, "%)") else NULL
-        )
-      })
+      embedding_view$active <- TRUE
 
-      output$topic_term_plot_uiOutput <- renderUI({
-        DT::dataTableOutput("embedding_keyword_table", width = "100%")
-      })
+      embedding_view$message <- tags$div(
+        style = "padding: 12px 16px; background: #f0f7ff; border-left: 4px solid #337ab7; margin-bottom: 16px; font-size: 16px;",
+        tags$strong("Embedding-Based Topic Model Summary: "),
+        paste0(n_topics, " topics discovered from ", n_docs, " documents"),
+        if (n_outliers > 0) paste0(" (", n_outliers, " outliers, ", outlier_pct, "%)") else NULL
+      )
+
+      embedding_view$terms <- DT::dataTableOutput("embedding_keyword_table", width = "100%")
 
       output$embedding_keyword_table <- DT::renderDataTable({
         model <- topic_model_result()
@@ -19229,19 +19237,17 @@ server <- shinyServer(function(input, output, session) {
         }
       })
 
-      output$topic_term_table_uiOutput <- renderUI({ NULL })
+      embedding_view$term_table <- NULL
 
-      output$topic_prevalence_plot_uiOutput <- renderUI({
-        tagList(
-          div(
-            style = "margin-bottom: 20px; overflow: hidden;",
-            plotly::plotlyOutput("embedding_topic_plot", height = 500, width = "100%")
-          ),
-          br(),
-          h4("Clustering Quality Metrics"),
-          tableOutput("embedding_quality_metrics")
-        )
-      })
+      embedding_view$prevalence <- tagList(
+        div(
+          style = "margin-bottom: 20px; overflow: hidden;",
+          plotly::plotlyOutput("embedding_topic_plot", height = 500, width = "100%")
+        ),
+        br(),
+        h4("Clustering Quality Metrics"),
+        tableOutput("embedding_quality_metrics")
+      )
 
       output$embedding_topics_info <- renderUI({
         NULL
@@ -20213,6 +20219,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$topic_term_plot_uiOutput <- renderUI({
+    if (embedding_shown()) return(embedding_view$terms)
     plot_height <- input$height %||% 1000
     plot_width <- input$width %||% 1000
 
@@ -20332,6 +20339,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$topic_term_table_uiOutput <- renderUI({
+    if (embedding_shown()) return(embedding_view$term_table)
     req(beta_td())
     htmltools::tags$div(
       style = "margin-top: 20px;",
@@ -20684,6 +20692,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$topic_prevalence_plot_uiOutput <- renderUI({
+    if (embedding_shown()) return(embedding_view$prevalence)
     req(input$stm_display)
     if (!is.null(gamma_terms())) {
       div(
