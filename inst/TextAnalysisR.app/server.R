@@ -99,6 +99,21 @@ server <- shinyServer(function(input, output, session) {
   })
 
   `%||%` <- function(a, b) if (is.null(a)) b else a
+
+  # Discovery mode picks the algorithm and whether k is fixed or detected
+  clustering_spec <- function() {
+    approach <- input$clustering_approach %||% "auto"
+    if (identical(approach, "manual")) {
+      return(list(method = "kmeans", n = input$manual_n_clusters))
+    }
+    if (identical(approach, "method")) {
+      fixed_k <- identical(input$semantic_cluster_method, "kmeans") &&
+        !is.null(input$kmeans_n_clusters) && input$kmeans_n_clusters > 0
+      return(list(method = input$semantic_cluster_method,
+                  n = if (fixed_k) input$kmeans_n_clusters else NULL))
+    }
+    list(method = "kmeans", n = NULL)
+  }
   .utf8_df <- function(df) {
     chr <- vapply(df, is.character, logical(1))
     df[chr] <- lapply(df[chr], TextAnalysisR::to_utf8)
@@ -206,7 +221,8 @@ server <- shinyServer(function(input, output, session) {
       input$cluster_openai_api_key, input$llm_sentiment_openai_api_key,
       input$stm_label_openai_api_key, input$k_rec_openai_api_key,
       input$content_openai_api_key,
-      input$topic_embedding_openai_api_key, input$openai_api_key, input$global_openai_api_key
+      input$topic_embedding_openai_api_key, input$openai_api_key, input$global_openai_api_key,
+      input$qc_openai_api_key, input$search_embedding_openai_api_key
     )
   }, {
     keys <- c(
@@ -214,7 +230,8 @@ server <- shinyServer(function(input, output, session) {
       input$cluster_openai_api_key, input$llm_sentiment_openai_api_key,
       input$stm_label_openai_api_key, input$k_rec_openai_api_key,
       input$content_openai_api_key,
-      input$topic_embedding_openai_api_key, input$openai_api_key, input$global_openai_api_key
+      input$topic_embedding_openai_api_key, input$openai_api_key, input$global_openai_api_key,
+      input$qc_openai_api_key, input$search_embedding_openai_api_key
     )
     valid <- keys[!is.null(keys) & nzchar(keys)]
     if (length(valid) > 0) ai_config$openai_api_key <- valid[1]
@@ -227,7 +244,8 @@ server <- shinyServer(function(input, output, session) {
       input$stm_label_gemini_api_key, input$k_rec_gemini_api_key,
       input$content_gemini_api_key,
       input$topic_embedding_gemini_api_key, input$global_gemini_api_key,
-      input$gemini_vision_api_key
+      input$gemini_vision_api_key,
+      input$qc_gemini_api_key, input$search_embedding_gemini_api_key
     )
   }, {
     keys <- c(
@@ -236,7 +254,8 @@ server <- shinyServer(function(input, output, session) {
       input$stm_label_gemini_api_key, input$k_rec_gemini_api_key,
       input$content_gemini_api_key,
       input$topic_embedding_gemini_api_key, input$global_gemini_api_key,
-      input$gemini_vision_api_key
+      input$gemini_vision_api_key,
+      input$qc_gemini_api_key, input$search_embedding_gemini_api_key
     )
     valid <- keys[!is.null(keys) & nzchar(keys)]
     if (length(valid) > 0) ai_config$gemini_api_key <- valid[1]
@@ -1211,12 +1230,8 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  listed_vars <- eventReactive(input$show_vars, {
-    input$show_vars
-  })
-
   united_tbl <- eventReactive(input$apply, {
-    if (is.null(listed_vars()) || length(listed_vars()) == 0) {
+    if (is.null(input$show_vars) || length(input$show_vars) == 0) {
       showNotification("Please select at least one column to unite", type = "error", duration = 10)
       return(NULL)
     }
@@ -1227,10 +1242,10 @@ server <- shinyServer(function(input, output, session) {
       {
         united_data <- TextAnalysisR::unite_cols(
           mydata(),
-          listed_vars = listed_vars()
+          listed_vars = input$show_vars
         )
 
-        TextAnalysisR:::show_completion_notification(paste("Combined", length(listed_vars()), "columns into 'Combined Text' while keeping original columns"))
+        TextAnalysisR:::show_completion_notification(paste("Combined", length(input$show_vars), "columns into 'Combined Text' while keeping original columns"))
         return(united_data)
       },
       error = function(e) {
@@ -1911,11 +1926,6 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  output$dict_print_dictionary <- renderPrint({
-    req(processed_tokens())
-    processed_tokens() %>% glimpse()
-  })
-
   output$ngram_detection_plot <- plotly::renderPlotly({
     req(ngram_stats())
     gg_to_plotly(TextAnalysisR::plot_ngram_frequency(
@@ -1968,7 +1978,7 @@ server <- shinyServer(function(input, output, session) {
   ))
 
   output$has_dictionary_results <- reactive({
-    dictionary_applied()
+    dictionary_applied() && !is.null(compound_stats())
   })
   outputOptions(output, "has_dictionary_results", suspendWhenHidden = FALSE)
 
@@ -2019,37 +2029,6 @@ server <- shinyServer(function(input, output, session) {
     })
   })
 
-  output$dictionary_plot <- plotly::renderPlotly({
-    req(input$dictionary)
-    req(dfm_dictionary())
-
-    freq_all <- quanteda.textstats::textstat_frequency(dfm_dictionary())
-
-    selected_ngrams <- input$multi_word_expressions
-    selected_ngrams_normalized <- tolower(gsub(" ", "_", selected_ngrams))
-
-    top_20_original <- if (!is.null(top_20_preselected())) {
-      tolower(gsub(" ", "_", top_20_preselected()))
-    } else {
-      character(0)
-    }
-
-    freq_mwe <- freq_all %>%
-      dplyr::filter(tolower(feature) %in% selected_ngrams_normalized) %>%
-      dplyr::mutate(
-        source = ifelse(tolower(feature) %in% top_20_original, "Top 20", "Manual")
-      ) %>%
-      dplyr::arrange(desc(frequency))
-
-    gg_to_plotly(TextAnalysisR::plot_mwe_frequency(
-      mwe_data = freq_mwe,
-      title = "Multi-Word Expression Frequency After Compounding",
-      color_by_source = TRUE,
-      primary_color = "#10B981",
-      secondary_color = "#A855F7"
-    ))
-  })
-
   output$selected_ngrams_plot_uiOutput <- renderUI({
     div(
       style = "display: flex; justify-content: center; margin-bottom: 20px;",
@@ -2086,6 +2065,42 @@ server <- shinyServer(function(input, output, session) {
       highlight_color = "#10B981",
       default_color = "#10B981",
       show_stats = FALSE
+    ))
+  })
+
+  output$dict_print_dictionary <- renderPrint({
+    req(processed_tokens())
+    processed_tokens() %>% glimpse()
+  })
+
+  output$dictionary_plot <- plotly::renderPlotly({
+    req(input$dictionary)
+    req(dfm_dictionary())
+
+    freq_all <- quanteda.textstats::textstat_frequency(dfm_dictionary())
+
+    selected_ngrams <- input$multi_word_expressions
+    selected_ngrams_normalized <- tolower(gsub(" ", "_", selected_ngrams))
+
+    top_20_original <- if (!is.null(top_20_preselected())) {
+      tolower(gsub(" ", "_", top_20_preselected()))
+    } else {
+      character(0)
+    }
+
+    freq_mwe <- freq_all %>%
+      dplyr::filter(tolower(feature) %in% selected_ngrams_normalized) %>%
+      dplyr::mutate(
+        source = ifelse(tolower(feature) %in% top_20_original, "Top 20", "Manual")
+      ) %>%
+      dplyr::arrange(desc(frequency))
+
+    gg_to_plotly(TextAnalysisR::plot_mwe_frequency(
+      mwe_data = freq_mwe,
+      title = "Multi-Word Expression Frequency After Compounding",
+      color_by_source = TRUE,
+      primary_color = "#10B981",
+      secondary_color = "#A855F7"
     ))
   })
 
@@ -3584,7 +3599,7 @@ server <- shinyServer(function(input, output, session) {
       class = "cell-border stripe"
     ) %>%
       DT::formatStyle("Feature", fontWeight = "bold") %>%
-      DT::formatPercentage("Percentage", digits = 1)
+      DT::formatRound("Percentage", digits = 1)
   })
 
   # Morphology Info Modal
@@ -7463,7 +7478,7 @@ server <- shinyServer(function(input, output, session) {
     input$main_navbar
     req(colnames_cat())
     cats <- c("None" = "None", colnames_cat())
-    lapply(c("doc_var_co_occurrence", "doc_var_correlation", "sentiment_group_var", "wordcloud_group_var",
+    lapply(c("doc_var_co_occurrence", "doc_var_correlation", "wordcloud_group_var",
              "readability_group_var", "keyword_group_var", "tfidf_group_var"),
            resend_choices, choices = cats, default = "None")
   })
@@ -7801,8 +7816,7 @@ server <- shinyServer(function(input, output, session) {
       input$height_word_co_occurrence_network_plot,
       input$doc_var_co_occurrence,
       input$use_category_cooccur,
-      input$seed_cooccur,
-      input$showlegend_cooccur
+      input$seed_cooccur
     )
   }) %>% debounce(500)
 
@@ -7842,7 +7856,8 @@ server <- shinyServer(function(input, output, session) {
   output$word_co_occurrence_network_plotly <- plotly::renderPlotly({
     result <- word_co_occurrence_network_results()
     req(result)
-    gg_to_plotly(result$plot)
+    plotly::layout(gg_to_plotly(result$plot),
+                   showlegend = isTRUE(input$showlegend_cooccur))
   })
 
   output$word_co_occurrence_network_table_uiOutput <- renderUI({
@@ -8136,8 +8151,7 @@ server <- shinyServer(function(input, output, session) {
       input$height_word_correlation_network_plot,
       input$doc_var_correlation,
       input$use_category_corr,
-      input$seed_corr,
-      input$showlegend_corr
+      input$seed_corr
     )
   }) %>% debounce(500)
 
@@ -8177,7 +8191,8 @@ server <- shinyServer(function(input, output, session) {
   output$word_correlation_network_plotly <- plotly::renderPlotly({
     result <- word_correlation_network_results()
     req(result)
-    gg_to_plotly(result$plot)
+    plotly::layout(gg_to_plotly(result$plot),
+                   showlegend = isTRUE(input$showlegend_corr))
   })
 
   output$word_correlation_network_table_uiOutput <- renderUI({
@@ -12070,21 +12085,6 @@ server <- shinyServer(function(input, output, session) {
           ),
           selected = "2"
         )
-      ),
-      conditionalPanel(
-        condition = "input.semantic_feature_space == 'embeddings'",
-        sliderInput(
-          "embedding_sim_threshold",
-          "Document similarity threshold:",
-          min = 0.3,
-          max = 0.9,
-          value = 0.5,
-          step = 0.05
-        ),
-        tags$div(
-          style = "font-size: 16px; color: #475569; margin-top: -8px; margin-bottom: 8px;",
-          "Higher values = fewer, stronger document connections"
-        )
       )
     )
   })
@@ -14075,7 +14075,8 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    cluster_method <- input$semantic_cluster_method
+    cluster_spec <- clustering_spec()
+    cluster_method <- cluster_spec$method
 
     has_dimred_results <- !is.null(dimred_results$last_method) &&
       dimred_results$last_params$feature_space == input$semantic_feature_space
@@ -14124,15 +14125,7 @@ server <- shinyServer(function(input, output, session) {
       min_samples = input$dbscan_min_samples %||% 5
     )
 
-    n_clusters <- if (cluster_method == "kmeans") {
-      if (!is.null(input$kmeans_n_clusters) && input$kmeans_n_clusters > 0) {
-        input$kmeans_n_clusters
-      } else {
-        NULL
-      }
-    } else {
-      NULL
-    }
+    n_clusters <- cluster_spec$n
 
     TextAnalysisR:::show_loading_notification(paste("Running", method_display_name, "clustering analysis..."), id = "loadingClustering")
 
@@ -14392,7 +14385,8 @@ server <- shinyServer(function(input, output, session) {
       return(NULL)
     }
 
-    cluster_method <- input$semantic_cluster_method
+    cluster_spec <- clustering_spec()
+    cluster_method <- cluster_spec$method
 
     existing_embedding <- NULL
     embedding_method <- NULL
@@ -14409,15 +14403,7 @@ server <- shinyServer(function(input, output, session) {
       min_samples = input$dbscan_min_samples %||% 5
     )
 
-    n_clusters <- if (cluster_method == "kmeans") {
-      if (!is.null(input$kmeans_n_clusters) && input$kmeans_n_clusters > 0) {
-        input$kmeans_n_clusters
-      } else {
-        NULL
-      }
-    } else {
-      NULL
-    }
+    n_clusters <- cluster_spec$n
 
     set.seed(input$semantic_cluster_seed)
 
@@ -15762,19 +15748,9 @@ server <- shinyServer(function(input, output, session) {
   })
   outputOptions(output, "has_search_results", suspendWhenHidden = FALSE)
 
-  output$has_cooccurrence_plot <- reactive({
-    !is.null(input$plot_word_co_occurrence_network) && input$plot_word_co_occurrence_network > 0
-  })
-  outputOptions(output, "has_cooccurrence_plot", suspendWhenHidden = FALSE)
-
-  output$has_correlation_plot <- reactive({
-    !is.null(input$plot_word_correlation_network) && input$plot_word_correlation_network > 0
-  })
-  outputOptions(output, "has_correlation_plot", suspendWhenHidden = FALSE)
-
   # Feature space status for co-occurrence network
   output$cooccur_feature_status <- renderUI({
-    feature_space <- input$cooccur_feature_space %||% "words"
+    feature_space <- input$semantic_feature_space %||% "words"
     dfm_available <- tryCatch({
       dfm_obj <- dfm_final()
       !is.null(dfm_obj) && inherits(dfm_obj, "dfm")
@@ -15806,6 +15782,16 @@ server <- shinyServer(function(input, output, session) {
       }
     }
   })
+
+  output$has_cooccurrence_plot <- reactive({
+    !is.null(input$plot_word_co_occurrence_network) && input$plot_word_co_occurrence_network > 0 && !is.null(cooccur_result_val())
+  })
+  outputOptions(output, "has_cooccurrence_plot", suspendWhenHidden = FALSE)
+
+  output$has_correlation_plot <- reactive({
+    !is.null(input$plot_word_correlation_network) && input$plot_word_correlation_network > 0 && !is.null(corr_result_val())
+  })
+  outputOptions(output, "has_correlation_plot", suspendWhenHidden = FALSE)
 
   # Feature space status for correlation network
   output$corr_feature_status <- renderUI({
@@ -15845,11 +15831,12 @@ server <- shinyServer(function(input, output, session) {
   output$has_frequency_plot <- reactive({
     !is.null(input$plot_term) && input$plot_term > 0 &&
       !is.null(input$continuous_var_3) && input$continuous_var_3 != "" &&
-      !is.null(input$type_terms)
+      isTruthy(input$type_terms)
   })
   outputOptions(output, "has_frequency_plot", suspendWhenHidden = FALSE)
 
   output$has_quotes <- reactive({
+    if (!is.null(embedding_quotes())) return(TRUE)
     tryCatch({
       thoughts_data <- thoughts()
       !is.null(thoughts_data) && nrow(thoughts_data) > 0
@@ -15860,16 +15847,19 @@ server <- shinyServer(function(input, output, session) {
   outputOptions(output, "has_quotes", suspendWhenHidden = FALSE)
 
   output$has_categorical_plot <- reactive({
-    !is.null(input$stm_effect_cat_btn) && input$stm_effect_cat_btn != "" &&
-      !is.null(input$stm_display_cat)
+    isTruthy(input$stm_effect_cat_btn) && isTruthy(input$stm_display_cat)
   })
   outputOptions(output, "has_categorical_plot", suspendWhenHidden = FALSE)
 
   output$has_continuous_plot <- reactive({
-    !is.null(input$stm_effect_con_btn) && input$stm_effect_con_btn != "" &&
-      !is.null(input$stm_display_con)
+    isTruthy(input$stm_effect_con_btn) && isTruthy(input$stm_display_con)
   })
   outputOptions(output, "has_continuous_plot", suspendWhenHidden = FALSE)
+
+  output$show_ai_recommendation <- reactive({
+    !is.null(K_search())
+  })
+  outputOptions(output, "show_ai_recommendation", suspendWhenHidden = FALSE)
 
   output$has_search_k_results <- reactive({
     tryCatch({
@@ -16460,14 +16450,14 @@ server <- shinyServer(function(input, output, session) {
 
     if (!clustering_analysis_triggered()) {
       return(create_error_plot(
-        "Select clustering method in the sidebar and click 'Apply' to begin",
+        "Select clustering method in the sidebar and click 'Discover' to begin",
         color = "#6c757d"
       ))
     }
 
     if (is.null(comparison_results$clustering)) {
       return(create_error_plot(
-        "Click 'Apply' in the sidebar to run clustering analysis.",
+        "Click 'Discover' in the sidebar to run clustering analysis.",
         color = "#6c757d"
       ))
     }
@@ -16480,7 +16470,7 @@ server <- shinyServer(function(input, output, session) {
     if (clustering_result$feature_space != current_feature_space ||
         (current_feature_space == "ngrams" && clustering_result$ngram_range != current_ngram_range)) {
       return(create_error_plot(
-        "Feature space changed. Click 'Apply' to re-run clustering analysis",
+        "Feature space changed. Click 'Discover' to re-run clustering analysis",
         color = "#ffc107"
       ))
     }
@@ -17226,10 +17216,6 @@ server <- shinyServer(function(input, output, session) {
   outputOptions(output, "semantic_wordcloud_table", suspendWhenHidden = FALSE)
 
 
-  output$clustering_warning <- renderUI({
-    NULL
-  })
-
   output$outlier_reduction_plot <- plotly::renderPlotly({
     input$outlier_reduction_method
     input$outlier_threshold
@@ -17542,7 +17528,7 @@ server <- shinyServer(function(input, output, session) {
           dfm <- quanteda::dfm_trim(dfm, min_termfreq = 2, min_docfreq = 1)
 
           if (quanteda::nfeat(dfm) > 0) {
-            top_terms <- quanteda.textstats::textstat_frequency(dfm, n = 10)
+            top_terms <- quanteda.textstats::textstat_frequency(dfm, n = input$top_terms_for_labels %||% 10)
             cluster_keywords[[as.character(cluster)]] <- top_terms$feature
           } else {
             cluster_keywords[[as.character(cluster)]] <- character(0)
@@ -18093,11 +18079,6 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
-  output$show_ai_recommendation <- reactive({
-    !is.null(K_search())
-  })
-  outputOptions(output, "show_ai_recommendation", suspendWhenHidden = FALSE)
-
   ai_recommendation <- reactiveVal(NULL)
 
   observeEvent(input$generate_k_recommendation, {
@@ -18322,8 +18303,8 @@ server <- shinyServer(function(input, output, session) {
 
       text <- gsub("\\\\\\(\\s*", "", text)
       text <- gsub("\\s*\\\\\\)", "", text)
-      text <- gsub("$$", "", text)
-      text <- gsub("$", "", text)
+      text <- gsub("$$", "", text, fixed = TRUE)
+      text <- gsub("$", "", text, fixed = TRUE)
       text <- gsub("K\\s*=\\s*(\\d+)", "<strong>K = \\1</strong>", text)
       text <- gsub("\\*\\*(.+?)\\*\\*", "<strong>\\1</strong>", text)
       text <- gsub("__(.+?)__", "<strong>\\1</strong>", text)
@@ -19487,6 +19468,8 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
+  embedding_quotes <- reactiveVal(NULL)
+
   observeEvent(input$embedding_quote, {
     if (is.null(topic_model_result())) {
       showNotification("Please run the embedding model first.", type = "warning", duration = 5)
@@ -19523,6 +19506,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       example_texts <- texts[closest_indices]
+      embedding_quotes(closest_indices)
 
       output$embedding_quote_table <- DT::renderDataTable({
         data.frame(
@@ -19564,11 +19548,7 @@ server <- shinyServer(function(input, output, session) {
       topics <- unique(topic_model_result()$topic_assignments[topic_model_result()$topic_assignments > 0])
       topic_choices <- setNames(topics, paste("Topic", topics))
 
-      output$embedding_quote_topic_uiOutput <- renderUI({
-        selectInput("embedding_quote_topic",
-                   "Select Topic:",
-                   choices = topic_choices)
-      })
+      updateSelectInput(session, "embedding_quote_topic", choices = topic_choices)
     }
   })
 
@@ -20807,13 +20787,13 @@ server <- shinyServer(function(input, output, session) {
     choices <- colnames_mydata()
     if (length(choices) > 0) {
       updateSelectizeInput(session,
-                           "topic_texts",
+                           "stm_topic_texts",
                            choices = choices,
                            selected = choices[1]
       )
     } else {
       updateSelectizeInput(session,
-                           "topic_texts",
+                           "stm_topic_texts",
                            choices = character(0),
                            selected = NULL
       )
@@ -21489,6 +21469,9 @@ server <- shinyServer(function(input, output, session) {
     sg <- qc_suggestions()
     txt <- qc_coded_texts()
     if (is.null(sg) || nrow(sg) == 0 || is.null(txt)) return(NULL)
+    # a provider failure is not evidence the codebook missed the unit
+    sg <- sg[sg$status != "call failed", , drop = FALSE]
+    if (nrow(sg) == 0) return(NULL)
     bare <- TextAnalysisR::uncoded_units(sg, txt)
     if (nrow(bare) == 0) return(NULL)
     bare
@@ -21571,8 +21554,8 @@ server <- shinyServer(function(input, output, session) {
       DT::formatStyle(
         "status",
         backgroundColor = DT::styleEqual(
-          c("pending", "accepted", "edited", "rejected", "no code"),
-          c("#F1F5F9", "#DCFCE7", "#DBEAFE", "#FEE2E2", "#F8FAFC"))
+          c("pending", "accepted", "edited", "rejected", "no code", "call failed"),
+          c("#F1F5F9", "#DCFCE7", "#DBEAFE", "#FEE2E2", "#F8FAFC", "#FEF3C7"))
       )
   })
 

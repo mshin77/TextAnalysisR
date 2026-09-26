@@ -1285,7 +1285,15 @@ Focus on incorporating the most significant keywords while following the guideli
                     icon = icon("chart-line"),
                     value = "diagnostic",
                     br(),
-                    .tab_placeholder("chart-line", "Fit models across a range of topic numbers, then click ", .hl("'Run Diagnostics'"), " to compare them"),
+                    conditionalPanel(
+                      condition = "output.has_search_k_results == false",
+                      .tab_placeholder(
+                        "chart-line",
+                        "Pick a topic-number range and click ",
+                        .hl("'Search K'"),
+                        " to compare models"
+                      )
+                    ),
                     uiOutput("topic_search_message"),
                     br(),
                     fluidRow(
@@ -1302,7 +1310,6 @@ Focus on incorporating the most significant keywords while following the guideli
                     icon = icon("scale-balanced"),
                     value = "quality",
                     br(),
-                    .tab_placeholder("scale-balanced", "Run diagnostics first, then click ", .hl("'Compare'"), " to rank candidate models"),
                     wellPanel(
                       style = "background-color: #f0f8ff; border: 1px solid #4682b4;",
                       p("Overall Score = Coherence(z) + Exclusivity(z) - Residual(z) + Heldout(z)",
@@ -1316,6 +1323,15 @@ Focus on incorporating the most significant keywords while following the guideli
                       )
                     ),
                     br(),
+                    conditionalPanel(
+                      condition = "output.has_search_k_results == false",
+                      .tab_placeholder(
+                        "scale-balanced",
+                        "Run ",
+                        .hl("'Search K'"),
+                        " to rank candidate models"
+                      )
+                    ),
                     DT::dataTableOutput("quality_summary_table")
                   ),
                   tabPanel(
@@ -1331,6 +1347,16 @@ Focus on incorporating the most significant keywords while following the guideli
                     icon = icon("wand-magic-sparkles"),
                     value = "ai_rec",
                     br(),
+                    conditionalPanel(
+                      condition = "output.show_ai_recommendation == false",
+                      .tab_placeholder(
+                        "wand-magic-sparkles",
+                        "Run ",
+                        .hl("'Search K'"),
+                        " first, then click ",
+                        .hl("'Generate Recommendation'")
+                      )
+                    ),
                     uiOutput("ai_recommendation_output"),
                     br(),
                     DT::dataTableOutput("ai_recommendation_table")
@@ -1347,7 +1373,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 )
               ),
               conditionalPanel(
-                condition = "input.topic_modeling_path == 'embedding'",
+                condition = "output.has_word_topic_results == false && input.topic_modeling_path == 'embedding'",
                 .tab_placeholder(
                   "cogs",
                   "Configure settings and click ",
@@ -1847,22 +1873,6 @@ lexical_analysis_ui_content <- function() {
               "Terms",
               choices = NULL,
               options = list(maxItems = 20, multiple = TRUE, placeholder = "Select or type terms")
-            ),
-            sliderInput(
-              "height_line_con_var_plot",
-              "Plot height",
-              value = 500,
-              min = 200,
-              max = 2000,
-              step = 50
-            ),
-            sliderInput(
-              "width_line_con_var_plot",
-              "Plot width",
-              value = 1000,
-              min = 500,
-              max = 2000,
-              step = 50
             ),
             actionButton("plot_term", "Plot Terms", class = "btn-primary btn-block")
           ),
@@ -2508,7 +2518,7 @@ lexical_analysis_ui_content <- function() {
                         "Additional Features",
                         br(),
                         conditionalPanel(
-                          condition = "output.has_additional_features == true",
+                          condition = "output.has_additional_features == true && output.has_any_additional_data == true",
                           fluidRow(
                             conditionalPanel(
                               condition = "output.has_case_data == true",
@@ -2525,7 +2535,7 @@ lexical_analysis_ui_content <- function() {
                           )
                         ),
                         conditionalPanel(
-                          condition = "output.has_additional_features == false",
+                          condition = "output.has_additional_features == false || output.has_any_additional_data == false",
                           .tab_placeholder(
                             "language",
                             "Select Case,
@@ -2537,7 +2547,13 @@ lexical_analysis_ui_content <- function() {
                       tabPanel(
                         "Summary Table",
                         br(),
-                        .tab_placeholder("table", "Annotate the corpus, then the per-document counts appear here"),
+                        conditionalPanel(
+                          condition = "output.morph_ready == false",
+                          .tab_placeholder(
+                            "table",
+                            "Annotate the corpus, then the per-document counts appear here"
+                          )
+                        ),
                         DT::dataTableOutput("morph_summary_table")
                       )
                     )
@@ -3105,7 +3121,6 @@ semantic_analysis_ui_content <- function() {
                         title = "Learn about document grouping")
             ),
 
-            uiOutput("clustering_warning"),
 
             wellPanel(
               style = "padding: 15px; margin-bottom: 15px;",
@@ -3480,6 +3495,7 @@ semantic_analysis_ui_content <- function() {
           conditionalPanel(
             condition = "input.semantic_analysis_tabs == 'cooccurrence'",
             tags$h5(HTML("<strong>Word Co-occurrence Networks</strong> <a href='https://igraph.org/r/' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"), style = "color: #4269BF; margin-bottom: 10px;"),
+            uiOutput("cooccur_feature_status"),
             selectizeInput(
               "doc_var_co_occurrence",
               "Categorical variable",
@@ -3560,8 +3576,8 @@ semantic_analysis_ui_content <- function() {
                 "Layout seed",
                 value = 2026, min = 1, max = 999999, step = 1
               ),
-              div(style = "font-size: 16px;",
-                  checkboxInput("showlegend_cooccur", "Show legend", value = TRUE)),
+                div(style = "font-size: 16px;",
+                    checkboxInput("showlegend_cooccur", "Show legend", value = TRUE)),
               div(
                 class = "category-toggle",
                 div(style = "font-size: 16px;", checkboxInput("use_category_cooccur",
@@ -3682,8 +3698,8 @@ semantic_analysis_ui_content <- function() {
                 "Layout seed",
                 value = 2026, min = 1, max = 999999, step = 1
               ),
-              div(style = "font-size: 16px;",
-                  checkboxInput("showlegend_corr", "Show legend", value = TRUE)),
+                div(style = "font-size: 16px;",
+                    checkboxInput("showlegend_corr", "Show legend", value = TRUE)),
               div(
                 class = "category-toggle",
                 div(style = "font-size: 16px;", checkboxInput("use_category_corr",
@@ -3731,9 +3747,11 @@ semantic_analysis_ui_content <- function() {
                 condition = "output.has_documents == false",
                 .tab_placeholder(
                   "upload",
-                  "Load data and process documents in the ",
-                  .hl("1. Setup"),
-                  " tab first"
+                  "Load data in the ",
+                  .hl("Upload"),
+                  " tab, then click ",
+                  .hl("'Process'"),
+                  " in the sidebar"
                 )
               )
             ),
@@ -3943,34 +3961,59 @@ semantic_analysis_ui_content <- function() {
                     "Summary",
                     icon = icon("clipboard-list"),
                     br(),
-                    .tab_placeholder("clipboard-list", "Select two categories and click ", .hl("'Compare'"), " to summarize the gap"),
+                    conditionalPanel(
+                      condition = "output.has_gap_analysis == false",
+                      .tab_placeholder(
+                        "clipboard-list",
+                        "Pick a reference category and click ",
+                        .hl("'Run Comparative Analysis'")
+                      )
+                    ),
                     DT::dataTableOutput("gap_summary_stats")
                   ),
                   tabPanel(
                     "Heatmap",
                     icon = icon("grip"),
                     br(),
-                    .tab_placeholder("grip", "Select two categories and click ", .hl("'Compare'"), " to shade shared terms"),
                     tags$p("Cross-category similarity heatmap comparing reference documents against other categories.",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
+                    conditionalPanel(
+                      condition = "output.has_gap_analysis == false",
+                      .tab_placeholder(
+                        "grip",
+                        "Run a comparison to shade shared terms"
+                      )
+                    ),
                     plotly::plotlyOutput("gap_cross_category_heatmap", height = "600px")
                   ),
                   tabPanel(
                     "Unique (Reference)",
                     icon = icon("circle-half-stroke"),
                     br(),
-                    .tab_placeholder("circle-half-stroke", "Terms found only in the reference category appear here after a comparison"),
                     tags$p("Reference items with low similarity to all comparison categories (distinctive content).",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
+                    conditionalPanel(
+                      condition = "output.has_gap_analysis == false",
+                      .tab_placeholder(
+                        "circle-half-stroke",
+                        "Terms found only in the reference category appear here after a comparison"
+                      )
+                    ),
                     DT::dataTableOutput("gap_unique_items")
                   ),
                   tabPanel(
                     "Missing (Comparison)",
                     icon = icon("circle-minus"),
                     br(),
-                    .tab_placeholder("circle-minus", "Terms absent from the comparison category appear here after a comparison"),
                     tags$p("Comparison category items not well-covered by reference category (content gaps).",
                            style = "color: #475569; font-size: 16px; margin-bottom: 10px;"),
+                    conditionalPanel(
+                      condition = "output.has_gap_analysis == false",
+                      .tab_placeholder(
+                        "circle-minus",
+                        "Terms absent from the comparison category appear here after a comparison"
+                      )
+                    ),
                     DT::dataTableOutput("gap_missing_items")
                   ),
                   tabPanel(

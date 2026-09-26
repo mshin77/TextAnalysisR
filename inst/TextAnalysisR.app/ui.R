@@ -259,6 +259,7 @@ ui <- fluidPage(
     role = "main",
     tabindex = "-1",
     tags$h1("TextAnalysisR", class = "sr-only"),
+    uiOutput("web_deployment_banner"),
     navbarPage(
       "TextAnalysisR",
       id = "main_navbar",
@@ -753,6 +754,11 @@ Supports:
                 actionButton("skip_stopwords", "Skip", class = "btn-secondary btn-block")
               )
             )
+          ),
+          conditionalPanel(
+            condition = "input.conditioned > 1",
+            actionButton("reset_pipeline", "Reset steps 2-5",
+              class = "btn-warning btn-block", icon = icon("rotate-left"))
           )
         ),
         mainPanel(
@@ -844,9 +850,9 @@ Supports:
                     condition = "!output.has_ngram_detection_results",
                     .tab_placeholder(
                       "search",
-                      "Configure settings and click ",
+                      "No multi-words detected. Click ",
                       .hl("'Apply'"),
-                      " to detect multi-words"
+                      " to detect them"
                     )
                   )
                 ),
@@ -870,15 +876,19 @@ Supports:
                     br(),
                     uiOutput("selected_ngrams_plot_uiOutput"),
                     br(),
-                    DT::dataTableOutput("dictionary_table")
+                    uiOutput("dictionary_plot_uiOutput"),
+                    br(),
+                    DT::dataTableOutput("dictionary_table"),
+                    br(),
+                    shiny::verbatimTextOutput("dict_print_dictionary")
                   ),
                   conditionalPanel(
                     condition = "!output.has_dictionary_results",
                     .tab_placeholder(
                       "link",
-                      "Select n-grams and click ",
+                      "No multi-words compounded. Click ",
                       .hl("'Apply'"),
-                      " to compound multi-words"
+                      " to compound them"
                     )
                   )
                 )
