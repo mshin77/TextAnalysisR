@@ -19557,7 +19557,13 @@ server <- shinyServer(function(input, output, session) {
   observe({
     if (!is.null(topic_model_result()) && "topic_assignments" %in% names(topic_model_result())) {
       topics <- unique(topic_model_result()$topic_assignments[topic_model_result()$topic_assignments > 0])
-      topic_choices <- setNames(topics, paste("Topic", topics))
+      # every document an outlier leaves no topics, and paste() would still
+      # return one name for a zero-length vector
+      topic_choices <- if (length(topics) > 0) {
+        setNames(topics, paste("Topic", topics))
+      } else {
+        character(0)
+      }
 
       updateSelectInput(session, "embedding_quote_topic", choices = topic_choices)
     }
