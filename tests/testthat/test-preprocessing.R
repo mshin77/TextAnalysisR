@@ -60,3 +60,12 @@ test_that(".clean_text decodes entities and repairs replacement characters", {
   expect_equal(TextAnalysisR:::.clean_text("a &lt; b &amp; c"), "a < b & c")
   expect_equal(TextAnalysisR:::.clean_text(damaged), "Korea's policy")
 })
+
+test_that("prep_texts drops punctuation and symbols by default", {
+  toks <- prep_texts(data.frame(united_texts = "Scores rose. Fluency improved & held."),
+                     text_field = "united_texts")
+  feats <- quanteda::featnames(quanteda::dfm(toks))
+  expect_false("." %in% feats)
+  expect_false("&" %in% feats)
+  expect_true("fluency" %in% feats)
+})

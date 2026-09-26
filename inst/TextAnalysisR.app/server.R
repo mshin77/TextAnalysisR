@@ -1450,15 +1450,7 @@ server <- shinyServer(function(input, output, session) {
     TextAnalysisR:::show_loading_notification("Skipping segmentation - using basic tokenization...", id = "loadingSkipSegment")
 
     tryCatch({
-      toks <- quanteda::tokens(
-        united_tbl()$united_texts,
-        what = "word"
-      )
-
-      other_cols <- united_tbl() %>% dplyr::select(-united_texts)
-      if (ncol(other_cols) > 0) {
-        quanteda::docvars(toks) <- other_cols
-      }
+      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
 
       preprocessed_skip(toks)
 
@@ -1513,14 +1505,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (!is.null(try(preprocessed_init(), silent = TRUE)) && !inherits(try(preprocessed_init(), silent = TRUE), "try-error")) {
       return(preprocessed_init())
     } else if (!is.null(united_tbl())) {
-      toks <- quanteda::tokens(
-        united_tbl()$united_texts,
-        what = "word"
-      )
-      other_cols <- united_tbl() %>% dplyr::select(-united_texts)
-      if (ncol(other_cols) > 0) {
-        quanteda::docvars(toks) <- other_cols
-      }
+      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
       return(toks)
     }
     return(NULL)
@@ -1760,14 +1745,7 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
       showNotification("Creating tokens from united text...", type = "message", duration = 2)
-      toks <- quanteda::tokens(
-        united_tbl()$united_texts,
-        what = "word"
-      )
-      other_cols <- united_tbl() %>% dplyr::select(-united_texts)
-      if (ncol(other_cols) > 0) {
-        quanteda::docvars(toks) <- other_cols
-      }
+      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
       toks
     } else {
       NULL
@@ -1882,14 +1860,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (!is.null(preprocessed_combined())) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
-      toks <- quanteda::tokens(
-        united_tbl()$united_texts,
-        what = "word"
-      )
-      other_cols <- united_tbl() %>% dplyr::select(-united_texts)
-      if (ncol(other_cols) > 0) {
-        quanteda::docvars(toks) <- other_cols
-      }
+      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
       toks
     } else {
       NULL
@@ -2175,14 +2146,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (!is.null(preprocessed_combined())) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
-      toks <- quanteda::tokens(
-        united_tbl()$united_texts,
-        what = "word"
-      )
-      other_cols <- united_tbl() %>% dplyr::select(-united_texts)
-      if (ncol(other_cols) > 0) {
-        quanteda::docvars(toks) <- other_cols
-      }
+      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
       toks
     } else {
       stop("No tokens available. Please complete Step 1 (Unite Text) first.")
@@ -2594,14 +2558,7 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
       showNotification("Creating tokens from united text...", type = "message", duration = 2)
-      toks <- quanteda::tokens(
-        united_tbl()$united_texts,
-        what = "word"
-      )
-      other_cols <- united_tbl() %>% dplyr::select(-united_texts)
-      if (ncol(other_cols) > 0) {
-        quanteda::docvars(toks) <- other_cols
-      }
+      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
       toks
     } else {
       NULL
@@ -2922,14 +2879,7 @@ server <- shinyServer(function(input, output, session) {
     toks_source <- if (!is.null(preprocessed_combined())) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
-      toks <- quanteda::tokens(
-        united_tbl()$united_texts,
-        what = "word"
-      )
-      other_cols <- united_tbl() %>% dplyr::select(-united_texts)
-      if (ncol(other_cols) > 0) {
-        quanteda::docvars(toks) <- other_cols
-      }
+      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
       toks
     } else {
       NULL
