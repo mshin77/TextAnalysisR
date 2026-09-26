@@ -510,7 +510,7 @@ server <- shinyServer(function(input, output, session) {
   image_exts <- c("png", "jpg", "jpeg", "webp", "gif")
 
   as_articles <- function(text_lines) {
-    lines <- trimws(TextAnalysisR:::.repair_encoding(as.character(text_lines)))
+    lines <- trimws(TextAnalysisR:::.clean_text(as.character(text_lines)))
     ends <- which(grepl("^End of Document", lines))
     if (length(ends) == 0) ends <- length(lines)
     starts <- c(1, utils::head(ends, -1) + 1)
@@ -709,7 +709,7 @@ server <- shinyServer(function(input, output, session) {
                          error = function(e) { why <<- conditionMessage(e); NULL })
           if (!is.null(df)) {
             df[] <- lapply(df, function(col) {
-              if (is.character(col)) TextAnalysisR:::.repair_encoding(col) else col
+              if (is.character(col)) TextAnalysisR:::.clean_text(col) else col
             })
           }
         }

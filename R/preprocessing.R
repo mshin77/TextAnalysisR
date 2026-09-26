@@ -235,7 +235,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
     data <- tibble::as_tibble(data)
   } else if (dataset_choice == "Copy and Paste Text") {
     if (is.null(text_input)) stop("No text provided")
-    data <- tibble::tibble(text = .repair_encoding(text_input))
+    data <- tibble::tibble(text = .clean_text(text_input))
   } else if (dataset_choice == "Upload Your File") {
     if (is.null(file_info)) stop("No file provided")
 
@@ -295,7 +295,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
       })
 
       if (is.null(df)) return(NULL)
-      df[] <- lapply(df, function(col) if (is.character(col)) .repair_encoding(col) else col)
+      df[] <- lapply(df, function(col) if (is.character(col)) .clean_text(col) else col)
       tibble::as_tibble(df)
     })
 
@@ -360,11 +360,24 @@ remove_metadata_lines <- function(df, text_col = "text") {
 # Curly punctuation destroyed at export time: U+FFFD re-encoded, leaving the
 # literal sequence on disk. Nothing can decode it back, so normalize instead --
 # apostrophe between letters, dropped elsewhere since quote direction is lost.
-.repair_encoding <- function(x) {
+# Markup from pasted or converted sources tokenizes into features, so it goes too.
+.clean_text <- function(x) {
   if (!length(x)) return(x)
   broken <- "(\u00ef\u00bf\u00bd|\ufffd)+"
   x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
-  gsub(broken, "", x, perl = TRUE)
+  x <- gsub(broken, "", x, perl = TRUE)
+  # block-level tags leave a space so flanking words stay separate
+  x <- gsub("<(br|/p|/li|/ul|/ol|/div|/tr|/td|/h[1-6])\\b[^<>]*>", " ", x,
+            ignore.case = TRUE, perl = TRUE)
+  # letter or slash required after '<' so arithmetic comparisons survive
+  x <- gsub("</?[[:alpha:]][[:alnum:]]*([[:space:]][^<>]*)?/?>", "", x, perl = TRUE)
+  x <- gsub("&nbsp;|&#160;", " ", x, ignore.case = TRUE, perl = TRUE)
+  x <- gsub("&#39;|&apos;|&rsquo;|&lsquo;", "'", x, perl = TRUE)
+  x <- gsub("&quot;|&#34;|&ldquo;|&rdquo;", '"', x, perl = TRUE)
+  x <- gsub("&lt;", "<", x, fixed = TRUE)
+  x <- gsub("&gt;", ">", x, fixed = TRUE)
+  x <- gsub("&amp;", "&", x, fixed = TRUE)
+  gsub("[[:space:]]{2,}", " ", x)
 }
 
 
@@ -408,9 +421,9 @@ import_news_export <- function(file_paths, dedupe = FALSE, threshold = 0.99) {
   pick <- function(nm) if (nm %in% names(meta)) as.character(meta[[nm]]) else NA_character_
 
   out <- data.frame(
-    text = .repair_encoding(trimws(arts$Article)),
+    text = .clean_text(trimws(arts$Article)),
     category = pick("Newspaper"),
-    headline = .repair_encoding(pick("Headline")),
+    headline = .clean_text(pick("Headline")),
     newspaper = pick("Newspaper"),
     date = pick("Date"),
     section = pick("Section"),

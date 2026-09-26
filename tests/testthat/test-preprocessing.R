@@ -48,3 +48,15 @@ test_that("math_mode overrides remove_* flags even when set TRUE", {
   expect_true("3" %in% flat)
   expect_true("+" %in% flat)
 })
+
+test_that(".clean_text drops markup but keeps comparison operators", {
+  cleaned <- TextAnalysisR:::.clean_text(
+    c("<p>Hello</p><br/>World", "<ul><li>one</li></ul>", "if a < b and c > d"))
+  expect_equal(trimws(cleaned), c("Hello World", "one", "if a < b and c > d"))
+})
+
+test_that(".clean_text decodes entities and repairs replacement characters", {
+  damaged <- paste0("Korea", intToUtf8(0xef), intToUtf8(0xbf), intToUtf8(0xbd), "s policy")
+  expect_equal(TextAnalysisR:::.clean_text("a &lt; b &amp; c"), "a < b & c")
+  expect_equal(TextAnalysisR:::.clean_text(damaged), "Korea's policy")
+})
