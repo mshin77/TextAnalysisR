@@ -18956,11 +18956,20 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$embedding_run, {
     embedding_displayed(FALSE)
 
+    # the feature check starts Python on first use and can block for a minute,
+    # so the notice goes up before it rather than after
+    TextAnalysisR:::show_loading_notification(
+      HTML("Preparing the embedding backend...<br>The first run starts Python and may take a minute."),
+      id = "embedding_model_notification"
+    )
+
     if (!TextAnalysisR:::require_feature("embeddings", session)) {
+      shiny::removeNotification("embedding_model_notification")
       return()
     }
 
     if (is.null(united_tbl())) {
+      shiny::removeNotification("embedding_model_notification")
       shiny::showModal(shiny::modalDialog(
         title = "Preprocessing Required",
         p("United text data not found."),
@@ -18975,7 +18984,10 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    if (!remote_doc_ok(nrow(united_tbl()), "Embedding-based topic modeling")) return()
+    if (!remote_doc_ok(nrow(united_tbl()), "Embedding-based topic modeling")) {
+      shiny::removeNotification("embedding_model_notification")
+      return()
+    }
 
     backend <- input$embedding_backend %||% "python"
 
@@ -19064,7 +19076,9 @@ server <- shinyServer(function(input, output, session) {
             method = method,
             backend = "r",
             embedding_model = model_name,
-            umap_neighbors = input$embedding_r_umap_neighbors %||% 15,
+            # umap needs fewer neighbors than items, so a small corpus caps the slider
+            umap_neighbors = min(input$embedding_r_umap_neighbors %||% 15,
+                                 max(2L, length(texts) - 1L)),
             umap_n_components = input$embedding_r_umap_n_components %||% 5,
             umap_min_dist = input$embedding_r_umap_min_dist %||% 0.0,
             umap_metric = input$embedding_r_umap_metric %||% "cosine",
