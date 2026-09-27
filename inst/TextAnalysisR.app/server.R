@@ -9262,21 +9262,63 @@ server <- shinyServer(function(input, output, session) {
 
     normalize <- !is.null(input$normalize_emotions) && input$normalize_emotions
 
-    gg <- if (!is.null(sentiment_results$emotion_scores_grouped) &&
-        !is.null(input$emotion_group_var) && input$emotion_group_var != "None") {
-      plot_emotion_radar(
-        emotion_data = sentiment_results$emotion_scores_grouped,
-        group_var = "emotion_group_var",
-        normalize = normalize,
-        title = paste("Emotion Analysis by", input$emotion_group_var)
-      )
+    grouped <- !is.null(sentiment_results$emotion_scores_grouped) &&
+      !is.null(input$emotion_group_var) && input$emotion_group_var != "None"
+
+    radar_df <- if (grouped) {
+      dplyr::rename(sentiment_results$emotion_scores_grouped, group_col = "emotion_group_var")
     } else {
-      plot_emotion_radar(
-        emotion_data = sentiment_results$emotion_scores,
-        normalize = normalize
-      )
+      dplyr::mutate(sentiment_results$emotion_scores, group_col = "All documents")
     }
-    gg_to_plotly(gg)
+
+    radar_df <- radar_df %>%
+      dplyr::group_by(.data$group_col) %>%
+      dplyr::mutate(peak = max(.data$total_score, na.rm = TRUE)) %>%
+      dplyr::mutate(score = if (normalize) .data$total_score / pmax(.data$peak, 1e-9) * 100 else .data$total_score) %>%
+      dplyr::group_modify(~ dplyr::bind_rows(.x, .x[1, , drop = FALSE])) %>%
+      dplyr::ungroup()
+
+    radar_df$hover_text <- paste("Emotion:", radar_df$emotion, "<br>Score:", round(radar_df$score, 2))
+
+    plotly::plot_ly(
+      radar_df,
+      type = "scatterpolar",
+      mode = "lines+markers",
+      r = ~score,
+      theta = ~emotion,
+      color = ~group_col,
+      colors = if (grouped) "Set2" else "#8B5CF6",
+      fill = "toself",
+      opacity = 0.45,
+      hoverinfo = "text",
+      text = ~hover_text,
+      marker = list(size = 6)
+    ) %>%
+      plotly::layout(
+        title = list(
+          text = if (grouped) paste("Emotion Analysis by", input$emotion_group_var) else "Emotion Analysis",
+          font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
+          x = 0.5,
+          xref = "paper",
+          xanchor = "center"
+        ),
+        polar = list(
+          radialaxis = list(
+            visible = TRUE,
+            tickfont = list(size = 11, color = "#8D6262", family = "Roboto, sans-serif")
+          ),
+          angularaxis = list(
+            tickfont = list(size = 12, color = "#8D6262", family = "Roboto, sans-serif")
+          )
+        ),
+        showlegend = grouped,
+        font = list(family = "Roboto, sans-serif", size = 12, color = "#3B3B3B"),
+        hoverlabel = list(
+          font = list(family = "Roboto, sans-serif", size = 14, color = "#FFFFFF"),
+          align = "left",
+          namelength = -1
+        )
+      )
   })
 
   output$emotion_scores_table <- renderDT({

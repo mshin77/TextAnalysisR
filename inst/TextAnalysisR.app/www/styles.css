@@ -2783,7 +2783,7 @@ a.action-link[title*="Info"]:hover {
 /* subtabs */
 .nav-tabs>li>a {
   font-size: 16px;
-  padding: 8px 12px;
+  padding: 8px 8px;
 }
 
 /* qc buttons */

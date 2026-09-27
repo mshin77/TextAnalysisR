@@ -3710,7 +3710,7 @@ semantic_analysis_ui_content <- function() {
           tabsetPanel(
             id = "semantic_analysis_tabs",
             tabPanel(
-              "1. Setup",
+              "Setup",
               value = "summary",
               br(),
               conditionalPanel(
@@ -3730,7 +3730,7 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "2. Word cloud",
+              "Word cloud",
               value = "wordcloud",
               br(),
               conditionalPanel(
@@ -3755,7 +3755,7 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "3. Word co-occurrence",
+              "Co-occurrence",
               value = "cooccurrence",
               bsCollapse(
                 open = 0,
@@ -3817,7 +3817,7 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "4. Word correlation",
+              "Correlation",
               value = "correlation",
               bsCollapse(
                 open = 0,
@@ -3879,11 +3879,11 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "5. Similarity",
+              "Similarity",
               value = "similarity",
               conditionalPanel(
                 condition = "output.has_documents == false",
-                .tab_placeholder("cog", "Process documents in the ", .hl("1. Setup"), " tab first")
+                .tab_placeholder("cog", "Process documents in the ", .hl("Setup"), " tab first")
               ),
               conditionalPanel(
                 condition = "output.has_documents == true && output.has_similarity_calculation == false",
@@ -3908,7 +3908,7 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "6. Comparative",
+              "Comparative",
               value = "comparative",
               br(),
               conditionalPanel(
@@ -3973,11 +3973,11 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "7. Search",
+              "Search",
               value = "search",
               conditionalPanel(
                 condition = "output.has_documents == false",
-                .tab_placeholder("cog", "Process documents in the ", .hl("1. Setup"), " tab first")
+                .tab_placeholder("cog", "Process documents in the ", .hl("Setup"), " tab first")
               ),
               conditionalPanel(
                 condition = "output.has_documents == true && output.has_search_results == false",
@@ -3997,7 +3997,7 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "8. Sentiment",
+              "Sentiment",
               value = "sentiment",
               tabsetPanel(
                 id = "sentiment_subtabs",
@@ -4024,7 +4024,7 @@ semantic_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "9. Document Groups",
+              "Groups",
               value = "clustering",
               tabsetPanel(
                 id = "clustering_subtabs",
