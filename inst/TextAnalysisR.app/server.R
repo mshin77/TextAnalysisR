@@ -2215,7 +2215,7 @@ server <- shinyServer(function(input, output, session) {
       paste0("  - Average document length: ", round(avg_doc_length, 1), " tokens"),
       "",
       "Note: For readability and lexical diversity metrics (TTR, Flesch-Kincaid, etc.),",
-      "   use the 'Lexical Analysis' tab → '4. Readability'"
+      "   use the 'Lexical Analysis' tab → 'Readability'"
     )
 
     combined_output <- c(

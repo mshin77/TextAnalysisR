@@ -1239,7 +1239,7 @@ Focus on incorporating the most significant keywords while following the guideli
           tabsetPanel(
             id = "conditioned3",
             tabPanel(
-              "1. Setup",
+              "Setup",
               value = 4,
               shinyBS::bsCollapse(
                 open = 0,
@@ -1364,7 +1364,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "2. Word-Topic",
+              "Word-Topic",
               value = 5,
               shinyBS::bsCollapse(
                 open = 0,
@@ -1448,7 +1448,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "3. Generation",
+              "Generation",
               value = "ai_content",
               div(
                 style = "padding: 20px;",
@@ -1474,7 +1474,7 @@ Focus on incorporating the most significant keywords while following the guideli
             ),
 
             tabPanel(
-              "4. Document-Topic",
+              "Document-Topic",
               value = 6,
               shinyBS::bsCollapse(
                 open = 0,
@@ -1545,7 +1545,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "5. Quotes",
+              "Quotes",
               value = 7,
               conditionalPanel(
                 condition = "output.has_quotes == true && input.topic_modeling_path == 'probability'",
@@ -1565,7 +1565,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "6. Effects",
+              "Effects",
               value = 8,
               conditionalPanel(
                 condition = "output.has_effect_estimates == true",
@@ -1582,7 +1582,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "7. Categorical",
+              "Categorical",
               value = 9,
               shinyBS::bsCollapse(
                 open = 0,
@@ -1646,7 +1646,7 @@ Focus on incorporating the most significant keywords while following the guideli
               )
             ),
             tabPanel(
-              "8. Continuous",
+              "Continuous",
               value = 10,
               shinyBS::bsCollapse(
                 open = 0,
@@ -2408,7 +2408,7 @@ lexical_analysis_ui_content <- function() {
           tabsetPanel(
             id = "conditioned2",
             tabPanel(
-              "1. Annotation",
+              "Annotation",
               value = 1,
               tabsetPanel(
                 id = "linguistic_subtabs",
@@ -2605,7 +2605,7 @@ lexical_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "2. Frequency",
+              "Frequency",
               value = 2,
               bsCollapse(
                 open = 0,
@@ -2644,7 +2644,7 @@ lexical_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "3. Keywords",
+              "Keywords",
               value = 3,
               tabsetPanel(
                 id = "keywords_subtabs",
@@ -2666,19 +2666,19 @@ lexical_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "4. Diversity",
+              "Diversity",
               value = 4,
               br(),
               uiOutput("lexical_diversity_uiOutput")
             ),
             tabPanel(
-              "5. Readability",
+              "Readability",
               value = 5,
               br(),
               uiOutput("readability_results_uiOutput")
             ),
             tabPanel(
-              "6. Log Odds",
+              "Log Odds",
               value = 6,
               br(),
               conditionalPanel(
@@ -2699,7 +2699,7 @@ lexical_analysis_ui_content <- function() {
               )
             ),
             tabPanel(
-              "7. Dispersion",
+              "Dispersion",
               value = 7,
               br(),
               conditionalPanel(
