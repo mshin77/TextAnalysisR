@@ -8733,52 +8733,7 @@ server <- shinyServer(function(input, output, session) {
       feature_type <- "words"
       ngram_range <- 2
 
-      if (feature_type == "embeddings") {
-        if (is_remote) {
-          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
-          showNotification("Embedding sentiment exceeds the hosted memory limit. Use the lexicon method, or run it in the R package.", type = "warning", duration = 10)
-          return()
-        }
-
-        if (!TextAnalysisR:::check_feature("embeddings")) {
-          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
-          showNotification("Transformer sentiment requires Python. Please use the lexicon method.", type = "warning", duration = 7)
-          return()
-        }
-
-        if (!"united_texts" %in% names(texts_df)) {
-          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
-          showNotification("Text column not found. Please unite text columns first.", type = "error", duration = 10)
-          return()
-        }
-
-        texts_vec <- texts_df$united_texts
-        doc_names <- if ("doc_id" %in% names(texts_df)) texts_df$doc_id else quanteda::docnames(dfm_obj)
-
-        sentiment_analysis_results <- tryCatch({
-          TextAnalysisR::sentiment_embedding_analysis(
-            texts = texts_vec,
-            embeddings = embeddings_cache$embeddings,
-            model_name = "distilbert-base-uncased-finetuned-sst-2-english",
-            doc_names = doc_names,
-            use_gpu = FALSE
-          )
-        }, error = function(e) {
-          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
-          TextAnalysisR:::show_error_notification(
-            paste0(
-              "Transformer sentiment error: ", e$message, ". ",
-              "Please ensure Python transformers library is installed. See Setup > Installation."
-            )
-          )
-          return(NULL)
-        })
-
-        if (is.null(sentiment_analysis_results)) {
-          return()
-        }
-
-      } else if (lexicon_name == "sentimentr") {
+      if (lexicon_name == "sentimentr") {
         if (!"united_texts" %in% names(texts_df)) {
           TextAnalysisR:::remove_notification_by_id("sentiment_loading")
           showNotification("Text column not found. Please unite text columns first.", type = "error", duration = 10)
@@ -8819,11 +8774,7 @@ server <- shinyServer(function(input, output, session) {
           }
         })
 
-        texts_vec <- if (feature_type == "ngrams" && "united_texts" %in% names(texts_df)) {
-          texts_df$united_texts
-        } else {
-          NULL
-        }
+        texts_vec <- NULL
 
         sentiment_analysis_results <- TextAnalysisR::sentiment_lexicon_analysis(
           dfm_object = dfm_obj,
