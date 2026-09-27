@@ -8734,6 +8734,12 @@ server <- shinyServer(function(input, output, session) {
       ngram_range <- if (feature_type == "ngrams") as.numeric(input$semantic_ngram_range %||% "2") else 2
 
       if (feature_type == "embeddings") {
+        if (is_remote) {
+          TextAnalysisR:::remove_notification_by_id("sentiment_loading")
+          showNotification("Embedding sentiment exceeds the hosted memory limit. Use the lexicon method, or run it in the R package.", type = "warning", duration = 10)
+          return()
+        }
+
         if (!TextAnalysisR:::check_feature("embeddings")) {
           TextAnalysisR:::remove_notification_by_id("sentiment_loading")
           showNotification("Transformer sentiment requires Python. Please use the lexicon method.", type = "warning", duration = 7)
