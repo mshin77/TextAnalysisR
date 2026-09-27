@@ -360,16 +360,13 @@ remove_metadata_lines <- function(df, text_col = "text") {
 # Curly punctuation destroyed at export time: U+FFFD re-encoded, leaving the
 # literal sequence on disk. Nothing can decode it back, so normalize instead --
 # apostrophe between letters, dropped elsewhere since quote direction is lost.
-# Markup from pasted or converted sources tokenizes into features, so it goes too.
 .clean_text <- function(x) {
   if (!length(x)) return(x)
   broken <- "(\u00ef\u00bf\u00bd|\ufffd)+"
   x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
   x <- gsub(broken, "", x, perl = TRUE)
-  # block-level tags leave a space so flanking words stay separate
   x <- gsub("<(br|/p|/li|/ul|/ol|/div|/tr|/td|/h[1-6])\\b[^<>]*>", " ", x,
             ignore.case = TRUE, perl = TRUE)
-  # letter or slash required after '<' so arithmetic comparisons survive
   x <- gsub("</?[[:alpha:]][[:alnum:]]*([[:space:]][^<>]*)?/?>", "", x, perl = TRUE)
   x <- gsub("&nbsp;|&#160;", " ", x, ignore.case = TRUE, perl = TRUE)
   x <- gsub("&#39;|&apos;|&rsquo;|&lsquo;", "'", x, perl = TRUE)

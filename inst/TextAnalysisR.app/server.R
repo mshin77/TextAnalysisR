@@ -100,7 +100,6 @@ server <- shinyServer(function(input, output, session) {
 
   `%||%` <- function(a, b) if (is.null(a)) b else a
 
-  # Discovery mode picks the algorithm and whether k is fixed or detected
   clustering_spec <- function() {
     approach <- input$clustering_approach %||% "auto"
     method <- input$semantic_cluster_method
@@ -2703,7 +2702,6 @@ server <- shinyServer(function(input, output, session) {
     buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
-  # both sit behind has_stopword_results, so they stay suspended until resumed
   outputOptions(output, "stopword_plot", suspendWhenHidden = FALSE)
   outputOptions(output, "stopword_table", suspendWhenHidden = FALSE)
 
@@ -18956,8 +18954,14 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$embedding_run, {
     embedding_displayed(FALSE)
 
-    # the feature check starts Python on first use and can block for a minute,
-    # so the notice goes up before it rather than after
+    if (is_remote) {
+      showNotification(
+        "Embedding-based topic modeling exceeds the hosted memory limit. Run it in the R package.",
+        type = "warning", duration = 10
+      )
+      return()
+    }
+
     TextAnalysisR:::show_loading_notification(
       HTML("Preparing the embedding backend...<br>The first run starts Python and may take a minute."),
       id = "embedding_model_notification"
@@ -19076,7 +19080,6 @@ server <- shinyServer(function(input, output, session) {
             method = method,
             backend = "r",
             embedding_model = model_name,
-            # umap needs fewer neighbors than items, so a small corpus caps the slider
             umap_neighbors = min(input$embedding_r_umap_neighbors %||% 15,
                                  max(2L, length(texts) - 1L)),
             umap_n_components = input$embedding_r_umap_n_components %||% 5,
@@ -19196,8 +19199,6 @@ server <- shinyServer(function(input, output, session) {
 
 
 
-  # the embedding path shares the topic display slots with STM, so it stores its
-  # content here instead of rebinding outputs STM registered once at startup
   embedding_view <- reactiveValues(active = FALSE, message = NULL, terms = NULL,
                                    term_table = NULL, prevalence = NULL)
 
@@ -19571,8 +19572,6 @@ server <- shinyServer(function(input, output, session) {
   observe({
     if (!is.null(topic_model_result()) && "topic_assignments" %in% names(topic_model_result())) {
       topics <- unique(topic_model_result()$topic_assignments[topic_model_result()$topic_assignments > 0])
-      # every document an outlier leaves no topics, and paste() would still
-      # return one name for a zero-length vector
       topic_choices <- if (length(topics) > 0) {
         setNames(topics, paste("Topic", topics))
       } else {
@@ -21503,7 +21502,6 @@ server <- shinyServer(function(input, output, session) {
     sg <- qc_suggestions()
     txt <- qc_coded_texts()
     if (is.null(sg) || nrow(sg) == 0 || is.null(txt)) return(NULL)
-    # a provider failure is not evidence the codebook missed the unit
     sg <- sg[sg$status != "call failed", , drop = FALSE]
     if (nrow(sg) == 0) return(NULL)
     bare <- TextAnalysisR::uncoded_units(sg, txt)
