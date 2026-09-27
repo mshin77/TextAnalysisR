@@ -8730,8 +8730,8 @@ server <- shinyServer(function(input, output, session) {
       }
 
       lexicon_name <- input$sentiment_lexicon %||% "bing"
-      feature_type <- input$semantic_feature_space %||% "words"
-      ngram_range <- if (feature_type == "ngrams") as.numeric(input$semantic_ngram_range %||% "2") else 2
+      feature_type <- "words"
+      ngram_range <- 2
 
       if (feature_type == "embeddings") {
         if (is_remote) {
