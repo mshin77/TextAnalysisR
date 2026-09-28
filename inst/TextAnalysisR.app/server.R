@@ -9863,14 +9863,13 @@ server <- shinyServer(function(input, output, session) {
       output$lexdiv_required_message <- renderPrint({
         cat("Lexical Diversity Analysis requires tokens.\n\n",
             "Minimum Required Steps:\n",
-            "  1. Go to 'Preprocessing' tab\n",
+            "  1. Go to 'Preprocess' tab\n",
             "  2. Upload data and unite text columns (Step 1)\n",
-            "  3. Create DFM (Step 6: Document-Feature Matrix)\n\n",
+            "  3. Create DFM (Step 5: Document-Feature Matrix)\n\n",
             "Optional Steps:\n",
-            "  • Step 2: Segment Texts (Preprocess)\n",
+            "  • Step 2: Segment Texts\n",
             "  • Step 3: Remove Stopwords\n",
-            "  • Step 4: Multi-Words\n",
-            "  • Step 5: Word Forms (Lemmas)\n\n",
+            "  • Step 4: Multi-Word Dictionary\n\n",
             "Then return to Lexical Analysis → Diversity and click 'Analyze'", sep = "")
       })
       TextAnalysisR:::show_dfm_instructions_modal("lexdiv_required_message")
