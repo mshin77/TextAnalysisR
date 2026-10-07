@@ -18,7 +18,7 @@ calculate_weighted_log_odds(dfm_object, group_var, top_n = 10, min_count = 5)
 \value{
 A data frame with the grouping variable, feature, n,
 log_odds_weighted (from tidylo::bind_log_odds), and significant
-(TRUE when |log_odds_weighted| >= 1.96)
+(TRUE when the Benjamini-Hochberg adjusted two-sided p-value of the z-score is below 0.05)
 }
 \description{
 Computes weighted log odds ratios using the method from Monroe, Colaresi,

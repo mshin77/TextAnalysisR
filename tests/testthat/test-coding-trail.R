@@ -138,3 +138,13 @@ test_that("round_summary never exceeds one hundred percent", {
   r <- log_round(NULL, 3, 0, 50)
   expect_equal(round_summary(r)$pct_uncoded, 100)
 })
+
+test_that("add_memo numbers past the largest existing id after filtering", {
+  m <- add_memo(NULL, "unit", "u1", "first")
+  m <- add_memo(m, "unit", "u2", "second")
+  m <- add_memo(m, "unit", "u3", "third")
+  kept <- m[m$memo_id != "m2", ]
+  out <- add_memo(kept, "unit", "u4", "fourth")
+  expect_false(any(duplicated(out$memo_id)))
+  expect_equal(out$memo_id[nrow(out)], "m4")
+})

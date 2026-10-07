@@ -4,7 +4,12 @@
 \alias{import_files}
 \title{Process Files}
 \usage{
-import_files(dataset_choice, file_info = NULL, text_input = NULL)
+import_files(
+  dataset_choice,
+  file_info = NULL,
+  text_input = NULL,
+  pdf_unit = c("line", "page", "document")
+)
 }
 \arguments{
 \item{dataset_choice}{A character string indicating the dataset choice.}
@@ -13,9 +18,15 @@ import_files(dataset_choice, file_info = NULL, text_input = NULL)
 named 'filepath' (default: NULL).}
 
 \item{text_input}{A character string containing text input (default: NULL).}
+
+\item{pdf_unit}{How a PDF becomes rows: "line" (default, one row per text
+line), "page" (one row per page), or "document" (one row per file).}
 }
 \value{
-A data frame containing the processed data.
+A data frame containing the processed data. PDF rows carry \code{page}
+and \code{page_end}, the first and last PDF page of the row's text, so a coded
+quote stays traceable to its source page. Other formats have no page
+columns; combined with PDFs, their rows get \code{NA}.
 }
 \description{
 This function processes different types of files and text input based on the dataset choice.

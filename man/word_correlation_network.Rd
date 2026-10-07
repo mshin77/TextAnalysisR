@@ -20,6 +20,7 @@ word_correlation_network(
   edge_color = "#5C5CFF",
   node_color_by = "community",
   seed = 123,
+  normalized = FALSE,
   category_params = NULL
 )
 }
@@ -57,6 +58,8 @@ check sensitivity.}
 \item{node_color_by}{Node coloring method: "community" or "centrality" (default: "community").}
 
 \item{seed}{Integer seed for the force-directed layout, so the plot is reproducible (default: 123).}
+
+\item{normalized}{Logical; if TRUE, degree and harmonic closeness are divided by n - 1 (default: FALSE).}
 
 \item{category_params}{Optional named list of category-specific parameters. Each element should be a list with \code{common_term_n}, \code{corr_n}, and \code{top_node_n} values for that category (default: NULL).}
 }

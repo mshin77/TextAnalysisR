@@ -9,7 +9,9 @@ extract_keywords_keyness(
   target,
   top_n = 20,
   measure = "lr",
-  min_count = 0
+  min_count = 0,
+  rank_by = c("score", "log_ratio"),
+  significant_only = FALSE
 )
 }
 \arguments{
@@ -22,14 +24,25 @@ extract_keywords_keyness(
 \item{measure}{Keyness measure: "lr" (log-likelihood G-squared), "chi2",
 "exact" (Fisher's exact odds ratio), or "pmi" (default: "lr")}
 
-\item{min_count}{Minimum total term frequency before computing keyness
-(default: 0, no pruning)}
+\item{min_count}{Minimum total term frequency for a term to be reported;
+statistics and corpus sizes use the full matrix (default: 0, no pruning)}
+
+\item{rank_by}{"score" ranks by the keyness statistic; "log_ratio" ranks by
+the absolute Log Ratio effect size (default: "score")}
+
+\item{significant_only}{Logical; keep only terms with adjusted p below 0.05
+(default: FALSE)}
 }
 \value{
-Data frame with columns: Keyword, Keyness_Score
+Data frame with columns: Keyword, Keyness_Score, Target_Count,
+Reference_Count, Target_per_10k, Reference_per_10k, Log_Ratio
+(log2 ratio of normalized frequencies; zero counts set to 0.5), and
+P_Adjusted (Benjamini-Hochberg).
 }
 \description{
-Extracts distinctive keywords by comparing document groups using log-likelihood ratio (G-squared).
+Extracts distinctive keywords by comparing a target document group with the
+rest, reporting significance (G-squared by default, Benjamini-Hochberg
+adjusted p-value) alongside an effect size (Log Ratio).
 }
 \examples{
 \donttest{
@@ -38,5 +51,13 @@ dfm_object <- quanteda::dfm(quanteda::tokens(quanteda::corpus(abstracts)))
 keywords <- extract_keywords_keyness(dfm_object, target = 1)
 print(keywords)
 }
+}
+\references{
+Hardie, A. (2014). Log Ratio: an informal introduction. ESRC Centre for
+Corpus Approaches to Social Science (CASS), Lancaster University.
+
+Gabrielatos, C. (2018). Keyness analysis: nature, metrics and techniques.
+In C. Taylor & A. Marchi (Eds.), Corpus Approaches to Discourse (pp. 225-258).
+Routledge.
 }
 \concept{lexical}

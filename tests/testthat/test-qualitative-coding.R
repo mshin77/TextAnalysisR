@@ -339,8 +339,61 @@ test_that("code_agreement keeps the highest-confidence code per unit and coder",
     coder      = c("c1", "c1", "c2"),
     confidence = c(0.4, 0.9, 0.8)
   )
-  res <- code_agreement(a)
+  expect_warning(res <- code_agreement(a), "presence")
   expect_equal(res$overall$estimate[res$overall$metric == "percent"], 1)
+})
+
+test_that("presence alignment credits coders who gave the same set of codes", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = rep(c("d1", "d2", "d3"), each = 4),
+    code   = rep(c("A", "B", "B", "A"), 3),
+    coder  = rep(c("c1", "c1", "c2", "c2"), 3),
+    confidence = rep(c(0.9, 0.4, 0.9, 0.4), 3)
+  )
+  res <- code_agreement(a, align = "presence")
+  expect_equal(res$overall$estimate[res$overall$metric == "percent"], 1)
+  expect_equal(res$overall$estimate[res$overall$metric == "set_match"], 1)
+  expect_setequal(unique(res$by_code$code), c("A", "B"))
+  expect_equal(nrow(res$disagree), 0)
+})
+
+test_that("presence alignment counts a reviewed unit with no code as absent", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = c("d1", "d1", "d2", "d2", "d3", "d3"),
+    code   = c("A", "A", "A", NA, NA, NA),
+    coder  = rep(c("c1", "c2"), 3)
+  )
+  res <- code_agreement(a, align = "presence")
+  pct <- res$by_code$estimate[res$by_code$code == "A" & res$by_code$metric == "percent"]
+  expect_equal(pct, 2 / 3)
+  expect_equal(res$overall$n[res$overall$metric == "set_match"], 3L)
+  expect_equal(res$disagree$doc_id, "d2")
+})
+
+test_that("presence alignment leaves units a coder never reviewed out of the intersection", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = c("d1", "d1", "d2", "d3", "d3"),
+    code   = c("A", "A", "A", "B", "B"),
+    coder  = c("c1", "c2", "c1", "c1", "c2")
+  )
+  res <- code_agreement(a, align = "presence", by_code = FALSE)
+  expect_equal(res$overall$n[res$overall$metric == "set_match"], 2L)
+  expect_null(res$by_code)
+})
+
+test_that("grid alignment treats a reviewed unit with no code as its own rating", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = c("d1", "d1", "d2", "d2", "d3", "d3"),
+    code   = c("A", "A", "A", NA, NA, NA),
+    coder  = rep(c("c1", "c2"), 3)
+  )
+  res <- code_agreement(a, by_code = FALSE)$overall
+  expect_equal(res$estimate[res$metric == "percent"], 2 / 3)
+  expect_equal(res$n[res$metric == "percent"], 3L)
 })
 
 test_that("code_agreement coverage reports span overlap per coder pair", {
@@ -760,4 +813,57 @@ test_that("generate_codes stops after a run of units that open nothing", {
   expect_equal(nrow(out$trace), 3)
   expect_equal(nrow(out$codebook), 1)
   expect_equal(out$trace$position, 1:3)
+})
+
+test_that("code_retest drops units whose call failed in any run", {
+  runs <- list(
+    tibble::tibble(doc_id = "d", unit_id = c("u1", "u2"), code = c("a", NA), status = c("ok", "error")),
+    tibble::tibble(doc_id = "d", unit_id = c("u1", "u2"), code = c("a", NA), status = c("ok", "error")))
+  i <- 0
+  local_mocked_bindings(apply_codes = function(...) { i <<- i + 1; runs[[i]] })
+  res <- code_retest(c(d = "text"), tibble::tibble(code = "a", definition = "x"), n_runs = 2, sample_n = 1)
+  expect_equal(res$summary$n_units[1], 1L)
+  expect_equal(res$summary$estimate[res$summary$metric == "retest_agreement"], 1)
+})
+
+test_that(".adjusted_rand is invariant to label switching", {
+  a <- c(1, 1, 2, 2, 3, 3)
+  b <- c(2, 2, 3, 3, 1, 1)
+  expect_equal(TextAnalysisR:::.adjusted_rand(a, b), 1)
+  expect_lt(TextAnalysisR:::.adjusted_rand(a, c(1, 2, 1, 2, 1, 2)), 0.1)
+})
+
+test_that("code_agreement drops rows whose AI call failed", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = rep(c("d1", "d2", "d3"), each = 2),
+    code   = c("A", "A", "B", "B", NA, "A"),
+    coder  = rep(c("c1", "c2"), 3),
+    status = c("human", "human", "human", "human", "error", "human")
+  )
+  res <- code_agreement(a, align = "presence")
+  expect_equal(res$overall$n[res$overall$metric == "set_match"], 2L)
+})
+
+test_that("grid alignment keeps the coded row over a no-code row for the same unit", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = c("d1", "d1", "d1", "d2", "d2"),
+    code   = c(NA, "A", "A", "B", "B"),
+    coder  = c("c1", "c1", "c2", "c1", "c2")
+  )
+  res <- suppressWarnings(code_agreement(a, align = "grid"))
+  expect_equal(res$overall$estimate[res$overall$metric == "percent"], 1)
+})
+
+test_that("presence alignment reports agreement among coders who did not write the codebook", {
+  skip_if_not_installed("irr")
+  a <- tibble::tibble(
+    doc_id = rep(c("d1", "d2", "d3"), each = 3),
+    code   = c("B", "A", "A", "B", "B", "B", "A", "A", "A"),
+    coder  = rep(c("author", "c2", "c3"), 3)
+  )
+  res <- code_agreement(a, align = "presence", codebook_authors = "author")
+  expect_false(is.null(res$independent))
+  expect_equal(res$independent$estimate[res$independent$metric == "percent"], 1)
 })

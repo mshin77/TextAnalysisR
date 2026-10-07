@@ -21,7 +21,7 @@ extract_pdf_multimodal(
 \item{vision_model}{Character: Model name
 \itemize{
 \item For OpenAI: "gpt-4.1", "gpt-4.1-mini"
-\item For Gemini: "gemini-2.5-flash", "gemini-2.5-pro"
+\item For Gemini: "gemini-3.8-flash", "gemini-3.5-flash-lite"
 }}
 
 \item{api_key}{Character: API key (required for openai/gemini providers)}

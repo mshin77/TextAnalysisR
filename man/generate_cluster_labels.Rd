@@ -21,7 +21,7 @@ generate_cluster_labels(
 "auto" picks the first provider with an available API key.}
 
 \item{model}{Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
-"gemini-2.5-flash-lite" (Gemini).}
+"gemini-3.5-flash-lite" (Gemini).}
 
 \item{temperature}{Temperature parameter (default: 0.3).}
 

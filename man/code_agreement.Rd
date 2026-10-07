@@ -9,7 +9,7 @@ code_agreement(
   metrics = c("alpha", "kappa", "ac1", "pabak", "percent"),
   units = c("intersection", "union"),
   by_code = TRUE,
-  align = c("grid", "coverage"),
+  align = c("grid", "presence", "coverage"),
   codebook_authors = NULL
 )
 }
@@ -27,15 +27,25 @@ two coders and returns \code{NA} for more.}
 
 \item{by_code}{Logical; also report per-code agreement.}
 
-\item{align}{"grid" (default) when coders share units, "coverage" when each
+\item{align}{"grid" (default) when coders give one code per unit,
+"presence" when a unit may carry several codes, "coverage" when each
 marked its own spans. Grid keeps the highest-confidence code where a coder
-gave several; coverage reports span overlap and ignores \code{metrics}/\code{units}.}
+gave several and warns that agreement on the remaining codes is lost.
+Presence scores every code as present or absent on each unit a coder
+reviewed, reports per-code statistics in \code{by_code}, their mean in
+\code{overall}, and \code{set_match}, the share of shared units on which coders gave
+the identical set of codes. Coverage reports span overlap and ignores
+\code{metrics}/\code{units}. Under grid and presence, a row with \code{code} \code{NA} records
+a unit the coder reviewed and left uncoded, which counts as a rating
+("(none)" under grid, absent under presence). Rows with \code{status}
+"error" (a failed AI call) are dropped: they record no judgment.}
 
 \item{codebook_authors}{Character vector of \code{coder} values that wrote or
 revised the codebook. When supplied, metrics are also computed among the
 remaining coders alone. Agreement with a coder who shaped the coding frame
 reflects that shared calibration, so the two figures answer different
-questions. Ignored when \code{align = "coverage"}.}
+questions. Applies to grid and presence; ignored when
+\code{align = "coverage"}.}
 }
 \value{
 A list with \code{overall}, \code{by_code} (NULL when \code{by_code} is FALSE),

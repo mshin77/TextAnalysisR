@@ -44,7 +44,7 @@ Set keys via `.Renviron` (persistent) or `Sys.setenv()` (session). The cloud cha
 | Provider | Chat Model | Embedding Model |
 |----------|------------|-----------------|
 | OpenAI | gpt-4.1-mini | text-embedding-3-small |
-| Gemini | gemini-2.5-flash | gemini-embedding-001 |
+| Gemini | gemini-3.8-flash | gemini-embedding-001 |
 | Local | - | all-MiniLM-L6-v2 |
 
 ## Responsible AI Design

@@ -44,8 +44,8 @@ topic identifier, term, and optionally term weight (beta).}
 
 \item{provider}{LLM provider: "openai" or "gemini" (default: "openai").}
 
-\item{model}{Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc.
-For Gemini: "gemini-2.5-flash-lite", "gemini-2.5-flash", etc.}
+\item{model}{Model name. For OpenAI: "gpt-4.1-mini", "gpt-4.1", etc.
+For Gemini: "gemini-3.5-flash-lite", "gemini-3.8-flash", etc.}
 
 \item{temperature}{Sampling temperature (0-2). Lower = more deterministic (default: 0).}
 
@@ -93,7 +93,7 @@ research_qs <- generate_topic_content(
   topic_terms_df = top_terms,
   content_type = "research_question",
   provider = "gemini",
-  model = "gemini-2.5-flash-lite"
+  model = "gemini-3.5-flash-lite"
 )
 
 # Generate with custom prompt

@@ -31,6 +31,7 @@ guard_stm_init <- function(requested, vocab_n) {
 
 # document-count ceiling for O(n^2) ops (embeddings, clustering, dim reduction) on memory-capped deployments
 .remote_doc_limit <- 3000L
+.remote_qc_doc_limit <- 100L
 
 remote_doc_ok <- function(n, feature) {
   if (is_remote && n > .remote_doc_limit) {
@@ -90,10 +91,14 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(lazy_tabs[[nm]]) && isFALSE(tab_loaded[[nm]])) tab_loaded[[nm]] <- TRUE
   }, ignoreInit = TRUE)
 
+  # choices sent before a lazy tab's HTML arrives are dropped, so tick after each flush
+  lazy_ui_ready <- reactiveVal(0)
+
   lapply(names(lazy_tabs), function(nm) {
     spec <- lazy_tabs[[nm]]
     output[[spec$out]] <- renderUI({
       req(isTRUE(tab_loaded[[nm]]))
+      session$onFlushed(function() lazy_ui_ready(isolate(lazy_ui_ready()) + 1), once = TRUE)
       cached_ui(nm, spec$content)
     })
   })
@@ -387,6 +392,7 @@ server <- shinyServer(function(input, output, session) {
         "Enable image/chart extraction",
         value = FALSE
       ),
+      .remote_notice("Each image, and each PDF page with little text,"),
       conditionalPanel(
         condition = "input.enable_multimodal == true",
         radioButtons("vision_provider",
@@ -405,7 +411,7 @@ server <- shinyServer(function(input, output, session) {
           ),
           selectizeInput("openai_vision_model",
             "OpenAI model:",
-            choices = c("GPT-4.1 (Default, accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini", "GPT-4" = "gpt-4"),
+            choices = c("GPT-4.1 (Default, accurate)" = "gpt-4.1", "GPT-4.1 Mini (Fast)" = "gpt-4.1-mini"),
             selected = NULL,
             options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           )
@@ -420,7 +426,7 @@ server <- shinyServer(function(input, output, session) {
           ),
           selectizeInput("gemini_vision_model",
             "Gemini model:",
-            choices = c("Gemini 2.5 Flash (Default, fast)" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro", "Gemini 2.5 Flash Lite (Economy)" = "gemini-2.5-flash-lite"),
+            choices = c("Gemini 3.8 Flash (Default, fast)" = "gemini-3.8-flash", "Gemini 3.5 Flash Lite (Economy)" = "gemini-3.5-flash-lite"),
             selected = NULL,
             options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           )
@@ -623,11 +629,14 @@ server <- shinyServer(function(input, output, session) {
       )
       vision_model <- switch(vision_provider,
         "openai" = isolate(pick_model(input$openai_vision_model, "gpt-4.1")),
-        "gemini" = isolate(pick_model(input$gemini_vision_model, "gemini-2.5-flash")),
+        "gemini" = isolate(pick_model(input$gemini_vision_model, "gemini-3.8-flash")),
         NULL
       )
 
       has_key <- !is.null(api_key) && nzchar(api_key)
+      if (has_images && !use_multimodal) {
+        stop("Images are read by an AI vision provider. Tick 'Enable image/chart extraction' to send them.")
+      }
       if (has_images && !has_key) {
         stop("A ", vision_provider, " API key is required to read images. Enter one in the sidebar.")
       }
@@ -678,6 +687,8 @@ server <- shinyServer(function(input, output, session) {
           )
 
           res <- read_pdf(use_multimodal)
+          # one call is already metered; count the remaining vision pages
+          lapply(seq_len(max(0, (res$num_attempted %||% 0) - 1)), function(k) spend_ai_call("Vision OCR", vision_provider, vision_model))
           text_only <- NULL
           if (!isTRUE(res$success) && use_multimodal) {
             res <- read_pdf(FALSE)
@@ -688,10 +699,17 @@ server <- shinyServer(function(input, output, session) {
             return(list(note = stats::setNames(res$message %||% "PDF extraction failed", row$name)))
           }
           df <- res$data
+          # database exports with article markers merge into articles; other PDFs keep page per row
+          paged <- "page" %in% names(df) && !any(grepl("^End of Document", trimws(df$text)))
 
-          if (isTRUE(input$remove_metadata) && "text" %in% names(df)) {
+          if (isTRUE(input$remove_metadata) && "text" %in% names(df) && !paged) {
             arts <- as_articles(df$text)
             if (length(arts) > 0) df <- data.frame(text = arts, stringsAsFactors = FALSE)
+          }
+          if (paged) {
+            if (isTRUE(input$remove_metadata)) df <- TextAnalysisR::remove_metadata_lines(df)
+            if (nrow(df) == 0) return(list(note = stats::setNames("only metadata found", row$name)))
+            df <- TextAnalysisR:::.pdf_rows(df$text, df$page, input$pdf_unit %||% "document")
           }
 
           if (!"category" %in% names(df)) df$category <- label
@@ -736,11 +754,14 @@ server <- shinyServer(function(input, output, session) {
           return(list(note = stats::setNames(why %||% "no readable text found", row$name)))
         }
 
-        if (!"text" %in% names(df) && ncol(df) >= 1) names(df)[1] <- "text"
+        # a spreadsheet of several columns (a survey export) keeps its columns for Unite Texts;
+        # renaming its first column, often an ID, to text would discard the responses
+        tabular <- ext %in% c("xlsx", "xls", "xlsm", "csv") && ncol(df) > 1
+        if (!tabular && !"text" %in% names(df) && ncol(df) >= 1) names(df)[1] <- "text"
         if (!"category" %in% names(df)) df$category <- label
 
         dropped <- 0L
-        if (isTRUE(input$remove_metadata) && !parsed_export) {
+        if (isTRUE(input$remove_metadata) && !parsed_export && !tabular) {
           before <- nrow(df)
           arts <- as_articles(df$text)
           if (length(arts) > 0) {
@@ -797,9 +818,12 @@ server <- shinyServer(function(input, output, session) {
         deduped <- before - nrow(result)
       }
 
-      if (!"text" %in% names(result)) stop("File processing produced no text column")
-
-      result <- result[!is.na(result$text) & nzchar(trimws(result$text)), , drop = FALSE]
+      if ("text" %in% names(result)) {
+        result <- result[!is.na(result$text) & nzchar(trimws(result$text)), , drop = FALSE]
+      } else {
+        has_text <- vapply(result, function(col) is.character(col) && any(nzchar(trimws(stats::na.omit(col)))), logical(1))
+        if (!any(has_text)) stop("File processing produced no text column")
+      }
       if (nrow(result) == 0) stop("File processing returned no text")
 
       described <- sum(unlist(lapply(parts, function(p) p$images %||% 0)))
@@ -1289,6 +1313,10 @@ server <- shinyServer(function(input, output, session) {
   preprocessed_skip <- reactiveVal(NULL)
   processed_tokens <- reactiveVal(NULL)
   stopwords_applied <- reactiveVal(FALSE)
+  # settings as applied at each step, so lemmatization repeats them rather than the current sidebar
+  applied_segment_settings <- reactiveVal(NULL)
+  applied_removals <- reactiveVal(character(0))
+  applied_expressions <- reactiveVal(character(0))
   dictionary_applied <- reactiveVal(FALSE)
   final_tokens <- reactiveVal(NULL)
   lemmatized_tokens <- reactiveVal(NULL)
@@ -1321,6 +1349,40 @@ server <- shinyServer(function(input, output, session) {
   })
   outputOptions(output, "step_5_outdated", suspendWhenHidden = FALSE)
 
+  # spaCy NER, POS and dependencies rely on case and punctuation, so parse the united
+  # text when it lines up with the tokens; math mode keeps the normalized tokens
+  spacy_source_texts <- function(tokens_to_use) {
+    tbl <- united_tbl()
+    if (isTRUE(math_mode_used()) || is.null(tbl) || nrow(tbl) != quanteda::ndoc(tokens_to_use)) return(tokens_to_use)
+    texts <- stats::setNames(as.character(tbl$united_texts), quanteda::docnames(tokens_to_use))
+    texts[is.na(texts)] <- ""
+    texts
+  }
+
+  segment_texts <- function(tbl, settings = NULL) {
+    settings <- settings %||% list(segment_options = input$segment_options %||% character(0),
+                                   min_char = input$min_char %||% 2, math_mode = isTRUE(input$math_mode))
+    segment_options <- settings$segment_options
+    TextAnalysisR::prep_texts(
+      tbl,
+      text_field = "united_texts",
+      min_char = settings$min_char,
+      lowercase = "lowercase" %in% segment_options,
+      remove_punct = "remove_punct" %in% segment_options,
+      remove_symbols = "remove_symbols" %in% segment_options,
+      remove_numbers = "remove_numbers" %in% segment_options,
+      remove_url = "remove_url" %in% segment_options,
+      remove_separators = "remove_separators" %in% segment_options,
+      split_hyphens = "split_hyphens" %in% segment_options,
+      split_tags = "split_tags" %in% segment_options,
+      include_docvars = "include_docvars" %in% segment_options,
+      keep_acronyms = "keep_acronyms" %in% segment_options,
+      padding = "padding" %in% segment_options,
+      math_mode = settings$math_mode,
+      verbose = TRUE
+    )
+  }
+
   preprocessed_init <- eventReactive(input$preprocess, {
     req(united_tbl())
 
@@ -1339,25 +1401,9 @@ server <- shinyServer(function(input, output, session) {
           segment_options <- input$segment_options %||% character(0)
           math_mode_enabled <- isTRUE(input$math_mode)
           math_mode_used(math_mode_enabled)
-
-          toks_processed <- TextAnalysisR::prep_texts(
-            united_tbl(),
-            text_field = "united_texts",
-            min_char = input$min_char %||% 2,
-            lowercase = "lowercase" %in% segment_options,
-            remove_punct = "remove_punct" %in% segment_options,
-            remove_symbols = "remove_symbols" %in% segment_options,
-            remove_numbers = "remove_numbers" %in% segment_options,
-            remove_url = "remove_url" %in% segment_options,
-            remove_separators = "remove_separators" %in% segment_options,
-            split_hyphens = "split_hyphens" %in% segment_options,
-            split_tags = "split_tags" %in% segment_options,
-            include_docvars = "include_docvars" %in% segment_options,
-            keep_acronyms = "keep_acronyms" %in% segment_options,
-            padding = "padding" %in% segment_options,
-            math_mode = math_mode_enabled,
-            verbose = TRUE
-          )
+          applied_segment_settings(list(segment_options = segment_options, min_char = input$min_char %||% 2,
+                                        math_mode = math_mode_enabled))
+          toks_processed <- segment_texts(united_tbl())
         },
         type = "message"
       )
@@ -1525,6 +1571,8 @@ server <- shinyServer(function(input, output, session) {
     return(NULL)
   })
 
+  common_word_suggestions <- reactiveVal(NULL)
+
   observe({
     req(preprocessed_combined())
 
@@ -1535,18 +1583,24 @@ server <- shinyServer(function(input, output, session) {
 
       top_100_words <- freq_df$feature[seq_len(min(100, nrow(freq_df)))]
 
-      top_10_words <- freq_df$feature[seq_len(min(10, nrow(freq_df)))]
+      common_word_suggestions(freq_df$feature[seq_len(min(10, nrow(freq_df)))])
 
       updateSelectizeInput(
         session,
         "common_words",
         choices = top_100_words,
-        selected = top_10_words,
+        selected = character(0),
+        options = list(create = TRUE),
         server = FALSE
       )
     }, error = function(e) {
       message("Error updating common_words: ", e$message)
     })
+  })
+
+  observeEvent(input$suggest_common_words, {
+    req(common_word_suggestions())
+    updateSelectizeInput(session, "common_words", selected = common_word_suggestions())
   })
 
   custom_dict_terms <- reactive({
@@ -1776,6 +1830,7 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(input$multi_word_expressions) || length(input$multi_word_expressions) == 0) {
       processed_tokens(toks_source)
       dictionary_applied(TRUE)
+      applied_expressions(character(0))
       compound_stats(NULL)
       step_4_version(step_4_version() + 1)
       step_4_based_on(step_3_version())
@@ -1845,6 +1900,7 @@ server <- shinyServer(function(input, output, session) {
 
       processed_tokens(toks_compound)
       dictionary_applied(TRUE)
+      applied_expressions(input$multi_word_expressions)
       step_4_version(step_4_version() + 1)
       step_4_based_on(step_3_version())
 
@@ -1893,6 +1949,7 @@ server <- shinyServer(function(input, output, session) {
 
     processed_tokens(toks_source)
     dictionary_applied(TRUE)
+    applied_expressions(character(0))
     step_4_version(step_4_version() + 1)
     step_4_based_on(step_3_version())
 
@@ -2387,13 +2444,16 @@ server <- shinyServer(function(input, output, session) {
       )
 
       if (!is.null(input$remove) && input$remove > 0) {
-        common_count <- length(input$common_words %||% character(0))
+        common_words <- input$common_words %||% character(0)
         custom_count <- length(input$custom_stopwords %||% character(0))
 
         report_lines <- c(report_lines,
           "Status: Applied",
-          paste("  - Common words removed:", common_count),
-          paste("  - Predefined stopwords removed:", custom_count),
+          paste0("  - Common words removed (", length(common_words), "): ",
+                 if (length(common_words) > 0) paste(common_words, collapse = ", ") else "none"),
+          paste0("  - Predefined stopwords removed: ", custom_count,
+                 " (language: ", input$stopwords_language %||% "en",
+                 ", stopwords package ", tryCatch(as.character(utils::packageVersion("stopwords")), error = function(e) "not installed"), ")"),
           ""
         )
       } else if (!is.null(input$skip_stopwords) && input$skip_stopwords > 0) {
@@ -2546,22 +2606,6 @@ server <- shinyServer(function(input, output, session) {
 
   # Step 5: Remove common words and stopwords.
 
-  tstat_freq_dfm_init <- reactive({
-    tstat_freq <- quanteda.textstats::textstat_frequency(dfm_init())
-    tstat_freq_n_100 <- head(tstat_freq, 100)
-    tstat_freq_n_100$feature
-  })
-
-  observe({
-    updateSelectizeInput(
-      session,
-      "common_words",
-      choices  = tstat_freq_dfm_init(),
-      selected = head(tstat_freq_dfm_init(), 20),
-      options  = list(create = TRUE),
-      server = TRUE
-    )
-  })
 
   observeEvent(input$remove, {
     toks_source <- if (!is.null(processed_tokens())) {
@@ -2597,6 +2641,7 @@ server <- shinyServer(function(input, output, session) {
 
     final_tokens(toks)
     stopwords_applied(TRUE)
+    applied_removals(c(input$common_words, input$custom_stopwords))
     step_3_version(step_3_version() + 1)
     step_3_based_on(step_2_version())
     last_clicked("remove")
@@ -2627,12 +2672,11 @@ server <- shinyServer(function(input, output, session) {
       return(NULL)
     }
 
-    if (!is.null(quanteda::docvars(dfm_init()))) {
-      quanteda::docvars(dfm_obj) <- quanteda::docvars(dfm_init())
-    }
+    # compare with the Step 4 (or Step 2) output; dfm_init() only exists after Step 5 and is already filtered
+    tokens_before <- isolate(processed_tokens() %||% preprocessed_combined()) %||% tokens_obj
 
     doc_count <- quanteda::ndoc(dfm_obj)
-    feature_count_before <- quanteda::nfeat(dfm_init())
+    feature_count_before <- quanteda::nfeat(quanteda::dfm(tokens_before))
     feature_count_after <- quanteda::nfeat(dfm_obj)
     features_removed <- feature_count_before - feature_count_after
     percent_reduction <- round((features_removed / feature_count_before) * 100, 1)
@@ -2737,7 +2781,9 @@ server <- shinyServer(function(input, output, session) {
     first_doc_tokens <- as.character(tokens_to_use[[1]])
 
     # Create cache key based on token content
-    current_cache_key <- digest::digest(as.list(tokens_to_use), algo = "md5")
+    spacy_model <- pick_model(input$spacy_model, "en_core_web_sm")
+    current_cache_key <- digest::digest(list(as.list(tokens_to_use), spacy_model, applied_segment_settings(),
+                                             applied_expressions(), applied_removals()), algo = "md5")
 
     # Check for cached results for these tokens
     if (!is.null(lemma_cache_key()) && !is.null(lemmatized_tokens()) &&
@@ -2746,6 +2792,13 @@ server <- shinyServer(function(input, output, session) {
       lemma_applied(TRUE)
       last_clicked("lemma")
       return(NULL)
+    }
+
+    mark_lemma_failed <- function() {
+      lemmatized_tokens(tokens_to_use)
+      lemma_cache_key(NULL)
+      lemma_applied(TRUE)
+      last_clicked("lemma")
     }
 
     TextAnalysisR:::show_loading_notification("Running spaCy linguistic analysis...", id = "loadingLemma")
@@ -2758,49 +2811,71 @@ server <- shinyServer(function(input, output, session) {
         FALSE
       })
 
-      if (!spacy_status) {
-        tryCatch({
-          suppressMessages(TextAnalysisR::init_spacy_nlp(pick_model(input$spacy_model, "en_core_web_sm")))
-        }, error = function(e) {
-          error_msg <- if (!is.null(e$message) && nchar(e$message) > 0) {
-            e$message
-          } else {
-            as.character(e)
-          }
-          try(removeNotification("loadingLemma"), silent = TRUE)
-          shinybusy::hide_spinner()
-          showModal(modalDialog(
-            title = "spaCy Initialization Failed",
-            tags$p("Could not initialize spaCy. Please ensure:"),
-            tags$ul(
-              tags$li("Python is installed"),
-              tags$li("spaCy is installed in Python"),
-              tags$li("The 'en_core_web_sm' model is downloaded")
-            ),
-            tags$p("Run in R console:"),
-            tags$pre("pip install spacy && python -m spacy download en_core_web_sm"),
-            tags$p(tags$strong("Error details:")),
-            tags$pre(style = "background-color: #f8f9fa; padding: 10px; border-radius: 4px;", error_msg),
-            easyClose = TRUE,
-            footer = modalButton("Close")
-          ))
-          lemmatized_tokens(tokens_to_use)
-          lemma_applied(TRUE)
-          last_clicked("lemma")
-          return(NULL)
-        })
+      spacy_ready <- spacy_status || tryCatch({
+        suppressMessages(TextAnalysisR::init_spacy_nlp(spacy_model))
+        TRUE
+      }, error = function(e) {
+        error_msg <- if (!is.null(e$message) && nchar(e$message) > 0) {
+          e$message
+        } else {
+          as.character(e)
+        }
+        try(removeNotification("loadingLemma"), silent = TRUE)
+        shinybusy::hide_spinner()
+        showModal(modalDialog(
+          title = "spaCy Initialization Failed",
+          tags$p("Could not initialize spaCy. Please ensure:"),
+          tags$ul(
+            tags$li("Python is installed"),
+            tags$li("spaCy is installed in Python"),
+            tags$li("The 'en_core_web_sm' model is downloaded")
+          ),
+          tags$p("Run in R console:"),
+          tags$pre("pip install spacy && python -m spacy download en_core_web_sm"),
+          tags$p(tags$strong("Error details:")),
+          tags$pre(style = "background-color: #f8f9fa; padding: 10px; border-radius: 4px;", error_msg),
+          easyClose = TRUE,
+          footer = modalButton("Close")
+        ))
+        FALSE
+      })
+
+      if (!spacy_ready) {
+        mark_lemma_failed()
+        return(NULL)
       }
 
-      # Use optimized lemmatization (disables NER/parser for speed)
-      parsed <- TextAnalysisR::spacy_lemmatize(
-        tokens_to_use,
-        batch_size = 100
-      )
+      # spaCy tags parts of speech from sentence context, so lemmatize the raw text
+      # and then repeat Steps 2-4; math mode keeps token-level lemmatization
+      contextual <- !isTRUE(math_mode_used()) && !is.null(united_tbl()) &&
+        nrow(united_tbl()) == quanteda::ndoc(tokens_to_use)
+
+      if (contextual) {
+        raw_texts <- stats::setNames(as.character(united_tbl()$united_texts), quanteda::docnames(tokens_to_use))
+        raw_texts[is.na(raw_texts)] <- ""
+        parsed <- TextAnalysisR::spacy_lemmatize(raw_texts, batch_size = 100, model = spacy_model)
+        lemma_text <- tapply(parsed$lemma, factor(parsed$doc_id, levels = names(raw_texts)), paste, collapse = " ")
+        lemma_tbl <- united_tbl()
+        lemma_tbl$united_texts <- ifelse(is.na(lemma_text), "", unname(lemma_text))
+        toks_lemma <- segment_texts(lemma_tbl, applied_segment_settings())
+        quanteda::docnames(toks_lemma) <- quanteda::docnames(tokens_to_use)
+
+        expressions <- applied_expressions()
+        if (length(expressions) > 0) {
+          expression_lemmas <- TextAnalysisR::spacy_lemmatize(stats::setNames(expressions, paste0("mwe", seq_along(expressions))),
+                                                              model = spacy_model)
+          lemma_phrases <- unname(tapply(expression_lemmas$lemma, expression_lemmas$doc_id, paste, collapse = " "))
+          toks_lemma <- quanteda::tokens_compound(toks_lemma, pattern = quanteda::phrase(unique(c(expressions, lemma_phrases))),
+                                                  concatenator = "_")
+        }
+      } else {
+        parsed <- TextAnalysisR::spacy_lemmatize(tokens_to_use, batch_size = 100, model = spacy_model)
+        lemma_doc_order <- intersect(quanteda::docnames(tokens_to_use), unique(parsed$doc_id))
+        lemma_list <- split(parsed$lemma, factor(parsed$doc_id, levels = lemma_doc_order))
+        toks_lemma <- quanteda::as.tokens(lemma_list)
+      }
 
       spacy_parsed(parsed)
-
-      lemma_list <- split(parsed$lemma, parsed$doc_id)
-      toks_lemma <- quanteda::as.tokens(lemma_list)
 
       original_docvars <- quanteda::docvars(tokens_to_use)
       if (!is.null(original_docvars) && nrow(original_docvars) > 0) {
@@ -2827,6 +2902,17 @@ server <- shinyServer(function(input, output, session) {
         }
       }
 
+      # spaCy returns cased lemmas, and lemmatizing can recreate removed stopwords
+      toks_lemma <- quanteda::tokens_tolower(toks_lemma)
+      if (isTRUE(stopwords_applied())) {
+        removed <- applied_removals()
+        # also drop the lemma forms, so a removed "students" does not return as "student"
+        removed_lemmas <- if (all(c("token", "lemma") %in% names(parsed))) {
+          tolower(parsed$lemma[tolower(parsed$token) %in% tolower(removed)])
+        } else character(0)
+        toks_lemma <- quanteda::tokens_remove(toks_lemma, pattern = unique(c(removed, removed_lemmas)), verbose = FALSE)
+      }
+
       lemmatized_tokens(toks_lemma)
       lemma_cache_key(current_cache_key)  # Cache the result
       lemma_applied(TRUE)
@@ -2850,9 +2936,7 @@ server <- shinyServer(function(input, output, session) {
         duration = NULL,
         closeButton = TRUE
       )
-      lemmatized_tokens(tokens_to_use)
-      lemma_applied(TRUE)
-      last_clicked("lemma")
+      mark_lemma_failed()
     })
   })
 
@@ -2911,6 +2995,7 @@ server <- shinyServer(function(input, output, session) {
 
     final_tokens(toks_source)
     stopwords_applied(TRUE)
+    applied_removals(character(0))
     step_3_version(step_3_version() + 1)
     step_3_based_on(step_2_version())
     last_clicked("skip_stopwords")
@@ -3443,7 +3528,8 @@ server <- shinyServer(function(input, output, session) {
     tryCatch({
       # Use spacy_parse_full with ALL features enabled for consistency
       parsed <- TextAnalysisR::spacy_parse_full(
-        tokens_to_use,
+        spacy_source_texts(tokens_to_use),
+        model = pick_model(input$spacy_model, "en_core_web_sm"),
         pos = TRUE,
         tag = TRUE,
         lemma = TRUE,
@@ -3511,7 +3597,8 @@ server <- shinyServer(function(input, output, session) {
 
         # Use spacy_parse_full with ALL features enabled
         parsed <- TextAnalysisR::spacy_parse_full(
-          tokens_to_use,
+          spacy_source_texts(tokens_to_use),
+          model = pick_model(input$spacy_model, "en_core_web_sm"),
           pos = TRUE,
           tag = TRUE,
           lemma = TRUE,
@@ -4227,7 +4314,8 @@ server <- shinyServer(function(input, output, session) {
     tryCatch({
       # Use spacy_parse_full with ALL features enabled for consistency
       parsed <- TextAnalysisR::spacy_parse_full(
-        tokens_to_use,
+        spacy_source_texts(tokens_to_use),
+        model = pick_model(input$spacy_model, "en_core_web_sm"),
         pos = TRUE,
         tag = TRUE,
         lemma = TRUE,
@@ -4571,9 +4659,9 @@ server <- shinyServer(function(input, output, session) {
       cat_label_esc <- htmltools::htmlEscape(cat_label, attribute = TRUE)
       color_esc <- htmltools::htmlEscape(color, attribute = TRUE)
       delete_html <- if (is_user_created) {
-        paste0("<span class='entity-delete-btn' data-category='", cat_esc,
+        paste0("<span class='entity-delete-btn' role='button' tabindex='0' aria-label='Remove ", cat_label_esc, "' data-category='", cat_esc,
                "' data-source='domain' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
-               "<i class='fa fa-eraser'></i></span>")
+               "<i class='fa fa-eraser' aria-hidden='true'></i></span>")
       } else ""
 
       tags$details(
@@ -4582,8 +4670,8 @@ server <- shinyServer(function(input, output, session) {
           style = paste0("cursor: pointer; font-weight: 600; color: ", color_esc, "; font-size: 16px;"),
           HTML(paste0(
             "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
-            "<input type='checkbox' class='entity-visibility-chk' data-category='", cat_esc, "' data-source='domain'", checked_attr, " style='margin:0;cursor:pointer;'/>",
-            "<span class='sidebar-color-picker' data-entity='", cat_label_esc, "' data-source='domain' data-category='", cat_esc, "' style='display:inline-block;width:12px;height:12px;background:", color_esc, ";border-radius:2px;cursor:pointer;'></span>",
+            "<input type='checkbox' class='entity-visibility-chk' aria-label='Show ", cat_label_esc, "' data-category='", cat_esc, "' data-source='domain'", checked_attr, " style='margin:0;cursor:pointer;'/>",
+            "<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change ", cat_label_esc, " color' data-entity='", cat_label_esc, "' data-source='domain' data-category='", cat_esc, "' style='display:inline-block;width:12px;height:12px;background:", color_esc, ";border-radius:2px;cursor:pointer;'></span>",
             "<span>", htmltools::htmlEscape(cat_label), "</span>",
             delete_html,
             "</span>"
@@ -4859,9 +4947,9 @@ server <- shinyServer(function(input, output, session) {
       name_esc <- htmltools::htmlEscape(name, attribute = TRUE)
       color_esc <- htmltools::htmlEscape(ent$color %||% "", attribute = TRUE)
       delete_html <- paste0(
-        "<span class='entity-delete-btn' data-category='", name_esc,
+        "<span class='entity-delete-btn' role='button' tabindex='0' aria-label='Remove ", name_esc, "' data-category='", name_esc,
         "' data-source='custom' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
-        "<i class='fa fa-eraser'></i></span>"
+        "<i class='fa fa-eraser' aria-hidden='true'></i></span>"
       )
 
       tags$details(
@@ -4871,8 +4959,8 @@ server <- shinyServer(function(input, output, session) {
           style = paste0("cursor: pointer; font-weight: 600; color: ", color_esc, "; font-size: 16px;"),
           HTML(paste0(
             "<span style='display:inline-flex;align-items:center;gap:4px;width:100%'>",
-            "<input type='checkbox' class='entity-visibility-chk' data-category='", name_esc, "' data-source='custom'", checked_attr, " style='margin:0;cursor:pointer;'/>",
-            "<span class='sidebar-color-picker' data-entity='", name_esc, "' data-source='custom' data-category='' style='display:inline-block;width:12px;height:12px;background:", color_esc, ";border-radius:2px;cursor:pointer;'></span>",
+            "<input type='checkbox' class='entity-visibility-chk' aria-label='Show ", name_esc, "' data-category='", name_esc, "' data-source='custom'", checked_attr, " style='margin:0;cursor:pointer;'/>",
+            "<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change ", name_esc, " color' data-entity='", name_esc, "' data-source='custom' data-category='' style='display:inline-block;width:12px;height:12px;background:", color_esc, ";border-radius:2px;cursor:pointer;'></span>",
             "<span>", htmltools::htmlEscape(name), "</span>",
             delete_html,
             "</span>"
@@ -7479,6 +7567,7 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     input$main_navbar
+    lazy_ui_ready()
     req(colnames_cat())
     cats <- c("None" = "None", colnames_cat())
     lapply(c("doc_var_co_occurrence", "doc_var_correlation", "wordcloud_group_var",
@@ -7634,6 +7723,9 @@ server <- shinyServer(function(input, output, session) {
     tagList(controls)
   })
 
+  # each reset button needs exactly one observer, however often the grouping variable changes
+  wired_reset_buttons <- new.env(parent = emptyenv())
+
   observeEvent(input$doc_var_co_occurrence,
                {
                  req(input$doc_var_co_occurrence != "None")
@@ -7644,6 +7736,8 @@ server <- shinyServer(function(input, output, session) {
                  for (level in cat_levels) {
                    level_id <- make.names(paste(input$doc_var_co_occurrence, level, sep = "_"))
                    reset_button_id <- paste0("reset_cooccur_", level_id)
+                   if (exists(reset_button_id, envir = wired_reset_buttons, inherits = FALSE)) next
+                   assign(reset_button_id, TRUE, envir = wired_reset_buttons)
 
                    local({
                      level_id_local <- level_id
@@ -7815,8 +7909,6 @@ server <- shinyServer(function(input, output, session) {
       input$node_color_cooccur,
       input$edge_color_cooccur,
       input$nrows_co_occurrence,
-      input$width_word_co_occurrence_network_plot,
-      input$height_word_co_occurrence_network_plot,
       input$doc_var_co_occurrence,
       input$use_category_cooccur,
       input$seed_cooccur
@@ -7853,7 +7945,13 @@ server <- shinyServer(function(input, output, session) {
     }
     w <- input$width_word_co_occurrence_network_plot %||% 900
     h <- input$height_word_co_occurrence_network_plot %||% 800
-    plotly::plotlyOutput("word_co_occurrence_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
+    div(
+      style = "overflow-x: auto; max-width: 100%;",
+      tabindex = "0",
+      role = "region",
+      `aria-label` = "Co-occurrence network, scrollable",
+      plotly::plotlyOutput("word_co_occurrence_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
+    )
   })
 
   output$word_co_occurrence_network_plotly <- plotly::renderPlotly({
@@ -8052,6 +8150,8 @@ server <- shinyServer(function(input, output, session) {
                  for (level in cat_levels) {
                    level_id <- make.names(paste(input$doc_var_correlation, level, sep = "_"))
                    reset_button_id <- paste0("reset_corr_", level_id)
+                   if (exists(reset_button_id, envir = wired_reset_buttons, inherits = FALSE)) next
+                   assign(reset_button_id, TRUE, envir = wired_reset_buttons)
 
                    local({
                      level_id_local <- level_id
@@ -8150,8 +8250,6 @@ server <- shinyServer(function(input, output, session) {
       input$node_color_corr,
       input$edge_color_corr,
       input$nrows_correlation,
-      input$width_word_correlation_network_plot,
-      input$height_word_correlation_network_plot,
       input$doc_var_correlation,
       input$use_category_corr,
       input$seed_corr
@@ -8188,7 +8286,13 @@ server <- shinyServer(function(input, output, session) {
     }
     w <- input$width_word_correlation_network_plot %||% 900
     h <- input$height_word_correlation_network_plot %||% 1000
-    plotly::plotlyOutput("word_correlation_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
+    div(
+      style = "overflow-x: auto; max-width: 100%;",
+      tabindex = "0",
+      role = "region",
+      `aria-label` = "Correlation network, scrollable",
+      plotly::plotlyOutput("word_correlation_network_plotly", width = paste0(w, "px"), height = paste0(h, "px"))
+    )
   })
 
   output$word_correlation_network_plotly <- plotly::renderPlotly({
@@ -8222,6 +8326,7 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     input$main_navbar
+    lazy_ui_ready()
     updateSelectInput(session,
                       "continuous_var_3",
                       choices = colnames_con(),
@@ -8250,6 +8355,7 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     input$main_navbar
+    lazy_ui_ready()
     req(tstat_freq_over_con_var())
     current <- isolate(input$type_terms)
     updateSelectizeInput(
@@ -8549,6 +8655,7 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     input$main_navbar
+    lazy_ui_ready()
     req(colnames_cat())
     cats <- c("None" = "None", colnames_cat())
     lapply(c("sentiment_category_var", "emotion_group_var"),
@@ -8557,6 +8664,7 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     input$main_navbar
+    lazy_ui_ready()
     req(united_tbl())
     col_names <- c("None" = "", names(united_tbl()))
     lapply(c("sentiment_doc_id_var", "readability_doc_id_var", "lexdiv_doc_id_var"),
@@ -8575,8 +8683,7 @@ server <- shinyServer(function(input, output, session) {
 
         # Create row index for joining
         texts_df_with_idx <- texts_df %>%
-          mutate(row_idx = row_number(),
-                 doc_name = paste0("text", row_idx))
+          mutate(doc_name = if ("doc_id" %in% names(texts_df)) as.character(doc_id) else paste0("text", row_number()))
 
         doc_sentiment_with_group <- doc_sentiment %>%
           left_join(
@@ -8617,37 +8724,41 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  observeEvent(input$emotion_group_var, {
+  observeEvent(list(input$emotion_group_var, sentiment_results$document_data), {
     if (sentiment_results$analyzed && !is.null(input$emotion_group_var) &&
         input$emotion_group_var != "None") {
 
-      doc_sentiment <- sentiment_results$data
-      texts_df <- united_tbl()
+      doc_sentiment <- sentiment_results$document_data
+      texts_df <- sentiment_results$original_data %||% united_tbl()
       lexicon_name <- input$sentiment_lexicon %||% "bing"
 
       if (!is.null(texts_df) && input$emotion_group_var %in% names(texts_df) && lexicon_name == "nrc") {
-        if (!"emotion_group_var" %in% names(doc_sentiment)) {
-          doc_sentiment <- doc_sentiment %>%
-            left_join(
-              texts_df %>%
-                mutate(document = row_number()) %>%
-                select(document, emotion_group_var = !!sym(input$emotion_group_var)),
-              by = "document"
-            )
-        }
+        group_lookup <- tibble::tibble(
+          document = if ("doc_id" %in% names(texts_df)) as.character(texts_df$doc_id) else paste0("text", seq_len(nrow(texts_df))),
+          emotion_group_var = texts_df[[input$emotion_group_var]]
+        )
+        # every document counts toward its group's tokens, including those with no NRC words
+        group_tokens <- (sentiment_results$document_tokens %||% tibble::tibble(document = character(), n_tokens = numeric())) %>%
+          inner_join(group_lookup, by = "document") %>%
+          filter(!is.na(emotion_group_var)) %>%
+          group_by(emotion_group_var) %>%
+          summarize(n_tokens = sum(n_tokens), n_docs = n(), .groups = "drop")
 
         emotion_cols <- c("anger", "anticipation", "disgust", "fear", "joy", "sadness", "surprise", "trust")
         available_emotions <- intersect(emotion_cols, names(doc_sentiment))
 
-        if (length(available_emotions) > 0) {
+        if (length(available_emotions) > 0 && nrow(group_tokens) > 0) {
           emotion_data_grouped <- doc_sentiment %>%
+            inner_join(group_lookup, by = "document") %>%
             select(document, emotion_group_var, all_of(available_emotions)) %>%
+            filter(!is.na(emotion_group_var)) %>%
             pivot_longer(cols = all_of(available_emotions), names_to = "emotion", values_to = "score") %>%
             group_by(emotion_group_var, emotion) %>%
-            summarize(total_score = sum(score, na.rm = TRUE), .groups = "drop")
+            summarize(emotion_words = sum(score, na.rm = TRUE), .groups = "drop") %>%
+            inner_join(group_tokens, by = "emotion_group_var") %>%
+            mutate(total_score = ifelse(n_tokens > 0, emotion_words / n_tokens * 1000, NA_real_))
 
           sentiment_results$emotion_scores_grouped <- emotion_data_grouped
-          sentiment_results$data <- doc_sentiment
         }
       }
     } else if (sentiment_results$analyzed) {
@@ -8693,6 +8804,8 @@ server <- shinyServer(function(input, output, session) {
       sentiment_results$data <- NULL
       sentiment_results$document_data <- NULL
       sentiment_results$emotion_scores <- NULL
+      sentiment_results$document_tokens <- NULL
+      sentiment_results$emotion_scores_grouped <- NULL
       sentiment_results$word_contributions <- NULL
       sentiment_results$summary <- NULL
       sentiment_results$grouped <- NULL
@@ -8796,6 +8909,8 @@ server <- shinyServer(function(input, output, session) {
       sentiment_results$document_data <- doc_sentiment
       sentiment_results$original_data <- texts_df
       sentiment_results$emotion_scores <- emotion_data
+      sentiment_results$document_tokens <- sentiment_analysis_results$document_tokens
+      sentiment_results$emotion_scores_grouped <- NULL
       sentiment_results$word_contributions <- sentiment_analysis_results$word_contributions
       sentiment_results$summary <- summary_stats
       sentiment_results$grouped <- NULL
@@ -8897,8 +9012,7 @@ server <- shinyServer(function(input, output, session) {
             "OpenAI Model",
             choices = c(
               "GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini",
-              "GPT-4.1 (Accurate)" = "gpt-4.1",
-              "GPT-4" = "gpt-4"
+              "GPT-4.1 (Accurate)" = "gpt-4.1"
             ),
             selected = NULL,
             options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
@@ -8917,9 +9031,8 @@ server <- shinyServer(function(input, output, session) {
             "llm_sentiment_model",
             "Gemini Model",
             choices = c(
-              "Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite",
-              "Gemini 2.5 Flash" = "gemini-2.5-flash",
-              "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
+              "Gemini 3.5 Flash Lite (Default, economy)" = "gemini-3.5-flash-lite",
+              "Gemini 3.8 Flash" = "gemini-3.8-flash"
             ),
             selected = NULL,
             options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
@@ -8982,6 +9095,8 @@ server <- shinyServer(function(input, output, session) {
         include_explanation = include_explanation,
         verbose = FALSE
       )
+      model_name <- llm_sentiment_result$model_used %||% model_name
+      llm_sentiment_result <- llm_sentiment_result$document_sentiment
 
       if (is.null(llm_sentiment_result) || nrow(llm_sentiment_result) == 0) {
         TextAnalysisR:::remove_notification_by_id("llm_sentiment_loading")
@@ -9266,7 +9381,7 @@ server <- shinyServer(function(input, output, session) {
       !is.null(input$emotion_group_var) && input$emotion_group_var != "None"
 
     radar_df <- if (grouped) {
-      dplyr::rename(sentiment_results$emotion_scores_grouped, group_col = "emotion_group_var")
+      dplyr::mutate(sentiment_results$emotion_scores_grouped, group_col = as.character(.data$emotion_group_var))
     } else {
       dplyr::mutate(sentiment_results$emotion_scores, group_col = "All documents")
     }
@@ -9278,7 +9393,10 @@ server <- shinyServer(function(input, output, session) {
       dplyr::group_modify(~ dplyr::bind_rows(.x, .x[1, , drop = FALSE])) %>%
       dplyr::ungroup()
 
-    radar_df$hover_text <- paste("Emotion:", radar_df$emotion, "<br>Score:", round(radar_df$score, 2))
+    radar_df$hover_text <- paste0(
+      if (grouped) paste0("Group: ", radar_df$group_col, "<br>") else "",
+      "Emotion: ", radar_df$emotion, "<br>Score: ", round(radar_df$score, 2)
+    )
 
     plotly::plot_ly(
       radar_df,
@@ -9287,16 +9405,20 @@ server <- shinyServer(function(input, output, session) {
       r = ~score,
       theta = ~emotion,
       color = ~group_col,
-      colors = if (grouped) "Set2" else "#8B5CF6",
+      # Dark2 without yellow, green darkened: every stroke at least 3:1 on white
+      colors = if (grouped) c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#4D7F17", "#A6761D", "#666666") else "#8B5CF6",
+      symbol = if (grouped) ~group_col else NULL,
       fill = "toself",
-      opacity = 0.45,
+      alpha = 0.2,
+      alpha_stroke = 1,
+      line = list(width = 2),
       hoverinfo = "text",
       text = ~hover_text,
       marker = list(size = 6)
     ) %>%
       plotly::layout(
         title = list(
-          text = if (grouped) paste("Emotion Analysis by", input$emotion_group_var) else "Emotion Analysis",
+          text = if (grouped) paste("Emotion Analysis by", input$emotion_group_var, "(per 1,000 retained tokens)") else "Emotion Analysis",
           font = list(size = 14, color = "#4269BF", family = "Roboto, sans-serif"),
           x = 0.5,
           xref = "paper",
@@ -9314,6 +9436,7 @@ server <- shinyServer(function(input, output, session) {
         showlegend = grouped,
         font = list(family = "Roboto, sans-serif", size = 12, color = "#3B3B3B"),
         hoverlabel = list(
+          bgcolor = "#1F2937",
           font = list(family = "Roboto, sans-serif", size = 14, color = "#FFFFFF"),
           align = "left",
           namelength = -1
@@ -9345,10 +9468,12 @@ server <- shinyServer(function(input, output, session) {
         arrange(emotion_group_var, desc(total_score)) %>%
         mutate(
           Category = emotion_group_var,
+          Documents = n_docs,
+          Tokens = n_tokens,
           Emotion = str_to_title(emotion),
-          Score = total_score
+          Score = round(total_score, 3)
         ) %>%
-        select(Category, Emotion, Score) %>%
+        select(Category, Documents, Tokens, Emotion, Score) %>%
         pivot_wider(names_from = Emotion, values_from = Score, values_fill = 0)
 
       datatable(emotion_table,
@@ -9572,7 +9697,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     scores_data <- readability_results$metrics_data
-    metric_names <- names(scores_data)[names(scores_data) != "Document"]
+    metric_names <- setdiff(names(scores_data), c("Document", "Words"))
     metric_names <- metric_names[!is.na(metric_names) & metric_names != ""]
 
     if (length(metric_names) == 0) {
@@ -9611,6 +9736,20 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
+  output$readability_text_source_ui <- renderUI({
+    tbl <- united_tbl()
+    text_cols <- if (is.null(tbl)) character(0) else setdiff(names(tbl)[vapply(tbl, is.character, logical(1))], "united_texts")
+    mean_chars <- vapply(text_cols, function(col) mean(nchar(tbl[[col]]), na.rm = TRUE), numeric(1))
+    longest <- if (length(text_cols) > 0) text_cols[which.max(mean_chars)] else "united_texts"
+    selectInput(
+      "readability_text_source",
+      "Text source",
+      choices = c(stats::setNames(text_cols, ifelse(text_cols == longest, paste(text_cols, "(longest prose)"), text_cols)),
+                  "All united columns" = "united_texts"),
+      selected = longest
+    )
+  })
+
   observeEvent(input$run_readability_analysis, {
     req(united_tbl())
 
@@ -9634,8 +9773,12 @@ server <- shinyServer(function(input, output, session) {
     TextAnalysisR:::show_loading_notification("Running readability analysis...", id = "readability_loading")
 
     tryCatch({
-      texts <- united_tbl()$united_texts
+      text_source <- input$readability_text_source %||% "united_texts"
+      if (!text_source %in% names(united_tbl())) text_source <- "united_texts"
+      texts <- as.character(united_tbl()[[text_source]])
+      texts[is.na(texts)] <- ""
       doc_names <- paste0("Doc ", seq_len(nrow(united_tbl())))
+      word_counts <- lengths(quanteda::tokens(texts, remove_punct = TRUE))
 
       selected_metrics <- input$readability_metrics
 
@@ -9652,6 +9795,12 @@ server <- shinyServer(function(input, output, session) {
         include_sentence_stats = FALSE,
         doc_names = doc_names
       )
+      readability_scores$Words <- word_counts
+      n_short <- sum(word_counts < 100)
+      if (n_short > 0) {
+        showNotification(paste0(n_short, " document(s) in '", text_source, "' have fewer than 100 words; readability scores are unstable at that length."),
+                         type = "warning", duration = 8)
+      }
 
       corp <- quanteda::corpus(texts)
       quanteda::docnames(corp) <- doc_names
@@ -9663,7 +9812,8 @@ server <- shinyServer(function(input, output, session) {
         scores = readability_scores,
         corpus = corp,
         metrics = selected_metrics,
-        warning = "Note: Traditional readability formulas (Flesch, FOG, etc.) measure surface-level features but don't capture semantic complexity, cohesion, or domain familiarity. TTR is sensitive to text length; MTLD is more reliable for lexical diversity. Modern best practice (2025) combines traditional metrics with lexical diversity (MTLD), syntactic complexity, and semantic coherence measures. Use these as complementary indicators, not absolute measures of comprehension."
+        text_source = text_source,
+        warning = paste0("Scored on '", text_source, "'. Readability formulas (Flesch, FOG, etc.) measure surface features such as sentence and word length, not semantic complexity, cohesion, or domain familiarity, and are unstable under 100 words. Treat them as complementary indicators, not measures of comprehension.")
       )
 
       TextAnalysisR:::remove_notification_by_id("readability_loading")
@@ -9684,7 +9834,7 @@ server <- shinyServer(function(input, output, session) {
     view_type <- input$readability_view_type %||% "distribution"
 
     if (is.null(selected_metric) || is.na(selected_metric)) {
-      metric_names <- names(scores_data)[names(scores_data) != "Document"]
+      metric_names <- setdiff(names(scores_data), c("Document", "Words"))
       metric_names <- metric_names[!is.na(metric_names)]
       if (length(metric_names) == 0) {
         return(plot_error("No valid metrics available"))
@@ -9763,7 +9913,7 @@ server <- shinyServer(function(input, output, session) {
         ),
         rownames = FALSE
       ) %>%
-        formatRound(columns = names(scores_data)[!names(scores_data) %in% c("Document", "Document ID", input$readability_group_var)], digits = 2)
+        formatRound(columns = names(scores_data)[!names(scores_data) %in% c("Document", "Document ID", "Words", input$readability_group_var)], digits = 2)
     }
   })
 
@@ -9885,22 +10035,21 @@ server <- shinyServer(function(input, output, session) {
         selected_metrics <- "all"
       }
 
-      # Get texts for average sentence length calculation
-      texts_for_lexdiv <- NULL
-      tryCatch({
-        text_col <- input$text_column
-        if (!is.null(text_col) && text_col %in% names(united_tbl())) {
-          texts_for_lexdiv <- as.character(united_tbl()[[text_col]])
-        }
-      }, error = function(e) {
-        texts_for_lexdiv <- NULL
-      })
+      texts_for_lexdiv <- as.character(united_tbl()$united_texts)
 
       result <- TextAnalysisR::lexical_diversity_analysis(
         x = tokens_to_use,
         measures = selected_metrics,
         texts = texts_for_lexdiv
       )
+
+      short_docs <- sum(Reduce(`|`, lapply(intersect(c("MATTR", "MSTTR"), names(result$lexical_diversity)),
+                                           function(m) is.na(result$lexical_diversity[[m]]))) %||% FALSE)
+      if (short_docs > 0) {
+        showNotification(sprintf("%d document(s) are shorter than the %d-token window and show NA for MATTR/MSTTR.",
+                                 short_docs, result$summary_stats$window %||% 50L),
+                         type = "warning", duration = 8)
+      }
 
       lexical_diversity_results$analyzed <- TRUE
       lexical_diversity_results$data <- result$lexical_diversity
@@ -9909,11 +10058,8 @@ server <- shinyServer(function(input, output, session) {
 
       # Set selected_metric to first available metric from selection
       available_metrics <- setdiff(names(result$lexical_diversity), "document")
-      if (length(available_metrics) > 0) {
-        lexical_diversity_results$selected_metric <- available_metrics[1]
-      } else {
-        lexical_diversity_results$selected_metric <- "TTR"
-      }
+      lexical_diversity_results$selected_metric <-
+        c(intersect(c("MTLD", "MATTR", "HDD"), available_metrics), available_metrics, "TTR")[1]
 
       TextAnalysisR:::remove_notification_by_id("lexdiv_loading")
       TextAnalysisR:::show_completion_notification("Lexical diversity analysis completed successfully!")
@@ -10003,6 +10149,7 @@ server <- shinyServer(function(input, output, session) {
   # Update group variable choices
   observe({
     input$main_navbar
+    lazy_ui_ready()
     req(colnames_cat())
     resend_choices("log_odds_group_var",
                    c("Select variable" = "", colnames_cat()),
@@ -10392,35 +10539,38 @@ server <- shinyServer(function(input, output, session) {
         normalize = isTRUE(input$tfidf_normalize)
       )
 
+      keyness_contrast <- NULL
       if (quanteda::ndoc(dfm_obj) > 1) {
         group_var <- input$tfidf_group_var
         keyness_top_n <- input$keyness_top_n %||% 15
 
-        if (!is.null(group_var) && group_var != "None" && group_var != "") {
-          dfm_docvars <- quanteda::docvars(dfm_obj)
+        dfm_docvars <- quanteda::docvars(dfm_obj)
+        group_values <- if (!is.null(group_var) && group_var %in% names(dfm_docvars)) dfm_docvars[[group_var]] else NULL
+        has_group <- !is.na(group_values)
+        unique_groups <- unique(group_values[has_group])
+        keyness_df <- data.frame(Keyword = character(), Keyness_Score = numeric())
 
-          if (group_var %in% names(dfm_docvars)) {
-            group_values <- dfm_docvars[[group_var]]
-            unique_groups <- unique(group_values[!is.na(group_values)])
-
-            if (length(unique_groups) >= 2) {
-              target_docs <- which(group_values == unique_groups[1])
-              keyness_df <- extract_keywords_keyness(dfm_obj, target = target_docs, top_n = keyness_top_n)
-            } else {
-              keyness_df <- data.frame(Keyword = character(), Keyness_Score = numeric())
-            }
-          } else {
-            target_docs <- 1:ceiling(quanteda::ndoc(dfm_obj) / 2)
-            keyness_df <- extract_keywords_keyness(dfm_obj, target = target_docs, top_n = keyness_top_n)
-          }
-        } else {
-          target_docs <- 1:ceiling(quanteda::ndoc(dfm_obj) / 2)
-          keyness_df <- extract_keywords_keyness(dfm_obj, target = target_docs, top_n = keyness_top_n)
+        if (length(unique_groups) >= 2) {
+          target_level <- if (isTRUE(input$keyness_target %in% unique_groups)) input$keyness_target else unique_groups[1]
+          target_docs <- which(group_values[has_group] == target_level)
+          keyness_df <- extract_keywords_keyness(
+            quanteda::dfm_subset(dfm_obj, has_group),
+            target = target_docs,
+            top_n = keyness_top_n,
+            min_count = 5,
+            rank_by = input$keyness_rank_by %||% "log_ratio",
+            significant_only = isTRUE(input$keyness_significant_only)
+          )
+          keyness_contrast <- paste0(
+            group_var, " = ", target_level, " vs ",
+            if (length(unique_groups) == 2) setdiff(unique_groups, target_level) else "all other groups"
+          )
         }
       } else {
         keyness_df <- data.frame(Keyword = character(), Keyness_Score = numeric())
       }
 
+      keyword_results$keyness_contrast <- keyness_contrast
       keyword_results$analyzed <- TRUE
       keyword_results$tfidf_data <- tfidf_df
       keyword_results$keyness_data <- keyness_df
@@ -10441,6 +10591,14 @@ server <- shinyServer(function(input, output, session) {
       TextAnalysisR:::remove_notification_by_id("keyword_loading")
       TextAnalysisR:::show_error_notification(paste("Error in keyword extraction:", e$message))
     })
+  })
+
+  output$keyness_target_ui <- renderUI({
+    group_var <- input$tfidf_group_var
+    req(group_var, group_var != "None", group_var %in% names(mydata()))
+    levels <- sort(unique(stats::na.omit(as.character(mydata()[[group_var]]))))
+    req(length(levels) >= 2)
+    selectInput("keyness_target", "Target group", choices = levels, selected = levels[1])
   })
 
   output$tfidf_keywords_plot <- plotly::renderPlotly({
@@ -10480,7 +10638,7 @@ server <- shinyServer(function(input, output, session) {
     }
     gg_to_plotly(plot_keyness_keywords(
       keyword_results$keyness_data,
-      group_label = keyword_results$group_var
+      group_label = keyword_results$keyness_contrast
     ))
   })
 
@@ -10489,12 +10647,12 @@ server <- shinyServer(function(input, output, session) {
     {
       if (nrow(keyword_results$keyness_data) == 0) {
         datatable(
-          data.frame(Message = "Keyness analysis requires multiple documents for comparison."),
+          data.frame(Message = "No keywords to show. Select a grouping variable with at least two groups, or untick 'Only adjusted p < .05'."),
           options = list(dom = "t", pageLength = 1),
           rownames = FALSE
         )
       } else {
-        keyness_data_desc <- keyword_results$keyness_data[order(abs(keyword_results$keyness_data$Keyness_Score), decreasing = TRUE), ]
+        keyness_data_desc <- keyword_results$keyness_data
         datatable(
           keyness_data_desc,
           options = list(
@@ -10507,7 +10665,8 @@ server <- shinyServer(function(input, output, session) {
           ),
           rownames = FALSE
         ) %>%
-          formatRound(columns = "Keyness_Score", digits = 2) %>%
+          formatRound(columns = intersect(c("Keyness_Score", "Target_per_10k", "Reference_per_10k", "Log_Ratio"), names(keyness_data_desc)), digits = 2) %>%
+          formatSignif(columns = intersect("P_Adjusted", names(keyness_data_desc)), digits = 3) %>%
           DT::formatStyle(columns = names(keyness_data_desc), `font-size` = "16px")
       }
     }
@@ -10750,6 +10909,12 @@ server <- shinyServer(function(input, output, session) {
       docs_data$category_display <- "Document"
     }
 
+    if (all(c("page", "page_end") %in% names(original_data))) {
+      rows <- if (nrow(original_data) == n_docs) seq_len(n_docs) else match(dfm_doc_names, rownames(original_data))
+      docs_data$page <- original_data$page[rows]
+      docs_data$page_end <- original_data$page_end[rows]
+    }
+
     proc_docs_available <- tryCatch({
       !is.null(processed_documents())
     }, error = function(e) {
@@ -10895,20 +11060,18 @@ server <- shinyServer(function(input, output, session) {
 
   memory_monitor <- function(operation = "general") {
     tryCatch({
-      if (requireNamespace("pryr", quietly = TRUE)) {
-        mem_usage <- pryr::mem_used()
-        performance_metrics$memory_usage[[operation]] <- mem_usage
+      # gc() column 2 is megabytes in use
+      mem_usage <- sum(gc(verbose = FALSE)[, 2]) * 1024^2
+      performance_metrics$memory_usage[[operation]] <- mem_usage
 
-        if (mem_usage > 1e9) {
-          gc()
-          if (reticulate::py_available()) {
-            tryCatch({
-              reticulate::py_run_string("import gc; gc.collect()")
-            }, error = function(e) {})
-          }
-          performance_metrics$last_cleanup <- Sys.time()
-          showNotification("Memory usage high - performed cleanup", type = "warning", duration = 5)
+      if (mem_usage > 1e9) {
+        if (reticulate::py_available()) {
+          tryCatch({
+            reticulate::py_run_string("import gc; gc.collect()")
+          }, error = function(e) {})
         }
+        performance_metrics$last_cleanup <- Sys.time()
+        showNotification("Memory usage high - performed cleanup", type = "warning", duration = 5)
       }
     }, error = function(e) {
       gc()
@@ -11463,6 +11626,59 @@ server <- shinyServer(function(input, output, session) {
     })
   }
 
+  # the query must be embedded by the same provider and model as the cached documents
+  encode_query_local <- function(query) {
+    if (!requireNamespace("reticulate", quietly = TRUE)) {
+      showNotification("Python/reticulate not available for semantic search", type = "error", duration = 10)
+      return(NULL)
+    }
+
+    if (!reticulate::py_available()) {
+      showNotification("Python not available. Please check Python installation.", type = "error", duration = 10)
+      return(NULL)
+    }
+
+    sentence_transformers <- tryCatch({
+      reticulate::import("sentence_transformers")
+    }, error = function(e) {
+      showNotification("sentence_transformers not available. Please install: pip install sentence-transformers", type = "error", duration = 10)
+      return(NULL)
+    })
+
+    if (is.null(sentence_transformers)) {
+      return(NULL)
+    }
+
+    model_name <- embeddings_cache$model %||% "all-MiniLM-L6-v2"
+
+    if (!is.null(embedding_model_cache$model) &&
+        embedding_model_cache$model_name == model_name &&
+        !is.null(embedding_model_cache$last_used) &&
+        as.numeric(difftime(Sys.time(), embedding_model_cache$last_used, units = "mins")) < 30) {
+      model <- embedding_model_cache$model
+    } else {
+      showNotification(paste("Loading", model_name, "model..."), type = "message", duration = 2)
+      model <- sentence_transformers$SentenceTransformer(model_name)
+      embedding_model_cache$model <- model
+      embedding_model_cache$model_name <- model_name
+      embedding_model_cache$last_used <- Sys.time()
+    }
+
+    query_embedding <- tryCatch({
+      embedding <- model$encode(query, show_progress_bar = FALSE, normalize_embeddings = TRUE)
+      if (!is.null(embedding)) {
+        matrix(as.numeric(embedding), nrow = 1)
+      } else {
+        NULL
+      }
+    }, error = function(e) {
+      showNotification(paste("Error encoding query:", e$message), type = "error")
+      return(NULL)
+    })
+
+    query_embedding
+  }
+
   semantic_search <- function(query, documents, embeddings = NULL, top_k = 5, use_embeddings = FALSE, search_method = "keyword") {
     if (is.null(query) || nchar(trimws(query)) == 0) {
       showNotification("Search query cannot be empty", type = "warning", duration = 7)
@@ -11497,77 +11713,19 @@ server <- shinyServer(function(input, output, session) {
     memory_monitor("semantic_search")
 
     tryCatch({
-      if (!requireNamespace("reticulate", quietly = TRUE)) {
-        showNotification("Python/reticulate not available for semantic search", type = "error", duration = 10)
-        return(NULL)
-      }
-
-      if (!reticulate::py_available()) {
-        showNotification("Python not available. Please check Python installation.", type = "error", duration = 10)
-        return(NULL)
-      }
-
-      sentence_transformers <- tryCatch({
-        reticulate::import("sentence_transformers")
-      }, error = function(e) {
-        showNotification("sentence_transformers not available. Please install: pip install sentence-transformers", type = "error", duration = 10)
-        return(NULL)
-      })
-
-      sklearn_metrics <- tryCatch({
-        reticulate::import("sklearn.metrics.pairwise")
-      }, error = function(e) {
-        showNotification("sklearn not available. Please install: pip install scikit-learn", type = "error", duration = 10)
-        return(NULL)
-      })
-
-      if (is.null(sentence_transformers) || is.null(sklearn_metrics)) {
-        return(NULL)
-      }
-
-      model_name <- embeddings_cache$model %||% "all-MiniLM-L6-v2"
-
-      if (!is.null(embedding_model_cache$model) &&
-          embedding_model_cache$model_name == model_name &&
-          !is.null(embedding_model_cache$last_used) &&
-          as.numeric(difftime(Sys.time(), embedding_model_cache$last_used, units = "mins")) < 30) {
-        model <- embedding_model_cache$model
+      cached_provider <- embeddings_cache$provider %||% "sentence-transformers"
+      query_embedding <- if (cached_provider %in% c("openai", "gemini")) {
+        matrix(TextAnalysisR::get_best_embeddings(query, provider = cached_provider, model = embeddings_cache$model,
+                                                  api_key = get_api_key(cached_provider), verbose = FALSE), nrow = 1)
       } else {
-        showNotification(paste("Loading", model_name, "model..."), type = "message", duration = 2)
-        model <- sentence_transformers$SentenceTransformer(model_name)
-        embedding_model_cache$model <- model
-        embedding_model_cache$model_name <- model_name
-        embedding_model_cache$last_used <- Sys.time()
+        encode_query_local(query)
       }
-
-      query_embedding <- tryCatch({
-        embedding <- model$encode(query, show_progress_bar = FALSE, normalize_embeddings = TRUE)
-        if (!is.null(embedding)) {
-          numpy <- reticulate::import("numpy")
-          numpy$reshape(embedding, list(1L, -1L))
-        } else {
-          NULL
-        }
-      }, error = function(e) {
-        showNotification(paste("Error encoding query:", e$message), type = "error")
-        return(NULL)
-      })
-
       if (is.null(query_embedding)) {
         return(NULL)
       }
 
-      similarities <- tryCatch({
-        sim_matrix <- sklearn_metrics$cosine_similarity(query_embedding, embeddings)
-        as.vector(sim_matrix)
-      }, error = function(e) {
-        showNotification(paste("Error calculating similarities:", e$message), type = "error")
-        return(NULL)
-      })
-
-      if (is.null(similarities)) {
-        return(NULL)
-      }
+      similarities <- as.vector(embeddings %*% t(query_embedding)) /
+        (sqrt(rowSums(embeddings^2)) * sqrt(sum(query_embedding^2)))
 
       if (length(similarities) != length(documents)) {
         showNotification("Similarity calculation error: dimension mismatch", type = "error", duration = 10)
@@ -12069,7 +12227,7 @@ server <- shinyServer(function(input, output, session) {
       label_content,
       selectInput(
         "semantic_feature_space",
-        label = NULL,
+        label = tags$span(class = "sr-only", "Feature space"),
         choices = choices,
         selected = "words"
       ),
@@ -12482,7 +12640,7 @@ server <- shinyServer(function(input, output, session) {
         if (is.null(tokens_data)) {
           shiny::showModal(shiny::modalDialog(
             title = "Preprocessing Required",
-            p("Please complete preprocessing (at least Step 4: DFM) to generate tokens."),
+            p("Please complete preprocessing (at least Step 5: DFM) to generate tokens."),
             easyClose = TRUE,
             footer = shiny::modalButton("Close")
           ))
@@ -12947,7 +13105,7 @@ server <- shinyServer(function(input, output, session) {
       } else if (provider == "gemini") {
         api_key <- get_api_key("gemini", input$rag_gemini_api_key)
         if (!check_api_key(api_key, "gemini", "RAG search")) return()
-        chat_model <- pick_model(input$rag_gemini_model, "gemini-2.5-flash")
+        chat_model <- pick_model(input$rag_gemini_model, "gemini-3.8-flash")
       }
 
       spend_ai_call("RAG Search", provider, chat_model)
@@ -13476,11 +13634,14 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
+      row_norms <- sqrt(rowSums(feature_matrix^2))
+      feature_matrix <- feature_matrix / ifelse(row_norms > 0, row_norms, 1)
+
       method <- input$semantic_dimred_method %||% "UMAP"
       coords <- NULL
 
       if (method == "PCA") {
-        pca_result <- prcomp(feature_matrix, center = TRUE, scale. = TRUE)
+        pca_result <- prcomp(feature_matrix, center = TRUE, scale. = FALSE)
         coords <- pca_result$x[, 1:2]
       } else if (method == "t-SNE") {
         set.seed(input$semantic_cluster_seed %||% 2026)
@@ -13493,7 +13654,7 @@ server <- shinyServer(function(input, output, session) {
       } else if (method == "UMAP") {
         set.seed(input$semantic_cluster_seed %||% 2026)
         umap_result <- umap::umap(feature_matrix,
-                                  n_neighbors = input$semantic_umap_neighbors %||% 15,
+                                  n_neighbors = max(2, min(input$semantic_umap_neighbors %||% 15, nrow(feature_matrix) - 1)),
                                   min_dist = input$semantic_umap_min_dist %||% 0.1)
         coords <- umap_result$layout
       }
@@ -13573,8 +13734,9 @@ server <- shinyServer(function(input, output, session) {
 
       quality_metrics <- list()
       if (!is.null(clusters)) {
-        if (length(unique(clusters)) > 1) {
-          sil <- cluster::silhouette(clusters, dist(coords))
+        scored <- clusters > 0
+        if (length(unique(clusters[scored])) > 1) {
+          sil <- cluster::silhouette(clusters[scored], dist(coords[scored, , drop = FALSE]))
           quality_metrics$silhouette <- mean(sil[, 3])
         }
         quality_metrics$n_clusters <- length(unique(clusters[clusters > 0]))
@@ -13667,11 +13829,14 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
+      row_norms <- sqrt(rowSums(feature_matrix^2))
+      feature_matrix <- feature_matrix / ifelse(row_norms > 0, row_norms, 1)
+
       method <- input$semantic_dimred_method %||% "UMAP"
       coords <- NULL
 
       if (method == "PCA") {
-        pca_result <- prcomp(feature_matrix, center = TRUE, scale. = TRUE)
+        pca_result <- prcomp(feature_matrix, center = TRUE, scale. = FALSE)
         coords <- pca_result$x[, 1:2]
       } else if (method == "t-SNE") {
         set.seed(input$semantic_cluster_seed %||% 2026)
@@ -13684,7 +13849,7 @@ server <- shinyServer(function(input, output, session) {
       } else if (method == "UMAP") {
         set.seed(input$semantic_cluster_seed %||% 2026)
         umap_result <- umap::umap(feature_matrix,
-                                  n_neighbors = input$semantic_umap_neighbors %||% 15,
+                                  n_neighbors = max(2, min(input$semantic_umap_neighbors %||% 15, nrow(feature_matrix) - 1)),
                                   min_dist = input$semantic_umap_min_dist %||% 0.1)
         coords <- umap_result$layout
       }
@@ -13715,8 +13880,9 @@ server <- shinyServer(function(input, output, session) {
 
       quality_metrics <- list()
       if (!is.null(clusters)) {
-        if (length(unique(clusters)) > 1) {
-          sil <- cluster::silhouette(clusters, dist(coords))
+        scored <- clusters > 0
+        if (length(unique(clusters[scored])) > 1) {
+          sil <- cluster::silhouette(clusters[scored], dist(coords[scored, , drop = FALSE]))
           quality_metrics$silhouette <- mean(sil[, 3])
         }
         quality_metrics$n_clusters <- length(unique(clusters[clusters > 0]))
@@ -13857,15 +14023,17 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
-      pca_result <- prcomp(feature_matrix, scale. = TRUE, center = TRUE, rank. = pca_dims)
+      row_norms <- sqrt(rowSums(feature_matrix^2))
+      feature_matrix <- feature_matrix / ifelse(row_norms > 0, row_norms, 1)
+      pca_result <- prcomp(feature_matrix, scale. = FALSE, center = TRUE, rank. = pca_dims)
       dimred_results$pca <- pca_result
 
       if (requireNamespace("umap", quietly = TRUE)) {
         set.seed(input$semantic_cluster_seed)
         umap_config <- umap::umap.defaults
-        safe_n_neighbors <- min(input$semantic_umap_neighbors, n_docs - 1, 15)
+        safe_n_neighbors <- max(2, min(input$semantic_umap_neighbors %||% 15, n_docs - 1))
         umap_config$n_neighbors <- safe_n_neighbors
-        umap_config$min_dist <- input$semantic_umap_min_dist
+        umap_config$min_dist <- input$semantic_umap_min_dist %||% 0.1
         umap_config$random_state <- input$semantic_cluster_seed
         umap_config$metric <- "cosine"
         umap_result <- umap::umap(pca_result$x, config = umap_config)
@@ -14214,16 +14382,28 @@ server <- shinyServer(function(input, output, session) {
             embedding_method = embedding_method
           )
         } else {
+          feature_matrix <- semantic_feature_matrix()
+          features_match <- !is.null(feature_matrix) && nrow(feature_matrix) == nrow(similarity_matrix)
+          if (!features_match) {
+            showNotification("Feature matrix unavailable for these documents; clustering rows of the similarity matrix instead.",
+                             type = "warning", duration = 8)
+          }
+          cluster_input <- if (features_match) feature_matrix else similarity_matrix
           result <- TextAnalysisR::cluster_embeddings(
-            data_matrix = similarity_matrix,
+            data_matrix = cluster_input,
             method = if (cluster_method == "dbscan") "umap_dbscan" else cluster_method,
             n_clusters = n_clusters %||% 0,
             dbscan_eps = dbscan_params$eps,
             dbscan_min_samples = dbscan_params$min_samples,
+            reduce_outliers = FALSE,
             seed = input$semantic_cluster_seed,
             verbose = FALSE
           )
 
+          if (length(result$empty_documents) > 0) {
+            showNotification(paste(length(result$empty_documents), "empty document(s) were not clustered (label 0)."),
+                             type = "message", duration = 8)
+          }
           if (!is.null(result)) {
             result$n_clusters_found <- result$n_clusters
             result$auto_detected <- result$auto_detected %||% (n_clusters %||% 0) == 0
@@ -14483,22 +14663,6 @@ server <- shinyServer(function(input, output, session) {
               best_match_idx <- non_outlier_indices[which.max(outlier_similarities[non_outlier_indices])]
               new_clusters[outlier_idx] <- clustering_result$clusters[best_match_idx]
               reassigned_count <- reassigned_count + 1
-            } else {
-              cluster_centroids <- calculate_cluster_centroids(
-                clustering_result$umap_embedding,
-                clustering_result$clusters
-              )
-
-              if (!is.null(cluster_centroids)) {
-                outlier_embedding <- clustering_result$umap_embedding[outlier_idx, ]
-                centroid_distances <- apply(cluster_centroids, 1, function(centroid) {
-                  sqrt(sum((outlier_embedding - centroid)^2))
-                })
-
-                nearest_cluster <- which.min(centroid_distances)
-                new_clusters[outlier_idx] <- nearest_cluster
-                reassigned_count <- reassigned_count + 1
-              }
             }
           }
         }
@@ -14513,27 +14677,6 @@ server <- shinyServer(function(input, output, session) {
 
     }, error = function(e) {
       showNotification(paste("Error in outlier reduction:", e$message), type = "error")
-      return(NULL)
-    })
-  }
-
-  calculate_cluster_centroids <- function(embeddings, clusters) {
-    tryCatch({
-      unique_clusters <- unique(clusters[clusters > 0])
-      if (length(unique_clusters) == 0) return(NULL)
-
-      centroids <- matrix(0, nrow = length(unique_clusters), ncol = ncol(embeddings))
-
-      for (i in seq_along(unique_clusters)) {
-        cluster <- unique_clusters[i]
-        cluster_indices <- which(clusters == cluster)
-        if (length(cluster_indices) > 0) {
-          centroids[i, ] <- colMeans(embeddings[cluster_indices, , drop = FALSE])
-        }
-      }
-
-      return(centroids)
-    }, error = function(e) {
       return(NULL)
     })
   }
@@ -16100,7 +16243,7 @@ server <- shinyServer(function(input, output, session) {
       } else if (feature_space == "ngrams") {
         "N-grams require completed preprocessing with tokens."
       } else {
-        "No DFM available. Complete preprocessing (at least Step 4) first."
+        "No DFM available. Complete preprocessing (at least Step 5) first."
       }
       return(create_error_plot(error_msg, color = "#dc3545"))
     }
@@ -17490,7 +17633,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (provider == "gemini") {
       api_key <- get_api_key("gemini", input$cluster_gemini_api_key)
       if (!check_api_key(api_key, "gemini", "cluster labels")) return()
-      model <- pick_model(input$cluster_gemini_model, "gemini-2.5-flash")
+      model <- pick_model(input$cluster_gemini_model, "gemini-3.8-flash")
     }
 
     spend_ai_call("Cluster Labels", provider, model)
@@ -17581,11 +17724,12 @@ server <- shinyServer(function(input, output, session) {
       return(NULL)
     }
 
-    # Check cache using hash of DFM dimensions and feature names
     current_hash <- digest::digest(list(
-      ndoc = quanteda::ndoc(dfm_obj),
-      nfeat = quanteda::nfeat(dfm_obj),
-      docnames = quanteda::docnames(dfm_obj)
+      docnames = quanteda::docnames(dfm_obj),
+      featnames = quanteda::featnames(dfm_obj),
+      feature_totals = unname(quanteda::featfreq(dfm_obj)),
+      doc_totals = unname(quanteda::ntoken(dfm_obj)),
+      docvars = quanteda::docvars(dfm_obj)
     ), algo = "md5")
 
     # Return cached result if DFM hasn't changed
@@ -17710,7 +17854,8 @@ server <- shinyServer(function(input, output, session) {
   # Cache for searchK results to avoid redundant computation
   searchK_cache <- reactiveValues(
     result = NULL,
-    params_hash = NULL
+    params_hash = NULL,
+    prevalence = NULL
   )
 
   K_search <- eventReactive(input$stm_search, {
@@ -17785,6 +17930,10 @@ server <- shinyServer(function(input, output, session) {
               topic_range = K_range(),
               max.em.its = input$stm_max_em_its_search,
               init.type = search_init,
+              seed = 1234L,
+              gamma.prior = input$stm_gamma_prior_search,
+              sigma.prior = 0,
+              kappa.prior = input$stm_kappa_prior_search,
               verbose = TRUE
             )
           } else {
@@ -17803,8 +17952,9 @@ server <- shinyServer(function(input, output, session) {
               max.em.its = input$stm_max_em_its_search,
               emtol = 1e-04,
               cores = n_cores,
-              # alpha only feeds the LDA Gibbs initializer
-              control = if (identical(search_init, "LDA")) list(alpha = 1) else list()
+              heldout.seed = 1234L,
+              # stm's LDA initializer defaults alpha to 50 / K per K, matching the final fit
+              control = list()
             )
           }
         }, error = function(search_error) {
@@ -17816,6 +17966,7 @@ server <- shinyServer(function(input, output, session) {
               documents = out()$documents,
               vocab = out()$vocab,
               init.type = "LDA",
+              seed = 1234L,
               K = K_range(),
               prevalence = prevalence_formula_K_search(),
               verbose = TRUE,
@@ -17825,7 +17976,8 @@ server <- shinyServer(function(input, output, session) {
               max.em.its = input$stm_max_em_its_search,
               emtol = 1e-04,
               cores = n_cores,
-              control = list(alpha = 1)
+              heldout.seed = 1234L,
+              control = list()
             )
           } else {
             stop(search_error)
@@ -17839,6 +17991,7 @@ server <- shinyServer(function(input, output, session) {
         # Cache the result
         searchK_cache$result <- result
         searchK_cache$params_hash <- current_params_hash
+        searchK_cache$prevalence <- paste(deparse(prevalence_formula_K_search()), collapse = " ")
 
         return(result)
       },
@@ -18121,7 +18274,7 @@ server <- shinyServer(function(input, output, session) {
         )
         return()
       }
-      model <- pick_model(input$k_rec_gemini_model, "gemini-2.5-flash")
+      model <- pick_model(input$k_rec_gemini_model, "gemini-3.8-flash")
     }
 
     spend_ai_call("K Recommendation", provider, model)
@@ -18160,31 +18313,30 @@ server <- shinyServer(function(input, output, session) {
         residual_z = safe_scale(residual),
         heldout_z = safe_scale(heldout),
         lbound_z = safe_scale(lbound),
-        overall_score = coherence_z + exclusivity_z - residual_z + heldout_z,
-        coherence_exclusivity_product = coherence * exclusivity
+        overall_score = coherence_z + exclusivity_z - residual_z + heldout_z
       ) %>%
       arrange(desc(overall_score))
 
     optimal_candidates <- list()
     optimal_candidates$best_overall <- metrics_summary$K[which.max(metrics_summary$overall_score)]
 
-    if (nrow(metrics_summary) > 2) {
-      residual_diff <- diff(metrics_summary$residual)
-      residual_diff2 <- diff(residual_diff)
-      if (length(residual_diff2) > 0) {
-        elbow_idx <- which.max(residual_diff2) + 2
-        if (elbow_idx <= nrow(metrics_summary)) {
-          optimal_candidates$residual_elbow <- metrics_summary$K[elbow_idx]
-        }
-      }
+    by_k <- metrics_summary %>% arrange(K) %>% filter(!is.na(residual))
+    if (nrow(by_k) >= 4) {
+      slopes <- diff(by_k$residual) / diff(by_k$K)
+      optimal_candidates$residual_elbow <- by_k$K[which.max(diff(slopes)) + 1]
     }
 
     if (!all(is.na(metrics_summary$heldout))) {
       optimal_candidates$max_heldout <- metrics_summary$K[which.max(metrics_summary$heldout)]
     }
 
-    if (!all(is.na(metrics_summary$coherence_exclusivity_product))) {
-      optimal_candidates$best_balance <- metrics_summary$K[which.max(metrics_summary$coherence_exclusivity_product)]
+    ce <- metrics_summary %>% filter(!is.na(coherence), !is.na(exclusivity)) %>% arrange(K)
+    if (nrow(ce) > 0) {
+      dominated <- vapply(seq_len(nrow(ce)), function(i) {
+        any(ce$coherence >= ce$coherence[i] & ce$exclusivity >= ce$exclusivity[i] &
+              (ce$coherence > ce$coherence[i] | ce$exclusivity > ce$exclusivity[i]))
+      }, logical(1))
+      optimal_candidates$frontier <- ce$K[!dominated]
     }
 
     metrics_display <- metrics_summary %>%
@@ -18209,13 +18361,14 @@ server <- shinyServer(function(input, output, session) {
       "\n- Higher heldout = better generalization",
       "\n\nKEY FINDINGS:",
       "\n1. BEST OVERALL SCORE: K =", optimal_candidates$best_overall,
-      " (This is the recommended K based on balanced metrics)",
+      " (equal-weight z-scores within the searched K range; a heuristic, not a rule)",
       if (!is.null(optimal_candidates$residual_elbow))
         paste("\n2. Residual elbow point: K =", optimal_candidates$residual_elbow) else "",
       if (!is.null(optimal_candidates$max_heldout))
         paste("\n3. Maximum held-out likelihood: K =", optimal_candidates$max_heldout) else "",
-      if (!is.null(optimal_candidates$best_balance))
-        paste("\n4. Best coherence-exclusivity product: K =", optimal_candidates$best_balance) else "",
+      if (!is.null(optimal_candidates$frontier))
+        paste("\n4. Coherence-exclusivity frontier (no other K is higher on both): K =",
+              paste(optimal_candidates$frontier, collapse = ", ")) else "",
       "\n\nTop 3 K values by overall score:", paste(top_k_values, collapse = ", "),
       "\n\nBased on this analysis, please provide:",
       "\n1. Your specific K recommendation",
@@ -18425,6 +18578,7 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     input$main_navbar
+    lazy_ui_ready()
     req(mydata())
     updateSelectizeInput(session, "stm_categorical_var",
                          choices = colnames_cat(), selected = isolate(input$stm_categorical_var))
@@ -18575,11 +18729,11 @@ server <- shinyServer(function(input, output, session) {
           ),
           tags$ul(
             tags$li(tags$strong("Step 1:"), " Unite Texts"),
-            tags$li(tags$strong("Step 4:"), " Document-Feature Matrix (DFM)")
+            tags$li(tags$strong("Step 5:"), " Document-Feature Matrix (DFM)")
           ),
           tags$p(
             tags$strong(style = "color: #6B7280;", "Optional:"),
-            " Steps 2, 3, 5, and 6",
+            " Steps 2-4",
             style = "margin-top: 10px; font-size: 16px;"
           )
         ),
@@ -18690,6 +18844,13 @@ server <- shinyServer(function(input, output, session) {
         init_type_to_use <- guard_stm_init(requested_init, length(out()$vocab))
         forced_lda <- !identical(init_type_to_use, requested_init)
 
+        fit_prevalence <- paste(deparse(prevalence_formula_K_n()), collapse = " ")
+        if (!is.null(searchK_cache$prevalence) && !identical(searchK_cache$prevalence, fit_prevalence)) {
+          showNotification(paste0("K was searched with prevalence ", searchK_cache$prevalence,
+                                  " but this model uses ", fit_prevalence, ". Search K again with the same covariates to compare like with like."),
+                           type = "warning", duration = 12)
+        }
+
         stm_result <- tryCatch({
           if (!identical(init_type_to_use, "Spectral")) set.seed(1234L)
           stm::stm(
@@ -18716,6 +18877,7 @@ server <- shinyServer(function(input, output, session) {
               documents = out()$documents,
               vocab = out()$vocab,
               init.type = "LDA",
+              seed = 1234L,
               K = K_num,
               prevalence = prevalence_formula_K_n(),
               verbose = TRUE,
@@ -19121,8 +19283,8 @@ server <- shinyServer(function(input, output, session) {
       })
       cleaned_output <- cleaned_output[nzchar(cleaned_output)]
 
-      n_topics <- length(unique(embedding_result$topic_assignments[embedding_result$topic_assignments >= 0]))
-      n_outliers <- sum(embedding_result$topic_assignments == -1)
+      n_topics <- length(unique(embedding_result$topic_assignments[embedding_result$topic_assignments > 0]))
+      n_outliers <- sum(embedding_result$topic_assignments == 0)
       n_docs <- length(embedding_result$topic_assignments)
 
       final_output <- c(
@@ -19216,7 +19378,7 @@ server <- shinyServer(function(input, output, session) {
       model <- topic_model_result()
       n_topics <- length(unique(model$topic_assignments[model$topic_assignments > 0]))
       n_docs <- length(model$topic_assignments)
-      n_outliers <- sum(model$topic_assignments == -1)
+      n_outliers <- sum(model$topic_assignments == 0)
       outlier_pct <- round(100 * n_outliers / n_docs, 1)
 
       embedding_view$active <- TRUE
@@ -19274,7 +19436,7 @@ server <- shinyServer(function(input, output, session) {
           topic_counts <- table(model$topic_assignments)
           topic_props <- prop.table(topic_counts)
 
-          n_outliers <- sum(model$topic_assignments == -1)
+          n_outliers <- sum(model$topic_assignments == 0)
           outlier_pct <- round(100 * n_outliers / length(model$topic_assignments), 1)
 
           plotly::plot_ly(
@@ -19448,7 +19610,7 @@ server <- shinyServer(function(input, output, session) {
       output$embedding_quality_metrics <- renderTable({
         model <- topic_model_result()
         n_topics <- length(unique(model$topic_assignments[model$topic_assignments > 0]))
-        n_outliers <- sum(model$topic_assignments == -1)
+        n_outliers <- sum(model$topic_assignments == 0)
 
         metrics_df <- data.frame(
           Metric = c("Topics Discovered", "Total Documents", "Outlier Documents", "Outlier Percentage",
@@ -19861,7 +20023,7 @@ server <- shinyServer(function(input, output, session) {
         showNotification(TextAnalysisR:::.missing_api_key_message("gemini", "shiny"), type = "error")
         return()
       }
-      model <- pick_model(input$stm_label_gemini_model, "gemini-2.5-flash")
+      model <- pick_model(input$stm_label_gemini_model, "gemini-3.8-flash")
     }
 
     spend_ai_call("STM Labels", provider, model)
@@ -19968,7 +20130,7 @@ server <- shinyServer(function(input, output, session) {
         )
         return()
       }
-      model <- pick_model(input$content_gemini_model, "gemini-2.5-flash")
+      model <- pick_model(input$content_gemini_model, "gemini-3.8-flash")
     }
 
     spend_ai_call("Content Generation", provider, model)
@@ -21332,7 +21494,6 @@ server <- shinyServer(function(input, output, session) {
            sentence = "sentence", paragraph = "paragraph", "whole document")
   })
 
-  # categories found at one grain do not describe another, so nothing survives the change
   observeEvent(input$analysis_unit, {
     stale <- !is.null(topic_model_result()) || !is.null(embeddings_cache$embeddings) ||
       !is.null(qc_suggestions())
@@ -21344,7 +21505,7 @@ server <- shinyServer(function(input, output, session) {
     qc_coded_texts(NULL)
     residue_texts(NULL)
     showNotification(
-      "Unit of analysis changed. The topic model and any codes were cleared, because categories found at one grain do not describe another.",
+      "Unit of analysis changed. The topic model and pending suggestions were cleared, because categories found at one grain do not describe another. Confirmed codes stay in the project file.",
       type = "warning", duration = 12)
   }, ignoreInit = TRUE)
   qc_agreement <- reactiveVal(NULL)
@@ -21387,12 +21548,17 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
     if (!"example" %in% names(cb)) cb$example <- NA_character_
-    qc_codebook(tibble::as_tibble(cb[, c("code", "definition", "example")]))
+    # numeric codes in a CSV would not bind with the character rows added later
+    cb[] <- lapply(cb, function(col) ifelse(is.na(col), NA_character_, as.character(col)))
+    keep <- intersect(c("code", "definition", "example", "color"), names(cb))
+    qc_codebook(tibble::as_tibble(cb[, keep]))
   })
 
   observeEvent(input$qc_add_code, {
     blank <- tibble::tibble(code = "", definition = "", example = NA_character_)
-    qc_codebook(if (is.null(qc_codebook())) blank else dplyr::bind_rows(qc_codebook(), blank))
+    current <- qc_codebook()
+    if (!is.null(current)) current[] <- lapply(current, as.character)
+    qc_codebook(if (is.null(current)) blank else dplyr::bind_rows(current, blank))
   })
 
   observeEvent(input$qc_seed_labels, {
@@ -21404,7 +21570,9 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
     seeded <- tibble::tibble(code = labels, definition = "", example = NA_character_)
-    combined <- if (is.null(qc_codebook())) seeded else dplyr::bind_rows(qc_codebook(), seeded)
+    current <- qc_codebook()
+    if (!is.null(current)) current[] <- lapply(current, as.character)
+    combined <- if (is.null(current)) seeded else dplyr::bind_rows(current, seeded)
     qc_codebook(dplyr::distinct(combined, code, .keep_all = TRUE))
     showNotification("Codebook seeded from topic labels. Add definitions before coding.", type = "message", duration = 8)
   })
@@ -21419,7 +21587,7 @@ server <- shinyServer(function(input, output, session) {
       options = list(pageLength = 10, scrollX = TRUE, dom = "Bfrtip",
                      buttons = c("copy", "csv", "excel"))
     )
-  })
+  }, server = FALSE)
 
   observeEvent(input$qc_codebook_table_cell_edit, {
     info <- input$qc_codebook_table_cell_edit
@@ -21445,22 +21613,35 @@ server <- shinyServer(function(input, output, session) {
     if (!check_api_key(api_key, provider, feature)) return(NULL)
     model <- if (provider == "openai") input$qc_openai_model else input$qc_gemini_model
     if (is.null(model) || !nzchar(model)) model <- NULL
-    spend_ai_call(feature, provider, model %||% "default")
     texts <- docs_data$combined_text
     names(texts) <- paste0("doc", seq_along(texts))
     n <- min(length(texts), input$qc_n_docs %||% 20)
+    # the hosted app pays per unit coded, so one click cannot run thousands of calls
+    if (is_remote && n > .remote_qc_doc_limit) {
+      showNotification(sprintf("The hosted app codes up to %d rows per run; run larger samples in the R package.",
+                               .remote_qc_doc_limit), type = "warning", duration = 8)
+      n <- .remote_qc_doc_limit
+    }
     idx <- seq_len(n)
     tm <- topic_model_result()
     if (isTRUE(input$qc_stratify_by_topic) && !is.null(tm$topic_assignments) &&
         length(tm$topic_assignments) == length(texts)) {
-      # proportional draw per topic so no topic is missed by taking the first n
       by_topic <- split(seq_along(texts), as.character(tm$topic_assignments))
-      quota <- pmax(1, round(n * lengths(by_topic) / length(texts)))
-      picked <- unlist(Map(function(ids, k) ids[seq_len(min(k, length(ids)))],
-                           by_topic, quota), use.names = FALSE)
-      idx <- sort(head(unique(picked), n))
+      share <- n * lengths(by_topic) / length(texts)
+      quota <- floor(share)
+      extra <- n - sum(quota)
+      if (extra > 0) {
+        top <- order(share - quota, decreasing = TRUE)[seq_len(extra)]
+        quota[top] <- quota[top] + 1
+      }
+      picked <- withr::with_seed(2026, unlist(Map(function(ids, k) ids[sample.int(length(ids), min(k, length(ids)))],
+                                                 by_topic, quota), use.names = FALSE))
+      idx <- sort(picked)
     }
-    list(texts = texts[idx],
+    spend_ai_call(sprintf("%s (%d units)", feature, length(idx)), provider, model %||% "default")
+    pages <- if (!is.null(docs_data$page))
+      data.frame(doc_id = names(texts), page = docs_data$page, page_end = docs_data$page_end)[idx, ]
+    list(texts = texts[idx], pages = pages,
          codebook = cb[nzchar(cb$code), , drop = FALSE],
          provider = provider, model = model, api_key = api_key)
   }
@@ -21490,6 +21671,17 @@ server <- shinyServer(function(input, output, session) {
     reached <- if ("status" %in% names(out)) out$status != "error" else rep(TRUE, nrow(out))
     out$status <- ifelse(!reached, "call failed",
                          ifelse(is.na(out$code), "no code", "pending"))
+    if (!is.null(request$pages)) out <- dplyr::left_join(out, request$pages, by = "doc_id")
+    prev <- qc_suggestions()
+    if (!is.null(prev) && nrow(prev) > 0) {
+      reviewed <- unique(prev$unit_id[prev$status %in% c("accepted", "edited", "rejected")])
+      if (length(reviewed) > 0) {
+        out <- dplyr::bind_rows(prev[prev$unit_id %in% reviewed, , drop = FALSE],
+                                out[!out$unit_id %in% reviewed, , drop = FALSE])
+        showNotification(sprintf("Kept coder decisions on %d reviewed units.", length(reviewed)),
+                         type = "message", duration = 6)
+      }
+    }
     qc_suggestions(out)
     qc_coded_texts(request$texts)
     TextAnalysisR:::show_completion_notification("Code suggestions ready. Confirm them in the Review tab.")
@@ -21571,12 +21763,14 @@ server <- shinyServer(function(input, output, session) {
 
   output$qc_review_table <- DT::renderDataTable({
     req(qc_suggestions())
-    d <- qc_suggestions()[, c("doc_id", "unit_id", "text", "code", "confidence", "rationale", "status")]
+    s <- qc_suggestions()
+    d <- s[, c("doc_id", "unit_id", "text", "code", "confidence", "rationale", "status",
+               intersect(c("page", "page_end"), names(s)))]
     DT::datatable(
       d,
       rownames = FALSE,
       selection = "multiple",
-      editable = list(target = "cell", disable = list(columns = c(0, 1, 2, 4, 5, 6))),
+      editable = list(target = "cell", disable = list(columns = setdiff(seq_along(d) - 1L, 3L))),
       extensions = "Buttons",
       options = list(pageLength = 10, scrollX = TRUE, dom = "Bfrtip",
                      buttons = c("copy", "csv", "excel"))
@@ -21587,7 +21781,7 @@ server <- shinyServer(function(input, output, session) {
           c("pending", "accepted", "edited", "rejected", "no code", "call failed"),
           c("#F1F5F9", "#DCFCE7", "#DBEAFE", "#FEE2E2", "#F8FAFC", "#FEF3C7"))
       )
-  })
+  }, server = FALSE)
 
   observeEvent(input$qc_review_table_cell_edit, {
     info <- input$qc_review_table_cell_edit
@@ -21602,6 +21796,7 @@ server <- shinyServer(function(input, output, session) {
     }
     s$code[info$row] <- if (nzchar(new_code)) new_code else NA_character_
     s$status[info$row] <- if (nzchar(new_code)) "edited" else "rejected"
+    s$confidence[info$row] <- NA_real_
     qc_suggestions(s)
   })
 
@@ -21612,7 +21807,7 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
     s <- qc_suggestions()
-    s$status[rows] <- ifelse(is.na(s$code[rows]) & new_status == "accepted", s$status[rows], new_status)
+    s$status[rows] <- new_status
     qc_suggestions(s)
   }
 
@@ -21630,8 +21825,14 @@ server <- shinyServer(function(input, output, session) {
   qc_accepted <- reactive({
     s <- qc_suggestions()
     req(s)
-    a <- s[s$status %in% c("accepted", "edited") & !is.na(s$code),
-           c("doc_id", "unit_id", "start", "end", "code", "confidence")]
+    cols <- c("doc_id", "unit_id", intersect(c("page", "page_end"), names(s)), "start", "end", "code", "confidence")
+    a <- s[s$status %in% c("accepted", "edited") & !is.na(s$code), cols]
+    reviewed <- unique(s$unit_id[s$status %in% c("accepted", "edited", "rejected")])
+    none <- s[s$unit_id %in% setdiff(reviewed, a$unit_id), cols]
+    none <- none[!duplicated(none$unit_id), , drop = FALSE]
+    none$code <- rep(NA_character_, nrow(none))
+    none$confidence <- rep(NA_real_, nrow(none))
+    a <- dplyr::bind_rows(a, none)
     coder <- trimws(input$qc_coder_name %||% "")
     a$coder <- if (nzchar(coder)) coder else "coder1"
     a
@@ -21662,7 +21863,11 @@ server <- shinyServer(function(input, output, session) {
       # datapath drops the original extension, which picks the reader
       parts <- lapply(seq_len(nrow(up)), function(i) {
         ext <- tolower(tools::file_ext(up$name[i]))
-        dest <- file.path(tempdir(), paste0("qc_coder_", i, ".", ext))
+        project <- if (ext == "rds") tryCatch(TextAnalysisR::read_coding_project(up$datapath[i]),
+                                              error = function(e) NULL) else NULL
+        if (!is.null(project)) return(qc_project_codes(project, isTRUE(input$qc_agree_holdout_only)))
+        dest <- tempfile(pattern = "qc_coder_", fileext = paste0(".", ext))
+        on.exit(unlink(dest), add = TRUE)
         file.copy(up$datapath[i], dest, overwrite = TRUE)
         tryCatch(TextAnalysisR::merge_codes(dest), error = function(e) {
           showNotification(paste0("Could not read ", up$name[i], ": ", e$message),
@@ -21673,19 +21878,34 @@ server <- shinyServer(function(input, output, session) {
       parts <- Filter(Negate(is.null), parts)
     }
     if (isTRUE(input$qc_include_own)) {
-      own <- tryCatch(qc_accepted(), error = function(e) NULL)
-      if (!is.null(own) && nrow(own) > 0) parts <- c(parts, list(own))
+      own <- qc_project_codes(qc_project(), isTRUE(input$qc_agree_holdout_only))
+      if (nrow(own) > 0) parts <- c(parts, list(own))
     }
     if (length(parts) == 0) {
       showNotification("Upload coder files or accept suggestions first.", type = "warning", duration = 7)
       return()
     }
-    combined <- TextAnalysisR::merge_codes(parts)
+    parts <- lapply(parts, function(d) {
+      d$code <- as.character(d$code)
+      d$coder <- as.character(d$coder)
+      d
+    })
+    coders <- unlist(lapply(parts, function(d) unique(d$coder)))
+    if (anyDuplicated(coders)) {
+      showNotification(sprintf("Coder name used in more than one file: %s. Their codes are pooled as one coder.",
+                               paste(unique(coders[duplicated(coders)]), collapse = ", ")),
+                       type = "warning", duration = 10)
+    }
+    combined <- tryCatch(TextAnalysisR::merge_codes(parts), error = function(e) {
+      showNotification(paste("Could not combine the coder files:", e$message), type = "error", duration = 10)
+      NULL
+    })
+    if (is.null(combined)) return()
     res <- tryCatch(
       TextAnalysisR::code_agreement(
         combined,
         units = input$qc_agree_units %||% "intersection",
-        align = input$qc_align %||% "grid"),
+        align = input$qc_align %||% "presence"),
       error = function(e) {
         showNotification(paste("Agreement error:", e$message), type = "error", duration = 10)
         NULL
@@ -21708,17 +21928,17 @@ server <- shinyServer(function(input, output, session) {
   output$qc_agreement_overall <- DT::renderDataTable({
     req(qc_agreement())
     qc_result_table(qc_agreement()$overall)
-  })
+  }, server = FALSE)
 
   output$qc_agreement_by_code <- DT::renderDataTable({
     req(qc_agreement(), qc_agreement()$by_code)
     qc_result_table(qc_agreement()$by_code)
-  })
+  }, server = FALSE)
 
   output$qc_agreement_disagree <- DT::renderDataTable({
     req(qc_agreement())
     qc_result_table(qc_agreement()$disagree)
-  })
+  }, server = FALSE)
 
   observeEvent(input$qc_run_retest, {
     request <- qc_build_request("Qualitative Coding Retest")
@@ -21728,7 +21948,7 @@ server <- shinyServer(function(input, output, session) {
       TextAnalysisR::code_retest(
         texts = request$texts, codebook = request$codebook,
         n_runs = input$qc_retest_runs %||% 2,
-        sample_n = input$qc_retest_sample %||% 10,
+        sample_n = if (is_remote) min(input$qc_retest_sample %||% 10, 20) else input$qc_retest_sample %||% 10,
         unit = input$analysis_unit %||% "paragraph",
         max_codes = input$qc_max_codes %||% 3,
         provider = request$provider, model = request$model,
@@ -21741,6 +21961,8 @@ server <- shinyServer(function(input, output, session) {
     TextAnalysisR:::remove_notification_by_id("qcRetestLoading")
     if (!is.null(res)) qc_retest(res$summary)
   })
+
+  source("qc_cgt_server.R", local = TRUE)
 
   output$qc_retest_table <- DT::renderDataTable({
     req(qc_retest())

@@ -7,6 +7,14 @@
     margin-right: 0;
   }
 
+  .top-right-controls {
+    gap: 0;
+  }
+
+  .top-right-controls a {
+    font-size: 18px !important;
+  }
+
   .nav-tabs > li > a,
   .nav-pills > li > a {
     padding: 8px 12px;
@@ -44,5 +52,45 @@
   .modal-body pre {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (hover: none) {
+  .top-right-controls a[data-tip]::after {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .qc-card-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qc-sidebar .btn,
+  .qc-project-bar .btn {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .qc-sidebar .btn-block {
+    display: inline-block;
+    width: auto;
+  }
+
+  #qual_coding_tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #qual_coding_tabs > li {
+    float: none;
+    flex: 0 0 auto;
+  }
+
+  .qc-step-detail {
+    display: none;
   }
 }

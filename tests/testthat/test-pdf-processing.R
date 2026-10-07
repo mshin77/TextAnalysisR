@@ -83,3 +83,29 @@ test_that("import_files validates empty files", {
 
   unlink(temp_txt)
 })
+
+test_that("import_files keeps the PDF page for each row at every unit", {
+  skip_if_not_installed("pdftools")
+  pdf_path <- tempfile(fileext = ".pdf")
+  grDevices::pdf(pdf_path)
+  for (p in 1:2) {
+    graphics::plot.new()
+    graphics::text(0.5, 0.8, sprintf("Teachers described routine number %d", p))
+    graphics::text(0.5, 0.4, sprintf("Students valued feedback in session %d", p))
+  }
+  grDevices::dev.off()
+  on.exit(unlink(pdf_path))
+  info <- data.frame(filepath = pdf_path)
+
+  lines <- import_files("Upload Your File", file_info = info)
+  pages <- import_files("Upload Your File", file_info = info, pdf_unit = "page")
+  whole <- import_files("Upload Your File", file_info = info, pdf_unit = "document")
+
+  expect_equal(nrow(lines), 4)
+  expect_equal(lines$page, c(1, 1, 2, 2))
+  expect_equal(nrow(pages), 2)
+  expect_equal(pages$page, pages$page_end)
+  expect_match(pages$text[2], "session 2")
+  expect_equal(nrow(whole), 1)
+  expect_equal(c(whole$page, whole$page_end), c(1, 2))
+})

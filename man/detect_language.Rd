@@ -4,17 +4,12 @@
 \alias{detect_language}
 \title{Detect Corpus Language From Stopword Overlap}
 \usage{
-detect_language(
-  texts,
-  languages = stopwords::stopwords_getlanguages("snowball"),
-  sample_n = 200,
-  seed = 123
-)
+detect_language(texts, languages = NULL, sample_n = 200, seed = 123)
 }
 \arguments{
 \item{texts}{Character vector of documents.}
 
-\item{languages}{Candidate language codes (default: all snowball languages).}
+\item{languages}{Candidate language codes. NULL (default) uses all snowball languages.}
 
 \item{sample_n}{Maximum documents to sample (default 200).}
 

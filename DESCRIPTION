@@ -28,7 +28,7 @@ Imports:
     grDevices,
     htmltools,
     htmlwidgets,
-    igraph,
+    igraph (>= 1.3.0),
     magrittr,
     Matrix,
     methods,
@@ -36,10 +36,11 @@ Imports:
     quanteda.textstats,
     RColorBrewer,
     readr,
-    rlang,
+    rlang (>= 1.0.0),
     scales,
     shiny,
     stats,
+    stringi,
     tibble,
     tidyr,
     tidytext,
@@ -65,6 +66,7 @@ Suggests:
     irr,
     jsonlite,
     knitr,
+    later,
     LexisNexisTools,
     markdown,
     MASS,
@@ -73,11 +75,13 @@ Suggests:
     numform,
     officer,
     openxlsx,
+    parallel,
     pdftools,
     progress,
     proxy,
     pscl,
     purrr,
+    ragg,
     readxl,
     reticulate (>= 1.28),
     sentimentr,
@@ -88,6 +92,7 @@ Suggests:
     shinybusy,
     shinyjs,
     spelling,
+    splines,
     stm,
     stopwords,
     stringr,
@@ -98,9 +103,12 @@ Suggests:
     webshot2,
     plotly
 Depends: R (>= 4.0)
-SystemRequirements: Python (>= 3.8) with spaCy (>= 3.5) for
-    lemmatization and sentence-transformers (>= 2.2) for embeddings
-    (optional)
+SystemRequirements: Python (>= 3.8; >= 3.10 for BERTopic 0.17+),
+    optional. Lightweight tier: spaCy (>= 3.5), pandas (>= 1.5),
+    pdfplumber (>= 0.10). Embeddings tier: sentence-transformers (>= 2.2),
+    transformers (>= 4.30), torch (>= 2.0). Topics tier: bertopic
+    (>= 0.15), umap-learn (>= 0.5.3), hdbscan (>= 0.8.29), scikit-learn
+    (>= 1.2), numba (>= 0.56).
 URL: https://mshin77.github.io/TextAnalysisR/,
     https://github.com/mshin77/TextAnalysisR
 BugReports: https://github.com/mshin77/TextAnalysisR/issues

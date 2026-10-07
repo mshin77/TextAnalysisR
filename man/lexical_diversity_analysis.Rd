@@ -4,7 +4,13 @@
 \alias{lexical_diversity_analysis}
 \title{Lexical Diversity Analysis}
 \usage{
-lexical_diversity_analysis(x, measures = "all", texts = NULL, cache_key = NULL)
+lexical_diversity_analysis(
+  x,
+  measures = "all",
+  texts = NULL,
+  cache_key = NULL,
+  window = 50
+)
 }
 \arguments{
 \item{x}{A quanteda DFM or tokens object. Tokens object is preferred for
@@ -19,6 +25,10 @@ calculation when using DFM input (since DFM loses token order).}
 
 \item{cache_key}{Optional cache key (e.g., from digest::digest) for caching
 expensive calculations. Use the same cache_key to retrieve cached results.}
+
+\item{window}{Integer. MATTR moving-window size and MSTTR segment length in
+tokens. Fixed for every document so scores do not depend on the rest of the
+corpus; documents shorter than the window return NA. Default 50.}
 }
 \value{
 A list containing:
@@ -43,7 +53,7 @@ Important notes:
 \itemize{
 \item For MTLD accuracy, pass a tokens object (not DFM) as input
 \item If using DFM, provide the 'texts' parameter for MTLD calculation
-\item MATTR and MSTTR window sizes are automatically adjusted for short documents
+\item MATTR and MSTTR use one fixed window; documents shorter than it return NA
 \item Raw TTR falls mechanically as documents lengthen; compare TTR only
 across documents of similar length
 \item MTLD and MATTR are most reliable at 100+ tokens per document
@@ -59,8 +69,10 @@ toks <- quanteda::tokens(corp)
 # Preferred: pass tokens object for accurate MTLD
 lex_div <- lexical_diversity_analysis(toks, texts = texts)
 # With caching for repeated analysis
-cache_key <- digest::digest(texts)
-lex_div <- lexical_diversity_analysis(toks, texts = texts, cache_key = cache_key)
+if (requireNamespace("digest", quietly = TRUE)) {
+  cache_key <- digest::digest(texts)
+  lex_div <- lexical_diversity_analysis(toks, texts = texts, cache_key = cache_key)
+}
 # Alternative: pass DFM with texts for MTLD accuracy
 dfm_obj <- quanteda::dfm(toks)
 lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
@@ -72,6 +84,10 @@ print(lex_div)
 McCarthy, P. M., & Jarvis, S. (2010). MTLD, vocd-D, and HD-D: A validation study
 of sophisticated approaches to lexical diversity assessment.
 Behavior Research Methods, 42(2), 381-392.
+
+Covington, M. A., & McFall, J. D. (2010). Cutting the Gordian knot: The
+moving-average type-token ratio (MATTR). Journal of Quantitative Linguistics,
+17(2), 94-100.
 }
 \seealso{
 \code{\link[=calculate_text_readability]{calculate_text_readability()}} for grade-level / Flesch metrics on the same input; \code{\link[=calculate_lexical_dispersion]{calculate_lexical_dispersion()}} for term spread across documents; \code{\link[=plot_lexical_diversity_distribution]{plot_lexical_diversity_distribution()}} to visualize

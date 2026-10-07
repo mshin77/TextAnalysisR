@@ -28,7 +28,7 @@ OPENAI_API_KEY/GEMINI_API_KEY env).}
 "text-embedding-3-small" (openai), "gemini-embedding-001" (gemini)}
 
 \item{chat_model}{Character string, chat model. Defaults:
-"gpt-4.1-mini" (openai), "gemini-2.5-flash-lite" (gemini)}
+"gpt-4.1-mini" (openai), "gemini-3.5-flash-lite" (gemini)}
 
 \item{top_k}{Integer, number of documents to retrieve (default: 5)}
 }

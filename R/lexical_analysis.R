@@ -489,6 +489,9 @@ extract_named_entities <- function(tokens,
 #'   calculation when using DFM input (since DFM loses token order).
 #' @param cache_key Optional cache key (e.g., from digest::digest) for caching
 #'   expensive calculations. Use the same cache_key to retrieve cached results.
+#' @param window Integer. MATTR moving-window size and MSTTR segment length in
+#'   tokens. Fixed for every document so scores do not depend on the rest of the
+#'   corpus; documents shorter than the window return NA. Default 50.
 #'
 #' @return A list containing:
 #' \itemize{
@@ -507,7 +510,7 @@ extract_named_entities <- function(tokens,
 #' \itemize{
 #'   \item For MTLD accuracy, pass a tokens object (not DFM) as input
 #'   \item If using DFM, provide the 'texts' parameter for MTLD calculation
-#'   \item MATTR and MSTTR window sizes are automatically adjusted for short documents
+#'   \item MATTR and MSTTR use one fixed window; documents shorter than it return NA
 #'   \item Raw TTR falls mechanically as documents lengthen; compare TTR only
 #'     across documents of similar length
 #'   \item MTLD and MATTR are most reliable at 100+ tokens per document
@@ -518,6 +521,10 @@ extract_named_entities <- function(tokens,
 #' McCarthy, P. M., & Jarvis, S. (2010). MTLD, vocd-D, and HD-D: A validation study
 #' of sophisticated approaches to lexical diversity assessment.
 #' Behavior Research Methods, 42(2), 381-392.
+#'
+#' Covington, M. A., & McFall, J. D. (2010). Cutting the Gordian knot: The
+#' moving-average type-token ratio (MATTR). Journal of Quantitative Linguistics,
+#' 17(2), 94-100.
 #'
 #' @concept lexical
 #' @seealso [calculate_text_readability()] for grade-level / Flesch metrics on the same input; [calculate_lexical_dispersion()] for term spread across documents; [plot_lexical_diversity_distribution()] to visualize
@@ -532,8 +539,10 @@ extract_named_entities <- function(tokens,
 #' # Preferred: pass tokens object for accurate MTLD
 #' lex_div <- lexical_diversity_analysis(toks, texts = texts)
 #' # With caching for repeated analysis
-#' cache_key <- digest::digest(texts)
-#' lex_div <- lexical_diversity_analysis(toks, texts = texts, cache_key = cache_key)
+#' if (requireNamespace("digest", quietly = TRUE)) {
+#'   cache_key <- digest::digest(texts)
+#'   lex_div <- lexical_diversity_analysis(toks, texts = texts, cache_key = cache_key)
+#' }
 #' # Alternative: pass DFM with texts for MTLD accuracy
 #' dfm_obj <- quanteda::dfm(toks)
 #' lex_div <- lexical_diversity_analysis(dfm_obj, texts = texts)
@@ -545,12 +554,14 @@ extract_named_entities <- function(tokens,
 lexical_diversity_analysis <- function(x,
                                       measures = "all",
                                       texts = NULL,
-                                      cache_key = NULL) {
+                                      cache_key = NULL,
+                                      window = 50) {
 
-  # Check cache first if cache_key is provided
+  stopifnot(is.numeric(window), length(window) == 1, window >= 2)
+  window <- as.integer(window)
 
   if (!is.null(cache_key) && nzchar(cache_key)) {
-    cache_id <- paste0("lexdiv_", cache_key)
+    cache_id <- paste0("lexdiv_", cache_key, "_w", window)
     if (exists(cache_id, envir = .lexdiv_cache, inherits = FALSE)) {
       return(get(cache_id, envir = .lexdiv_cache, inherits = FALSE))
     }
@@ -614,20 +625,14 @@ lexical_diversity_analysis <- function(x,
       x_dfm <- x
     }
 
-    doc_lengths <- quanteda::ntoken(x_dfm)
-    valid_mask <- doc_lengths > 0
-    min_length <- if (any(valid_mask)) min(doc_lengths[valid_mask]) else 0
-
-    window_size <- min(100, max(10, min_length))
+    valid_mask <- quanteda::ntoken(x_dfm) > 0
 
     if (length(measures_to_use) > 0 && any(valid_mask)) {
       if (all(valid_mask)) {
         lexdiv_results <- suppressWarnings(
           quanteda.textstats::textstat_lexdiv(
             x_dfm,
-            measure = measures_to_use,
-            MATTR_window = window_size,
-            MSTTR_segment = window_size
+            measure = measures_to_use
           )
         )
       } else {
@@ -635,9 +640,7 @@ lexical_diversity_analysis <- function(x,
         valid_results <- suppressWarnings(
           quanteda.textstats::textstat_lexdiv(
             x_valid,
-            measure = measures_to_use,
-            MATTR_window = min(100, max(10, min(quanteda::ntoken(x_valid)))),
-            MSTTR_segment = min(100, max(10, min(quanteda::ntoken(x_valid))))
+            measure = measures_to_use
           )
         )
         lexdiv_results <- data.frame(document = quanteda::docnames(x_dfm))
@@ -652,7 +655,7 @@ lexical_diversity_analysis <- function(x,
 
     if (mtld_requested) {
       tryCatch({
-        tokens_source <- if (is_tokens_input) x else seq_tokens
+        tokens_source <- quanteda::tokens_tolower(if (is_tokens_input) x else seq_tokens)
 
         mtld_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
           .calc_mtld(as.character(tokens_source[[i]]))
@@ -666,20 +669,21 @@ lexical_diversity_analysis <- function(x,
 
     if (mattr_requested) {
       tryCatch({
-        tokens_source <- if (is_tokens_input) x else seq_tokens
-        mattr_window <- min(window_size, min(quanteda::ntoken(tokens_source)))
-
+        tokens_source <- quanteda::tokens_tolower(if (is_tokens_input) x else seq_tokens)
         mattr_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
           doc_tokens <- as.character(tokens_source[[i]])
           n <- length(doc_tokens)
-          if (n < mattr_window) return(NA_real_)
-          ttrs <- vapply(seq_len(n - mattr_window + 1), function(j) {
-            length(unique(doc_tokens[j:(j + mattr_window - 1)])) / mattr_window
+          if (n < window) return(NA_real_)
+          ttrs <- vapply(seq_len(n - window + 1), function(j) {
+            length(unique(doc_tokens[j:(j + window - 1)])) / window
           }, numeric(1))
           mean(ttrs)
         }, numeric(1))
 
         lexdiv_results$MATTR <- as.numeric(mattr_values)
+        if (any(is.na(lexdiv_results$MATTR))) {
+          message(sum(is.na(lexdiv_results$MATTR)), " document(s) shorter than window = ", window, " tokens get NA MATTR.")
+        }
       }, error = function(e) {
         message("MATTR calculation failed: ", e$message, ". Skipping MATTR.")
       })
@@ -687,23 +691,24 @@ lexical_diversity_analysis <- function(x,
 
     if (msttr_requested) {
       tryCatch({
-        tokens_source <- if (is_tokens_input) x else seq_tokens
-        msttr_segment <- min(50, min(quanteda::ntoken(tokens_source)))
-
+        tokens_source <- quanteda::tokens_tolower(if (is_tokens_input) x else seq_tokens)
         msttr_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
           doc_tokens <- as.character(tokens_source[[i]])
           n <- length(doc_tokens)
-          if (n < msttr_segment) return(NA_real_)
-          n_segments <- n %/% msttr_segment
+          if (n < window) return(NA_real_)
+          n_segments <- n %/% window
           if (n_segments < 1) return(NA_real_)
           ttrs <- vapply(seq_len(n_segments), function(j) {
-            seg <- doc_tokens[((j - 1) * msttr_segment + 1):(j * msttr_segment)]
-            length(unique(seg)) / msttr_segment
+            seg <- doc_tokens[((j - 1) * window + 1):(j * window)]
+            length(unique(seg)) / window
           }, numeric(1))
           mean(ttrs)
         }, numeric(1))
 
         lexdiv_results$MSTTR <- as.numeric(msttr_values)
+        if (any(is.na(lexdiv_results$MSTTR))) {
+          message(sum(is.na(lexdiv_results$MSTTR)), " document(s) shorter than window = ", window, " tokens get NA MSTTR.")
+        }
       }, error = function(e) {
         message("MSTTR calculation failed: ", e$message, ". Skipping MSTTR.")
       })
@@ -711,7 +716,7 @@ lexical_diversity_analysis <- function(x,
 
     if (hdd_requested) {
       tryCatch({
-        tokens_source <- if (is_tokens_input) x else seq_tokens
+        tokens_source <- quanteda::tokens_tolower(if (is_tokens_input) x else seq_tokens)
 
         hdd_values <- vapply(seq_len(quanteda::ndoc(tokens_source)), function(i) {
           .calc_hdd(as.character(tokens_source[[i]]))
@@ -753,7 +758,8 @@ lexical_diversity_analysis <- function(x,
 
     summary_stats <- list(
       n_documents = nrow(lexdiv_results),
-      measures_calculated = actual_measures
+      measures_calculated = actual_measures,
+      window = window
     )
 
     for (measure in actual_measures) {
@@ -771,7 +777,7 @@ lexical_diversity_analysis <- function(x,
 
     # Store in cache if cache_key provided
     if (!is.null(cache_key) && nzchar(cache_key)) {
-      cache_id <- paste0("lexdiv_", cache_key)
+      cache_id <- paste0("lexdiv_", cache_key, "_w", window)
       assign(cache_id, result, envir = .lexdiv_cache)
     }
 
@@ -1177,17 +1183,34 @@ extract_keywords_tfidf <- function(dfm,
 #' Extract Keywords Using Statistical Keyness
 #'
 #' @description
-#' Extracts distinctive keywords by comparing document groups using log-likelihood ratio (G-squared).
+#' Extracts distinctive keywords by comparing a target document group with the
+#' rest, reporting significance (G-squared by default, Benjamini-Hochberg
+#' adjusted p-value) alongside an effect size (Log Ratio).
 #'
 #' @param dfm A quanteda dfm object
 #' @param target Target document indices or logical vector
 #' @param top_n Number of top keywords to extract (default: 20)
 #' @param measure Keyness measure: "lr" (log-likelihood G-squared), "chi2",
 #'   "exact" (Fisher's exact odds ratio), or "pmi" (default: "lr")
-#' @param min_count Minimum total term frequency before computing keyness
-#'   (default: 0, no pruning)
+#' @param min_count Minimum total term frequency for a term to be reported;
+#'   statistics and corpus sizes use the full matrix (default: 0, no pruning)
+#' @param rank_by "score" ranks by the keyness statistic; "log_ratio" ranks by
+#'   the absolute Log Ratio effect size (default: "score")
+#' @param significant_only Logical; keep only terms with adjusted p below 0.05
+#'   (default: FALSE)
 #'
-#' @return Data frame with columns: Keyword, Keyness_Score
+#' @return Data frame with columns: Keyword, Keyness_Score, Target_Count,
+#'   Reference_Count, Target_per_10k, Reference_per_10k, Log_Ratio
+#'   (log2 ratio of normalized frequencies; zero counts set to 0.5), and
+#'   P_Adjusted (Benjamini-Hochberg).
+#'
+#' @references
+#' Hardie, A. (2014). Log Ratio: an informal introduction. ESRC Centre for
+#' Corpus Approaches to Social Science (CASS), Lancaster University.
+#'
+#' Gabrielatos, C. (2018). Keyness analysis: nature, metrics and techniques.
+#' In C. Taylor & A. Marchi (Eds.), Corpus Approaches to Discourse (pp. 225-258).
+#' Routledge.
 #'
 #' @concept lexical
 #' @export
@@ -1203,27 +1226,25 @@ extract_keywords_keyness <- function(dfm,
                                      target,
                                      top_n = 20,
                                      measure = "lr",
-                                     min_count = 0) {
+                                     min_count = 0,
+                                     rank_by = c("score", "log_ratio"),
+                                     significant_only = FALSE) {
 
   measure <- match.arg(measure, c("lr", "chi2", "exact", "pmi"))
+  rank_by <- match.arg(rank_by)
 
   if (!requireNamespace("quanteda.textstats", quietly = TRUE)) {
     stop("Package 'quanteda.textstats' is required.")
   }
 
-  if (quanteda::ndoc(dfm) < 2) {
-    return(data.frame(
-      Keyword = character(),
-      Keyness_Score = numeric(),
-      stringsAsFactors = FALSE
-    ))
-  }
+  empty <- data.frame(
+    Keyword = character(), Keyness_Score = numeric(), Target_Count = numeric(),
+    Reference_Count = numeric(), Target_per_10k = numeric(), Reference_per_10k = numeric(),
+    Log_Ratio = numeric(), P_Adjusted = numeric(), stringsAsFactors = FALSE
+  )
+  if (quanteda::ndoc(dfm) < 2) return(empty)
 
-  # keyness statistics are unstable for very low-frequency terms
-  if (min_count > 0) {
-    dfm <- quanteda::dfm_trim(dfm, min_termfreq = min_count)
-  }
-
+  # score the full matrix so corpus sizes and G2 are not shrunk by the frequency filter
   keyness <- quanteda.textstats::textstat_keyness(
     dfm,
     target = target,
@@ -1231,14 +1252,42 @@ extract_keywords_keyness <- function(dfm,
   )
 
   score_col <- switch(measure, lr = "G2", chi2 = "chi2", exact = "exact", pmi = "pmi")
-  keyness_top <- head(keyness[order(-abs(keyness[[score_col]])), ], min(top_n, nrow(keyness)))
+  target_total <- sum(keyness$n_target)
+  reference_total <- sum(keyness$n_reference)
+  # keyness statistics are unstable for very low-frequency terms
+  keyness <- keyness[keyness$n_target + keyness$n_reference >= min_count, , drop = FALSE]
 
-  data.frame(
-    Keyword = keyness_top$feature,
-    Keyness_Score = keyness_top[[score_col]],
+  out <- data.frame(
+    Keyword = keyness$feature,
+    Keyness_Score = keyness[[score_col]],
+    Target_Count = keyness$n_target,
+    Reference_Count = keyness$n_reference,
+    Target_per_10k = keyness$n_target / target_total * 1e4,
+    Reference_per_10k = keyness$n_reference / reference_total * 1e4,
+    # Hardie (2014) substitutes 0.5 for zero frequencies only
+    Log_Ratio = log2((pmax(keyness$n_target, 0.5) / target_total) / (pmax(keyness$n_reference, 0.5) / reference_total)),
+    # quanteda's pmi p-value treats PMI as a chi-square statistic, which is not a valid test
+    P_Adjusted = if (is.null(keyness$p) || measure == "pmi") NA_real_ else stats::p.adjust(keyness$p, method = "BH"),
     stringsAsFactors = FALSE,
     row.names = NULL
   )
+
+  if (significant_only) {
+    out <- out[!is.na(out$P_Adjusted) & out$P_Adjusted < 0.05, , drop = FALSE]
+  }
+  if (nrow(out) == 0) return(empty)
+
+  # exact reports odds ratios, so rank on the log scale to keep reference-group terms
+  rank_score <- if (rank_by == "log_ratio") {
+    out$Log_Ratio
+  } else if (measure == "exact") {
+    log(out$Keyness_Score)
+  } else {
+    out$Keyness_Score
+  }
+  out <- out[order(-abs(rank_score)), , drop = FALSE]
+  rownames(out) <- NULL
+  utils::head(out, top_n)
 }
 
 
@@ -1328,13 +1377,25 @@ plot_keyness_keywords <- function(keyness_data,
   keyness_data_sorted$Keyword_ordered <- factor(keyness_data_sorted$Keyword,
                                                  levels = keyness_data_sorted$Keyword)
 
-  keyness_data_sorted$hover_text <- paste0("Keyword: ", keyness_data_sorted$Keyword,
-                                            "\nKeyness Score (G\u00b2): ",
-                                            round(keyness_data_sorted$Keyness_Score, 2))
+  has_effect <- "Log_Ratio" %in% names(keyness_data_sorted)
+  keyness_data_sorted$Direction <- if (has_effect) {
+    ifelse(keyness_data_sorted$Log_Ratio >= 0, "Favours target", "Favours reference")
+  } else {
+    "Keyness"
+  }
+  keyness_data_sorted$hover_text <- paste0(
+    "Keyword: ", keyness_data_sorted$Keyword,
+    "\nKeyness Score (G\u00b2): ", round(keyness_data_sorted$Keyness_Score, 2),
+    if (has_effect) paste0("\nLog Ratio: ", round(keyness_data_sorted$Log_Ratio, 2),
+                           "\nAdjusted p: ", signif(keyness_data_sorted$P_Adjusted, 3)) else ""
+  )
 
   ggplot2::ggplot(keyness_data_sorted, ggplot2::aes(x = Keyness_Score, y = Keyword_ordered,
-                                                     text = hover_text)) +
-    ggplot2::geom_col(fill = "#337ab7") +
+                                                     fill = .data$Direction, text = hover_text)) +
+    ggplot2::geom_col() +
+    # both fills stay above 3:1 contrast on white
+    ggplot2::scale_fill_manual(values = c("Favours target" = "#337ab7", "Favours reference" = "#B45309",
+                                          "Keyness" = "#337ab7"), name = NULL) +
     ggplot2::labs(x = "Keyness Score (G\u00b2)", y = "", title = title) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
@@ -2657,7 +2718,7 @@ parse_morphology_string <- function(data, features = NULL) {
 #'     \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
 #'     \item variance: Approximate variance of the log odds ratio
 #'     \item z_score: Log odds ratio divided by its standard error
-#'     \item significant: TRUE when |z| >= 1.96
+#'     \item significant: TRUE when the Benjamini-Hochberg adjusted two-sided p-value of z is below 0.05
 #'   }
 #'   Terms are ranked by absolute z-score.
 #'
@@ -2752,7 +2813,7 @@ calculate_log_odds_ratio <- function(dfm_object,
       log_odds_ratio = log_odds,
       variance = as.numeric(variance),
       z_score = z_score,
-      significant = abs(z_score) >= 1.96,
+      significant = stats::p.adjust(2 * stats::pnorm(-abs(z_score)), method = "BH") < 0.05,
       stringsAsFactors = FALSE
     )
 
@@ -2835,7 +2896,7 @@ calculate_log_odds_ratio <- function(dfm_object,
 #'
 #' @return A data frame with the grouping variable, feature, n,
 #'   log_odds_weighted (from tidylo::bind_log_odds), and significant
-#'   (TRUE when |log_odds_weighted| >= 1.96)
+#'   (TRUE when the Benjamini-Hochberg adjusted two-sided p-value of the z-score is below 0.05)
 #'
 #' @references
 #' Monroe, B. L., Colaresi, M. P., & Quinn, K. M. (2008). Fightin' words:
@@ -2898,11 +2959,11 @@ calculate_weighted_log_odds <- function(dfm_object,
   result <- result %>%
     dplyr::filter(n >= min_count) %>%
     dplyr::group_by(.data[[group_var]]) %>%
+    dplyr::mutate(significant = stats::p.adjust(2 * stats::pnorm(-abs(.data$log_odds_weighted)), method = "BH") < 0.05) %>%
     dplyr::slice_max(abs(.data$log_odds_weighted), n = top_n, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     dplyr::arrange(.data[[group_var]], dplyr::desc(abs(.data$log_odds_weighted)))
 
-  result$significant <- abs(result$log_odds_weighted) >= 1.96
   as.data.frame(result)
 }
 

@@ -14,7 +14,7 @@ cluster_embeddings(
   umap_metric = "cosine",
   dbscan_eps = 0,
   dbscan_min_samples = NULL,
-  reduce_outliers = TRUE,
+  reduce_outliers = FALSE,
   outlier_strategy = "centroid",
   outlier_threshold = 0,
   seed = 123,
@@ -39,12 +39,14 @@ If 0, optimal number is determined automatically.}
 
 \item{umap_metric}{The metric for UMAP (default: "cosine").}
 
-\item{dbscan_eps}{The eps parameter for DBSCAN. If 0, optimal value is determined automatically.}
+\item{dbscan_eps}{The eps parameter for DBSCAN. If 0, HDBSCAN runs instead, which needs no eps,
+with a minimum cluster size of \code{max(dbscan_min_samples, 10)}.}
 
 \item{dbscan_min_samples}{The minimum samples for DBSCAN. Default NULL sets
 \code{umap_n_components + 1} (dimensions-plus-one rule of thumb).}
 
-\item{reduce_outliers}{Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).
+\item{reduce_outliers}{Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: FALSE).
+Noise is part of the HDBSCAN/DBSCAN result; reassigning it forces weak members into clusters.
 Set FALSE to keep density-based noise labels.}
 
 \item{outlier_strategy}{Strategy for outlier reduction: "centroid" (default,
@@ -63,6 +65,8 @@ the threshold keep cluster label 0.}
 }
 \value{
 A list containing cluster assignments, method used, and quality metrics.
+All-zero rows (empty documents) are not clustered: they get label 0 and
+their row indices are returned in \code{empty_documents}.
 For \code{method = "umap_dbscan"} with \code{reduce_outliers = TRUE}, the list
 also reports how noise points were reassigned: \code{outlier_strategy}
 ("embeddings" or "centroid"), \code{outlier_metric} ("cosine" or "euclidean"),

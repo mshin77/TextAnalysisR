@@ -21,7 +21,8 @@ lemmatize_tokens(
 \item{verbose}{Logical; print progress messages (default: TRUE).}
 }
 \value{
-A quanteda tokens object containing lemmatized tokens.
+A quanteda tokens object containing lemmatized tokens, in the
+original document order and with the original document variables.
 }
 \description{
 Converts tokens to their lemmatized forms using spaCy, with batch processing
@@ -31,6 +32,7 @@ to handle large document collections without timeout issues.
 Uses spaCy for linguistic lemmatization producing proper dictionary forms
 (e.g., "studies" -> "study", "better" -> "good").
 Batch processing prevents timeout errors with large document collections.
+If any batch fails, the function stops rather than returning a shorter corpus.
 }
 \examples{
 if (interactive()) {

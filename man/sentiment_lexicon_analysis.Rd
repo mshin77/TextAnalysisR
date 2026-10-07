@@ -32,6 +32,8 @@ A list containing:
 \describe{
 \item{document_sentiment}{Data frame with sentiment scores per document}
 \item{emotion_scores}{Data frame with emotion scores (NRC only)}
+\item{document_tokens}{Data frame of every document and its token count,
+including documents with no lexicon matches, for per-token rates}
 \item{summary_stats}{List of summary statistics}
 \item{feature_type}{Feature type used for analysis}
 }
@@ -46,6 +48,10 @@ the lexicon covered. AFINN classification uses a +/- 0.5 band on the
 per-sentiment-word average (\code{avg_sentiment}); its
 \code{n_sentiment_words} column counts matched sentiment tokens, not
 document length.
+
+Words are scored in isolation from a bag of words, so negation ("not
+happy"), intensifiers, and irony are not handled. For valence shifters, see
+\code{\link[=sentiment_valence_analysis]{sentiment_valence_analysis()}} (sentimentr).
 }
 \examples{
 \donttest{
