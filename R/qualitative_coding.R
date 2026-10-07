@@ -290,7 +290,8 @@ generate_codes <- function(texts, codebook = NULL,
     warning(sprintf("%d of %d units failed to reach the provider; status is 'error' for those rows.",
                     failed, nrow(trace)), call. = FALSE)
   }
-  list(codebook = book, trace = trace)
+  list(codebook = book, trace = trace,
+       llm = list(provider = resolved$provider, model = model, temperature = temperature))
 }
 
 #' @title Apply a Codebook to Texts
@@ -394,7 +395,9 @@ apply_codes <- function(texts, codebook,
     warning("Confidence values outside 0 to 1 were dropped; those rows keep the code with confidence NA.",
             call. = FALSE)
   }
-  out[, setdiff(names(out), "offscale")]
+  out <- out[, setdiff(names(out), "offscale")]
+  attr(out, "llm") <- list(provider = provider, model = model, temperature = temperature)
+  out
 }
 
 #' @title AI Coding Retest Stability
@@ -564,7 +567,9 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   if (ncol(ratings) != 2) return(NA_real_)
   po <- .percent_agreement(ratings)
   if (is.na(po)) return(NA_real_)
-  2 * po - 1
+  # Byrt et al. (1993): (q * po - 1) / (q - 1) for q categories
+  q <- max(2L, length(unique(stats::na.omit(as.vector(as.matrix(ratings))))))
+  (q * po - 1) / (q - 1)
 }
 
 #' @keywords internal

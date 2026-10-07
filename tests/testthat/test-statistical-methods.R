@@ -61,7 +61,7 @@ test_that("weighted log odds uses full-vocabulary totals", {
   result <- calculate_weighted_log_odds(dfm_object, "reference_type",
                                         top_n = 5, min_count = 2)
 
-  expect_true(all(result$n >= 2))
+  expect_true(all(quanteda::featfreq(dfm_object)[result$feature] >= 2))
   expect_true(all(is.finite(result$log_odds_weighted)))
   expect_type(result$significant, "logical")
 

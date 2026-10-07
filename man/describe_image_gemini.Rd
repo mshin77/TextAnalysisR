@@ -11,7 +11,8 @@ describe_image_gemini(
   model = "gemini-3.8-flash",
   max_tokens = 500,
   api_key,
-  mime_type = "image/png"
+  mime_type = "image/png",
+  timeout = 120
 )
 }
 \arguments{
@@ -24,6 +25,10 @@ describe_image_gemini(
 \item{max_tokens}{Integer, maximum tokens in response (default: 500)}
 
 \item{api_key}{Character string, Gemini API key}
+
+\item{mime_type}{Image media type (default: "image/png")}
+
+\item{timeout}{Request timeout in seconds (default: 120)}
 }
 \value{
 Character string description, or NULL on failure

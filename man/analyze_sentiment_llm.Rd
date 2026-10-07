@@ -7,7 +7,7 @@
 analyze_sentiment_llm(
   texts,
   doc_names = NULL,
-  provider = c("openai", "gemini"),
+  provider = c("openai", "gemini", "ollama"),
   model = NULL,
   api_key = NULL,
   batch_size = 5,
@@ -20,7 +20,7 @@ analyze_sentiment_llm(
 
 \item{doc_names}{Optional character vector of document names (default: text1, text2, ...).}
 
-\item{provider}{AI provider to use: "openai" (default) or "gemini".}
+\item{provider}{AI provider to use: "openai" (default), "gemini", or "ollama" (local).}
 
 \item{model}{Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
 "gemini-3.5-flash-lite" (Gemini).}

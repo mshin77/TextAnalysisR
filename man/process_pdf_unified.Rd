@@ -35,6 +35,11 @@ Unified PDF processing:
 \item Multimodal (R-native pdftools + Vision LLM) if enabled
 \item R pdftools text extraction as fallback
 }
+
+Pages with 500 or fewer characters of extracted text (up to 50) are rendered
+and uploaded to the vision provider (OpenAI or Google). Check that the
+provider is allowed for data under IRB or consent limits. Descriptions are
+marked "\link{AI-generated page description}" to keep them apart from source text.
 }
 \seealso{
 \code{\link[=import_files]{import_files()}} for the generic file-loading entry point; \code{\link[=describe_image]{describe_image()}} for standalone image captioning

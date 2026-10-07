@@ -13,6 +13,10 @@
 #' launching to save elsewhere. The hosted app does not autosave to disk; there
 #' the project is kept on the device and downloaded with "Save project".
 #'
+#' API keys (`OPENAI_API_KEY`, `GEMINI_API_KEY`) in a `.env` file in the
+#' working directory are read for the app session only; variables already set
+#' in the R session take precedence.
+#'
 #' @param launch.browser Logical. Whether to open the app in a browser.
 #'   Defaults to `interactive()`, which is FALSE in non-interactive sessions
 #'   (e.g., Docker containers, servers).
@@ -54,6 +58,11 @@ run_app <- function(launch.browser = interactive()) {
   withr::local_options(lapply(stats::setNames(nm = app_options), getOption))
   withr::local_envvar(Sys.getenv(c("HF_HUB_ETAG_TIMEOUT", "HF_HUB_DISABLE_TELEMETRY"), unset = NA))
   if (is.null(getOption("TextAnalysisR.project_dir"))) withr::local_options(TextAnalysisR.project_dir = getwd())
+
+  dotenv <- if (file.exists(".env")) grep("^[A-Za-z_][A-Za-z0-9_]*=", trimws(readLines(".env", warn = FALSE)), value = TRUE) else character(0)
+  dotenv <- stats::setNames(gsub("^[\"']|[\"']$", "", sub("^[^=]*=", "", dotenv)), sub("=.*", "", dotenv))
+  dotenv <- dotenv[!nzchar(Sys.getenv(names(dotenv)))]
+  if (length(dotenv) > 0) withr::local_envvar(dotenv)
 
   shiny::runApp(appDir, display.mode = "normal", launch.browser = launch.browser)
 }

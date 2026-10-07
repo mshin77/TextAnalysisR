@@ -70,3 +70,20 @@ test_that("detect_language works with the NULL default", {
   out <- detect_language(c("the cat sat on the mat and the dog ran", "this is a sentence in english"))
   expect_equal(out$language[1], "en")
 })
+
+test_that("log odds plot draws one panel per comparison", {
+  d <- quanteda::dfm(quanteda::tokens(rep(c("alpha beta gamma alpha", "beta gamma delta beta", "gamma delta alpha delta"), 4)))
+  quanteda::docvars(d, "grp") <- rep(c("x", "y", "z"), 4)
+  lo <- calculate_log_odds_ratio(d, "grp", comparison_mode = "one_vs_rest", min_count = 1)
+  p <- plot_log_odds_ratio(lo)
+  expect_s3_class(p, "ggplot")
+  expect_no_error(ggplot2::ggplot_build(p))
+})
+
+test_that("weighted log odds keeps terms a group under-uses", {
+  d <- quanteda::dfm(quanteda::tokens(c(paste(rep("gamma", 60), collapse = " "), "gamma alpha alpha",
+                                         paste(rep("alpha", 40), collapse = " "), "beta beta gamma")))
+  quanteda::docvars(d, "grp") <- c("B", "A", "A", "B")
+  wl <- calculate_weighted_log_odds(d, "grp", top_n = 10, min_count = 5)
+  expect_true(any(wl$grp == "A" & wl$feature == "gamma" & wl$log_odds_weighted < 0))
+})

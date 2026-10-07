@@ -3512,6 +3512,12 @@ semantic_analysis_ui_content <- function() {
             ),
             div(
               id = "global_cooccur_params", class = "global-params",
+              radioButtons(
+                "cooccur_edge_metric",
+                "Edge weight",
+                choices = c("Co-occurrence count" = "count", "PMI (downweights common words)" = "pmi"),
+                selected = "count"
+              ),
               sliderInput(
                 "co_occurence_number_global",
                 "Minimum co-occurrences",

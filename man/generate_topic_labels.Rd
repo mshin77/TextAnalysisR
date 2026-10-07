@@ -19,7 +19,7 @@ generate_topic_labels(
 \arguments{
 \item{top_topic_terms}{A data frame containing the top terms for each topic.}
 
-\item{provider}{AI provider to use: "auto" (default), "openai", or "gemini".
+\item{provider}{AI provider to use: "auto" (default), "openai", "gemini", or "ollama" (local).
 "auto" picks the first provider with an available API key.}
 
 \item{model}{A character string specifying which model to use. If NULL, uses
@@ -29,7 +29,8 @@ provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-3.5-flash-lite" (Gemini).}
 If NULL, the function uses the default system prompt.}
 
 \item{user}{A character string containing the user prompt for the API.
-If NULL, the function uses the default user prompt.}
+If NULL, the function uses the default user prompt. Write \code{\{terms\}} where
+the topic keywords go; without it, the keywords are appended.}
 
 \item{temperature}{A numeric value controlling the randomness of the output (default: 0.5).}
 
@@ -41,6 +42,7 @@ If NULL, the function uses the default user prompt.}
 }
 \value{
 A data frame containing the top terms for each topic along with their generated labels.
+The \code{"llm"} attribute records the provider, model, and temperature.
 }
 \description{
 This function generates descriptive labels for each topic based on their
