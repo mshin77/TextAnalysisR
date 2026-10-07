@@ -22,7 +22,7 @@ describe_image(
 
 \item{model}{Character: Model name (uses provider default if NULL)}
 
-\item{api_key}{Character: API key (required for openai/gemini)}
+\item{api_key}{Character: API key; falls back to OPENAI_API_KEY or GEMINI_API_KEY}
 
 \item{prompt}{Character: Description prompt}
 

@@ -9,7 +9,7 @@ apply_codes(
   codebook,
   unit = c("paragraph", "sentence", "document"),
   max_codes = 3,
-  provider = c("auto", "openai", "gemini"),
+  provider = c("auto", "openai", "gemini", "ollama"),
   model = NULL,
   temperature = 0,
   api_key = NULL,
@@ -30,7 +30,7 @@ blank lines), or "document" (one unit per element of \code{texts}).}
 \item{max_codes}{Maximum codes per unit (default 3). Units where no code
 fits return one row with \code{code = NA}.}
 
-\item{provider}{AI provider: "auto" (default), "openai", or "gemini".}
+\item{provider}{AI provider: "auto" (default), "openai", "gemini", or "ollama" (local).}
 
 \item{model}{Optional model id; provider default when NULL.}
 

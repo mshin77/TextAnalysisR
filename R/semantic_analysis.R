@@ -1303,9 +1303,8 @@ Respond with ONLY the topic label, nothing else. Do not include quotes or explan
 Generated Topic Label:"
     )
 
-    tryCatch({
-      # Call LLM
-      response_text <- call_llm_api(
+    response_text <- tryCatch(
+      call_llm_api(
         provider = provider,
         system_prompt = "You are a data scientist specializing in generating concise cluster labels.",
         user_prompt = prompt,
@@ -1313,28 +1312,23 @@ Generated Topic Label:"
         temperature = temperature,
         max_tokens = max_tokens,
         api_key = api_key
-      )
-
-      if (!is.null(response_text) && nzchar(response_text)) {
-        label <- trimws(response_text)
-        label <- gsub("^\"(.*)\"$", "\\1", label)
-        label <- gsub("^Generated Topic Label:\\s*", "", label, ignore.case = TRUE)
-        label <- trimws(label)
-        gen_names[[cluster_id]] <- label
-      } else {
-        gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
+      ),
+      error = function(e) {
+        warning("AI call failed for cluster ", cluster_id, ": ", e$message)
+        NULL
       }
+    )
 
-    }, error = function(e) {
-      warning("AI call failed for cluster ", cluster_id, ": ", e$message)
-      gen_names[[cluster_id]] <- paste("Cluster", cluster_id)
-    })
+    label <- trimws(gsub("^Generated Topic Label:\\s*", "", gsub("^\"(.*)\"$", "\\1", trimws(response_text %||% "")),
+                         ignore.case = TRUE))
+    gen_names[[cluster_id]] <- if (nzchar(label)) label else paste("Cluster", cluster_id)
 
     Sys.sleep(1)
   }
 
   if (verbose) message("AI label generation completed")
 
+  attr(gen_names, "llm") <- list(provider = provider, model = model, temperature = temperature)
   return(gen_names)
 }
 
@@ -2549,20 +2543,19 @@ sentiment_lexicon_analysis <- function(dfm_object,
       dplyr::summarise(n = sum(count), .groups = "drop") %>%
       tidyr::pivot_wider(names_from = sentiment, values_from = n, values_fill = 0)
 
-    if ("positive" %in% names(doc_sentiment) && "negative" %in% names(doc_sentiment)) {
-      doc_sentiment <- doc_sentiment %>%
-        dplyr::mutate(
-          total_sentiment_words = .data$positive + .data$negative,
-          sentiment_score = ifelse(.data$total_sentiment_words > 0,
-                                   (.data$positive - .data$negative) / .data$total_sentiment_words,
-                                   0),
-          sentiment = dplyr::case_when(
-            .data$sentiment_score > 0 ~ "positive",
-            .data$sentiment_score < 0 ~ "negative",
-            TRUE ~ "neutral"
-          )
+    doc_sentiment[setdiff(c("positive", "negative"), names(doc_sentiment))] <- 0
+    doc_sentiment <- doc_sentiment %>%
+      dplyr::mutate(
+        total_sentiment_words = .data$positive + .data$negative,
+        sentiment_score = ifelse(.data$total_sentiment_words > 0,
+                                 (.data$positive - .data$negative) / .data$total_sentiment_words,
+                                 0),
+        sentiment = dplyr::case_when(
+          .data$sentiment_score > 0 ~ "positive",
+          .data$sentiment_score < 0 ~ "negative",
+          TRUE ~ "neutral"
         )
-    }
+      )
   }
 
   emotion_data <- NULL
@@ -3713,20 +3706,17 @@ plot_cross_category_heatmap <- function(similarity_data,
       col_full_ids <- col_docs$document_id_display %||% col_short_labels
 
       sub_matrix <- similarity_data[row_indices, col_indices, drop = FALSE]
+      grid <- expand.grid(i = seq_along(row_indices), j = seq_along(col_indices))
 
-      for (i in seq_along(row_indices)) {
-        for (j in seq_along(col_indices)) {
-          plot_data_list[[length(plot_data_list) + 1]] <- data.frame(
-            row_label_trunc = row_short_labels[i],
-            col_label_trunc = col_short_labels[j],
-            row_display = row_full_ids[i],
-            col_display = col_full_ids[j],
-            similarity = sub_matrix[i, j],
-            col_category = col_cat,
-            stringsAsFactors = FALSE
-          )
-        }
-      }
+      plot_data_list[[length(plot_data_list) + 1]] <- data.frame(
+        row_label_trunc = row_short_labels[grid$i],
+        col_label_trunc = col_short_labels[grid$j],
+        row_display = row_full_ids[grid$i],
+        col_display = col_full_ids[grid$j],
+        similarity = sub_matrix[cbind(grid$i, grid$j)],
+        col_category = col_cat,
+        stringsAsFactors = FALSE
+      )
     }
 
     if (length(plot_data_list) == 0) {
@@ -4462,16 +4452,6 @@ word_co_occurrence_network <- function(dfm_object,
       return(NULL)
     }
 
-    # Cap nodes before layout: force-directed placement stalls on dense graphs
-    node_cap <- min(max(effective_top_node_n, 1L), 300L)
-    if (igraph::vcount(graph) > node_cap) {
-      keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
-      message(sprintf(
-        "Network has %d nodes; rendering the top %d by degree to keep the layout responsive.",
-        igraph::vcount(graph), node_cap))
-      graph <- igraph::induced_subgraph(graph, keep)
-    }
-
     igraph::E(graph)$weight <- igraph::E(graph)$n
     # igraph reads path weights as distances, so stronger edges get shorter paths
     edge_distance <- 1 / igraph::E(graph)$weight
@@ -4487,6 +4467,16 @@ word_co_occurrence_network <- function(dfm_object,
       igraph::cluster_leiden(graph, objective_function = "modularity", n_iterations = -1)
     })
     igraph::V(graph)$community <- community_result$membership
+    # metrics above use the full graph; only the drawing is capped, since force-directed layout stalls on dense graphs
+    full_graph <- graph
+    node_cap <- min(max(effective_top_node_n, 1L), 300L)
+    if (igraph::vcount(graph) > node_cap) {
+      keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
+      message(sprintf(
+        "Network has %d nodes; drawing the top %d by degree. Summary metrics use all nodes.",
+        igraph::vcount(graph), node_cap))
+      graph <- igraph::induced_subgraph(graph, keep)
+    }
 
     layout_mat <- withr::with_seed(seed, igraph::layout_with_fr(graph))
     layout_df <- as.data.frame(layout_mat) %>% stats::setNames(c("x", "y"))
@@ -4614,7 +4604,7 @@ word_co_occurrence_network <- function(dfm_object,
         legend.text = ggplot2::element_text(size = 12, color = "#3B3B3B")
       )
 
-    list(plot = p, layout_df = layout_df, graph = graph, top_nodes = top_nodes)
+    list(plot = p, layout_df = layout_df, graph = full_graph, top_nodes = top_nodes)
   }
 
   if (!is.null(doc_var) && length(docvar_levels) > 1) {
@@ -4901,16 +4891,6 @@ word_correlation_network <- function(dfm_object,
       return(NULL)
     }
 
-    # Cap nodes before layout: force-directed placement stalls on dense graphs
-    node_cap <- min(max(effective_top_node_n, 1L), 300L)
-    if (igraph::vcount(graph) > node_cap) {
-      keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
-      message(sprintf(
-        "Network has %d nodes; rendering the top %d by degree to keep the layout responsive.",
-        igraph::vcount(graph), node_cap))
-      graph <- igraph::induced_subgraph(graph, keep)
-    }
-
     igraph::E(graph)$weight <- igraph::E(graph)$correlation
     # igraph reads path weights as distances, so stronger edges get shorter paths
     edge_distance <- 1 / igraph::E(graph)$weight
@@ -4925,6 +4905,16 @@ word_correlation_network <- function(dfm_object,
       igraph::cluster_leiden(graph, objective_function = "modularity", n_iterations = -1)
     })
     igraph::V(graph)$community <- community_result$membership
+    # metrics above use the full graph; only the drawing is capped, since force-directed layout stalls on dense graphs
+    full_graph <- graph
+    node_cap <- min(max(effective_top_node_n, 1L), 300L)
+    if (igraph::vcount(graph) > node_cap) {
+      keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
+      message(sprintf(
+        "Network has %d nodes; drawing the top %d by degree. Summary metrics use all nodes.",
+        igraph::vcount(graph), node_cap))
+      graph <- igraph::induced_subgraph(graph, keep)
+    }
 
     layout_mat <- withr::with_seed(seed, igraph::layout_with_fr(graph))
     layout_df <- as.data.frame(layout_mat) %>% stats::setNames(c("x", "y"))
@@ -5052,7 +5042,7 @@ word_correlation_network <- function(dfm_object,
         legend.text = ggplot2::element_text(size = 12, color = "#3B3B3B")
       )
 
-    list(plot = p, layout_df = layout_df, graph = graph, top_nodes = top_nodes)
+    list(plot = p, layout_df = layout_df, graph = full_graph, top_nodes = top_nodes)
   }
 
   if (!is.null(doc_var) && length(docvar_levels) > 1) {

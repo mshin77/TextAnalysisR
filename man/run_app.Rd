@@ -24,6 +24,10 @@ when \code{run_app()} is called, so start the app from the analysis project's
 folder. Set \code{options(TextAnalysisR.project_dir = "<path>")} before
 launching to save elsewhere. The hosted app does not autosave to disk; there
 the project is kept on the device and downloaded with "Save project".
+
+API keys (\code{OPENAI_API_KEY}, \code{GEMINI_API_KEY}) in a \code{.env} file in the
+working directory are read for the app session only; variables already set
+in the R session take precedence.
 }
 \examples{
 if (interactive()) {

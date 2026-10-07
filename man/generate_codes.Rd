@@ -11,7 +11,7 @@ generate_codes(
   order = NULL,
   context_k = Inf,
   stop_after = Inf,
-  provider = c("auto", "openai", "gemini"),
+  provider = c("auto", "openai", "gemini", "ollama"),
   model = NULL,
   temperature = 0,
   api_key = NULL,
@@ -40,7 +40,7 @@ codebook grows.}
 \item{stop_after}{Stop once this many consecutive units open no new code;
 \code{Inf} (default) reads the whole corpus.}
 
-\item{provider}{AI provider: "auto" (default), "openai", or "gemini".}
+\item{provider}{AI provider: "auto" (default), "openai", "gemini", or "ollama" (local).}
 
 \item{model}{Optional model id; provider default when NULL.}
 

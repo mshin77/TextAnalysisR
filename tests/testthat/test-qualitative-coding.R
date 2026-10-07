@@ -867,3 +867,8 @@ test_that("presence alignment reports agreement among coders who did not write t
   expect_false(is.null(res$independent))
   expect_equal(res$independent$estimate[res$independent$metric == "percent"], 1)
 })
+
+test_that("PABAK uses the number of categories", {
+  r <- data.frame(c1 = c("a", "b", "c", "a"), c2 = c("a", "b", "c", "b"))
+  expect_equal(TextAnalysisR:::.pabak(r), (3 * 0.75 - 1) / 2)
+})

@@ -2956,8 +2956,10 @@ calculate_weighted_log_odds <- function(dfm_object,
     n = n
   )
 
+  # min_count applies to the corpus total, so under-used terms keep their negative z
   result <- result %>%
-    dplyr::filter(n >= min_count) %>%
+    dplyr::group_by(.data$feature) %>%
+    dplyr::filter(sum(.data$n) >= min_count) %>%
     dplyr::group_by(.data[[group_var]]) %>%
     dplyr::mutate(significant = stats::p.adjust(2 * stats::pnorm(-abs(.data$log_odds_weighted)), method = "BH") < 0.05) %>%
     dplyr::slice_max(abs(.data$log_odds_weighted), n = top_n, with_ties = FALSE) %>%
@@ -3021,16 +3023,15 @@ plot_log_odds_ratio <- function(log_odds_data,
     )
   }
 
-  positive <- log_odds_data[log_odds_data$log_odds_ratio > 0, ]
-  negative <- log_odds_data[log_odds_data$log_odds_ratio < 0, ]
-
-  positive <- positive[order(positive$log_odds_ratio, decreasing = TRUE), ]
-  negative <- negative[order(negative$log_odds_ratio, decreasing = FALSE), ]
-
-  plot_data <- rbind(
-    utils::head(positive, top_n),
-    utils::head(negative, top_n)
-  )
+  # one-vs-rest and pairwise runs hold several comparisons; each gets its own panel
+  log_odds_data$comparison <- paste0(log_odds_data$category2, " (-) vs ", log_odds_data$category1, " (+)")
+  plot_data <- log_odds_data %>%
+    dplyr::filter(.data$log_odds_ratio != 0) %>%
+    dplyr::mutate(direction = ifelse(.data$log_odds_ratio > 0, "positive", "negative")) %>%
+    dplyr::group_by(.data$comparison, .data$direction) %>%
+    dplyr::slice_max(abs(.data$log_odds_ratio), n = top_n, with_ties = FALSE) %>%
+    dplyr::ungroup() %>%
+    as.data.frame()
 
   if (nrow(plot_data) == 0) {
     return(
@@ -3042,22 +3043,20 @@ plot_log_odds_ratio <- function(log_odds_data,
     )
   }
 
-  plot_data <- plot_data[order(plot_data$log_odds_ratio), ]
-  plot_data$term_ordered <- factor(plot_data$term, levels = plot_data$term)
-  plot_data$direction <- ifelse(plot_data$log_odds_ratio > 0, "positive", "negative")
+  plot_data$term_ordered <- tidytext::reorder_within(plot_data$term, plot_data$log_odds_ratio, plot_data$comparison)
 
   plot_data$hover_text <- paste0(plot_data$term,
                                   "\nLog Odds: ", round(plot_data$log_odds_ratio, 3),
                                   "\n", plot_data$category1, ": ", plot_data$count1,
                                   "\n", plot_data$category2, ": ", plot_data$count2)
 
-  cat1 <- unique(plot_data$category1)[1]
-  cat2 <- unique(plot_data$category2)[1]
-  subtitle <- paste0(cat2, " (-) vs ", cat1, " (+)")
+  comparisons <- unique(plot_data$comparison)
+  subtitle <- if (length(comparisons) == 1) comparisons else NULL
 
-  ggplot2::ggplot(plot_data, ggplot2::aes(x = log_odds_ratio, y = term_ordered,
+  p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = log_odds_ratio, y = term_ordered,
                                            fill = direction, text = hover_text)) +
     ggplot2::geom_col() +
+    tidytext::scale_y_reordered() +
     ggplot2::geom_vline(xintercept = 0, linetype = "dotted", color = "#94A3B8") +
     ggplot2::scale_fill_manual(values = c("positive" = color_positive,
                                            "negative" = color_negative),
@@ -3071,6 +3070,8 @@ plot_log_odds_ratio <- function(log_odds_data,
       axis.text = ggplot2::element_text(size = 11, color = "#3B3B3B"),
       axis.title = ggplot2::element_text(size = 12, color = "#0c1f4a")
     )
+  if (length(comparisons) > 1) p <- p + ggplot2::facet_wrap(~comparison, scales = "free_y")
+  p
 }
 
 

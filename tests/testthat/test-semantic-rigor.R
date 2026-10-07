@@ -104,3 +104,13 @@ test_that("co-occurrence closeness follows the normalized argument", {
   ratio <- raw$table$closeness / norm$table$closeness
   expect_true(all(abs(ratio - 3) < 0.01))
 })
+
+test_that("topic labels insert the keywords into a custom prompt", {
+  sent <- character(0)
+  local_mocked_bindings(call_llm_api = function(..., user_prompt) { sent <<- c(sent, user_prompt); "Label" })
+  terms <- data.frame(topic = c(1, 1), term = c("reading", "fluency"), beta = c(0.2, 0.1))
+  out <- suppressMessages(generate_topic_labels(terms, provider = "ollama",
+                                                user = "Keywords: [terms will be inserted here]. Label it.", verbose = FALSE))
+  expect_match(sent[1], "Keywords: reading, fluency. Label it.", fixed = TRUE)
+  expect_equal(attr(out, "llm")$provider, "ollama")
+})

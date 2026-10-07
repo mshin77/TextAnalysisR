@@ -5,7 +5,7 @@
 \title{Call LLM API}
 \usage{
 call_llm_api(
-  provider = c("openai", "gemini"),
+  provider = c("openai", "gemini", "ollama"),
   system_prompt,
   user_prompt,
   model = NULL,
@@ -15,7 +15,7 @@ call_llm_api(
 )
 }
 \arguments{
-\item{provider}{Character string: "openai" or "gemini"}
+\item{provider}{Character string: "openai", "gemini", or "ollama" (local, no key)}
 
 \item{system_prompt}{Character string with system instructions}
 
@@ -33,7 +33,7 @@ call_llm_api(
 Character string with the model's response
 }
 \description{
-Calls different LLM providers (OpenAI, Gemini) through a single interface.
+Calls different LLM providers (OpenAI, Gemini, or a local Ollama server) through a single interface.
 Automatically routes to the appropriate provider-specific function.
 }
 \examples{

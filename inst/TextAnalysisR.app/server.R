@@ -279,7 +279,8 @@ server <- shinyServer(function(input, output, session) {
   ))
 
   spend_ai_call <- function(feature, provider, model) {
-    guard_ai_usage(session)
+    # only the shared server key is budgeted; a personal key pays its own way
+    if (!nzchar(get_api_key(provider))) guard_ai_usage(session)
     current <- ai_usage_log()
     ai_usage_log(rbind(current, data.frame(
       timestamp = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
@@ -629,7 +630,7 @@ server <- shinyServer(function(input, output, session) {
       )
       vision_model <- switch(vision_provider,
         "openai" = isolate(pick_model(input$openai_vision_model, "gpt-4.1")),
-        "gemini" = isolate(pick_model(input$gemini_vision_model, "gemini-3.8-flash")),
+        "gemini" = isolate(pick_model(input$gemini_vision_model, server_gemini_model)),
         NULL
       )
 
@@ -1359,6 +1360,13 @@ server <- shinyServer(function(input, output, session) {
     texts
   }
 
+  # Step 2 skipped: split on whitespace only, as the skip dialog states
+  raw_tokens <- function() {
+    TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts", min_char = 1, lowercase = FALSE,
+                              remove_punct = FALSE, remove_symbols = FALSE, remove_numbers = FALSE,
+                              remove_url = FALSE, split_hyphens = FALSE)
+  }
+
   segment_texts <- function(tbl, settings = NULL) {
     settings <- settings %||% list(segment_options = input$segment_options %||% character(0),
                                    min_char = input$min_char %||% 2, math_mode = isTRUE(input$math_mode))
@@ -1510,7 +1518,7 @@ server <- shinyServer(function(input, output, session) {
     TextAnalysisR:::show_loading_notification("Skipping segmentation - using basic tokenization...", id = "loadingSkipSegment")
 
     tryCatch({
-      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
+      toks <- raw_tokens()
 
       preprocessed_skip(toks)
 
@@ -1565,7 +1573,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (!is.null(try(preprocessed_init(), silent = TRUE)) && !inherits(try(preprocessed_init(), silent = TRUE), "try-error")) {
       return(preprocessed_init())
     } else if (!is.null(united_tbl())) {
-      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
+      toks <- raw_tokens()
       return(toks)
     }
     return(NULL)
@@ -1813,7 +1821,7 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
       showNotification("Creating tokens from united text...", type = "message", duration = 2)
-      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
+      toks <- raw_tokens()
       toks
     } else {
       NULL
@@ -1899,6 +1907,8 @@ server <- shinyServer(function(input, output, session) {
       }
 
       processed_tokens(toks_compound)
+      # Step 5 reads final_tokens first, so the compounds must replace the Step 3 output
+      if (!is.null(final_tokens())) final_tokens(toks_compound)
       dictionary_applied(TRUE)
       applied_expressions(input$multi_word_expressions)
       step_4_version(step_4_version() + 1)
@@ -1930,7 +1940,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (!is.null(preprocessed_combined())) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
-      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
+      toks <- raw_tokens()
       toks
     } else {
       NULL
@@ -2217,7 +2227,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (!is.null(preprocessed_combined())) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
-      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
+      toks <- raw_tokens()
       toks
     } else {
       stop("No tokens available. Please complete Step 1 (Unite Text) first.")
@@ -2616,7 +2626,7 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
       showNotification("Creating tokens from united text...", type = "message", duration = 2)
-      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
+      toks <- raw_tokens()
       toks
     } else {
       NULL
@@ -2980,7 +2990,7 @@ server <- shinyServer(function(input, output, session) {
     toks_source <- if (!is.null(preprocessed_combined())) {
       preprocessed_combined()
     } else if (!is.null(united_tbl())) {
-      toks <- TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts")
+      toks <- raw_tokens()
       toks
     } else {
       NULL
@@ -7857,6 +7867,7 @@ server <- shinyServer(function(input, output, session) {
       dfm_object = dfm_to_use,
       doc_var = params$doc_var,
       co_occur_n = floor(as.numeric(input$co_occurence_number_global)),
+      edge_metric = input$cooccur_edge_metric %||% "count",
       top_node_n = as.numeric(input$top_node_n_co_occurrence_global),
       nrows = as.numeric(input$nrows_co_occurrence),
       category_params = if (isTRUE(params$use_category_specific)) params$category_params else NULL,
@@ -8878,7 +8889,7 @@ server <- shinyServer(function(input, output, session) {
                        "Please install it with: install.packages('textdata')\n",
                        "After installation, run: tidytext::get_sentiments('", lexicon_name, "')\n",
                        "You will be prompted to download the lexicon on first use."))
-          } else if (grepl("lexicon", e$message)) {
+          } else if (grepl("lexicon|menu|interactive", e$message)) {
             stop(paste0("The ", lexicon_name, " lexicon needs to be downloaded first.\n",
                        "Run: tidytext::get_sentiments('", lexicon_name, "')\n",
                        "You will be prompted to confirm the download."))
@@ -13105,7 +13116,7 @@ server <- shinyServer(function(input, output, session) {
       } else if (provider == "gemini") {
         api_key <- get_api_key("gemini", input$rag_gemini_api_key)
         if (!check_api_key(api_key, "gemini", "RAG search")) return()
-        chat_model <- pick_model(input$rag_gemini_model, "gemini-3.8-flash")
+        chat_model <- pick_model(input$rag_gemini_model, server_gemini_model)
       }
 
       spend_ai_call("RAG Search", provider, chat_model)
@@ -15222,6 +15233,13 @@ server <- shinyServer(function(input, output, session) {
       return(TextAnalysisR:::create_empty_plot_message("Need at least one comparison category"))
     }
 
+    # 500 x 500 cells is the most a browser draws without freezing
+    n_cells <- sum(docs_data$category_display == ref_category) * sum(docs_data$category_display %in% col_categories)
+    if (n_cells > 250000) {
+      return(TextAnalysisR:::create_empty_plot_message(sprintf(
+        "%s document pairs are too many to draw; filter to fewer documents.", format(n_cells, big.mark = ","))))
+    }
+
     # Create cross-category heatmap
     tryCatch({
       p <- TextAnalysisR::plot_cross_category_heatmap(
@@ -15232,7 +15250,7 @@ server <- shinyServer(function(input, output, session) {
         category_var = "category_display",
         method_name = similarity_data$method_name %||% "Cosine",
         title = paste("Cross-Category Similarity:", ref_category, "vs Others"),
-        show_values = TRUE,
+        show_values = n_cells <= 400,
         row_label = ref_category
       )
       gg_to_plotly(p)
@@ -17633,7 +17651,7 @@ server <- shinyServer(function(input, output, session) {
     } else if (provider == "gemini") {
       api_key <- get_api_key("gemini", input$cluster_gemini_api_key)
       if (!check_api_key(api_key, "gemini", "cluster labels")) return()
-      model <- pick_model(input$cluster_gemini_model, "gemini-3.8-flash")
+      model <- pick_model(input$cluster_gemini_model, server_gemini_model)
     }
 
     spend_ai_call("Cluster Labels", provider, model)
@@ -18274,7 +18292,7 @@ server <- shinyServer(function(input, output, session) {
         )
         return()
       }
-      model <- pick_model(input$k_rec_gemini_model, "gemini-3.8-flash")
+      model <- pick_model(input$k_rec_gemini_model, server_gemini_model)
     }
 
     spend_ai_call("K Recommendation", provider, model)
@@ -20023,7 +20041,7 @@ server <- shinyServer(function(input, output, session) {
         showNotification(TextAnalysisR:::.missing_api_key_message("gemini", "shiny"), type = "error")
         return()
       }
-      model <- pick_model(input$stm_label_gemini_model, "gemini-3.8-flash")
+      model <- pick_model(input$stm_label_gemini_model, server_gemini_model)
     }
 
     spend_ai_call("STM Labels", provider, model)
@@ -20130,7 +20148,7 @@ server <- shinyServer(function(input, output, session) {
         )
         return()
       }
-      model <- pick_model(input$content_gemini_model, "gemini-3.8-flash")
+      model <- pick_model(input$content_gemini_model, server_gemini_model)
     }
 
     spend_ai_call("Content Generation", provider, model)
@@ -20567,21 +20585,8 @@ server <- shinyServer(function(input, output, session) {
                          min_samples <- dbscan_params$min_samples %||% 5
 
                          if (eps == 0) {
-                           k_neighbor <- min_samples
-                           if (ncol(embedding) > 2) {
-                             dist_matrix <- as.matrix(dist(embedding))
-                           } else {
-                             dist_matrix <- as.matrix(dist(embedding))
-                           }
-                           k_distances <- apply(dist_matrix, 1, function(row) {
-                             sorted_distances <- sort(row[row > 0])
-                             if (length(sorted_distances) >= k_neighbor) {
-                               return(sorted_distances[k_neighbor])
-                             } else {
-                               return(max(sorted_distances))
-                             }
-                           })
-                           eps <- quantile(sort(k_distances), 0.2)
+                           # dbscan counts the point itself toward minPts, so the k-distance uses minPts - 1
+                           eps <- stats::quantile(dbscan::kNNdist(embedding, k = max(1, min_samples - 1)), 0.2)
                          }
 
                          db <- dbscan::dbscan(embedding, eps = eps, minPts = min_samples)

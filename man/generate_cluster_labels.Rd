@@ -17,7 +17,7 @@ generate_cluster_labels(
 \arguments{
 \item{cluster_keywords}{List of keywords for each cluster.}
 
-\item{provider}{AI provider to use: "auto" (default), "openai", or "gemini".
+\item{provider}{AI provider to use: "auto" (default), "openai", "gemini", or "ollama" (local).
 "auto" picks the first provider with an available API key.}
 
 \item{model}{Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),

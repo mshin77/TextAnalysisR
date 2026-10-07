@@ -4,15 +4,17 @@
 \alias{render_pdf_pages_to_base64}
 \title{Render PDF Pages to Base64 PNG}
 \usage{
-render_pdf_pages_to_base64(file_path, dpi = 150)
+render_pdf_pages_to_base64(file_path, dpi = 150, pages = NULL)
 }
 \arguments{
 \item{file_path}{Character string path to PDF file}
 
 \item{dpi}{Numeric, rendering resolution (default: 150)}
+
+\item{pages}{Integer page numbers to render; all pages when NULL}
 }
 \value{
-List of base64-encoded PNG strings, one per page
+List of base64-encoded PNG strings named by page number
 }
 \description{
 Renders each page of a PDF as a PNG image and returns base64-encoded strings.

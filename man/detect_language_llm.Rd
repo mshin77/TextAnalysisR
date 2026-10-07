@@ -7,7 +7,7 @@
 detect_language_llm(
   texts,
   languages,
-  provider = c("auto", "openai", "gemini"),
+  provider = c("auto", "openai", "gemini", "ollama"),
   model = NULL,
   api_key = NULL,
   sample_n = 200,
@@ -21,7 +21,7 @@ detect_language_llm(
 \item{languages}{Named character vector of candidate languages (name =
 display name, value = language code), e.g. \code{c(English = "en", French = "fr")}.}
 
-\item{provider}{One of \code{"auto"}, \code{"openai"}, \code{"gemini"}. \code{"auto"} picks
+\item{provider}{One of \code{"auto"}, \code{"openai"}, \code{"gemini"}, \code{"ollama"} (local). \code{"auto"} picks
 whichever of \code{OPENAI_API_KEY} / \code{GEMINI_API_KEY} is set, or the key
 implied by \code{api_key}'s prefix.}
 

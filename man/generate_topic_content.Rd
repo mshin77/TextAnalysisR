@@ -11,8 +11,8 @@ generate_topic_content(
   topic_var = "topic",
   term_var = "term",
   weight_var = "beta",
-  provider = c("openai", "gemini"),
-  model = "gpt-4.1-mini",
+  provider = c("openai", "gemini", "ollama"),
+  model = NULL,
   temperature = 0,
   system_prompt = NULL,
   user_prompt_template = NULL,
@@ -42,7 +42,7 @@ topic identifier, term, and optionally term weight (beta).}
 
 \item{weight_var}{Name of the column containing term weights (default: "beta").}
 
-\item{provider}{LLM provider: "openai" or "gemini" (default: "openai").}
+\item{provider}{LLM provider: "openai" (default), "gemini", or "ollama" (local).}
 
 \item{model}{Model name. For OpenAI: "gpt-4.1-mini", "gpt-4.1", etc.
 For Gemini: "gemini-3.5-flash-lite", "gemini-3.8-flash", etc.}
