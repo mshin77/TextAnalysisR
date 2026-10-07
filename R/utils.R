@@ -1780,12 +1780,9 @@ get_best_embeddings <- function(texts,
     if (check_feature("python")) {
       provider <- "sentence-transformers"
       if (verbose) message("Using sentence-transformers embeddings (local Python)")
-    } else if ((!is.null(api_key) && nzchar(api_key)) || nzchar(Sys.getenv("OPENAI_API_KEY"))) {
-      provider <- "openai"
-      if (verbose) message("Using OpenAI embeddings (API)")
-    } else if (nzchar(Sys.getenv("GEMINI_API_KEY"))) {
-      provider <- "gemini"
-      if (verbose) message("Using Gemini embeddings (API)")
+    } else if (!is.na(.auto_provider("auto", api_key))) {
+      provider <- .auto_provider("auto", api_key)
+      if (verbose) message("Using ", .provider_label(provider), " embeddings (API)")
     } else {
       message(
         "No embedding provider available. Options:\n",
