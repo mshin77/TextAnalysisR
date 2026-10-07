@@ -1025,8 +1025,18 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
   if (verbose) message("Generating embeddings using model: ", model)
 
   tryCatch({
-    sentence_transformers <- .py_import("sentence_transformers")
-    embedding_model <- sentence_transformers$SentenceTransformer(model)
+    if (is.null(.st_model_cache[[model]])) {
+      assign(model, .py_import("sentence_transformers")$SentenceTransformer(model), envir = .st_model_cache)
+    }
+    embedding_model <- .st_model_cache[[model]]
+    n_long <- tryCatch({
+      ids <- reticulate::py_to_r(embedding_model$tokenizer(as.list(texts))[["input_ids"]])
+      sum(lengths(ids) > embedding_model$max_seq_length)
+    }, error = function(e) 0L)
+    if (n_long > 0) {
+      message(n_long, " document(s) exceed ", embedding_model$max_seq_length,
+              " word pieces; text past that point is not embedded.")
+    }
     embeddings <- embedding_model$encode(texts, show_progress_bar = verbose, normalize_embeddings = TRUE)
 
     if (verbose) message("Embeddings generated successfully")
@@ -1037,6 +1047,8 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
     stop("Error generating embeddings: ", e$message)
   })
 }
+
+.st_model_cache <- new.env(parent = emptyenv())
 
 #' @title Semantic Similarity Analysis
 #' @description Runs document similarity analysis using calculate_document_similarity.
