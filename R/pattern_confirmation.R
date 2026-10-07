@@ -43,13 +43,13 @@
 }
 
 #' @keywords internal
-.fit_predict <- function(x_train, y_train, x_test, method, k) {
+.fit_predict <- function(x_train, y_train, x_test, method, k, seed = 123) {
   if (method == "knn") {
     if (!requireNamespace("class", quietly = TRUE)) {
       stop("Package 'class' is required for method = 'knn'.", call. = FALSE)
     }
     k_use <- max(1L, min(as.integer(k), length(y_train) - 1L))
-    return(as.character(class::knn(x_train, x_test, cl = factor(y_train), k = k_use)))
+    return(as.character(withr::with_seed(seed, class::knn(x_train, x_test, cl = factor(y_train), k = k_use))))
   }
   if (!requireNamespace("nnet", quietly = TRUE)) {
     stop("Package 'nnet' is required for method = 'multinom'.", call. = FALSE)
@@ -133,7 +133,7 @@ validate_categories <- function(embeddings, categories,
     train <- which(fold_id != i)
     if (balance == "downsample") train <- .downsample(train, y, seed + i)
     predicted[test] <- .fit_predict(x[train, , drop = FALSE], y[train],
-                                    x[test, , drop = FALSE], method, k)
+                                    x[test, , drop = FALSE], method, k, seed + i)
   }
 
   by_category <- .class_metrics(y, predicted, levels_use)

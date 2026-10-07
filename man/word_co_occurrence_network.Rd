@@ -20,7 +20,8 @@ word_co_occurrence_network(
   edge_color = "#5C5CFF",
   node_color_by = "community",
   seed = 123,
-  category_params = NULL
+  category_params = NULL,
+  normalized = FALSE
 )
 }
 \arguments{
@@ -58,6 +59,8 @@ high-frequency words; only positive-PMI pairs are kept).}
 \item{seed}{Integer seed for the force-directed layout, so the plot is reproducible (default: 123).}
 
 \item{category_params}{Optional named list of category-specific parameters. Each element should be a list with \code{co_occur_n} and \code{top_node_n} values for that category (default: NULL).}
+
+\item{normalized}{Logical; if TRUE, degree and harmonic closeness are divided by n - 1 (default: FALSE).}
 }
 \value{
 A list containing the ggplot2 plot, a table, and a summary.

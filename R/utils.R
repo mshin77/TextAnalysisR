@@ -738,6 +738,7 @@ calculate_word_frequency <- function(dfm_object,
               buttons = c("copy", "csv", "excel", "pdf", "print")
             )
           ) %>%
+          DT::formatRound(columns = names(.x)[vapply(.x, is.numeric, logical(1))], digits = 3) %>%
           DT::formatStyle(
             columns = names(.x),
             `font-size` = "16px"
@@ -792,31 +793,21 @@ calculate_metrics <- function(similarity_matrix, labels = NULL, method_info = NU
       length(labels) > 0 && length(unique(labels)) > 1 &&
       length(unique(labels)) < length(labels) * 0.8) {
 
-    tryCatch({
-      if (requireNamespace("cluster", quietly = TRUE)) {
-        dist_matrix <- as.dist(1 - similarity_matrix)
-        sil_result <- cluster::silhouette(as.numeric(as.factor(labels)), dist_matrix)
-        metrics$silhouette_score <- if (is.numeric(sil_result[, 3]) && !is.na(sil_result[, 3]))
-                                   round(mean(sil_result[, 3]), 3) else NA
-      }
-    }, error = function(e) {
-      metrics$silhouette_score <- NA
-    })
+    if (!requireNamespace("cluster", quietly = TRUE)) {
+      message("Install 'cluster' to report the silhouette score.")
+    }
+    metrics$silhouette_score <- if (!requireNamespace("cluster", quietly = TRUE)) NA else tryCatch({
+      sil_result <- cluster::silhouette(as.integer(as.factor(labels)), stats::as.dist(1 - similarity_matrix))
+      round(mean(sil_result[, 3]), 3)
+    }, error = function(e) NA)
 
-    tryCatch({
-      if (requireNamespace("igraph", quietly = TRUE)) {
-        threshold <- quantile(similarity_matrix[upper.tri(similarity_matrix)], 0.75, na.rm = TRUE)
-        adj_matrix <- similarity_matrix > threshold
-        diag(adj_matrix) <- FALSE
-        graph <- igraph::graph_from_adjacency_matrix(adj_matrix, mode = "undirected")
-        communities <- igraph::cluster_louvain(graph)
-        metrics$modularity <- if (is.numeric(igraph::modularity(communities)) &&
-                                  !is.na(igraph::modularity(communities)))
-                             round(igraph::modularity(communities), 3) else NA
-      }
-    }, error = function(e) {
-      metrics$modularity <- NA
-    })
+    metrics$modularity <- tryCatch({
+      threshold <- stats::quantile(similarity_matrix[upper.tri(similarity_matrix)], 0.75, na.rm = TRUE)
+      adj_matrix <- similarity_matrix > threshold
+      diag(adj_matrix) <- FALSE
+      graph <- igraph::graph_from_adjacency_matrix(adj_matrix, mode = "undirected")
+      round(igraph::modularity(graph, as.integer(as.factor(labels))), 3)
+    }, error = function(e) NA)
   }
 
 
@@ -1111,7 +1102,7 @@ call_openai_chat <- function(system_prompt,
     max_tokens = max_tokens
   )
 
-  response <- httr::POST(
+  response <- .http_post(
     url = "https://api.openai.com/v1/chat/completions",
     httr::add_headers(
       `Authorization` = paste("Bearer", api_key)
@@ -1142,7 +1133,7 @@ call_openai_chat <- function(system_prompt,
 #'
 #' @param system_prompt Character string with system instructions
 #' @param user_prompt Character string with user message
-#' @param model Character string specifying the Gemini model (default: "gemini-2.5-flash")
+#' @param model Character string specifying the Gemini model (default: "gemini-3.8-flash")
 #' @param temperature Numeric temperature for response randomness (default: 0)
 #' @param max_tokens Maximum number of tokens to generate (default: 150)
 #' @param api_key Character string with Gemini API key
@@ -1154,7 +1145,7 @@ call_openai_chat <- function(system_prompt,
 #'
 call_gemini_chat <- function(system_prompt,
                               user_prompt,
-                              model = "gemini-2.5-flash",
+                              model = "gemini-3.8-flash",
                               temperature = 0,
                               max_tokens = 8192,
                               api_key) {
@@ -1195,7 +1186,7 @@ call_gemini_chat <- function(system_prompt,
     model, ":generateContent"
   )
 
-  response <- httr::POST(
+  response <- .http_post(
     url = url,
     httr::add_headers(
       `x-goog-api-key` = api_key
@@ -1246,13 +1237,59 @@ call_gemini_chat <- function(system_prompt,
 }
 
 
+#' Call Ollama Chat API
+#'
+#' @description
+#' Makes a chat request to a local Ollama server, so text stays on the machine.
+#'
+#' @param system_prompt Character string with system instructions
+#' @param user_prompt Character string with user message
+#' @param model Ollama model name, pulled beforehand with `ollama pull` (default: "llama3.2")
+#' @param temperature Numeric temperature for response randomness (default: 0)
+#' @param max_tokens Maximum number of tokens to generate (default: 150)
+#' @param host Ollama server address (default: OLLAMA_HOST or "http://localhost:11434")
+#'
+#' @return Character string with the model's response
+#'
+#' @concept ai
+#' @keywords internal
+#'
+call_ollama_chat <- function(system_prompt,
+                             user_prompt,
+                             model = "llama3.2",
+                             temperature = 0,
+                             max_tokens = 150,
+                             host = Sys.getenv("OLLAMA_HOST", "http://localhost:11434")) {
+  host <- sub("/$", "", if (grepl("^https?://", host)) host else paste0("http://", host))
+  body_list <- list(
+    model = model,
+    stream = FALSE,
+    messages = list(
+      list(role = "system", content = system_prompt),
+      list(role = "user", content = user_prompt)
+    ),
+    options = list(temperature = temperature, num_predict = max_tokens)
+  )
+
+  response <- tryCatch(
+    .http_post(url = paste0(host, "/api/chat"), body = body_list, encode = "json", timeout = 300),
+    error = function(e) stop("Ollama is not reachable at ", host, ". Start it with `ollama serve`.", call. = FALSE)
+  )
+  if (httr::status_code(response) != 200) {
+    .stop_api_error("ollama", "chat", httr::status_code(response),
+                    httr::content(response, "text", encoding = "UTF-8"))
+  }
+  httr::content(response, "parsed")$message$content
+}
+
+
 #' Call LLM API
 #'
 #' @description
-#' Calls different LLM providers (OpenAI, Gemini) through a single interface.
+#' Calls different LLM providers (OpenAI, Gemini, or a local Ollama server) through a single interface.
 #' Automatically routes to the appropriate provider-specific function.
 #'
-#' @param provider Character string: "openai" or "gemini"
+#' @param provider Character string: "openai", "gemini", or "ollama" (local, no key)
 #' @param system_prompt Character string with system instructions
 #' @param user_prompt Character string with user message
 #' @param model Character string specifying the model (provider-specific defaults apply)
@@ -1284,7 +1321,7 @@ call_gemini_chat <- function(system_prompt,
 #'   api_key = Sys.getenv("GEMINI_API_KEY")
 #' )
 #' }
-call_llm_api <- function(provider = c("openai", "gemini"),
+call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
                          system_prompt,
                          user_prompt,
                          model = NULL,
@@ -1295,11 +1332,17 @@ call_llm_api <- function(provider = c("openai", "gemini"),
   provider <- match.arg(provider)
 
   # Set default models based on provider
-  if (is.null(model)) {
+  if (is.null(model) || !nzchar(model)) {
     model <- switch(provider,
       "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-2.5-flash"
+      "gemini" = "gemini-3.8-flash",
+      "ollama" = "llama3.2"
     )
+  }
+
+  if (provider == "ollama") {
+    return(call_ollama_chat(system_prompt, user_prompt, model = model,
+                            temperature = temperature, max_tokens = max_tokens))
   }
 
   if (is.null(api_key) || !nzchar(api_key)) {
@@ -1343,6 +1386,8 @@ call_llm_api <- function(provider = c("openai", "gemini"),
 #' @param model Character string, OpenAI model name (default: "gpt-4.1")
 #' @param max_tokens Integer, maximum tokens in response (default: 500)
 #' @param api_key Character string, OpenAI API key
+#' @param mime_type Image media type (default: "image/png")
+#' @param timeout Request timeout in seconds (default: 120)
 #'
 #' @return Character string description, or NULL on failure
 #' @keywords internal
@@ -1351,7 +1396,8 @@ describe_image_openai <- function(image_base64,
                                   model = "gpt-4.1",
                                   max_tokens = 500,
                                   api_key,
-                                  mime_type = "image/png") {
+                                  mime_type = "image/png",
+                                  timeout = 120) {
   if (!requireNamespace("httr", quietly = TRUE) ||
       !requireNamespace("jsonlite", quietly = TRUE)) {
     return(NULL)
@@ -1377,14 +1423,14 @@ describe_image_openai <- function(image_base64,
       max_tokens = max_tokens
     )
 
-    response <- httr::POST(
+    response <- .http_post(
       url = "https://api.openai.com/v1/chat/completions",
       httr::add_headers(
         Authorization = paste("Bearer", api_key),
         `Content-Type` = "application/json"
       ),
       body = jsonlite::toJSON(body, auto_unbox = TRUE),
-      httr::timeout(120)
+      timeout = timeout
     )
 
     status <- httr::status_code(response)
@@ -1409,18 +1455,21 @@ describe_image_openai <- function(image_base64,
 #'
 #' @param image_base64 Character string of base64-encoded PNG image
 #' @param prompt Character string describing what to extract
-#' @param model Character string, Gemini model name (default: "gemini-2.5-flash")
+#' @param model Character string, Gemini model name (default: "gemini-3.8-flash")
 #' @param max_tokens Integer, maximum tokens in response (default: 500)
 #' @param api_key Character string, Gemini API key
+#' @param mime_type Image media type (default: "image/png")
+#' @param timeout Request timeout in seconds (default: 120)
 #'
 #' @return Character string description, or NULL on failure
 #' @keywords internal
 describe_image_gemini <- function(image_base64,
                                   prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
-                                  model = "gemini-2.5-flash",
+                                  model = "gemini-3.8-flash",
                                   max_tokens = 500,
                                   api_key,
-                                  mime_type = "image/png") {
+                                  mime_type = "image/png",
+                                  timeout = 120) {
   if (!requireNamespace("httr", quietly = TRUE) ||
       !requireNamespace("jsonlite", quietly = TRUE)) {
     return(NULL)
@@ -1451,14 +1500,14 @@ describe_image_gemini <- function(image_base64,
       model, ":generateContent"
     )
 
-    response <- httr::POST(
+    response <- .http_post(
       url = url,
       httr::add_headers(
         `Content-Type` = "application/json",
         `x-goog-api-key` = api_key
       ),
       body = jsonlite::toJSON(body, auto_unbox = TRUE),
-      httr::timeout(120)
+      timeout = timeout
     )
 
     status <- httr::status_code(response)
@@ -1501,7 +1550,7 @@ describe_image_gemini <- function(image_base64,
 #' @param image_base64 Character string of base64-encoded PNG image
 #' @param provider Character: "openai" or "gemini"
 #' @param model Character: Model name (uses provider default if NULL)
-#' @param api_key Character: API key (required for openai/gemini)
+#' @param api_key Character: API key; falls back to OPENAI_API_KEY or GEMINI_API_KEY
 #' @param prompt Character: Description prompt
 #' @param timeout Numeric: Request timeout in seconds (default: 120)
 #' @param mime_type Character: Image media type, such as "image/png" or "image/jpeg"
@@ -1517,19 +1566,24 @@ describe_image <- function(image_base64,
                            prompt = "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
                            timeout = 120,
                            mime_type = "image/png") {
-  if (is.null(model)) {
+  if (is.null(model) || !nzchar(model)) {
     model <- switch(provider,
       "openai" = "gpt-4.1",
-      "gemini" = "gemini-2.5-flash",
-      "gemini-2.5-flash"
+      "gemini" = "gemini-3.8-flash",
+      "gemini-3.8-flash"
     )
   }
 
+  if (is.null(api_key) || !nzchar(api_key)) {
+    api_key <- Sys.getenv(switch(provider, openai = "OPENAI_API_KEY", "GEMINI_API_KEY"))
+  }
+  if (!nzchar(api_key)) return(.notify_missing_api_key(provider))
+
   switch(provider,
     "openai" = describe_image_openai(image_base64, prompt, model, api_key = api_key,
-                                     mime_type = mime_type),
+                                     mime_type = mime_type, timeout = timeout),
     "gemini" = describe_image_gemini(image_base64, prompt, model, api_key = api_key,
-                                     mime_type = mime_type),
+                                     mime_type = mime_type, timeout = timeout),
     NULL
   )
 }
@@ -1586,6 +1640,10 @@ get_api_embeddings <- function(texts,
     stop("jsonlite package is required for embedding API calls")
   }
 
+  # repeat queries over one corpus reuse the vectors instead of paying again
+  cache_key <- rlang::hash(list(texts, provider, model))
+  if (!is.null(.api_embedding_cache[[cache_key]])) return(.api_embedding_cache[[cache_key]])
+
   n_texts <- length(texts)
   all_embeddings <- list()
 
@@ -1601,8 +1659,13 @@ get_api_embeddings <- function(texts,
     all_embeddings[[length(all_embeddings) + 1]] <- embeddings
   }
 
-  do.call(rbind, all_embeddings)
+  out <- do.call(rbind, all_embeddings)
+  if (length(ls(.api_embedding_cache)) >= 10) rm(list = ls(.api_embedding_cache), envir = .api_embedding_cache)
+  assign(cache_key, out, envir = .api_embedding_cache)
+  out
 }
+
+.api_embedding_cache <- new.env(parent = emptyenv())
 
 
 #' Get OpenAI Embeddings (Internal)
@@ -1613,7 +1676,7 @@ get_openai_embeddings <- function(texts, model, api_key) {
     model = model
   )
 
-  response <- httr::POST(
+  response <- .http_post(
     url = "https://api.openai.com/v1/embeddings",
     httr::add_headers(
       `Content-Type` = "application/json",
@@ -1643,47 +1706,28 @@ get_openai_embeddings <- function(texts, model, api_key) {
 #' Get Gemini Embeddings (Internal)
 #' @keywords internal
 get_gemini_embeddings <- function(texts, model, api_key) {
-  # Gemini requires individual requests per text
-  embeddings_list <- lapply(texts, function(text) {
-    body_list <- list(
-      model = paste0("models/", model),
-      content = list(
-        parts = list(
-          list(text = text)
-        )
-      )
-    )
-
-    url <- paste0(
-      "https://generativelanguage.googleapis.com/v1beta/models/",
-      model, ":embedContent"
-    )
-
-    response <- httr::POST(
-      url = url,
-      httr::add_headers(
-        `Content-Type` = "application/json",
-        `x-goog-api-key` = api_key
-      ),
-      body = jsonlite::toJSON(body_list, auto_unbox = TRUE),
-      encode = "json"
-    )
-
-    if (httr::status_code(response) != 200) {
-      .stop_api_error("gemini", "embeddings", httr::status_code(response),
-                      httr::content(response, "text", encoding = "UTF-8"))
-    }
-
-    res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
-
-    if (!is.null(res_json$embedding$values)) {
-      return(res_json$embedding$values)
-    } else {
-      stop("Unexpected response structure from Gemini Embeddings API")
-    }
+  requests <- lapply(texts, function(text) {
+    list(model = paste0("models/", model), content = list(parts = list(list(text = text))))
   })
 
-  do.call(rbind, embeddings_list)
+  response <- .http_post(
+    url = paste0("https://generativelanguage.googleapis.com/v1beta/models/", model, ":batchEmbedContents"),
+    httr::add_headers(
+      `Content-Type` = "application/json",
+      `x-goog-api-key` = api_key
+    ),
+    body = jsonlite::toJSON(list(requests = requests), auto_unbox = TRUE),
+    encode = "json"
+  )
+
+  if (httr::status_code(response) != 200) {
+    .stop_api_error("gemini", "embeddings", httr::status_code(response),
+                    httr::content(response, "text", encoding = "UTF-8"))
+  }
+
+  res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"), simplifyVector = FALSE)
+  if (is.null(res_json$embeddings)) stop("Unexpected response structure from Gemini Embeddings API")
+  do.call(rbind, lapply(res_json$embeddings, function(e) unlist(e$values)))
 }
 
 
@@ -1988,6 +2032,8 @@ log_security_event <- function(event_type, details, session_info, level = "info"
       parsed$error$message
     } else if (provider == "gemini") {
       parsed$error$message %||% parsed$error$status
+    } else {
+      parsed$error
     }
     if (is.null(detail) || !nzchar(detail)) return(NULL)
     if (nchar(detail) > 300) detail <- paste0(substr(detail, 1, 297), "...")
@@ -2021,7 +2067,7 @@ log_security_event <- function(event_type, details, session_info, level = "info"
     "Check your request and try again."
   )
 
-  provider_label <- if (provider == "openai") "OpenAI" else "Gemini"
+  provider_label <- .provider_label(provider)
   msg <- sprintf("%s %s API request failed (HTTP %d: %s).\n%s",
                  provider_label, endpoint, status_code, status_meaning, action)
 
@@ -2034,17 +2080,54 @@ log_security_event <- function(event_type, details, session_info, level = "info"
 }
 
 
+.auto_provider <- function(provider, api_key = NULL) {
+  if (provider != "auto") return(provider)
+  prefix <- c(openai = "^sk-", gemini = "^AIza")
+  env <- c(openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
+  from_key <- if (is.null(api_key)) character(0) else names(prefix)[vapply(prefix, grepl, logical(1), x = api_key)]
+  c(from_key, names(env)[nzchar(Sys.getenv(env))])[1]
+}
+
+.provider_label <- function(provider) {
+  switch(provider, openai = "OpenAI", gemini = "Gemini", ollama = "Ollama", provider)
+}
+
+.http_post <- function(url, ..., timeout = 60) {
+  httr::RETRY("POST", url = url, ..., httr::timeout(timeout), times = 3, pause_base = 2,
+              terminate_on = c(400, 401, 403, 404), quiet = TRUE)
+}
+
 .stop_api_error <- function(provider, endpoint, status_code, response_body) {
   tryCatch(
     log_security_event("api_error", sprintf("%s %s status %d: %s",
-      if (provider == "openai") "OpenAI" else "Gemini",
-      endpoint, status_code, response_body), list(token = NULL), "error"),
+      .provider_label(provider), endpoint, status_code,
+      .parse_provider_error(provider, response_body) %||% "no detail"), list(token = NULL), "error"),
     error = function(e) NULL
   )
   stop(.format_api_error_message(provider, endpoint, status_code, response_body),
        call. = FALSE)
 }
 
+
+.python_state <- new.env(parent = emptyenv())
+
+#' @keywords internal
+.use_system_certificates <- function() {
+  if (isTRUE(.python_state$certificates_checked)) return(invisible(isTRUE(.python_state$certificates_on)))
+  .python_state$certificates_checked <- TRUE
+  if (!reticulate::py_module_available("truststore")) return(invisible(FALSE))
+  .python_state$certificates_on <- tryCatch({
+    reticulate::py_run_string("import truststore\ntruststore.inject_into_ssl()")
+    TRUE
+  }, error = function(e) FALSE)
+  return(invisible(.python_state$certificates_on))
+}
+
+#' @keywords internal
+.py_import <- function(module) {
+  .use_system_certificates()
+  return(reticulate::import(module))
+}
 
 #' @keywords internal
 .ensure_python <- function(required_module = NULL, envname = NULL) {
@@ -2815,7 +2898,7 @@ show_no_dfm_notification <- function(feature_name = "this feature", duration = 7
 
   message <- paste0(
     "No document-feature matrix available. ",
-    "Please complete preprocessing (at least Step 4: DFM) first."
+    "Please complete preprocessing (at least Step 5: DFM) first."
   )
 
   shiny::showNotification(
@@ -2837,7 +2920,7 @@ show_no_feature_matrix_notification <- function(duration = 7) {
   }
 
   shiny::showNotification(
-    "No feature matrix available. Please complete preprocessing (at least Step 4: DFM) first.",
+    "No feature matrix available. Please complete preprocessing (at least Step 5: DFM) first.",
     type = "error",
     duration = duration
   )
@@ -2956,11 +3039,11 @@ show_dfm_required_modal <- function(feature_name = "this feature", additional_me
         ),
         shiny::tags$ul(
           shiny::tags$li(shiny::tags$strong("Step 1:"), " Unite Texts"),
-          shiny::tags$li(shiny::tags$strong("Step 4:"), " Document-Feature Matrix (DFM)")
+          shiny::tags$li(shiny::tags$strong("Step 5:"), " Document-Feature Matrix (DFM)")
         ),
         shiny::tags$p(
           shiny::tags$strong(style = "color: #6B7280;", "Optional:"),
-          " Steps 2, 3, 5, and 6",
+          " Steps 2-4",
           style = "margin-top: 10px; font-size: 12px;"
         )
       )
@@ -3055,7 +3138,7 @@ get_dfm_setup_instructions <- function(feature_name = "this feature") {
     "Warning: DFM Processing Required\n",
     "Please complete the following steps first:\n",
     "1. Go to the 'Preprocess' tab",
-    "2. Navigate to Step 4: Document-Feature Matrix",
+    "2. Navigate to Step 5: Document-Feature Matrix",
     "3. Click the 'Process' button\n",
     paste0("Once the DFM is created, you can return here to use ", feature_name, ".")
   )

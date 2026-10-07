@@ -182,6 +182,30 @@ to_utf8 <- function(x) {
     call. = FALSE)
 }
 
+#' @keywords internal
+.pdf_page_lines <- function(pages) {
+  # NFKC splits ligatures such as U+FB01; line-end hyphens rejoin split words
+  pages <- gsub("(\\p{Ll})-\n\\s*(\\p{Ll})", "\\1\\2", stringi::stri_trans_nfkc(pages), perl = TRUE)
+  page_lines <- lapply(pages, function(page) trimws(strsplit(page, "\n")[[1]]))
+  out <- data.frame(text = to_utf8(unlist(page_lines)),
+                    page = rep(seq_along(page_lines), lengths(page_lines)),
+                    stringsAsFactors = FALSE)
+  out[out$text != "", , drop = FALSE]
+}
+
+#' @keywords internal
+.pdf_rows <- function(lines, page_of, unit) {
+  if (unit == "line") {
+    return(data.frame(text = lines, page = page_of, page_end = page_of, stringsAsFactors = FALSE))
+  }
+  group <- if (unit == "page") page_of else rep(1L, length(lines))
+  idx <- split(seq_along(lines), group)
+  data.frame(text = vapply(idx, function(i) paste(lines[i], collapse = "\n"), character(1)),
+             page = vapply(idx, function(i) min(page_of[i]), integer(1)),
+             page_end = vapply(idx, function(i) max(page_of[i]), integer(1)),
+             stringsAsFactors = FALSE, row.names = NULL)
+}
+
 #' @title Process Files
 #'
 #' @description
@@ -191,8 +215,13 @@ to_utf8 <- function(x) {
 #' @param file_info A data frame containing file information with a column
 #'   named 'filepath' (default: NULL).
 #' @param text_input A character string containing text input (default: NULL).
+#' @param pdf_unit How a PDF becomes rows: "line" (default, one row per text
+#'   line), "page" (one row per page), or "document" (one row per file).
 #'
-#' @return A data frame containing the processed data.
+#' @return A data frame containing the processed data. PDF rows carry `page`
+#'   and `page_end`, the first and last PDF page of the row's text, so a coded
+#'   quote stays traceable to its source page. Other formats have no page
+#'   columns; combined with PDFs, their rows get `NA`.
 #'
 #' @importFrom utils read.csv
 #'
@@ -221,7 +250,9 @@ to_utf8 <- function(x) {
 #'                                           text_input = text_input)
 #'   head(mydata)
 #' }
-import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
+import_files <- function(dataset_choice, file_info = NULL, text_input = NULL,
+                         pdf_unit = c("line", "page", "document")) {
+  pdf_unit <- match.arg(pdf_unit)
 
   need_pkg <- function(pkg, ext) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
@@ -253,22 +284,14 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL) {
         } else if (ext == "pdf") {
           need_pkg("pdftools", "PDF")
           tryCatch({
-            pages <- pdftools::pdf_text(filepath)
-            lines <- unlist(lapply(pages, function(page) {
-              lines <- strsplit(page, "\n")[[1]]
-              trimws(lines)
-            }))
-            lines <- to_utf8(lines[lines != ""])
-            .stop_unusable_pdf(lines, filepath)
-            data.frame(text = lines, stringsAsFactors = FALSE)
+            lines <- .pdf_page_lines(pdftools::pdf_text(filepath))
+            .stop_unusable_pdf(lines$text, filepath)
+            .pdf_rows(lines$text, lines$page, pdf_unit)
           }, error = function(e) {
-            message("Error processing PDF file: ", filepath, ": ", e$message)
-            data.frame(text = "", stringsAsFactors = FALSE)
+            stop("Could not read PDF ", basename(filepath), ": ", e$message, call. = FALSE)
           })
         } else if (ext == "docx") {
           need_pkg("officer", "DOCX")
-          # Note: This extracts text only. For image extraction from DOCX,
-          # use process_docx_multimodal() function (requires Python + Vision API)
           doc <- officer::read_docx(filepath)
           doc_summary <- officer::docx_summary(doc)
           lines <- unlist(lapply(doc_summary$text, function(x) {
@@ -564,28 +587,49 @@ import_images <- function(file_paths,
 #'
 #' @param file_path Character string path to PDF file
 #' @param dpi Numeric, rendering resolution (default: 150)
+#' @param pages Integer page numbers to render; all pages when NULL
 #'
-#' @return List of base64-encoded PNG strings, one per page
+#' @return List of base64-encoded PNG strings named by page number
 #' @keywords internal
-render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
+render_pdf_pages_to_base64 <- function(file_path, dpi = 150, pages = NULL) {
   if (!requireNamespace("pdftools", quietly = TRUE)) {
     stop("pdftools package required for PDF rendering")
   }
 
-  n_pages <- pdftools::pdf_info(file_path)$pages
-  if (n_pages == 0) return(list())
+  if (is.null(pages)) pages <- seq_len(pdftools::pdf_info(file_path)$pages)
+  if (length(pages) == 0) return(list())
 
-  pages <- lapply(seq_len(n_pages), function(i) {
+  rendered <- lapply(pages, function(i) {
+    tmp <- tempfile(fileext = ".png")
+    on.exit(unlink(tmp), add = TRUE)
     tryCatch({
-      tmp <- tempfile(fileext = ".png")
       pdftools::pdf_convert(file_path, format = "png", pages = i,
                             dpi = dpi, filenames = tmp, verbose = FALSE)
-      raw_bytes <- readBin(tmp, "raw", file.info(tmp)$size)
-      unlink(tmp)
-      jsonlite::base64_enc(raw_bytes)
+      jsonlite::base64_enc(readBin(tmp, "raw", file.info(tmp)$size))
     }, error = function(e) NULL)
   })
-  Filter(Negate(is.null), pages)
+  names(rendered) <- pages
+  Filter(Negate(is.null), rendered)
+}
+
+
+# pages with 500 or fewer characters of text go to the vision model, at most max_pages
+.describe_pdf_pages <- function(file_path, text_pages, provider, model, api_key, max_pages = 50) {
+  sparse <- which(nchar(trimws(text_pages)) <= 500)
+  if (length(sparse) > max_pages) {
+    message(sprintf("%d pages have little text; describing the first %d.", length(sparse), max_pages))
+    sparse <- utils::head(sparse, max_pages)
+  }
+  images <- render_pdf_pages_to_base64(file_path, pages = sparse)
+  desc <- vapply(images, function(img) {
+    describe_image(image_base64 = img, provider = provider, model = model, api_key = api_key) %||% NA_character_
+  }, character(1))
+  if (length(desc) > 0 && all(is.na(desc))) {
+    warning("The vision model returned no page descriptions; check the API key and quota.", call. = FALSE)
+  }
+  desc <- desc[!is.na(desc)]
+  attr(desc, "attempted") <- length(images)
+  desc
 }
 
 
@@ -595,73 +639,36 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
   if (is.null(vision_model)) {
     vision_model <- switch(vision_provider,
       "openai" = "gpt-4.1",
-      "gemini" = "gemini-2.5-flash",
-      "gemini-2.5-flash"
+      "gemini" = "gemini-3.8-flash",
+      "gemini-3.8-flash"
     )
   }
 
   text_pages <- tryCatch(pdftools::pdf_text(file_path), error = function(e) character(0))
 
-  page_images <- render_pdf_pages_to_base64(file_path)
+  image_descriptions <- if (describe_images) {
+    .describe_pdf_pages(file_path, text_pages, vision_provider, vision_model, api_key)
+  } else character(0)
+  num_described <- length(image_descriptions)
 
-  image_descriptions <- list()
-  num_described <- 0
-
-  if (describe_images && length(page_images) > 0) {
-    for (i in seq_along(page_images)) {
-      page_text_len <- if (i <= length(text_pages)) nchar(trimws(text_pages[i])) else 0
-      if (page_text_len > 500) next
-
-      desc <- describe_image(
-        image_base64 = page_images[[i]],
-        provider = vision_provider,
-        model = vision_model,
-        api_key = api_key
-      )
-      if (!is.null(desc)) {
-        image_descriptions[[length(image_descriptions) + 1]] <- desc
-        num_described <- num_described + 1
-      }
-    }
+  # model output stays one labelled row per page, apart from the source text
+  lines <- .pdf_page_lines(text_pages)
+  if (num_described > 0) {
+    described <- data.frame(text = sprintf("[AI-generated page description] %s", trimws(image_descriptions)),
+                            page = as.integer(names(image_descriptions)), stringsAsFactors = FALSE)
+    lines <- rbind(lines, described)
+    lines <- lines[order(lines$page), , drop = FALSE]
   }
-
-  all_text <- paste(trimws(text_pages), collapse = "\n\n")
-  if (length(image_descriptions) > 0) {
-    all_text <- paste0(all_text, "\n\n", paste(image_descriptions, collapse = "\n\n"))
-  }
-
-  combined_lines <- strsplit(all_text, "\n")[[1]]
-  combined_lines <- combined_lines[nchar(trimws(combined_lines)) > 0]
 
   list(
     success = TRUE,
-    data = data.frame(text = combined_lines, stringsAsFactors = FALSE),
+    data = lines,
     type = "multimodal",
     method = "multimodal",
     message = paste("Extracted text and", num_described, "page descriptions"),
     num_images = num_described,
+    num_attempted = attr(image_descriptions, "attempted") %||% 0L,
     vision_provider = vision_provider
-  )
-}
-
-.extract_python_pdf <- function(file_path) {
-  env_check <- check_python_env()
-  if (!env_check$available) {
-    stop("Python environment not available")
-  }
-
-  pdf_data <- process_pdf_file_py(file_path, content_type = "auto")
-
-  if (!pdf_data$success || is.null(pdf_data$data)) {
-    stop(pdf_data$message)
-  }
-
-  list(
-    success = TRUE,
-    data = pdf_data$data,
-    type = pdf_data$type,
-    method = "python",
-    message = paste("Python extraction:", pdf_data$message)
   )
 }
 
@@ -670,25 +677,20 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
     stop("pdftools package required")
   }
 
-  pages <- pdftools::pdf_text(file_path)
-  lines <- unlist(lapply(pages, function(page) {
-    page_lines <- strsplit(page, "\n")[[1]]
-    trimws(page_lines)
-  }))
-  lines <- lines[lines != ""]
+  lines <- .pdf_page_lines(pdftools::pdf_text(file_path))
 
-  if (length(lines) == 0) {
+  if (nrow(lines) == 0) {
     stop("No extractable text found")
   }
 
-  .stop_unusable_pdf(lines, file_path)
+  .stop_unusable_pdf(lines$text, file_path)
 
   list(
     success = TRUE,
-    data = data.frame(text = lines, stringsAsFactors = FALSE),
+    data = lines,
     type = "text",
     method = "r",
-    message = paste("R extraction: Extracted", length(lines), "lines")
+    message = paste("R extraction: Extracted", nrow(lines), "lines")
   )
 }
 
@@ -698,6 +700,11 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150) {
 #' Unified PDF processing:
 #' 1. Multimodal (R-native pdftools + Vision LLM) if enabled
 #' 2. R pdftools text extraction as fallback
+#'
+#' Pages with 500 or fewer characters of extracted text (up to 50) are rendered
+#' and uploaded to the vision provider (OpenAI or Google). Check that the
+#' provider is allowed for data under IRB or consent limits. Descriptions are
+#' marked "[AI-generated page description]" to keep them apart from source text.
 #'
 #' @param file_path Character string path to PDF file
 #' @param use_multimodal Logical, enable multimodal extraction
@@ -1036,12 +1043,14 @@ prep_texts <- function(united_tbl,
 #' @param model Character; spaCy model to use (default: "en_core_web_sm").
 #' @param verbose Logical; print progress messages (default: TRUE).
 #'
-#' @return A quanteda tokens object containing lemmatized tokens.
+#' @return A quanteda tokens object containing lemmatized tokens, in the
+#'   original document order and with the original document variables.
 #'
 #' @details
 #' Uses spaCy for linguistic lemmatization producing proper dictionary forms
 #' (e.g., "studies" -> "study", "better" -> "good").
 #' Batch processing prevents timeout errors with large document collections.
+#' If any batch fails, the function stops rather than returning a shorter corpus.
 #'
 #' @concept preprocessing
 #' @export
@@ -1095,15 +1104,14 @@ lemmatize_tokens <- function(tokens,
         all_lemmas[[doc_id]] <- doc_lemmas
       }
     }, error = function(e) {
-      warning(sprintf("Error in batch %d: %s", i, e$message))
+      # a skipped batch would silently shrink the corpus and misalign document variables
+      stop(sprintf("Lemmatization failed in batch %d (documents %d-%d): %s",
+                   i, start_idx, end_idx, conditionMessage(e)), call. = FALSE)
     })
   }
 
-  if (length(all_lemmas) == 0) {
-    stop("All batches failed. Check spaCy installation.")
-  }
-
-  lemmatized_tokens <- quanteda::as.tokens(all_lemmas)
+  lemmatized_tokens <- quanteda::as.tokens(all_lemmas[doc_names])
+  quanteda::docvars(lemmatized_tokens) <- quanteda::docvars(tokens)
 
   if (verbose) {
     processing_time <- difftime(Sys.time(), start_time, units = "secs")
@@ -1604,11 +1612,16 @@ check_multimodal_prerequisites <- function(
 #' Extract both text and visual content from PDFs using R-native pdftools
 #' and vision LLM APIs. No Python required.
 #'
+#' Pages with 500 or fewer characters of extracted text (up to 50) are rendered
+#' and uploaded to the vision provider (OpenAI or Google). Check that the
+#' provider is allowed for data under IRB or consent limits. Descriptions are
+#' marked "[AI-generated page description]" to keep them apart from source text.
+#'
 #' @param file_path Character string path to PDF file
 #' @param vision_provider Character: "openai" or "gemini" (default)
 #' @param vision_model Character: Model name
 #'   - For OpenAI: "gpt-4.1", "gpt-4.1-mini"
-#'   - For Gemini: "gemini-2.5-flash", "gemini-2.5-pro"
+#'   - For Gemini: "gemini-3.8-flash", "gemini-3.5-flash-lite"
 #' @param api_key Character: API key (required for openai/gemini providers)
 #' @param describe_images Logical: Convert page images to text descriptions (default: TRUE)
 #' @param envname Character: Kept for backward compatibility, ignored
@@ -1647,8 +1660,8 @@ extract_pdf_multimodal <- function(
   if (is.null(vision_model)) {
     vision_model <- switch(vision_provider,
       "openai" = "gpt-4.1",
-      "gemini" = "gemini-2.5-flash",
-      "gemini-2.5-flash"
+      "gemini" = "gemini-3.8-flash",
+      "gemini-3.8-flash"
     )
   }
 
@@ -1666,28 +1679,11 @@ extract_pdf_multimodal <- function(
     text_pages <- pdftools::pdf_text(file_path)
     text_content <- list(paste(trimws(text_pages), collapse = "\n\n"))
 
-    image_descriptions <- list()
-    num_described <- 0
-
-    if (describe_images) {
-      page_images <- render_pdf_pages_to_base64(file_path)
-
-      for (i in seq_along(page_images)) {
-        page_text_len <- if (i <= length(text_pages)) nchar(trimws(text_pages[i])) else 0
-        if (page_text_len > 500) next
-
-        desc <- describe_image(
-          image_base64 = page_images[[i]],
-          provider = vision_provider,
-          model = vision_model,
-          api_key = api_key
-        )
-        if (!is.null(desc)) {
-          image_descriptions[[length(image_descriptions) + 1]] <- desc
-          num_described <- num_described + 1
-        }
-      }
-    }
+    image_descriptions <- if (describe_images) {
+      as.list(sprintf("[AI-generated page description] %s",
+                      .describe_pdf_pages(file_path, text_pages, vision_provider, vision_model, api_key)))
+    } else list()
+    num_described <- length(image_descriptions)
 
     combined_text <- paste(trimws(text_pages), collapse = "\n\n")
     if (length(image_descriptions) > 0) {
@@ -1810,7 +1806,7 @@ check_vision_models <- function(provider = "gemini", api_key = NULL) {
 #' languages absent from snowball; treat the result as a suggestion.
 #'
 #' @param texts Character vector of documents.
-#' @param languages Candidate language codes (default: all snowball languages).
+#' @param languages Candidate language codes. NULL (default) uses all snowball languages.
 #' @param sample_n Maximum documents to sample (default 200).
 #' @param seed Seed for sampling.
 #'
@@ -1822,8 +1818,12 @@ check_vision_models <- function(provider = "gemini", api_key = NULL) {
 #' @concept preprocessing
 #' @export
 detect_language <- function(texts,
-                            languages = stopwords::stopwords_getlanguages("snowball"),
+                            languages = NULL,
                             sample_n = 200, seed = 123) {
+  if (!requireNamespace("stopwords", quietly = TRUE)) {
+    stop("Package 'stopwords' is required. Install it with install.packages('stopwords').", call. = FALSE)
+  }
+  languages <- languages %||% stopwords::stopwords_getlanguages("snowball")
   texts <- as.character(texts)
   texts <- texts[!is.na(texts) & nzchar(trimws(texts))]
   if (length(texts) == 0) return(NULL)
@@ -1857,7 +1857,7 @@ detect_language <- function(texts,
 #' @param languages Named character vector of candidate languages (name =
 #'   display name, value = language code), e.g. `c(English = "en", French =
 #'   "fr")`.
-#' @param provider One of `"auto"`, `"openai"`, `"gemini"`. `"auto"` picks
+#' @param provider One of `"auto"`, `"openai"`, `"gemini"`, `"ollama"` (local). `"auto"` picks
 #'   whichever of `OPENAI_API_KEY` / `GEMINI_API_KEY` is set, or the key
 #'   implied by `api_key`'s prefix.
 #' @param model Model name (default depends on provider).
@@ -1886,7 +1886,7 @@ detect_language <- function(texts,
 #' }
 detect_language_llm <- function(texts,
                                  languages,
-                                 provider = c("auto", "openai", "gemini"),
+                                 provider = c("auto", "openai", "gemini", "ollama"),
                                  model = NULL,
                                  api_key = NULL,
                                  sample_n = 200,
@@ -1902,20 +1902,15 @@ detect_language_llm <- function(texts,
   }
   sample_text <- substr(paste(texts, collapse = " "), 1, 2000)
 
-  if (provider == "auto") {
-    if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
-      provider <- "openai"
-    } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
-      provider <- "gemini"
-    } else {
-      if (verbose) message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
-      return(NULL)
-    }
+  provider <- .auto_provider(provider, api_key)
+  if (is.na(provider)) {
+    if (verbose) message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY, or use provider = \"ollama\".")
+    return(NULL)
   }
 
   setup <- .resolve_llm_setup(
     provider, model, api_key,
-    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite"),
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-3.5-flash-lite"),
     strict_validate = TRUE
   )
   if (is.null(setup)) return(NULL)

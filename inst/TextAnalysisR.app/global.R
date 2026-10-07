@@ -86,15 +86,25 @@ guard_ai_usage <- function(session) {
 
 # process-wide (not per-session) so a closing session cannot reset the limit for a concurrent one
 options(shiny.maxRequestSize = 100 * 1024^2, shiny.timeout = 300)
+# wide tables scroll inside their column on narrow screens
+options(DT.options = list(scrollX = TRUE))
 
 server_gemini_key <- Sys.getenv("GEMINI_API_KEY", "")
 has_server_gemini <- nzchar(server_gemini_key)
-server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-flash")
+server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-3.8-flash")
 
 .gemini_provider_label <- if (has_server_gemini) "Gemini" else "Gemini (API Key Required)"
 .llm_provider_choices <- c("OpenAI (API Key Required)" = "openai", "gemini")
 names(.llm_provider_choices)[2] <- .gemini_provider_label
 .llm_provider_default <- "gemini"
+
+.remote_notice <- function(what = "The text") {
+  tags$div(
+    class = "status-main-info qc-privacy",
+    tags$i(class = "fas fa-shield-alt status-icon status-icon-info", `aria-hidden` = "true"),
+    paste(what, "is sent to the chosen AI provider (OpenAI or Google). For data under IRB or consent limits, check that the provider is allowed.")
+  )
+}
 # cached model staleness check must not hang the session
 Sys.setenv(HF_HUB_ETAG_TIMEOUT = Sys.getenv("HF_HUB_ETAG_TIMEOUT", "5"))
 Sys.setenv(HF_HUB_DISABLE_TELEMETRY = Sys.getenv("HF_HUB_DISABLE_TELEMETRY", "1"))
@@ -457,12 +467,13 @@ topic_modeling_ui_content <- function() {
               selected = .llm_provider_default,
               inline = FALSE
             ),
+            .remote_notice(),
             conditionalPanel(
               condition = "input.stm_label_provider == 'openai'",
               selectizeInput(
                 "stm_label_openai_model",
                 "OpenAI Model:",
-                choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
+                choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1"),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
@@ -478,7 +489,7 @@ topic_modeling_ui_content <- function() {
               selectizeInput(
                 "stm_label_gemini_model",
                 "Gemini Model:",
-                choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
+                choices = c("Gemini 3.5 Flash Lite (Default, economy)" = "gemini-3.5-flash-lite", "Gemini 3.8 Flash" = "gemini-3.8-flash"),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
@@ -645,6 +656,7 @@ Focus on incorporating the most significant keywords while following the guideli
               selected = .llm_provider_default,
               inline = FALSE
             ),
+            .remote_notice(),
 
             conditionalPanel(
               condition = "input.k_rec_provider == 'openai'",
@@ -653,8 +665,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 "OpenAI Model:",
                 choices = c(
                   "GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini",
-                  "GPT-4.1 (Accurate)" = "gpt-4.1",
-                  "GPT-4" = "gpt-4"
+                  "GPT-4.1 (Accurate)" = "gpt-4.1"
                 ),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
@@ -673,9 +684,8 @@ Focus on incorporating the most significant keywords while following the guideli
                 "k_rec_gemini_model",
                 "Gemini Model:",
                 choices = c(
-                  "Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite",
-                  "Gemini 2.5 Flash" = "gemini-2.5-flash",
-                  "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"
+                  "Gemini 3.5 Flash Lite (Default, economy)" = "gemini-3.5-flash-lite",
+                  "Gemini 3.8 Flash" = "gemini-3.8-flash"
                 ),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
@@ -717,7 +727,7 @@ Focus on incorporating the most significant keywords while following the guideli
             tags$div(
               class = "status-step-blue",
               tags$i(class = "fa fa-check-circle status-icon status-icon-info"),
-              tags$strong("Step 2:"), " Estimate coefficients in Estimated Effects tab"
+              tags$strong("Step 2:"), " Estimate coefficients in the Effects tab"
             ),
             selectizeInput(
               "stm_effect_cat_btn",
@@ -745,7 +755,7 @@ Focus on incorporating the most significant keywords while following the guideli
             tags$div(
               class = "status-step-blue",
               tags$i(class = "fa fa-check-circle status-icon status-icon-info"),
-              tags$strong("Step 2:"), " Estimate coefficients in Estimated Effects tab"
+              tags$strong("Step 2:"), " Estimate coefficients in the Effects tab"
             ),
             selectizeInput(
               "stm_effect_con_btn",
@@ -803,12 +813,13 @@ Focus on incorporating the most significant keywords while following the guideli
               selected = .llm_provider_default,
               inline = FALSE
             ),
+            .remote_notice(),
             conditionalPanel(
               condition = "input.content_provider == 'openai'",
               selectizeInput(
                 "content_openai_model",
                 "OpenAI Model:",
-                choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
+                choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1"),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
@@ -824,7 +835,7 @@ Focus on incorporating the most significant keywords while following the guideli
               selectizeInput(
                 "content_gemini_model",
                 "Gemini Model:",
-                choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
+                choices = c("Gemini 3.5 Flash Lite (Default, economy)" = "gemini-3.5-flash-lite", "Gemini 3.8 Flash" = "gemini-3.8-flash"),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
@@ -1894,7 +1905,7 @@ lexical_analysis_ui_content <- function() {
                 "Yule's K" = "K",
                 "Simpson's D" = "D"
               ),
-              selected = c("MTLD", "MATTR", "TTR")
+              selected = c("MTLD", "MATTR")
             ),
             actionButton("run_lexdiv_analysis", "Analyze", class = "btn-primary btn-block")
           ),
@@ -1920,6 +1931,11 @@ lexical_analysis_ui_content <- function() {
               )
             ),
             br(),
+            uiOutput("readability_text_source_ui"),
+            tags$p(
+              "Formulas assume running prose with sentence punctuation; keyword or title fields distort words per sentence.",
+              style = "font-size: 14px; color: #475569; margin-top: -5px; margin-bottom: 10px;"
+            ),
             checkboxGroupInput(
               "readability_metrics",
               "Metrics to calculate",
@@ -2008,6 +2024,14 @@ lexical_analysis_ui_content <- function() {
                 multiple = FALSE,
                 options = list(placeholder = "Select grouping variable")
               ),
+              uiOutput("keyness_target_ui"),
+              selectInput(
+                "keyness_rank_by",
+                "Rank by",
+                choices = c("Log Ratio (effect size)" = "log_ratio", "G² (significance)" = "score"),
+                selected = "log_ratio"
+              ),
+              checkboxInput("keyness_significant_only", "Only adjusted p < .05", value = TRUE),
               tags$p(
                 "Finds words used significantly more in one group vs others.",
                 style = "font-size: 16px; color: #475569; margin-top: -5px; margin-bottom: 10px;"
@@ -2174,12 +2198,12 @@ lexical_analysis_ui_content <- function() {
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_named", HTML("<span class='sr-only'>Named entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' data-entity='PERSON' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#e91e63;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERSON</span> <span style='color:#475569;'>- People, including fictional</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='NORP' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ff8f00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>NORP</span> <span style='color:#475569;'>- Nationalities, religious/political groups</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='ORG' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#1565c0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORG</span> <span style='color:#475569;'>- Companies, agencies, institutions</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='GPE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#2e7d32;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>GPE</span> <span style='color:#475569;'>- Countries, cities, states</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='LOC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#0277bd;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LOC</span> <span style='color:#475569;'>- Non-GPE locations, mountains, water bodies</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='FAC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9e9d24;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>FAC</span> <span style='color:#475569;'>- Buildings, airports, highways, bridges</span>")
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change PERSON color' data-entity='PERSON' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#e91e63;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERSON</span> <span style='color:#475569;'>- People, including fictional</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change NORP color' data-entity='NORP' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ff8f00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>NORP</span> <span style='color:#475569;'>- Nationalities, religious/political groups</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change ORG color' data-entity='ORG' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#1565c0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORG</span> <span style='color:#475569;'>- Companies, agencies, institutions</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change GPE color' data-entity='GPE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#2e7d32;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>GPE</span> <span style='color:#475569;'>- Countries, cities, states</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change LOC color' data-entity='LOC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#0277bd;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LOC</span> <span style='color:#475569;'>- Non-GPE locations, mountains, water bodies</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change FAC color' data-entity='FAC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9e9d24;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>FAC</span> <span style='color:#475569;'>- Buildings, airports, highways, bridges</span>")
                       ),
                       choiceValues = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC"),
                       selected = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC")
@@ -2193,11 +2217,11 @@ lexical_analysis_ui_content <- function() {
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_objects", HTML("<span class='sr-only'>Object and event entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' data-entity='PRODUCT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5060D5;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PRODUCT</span> <span style='color:#475569;'>- Objects, vehicles, foods, etc.</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='EVENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c62828;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>EVENT</span> <span style='color:#475569;'>- Named hurricanes, battles, wars, sports</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#734FE2;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#475569;'>- Titles of books, songs, etc.</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#03786A;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#475569;'>- Named documents made into laws</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#558b2f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#475569;'>- Any named language</span>")
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change PRODUCT color' data-entity='PRODUCT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5060D5;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PRODUCT</span> <span style='color:#475569;'>- Objects, vehicles, foods, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change EVENT color' data-entity='EVENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c62828;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>EVENT</span> <span style='color:#475569;'>- Named hurricanes, battles, wars, sports</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change WORK_OF_ART color' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#734FE2;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#475569;'>- Titles of books, songs, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change LAW color' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#03786A;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#475569;'>- Named documents made into laws</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change LANGUAGE color' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#558b2f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#475569;'>- Any named language</span>")
                       ),
                       choiceValues = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE"),
                       selected = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE")
@@ -2211,13 +2235,13 @@ lexical_analysis_ui_content <- function() {
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_numeric", HTML("<span class='sr-only'>Numeric and temporal entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ef6c00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#475569;'>- Absolute or relative dates/periods</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#d84315;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#475569;'>- Times smaller than a day</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9C3AD7;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#475569;'>- Monetary values including unit</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='PERCENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00838f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERCENT</span> <span style='color:#475569;'>- Percentage including %</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#78909c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#475569;'>- Measurements (weight, distance)</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#866358;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#475569;'>- first, second, third, etc.</span>"),
-                        HTML("<span class='sidebar-color-picker' data-entity='CARDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#546e7a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>CARDINAL</span> <span style='color:#475569;'>- Numerals not in other category</span>")
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change DATE color' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ef6c00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#475569;'>- Absolute or relative dates/periods</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change TIME color' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#d84315;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#475569;'>- Times smaller than a day</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change MONEY color' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9C3AD7;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#475569;'>- Monetary values including unit</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change PERCENT color' data-entity='PERCENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00838f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERCENT</span> <span style='color:#475569;'>- Percentage including %</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change QUANTITY color' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#78909c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#475569;'>- Measurements (weight, distance)</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change ORDINAL color' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#866358;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#475569;'>- first, second, third, etc.</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change CARDINAL color' data-entity='CARDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#546e7a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>CARDINAL</span> <span style='color:#475569;'>- Numerals not in other category</span>")
                       ),
                       choiceValues = c("DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL"),
                       selected = c("DATE", "TIME", "MONEY", "PERCENT", "QUANTITY", "ORDINAL", "CARDINAL")
@@ -2355,6 +2379,12 @@ lexical_analysis_ui_content <- function() {
               fileInput("codebook_upload", HTML("<span class='sr-only'>Upload codebook file</span>"))
             ),
             tags$script(HTML("
+              $(document).on('keydown', '.sidebar-color-picker, .entity-delete-btn', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  $(this).trigger('click');
+                }
+              });
               $(document).on('click', '.sidebar-color-picker', function(e) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -3035,12 +3065,13 @@ semantic_analysis_ui_content <- function() {
                 choices = .llm_provider_choices,
                 selected = .llm_provider_default
               ),
+              .remote_notice(),
               conditionalPanel(
                 condition = "input.rag_provider == 'openai'",
                 selectizeInput(
                   "rag_openai_model",
                   "OpenAI Model:",
-                  choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
+                  choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1"),
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
@@ -3056,7 +3087,7 @@ semantic_analysis_ui_content <- function() {
                 selectizeInput(
                   "rag_gemini_model",
                   "Gemini Model:",
-                  choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
+                  choices = c("Gemini 3.5 Flash Lite (Default, economy)" = "gemini-3.5-flash-lite", "Gemini 3.8 Flash" = "gemini-3.8-flash"),
                   selected = NULL,
                   options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
                 ),
@@ -3205,13 +3236,14 @@ semantic_analysis_ui_content <- function() {
               selected = .llm_provider_default,
               inline = FALSE
             ),
+            .remote_notice(),
 
             conditionalPanel(
               condition = "input.cluster_label_provider == 'openai'",
               selectizeInput(
                 "cluster_openai_model",
                 "OpenAI Model:",
-                choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1", "GPT-4" = "gpt-4"),
+                choices = c("GPT-4.1 Mini (Default, fast)" = "gpt-4.1-mini", "GPT-4.1 (Accurate)" = "gpt-4.1"),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
@@ -3228,7 +3260,7 @@ semantic_analysis_ui_content <- function() {
               selectizeInput(
                 "cluster_gemini_model",
                 "Gemini Model:",
-                choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
+                choices = c("Gemini 3.5 Flash Lite (Default, economy)" = "gemini-3.5-flash-lite", "Gemini 3.8 Flash" = "gemini-3.8-flash"),
                 selected = NULL,
                 options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
               ),
@@ -3328,6 +3360,7 @@ semantic_analysis_ui_content <- function() {
                   selected = .llm_provider_default,
                   inline = FALSE
                 ),
+                .remote_notice(),
                 uiOutput("llm_sentiment_model_ui"),
                 checkboxInput(
                   "llm_sentiment_explanation",
@@ -4082,10 +4115,52 @@ semantic_analysis_ui_content <- function() {
 }
 
 qualitative_coding_ui_content <- function() {
+  tagList(
+  div(
+    class = "qc-project-bar",
+    div(class = "qc-project-who",
+        tags$i(class = "fa fa-file-alt", `aria-hidden` = "true"),
+        tags$label(`for` = "qc_coder_name", class = "sr-only", "Coder name"),
+        textInput("qc_coder_name", NULL, value = "coder1", placeholder = "Coder name", width = "160px"),
+        tags$span(class = "qc-save-status", textOutput("qc_save_status", inline = TRUE))),
+    div(class = "qc-project-actions",
+        tags$label(`for` = "qc_project_file", class = "sr-only", "Open a saved coding project (.rds)"),
+        fileInput("qc_project_file", NULL, accept = ".rds", buttonLabel = "Open project",
+                  placeholder = "", width = "150px"),
+        downloadButton("qc_project_download", "Save project", class = "btn-default btn-sm"))
+  ),
+  tags$p(class = "qc-autosave-note", textOutput("qc_autosave_note", inline = TRUE)),
+  uiOutput("qc_file_banner"),
+  uiOutput("qc_restore_banner"),
+  uiOutput("qc_stepper"),
   sidebarLayout(
     sidebarPanel(
       width = 3,
-      class = "sidebar-panel",
+      class = "sidebar-panel qc-sidebar",
+      conditionalPanel(
+        condition = "input.qual_coding_tabs == 'qc_ruling'",
+        tags$h5(strong("Rule on the groups"), style = "color: #4269BF; margin-bottom: 10px;"),
+        tags$div(
+          class = "status-main-info",
+          tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
+          "Groups come from an embedding topic model (Topic Modeling). Give every group a verdict, then close the round."
+        ),
+        uiOutput("qc_ruling_status"),
+        actionButton("qc_close_round", "Close round", class = "btn-primary btn-block"),
+        tags$p("Splits re-run inside the group; merges join groups. The rounds end when one keeps every group.",
+               class = "qc-tip"),
+        downloadButton("qc_download_rulings", "Download ruling log", class = "btn-default btn-block")
+      ),
+      conditionalPanel(
+        condition = "input.qual_coding_tabs == 'qc_annotate'",
+        tags$h5(strong("Annotate units"), style = "color: #4269BF; margin-bottom: 10px;"),
+        selectInput("qc_ann_source", "Show units from",
+                    choices = c("Loose units (no group)" = "loose", "Blind holdout" = "holdout")),
+        tags$p("Loose units are the ones no group holds: the place a missing category shows up.",
+               class = "qc-tip"),
+        textAreaInput("qc_ann_memo", "Memo on this unit", rows = 3, width = "100%"),
+        actionButton("qc_ann_save_memo", "Save memo", class = "btn-default btn-sm")
+      ),
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_codebook'",
         tags$h5(strong("Build the codebook"), style = "color: #4269BF; margin-bottom: 10px;"),
@@ -4113,6 +4188,11 @@ qualitative_coding_ui_content <- function() {
           "AI output is a suggestion. Each code needs review before export."
         ),
         tags$div(
+          class = "status-main-info qc-privacy",
+          tags$i(class = "fas fa-shield-alt status-icon status-icon-info"),
+          "The text of each unit coded is sent to the chosen AI provider. For data under IRB or consent limits, run TextAnalysisR on a local computer and check that the provider is allowed."
+        ),
+        tags$div(
           class = "status-main-info",
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
           "Unit of analysis: ",
@@ -4134,6 +4214,7 @@ qualitative_coding_ui_content <- function() {
           selected = .llm_provider_default,
           inline = FALSE
         ),
+        .remote_notice(),
         conditionalPanel(
           condition = "input.qc_provider == 'openai'",
           selectizeInput(
@@ -4153,7 +4234,7 @@ qualitative_coding_ui_content <- function() {
           condition = "input.qc_provider == 'gemini'",
           selectizeInput(
             "qc_gemini_model", "Gemini Model:",
-            choices = c("Gemini 2.5 Flash Lite (Default, economy)" = "gemini-2.5-flash-lite", "Gemini 2.5 Flash" = "gemini-2.5-flash", "Gemini 2.5 Pro (Accurate)" = "gemini-2.5-pro"),
+            choices = c("Gemini 3.5 Flash Lite (Default, economy)" = "gemini-3.5-flash-lite", "Gemini 3.8 Flash" = "gemini-3.8-flash"),
             selected = NULL,
             options = list(create = TRUE, placeholder = "Type your model...", onInitialize = I("function() { this.setValue(\"\"); }"))
           ),
@@ -4174,7 +4255,6 @@ qualitative_coding_ui_content <- function() {
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
           "Select rows, then accept or reject. Double-click the code cell to correct it; edits count as confirmed."
         ),
-        textInput("qc_coder_name", "Coder name", value = "coder1"),
         tags$label("Selected rows", class = "control-label"),
         div(
           class = "qc-btn-row",
@@ -4212,16 +4292,19 @@ qualitative_coding_ui_content <- function() {
         ),
         fileInput("qc_coder_files", "Coder files",
                   accept = c(".csv", ".xlsx", ".xls", ".txt", ".rds"), multiple = TRUE),
-        tags$p("One file per coder, exported from the Review tab.",
+        tags$p("One project file (.rds) or Review export per coder.",
                style = "font-size: 13px; color: #475569; margin-top: -8px;"),
-        checkboxInput("qc_include_own", "Include accepted rows from this session", value = TRUE),
+        checkboxInput("qc_include_own", "Include this project's codes", value = TRUE),
+        checkboxInput("qc_agree_holdout_only", "Holdout units only", value = TRUE),
         radioButtons(
           "qc_align", "Unit alignment",
-          choices = c("Shared units (grid)" = "grid", "Span overlap (coverage)" = "coverage"),
-          selected = "grid"
+          choices = c("Several codes per unit (presence)" = "presence",
+                      "One code per unit (grid)" = "grid",
+                      "Span overlap (coverage)" = "coverage"),
+          selected = "presence"
         ),
         conditionalPanel(
-          condition = "input.qc_align == 'grid'",
+          condition = "input.qc_align != 'coverage'",
           radioButtons(
             "qc_agree_units", "Units",
             choices = c("Coded by every coder" = "intersection", "Union (missing allowed)" = "union"),
@@ -4229,6 +4312,14 @@ qualitative_coding_ui_content <- function() {
           )
         ),
         actionButton("qc_run_agreement", "Compute Agreement", class = "btn-primary btn-block"),
+        hr(),
+        tags$h5(strong("Blind holdout"), style = "color: #4269BF; margin-bottom: 10px;"),
+        uiOutput("qc_holdout_summary"),
+        numericInput("qc_holdout_n", "Holdout size", value = 50, min = 10, max = 500, step = 5),
+        selectInput("qc_holdout_strata", "Spread across", choices = c("None" = "")),
+        actionButton("qc_draw_holdout", "Draw holdout", class = "btn-default btn-block"),
+        tags$p("Drawn only from units no one opened during refinement. Each coder codes it in Annotate before seeing model codes.",
+               class = "qc-tip"),
         hr(),
         tags$h5(strong("AI retest stability"), style = "color: #4269BF; margin-bottom: 10px;"),
         numericInput("qc_retest_runs", "Runs", value = 2, min = 2, max = 5, step = 1),
@@ -4241,7 +4332,7 @@ qualitative_coding_ui_content <- function() {
       tabsetPanel(
         id = "qual_coding_tabs",
         tabPanel(
-          "1. Codebook",
+          "Codebook",
           value = "qc_codebook",
           div(
             style = "padding: 20px;",
@@ -4266,7 +4357,36 @@ qualitative_coding_ui_content <- function() {
           )
         ),
         tabPanel(
-          "2. AI Coding",
+          "Group ruling",
+          value = "qc_ruling",
+          div(
+            style = "padding: 20px;",
+            conditionalPanel(
+              condition = "output.has_qc_groups == true",
+              uiOutput("qc_ruling_cards")
+            ),
+            conditionalPanel(
+              condition = "output.has_qc_groups == false",
+              .tab_placeholder(
+                tags$i(class = "fas fa-layer-group", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
+                "Run an embedding topic model in ",
+                .hl("Topic Modeling"),
+                " to detect groups, then rule on each one here.",
+                width = NULL
+              )
+            )
+          )
+        ),
+        tabPanel(
+          "Annotate",
+          value = "qc_annotate",
+          div(
+            style = "padding: 20px;",
+            uiOutput("qc_ann_panel")
+          )
+        ),
+        tabPanel(
+          "AI Coding",
           value = "qc_ai",
           div(
             style = "padding: 20px;",
@@ -4289,7 +4409,7 @@ qualitative_coding_ui_content <- function() {
           )
         ),
         tabPanel(
-          "3. Review",
+          "Review",
           value = "qc_review",
           div(
             style = "padding: 20px;",
@@ -4307,7 +4427,7 @@ qualitative_coding_ui_content <- function() {
           )
         ),
         tabPanel(
-          "4. Agreement",
+          "Agreement",
           value = "qc_agree",
           div(
             style = "padding: 20px;",
@@ -4349,5 +4469,6 @@ qualitative_coding_ui_content <- function() {
         )
       )
     )
+  )
   )
 }

@@ -43,7 +43,7 @@ add_memo <- function(memos = NULL, target_type = c("unit", "category"),
   }
 
   row <- tibble::tibble(
-    memo_id = paste0("m", nrow(memos) + 1L),
+    memo_id = paste0("m", max(c(0L, suppressWarnings(as.integer(sub("^m", "", memos$memo_id)))), na.rm = TRUE) + 1L),
     target_type = target_type,
     target_id = as.character(target_id),
     round = as.integer(round),

@@ -8,7 +8,7 @@ describe_image_gemini(
   image_base64,
   prompt =
     "Describe this image: charts, diagrams, tables, and text. Extract visible text.",
-  model = "gemini-2.5-flash",
+  model = "gemini-3.8-flash",
   max_tokens = 500,
   api_key,
   mime_type = "image/png"
@@ -19,7 +19,7 @@ describe_image_gemini(
 
 \item{prompt}{Character string describing what to extract}
 
-\item{model}{Character string, Gemini model name (default: "gemini-2.5-flash")}
+\item{model}{Character string, Gemini model name (default: "gemini-3.8-flash")}
 
 \item{max_tokens}{Integer, maximum tokens in response (default: 500)}
 

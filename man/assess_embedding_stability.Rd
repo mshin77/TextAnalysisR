@@ -38,6 +38,7 @@ A list containing:
 \item all_models: List of all fitted models
 \item is_stable: Logical, TRUE if mean ARI >= 0.6 (considered stable)
 \item recommendation: Text recommendation based on stability
+\item kept_index: Positions of the non-blank input texts the models were fitted on
 }
 }
 \description{

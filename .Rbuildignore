@@ -31,3 +31,6 @@ __pycache__$
 \.pyc$
 \.bak$
 \.tmp\.
+^tests/manual$
+(^|/)\.env$
+^[^/]+\.rds$

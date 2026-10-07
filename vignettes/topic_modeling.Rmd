@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, eval = requireNamespace("stm", quietly = TRUE))
 ```
 
 Topic modeling discovers latent themes in a text collection. The Shiny app offers two types:

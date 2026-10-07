@@ -10,7 +10,8 @@ NULL
 }
 
 .resolve_llm_setup <- function(provider, model, api_key, defaults, strict_validate = FALSE) {
-  if (is.null(model)) model <- defaults[[provider]]
+  if (is.null(model) || !nzchar(model)) model <- c(defaults, ollama = "llama3.2")[[provider]]
+  if (provider == "ollama") return(list(provider = provider, model = model, api_key = ""))
   if (is.null(api_key)) {
     env_var <- switch(provider, openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
     api_key <- Sys.getenv(env_var)
@@ -158,7 +159,7 @@ calculate_document_similarity <- function(texts,
         if (!python_available) {
           return(.notify_missing_python("Embedding-based document similarity (sentence-transformers)"))
         }
-        sentence_transformers <- reticulate::import("sentence_transformers")
+        sentence_transformers <- .py_import("sentence_transformers")
         model <- sentence_transformers$SentenceTransformer(embedding_model)
 
         n_docs <- length(valid_texts)
@@ -489,6 +490,12 @@ reduce_dimensions <- function(data_matrix,
       stop("Insufficient non-constant features for analysis")
     }
 
+    # centering in PCA shifts cosine angles unless rows are unit length first
+    if (method == "UMAP" && identical(umap_metric, "cosine")) {
+      row_norms <- sqrt(rowSums(data_matrix^2))
+      data_matrix <- data_matrix / ifelse(row_norms > 0, row_norms, 1)
+    }
+
     max_components <- min(nrow(data_matrix) - 1, ncol(data_matrix), pca_dims)
     pca_dims_actual <- min(pca_dims, max_components)
 
@@ -549,9 +556,9 @@ reduce_dimensions <- function(data_matrix,
         umap_input <- if (is.null(pca_result)) data_matrix else pca_result$x
         if (verbose) message("Performing UMAP on ",
                              if (is.null(pca_result)) "original features..." else "PCA results...")
+        safe_n_neighbors <- as.integer(max(2, min(umap_neighbors, nrow(data_matrix) - 1)))
 
         if (requireNamespace("umap", quietly = TRUE)) {
-          safe_n_neighbors <- min(umap_neighbors, nrow(data_matrix) - 1, 15)
 
           umap_config <- umap::umap.defaults
           umap_config$n_neighbors <- safe_n_neighbors
@@ -581,7 +588,7 @@ reduce_dimensions <- function(data_matrix,
 
           umap_module <- reticulate::import("umap")
           reducer <- umap_module$UMAP(
-            n_neighbors = umap_neighbors,
+            n_neighbors = safe_n_neighbors,
             min_dist = umap_min_dist,
             n_components = as.integer(n_components),
             metric = umap_metric,
@@ -595,7 +602,7 @@ reduce_dimensions <- function(data_matrix,
             method = "UMAP",
             pca_result = pca_result,
             umap_params = list(
-              n_neighbors = umap_neighbors,
+              n_neighbors = safe_n_neighbors,
               min_dist = umap_min_dist,
               metric = umap_metric
             )
@@ -643,10 +650,12 @@ reduce_dimensions <- function(data_matrix,
 #' @param umap_min_dist The minimum distance for UMAP (default: 0.1).
 #' @param umap_n_components The number of UMAP components (default: 10).
 #' @param umap_metric The metric for UMAP (default: "cosine").
-#' @param dbscan_eps The eps parameter for DBSCAN. If 0, optimal value is determined automatically.
+#' @param dbscan_eps The eps parameter for DBSCAN. If 0, HDBSCAN runs instead, which needs no eps,
+#'   with a minimum cluster size of \code{max(dbscan_min_samples, 10)}.
 #' @param dbscan_min_samples The minimum samples for DBSCAN. Default NULL sets
 #'   \code{umap_n_components + 1} (dimensions-plus-one rule of thumb).
-#' @param reduce_outliers Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: TRUE).
+#' @param reduce_outliers Logical, if TRUE, reassigns noise points (cluster 0) to nearest cluster (default: FALSE).
+#'   Noise is part of the HDBSCAN/DBSCAN result; reassigning it forces weak members into clusters.
 #'   Set FALSE to keep density-based noise labels.
 #' @param outlier_strategy Strategy for outlier reduction: "centroid" (default,
 #'   Euclidean nearest-centroid in UMAP space; package-specific heuristic) or
@@ -660,6 +669,8 @@ reduce_dimensions <- function(data_matrix,
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
 #' @return A list containing cluster assignments, method used, and quality metrics.
+#'   All-zero rows (empty documents) are not clustered: they get label 0 and
+#'   their row indices are returned in \code{empty_documents}.
 #'   For \code{method = "umap_dbscan"} with \code{reduce_outliers = TRUE}, the list
 #'   also reports how noise points were reassigned: \code{outlier_strategy}
 #'   ("embeddings" or "centroid"), \code{outlier_metric} ("cosine" or "euclidean"),
@@ -715,11 +726,30 @@ cluster_embeddings <- function(data_matrix,
                                        umap_metric = "cosine",
                                        dbscan_eps = 0,
                                        dbscan_min_samples = NULL,
-                                       reduce_outliers = TRUE,
+                                       reduce_outliers = FALSE,
                                        outlier_strategy = "centroid",
                                        outlier_threshold = 0,
                                        seed = 123,
                                        verbose = TRUE) {
+
+  # zero vectors have no direction, so empty documents are set aside with label 0
+  empty_rows <- rowSums(abs(as.matrix(data_matrix))) == 0
+  if (any(empty_rows) && !all(empty_rows)) {
+    if (verbose) message("Setting aside ", sum(empty_rows), " empty document(s) with label 0")
+    args <- mget(names(formals(sys.function())), envir = environment())
+    args$data_matrix <- data_matrix[!empty_rows, , drop = FALSE]
+    result <- do.call(cluster_embeddings, args)
+    clusters <- integer(length(empty_rows))
+    clusters[!empty_rows] <- result$clusters
+    result$clusters <- clusters
+    result$empty_documents <- which(empty_rows)
+    if (!is.null(result$umap_embedding)) {
+      embedding <- matrix(NA_real_, nrow = length(empty_rows), ncol = ncol(result$umap_embedding))
+      embedding[!empty_rows, ] <- result$umap_embedding
+      result$umap_embedding <- embedding
+    }
+    return(result)
+  }
 
   # minPts rule of thumb: dimensions + 1
   if (is.null(dbscan_min_samples)) {
@@ -730,7 +760,7 @@ cluster_embeddings <- function(data_matrix,
     message("Starting clustering analysis with method: ", method)
   }
 
-  # scale() yields NaN on zero-variance columns, crashing kmeans/hclust
+  # zero-variance columns carry no signal and break UMAP and clusterCrit
   col_vars <- apply(data_matrix, 2, stats::var)
   constant_cols <- is.na(col_vars) | col_vars == 0
   if (any(constant_cols)) {
@@ -738,6 +768,9 @@ cluster_embeddings <- function(data_matrix,
     data_matrix <- data_matrix[, !constant_cols, drop = FALSE]
     if (verbose) message("Removed ", sum(constant_cols), " zero-variance columns")
   }
+
+  row_norms <- sqrt(rowSums(data_matrix^2))
+  unit_matrix <- data_matrix / ifelse(row_norms > 0, row_norms, 1)
 
   start_time <- Sys.time()
 
@@ -762,23 +795,21 @@ cluster_embeddings <- function(data_matrix,
                "Please install it with: install.packages('dbscan')")
         }
 
-        if (dbscan_eps == 0) {
-          if (verbose) message("Determining optimal eps parameter...")
-          # kNNdist convention: k = minPts - 1 (a point is its own neighbor)
-          knn_dist <- dbscan::kNNdist(umap_result$reduced_data, k = max(1, dbscan_min_samples - 1))
-          dbscan_eps <- stats::quantile(knn_dist, 0.9)
-          auto_eps <- TRUE
+        auto_eps <- dbscan_eps == 0
+        dbscan_result <- if (auto_eps) {
+          if (verbose) message("No eps given: running HDBSCAN...")
+          dbscan::hdbscan(umap_result$reduced_data, minPts = max(dbscan_min_samples, 10))
         } else {
-          auto_eps <- FALSE
+          dbscan::dbscan(umap_result$reduced_data, eps = dbscan_eps, minPts = dbscan_min_samples)
         }
-
-        dbscan_result <- dbscan::dbscan(umap_result$reduced_data,
-                                       eps = dbscan_eps,
-                                       minPts = dbscan_min_samples)
 
         clusters <- dbscan_result$cluster
         n_clusters_found <- length(unique(clusters)) - (0 %in% clusters)
         noise_ratio <- sum(clusters == 0) / length(clusters)
+        if (noise_ratio > 0.5) {
+          warning(sprintf("%.0f%% of documents were labelled noise; consider a smaller minimum cluster size or a larger eps.",
+                          100 * noise_ratio), call. = FALSE)
+        }
 
         outliers_reassigned <- 0
         outlier_strategy_used <- outlier_strategy
@@ -834,7 +865,7 @@ cluster_embeddings <- function(data_matrix,
           umap_embedding = umap_result$reduced_data,
           dbscan_result = dbscan_result,
           auto_detected = auto_eps,
-          detection_method = if (auto_eps) "90th percentile of kNN distances" else "Manual",
+          detection_method = if (auto_eps) "HDBSCAN (no eps)" else "Manual",
           noise_ratio = noise_ratio,
           reduce_outliers = reduce_outliers,
           outlier_strategy = if (reduce_outliers) outlier_strategy_used else NA_character_,
@@ -842,9 +873,9 @@ cluster_embeddings <- function(data_matrix,
           outlier_space = if (reduce_outliers) paste0(outlier_space, " space") else NA_character_,
           outliers_reassigned = outliers_reassigned,
           parameters = list(
-            eps = dbscan_eps,
-            min_samples = dbscan_min_samples,
-            umap_neighbors = umap_neighbors,
+            eps = if (auto_eps) NA_real_ else dbscan_eps,
+            min_samples = if (auto_eps) max(dbscan_min_samples, 10) else dbscan_min_samples,
+            umap_neighbors = umap_result$umap_params$n_neighbors %||% umap_neighbors,
             umap_min_dist = umap_min_dist,
             umap_metric = umap_metric
           )
@@ -856,18 +887,18 @@ cluster_embeddings <- function(data_matrix,
         if (n_clusters == 0) {
           if (verbose) message("Determining optimal number of clusters...")
           max_k <- min(10, nrow(data_matrix) - 1)
-          wss <- sapply(1:max_k, function(k) {
-            kmeans(scale(data_matrix), k, nstart = 10, iter.max = 100)$tot.withinss
+          wss <- sapply(seq_len(max(max_k, 1)), function(k) {
+            kmeans(unit_matrix, k, nstart = 10, iter.max = 100)$tot.withinss
           })
 
-          n_clusters <- which.max(diff(diff(wss))) + 1
-          if (n_clusters < 2) n_clusters <- 2
+          # the elbow needs at least three WSS points
+          n_clusters <- if (max_k >= 3) max(2, which.max(diff(diff(wss))) + 1) else 2
           auto_detected <- TRUE
         } else {
           auto_detected <- FALSE
         }
 
-        kmeans_result <- stats::kmeans(scale(data_matrix),
+        kmeans_result <- stats::kmeans(unit_matrix,
                                      centers = n_clusters,
                                      nstart = 25,
                                      iter.max = 100)
@@ -884,12 +915,12 @@ cluster_embeddings <- function(data_matrix,
       "hierarchical" = {
         if (verbose) message("Performing hierarchical clustering...")
 
-        dist_matrix <- stats::dist(scale(data_matrix))
+        dist_matrix <- stats::dist(unit_matrix)
         hclust_result <- stats::hclust(dist_matrix, method = "ward.D2")
 
         if (n_clusters == 0) {
           if (verbose) message("Determining optimal number of clusters...")
-          sil_scores <- sapply(2:min(10, nrow(data_matrix) - 1), function(k) {
+          sil_scores <- sapply(2:max(2, min(10, nrow(data_matrix) - 1)), function(k) {
             clusters <- stats::cutree(hclust_result, k = k)
             if (!requireNamespace("cluster", quietly = TRUE)) {
               stop("cluster package is required for silhouette analysis. ",
@@ -921,40 +952,32 @@ cluster_embeddings <- function(data_matrix,
       if (verbose) message("Calculating quality metrics...")
 
       # umap_dbscan clusters form in UMAP space, so score metrics there
-      eval_matrix <- if (method == "umap_dbscan") result$umap_embedding else scale(data_matrix)
+      eval_matrix <- if (method == "umap_dbscan") result$umap_embedding else unit_matrix
 
       if (requireNamespace("cluster", quietly = TRUE)) {
-        tryCatch({
-          sil <- cluster::silhouette(result$clusters, stats::dist(eval_matrix))
-          result$silhouette <- mean(sil[, 3])
-        }, error = function(e) {
-          result$silhouette <- NA
-        })
+        result$silhouette <- tryCatch(
+          .silhouette_no_noise(result$clusters, eval_matrix),
+          error = function(e) NA_real_
+        )
       }
 
-      if (requireNamespace("clusterCrit", quietly = TRUE)) {
-        tryCatch({
-          result$davies_bouldin <- clusterCrit::intCriteria(
-            as.matrix(eval_matrix),
-            result$clusters,
-            "Davies_Bouldin"
-          )$davies_bouldin
-        }, error = function(e) {
-          result$davies_bouldin <- NA
-        })
+      scored <- result$clusters > 0
+      result$noise_ratio <- result$noise_ratio %||% mean(!scored)
+      if (!requireNamespace("clusterCrit", quietly = TRUE)) {
+        message("Install 'clusterCrit' to report Davies-Bouldin and Calinski-Harabasz indices.")
       }
-
-      if (requireNamespace("clusterCrit", quietly = TRUE)) {
-        tryCatch({
-          result$calinski_harabasz <- clusterCrit::intCriteria(
-            as.matrix(eval_matrix),
-            result$clusters,
-            "Calinski_Harabasz"
-          )$calinski_harabasz
-        }, error = function(e) {
-          result$calinski_harabasz <- NA
-        })
-      }
+      crit <- if (!requireNamespace("clusterCrit", quietly = TRUE)) {
+        list(davies_bouldin = NA_real_, calinski_harabasz = NA_real_)
+      } else tryCatch(
+        clusterCrit::intCriteria(
+          as.matrix(eval_matrix)[scored, , drop = FALSE],
+          as.integer(factor(result$clusters[scored])),
+          c("Davies_Bouldin", "Calinski_Harabasz")
+        ),
+        error = function(e) list(davies_bouldin = NA_real_, calinski_harabasz = NA_real_)
+      )
+      result$davies_bouldin <- crit$davies_bouldin
+      result$calinski_harabasz <- crit$calinski_harabasz
     }
 
     execution_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
@@ -1002,7 +1025,7 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
   if (verbose) message("Generating embeddings using model: ", model)
 
   tryCatch({
-    sentence_transformers <- reticulate::import("sentence_transformers")
+    sentence_transformers <- .py_import("sentence_transformers")
     embedding_model <- sentence_transformers$SentenceTransformer(model)
     embeddings <- embedding_model$encode(texts, show_progress_bar = verbose, normalize_embeddings = TRUE)
 
@@ -1076,7 +1099,7 @@ analyze_document_clustering <- function(feature_matrix,
   if (clustering_method != "none") {
     if (clustering_method == "kmeans") {
       k <- list(...)$k %||% 5
-      km_result <- kmeans(coords, centers = k, nstart = 25)
+      km_result <- withr::with_seed(list(...)$seed %||% 123, stats::kmeans(coords, centers = k, nstart = 25))
       clusters <- km_result$cluster
     } else if (clustering_method == "hierarchical") {
       k <- list(...)$k %||% 5
@@ -1094,8 +1117,7 @@ analyze_document_clustering <- function(feature_matrix,
     }
 
     if (!is.null(clusters) && length(unique(clusters)) > 1) {
-      sil <- cluster::silhouette(clusters, dist(coords))
-      quality_metrics$silhouette <- mean(sil[, 3])
+      quality_metrics$silhouette <- .silhouette_no_noise(clusters, coords)
       quality_metrics$n_clusters <- length(unique(clusters[clusters > 0]))
 
       if (min(clusters) == 0) {
@@ -1163,10 +1185,10 @@ generate_cluster_labels_auto <- function(feature_matrix,
 #' Supports OpenAI or Gemini for AI generation.
 #'
 #' @param cluster_keywords List of keywords for each cluster.
-#' @param provider AI provider to use: "auto" (default), "openai", or "gemini".
+#' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama" (local).
 #'   "auto" picks the first provider with an available API key.
 #' @param model Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
-#'   "gemini-2.5-flash-lite" (Gemini).
+#'   "gemini-3.5-flash-lite" (Gemini).
 #' @param temperature Temperature parameter (default: 0.3).
 #' @param max_tokens Maximum tokens for response (default: 50).
 #' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
@@ -1202,22 +1224,15 @@ generate_cluster_labels <- function(cluster_keywords,
     )
   }
 
-  if (provider == "auto") {
-    if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
-      provider <- "openai"
-      if (verbose) message("Using OpenAI for label generation")
-    } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
-      provider <- "gemini"
-      if (verbose) message("Using Gemini for label generation")
-    } else {
-      message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
-      return(invisible(NULL))
-    }
+  provider <- .auto_provider(provider, api_key)
+  if (is.na(provider)) {
+    message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY, or use provider = \"ollama\".")
+    return(invisible(NULL))
   }
 
   setup <- .resolve_llm_setup(
     provider, model, api_key,
-    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite"),
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-3.5-flash-lite"),
     strict_validate = TRUE
   )
   if (is.null(setup)) return(invisible(NULL))
@@ -1603,7 +1618,8 @@ calculate_clustering_metrics <- function(clusters,
   }
 
   data_matrix <- as.matrix(data_matrix)
-  clusters <- as.numeric(as.factor(clusters))
+  # keep raw labels so noise (0) stays distinguishable
+  if (!is.numeric(clusters)) clusters <- as.integer(as.factor(clusters))
   unique_clusters <- unique(clusters)
   n_clusters <- length(unique_clusters)
   n_points <- nrow(data_matrix)
@@ -1634,16 +1650,24 @@ calculate_clustering_metrics <- function(clusters,
   if ("silhouette" %in% metrics) {
     result$silhouette <- tryCatch({
       if (requireNamespace("cluster", quietly = TRUE)) {
-        sil_result <- cluster::silhouette(clusters, dist_matrix)
-        mean(sil_result[, 3])
+        .silhouette_no_noise(clusters, dist_matrix)
       } else {
         NA
       }
     }, error = function(e) NA)
   }
 
+  scored <- clusters > 0
+  result$noise_ratio <- mean(!scored)
+  data_matrix <- data_matrix[scored, , drop = FALSE]
+  clusters <- clusters[scored]
+  unique_clusters <- unique(clusters)
+  n_clusters <- length(unique_clusters)
+  n_points <- nrow(data_matrix)
+
   if ("davies_bouldin" %in% metrics) {
     result$davies_bouldin <- tryCatch({
+      if (n_clusters < 2) stop("too few clusters")
       centers <- matrix(0, nrow = n_clusters, ncol = ncol(data_matrix))
       for (i in seq_len(n_clusters)) {
         cluster_id <- unique_clusters[i]
@@ -1684,9 +1708,7 @@ calculate_clustering_metrics <- function(clusters,
 
   if ("calinski_harabasz" %in% metrics) {
     result$calinski_harabasz <- tryCatch({
-      if (n_clusters >= n_points) {
-        return(NA)
-      }
+      if (n_clusters >= n_points || n_clusters < 2) stop("too few points")
 
       overall_centroid <- colMeans(data_matrix)
 
@@ -2384,6 +2406,10 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #' \code{n_sentiment_words} column counts matched sentiment tokens, not
 #' document length.
 #'
+#' Words are scored in isolation from a bag of words, so negation ("not
+#' happy"), intensifiers, and irony are not handled. For valence shifters, see
+#' [sentiment_valence_analysis()] (sentimentr).
+#'
 #' @param dfm_object A quanteda DFM object (unigram)
 #' @param lexicon Lexicon to use: "afinn", "bing", or "nrc" (default: "bing")
 #' @param texts_df Optional data frame with original texts and metadata (default: NULL)
@@ -2396,6 +2422,8 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #'   \describe{
 #'     \item{document_sentiment}{Data frame with sentiment scores per document}
 #'     \item{emotion_scores}{Data frame with emotion scores (NRC only)}
+#'     \item{document_tokens}{Data frame of every document and its token count,
+#'       including documents with no lexicon matches, for per-token rates}
 #'     \item{summary_stats}{List of summary statistics}
 #'     \item{feature_type}{Feature type used for analysis}
 #'   }
@@ -2586,6 +2614,8 @@ sentiment_lexicon_analysis <- function(dfm_object,
     document_sentiment = doc_sentiment,
     word_contributions = word_contributions,
     emotion_scores = emotion_data,
+    document_tokens = data.frame(document = doc_names, n_tokens = as.numeric(quanteda::ntoken(dfm_object)),
+                                 stringsAsFactors = FALSE),
     summary_stats = summary_stats,
     lexicon_used = lexicon_name,
     feature_type = feature_type
@@ -2891,9 +2921,9 @@ sentiment_embedding_analysis <- function(texts,
 #'
 #' @param texts Character vector of texts to analyze.
 #' @param doc_names Optional character vector of document names (default: text1, text2, ...).
-#' @param provider AI provider to use: "openai" (default) or "gemini".
+#' @param provider AI provider to use: "openai" (default), "gemini", or "ollama" (local).
 #' @param model Model name. If NULL, uses provider defaults: "gpt-4.1-mini" (OpenAI),
-#'   "gemini-2.5-flash-lite" (Gemini).
+#'   "gemini-3.5-flash-lite" (Gemini).
 #' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
 #' @param batch_size Number of texts to process per API call (default: 5).
 #'   Larger batches are more efficient but may hit token limits.
@@ -2932,7 +2962,7 @@ sentiment_embedding_analysis <- function(texts,
 #' }
 analyze_sentiment_llm <- function(texts,
                                   doc_names = NULL,
-                                  provider = c("openai", "gemini"),
+                                  provider = c("openai", "gemini", "ollama"),
                                   model = NULL,
                                   api_key = NULL,
                                   batch_size = 5,
@@ -2954,7 +2984,7 @@ analyze_sentiment_llm <- function(texts,
   # Resolve provider, model, and API key
   setup <- .resolve_llm_setup(
     provider, model, api_key,
-    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-2.5-flash-lite")
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-3.5-flash-lite")
   )
   if (is.null(setup)) return(invisible(NULL))
   model <- setup$model
@@ -2969,6 +2999,7 @@ analyze_sentiment_llm <- function(texts,
   system_prompt <- "You are an expert sentiment analyst. Analyze the sentiment of each text and respond in valid JSON format only.
 
 For each text, provide:
+- id: the text number
 - sentiment: 'positive', 'negative', or 'neutral'
 - score: a number from -1.0 (very negative) to 1.0 (very positive)
 - confidence: a number from 0.0 to 1.0 indicating your confidence
@@ -2980,7 +3011,7 @@ For each text, provide:
 
   system_prompt <- paste0(system_prompt, "
 Respond with a JSON array. Example:
-[{\"sentiment\": \"positive\", \"score\": 0.8, \"confidence\": 0.95}]
+[{\"id\": 1, \"sentiment\": \"positive\", \"score\": 0.8, \"confidence\": 0.95}]
 
 Important:
 - Detect sarcasm and irony (e.g., 'Oh great, another meeting' is likely negative)
@@ -3012,7 +3043,8 @@ Important:
     response <- tryCatch(
       call_llm_api(
         provider = provider, system_prompt = system_prompt, user_prompt = user_prompt,
-        model = model, temperature = 0, max_tokens = 500, api_key = api_key
+        model = model, temperature = 0, api_key = api_key,
+        max_tokens = (if (include_explanation) 120 else 40) * length(batch_texts) + 50
       ),
       error = function(e) {
         warning(sprintf("Batch %d failed: %s", i, e$message))
@@ -3045,10 +3077,11 @@ Important:
       next
     }
 
-    # Map parsed results to batch
+    # match on the echoed id; fall back to order when the model omits it
+    pos <- if ("id" %in% names(parsed)) match(seq_along(batch_texts), as.integer(parsed$id)) else seq_along(batch_texts)
     for (j in seq_along(batch_texts)) {
-      if (j <= nrow(parsed)) {
-        row <- parsed[j, ]
+      if (!is.na(pos[j]) && pos[j] <= nrow(parsed)) {
+        row <- parsed[pos[j], ]
         results <- rbind(results, data.frame(
           document = batch_names[j],
           sentiment = as.character(row$sentiment),
@@ -3944,7 +3977,7 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #' @param embedding_model Character string, embedding model. Defaults:
 #'   "text-embedding-3-small" (openai), "gemini-embedding-001" (gemini)
 #' @param chat_model Character string, chat model. Defaults:
-#'   "gpt-4.1-mini" (openai), "gemini-2.5-flash-lite" (gemini)
+#'   "gpt-4.1-mini" (openai), "gemini-3.5-flash-lite" (gemini)
 #' @param top_k Integer, number of documents to retrieve (default: 5)
 #'
 #' @return List with:
@@ -4033,7 +4066,7 @@ run_rag_search <- function(
   if (is.null(chat_model)) {
     chat_model <- switch(provider,
       "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-2.5-flash-lite"
+      "gemini" = "gemini-3.5-flash-lite"
     )
   }
 
@@ -4181,10 +4214,34 @@ run_rag_search <- function(
 
 # Network Analysis Functions
 
+.silhouette_no_noise <- function(clusters, x) {
+  keep <- clusters > 0
+  if (length(unique(clusters[keep])) < 2) return(NA_real_)
+  d <- if (inherits(x, "dist")) {
+    stats::as.dist(as.matrix(x)[keep, keep, drop = FALSE])
+  } else {
+    stats::dist(x[keep, , drop = FALSE])
+  }
+  mean(cluster::silhouette(clusters[keep], d)[, 3])
+}
+
 .node_palette <- function(n, colors = NULL) {
   if (n <= 0) return(character(0))
   base <- if (length(colors) > 0) colors else RColorBrewer::brewer.pal(8, "Set2")
   if (length(base) >= n) base[seq_len(n)] else grDevices::colorRampPalette(base)(n)
+}
+
+# ggplotly emits one trace per distinct width/alpha pair, so continuous edge
+# styles produce one trace per edge; a few bins keep the widget buildable
+.edge_style_bins <- function(x, n_bins = 5L) {
+  breaks <- unique(stats::quantile(x, probs = seq(0, 1, length.out = n_bins + 1), names = FALSE))
+  bin <- if (length(breaks) > 1) cut(x, breaks = breaks, labels = FALSE, include.lowest = TRUE) else rep(1L, length(x))
+  top <- max(length(breaks) - 1L, 2L)
+  # alpha floor 0.75 keeps the default #5C5CFF edge at 3.1:1 on white
+  data.frame(
+    line_width = scales::rescale(bin, to = c(0.3, 2), from = c(1, top)),
+    alpha = scales::rescale(bin, to = c(0.75, 1), from = c(1, top))
+  )
 }
 
 
@@ -4198,6 +4255,7 @@ run_rag_search <- function(
 #' @param doc_var A document-level metadata variable (default: NULL).
 #' @param co_occur_n Minimum co-occurrence count (default: 50). A heuristic
 #'   default; vary it to check edge-count sensitivity.
+#' @param normalized Logical; if TRUE, degree and harmonic closeness are divided by n - 1 (default: FALSE).
 #' @param edge_metric Edge weight: "count" (default, raw co-occurrence) or
 #'   "pmi" (pointwise mutual information, correcting the bias toward generic
 #'   high-frequency words; only positive-PMI pairs are kept).
@@ -4272,7 +4330,8 @@ word_co_occurrence_network <- function(dfm_object,
                                        edge_color = "#5C5CFF",
                                        node_color_by = "community",
                                        seed = 123,
-                                       category_params = NULL) {
+                                       category_params = NULL,
+                                       normalized = FALSE) {
 
   edge_metric <- match.arg(edge_metric)
 
@@ -4329,19 +4388,19 @@ word_co_occurrence_network <- function(dfm_object,
   build_summary <- function(net, group_label) {
     g <- net$graph
     summary_df <- data.frame(
-      Metric = c("Nodes", "Edges", "Density", "Diameter",
+      Metric = c("Nodes", "Edges", "Density", "Diameter (hops)",
                  "Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
-                 "Modularity", "Assortativity", "Geodesic Distance (Mean)"),
+                 "Modularity", "Assortativity", "Geodesic Distance (Mean, hops)"),
       Value = c(
         igraph::vcount(g),
         igraph::ecount(g),
         igraph::edge_density(g),
-        igraph::diameter(g),
+        igraph::diameter(g, weights = NA),
         igraph::transitivity(g, type = "global"),
         mean(igraph::transitivity(g, type = "local"), na.rm = TRUE),
         igraph::modularity(g, membership = igraph::V(g)$community),
         igraph::assortativity_degree(g),
-        mean(igraph::distances(g)[igraph::distances(g) != Inf], na.rm = TRUE)
+        mean(Filter(is.finite, igraph::distances(g, weights = NA)[upper.tri(diag(igraph::vcount(g)))]))
       )
     ) %>%
       dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
@@ -4401,16 +4460,20 @@ word_co_occurrence_network <- function(dfm_object,
       graph <- igraph::induced_subgraph(graph, keep)
     }
 
-    igraph::V(graph)$degree      <- igraph::degree(graph)
-    igraph::V(graph)$betweenness <- igraph::betweenness(graph)
-    igraph::V(graph)$closeness   <- igraph::closeness(graph)
+    igraph::E(graph)$weight <- igraph::E(graph)$n
+    # igraph reads path weights as distances, so stronger edges get shorter paths
+    edge_distance <- 1 / igraph::E(graph)$weight
+    igraph::V(graph)$degree      <- igraph::degree(graph, normalized = normalized)
+    igraph::V(graph)$betweenness <- igraph::betweenness(graph, weights = edge_distance)
+    # harmonic closeness stays defined across disconnected components
+    igraph::V(graph)$closeness   <- igraph::harmonic_centrality(graph, weights = edge_distance, normalized = normalized)
     igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-    community_result <- if (community_method == "louvain") {
+    community_result <- withr::with_seed(seed, if (community_method == "louvain") {
       igraph::cluster_louvain(graph)
     } else {
       # modularity objective matches the reported modularity statistic
-      igraph::cluster_leiden(graph, objective_function = "modularity")
-    }
+      igraph::cluster_leiden(graph, objective_function = "modularity", n_iterations = -1)
+    })
     igraph::V(graph)$community <- community_result$membership
 
     layout_mat <- withr::with_seed(seed, igraph::layout_with_fr(graph))
@@ -4437,9 +4500,9 @@ word_co_occurrence_network <- function(dfm_object,
                     xend = layout_df$x[match(to, layout_df$label)],
                     yend = layout_df$y[match(to, layout_df$label)],
                     cooccur_count = n) %>%
-      dplyr::select(from, to, x, y, xend, yend, cooccur_count) %>%
-      dplyr::mutate(line_width = scales::rescale(cooccur_count, to = c(0.3, 2)),
-                    alpha      = scales::rescale(cooccur_count, to = c(0.2, 0.9)))
+      dplyr::select(from, to, x, y, xend, yend, cooccur_count)
+    edge_data <- dplyr::bind_cols(edge_data, .edge_style_bins(edge_data$cooccur_count))
+    edge_label <- if (edge_metric == "pmi") "PMI" else "co-occurrences"
 
     # Node size
     size_metric <- switch(node_size_by,
@@ -4458,7 +4521,7 @@ word_co_occurrence_network <- function(dfm_object,
         hover_text = paste("Word:", label,
                            "<br>Degree:", degree,
                            "<br>Betweenness:", round(betweenness, 2),
-                           "<br>Closeness:", round(closeness, 2),
+                           "<br>Harmonic closeness:", round(closeness, 2),
                            "<br>Eigenvector:", round(eigenvector, 2),
                            "<br>Frequency:", frequency,
                            "<br>Community:", community,
@@ -4499,7 +4562,8 @@ word_co_occurrence_network <- function(dfm_object,
     p <- ggplot2::ggplot() +
       ggplot2::geom_segment(data = edge_data,
                             ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
-                                         linewidth = .data$line_width, alpha = .data$alpha),
+                                         linewidth = .data$line_width, alpha = .data$alpha,
+                                         text = paste0(.data$from, " - ", .data$to, ", ", edge_label, ": ", round(.data$cooccur_count, 3))),
                             color = edge_color, show.legend = FALSE) +
       ggplot2::scale_linewidth_identity() +
       ggplot2::scale_alpha_identity()
@@ -4651,6 +4715,7 @@ word_co_occurrence_network <- function(dfm_object,
 #' @param edge_color Hex color for network edges.
 #' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
 #' @param seed Integer seed for the force-directed layout, so the plot is reproducible (default: 123).
+#' @param normalized Logical; if TRUE, degree and harmonic closeness are divided by n - 1 (default: FALSE).
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `common_term_n`, `corr_n`, and `top_node_n` values for that category (default: NULL).
 #'
 #' @return A list containing the ggplot2 plot, a table, and a summary.
@@ -4712,6 +4777,7 @@ word_correlation_network <- function(dfm_object,
                                      edge_color = "#5C5CFF",
                                      node_color_by = "community",
                                      seed = 123,
+                                     normalized = FALSE,
                                      category_params = NULL) {
 
   if (!requireNamespace("htmltools", quietly = TRUE) ||
@@ -4767,19 +4833,19 @@ word_correlation_network <- function(dfm_object,
   build_summary <- function(net, group_label) {
     g <- net$graph
     summary_df <- data.frame(
-      Metric = c("Nodes", "Edges", "Density", "Diameter",
+      Metric = c("Nodes", "Edges", "Density", "Diameter (hops)",
                  "Global Clustering Coefficient", "Local Clustering Coefficient (Mean)",
-                 "Modularity", "Assortativity", "Geodesic Distance (Mean)"),
+                 "Modularity", "Assortativity", "Geodesic Distance (Mean, hops)"),
       Value = c(
         igraph::vcount(g),
         igraph::ecount(g),
         igraph::edge_density(g),
-        igraph::diameter(g),
+        igraph::diameter(g, weights = NA),
         igraph::transitivity(g, type = "global"),
         mean(igraph::transitivity(g, type = "local"), na.rm = TRUE),
         igraph::modularity(g, membership = igraph::V(g)$community),
         igraph::assortativity_degree(g),
-        mean(igraph::distances(g)[igraph::distances(g) != Inf], na.rm = TRUE)
+        mean(Filter(is.finite, igraph::distances(g, weights = NA)[upper.tri(diag(igraph::vcount(g)))]))
       )
     ) %>%
       dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ round(., 3)))
@@ -4815,7 +4881,7 @@ word_correlation_network <- function(dfm_object,
       dplyr::filter(dplyr::n() >= effective_common_term_n) %>%
       widyr::pairwise_cor(term, document, sort = TRUE, upper = FALSE) %>%
       dplyr::ungroup() %>%
-      dplyr::filter(correlation > effective_corr_n)
+      dplyr::filter(correlation > max(effective_corr_n, 0))
 
     graph <- igraph::graph_from_data_frame(term_cor, directed = FALSE)
     if(igraph::vcount(graph) == 0) {
@@ -4833,16 +4899,19 @@ word_correlation_network <- function(dfm_object,
       graph <- igraph::induced_subgraph(graph, keep)
     }
 
-    igraph::V(graph)$degree      <- igraph::degree(graph)
-    igraph::V(graph)$betweenness <- igraph::betweenness(graph)
-    igraph::V(graph)$closeness   <- igraph::closeness(graph)
+    igraph::E(graph)$weight <- igraph::E(graph)$correlation
+    # igraph reads path weights as distances, so stronger edges get shorter paths
+    edge_distance <- 1 / igraph::E(graph)$weight
+    igraph::V(graph)$degree      <- igraph::degree(graph, normalized = normalized)
+    igraph::V(graph)$betweenness <- igraph::betweenness(graph, weights = edge_distance)
+    igraph::V(graph)$closeness   <- igraph::harmonic_centrality(graph, weights = edge_distance, normalized = normalized)
     igraph::V(graph)$eigenvector <- igraph::eigen_centrality(graph)$vector
-    community_result <- if (community_method == "louvain") {
+    community_result <- withr::with_seed(seed, if (community_method == "louvain") {
       igraph::cluster_louvain(graph)
     } else {
       # modularity objective matches the reported modularity statistic
-      igraph::cluster_leiden(graph, objective_function = "modularity")
-    }
+      igraph::cluster_leiden(graph, objective_function = "modularity", n_iterations = -1)
+    })
     igraph::V(graph)$community <- community_result$membership
 
     layout_mat <- withr::with_seed(seed, igraph::layout_with_fr(graph))
@@ -4869,9 +4938,8 @@ word_correlation_network <- function(dfm_object,
                     xend = layout_df$x[match(to, layout_df$label)],
                     yend = layout_df$y[match(to, layout_df$label)],
                     correlation = correlation) %>%
-      dplyr::select(from, to, x, y, xend, yend, correlation) %>%
-      dplyr::mutate(line_width = scales::rescale(correlation, to = c(0.3, 2)),
-                    alpha      = scales::rescale(correlation, to = c(0.2, 0.9)))
+      dplyr::select(from, to, x, y, xend, yend, correlation)
+    edge_data <- dplyr::bind_cols(edge_data, .edge_style_bins(edge_data$correlation))
 
     # Node size
     size_metric <- switch(node_size_by,
@@ -4891,7 +4959,7 @@ word_correlation_network <- function(dfm_object,
           "Word:", label,
           "<br>Degree:", degree,
           "<br>Betweenness:", round(betweenness, 2),
-          "<br>Closeness:", round(closeness, 2),
+          "<br>Harmonic closeness:", round(closeness, 2),
           "<br>Eigenvector:", round(eigenvector, 2),
           "<br>Frequency:", frequency,
           "<br>Community:", community,
@@ -4932,7 +5000,8 @@ word_correlation_network <- function(dfm_object,
     p <- ggplot2::ggplot() +
       ggplot2::geom_segment(data = edge_data,
                             ggplot2::aes(x = .data$x, y = .data$y, xend = .data$xend, yend = .data$yend,
-                                         linewidth = .data$line_width, alpha = .data$alpha),
+                                         linewidth = .data$line_width, alpha = .data$alpha,
+                                         text = paste0(.data$from, " - ", .data$to, ": r = ", round(.data$correlation, 3))),
                             color = edge_color, show.legend = FALSE) +
       ggplot2::scale_linewidth_identity() +
       ggplot2::scale_alpha_identity()

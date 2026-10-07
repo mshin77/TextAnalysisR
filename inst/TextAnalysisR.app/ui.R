@@ -162,18 +162,18 @@ ui <- fluidPage(
     tags$a(
       id = "tts_toggle",
       href = "javascript:void(0);",
-      style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 26px; user-select: none;",
+      style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 20px; user-select: none;",
       `aria-label` = "Text to speech",
-      title = "Text to Speech (Alt+S)",
+      title = "Read aloud",
       tags$i(class = "fa fa-volume-up", id = "tts_icon", `aria-hidden` = "true", style = "pointer-events: none;")
     ),
     tags$a(
       id = "dark_mode_toggle",
       href = "javascript:void(0);",
       onclick = "toggleDarkMode()",
-      style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 30px;",
+      style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 20px;",
       `aria-label` = "Toggle dark mode",
-      title = "Toggle dark mode",
+      title = "Dark mode",
       tags$i(class = "fa fa-moon", `aria-hidden` = "true")
     ),
     tags$div(
@@ -181,9 +181,9 @@ ui <- fluidPage(
       tags$a(
         id = "translate_icon",
         href = "javascript:void(0);",
-        style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 26px; user-select: none;",
+        style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 20px; user-select: none;",
         `aria-label` = "Select language",
-        title = "Select Language",
+        title = "Language",
         tags$i(class = "fa fa-globe", `aria-hidden` = "true", style = "pointer-events: none;")
       ),
       # Hidden Google Translate element (accessed programmatically)
@@ -449,11 +449,20 @@ ui <- fluidPage(
           fileInput("file", "File upload",
             multiple = TRUE,
             accept = c(".xlsx", ".xls", ".xlsm", ".csv", ".pdf", ".docx", ".txt",
-                       ".png", ".jpg", ".jpeg", ".webp")
+                       ".png", ".jpg", ".jpeg", ".webp", ".gif")
           ),
           conditionalPanel(
             condition = "input.dataset_choice == 'Upload Your File'",
             uiOutput("upload_manifest"),
+            selectInput(
+              "pdf_unit",
+              "Rows per PDF",
+              choices = c("One per file" = "document", "One per page" = "page",
+                          "One per line" = "line"),
+              selected = "document"
+            ),
+            tags$p("Set before uploading. Every row keeps its PDF page range (page, page_end).",
+                   style = "font-size: 13px; color: #475569; margin-top: -8px;"),
             checkboxInput(
               "remove_metadata",
               "Remove database metadata lines",
@@ -527,7 +536,7 @@ Supports:
               style = "color: #4269BF; margin-bottom: 10px;"
             ),
             div(class = "checkbox-margin", checkboxGroupInput("show_vars",
-              label = NULL,
+              label = tags$span(class = "sr-only", "Text columns to unite"),
               choices = NULL
             )),
             actionButton("apply", "Apply", class = "btn-primary btn-block"),
@@ -538,7 +547,7 @@ Supports:
             ),
             selectInput(
               "analysis_unit",
-              label = NULL,
+              label = tags$span(class = "sr-only", "Unit of analysis"),
               choices = c("Sentences" = "sentence",
                           "Paragraphs (split on blank lines)" = "paragraph",
                           "Whole rows" = "document"),
@@ -565,7 +574,7 @@ Supports:
               )
             ),
             div(class = "checkbox-margin", checkboxGroupInput("segment_options",
-              label = NULL,
+              label = tags$span(class = "sr-only", "Tokenization options"),
               choices = list(
                 "Convert to lowercase" = "lowercase",
                 "Remove punctuation" = "remove_punct",
@@ -711,14 +720,15 @@ Supports:
             ),
             selectizeInput(
               "common_words",
-              label = "Top 10 frequent words pre-selected",
+              label = "Common words to remove",
               choices = NULL,
               multiple = TRUE,
               options = list(
                 create = TRUE,
-                placeholder = "Type to add more or modify"
+                placeholder = "None selected; type or suggest"
               )
             ),
+            actionButton("suggest_common_words", "Suggest top terms", class = "btn-sm", style = "margin-top: -6px; margin-bottom: 12px;"),
             selectInput(
               "stopwords_language",
               "Stopword language",

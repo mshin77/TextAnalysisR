@@ -23,7 +23,7 @@ generate_topic_labels(
 "auto" picks the first provider with an available API key.}
 
 \item{model}{A character string specifying which model to use. If NULL, uses
-provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini).}
+provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-3.5-flash-lite" (Gemini).}
 
 \item{system}{A character string containing the system prompt for the API.
 If NULL, the function uses the default system prompt.}

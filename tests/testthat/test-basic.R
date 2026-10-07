@@ -154,3 +154,28 @@ test_that("run_app function exists", {
   expect_true(exists("run_app"))
   expect_type(run_app, "closure")
 })
+
+test_that(".use_system_certificates leaves Python alone when truststore is missing", {
+  skip_if_not_installed("reticulate")
+  env <- TextAnalysisR:::.python_state
+  rm(list = ls(env), envir = env)
+  local_mocked_bindings(py_module_available = function(module) FALSE, .package = "reticulate")
+  ran <- FALSE
+  local_mocked_bindings(py_run_string = function(...) { ran <<- TRUE }, .package = "reticulate")
+  expect_false(TextAnalysisR:::.use_system_certificates())
+  expect_false(ran)
+  rm(list = ls(env), envir = env)
+})
+
+test_that(".use_system_certificates turns truststore on once per session", {
+  skip_if_not_installed("reticulate")
+  env <- TextAnalysisR:::.python_state
+  rm(list = ls(env), envir = env)
+  calls <- 0
+  local_mocked_bindings(py_module_available = function(module) TRUE, .package = "reticulate")
+  local_mocked_bindings(py_run_string = function(code) { calls <<- calls + 1; expect_match(code, "inject_into_ssl") }, .package = "reticulate")
+  expect_true(TextAnalysisR:::.use_system_certificates())
+  expect_true(TextAnalysisR:::.use_system_certificates())
+  expect_equal(calls, 1)
+  rm(list = ls(env), envir = env)
+})

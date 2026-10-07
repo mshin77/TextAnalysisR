@@ -226,6 +226,7 @@ estimate_topic_effects <- function(estimates, variable,
 #' @param init.type Initialization passed to stm::searchK: "Spectral", "LDA", or "Random" (default: "Spectral").
 #' @param height Plot height in pixels (default: 600).
 #' @param width Plot width in pixels (default: 800).
+#' @param seed Integer seed for the held-out split and model initialization (default: 123).
 #' @param verbose Logical indicating whether to print progress (default: TRUE).
 #' @param ... Additional arguments passed to stm::searchK.
 #' @return A list with the search results, the model call, and the settings used.
@@ -242,6 +243,7 @@ find_optimal_k <- function(dfm_object,
                            init.type = "Spectral",
                            height = 600,
                            width = 800,
+                           seed = 123,
                            verbose = TRUE, ...) {
   out <- quanteda::convert(dfm_object, to = "stm")
   if (is.null(out$meta) || is.null(out$documents) || is.null(out$vocab)) {
@@ -283,6 +285,8 @@ find_optimal_k <- function(dfm_object,
       init.type = init.type,
       K = topic_range,
       prevalence = prevalence_formula,
+      heldout.seed = seed,
+      seed = seed,
       verbose = verbose,
       ...
     )
@@ -300,6 +304,8 @@ find_optimal_k <- function(dfm_object,
         init.type = "LDA",
         K = topic_range,
         prevalence = prevalence_formula,
+        heldout.seed = seed,
+        seed = seed,
         verbose = verbose,
         ...
       )
@@ -571,20 +577,22 @@ extract_topic_terms_df <- function(model, n = 7) {
 #' top terms using AI providers (OpenAI or Gemini).
 #'
 #' @param top_topic_terms A data frame containing the top terms for each topic.
-#' @param provider AI provider to use: "auto" (default), "openai", or "gemini".
+#' @param provider AI provider to use: "auto" (default), "openai", "gemini", or "ollama" (local).
 #'   "auto" picks the first provider with an available API key.
 #' @param model A character string specifying which model to use. If NULL, uses
-#'   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-2.5-flash-lite" (Gemini).
+#'   provider defaults: "gpt-4.1-mini" (OpenAI), "gemini-3.5-flash-lite" (Gemini).
 #' @param system A character string containing the system prompt for the API.
 #'   If NULL, the function uses the default system prompt.
 #' @param user A character string containing the user prompt for the API.
-#'   If NULL, the function uses the default user prompt.
+#'   If NULL, the function uses the default user prompt. Write \code{\{terms\}} where
+#'   the topic keywords go; without it, the keywords are appended.
 #' @param temperature A numeric value controlling the randomness of the output (default: 0.5).
 #' @param api_key API key for OpenAI or Gemini. If NULL, uses environment variable.
 #' @param openai_api_key Deprecated. Use `api_key` instead. Kept for backward compatibility.
 #' @param verbose Logical, if TRUE, prints progress messages.
 #'
 #' @return A data frame containing the top terms for each topic along with their generated labels.
+#'   The \code{"llm"} attribute records the provider, model, and temperature.
 #'
 #' @concept topic-modeling
 #' @seealso [get_topic_terms()] to extract top terms first; [generate_topic_content()] for survey items / RQs / themes grounded in the same terms; [call_llm_api()] for the direct AI provider call
@@ -626,42 +634,20 @@ generate_topic_labels <- function(top_topic_terms,
     if (provider == "auto") provider <- "openai"
   }
 
-  if (provider == "auto") {
-    if (nzchar(Sys.getenv("OPENAI_API_KEY")) || (!is.null(api_key) && grepl("^sk-", api_key))) {
-      provider <- "openai"
-      if (verbose) message("Using OpenAI for topic label generation")
-    } else if (nzchar(Sys.getenv("GEMINI_API_KEY")) || (!is.null(api_key) && grepl("^AIza", api_key))) {
-      provider <- "gemini"
-      if (verbose) message("Using Gemini for topic label generation")
-    } else {
-      message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
-      return(invisible(NULL))
-    }
-  }
-
-  if (is.null(model)) {
-    model <- switch(provider,
-      "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-2.5-flash-lite"
-    )
-  }
-
-  if (is.null(api_key)) {
-    api_key <- switch(provider,
-      "openai" = Sys.getenv("OPENAI_API_KEY"),
-      "gemini" = Sys.getenv("GEMINI_API_KEY")
-    )
-  }
-
-  if (!nzchar(api_key)) {
-    return(.notify_missing_api_key(provider))
-  }
-
-  validation <- validate_api_key(api_key, strict = FALSE)
-  if (!validation$valid) {
-    message(sprintf("Invalid API key format: %s", validation$error))
+  provider <- .auto_provider(provider, api_key)
+  if (is.na(provider)) {
+    message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY, or use provider = \"ollama\".")
     return(invisible(NULL))
   }
+
+  setup <- .resolve_llm_setup(
+    provider, model, api_key,
+    defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-3.5-flash-lite"),
+    strict_validate = TRUE
+  )
+  if (is.null(setup)) return(invisible(NULL))
+  model <- setup$model
+  api_key <- setup$api_key
 
   if (verbose) {
     message("Generating topic labels for ", dplyr::n_distinct(top_topic_terms$topic),
@@ -721,9 +707,11 @@ Label: Virtual Math Tools for Students with Disabilities"
       "'. Based on the keywords, create a short label (max 5 words). Return only the label."
     )
 
-    # Use custom user prompt if provided
+    # {terms} or the app placeholder marks where the keywords go
     if (!is.null(user)) {
-      user_prompt <- user
+      terms_text <- paste(selected_terms, collapse = ", ")
+      user_prompt <- gsub("\\{terms\\}|\\[terms will be inserted here\\]", terms_text, user)
+      if (identical(user_prompt, user)) user_prompt <- paste0(user, "\n\nKeywords: ", terms_text)
     }
 
     topic_label <- tryCatch({
@@ -753,6 +741,7 @@ Label: Virtual Math Tools for Students with Disabilities"
     dplyr::left_join(unique_topics, by = "topic") %>%
     dplyr::select(topic_label, topic, term, beta) %>%
     dplyr::arrange(topic, dplyr::desc(beta))
+  attr(top_labeled_topic_terms, "llm") <- list(provider = provider, model = model, temperature = temperature)
 
   return(top_labeled_topic_terms)
 }
@@ -1082,7 +1071,7 @@ fit_embedding_model <- function(texts,
       if (!python_available) {
         return(.notify_missing_python("Semantic topic modeling (sentence-transformers)"))
       }
-      sentence_transformers <- reticulate::import("sentence_transformers")
+      sentence_transformers <- .py_import("sentence_transformers")
       model <- sentence_transformers$SentenceTransformer(embedding_model)
 
       n_docs <- length(valid_texts)
@@ -1107,7 +1096,7 @@ fit_embedding_model <- function(texts,
         if (verbose) message("Step 2: Performing BERTopic-based topic modeling...")
 
         bertopic_available <- tryCatch({
-          reticulate::import("bertopic")
+          .py_import("bertopic")
           TRUE
         }, error = function(e) FALSE)
 
@@ -1116,7 +1105,7 @@ fit_embedding_model <- function(texts,
                "Or in R: reticulate::py_install('bertopic')")
         }
 
-        bertopic <- reticulate::import("bertopic")
+        bertopic <- .py_import("bertopic")
 
         # "auto" requests BERTopic's automatic topic merging
         nr_topics <- if (is.null(n_topics)) NULL
@@ -1165,18 +1154,20 @@ fit_embedding_model <- function(texts,
             for (idx in outlier_docs) {
               if (!is.null(topic_probs) && nrow(topic_probs) >= idx) {
                 probs <- topic_probs[idx, ]
-                if (max(probs) > outlier_threshold) {
+                if (max(probs) >= outlier_threshold) {
                   topic_assignments[idx] <- which.max(probs)
                   outliers_reassigned <- outliers_reassigned + 1
                 }
               }
             }
+            topic_model$update_topics(valid_texts, topics = as.integer(topic_assignments - 1))
           } else if (outlier_strategy %in% c("c-tf-idf", "embeddings", "distributions")) {
             new_topics <- topic_model$reduce_outliers(
               valid_texts,
               as.integer(topic_assignments_raw),
               strategy = outlier_strategy,
-              threshold = outlier_threshold
+              threshold = outlier_threshold,
+              embeddings = if (outlier_strategy == "embeddings") embeddings else NULL
             )
             # sync topic info with the new assignments
             topic_model$update_topics(valid_texts, topics = new_topics)
@@ -1414,7 +1405,7 @@ fit_embedding_model <- function(texts,
       if (!python_available) {
         return(.notify_missing_python("Embedding generation (sentence-transformers)"))
       }
-      sentence_transformers <- reticulate::import("sentence_transformers")
+      sentence_transformers <- .py_import("sentence_transformers")
       model <- sentence_transformers$SentenceTransformer(embedding_model)
 
       n_docs <- length(valid_texts)
@@ -1444,7 +1435,7 @@ fit_embedding_model <- function(texts,
           stop("umap package required. Install with: install.packages('umap')")
         }
         umap_config <- umap::umap.defaults
-        umap_config$n_neighbors <- umap_neighbors
+        umap_config$n_neighbors <- max(2, min(umap_neighbors, nrow(embeddings) - 1))
         umap_config$min_dist <- max(umap_min_dist, 0.001)
         umap_config$n_components <- min(umap_n_components, ncol(embeddings))
         umap_config$metric <- umap_metric
@@ -1471,7 +1462,7 @@ fit_embedding_model <- function(texts,
           stop("umap package required. Install with: install.packages('umap')")
         }
         umap_config <- umap::umap.defaults
-        umap_config$n_neighbors <- umap_neighbors
+        umap_config$n_neighbors <- max(2, min(umap_neighbors, nrow(embeddings) - 1))
         umap_config$min_dist <- max(umap_min_dist, 0.001)
         umap_config$n_components <- min(umap_n_components, ncol(embeddings))
         umap_config$metric <- umap_metric
@@ -1718,7 +1709,7 @@ find_topic_matches <- function(topic_model,
     if (!requireNamespace("reticulate", quietly = TRUE)) {
       stop("reticulate package is required for topic similarity")
     }
-    sentence_transformers <- reticulate::import("sentence_transformers")
+    sentence_transformers <- .py_import("sentence_transformers")
     model <- sentence_transformers$SentenceTransformer(embedding_model)
     query_embedding <- model$encode(query, show_progress_bar = FALSE, normalize_embeddings = TRUE)
 
@@ -2081,6 +2072,17 @@ auto_tune_embedding_topics <- function(
 }
 
 
+#' @noRd
+.adjusted_rand <- function(a, b) {
+  tab <- table(a, b)
+  pairs <- function(x) sum(x * (x - 1) / 2)
+  index <- pairs(tab)
+  expected <- pairs(rowSums(tab)) * pairs(colSums(tab)) / pairs(sum(tab))
+  maximum <- (pairs(rowSums(tab)) + pairs(colSums(tab))) / 2
+  if (maximum == expected) return(1)
+  return((index - expected) / (maximum - expected))
+}
+
 #' @title Assess Embedding Topic Model Stability
 #'
 #' @description
@@ -2103,6 +2105,7 @@ auto_tune_embedding_topics <- function(
 #'   - all_models: List of all fitted models
 #'   - is_stable: Logical, TRUE if mean ARI >= 0.6 (considered stable)
 #'   - recommendation: Text recommendation based on stability
+#'   - kept_index: Positions of the non-blank input texts the models were fitted on
 #'
 #' @details
 #' Stability is assessed via:
@@ -2152,6 +2155,13 @@ assess_embedding_stability <- function(
     stop("n_runs must be at least 2 to assess stability")
   }
 
+  # fit_embedding_model drops blank texts, so embed the same non-blank set
+  kept_index <- which(!is.na(texts) & nzchar(trimws(texts)))
+  if (length(kept_index) < length(texts) && verbose) {
+    message("  Dropping ", length(texts) - length(kept_index), " blank text(s)")
+  }
+  texts <- texts[kept_index]
+
   # Generate embeddings once for efficiency
   if (verbose) message("  Generating embeddings (one-time cost)...")
   embeddings <- tryCatch({
@@ -2199,7 +2209,7 @@ assess_embedding_stability <- function(
 
   # degenerate single-cluster runs distort mean ARI
   degenerate <- vapply(models, function(m) {
-    length(unique(m$topic_assignments[m$topic_assignments >= 0])) <= 1
+    length(unique(m$topic_assignments[m$topic_assignments > 0])) <= 1
   }, logical(1))
   if (any(degenerate) && sum(!degenerate) >= 2) {
     if (verbose) message("  Excluding ", sum(degenerate), " degenerate run(s)")
@@ -2215,13 +2225,12 @@ assess_embedding_stability <- function(
       assignments_i <- models[[i]]$topic_assignments
       assignments_j <- models[[j]]$topic_assignments
 
-      # Calculate ARI using contingency table approach
-      ari <- tryCatch({
+      both <- assignments_i > 0 & assignments_j > 0
+      ari <- if (sum(both) < 2) NA else tryCatch({
         if (requireNamespace("aricode", quietly = TRUE)) {
-          aricode::ARI(assignments_i, assignments_j)
+          aricode::ARI(assignments_i[both], assignments_j[both])
         } else {
-          # Fallback: simple agreement rate
-          mean(assignments_i == assignments_j)
+          .adjusted_rand(assignments_i[both], assignments_j[both])
         }
       }, error = function(e) NA)
 
@@ -2293,7 +2302,8 @@ assess_embedding_stability <- function(
     best_model = best_model,
     all_models = models,
     is_stable = is_stable,
-    recommendation = recommendation
+    recommendation = recommendation,
+    kept_index = kept_index
   )
 }
 
@@ -3729,9 +3739,9 @@ Content:"
 #' @param topic_var Name of the column containing topic identifiers (default: "topic").
 #' @param term_var Name of the column containing terms (default: "term").
 #' @param weight_var Name of the column containing term weights (default: "beta").
-#' @param provider LLM provider: "openai" or "gemini" (default: "openai").
-#' @param model Model name. For OpenAI: "gpt-4.1-mini", "gpt-4", etc.
-#'   For Gemini: "gemini-2.5-flash-lite", "gemini-2.5-flash", etc.
+#' @param provider LLM provider: "openai" (default), "gemini", or "ollama" (local).
+#' @param model Model name. For OpenAI: "gpt-4.1-mini", "gpt-4.1", etc.
+#'   For Gemini: "gemini-3.5-flash-lite", "gemini-3.8-flash", etc.
 #' @param temperature Sampling temperature (0-2). Lower = more deterministic (default: 0).
 #' @param system_prompt Custom system prompt. If NULL, uses default for content_type.
 #' @param user_prompt_template Custom user prompt template with \{terms\} placeholder.
@@ -3770,7 +3780,7 @@ Content:"
 #'   topic_terms_df = top_terms,
 #'   content_type = "research_question",
 #'   provider = "gemini",
-#'   model = "gemini-2.5-flash-lite"
+#'   model = "gemini-3.5-flash-lite"
 #' )
 #'
 #' # Generate with custom prompt
@@ -3788,8 +3798,8 @@ generate_topic_content <- function(topic_terms_df,
                                     topic_var = "topic",
                                     term_var = "term",
                                     weight_var = "beta",
-                                    provider = c("openai", "gemini"),
-                                    model = "gpt-4.1-mini",
+                                    provider = c("openai", "gemini", "ollama"),
+                                    model = NULL,
                                     temperature = 0,
                                     system_prompt = NULL,
                                     user_prompt_template = NULL,
@@ -3848,13 +3858,11 @@ generate_topic_content <- function(topic_terms_df,
 
   unique_topics[[output_var]] <- NA_character_
 
-  if (is.null(api_key)) {
-    env_var <- switch(provider, "openai" = "OPENAI_API_KEY", "gemini" = "GEMINI_API_KEY")
-    api_key <- Sys.getenv(env_var)
-    if (api_key == "") {
-      return(.notify_missing_api_key(provider))
-    }
-  }
+  setup <- .resolve_llm_setup(provider, model, api_key,
+                              defaults = list(openai = "gpt-4.1-mini", gemini = "gemini-3.5-flash-lite"))
+  if (is.null(setup)) return(invisible(NULL))
+  model <- setup$model
+  api_key <- setup$api_key
 
   # Progress bar
   if (verbose && requireNamespace("progress", quietly = TRUE)) {

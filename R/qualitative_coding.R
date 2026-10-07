@@ -124,17 +124,12 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
 #' @keywords internal
 .resolve_provider <- function(provider, api_key) {
   env <- c(openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
-  prefix <- c(openai = "^sk-", gemini = "^AIza")
-  from_key <- if (is.null(api_key)) {
-    character(0)
-  } else {
-    names(prefix)[vapply(prefix, grepl, logical(1), x = api_key)]
-  }
-  if (provider == "auto") provider <- c(from_key, names(env)[nzchar(Sys.getenv(env))])[1]
+  provider <- .auto_provider(provider, api_key)
   if (is.na(provider)) {
-    message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY.")
+    message("No AI provider available. Set OPENAI_API_KEY or GEMINI_API_KEY, or use provider = \"ollama\".")
     return(NULL)
   }
+  if (provider == "ollama") return(list(provider = provider, api_key = ""))
   if (is.null(api_key)) api_key <- Sys.getenv(env[[provider]])
   if (!nzchar(api_key)) return(.notify_missing_api_key(provider))
   list(provider = provider, api_key = api_key)
@@ -193,7 +188,7 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
 #'   codebook grows.
 #' @param stop_after Stop once this many consecutive units open no new code;
 #'   `Inf` (default) reads the whole corpus.
-#' @param provider AI provider: "auto" (default), "openai", or "gemini".
+#' @param provider AI provider: "auto" (default), "openai", "gemini", or "ollama" (local).
 #' @param model Optional model id; provider default when NULL.
 #' @param temperature Sampling temperature (default 0 for reproducibility).
 #' @param api_key Optional API key; falls back to the provider env var.
@@ -215,7 +210,7 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
 generate_codes <- function(texts, codebook = NULL,
                            unit = c("sentence", "paragraph", "document"),
                            order = NULL, context_k = Inf, stop_after = Inf,
-                           provider = c("auto", "openai", "gemini"),
+                           provider = c("auto", "openai", "gemini", "ollama"),
                            model = NULL, temperature = 0, api_key = NULL,
                            max_tokens = 200, delay = 1, verbose = TRUE) {
   unit <- match.arg(unit)
@@ -272,7 +267,7 @@ generate_codes <- function(texts, codebook = NULL,
       .parse_new_code(response, book$code)
     }, error = function(e) {
       list(code = NA_character_, definition = NA_character_,
-           opened_new = FALSE, status = "error")
+           opened_new = FALSE, status = "error", message = conditionMessage(e))
     })
     if (isTRUE(parsed$opened_new)) {
       book <- tibble::add_row(book, code = parsed$code,
@@ -283,8 +278,9 @@ generate_codes <- function(texts, codebook = NULL,
     rows[[p]] <- tibble::tibble(
       position = p, doc_id = units_tbl$doc_id[i], unit_id = units_tbl$unit_id[i],
       assigned = parsed$code, opened_new = isTRUE(parsed$opened_new),
-      n_categories = nrow(book), status = parsed$status)
-    quiet <- if (isTRUE(parsed$opened_new)) 0L else quiet + 1L
+      n_categories = nrow(book), status = parsed$status,
+      message = parsed$message %||% NA_character_)
+    quiet <- if (isTRUE(parsed$opened_new)) 0L else if (identical(parsed$status, "error")) quiet else quiet + 1L
     if (quiet >= stop_after) break
     if (p < n_units) Sys.sleep(delay)
   }
@@ -312,7 +308,7 @@ generate_codes <- function(texts, codebook = NULL,
 #'   blank lines), or "document" (one unit per element of `texts`).
 #' @param max_codes Maximum codes per unit (default 3). Units where no code
 #'   fits return one row with `code = NA`.
-#' @param provider AI provider: "auto" (default), "openai", or "gemini".
+#' @param provider AI provider: "auto" (default), "openai", "gemini", or "ollama" (local).
 #' @param model Optional model id; provider default when NULL.
 #' @param temperature Sampling temperature (default 0 for reproducibility).
 #' @param api_key Optional API key; falls back to the provider env var.
@@ -333,7 +329,7 @@ generate_codes <- function(texts, codebook = NULL,
 apply_codes <- function(texts, codebook,
                         unit = c("paragraph", "sentence", "document"),
                         max_codes = 3,
-                        provider = c("auto", "openai", "gemini"),
+                        provider = c("auto", "openai", "gemini", "ollama"),
                         model = NULL, temperature = 0, api_key = NULL,
                         max_tokens = NULL, delay = 1, verbose = TRUE) {
   unit <- match.arg(unit)
@@ -439,8 +435,11 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
     return(invisible(NULL))
   }
 
+  failed <- unique(unlist(lapply(runs, function(d) {
+    if ("status" %in% names(d)) d$unit_id[d$status == "error"] else character(0)
+  })))
   sigs <- lapply(runs, function(d) {
-    d %>%
+    d[!d$unit_id %in% failed, , drop = FALSE] %>%
       dplyr::mutate(code = dplyr::coalesce(.data$code, "")) %>%
       dplyr::group_by(.data$unit_id) %>%
       dplyr::summarise(
@@ -467,6 +466,75 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   )
 }
 
+.qc_none <- "(none)"
+
+#' @keywords internal
+.presence_ratings <- function(assignments, units = c("intersection", "union")) {
+  units <- match.arg(units)
+  miss <- setdiff(c("doc_id", "code", "coder"), names(assignments))
+  if (length(miss) > 0) {
+    stop("assignments is missing column(s): ", paste(miss, collapse = ", "), call. = FALSE)
+  }
+  a <- unique(assignments[c("doc_id", "code", "coder")])
+  reviewed <- unique(a[c("doc_id", "coder")])
+  docs <- sort(unique(reviewed$doc_id))
+  coders <- sort(unique(reviewed$coder))
+  seen <- matrix(FALSE, length(docs), length(coders), dimnames = list(docs, coders))
+  seen[cbind(match(reviewed$doc_id, docs), match(reviewed$coder, coders))] <- TRUE
+  keep <- if (units == "intersection") rowSums(seen) == ncol(seen) else rowSums(seen) > 0
+  codes <- sort(unique(stats::na.omit(as.character(a$code))))
+  stats::setNames(lapply(codes, function(k) {
+    hit <- a[!is.na(a$code) & a$code == k, ]
+    m <- ifelse(seen, "no", NA_character_)
+    m[cbind(match(hit$doc_id, docs), match(hit$coder, coders))] <- "yes"
+    m[keep, , drop = FALSE]
+  }), codes)
+}
+
+#' @keywords internal
+.presence_agreement <- function(assignments, metrics, units, by_code) {
+  per_code <- .presence_ratings(assignments, units)
+  if (length(per_code) == 0 || nrow(per_code[[1]]) == 0 || ncol(per_code[[1]]) < 2) {
+    stop("At least two coders with shared units are required.", call. = FALSE)
+  }
+  code_rows <- dplyr::bind_rows(lapply(names(per_code), function(k) {
+    m <- .agreement_metrics(per_code[[k]], metrics)
+    m$code <- k
+    m[, c("code", "metric", "estimate", "n")]
+  }))
+  overall <- code_rows %>%
+    dplyr::group_by(.data$metric) %>%
+    dplyr::summarise(estimate = mean(.data$estimate, na.rm = TRUE),
+                     n = suppressWarnings(as.integer(max(.data$n, na.rm = TRUE))),
+                     .groups = "drop") %>%
+    dplyr::mutate(estimate = ifelse(is.nan(.data$estimate), NA_real_, .data$estimate),
+                  metric = factor(.data$metric, levels = metrics)) %>%
+    dplyr::arrange(.data$metric) %>%
+    dplyr::mutate(metric = as.character(.data$metric))
+  stacked <- simplify2array(per_code)
+  shared <- stats::complete.cases(per_code[[1]])
+  same_set <- vapply(which(shared), function(i) {
+    sets <- apply(stacked[i, , , drop = FALSE], 2, function(col) paste(col, collapse = ""))
+    length(unique(sets)) == 1
+  }, logical(1))
+  overall <- dplyr::bind_rows(overall, tibble::tibble(
+    metric = "set_match",
+    estimate = if (length(same_set)) mean(same_set) else NA_real_,
+    n = length(same_set)))
+  disagree <- dplyr::bind_rows(lapply(names(per_code), function(k) {
+    m <- per_code[[k]]
+    differ <- apply(m, 1, function(r) length(unique(r[!is.na(r)])) > 1)
+    if (!any(differ)) return(NULL)
+    d <- as.data.frame(m[differ, , drop = FALSE], stringsAsFactors = FALSE)
+    tibble::as_tibble(cbind(data.frame(doc_id = rownames(m)[differ], code = k,
+                                       stringsAsFactors = FALSE), d))
+  }))
+  list(overall = overall,
+       by_code = if (by_code) code_rows else NULL,
+       disagree = if (nrow(disagree)) disagree else tibble::tibble(doc_id = character(0), code = character(0)),
+       independent = NULL)
+}
+
 #' @keywords internal
 .qc_ratings <- function(assignments, units = c("intersection", "union")) {
   units <- match.arg(units)
@@ -475,6 +543,7 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
     stop("assignments is missing column(s): ", paste(miss, collapse = ", "), call. = FALSE)
   }
   a <- assignments[!duplicated(assignments[c("doc_id", "coder")]), c("doc_id", "code", "coder")]
+  a$code <- ifelse(is.na(a$code), .qc_none, as.character(a$code))
   wide <- tidyr::pivot_wider(a, id_cols = "doc_id", names_from = "coder", values_from = "code")
   m <- as.matrix(wide[, -1, drop = FALSE])
   rownames(m) <- wide$doc_id
@@ -641,14 +710,24 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #' @param units "intersection" (default, units coded by every coder) or
 #'   "union" (uncoded units count as missing). Grid alignment only.
 #' @param by_code Logical; also report per-code agreement.
-#' @param align "grid" (default) when coders share units, "coverage" when each
+#' @param align "grid" (default) when coders give one code per unit,
+#'   "presence" when a unit may carry several codes, "coverage" when each
 #'   marked its own spans. Grid keeps the highest-confidence code where a coder
-#'   gave several; coverage reports span overlap and ignores `metrics`/`units`.
+#'   gave several and warns that agreement on the remaining codes is lost.
+#'   Presence scores every code as present or absent on each unit a coder
+#'   reviewed, reports per-code statistics in `by_code`, their mean in
+#'   `overall`, and `set_match`, the share of shared units on which coders gave
+#'   the identical set of codes. Coverage reports span overlap and ignores
+#'   `metrics`/`units`. Under grid and presence, a row with `code` `NA` records
+#'   a unit the coder reviewed and left uncoded, which counts as a rating
+#'   ("(none)" under grid, absent under presence). Rows with `status`
+#'   "error" (a failed AI call) are dropped: they record no judgment.
 #' @param codebook_authors Character vector of `coder` values that wrote or
 #'   revised the codebook. When supplied, metrics are also computed among the
 #'   remaining coders alone. Agreement with a coder who shaped the coding frame
 #'   reflects that shared calibration, so the two figures answer different
-#'   questions. Ignored when `align = "coverage"`.
+#'   questions. Applies to grid and presence; ignored when
+#'   `align = "coverage"`.
 #'
 #' @return A list with `overall`, `by_code` (NULL when `by_code` is FALSE),
 #'   `disagree`, and `independent` (NULL unless `codebook_authors` is supplied
@@ -668,7 +747,7 @@ code_agreement <- function(assignments,
                            metrics = c("alpha", "kappa", "ac1", "pabak", "percent"),
                            units = c("intersection", "union"),
                            by_code = TRUE,
-                           align = c("grid", "coverage"),
+                           align = c("grid", "presence", "coverage"),
                            codebook_authors = NULL) {
   metrics <- match.arg(metrics, several.ok = TRUE)
   units <- match.arg(units)
@@ -679,9 +758,23 @@ code_agreement <- function(assignments,
   }
   a <- assignments
   if ("unit_id" %in% names(a)) a$doc_id <- a$unit_id
-  if ("confidence" %in% names(a)) {
-    a <- a[order(a$confidence, decreasing = TRUE, na.last = TRUE), ]
+  if ("status" %in% names(a)) a <- a[is.na(a$status) | a$status != "error", , drop = FALSE]
+  if (align == "presence") {
+    res <- .presence_agreement(a, metrics, units, by_code)
+    others <- setdiff(unique(a$coder), codebook_authors)
+    if (!is.null(codebook_authors) && length(others) >= 2) {
+      res$independent <- .presence_agreement(a[a$coder %in% others, , drop = FALSE], metrics, units, FALSE)$overall
+    }
+    return(res)
   }
+  multi <- dplyr::count(dplyr::distinct(a[!is.na(a$code), c("doc_id", "coder", "code")]),
+                        .data$doc_id, .data$coder)
+  if (any(multi$n > 1)) {
+    warning("Some units carry more than one code from a coder; grid alignment keeps one. ",
+            "Use align = \"presence\" to score every code.", call. = FALSE)
+  }
+  conf <- if ("confidence" %in% names(a)) -a$confidence else rep(0, nrow(a))
+  a <- a[order(is.na(a$code), conf, na.last = TRUE), , drop = FALSE]
   ratings <- .qc_ratings(a, units)
   if (nrow(ratings) == 0 || ncol(ratings) < 2) {
     stop("At least two coders with shared units are required.", call. = FALSE)

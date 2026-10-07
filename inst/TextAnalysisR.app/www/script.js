@@ -281,15 +281,15 @@ function updateTTSIcon() {
         ttsToggle.classList.add('tts-active');
         if (ttsState.isPaused) {
             ttsIcon.className = 'fa fa-pause';
-            ttsToggle.title = 'Resume Speech (Alt+S)';
+            ttsToggle.title = 'Resume';
         } else {
             ttsIcon.className = 'fa fa-volume-up';
-            ttsToggle.title = 'Stop Speech (Alt+S)';
+            ttsToggle.title = 'Stop reading';
         }
     } else {
         ttsToggle.classList.remove('tts-active');
         ttsIcon.className = 'fa fa-volume-up';
-        ttsToggle.title = 'Text to Speech (Alt+S)';
+        ttsToggle.title = 'Read aloud';
     }
 }
 
@@ -354,6 +354,22 @@ $(document).on('click', '#entity_table .entity-badge', function(e) {
             time: new Date().getTime()
         }, {priority: 'event'});
     }
+});
+
+// native titles cannot be repositioned and clip at the right edge, so header controls use data-tip
+$(document).ready(function() {
+    var controls = document.querySelector('.top-right-controls');
+    if (!controls) return;
+    var moveTitle = function(el) {
+        var title = el.getAttribute('title');
+        if (!title) return;
+        el.setAttribute('data-tip', title);
+        el.removeAttribute('title');
+    };
+    controls.querySelectorAll('a[title]').forEach(moveTitle);
+    new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) { moveTitle(m.target); });
+    }).observe(controls, { subtree: true, attributes: true, attributeFilter: ['title'] });
 });
 
 $(document).ready(function() {
@@ -426,6 +442,40 @@ $(document).ready(function() {
     if (visualNotifications) {
         observer.observe(visualNotifications, { childList: true });
     }
+
+    // plotly renders asynchronously after shiny:value, so label after a short delay
+    function labelPlotlyOutput(el) {
+        var layoutTitle = el.layout && el.layout.title;
+        var title = typeof layoutTitle === 'string' ? layoutTitle : (layoutTitle && layoutTitle.text) || '';
+        var label = title.replace(/<[^>]+>/g, ' ').trim() || el.id.replace(/_/g, ' ');
+        el.setAttribute('role', 'figure');
+        el.setAttribute('aria-label', 'Chart: ' + label);
+    }
+    $(document).on('shiny:value', function(event) {
+        var el = event.target;
+        if (el && el.classList && el.classList.contains('plotly')) {
+            setTimeout(function() { labelPlotlyOutput(el); }, 500);
+        }
+    });
+
+    // Shiny creates #shiny-notification-panel on the first notification, so watch body for it
+    var shinyNotificationObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                var text = node.nodeType === 1 && node.querySelector('.shiny-notification-content-text');
+                var ariaRegion = document.getElementById('accessible-notifications');
+                if (text && ariaRegion) {
+                    ariaRegion.textContent = text.textContent.trim();
+                }
+            });
+        });
+    });
+    new MutationObserver(function() {
+        var panel = document.getElementById('shiny-notification-panel');
+        if (panel) {
+            shinyNotificationObserver.observe(panel, { childList: true });
+        }
+    }).observe(document.body, { childList: true });
 
     var translateIcon = $('#translate_icon');
     if (translateIcon.length > 0) {
@@ -561,7 +611,7 @@ function toggleDarkMode() {
       icon.className = newTheme === 'dark' ? 'fa fa-sun' : 'fa fa-moon';
     }
     btn.setAttribute('aria-label', newTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-    btn.title = newTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    btn.title = newTheme === 'dark' ? 'Light mode' : 'Dark mode';
   }
 }
 
@@ -577,7 +627,7 @@ $(document).ready(function() {
       icon.className = savedTheme === 'dark' ? 'fa fa-sun' : 'fa fa-moon';
     }
     btn.setAttribute('aria-label', savedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-    btn.title = savedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    btn.title = savedTheme === 'dark' ? 'Light mode' : 'Dark mode';
   }
 
   // Initialize Google Translate
@@ -651,3 +701,56 @@ $(document).ready(function() {
 });
 
 
+
+// qualitative coding: device copy, code chips, group reading
+(function() {
+    var storeKey = 'textanalysisr_qc_project';
+
+    $(document).on('shiny:connected', function() {
+        try {
+            var saved = window.localStorage.getItem(storeKey);
+            if (saved) Shiny.setInputValue('qc_device_copy', JSON.parse(saved));
+        } catch (e) {}
+    });
+
+    Shiny.addCustomMessageHandler('qcDeviceSave', function(payload) {
+        try { window.localStorage.setItem(storeKey, JSON.stringify(payload)); } catch (e) {}
+    });
+    Shiny.addCustomMessageHandler('qcDeviceClear', function(message) {
+        try { window.localStorage.removeItem(storeKey); } catch (e) {}
+    });
+
+    var points = function(text) { return Array.from(text).length; };
+
+    var readSelection = function() {
+        var box = document.getElementById('qc_ann_text');
+        var sel = window.getSelection();
+        var range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+        if (!box || !range || range.collapsed || !box.contains(range.startContainer) || !box.contains(range.endContainer)) return null;
+        var before = document.createRange();
+        before.selectNodeContents(box);
+        before.setEnd(range.startContainer, range.startOffset);
+        var start = points(before.toString());
+        return { unit: box.getAttribute('data-unit'), start: start, end: start + points(range.toString()) };
+    };
+
+    $(document).on('mousedown', '.qc-chip', function(e) { e.preventDefault(); });
+
+    $(document).on('click', '.qc-chip', function() {
+        Shiny.setInputValue('qc_ann_apply', { code: this.getAttribute('data-code'), selection: readSelection(), nonce: Date.now() }, { priority: 'event' });
+        var sel = window.getSelection();
+        if (sel) sel.removeAllRanges();
+    });
+
+    $(document).on('click', '.qc-span-chip', function() {
+        Shiny.setInputValue('qc_ann_remove', {
+            code: this.getAttribute('data-code'),
+            start: this.getAttribute('data-start'),
+            end: this.getAttribute('data-end')
+        }, { priority: 'event' });
+    });
+
+    $(document).on('click', '.qc-more', function() {
+        Shiny.setInputValue('qc_more', this.getAttribute('data-group'), { priority: 'event' });
+    });
+})();

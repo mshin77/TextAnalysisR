@@ -15,6 +15,7 @@ find_optimal_k(
   init.type = "Spectral",
   height = 600,
   width = 800,
+  seed = 123,
   verbose = TRUE,
   ...
 )
@@ -41,6 +42,8 @@ Set to higher values for faster searchK on multi-core systems.}
 \item{height}{Plot height in pixels (default: 600).}
 
 \item{width}{Plot width in pixels (default: 800).}
+
+\item{seed}{Integer seed for the held-out split and model initialization (default: 123).}
 
 \item{verbose}{Logical indicating whether to print progress (default: TRUE).}
 
