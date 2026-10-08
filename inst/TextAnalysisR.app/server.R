@@ -13050,6 +13050,7 @@ server <- shinyServer(function(input, output, session) {
       provider <- input$rag_provider %||% "openai"
 
       api_key <- NULL
+      chat_model <- NULL
 
       if (provider == "openai") {
         api_key <- get_api_key("openai", input$rag_openai_api_key)
@@ -18362,25 +18363,15 @@ server <- shinyServer(function(input, output, session) {
         "Include specific metric values in your explanation. ",
         "Discuss trade-offs between different K values and explain your reasoning thoroughly."
       )
-      recommendation <- if (provider == "openai") {
-        TextAnalysisR:::call_openai_chat(
-          user_prompt = detailed_prompt,
-          system_prompt = system_prompt,
-          model = model,
-          api_key = api_key,
-          temperature = 0.7,
-          max_tokens = 2048
-        )
-      } else {
-        TextAnalysisR:::call_gemini_chat(
-          user_prompt = detailed_prompt,
-          system_prompt = system_prompt,
-          model = model,
-          api_key = api_key,
-          temperature = 0.7,
-          max_tokens = 2048
-        )
-      }
+      recommendation <- TextAnalysisR::call_llm_api(
+        provider = provider,
+        system_prompt = system_prompt,
+        user_prompt = detailed_prompt,
+        model = model,
+        temperature = 0.7,
+        max_tokens = 2048,
+        api_key = api_key
+      )
 
       # Extract K value from recommendation
       recommended_k <- as.numeric(gsub(".*K\\s*=\\s*(\\d+).*", "\\1",

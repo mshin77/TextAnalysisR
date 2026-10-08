@@ -7,7 +7,7 @@
 run_rag_search(
   query,
   documents,
-  provider = c("openai", "gemini"),
+  provider = c("openai", "gemini", "ollama"),
   api_key = NULL,
   embedding_model = NULL,
   chat_model = NULL,
@@ -19,16 +19,18 @@ run_rag_search(
 
 \item{documents}{Character vector, corpus to search}
 
-\item{provider}{Character string, provider: "openai" or "gemini"}
+\item{provider}{Character string, provider: "openai", "gemini", or "ollama"
+(local answer and local retrieval; needs Python with sentence-transformers)}
 
 \item{api_key}{Character string, API key (or from
-OPENAI_API_KEY/GEMINI_API_KEY env).}
+OPENAI_API_KEY/GEMINI_API_KEY env); not used for ollama.}
 
 \item{embedding_model}{Character string, embedding model. Defaults:
-"text-embedding-3-small" (openai), "gemini-embedding-001" (gemini)}
+"text-embedding-3-small" (openai), "gemini-embedding-001" (gemini),
+"all-MiniLM-L6-v2" (ollama, local sentence-transformers)}
 
 \item{chat_model}{Character string, chat model. Defaults:
-"gpt-4.1-mini" (openai), "gemini-3.5-flash-lite" (gemini)}
+"gpt-4.1-mini" (openai), "gemini-3.5-flash-lite" (gemini), "llama3.2" (ollama)}
 
 \item{top_k}{Integer, number of documents to retrieve (default: 5)}
 }

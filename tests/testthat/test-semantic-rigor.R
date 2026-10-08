@@ -163,3 +163,18 @@ test_that("topic quality ignores outlier topic 0 and rises with separation", {
   expect_equal(with_noise$topic_size_min, 3)
   expect_equal(with_noise$overall_quality, near$overall_quality)
 })
+
+test_that("RAG with ollama retrieves locally and needs no key", {
+  used <- list()
+  local_mocked_bindings(
+    get_best_embeddings = function(texts, provider, ...) {
+      used$embed <<- provider
+      matrix(c(1, 0, 0, 1, 1, 0)[seq_len(2 * length(texts))], ncol = 2, byrow = TRUE)
+    },
+    call_llm_api = function(provider, ...) { used$chat <<- provider; "Answer" }
+  )
+  res <- run_rag_search("query", c("doc one", "doc two"), provider = "ollama", top_k = 1)
+  expect_true(res$success)
+  expect_equal(used$embed, "sentence-transformers")
+  expect_equal(used$chat, "ollama")
+})
