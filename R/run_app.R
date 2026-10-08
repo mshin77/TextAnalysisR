@@ -7,10 +7,10 @@
 #'
 #' @details
 #' The Qualitative Coding tab autosaves its project file
-#' (`coding-project-<coder>.rds`) to the folder that is the working directory
-#' when `run_app()` is called, so start the app from the analysis project's
-#' folder. Set `options(TextAnalysisR.project_dir = "<path>")` before
-#' launching to save elsewhere. The hosted app does not autosave to disk; there
+#' (`coding-project-<coder>.rds`) to `tools::R_user_dir("TextAnalysisR", "data")`.
+#' Set
+#' `options(TextAnalysisR.project_dir = "<path>")` before launching to keep the
+#' file next to an analysis project instead. The hosted app does not autosave to disk; there
 #' the project is kept on the device and downloaded with "Save project".
 #'
 #' API keys (`OPENAI_API_KEY`, `GEMINI_API_KEY`) in a `.env` file in the
@@ -57,8 +57,8 @@ run_app <- function(launch.browser = interactive()) {
   app_options <- c("shiny.maxRequestSize", "shiny.timeout", "shiny.useragg", "DT.options")
   withr::local_options(lapply(stats::setNames(nm = app_options), getOption))
   withr::local_envvar(Sys.getenv(c("HF_HUB_ETAG_TIMEOUT", "HF_HUB_DISABLE_TELEMETRY"), unset = NA))
-  if (is.null(getOption("TextAnalysisR.project_dir"))) withr::local_options(TextAnalysisR.project_dir = getwd())
 
+  # trusted: the .env is the user's own file; values last for the app session only
   dotenv <- if (file.exists(".env")) grep("^[A-Za-z_][A-Za-z0-9_]*=", trimws(readLines(".env", warn = FALSE)), value = TRUE) else character(0)
   dotenv <- stats::setNames(gsub("^[\"']|[\"']$", "", sub("^[^=]*=", "", dotenv)), sub("=.*", "", dotenv))
   dotenv <- dotenv[!nzchar(Sys.getenv(names(dotenv)))]

@@ -53,10 +53,10 @@ NULL
 
 .calc_mtld <- function(tokens, factor_size = 0.72) {
   if (length(tokens) < 10) return(NA_real_)
-  mean(c(
-    .mtld_one_direction(tokens, factor_size),
-    .mtld_one_direction(rev(tokens), factor_size)
-  ), na.rm = TRUE)
+  both <- c(.mtld_one_direction(tokens, factor_size),
+            .mtld_one_direction(rev(tokens), factor_size))
+  if (all(is.na(both))) return(NA_real_)
+  mean(both, na.rm = TRUE)
 }
 
 .calc_hdd <- function(tokens, sample_size = 42) {
@@ -495,7 +495,8 @@ extract_named_entities <- function(tokens,
 #'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{lexical_diversity}: Data frame with per-document lexical diversity scores
+#'   \item \code{lexical_diversity}: Data frame with per-document lexical
+#'     diversity scores and \code{n_tokens}, the number of tokens per document
 #'   \item \code{summary_stats}: List of summary statistics (mean, median, sd) for each measure
 #' }
 #'
@@ -504,15 +505,21 @@ extract_named_entities <- function(tokens,
 
 #' from McCarthy & Jarvis (2010). It counts the number of "factors" needed to
 #' reduce TTR below 0.72, then divides the number of tokens by the number of factors.
-#' This provides a length-independent measure of lexical diversity.
+#' This provides a length-independent measure of lexical diversity. A factor
+#' closes only once it spans at least 10 tokens, so early TTR dips in the first
+#' few tokens do not count; this floor is a package choice, not part of the
+#' original McCarthy and Jarvis (2010) algorithm.
+#' Documents under 10 tokens, or where no factor completes in either
+#' direction, return \code{NA}.
 #'
 #' Important notes:
 #' \itemize{
 #'   \item For MTLD accuracy, pass a tokens object (not DFM) as input
 #'   \item If using DFM, provide the 'texts' parameter for MTLD calculation
 #'   \item MATTR and MSTTR use one fixed window; documents shorter than it return NA
-#'   \item Raw TTR falls mechanically as documents lengthen; compare TTR only
-#'     across documents of similar length
+#'   \item TTR, C, R, CTTR, Maas, K, and D depend on text length (TTR falls
+#'     mechanically as documents lengthen); compare them only across documents
+#'     of similar \code{n_tokens}
 #'   \item MTLD and MATTR are most reliable at 100+ tokens per document
 #'   \item Results are cached when cache_key is provided for repeated analysis
 #' }
@@ -741,6 +748,7 @@ lexical_diversity_analysis <- function(x,
     # Select only columns that exist
     cols_to_keep <- c("document", actual_measures)
     lexdiv_results <- lexdiv_results[, cols_to_keep, drop = FALSE]
+    lexdiv_results$n_tokens <- as.integer(quanteda::ntoken(if (is.null(seq_tokens)) x_dfm else seq_tokens))
 
     # Add Average Sentence Length if texts provided
     if (!is.null(texts) && length(texts) == nrow(lexdiv_results)) {
@@ -1202,7 +1210,9 @@ extract_keywords_tfidf <- function(dfm,
 #' @return Data frame with columns: Keyword, Keyness_Score, Target_Count,
 #'   Reference_Count, Target_per_10k, Reference_per_10k, Log_Ratio
 #'   (log2 ratio of normalized frequencies; zero counts set to 0.5), and
-#'   P_Adjusted (Benjamini-Hochberg).
+#'   P_Adjusted (Benjamini-Hochberg). A non-empty result carries the keyness
+#'   measure in `attr(, "measure")`, which [plot_keyness_keywords()] reads for
+#'   its labels.
 #'
 #' @references
 #' Hardie, A. (2014). Log Ratio: an informal introduction. ESRC Centre for
@@ -1287,7 +1297,9 @@ extract_keywords_keyness <- function(dfm,
   }
   out <- out[order(-abs(rank_score)), , drop = FALSE]
   rownames(out) <- NULL
-  utils::head(out, top_n)
+  out <- utils::head(out, top_n)
+  attr(out, "measure") <- measure
+  out
 }
 
 
@@ -1343,8 +1355,12 @@ plot_tfidf_keywords <- function(tfidf_data,
 #' Creates a horizontal bar plot of distinctive keywords by keyness score.
 #'
 #' @param keyness_data Data frame from extract_keywords_keyness()
-#' @param title Plot title (default: "Top Keywords by Keyness (G-squared)")
+#' @param title Plot title (default: "Top Keywords by Keyness" followed by the
+#'   measure, e.g. "(G-squared)")
 #' @param group_label Optional label for the target group (default: NULL)
+#' @param measure Keyness measure behind `Keyness_Score`: "lr", "chi2",
+#'   "exact", or "pmi". `NULL` (default) reads `attr(keyness_data, "measure")`
+#'   and falls back to "lr". Sets the axis, hover, and title labels.
 #'
 #' @return A plotly bar chart
 #'
@@ -1352,7 +1368,12 @@ plot_tfidf_keywords <- function(tfidf_data,
 #' @export
 plot_keyness_keywords <- function(keyness_data,
                                   title = NULL,
-                                  group_label = NULL) {
+                                  group_label = NULL,
+                                  measure = NULL) {
+  measure <- match.arg(measure %||% attr(keyness_data, "measure") %||% "lr",
+                       c("lr", "chi2", "exact", "pmi"))
+  stat_label <- switch(measure, lr = "G\u00b2", chi2 = "\u03c7\u00b2",
+                       exact = "Odds Ratio", pmi = "PMI")
 
   if (nrow(keyness_data) == 0) {
     return(
@@ -1368,9 +1389,9 @@ plot_keyness_keywords <- function(keyness_data,
 
   if (is.null(title)) {
     title <- if (!is.null(group_label)) {
-      paste0("Top Keywords by Keyness (G\u00b2) - Grouped by ", group_label)
+      paste0("Top Keywords by Keyness (", stat_label, ") - Grouped by ", group_label)
     } else {
-      "Top Keywords by Keyness (G\u00b2)"
+      paste0("Top Keywords by Keyness (", stat_label, ")")
     }
   }
 
@@ -1385,7 +1406,7 @@ plot_keyness_keywords <- function(keyness_data,
   }
   keyness_data_sorted$hover_text <- paste0(
     "Keyword: ", keyness_data_sorted$Keyword,
-    "\nKeyness Score (G\u00b2): ", round(keyness_data_sorted$Keyness_Score, 2),
+    "\nKeyness Score (", stat_label, "): ", round(keyness_data_sorted$Keyness_Score, 2),
     if (has_effect) paste0("\nLog Ratio: ", round(keyness_data_sorted$Log_Ratio, 2),
                            "\nAdjusted p: ", signif(keyness_data_sorted$P_Adjusted, 3)) else ""
   )
@@ -1396,7 +1417,7 @@ plot_keyness_keywords <- function(keyness_data,
     # both fills stay above 3:1 contrast on white
     ggplot2::scale_fill_manual(values = c("Favours target" = "#337ab7", "Favours reference" = "#B45309",
                                           "Keyness" = "#337ab7"), name = NULL) +
-    ggplot2::labs(x = "Keyness Score (G\u00b2)", y = "", title = title) +
+    ggplot2::labs(x = paste0("Keyness Score (", stat_label, ")"), y = "", title = title) +
     ggplot2::theme_minimal(base_size = 11) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(size = 13, color = "#0c1f4a"),
@@ -1675,11 +1696,16 @@ plot_top_readability_documents <- function(readability_data,
 #' @param metrics Character vector of readability metrics to calculate.
 #'   Options: "flesch", "flesch_kincaid", "gunning_fog", "smog", "ari", "coleman_liau"
 #' @param include_lexical_diversity Logical, include the MTLD lexical diversity
-#'   index (default: TRUE)
+#'   index, computed on lowercased tokens (default: TRUE)
 #' @param include_sentence_stats Logical, include average sentence length (default: TRUE)
 #' @param doc_names Optional character vector of document names
 #'
-#' @return A data frame with document names and readability scores
+#' @return A data frame with document names, readability scores, and
+#'   `sentence_flag`: TRUE for documents with a mean sentence length over 40
+#'   words (a single long sentence included), where missing sentence boundaries
+#'   (common in PDF lines or unpunctuated text) distort sentence-based
+#'   formulas. Flagged documents keep their scores, and a warning gives their
+#'   count.
 #'
 #' @concept lexical
 #' @export
@@ -1767,22 +1793,32 @@ calculate_text_readability <- function(texts,
 
   if (include_lexical_diversity) {
     # MTLD needs token order; compute per document, not from a DFM
-    toks <- quanteda::tokens(texts, remove_punct = TRUE)
+    toks <- quanteda::tokens_tolower(quanteda::tokens(texts, remove_punct = TRUE))
     mtld_values <- vapply(seq_len(quanteda::ndoc(toks)), function(i) {
       .calc_mtld(as.character(toks[[i]]))
     }, numeric(1))
     readability_scores$`Lexical Diversity (MTLD)` <- as.numeric(mtld_values)
   }
 
+  sentence_stats <- vapply(texts, function(t) {
+    sents <- quanteda::tokens(t, what = "sentence")[[1]]
+    sents <- sents[nzchar(trimws(sents))]
+    if (length(sents) == 0) return(c(0, NA_real_))
+    words <- lengths(quanteda::tokens(sents, what = "word", remove_punct = TRUE))
+    c(length(sents), sum(words) / length(sents))
+  }, numeric(2), USE.NAMES = FALSE)
+
   if (include_sentence_stats) {
-    avg_sentence_length <- vapply(texts, function(t) {
-      sents <- quanteda::tokens(t, what = "sentence")[[1]]
-      sents <- sents[nzchar(trimws(sents))]
-      if (length(sents) == 0) return(NA_real_)
-      words <- lengths(quanteda::tokens(sents, what = "word", remove_punct = TRUE))
-      sum(words) / length(sents)
-    }, numeric(1))
-    readability_scores$`Avg Sentence Length` <- avg_sentence_length
+    readability_scores$`Avg Sentence Length` <- sentence_stats[2, ]
+  }
+
+  # formulas assume real sentence boundaries; PDF lines and unpunctuated text break that
+  readability_scores$sentence_flag <- !is.na(sentence_stats[2, ]) & sentence_stats[2, ] > 40
+  if (any(readability_scores$sentence_flag)) {
+    warning(sprintf(paste0("%d of %d document(s) average over 40 ",
+                           "words per sentence; readability scores for these (sentence_flag = TRUE) ",
+                           "may reflect missing sentence boundaries."),
+                    sum(readability_scores$sentence_flag), nrow(readability_scores)), call. = FALSE)
   }
 
   return(readability_scores)
@@ -2718,7 +2754,7 @@ parse_morphology_string <- function(data, features = NULL) {
 #'     \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
 #'     \item variance: Approximate variance of the log odds ratio
 #'     \item z_score: Log odds ratio divided by its standard error
-#'     \item significant: TRUE when the Benjamini-Hochberg adjusted two-sided p-value of z is below 0.05
+#'     \item significant: TRUE when the Benjamini-Hochberg adjusted two-sided p-value of z is below 0.05, adjusted across all comparisons in the run
 #'   }
 #'   Terms are ranked by absolute z-score.
 #'
@@ -2813,12 +2849,11 @@ calculate_log_odds_ratio <- function(dfm_object,
       log_odds_ratio = log_odds,
       variance = as.numeric(variance),
       z_score = z_score,
-      significant = stats::p.adjust(2 * stats::pnorm(-abs(z_score)), method = "BH") < 0.05,
+      p_value = 2 * stats::pnorm(-abs(z_score)),
       stringsAsFactors = FALSE
     )
 
-    result <- result[order(abs(result$z_score), decreasing = TRUE), ]
-    utils::head(result, top_n)
+    result[order(abs(result$z_score), decreasing = TRUE), ]
   }
 
   results <- list()
@@ -2844,8 +2879,9 @@ calculate_log_odds_ratio <- function(dfm_object,
   } else if (comparison_mode == "one_vs_rest") {
     for (level in levels) {
       # Combine all other categories
-      groups_binary <- ifelse(groups == level, level, "Other")
-      result <- compare_two(dfm_object, level, "Other", groups_binary)
+      # parentheses keep the label from matching a real level such as "Other"
+      groups_binary <- ifelse(groups == level, level, "(rest of corpus)")
+      result <- compare_two(dfm_object, level, "(rest of corpus)", groups_binary)
       if (!is.null(result)) {
         results[[length(results) + 1]] <- result
       }
@@ -2873,11 +2909,19 @@ calculate_log_odds_ratio <- function(dfm_object,
       odds_ratio = numeric(),
       log_odds_ratio = numeric(),
       variance = numeric(),
-      z_score = numeric()
+      z_score = numeric(),
+      significant = logical()
     ))
   }
 
-  do.call(rbind, results)
+  # BH runs over every term in every comparison of the run, then top_n is kept per comparison
+  combined <- do.call(rbind, results)
+  combined$significant <- stats::p.adjust(combined$p_value, method = "BH") < 0.05
+  combined$p_value <- NULL
+  pair <- paste(combined$category1, combined$category2, sep = "\r")
+  combined <- do.call(rbind, lapply(split(combined, factor(pair, levels = unique(pair))), utils::head, top_n))
+  rownames(combined) <- NULL
+  combined
 }
 
 
@@ -2888,6 +2932,10 @@ calculate_log_odds_ratio <- function(dfm_object,
 #' and Quinn (2008) "Fightin' Words" via the tidylo package. This method
 #' weights log odds by variance (z-score) to identify words that reliably
 #' distinguish between groups, accounting for sampling variability.
+#'
+#' tidylo estimates the informative Dirichlet prior from the pooled corpus
+#' counts and compares each group with the pooled corpus, so the z-scores are
+#' not directly comparable with a background-corpus prior as in Monroe et al.
 #'
 #' @param dfm_object A quanteda dfm object
 #' @param group_var Character, name of the document variable to group by
@@ -2960,8 +3008,10 @@ calculate_weighted_log_odds <- function(dfm_object,
   result <- result %>%
     dplyr::group_by(.data$feature) %>%
     dplyr::filter(sum(.data$n) >= min_count) %>%
-    dplyr::group_by(.data[[group_var]]) %>%
+    dplyr::ungroup() %>%
+    # BH runs over every group's terms, the same family as calculate_log_odds_ratio
     dplyr::mutate(significant = stats::p.adjust(2 * stats::pnorm(-abs(.data$log_odds_weighted)), method = "BH") < 0.05) %>%
+    dplyr::group_by(.data[[group_var]]) %>%
     dplyr::slice_max(abs(.data$log_odds_weighted), n = top_n, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     dplyr::arrange(.data[[group_var]], dplyr::desc(abs(.data$log_odds_weighted)))
@@ -3311,6 +3361,15 @@ plot_lexical_dispersion <- function(dispersion_data,
   }
 
   unique_terms <- unique(dispersion_data$term)
+
+  # past about 20,000 marks in total the browser stalls; a seeded sample per term keeps the spread visible
+  per_term <- floor(20000 / length(unique_terms))
+  if (any(table(dispersion_data$term) > per_term)) {
+    dispersion_data <- do.call(rbind, lapply(split(dispersion_data, dispersion_data$term), function(d) {
+      if (nrow(d) > per_term) d[sort(withr::with_seed(1, sample(nrow(d), per_term))), ] else d
+    }))
+    message(sprintf("Showing a sample of %s occurrences per term.", format(per_term, big.mark = ",")))
+  }
 
   if (is.null(colors)) {
     default_colors <- c("#3B82F6", "#10B981", "#F59E0B", "#EF4444",

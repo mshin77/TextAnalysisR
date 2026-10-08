@@ -10,7 +10,8 @@ code_agreement(
   units = c("intersection", "union"),
   by_code = TRUE,
   align = c("grid", "presence", "coverage"),
-  codebook_authors = NULL
+  codebook_authors = NULL,
+  codebook = NULL
 )
 }
 \arguments{
@@ -46,11 +47,21 @@ remaining coders alone. Agreement with a coder who shaped the coding frame
 reflects that shared calibration, so the two figures answer different
 questions. Applies to grid and presence; ignored when
 \code{align = "coverage"}.}
+
+\item{codebook}{Optional codebook: a data frame with a \code{code} column, or a
+character vector of codes. Under grid alignment, PABAK and AC1 then take
+the number of categories q from the codebook codes together with any
+other observed category such as "(none)". Without it, q is the number of
+categories observed in the ratings. Presence and per-code statistics are
+binary (q = 2) either way.}
 }
 \value{
 A list with \code{overall}, \code{by_code} (NULL when \code{by_code} is FALSE),
 \code{disagree}, and \code{independent} (NULL unless \code{codebook_authors} is supplied
-and at least two other coders remain). For grid alignment these are the
+and at least two other coders remain). Presence alignment adds
+\code{codes_left_out}, the number of codes never applied on a shared unit;
+these are excluded from \code{by_code} and the \code{overall} means, since a code
+absent from every shared unit would otherwise score perfect agreement. For grid alignment these are the
 metric, per-code, and disagreement tables; for coverage they hold
 per-coder-pair span coverage and the uncovered spans. In the metric tables
 \code{n} counts the units each statistic was computed on: units carrying a code

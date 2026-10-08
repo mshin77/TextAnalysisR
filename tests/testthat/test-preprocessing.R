@@ -69,3 +69,16 @@ test_that("prep_texts drops punctuation and symbols by default", {
   expect_false("&" %in% feats)
   expect_true("fluency" %in% feats)
 })
+
+test_that("two-column PDF pages read left column then right column", {
+  left <- sprintf("left column line %d with several words", 1:6)
+  right <- sprintf("right column line %d with words", 1:8)
+  page <- paste(c(sprintf("%-46s%s", left, right[1:6]), sprintf("%46s%s", "", right[7:8])), collapse = "\n")
+  expect_equal(TextAnalysisR:::.pdf_page_lines(page)$text, c(left, right))
+})
+
+test_that("line-end hyphens join only when the joined word occurs elsewhere", {
+  out <- TextAnalysisR:::.pdf_page_lines("an evidence-\nbased plan and evidence based work\nan inter-\nvention and an intervention")$text
+  expect_true(any(grepl("evidence-based", out, fixed = TRUE)))
+  expect_true(any(grepl("an intervention and", out, fixed = TRUE)))
+})

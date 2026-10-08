@@ -61,15 +61,15 @@ server <- shinyServer(function(input, output, session) {
 
   entity_color_map_js <- paste(
     "  var colors = {",
-    "    'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-    "    'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
+    "    'PERSON': '#c2185b', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
+    "    'DATE': '#b35300', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
     "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
     "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
-    "    'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24',",
-    "    'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c',",
-    "    'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50',",
-    "    'TECHNOLOGY': '#FF9800',",
-    "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
+    "    'LANGUAGE': '#33691e', 'LOC': '#0277bd', 'FAC': '#827717',",
+    "    'NORP': '#b45309', 'TIME': '#bf360c', 'QUANTITY': '#5f7381',",
+    "    'DISABILITY': '#c2185b', 'MATHEMATICS': '#357a38',",
+    "    'TECHNOLOGY': '#c2410c',",
+    "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#00796b', 'CUSTOM': '#d81b60'",
     "  };",
     "  if (window.customEntityColors) {",
     "    Object.assign(colors, window.customEntityColors);",
@@ -193,6 +193,7 @@ server <- shinyServer(function(input, output, session) {
   }
 
   check_api_key <- function(api_key, provider, where, notify = shiny::showNotification) {
+    if (provider == "ollama") return(TRUE)
     if (!nzchar(api_key)) {
       notify(TextAnalysisR:::.missing_api_key_message(provider, "shiny"), type = "error", duration = 7)
       return(FALSE)
@@ -278,13 +279,23 @@ server <- shinyServer(function(input, output, session) {
     stringsAsFactors = FALSE
   ))
 
+  # package messages about trimmed or sampled plots otherwise reach only the server console
+  with_plot_notices <- function(expr, session_local = session) {
+    withCallingHandlers(expr, message = function(m) {
+      if (grepl("Drawing|sample|trimm|most frequent", conditionMessage(m))) {
+        try(showNotification(trimws(conditionMessage(m)), type = "message", duration = 8, session = session_local), silent = TRUE)
+      }
+    })
+  }
+
   spend_ai_call <- function(feature, provider, model) {
     # only the shared server key is budgeted; a personal key pays its own way
-    if (!nzchar(get_api_key(provider))) guard_ai_usage(session)
+    key <- get_api_key(provider)
+    if (!nzchar(key) || (has_server_gemini && identical(key, server_gemini_key))) guard_ai_usage(session)
     current <- ai_usage_log()
     ai_usage_log(rbind(current, data.frame(
       timestamp = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-      feature = feature, provider = provider, model = model,
+      feature = feature, provider = provider, model = model %||% "default",
       stringsAsFactors = FALSE
     )))
   }
@@ -1074,10 +1085,56 @@ server <- shinyServer(function(input, output, session) {
   reset_downstream <- function() {
     for (rv in list(preprocessed_skip, processed_tokens, final_tokens,
                     lemmatized_tokens, dfm_tokens, ngram_stats, compound_stats,
-                    top_20_preselected)) {
+                    top_20_preselected, applied_segment_settings, lemma_cache_key)) {
       try(rv(NULL), silent = TRUE)
     }
+    applied_removals(character(0))
+    applied_expressions(character(0))
+    applied_edge_options(character(0))
+    step2_apply(NULL)
+    stopwords_applied(FALSE)
+    dictionary_applied(FALSE)
+    last_clicked(NULL)
   }
+
+  # Step 4 phrases join on Step 2 tokens, before stopword removal, so "students with disabilities" can match
+  compound_tokens <- function(toks, expressions) {
+    if (length(expressions) == 0) return(toks)
+    toks_compound <- quanteda::tokens_compound(toks, pattern = lapply(expressions, function(x) unlist(strsplit(x, "\\s+"))),
+                                               concatenator = "_", case_insensitive = TRUE, join = FALSE)
+    all_stopwords <- tolower(stopwords::stopwords("en", source = "snowball"))
+    options_set <- applied_edge_options()
+    clean_leading <- "leading_stopwords" %in% options_set
+    clean_trailing <- "trailing_stopwords" %in% options_set
+    if (!clean_leading && !clean_trailing) return(toks_compound)
+
+    docvars_backup <- quanteda::docvars(toks_compound)
+    toks_list <- lapply(as.list(toks_compound), function(v) {
+      vapply(v, function(tok) {
+        if (!grepl("_", tok, fixed = TRUE)) return(tok)
+        parts <- unlist(strsplit(tok, "_", fixed = TRUE))
+        while (clean_leading && length(parts) > 0 && tolower(parts[1]) %in% all_stopwords) parts <- parts[-1]
+        while (clean_trailing && length(parts) > 0 && tolower(parts[length(parts)]) %in% all_stopwords) parts <- parts[-length(parts)]
+        paste(parts, collapse = "_")
+      }, character(1), USE.NAMES = FALSE)
+    })
+    out <- quanteda::tokens_remove(quanteda::as.tokens(toks_list), "")
+    if (!is.null(docvars_backup) && nrow(docvars_backup) > 0) quanteda::docvars(out) <- docvars_backup
+    out
+  }
+
+  remove_applied <- function(toks) {
+    removed <- applied_removals()
+    if (isTRUE(stopwords_applied()) && length(removed) > 0) quanteda::tokens_remove(toks, pattern = removed, verbose = FALSE) else toks
+  }
+
+  observeEvent(input$apply, {
+    step2_ran <- !is.null(step2_apply()) || !is.null(preprocessed_skip())
+    reset_downstream()
+    if (step2_ran) {
+      showNotification("Text columns changed. Run Step 2 again before Steps 3 to 5.", type = "warning", duration = 8)
+    }
+  }, ignoreInit = TRUE)
 
   paste_stack <- reactiveVal(NULL)
   skipped_files <- reactiveVal(NULL)
@@ -1318,6 +1375,8 @@ server <- shinyServer(function(input, output, session) {
   applied_segment_settings <- reactiveVal(NULL)
   applied_removals <- reactiveVal(character(0))
   applied_expressions <- reactiveVal(character(0))
+  applied_edge_options <- reactiveVal(character(0))
+  step2_apply <- reactiveVal(NULL)
   dictionary_applied <- reactiveVal(FALSE)
   final_tokens <- reactiveVal(NULL)
   lemmatized_tokens <- reactiveVal(NULL)
@@ -1397,6 +1456,7 @@ server <- shinyServer(function(input, output, session) {
     preprocessed_skip(NULL)
     processed_tokens(NULL)
     dictionary_applied(FALSE)
+    applied_expressions(character(0))
     final_tokens(NULL)
     lemmatized_tokens(NULL)
     last_clicked(NULL)
@@ -1411,6 +1471,7 @@ server <- shinyServer(function(input, output, session) {
           math_mode_used(math_mode_enabled)
           applied_segment_settings(list(segment_options = segment_options, min_char = input$min_char %||% 2,
                                         math_mode = math_mode_enabled))
+          step2_apply(input$apply)
           toks_processed <- segment_texts(united_tbl())
         },
         type = "message"
@@ -1511,9 +1572,12 @@ server <- shinyServer(function(input, output, session) {
 
     processed_tokens(NULL)
     dictionary_applied(FALSE)
+    applied_expressions(character(0))
     final_tokens(NULL)
     lemmatized_tokens(NULL)
     last_clicked(NULL)
+    applied_segment_settings(list(segment_options = c("remove_separators", "split_tags", "include_docvars"),
+                                  min_char = 1, math_mode = FALSE))
 
     TextAnalysisR:::show_loading_notification("Skipping segmentation - using basic tokenization...", id = "loadingSkipSegment")
 
@@ -1570,7 +1634,8 @@ server <- shinyServer(function(input, output, session) {
   preprocessed_combined <- reactive({
     if (!is.null(preprocessed_skip())) {
       return(preprocessed_skip())
-    } else if (!is.null(try(preprocessed_init(), silent = TRUE)) && !inherits(try(preprocessed_init(), silent = TRUE), "try-error")) {
+    } else if (identical(step2_apply(), input$apply) &&
+               !is.null(try(preprocessed_init(), silent = TRUE)) && !inherits(try(preprocessed_init(), silent = TRUE), "try-error")) {
       return(preprocessed_init())
     } else if (!is.null(united_tbl())) {
       toks <- raw_tokens()
@@ -1813,19 +1878,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$dictionary, {
-    toks_source <- if (!is.null(final_tokens())) {
-      showNotification("Using stopword-filtered tokens", type = "message", duration = 3)
-      final_tokens()
-    } else if (!is.null(preprocessed_combined()) &&
-               (!is.null(try(preprocessed_init(), silent = TRUE)) || !is.null(preprocessed_skip()))) {
-      preprocessed_combined()
-    } else if (!is.null(united_tbl())) {
-      showNotification("Creating tokens from united text...", type = "message", duration = 2)
-      toks <- raw_tokens()
-      toks
-    } else {
-      NULL
-    }
+    toks_source <- preprocessed_combined()
 
     if (is.null(toks_source)) {
       showNotification("Please complete Step 1 (Unite Text) first", type = "warning", duration = 5)
@@ -1836,75 +1889,17 @@ server <- shinyServer(function(input, output, session) {
     last_clicked(NULL)
 
     if (is.null(input$multi_word_expressions) || length(input$multi_word_expressions) == 0) {
+      toks_source <- remove_applied(toks_source)
       processed_tokens(toks_source)
+      if (!is.null(final_tokens())) final_tokens(toks_source)
       dictionary_applied(TRUE)
       applied_expressions(character(0))
       compound_stats(NULL)
       step_4_version(step_4_version() + 1)
       step_4_based_on(step_3_version())
     } else {
-      # Convert multi-word expressions to character vectors for pattern matching
-      patterns <- lapply(input$multi_word_expressions, function(x) {
-        unlist(strsplit(x, "\\s+"))
-      })
-
-      toks_compound <- quanteda::tokens_compound(
-        toks_source,
-        pattern = patterns,
-        concatenator = "_",
-        case_insensitive = TRUE,
-        join = FALSE
-      )
-
-      # Clean stopwords from compound edges using standard English stopwords
-      all_stopwords <- tolower(stopwords::stopwords("en", source = "snowball"))
-
-      clean_leading <- "leading_stopwords" %in% (input$stopword_options %||% character(0))
-      clean_trailing <- "trailing_stopwords" %in% (input$stopword_options %||% character(0))
-
-      if (clean_leading || clean_trailing) {
-        docvars_backup <- quanteda::docvars(toks_compound)
-
-        toks_list <- lapply(as.list(toks_compound), function(token_vector) {
-          vapply(token_vector, function(tok) {
-            if (grepl("_", tok, fixed = TRUE)) {
-              parts <- unlist(strsplit(tok, "_", fixed = TRUE))
-
-              # Keep cleaning edges until no more stopwords at edges
-              changed <- TRUE
-              while (changed && length(parts) > 0) {
-                changed <- FALSE
-
-                # Remove leading stopwords
-                if (clean_leading && length(parts) > 0 && tolower(parts[1]) %in% all_stopwords) {
-                  parts <- parts[-1]
-                  changed <- TRUE
-                }
-
-                # Remove trailing stopwords
-                if (clean_trailing && length(parts) > 0 && tolower(parts[length(parts)]) %in% all_stopwords) {
-                  parts <- parts[-length(parts)]
-                  changed <- TRUE
-                }
-              }
-
-              if (length(parts) == 0) {
-                return("")
-              }
-              paste(parts, collapse = "_")
-            } else {
-              tok
-            }
-          }, character(1), USE.NAMES = FALSE)
-        })
-
-        toks_compound <- quanteda::as.tokens(toks_list)
-        toks_compound <- quanteda::tokens_remove(toks_compound, "")
-
-        if (!is.null(docvars_backup) && nrow(docvars_backup) > 0) {
-          quanteda::docvars(toks_compound) <- docvars_backup
-        }
-      }
+      applied_edge_options(input$stopword_options %||% character(0))
+      toks_compound <- remove_applied(compound_tokens(toks_source, input$multi_word_expressions))
 
       processed_tokens(toks_compound)
       # Step 5 reads final_tokens first, so the compounds must replace the Step 3 output
@@ -1935,21 +1930,13 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$skip_dictionary, {
-    toks_source <- if (!is.null(final_tokens())) {
-      final_tokens()
-    } else if (!is.null(preprocessed_combined())) {
-      preprocessed_combined()
-    } else if (!is.null(united_tbl())) {
-      toks <- raw_tokens()
-      toks
-    } else {
-      NULL
-    }
+    toks_source <- preprocessed_combined()
 
     if (is.null(toks_source)) {
       showNotification("Please complete Step 1 (Unite Text) first", type = "warning", duration = 5)
       return(NULL)
     }
+    toks_source <- remove_applied(toks_source)
 
     lemmatized_tokens(NULL)
     last_clicked(NULL)
@@ -1958,6 +1945,7 @@ server <- shinyServer(function(input, output, session) {
     showNotification("Skipping multi-word dictionary...", type = "message", duration = 3)
 
     processed_tokens(toks_source)
+    if (!is.null(final_tokens())) final_tokens(toks_source)
     dictionary_applied(TRUE)
     applied_expressions(character(0))
     step_4_version(step_4_version() + 1)
@@ -2618,19 +2606,8 @@ server <- shinyServer(function(input, output, session) {
 
 
   observeEvent(input$remove, {
-    toks_source <- if (!is.null(processed_tokens())) {
-      showNotification("Using multi-word compounded tokens", type = "message", duration = 3)
-      processed_tokens()
-    } else if (!is.null(preprocessed_combined()) &&
-               (!is.null(try(preprocessed_init(), silent = TRUE)) || !is.null(preprocessed_skip()))) {
-      preprocessed_combined()
-    } else if (!is.null(united_tbl())) {
-      showNotification("Creating tokens from united text...", type = "message", duration = 2)
-      toks <- raw_tokens()
-      toks
-    } else {
-      NULL
-    }
+    base <- preprocessed_combined()
+    toks_source <- if (!is.null(base)) compound_tokens(base, applied_expressions())
 
     if (is.null(toks_source)) {
       showNotification("Please complete Step 1 (Unite Text) first", type = "warning", duration = 5)
@@ -2650,6 +2627,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     final_tokens(toks)
+    if (isTRUE(dictionary_applied())) processed_tokens(toks)
     stopwords_applied(TRUE)
     applied_removals(c(input$common_words, input$custom_stopwords))
     step_3_version(step_3_version() + 1)
@@ -2659,6 +2637,7 @@ server <- shinyServer(function(input, output, session) {
 
   dfm_outcome <- reactive({
     req(input$remove > 0 | input$skip_stopwords > 0)
+    req(isTRUE(stopwords_applied()))
 
     tokens_obj <- if (!is.null(final_tokens())) {
       final_tokens()
@@ -2683,7 +2662,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     # compare with the Step 4 (or Step 2) output; dfm_init() only exists after Step 5 and is already filtered
-    tokens_before <- isolate(processed_tokens() %||% preprocessed_combined()) %||% tokens_obj
+    tokens_before <- isolate(compound_tokens(preprocessed_combined() %||% tokens_obj, applied_expressions()))
 
     doc_count <- quanteda::ndoc(dfm_obj)
     feature_count_before <- quanteda::nfeat(quanteda::dfm(tokens_before))
@@ -2955,7 +2934,7 @@ server <- shinyServer(function(input, output, session) {
       if (last_clicked() == "lemma") {
         return(lemmatized_tokens())
       } else if (last_clicked() == "skip") {
-        return(final_tokens())
+        return(lemmatized_tokens())
       }
     }
     return(NULL)
@@ -2987,14 +2966,8 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$skip_stopwords, {
-    toks_source <- if (!is.null(preprocessed_combined())) {
-      preprocessed_combined()
-    } else if (!is.null(united_tbl())) {
-      toks <- raw_tokens()
-      toks
-    } else {
-      NULL
-    }
+    base <- preprocessed_combined()
+    toks_source <- if (!is.null(base)) compound_tokens(base, applied_expressions())
 
     if (is.null(toks_source)) {
       showNotification("Please complete Step 1 (Unite Text) first", type = "warning", duration = 5)
@@ -3004,6 +2977,7 @@ server <- shinyServer(function(input, output, session) {
     lemmatized_tokens(NULL)
 
     final_tokens(toks_source)
+    if (isTRUE(dictionary_applied())) processed_tokens(toks_source)
     stopwords_applied(TRUE)
     applied_removals(character(0))
     step_3_version(step_3_version() + 1)
@@ -3040,6 +3014,12 @@ server <- shinyServer(function(input, output, session) {
     last_clicked(NULL)
     math_mode_used(FALSE)
     compound_stats(NULL)
+    applied_segment_settings(NULL)
+    applied_removals(character(0))
+    applied_expressions(character(0))
+    applied_edge_options(character(0))
+    step2_apply(NULL)
+    lemma_cache_key(NULL)
 
     step_2_version(0)
     step_3_version(0)
@@ -4619,15 +4599,15 @@ server <- shinyServer(function(input, output, session) {
   })
 
 
-  default_category_colors <- c("#E91E63", "#2196F3", "#4CAF50", "#9C27B0", "#FF9800", "#00BCD4",
+  default_category_colors <- c("#c2185b", "#2196F3", "#357a38", "#9C27B0", "#c2410c", "#00BCD4",
                                 "#886254", "#607D8B", "#FF5722", "#3F51B5", "#009688", "#CDDC39")
 
   domain_entity_colors <- reactiveVal(list(
-    disability = "#E91E63",
+    disability = "#c2185b",
     program = "#2196F3",
-    test = "#4CAF50",
+    test = "#357a38",
     concept = "#9C27B0",
-    tool = "#FF9800",
+    tool = "#c2410c",
     method = "#00BCD4"
   ))
 
@@ -5218,12 +5198,12 @@ server <- shinyServer(function(input, output, session) {
   editing_entity_display_color <- reactiveVal(NULL)
 
   spacy_default_colors <- c(
-    "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-    "DATE" = "#ef6c00", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
+    "PERSON" = "#c2185b", "ORG" = "#1565c0", "GPE" = "#2e7d32",
+    "DATE" = "#b35300", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
     "ORDINAL" = "#866358", "PERCENT" = "#00838f", "PRODUCT" = "#5060D5",
     "EVENT" = "#c62828", "WORK_OF_ART" = "#734FE2", "LAW" = "#03786A",
-    "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
-    "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c"
+    "LANGUAGE" = "#33691e", "LOC" = "#0277bd", "FAC" = "#827717",
+    "NORP" = "#b45309", "TIME" = "#bf360c", "QUANTITY" = "#5f7381"
   )
 
   observeEvent(input$sidebar_color_edit, {
@@ -5925,15 +5905,15 @@ server <- shinyServer(function(input, output, session) {
 
     # Full color map with standard + domain-specific + custom colors
     color_map_js <- paste0(
-      "'PERSON': '#e91e63', 'ORG': '#1565c0', 'GPE': '#2e7d32', ",
-      "'DATE': '#ef6c00', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a', ",
+      "'PERSON': '#c2185b', 'ORG': '#1565c0', 'GPE': '#2e7d32', ",
+      "'DATE': '#b35300', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a', ",
       "'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5', ",
       "'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A', ",
-      "'LANGUAGE': '#558b2f', 'LOC': '#0277bd', 'FAC': '#9e9d24', ",
-      "'NORP': '#ff8f00', 'TIME': '#d84315', 'QUANTITY': '#78909c', ",
-      "'DISABILITY': '#E91E63', 'MATHEMATICS': '#4CAF50', ",
-      "'TECHNOLOGY': '#FF9800', ",
-      "'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#26a69a', 'CUSTOM': '#d81b60'",
+      "'LANGUAGE': '#33691e', 'LOC': '#0277bd', 'FAC': '#827717', ",
+      "'NORP': '#b45309', 'TIME': '#bf360c', 'QUANTITY': '#5f7381', ",
+      "'DISABILITY': '#c2185b', 'MATHEMATICS': '#357a38', ",
+      "'TECHNOLOGY': '#c2410c', ",
+      "'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#00796b', 'CUSTOM': '#d81b60'",
       if (nzchar(custom_color_js)) paste0(", ", custom_color_js) else ""
     )
 
@@ -5961,8 +5941,9 @@ server <- shinyServer(function(input, output, session) {
               "  if (!data || data === '') return '';",
               entity_color_map_js,
               "  var color = colors[data] || '#757575';",
-              "  var lemma = row[row.length - 2] || '';",
-              "  return '<span class=\"entity-badge\" data-entity=\"' + data + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px; cursor: pointer;\" title=\"Click to edit\">' + data + '</span>';",
+              "  var lemma = $('<div>').text(row[row.length - 2] || '').html().replace(/\"/g, '&quot;');",
+              "  var safe = $('<div>').text(data).html().replace(/\"/g, '&quot;');",
+              "  return '<button type=\"button\" class=\"entity-badge\" data-entity=\"' + safe + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; border: none; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px; cursor: pointer;\" title=\"Edit entity colour\" aria-label=\"Edit colour for entity ' + safe + '\">' + safe + '</button>';",
               "}",
               sep = "\n"
             ))
@@ -6086,15 +6067,15 @@ server <- shinyServer(function(input, output, session) {
     }
 
     entity_colors <- c(
-      "PERSON" = "#e91e63", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-      "DATE" = "#ef6c00", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
+      "PERSON" = "#c2185b", "ORG" = "#1565c0", "GPE" = "#2e7d32",
+      "DATE" = "#b35300", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
       "ORDINAL" = "#866358", "PERCENT" = "#00838f", "PRODUCT" = "#5060D5",
       "EVENT" = "#c62828", "WORK_OF_ART" = "#734FE2", "LAW" = "#03786A",
-      "LANGUAGE" = "#558b2f", "LOC" = "#0277bd", "FAC" = "#9e9d24",
-      "NORP" = "#ff8f00", "TIME" = "#d84315", "QUANTITY" = "#78909c",
-      "DISABILITY" = "#E91E63", "MATHEMATICS" = "#4CAF50",
-      "TECHNOLOGY" = "#FF9800",
-      "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#26a69a",
+      "LANGUAGE" = "#33691e", "LOC" = "#0277bd", "FAC" = "#827717",
+      "NORP" = "#b45309", "TIME" = "#bf360c", "QUANTITY" = "#5f7381",
+      "DISABILITY" = "#c2185b", "MATHEMATICS" = "#357a38",
+      "TECHNOLOGY" = "#c2410c",
+      "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#00796b",
       "CUSTOM" = "#d81b60"
     )
     custom_colors <- isolate(custom_entity_colors())
@@ -6362,15 +6343,15 @@ server <- shinyServer(function(input, output, session) {
         }
 
         entity_colors <- c(
-          "PERSON" = "#e91e63", "ORG" = "#2196f3", "GPE" = "#4caf50",
-          "DATE" = "#ff9800", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
+          "PERSON" = "#c2185b", "ORG" = "#2196f3", "GPE" = "#357a38",
+          "DATE" = "#c2410c", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
           "ORDINAL" = "#886254", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
           "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
           "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
           "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e",
-          "DISABILITY" = "#E91E63", "PROGRAM" = "#2196F3", "TEST" = "#4CAF50",
-          "CONCEPT" = "#00acc1", "TOOL" = "#FF9800", "METHOD" = "#00BCD4",
-          "THEME" = "#7c4dff", "CODE" = "#546e7a", "CATEGORY" = "#26a69a",
+          "DISABILITY" = "#c2185b", "PROGRAM" = "#2196F3", "TEST" = "#357a38",
+          "CONCEPT" = "#00acc1", "TOOL" = "#c2410c", "METHOD" = "#00BCD4",
+          "THEME" = "#7c4dff", "CODE" = "#546e7a", "CATEGORY" = "#00796b",
           "CUSTOM" = "#d81b60"
         )
         if (length(custom_cols_snapshot) > 0) {
@@ -7889,7 +7870,7 @@ server <- shinyServer(function(input, output, session) {
     start_time <- Sys.time()
     later::later(function() {
       result <- tryCatch(
-        do.call(TextAnalysisR::word_co_occurrence_network, call_args),
+        with_plot_notices(do.call(TextAnalysisR::word_co_occurrence_network, call_args), session_local),
         error = function(e) {
           try(showNotification(paste("Error:", e$message), type = "error", session = session_local), silent = TRUE)
           NULL
@@ -7912,6 +7893,7 @@ server <- shinyServer(function(input, output, session) {
 
   cooccur_slider_inputs <- reactive({
     list(
+      input$cooccur_edge_metric,
       input$co_occurence_number_global,
       input$top_node_n_co_occurrence_global,
       input$node_label_size_cooccur,
@@ -8229,7 +8211,7 @@ server <- shinyServer(function(input, output, session) {
     start_time <- Sys.time()
     later::later(function() {
       result <- tryCatch(
-        do.call(TextAnalysisR::word_correlation_network, call_args),
+        with_plot_notices(do.call(TextAnalysisR::word_correlation_network, call_args), session_local),
         error = function(e) {
           try(showNotification(paste("Error:", e$message), type = "error", session = session_local), silent = TRUE)
           NULL
@@ -8869,7 +8851,8 @@ server <- shinyServer(function(input, output, session) {
         sentiment_analysis_results <- tryCatch(
           TextAnalysisR::sentiment_valence_analysis(
             texts = texts_df$united_texts,
-            doc_names = doc_names
+            doc_names = doc_names,
+            neutral_terms = if (isTRUE(input$sentiment_domain_neutral)) TextAnalysisR::domain_neutral_terms() else character(0)
           ),
           error = function(e) {
             TextAnalysisR:::remove_notification_by_id("sentiment_loading")
@@ -8906,7 +8889,8 @@ server <- shinyServer(function(input, output, session) {
           texts_df = texts_df,
           feature_type = feature_type,
           ngram_range = ngram_range,
-          texts = texts_vec
+          texts = texts_vec,
+          neutral_terms = if (isTRUE(input$sentiment_domain_neutral)) TextAnalysisR::domain_neutral_terms() else character(0)
         )
       }
 
@@ -9091,7 +9075,7 @@ server <- shinyServer(function(input, output, session) {
         return()
       }
 
-      model_name <- input$llm_sentiment_model
+      model_name <- if (provider == "ollama") NULL else input$llm_sentiment_model
       spend_ai_call("LLM Sentiment", provider, model_name)
       batch_size <- input$llm_sentiment_batch_size %||% 5
       include_explanation <- input$llm_sentiment_explanation %||% TRUE
@@ -9708,7 +9692,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     scores_data <- readability_results$metrics_data
-    metric_names <- setdiff(names(scores_data), c("Document", "Words"))
+    metric_names <- setdiff(names(scores_data), c("Document", "Words", "sentence_flag"))
     metric_names <- metric_names[!is.na(metric_names) & metric_names != ""]
 
     if (length(metric_names) == 0) {
@@ -9799,13 +9783,18 @@ server <- shinyServer(function(input, output, session) {
 
       selected_metrics <- unname(as.character(selected_metrics))
 
-      readability_scores <- TextAnalysisR::calculate_text_readability(
+      readability_scores <- suppressWarnings(TextAnalysisR::calculate_text_readability(
         texts = texts,
         metrics = selected_metrics,
         include_lexical_diversity = FALSE,
         include_sentence_stats = FALSE,
         doc_names = doc_names
-      )
+      ))
+      n_flagged <- sum(readability_scores$sentence_flag %||% FALSE)
+      if (n_flagged > 0) {
+        showNotification(paste0(n_flagged, " document(s) average over 40 words per sentence; their scores may reflect missing sentence boundaries."),
+                         type = "warning", duration = 8)
+      }
       readability_scores$Words <- word_counts
       n_short <- sum(word_counts < 100)
       if (n_short > 0) {
@@ -9845,7 +9834,7 @@ server <- shinyServer(function(input, output, session) {
     view_type <- input$readability_view_type %||% "distribution"
 
     if (is.null(selected_metric) || is.na(selected_metric)) {
-      metric_names <- setdiff(names(scores_data), c("Document", "Words"))
+      metric_names <- setdiff(names(scores_data), c("Document", "Words", "sentence_flag"))
       metric_names <- metric_names[!is.na(metric_names)]
       if (length(metric_names) == 0) {
         return(plot_error("No valid metrics available"))
@@ -9958,7 +9947,7 @@ server <- shinyServer(function(input, output, session) {
   output$lexical_diversity_uiOutput <- renderUI({
     if (lexical_diversity_results$analyzed) {
       # Get available metrics from data
-      available_metrics <- setdiff(names(lexical_diversity_results$data), "document")
+      available_metrics <- setdiff(names(lexical_diversity_results$data), c("document", "n_tokens"))
 
       # Create choices with display labels
       metric_labels <- c(
@@ -10048,6 +10037,18 @@ server <- shinyServer(function(input, output, session) {
 
       texts_for_lexdiv <- as.character(united_tbl()$united_texts)
 
+      # MTLD and MATTR norms come from running text, so stopword removal and lemmas would bias them
+      running_tokens <- quanteda::tokens_tolower(quanteda::tokens(texts_for_lexdiv, remove_punct = TRUE,
+                                                                  remove_numbers = TRUE, remove_symbols = TRUE))
+      if (quanteda::ndoc(running_tokens) == quanteda::ndoc(tokens_to_use)) {
+        quanteda::docnames(running_tokens) <- quanteda::docnames(tokens_to_use)
+        quanteda::docvars(running_tokens) <- quanteda::docvars(tokens_to_use)
+        tokens_to_use <- running_tokens
+      } else {
+        showNotification("Document counts differ from the united text, so diversity uses the processed tokens.",
+                         type = "warning", duration = 8)
+      }
+
       result <- TextAnalysisR::lexical_diversity_analysis(
         x = tokens_to_use,
         measures = selected_metrics,
@@ -10068,7 +10069,7 @@ server <- shinyServer(function(input, output, session) {
       lexical_diversity_results$original_data <- united_tbl()
 
       # Set selected_metric to first available metric from selection
-      available_metrics <- setdiff(names(result$lexical_diversity), "document")
+      available_metrics <- setdiff(names(result$lexical_diversity), c("document", "n_tokens"))
       lexical_diversity_results$selected_metric <-
         c(intersect(c("MTLD", "MATTR", "HDD"), available_metrics), available_metrics, "TTR")[1]
 
@@ -10315,13 +10316,15 @@ server <- shinyServer(function(input, output, session) {
                            c("feature", "n", "log_odds_weighted", "log_odds"))[1]
 
       table_data <- log_odds_results$data %>%
-        dplyr::select(dplyr::all_of(c(group_col, "feature", "n", "log_odds_weighted"))) %>%
-        dplyr::mutate(log_odds_weighted = round(.data$log_odds_weighted, 3)) %>%
+        dplyr::select(dplyr::all_of(c(group_col, "feature", "n", "log_odds_weighted", "significant"))) %>%
+        dplyr::mutate(log_odds_weighted = round(.data$log_odds_weighted, 3),
+                      significant = ifelse(.data$significant, "yes", "no")) %>%
         dplyr::rename(
           Group = !!rlang::sym(group_col),
           Term = feature,
           Count = n,
-          `Weighted Log Odds` = log_odds_weighted
+          `Weighted Log Odds (z)` = log_odds_weighted,
+          `BH q < .05` = significant
         )
 
       datatable(
@@ -10339,9 +10342,11 @@ server <- shinyServer(function(input, output, session) {
     } else {
       # Simple method columns: term, category1, category2, count1, count2, log_odds_ratio
       table_data <- log_odds_results$data %>%
-        dplyr::select(term, category1, category2, count1, count2, log_odds_ratio) %>%
+        dplyr::select(term, category1, category2, count1, count2, log_odds_ratio, z_score, significant) %>%
         dplyr::mutate(
           log_odds_ratio = round(.data$log_odds_ratio, 3),
+          z_score = round(.data$z_score, 2),
+          significant = ifelse(.data$significant, "yes", "no"),
           direction = ifelse(.data$log_odds_ratio > 0,
                             paste0("\u2191 ", .data$category1),
                             paste0("\u2193 ", .data$category2))
@@ -10353,6 +10358,8 @@ server <- shinyServer(function(input, output, session) {
           `Count 1` = count1,
           `Count 2` = count2,
           `Log Odds` = log_odds_ratio,
+          z = z_score,
+          `BH q < .05` = significant,
           Direction = direction
         )
 
@@ -10478,11 +10485,11 @@ server <- shinyServer(function(input, output, session) {
     req(dispersion_results$analyzed)
     req(dispersion_results$data)
 
-    gg_to_plotly(plot_lexical_dispersion(
+    gg_to_plotly(with_plot_notices(plot_lexical_dispersion(
       dispersion_data = dispersion_results$data,
       scale = input$dispersion_scale %||% "relative",
       title = "Lexical Dispersion"
-    ))
+    )))
   })
 
   # Render dispersion metrics table
@@ -11206,6 +11213,7 @@ server <- shinyServer(function(input, output, session) {
   clear_embeddings_cache <- function() {
     embeddings_cache$embeddings <- NULL
     embeddings_cache$model <- NULL
+    embeddings_cache$provider <- NULL
     embeddings_cache$texts_hash <- NULL
     embeddings_cache$category_filter <- NULL
     embeddings_cache$timestamp <- NULL
@@ -11533,16 +11541,13 @@ server <- shinyServer(function(input, output, session) {
             return(NULL)
           }
 
+          # a missing batch would shift every later row against its document
+          failed_batches <- total_batches - successful_batches
           if (failed_batches > 0) {
-            showNotification(
-              HTML(paste0(
-                "⚠ Embeddings generated with issues<br>",
-                "Completed: ", successful_batches, " batches<br>",
-                "Failed: ", failed_batches, " batches"
-              )),
-              type = "warning",
-              duration = 5
-            )
+            showNotification(sprintf("%d of %d embedding batches failed; nothing was cached. Try again.",
+                                     failed_batches, failed_batches + successful_batches),
+                             type = "error", duration = 10)
+            return(NULL)
           } else {
             showNotification(
               HTML(paste0(
@@ -11558,6 +11563,7 @@ server <- shinyServer(function(input, output, session) {
 
           embeddings_cache$embeddings <- embeddings
           embeddings_cache$model <- embedding_model
+          embeddings_cache$provider <- "sentence-transformers"
           embeddings_cache$texts_hash <- current_texts_hash
           embeddings_cache$timestamp <- Sys.time()
 
@@ -11725,6 +11731,7 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch({
       cached_provider <- embeddings_cache$provider %||% "sentence-transformers"
+      if (cached_provider %in% c("openai", "gemini")) spend_ai_call("Search Query", cached_provider, embeddings_cache$model)
       query_embedding <- if (cached_provider %in% c("openai", "gemini")) {
         matrix(TextAnalysisR::get_best_embeddings(query, provider = cached_provider, model = embeddings_cache$model,
                                                   api_key = get_api_key(cached_provider), verbose = FALSE), nrow = 1)
@@ -12340,7 +12347,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       embeddings_cache$embeddings <- embeddings
-      embeddings_cache$model <- model_name %||% "auto-detected"
+      embeddings_cache$model <- model_name
       embeddings_cache$provider <- provider
       embeddings_cache$texts_hash <- digest::digest(texts_vec, algo = "md5")
       embeddings_cache$timestamp <- Sys.time()
@@ -13188,7 +13195,7 @@ server <- shinyServer(function(input, output, session) {
             verbose = FALSE
           )
           embeddings_cache$embeddings <- embeddings
-          embeddings_cache$model <- search_model %||% "auto-detected"
+          embeddings_cache$model <- search_model
           embeddings_cache$provider <- search_provider
           embeddings_cache$texts_hash <- digest::digest(valid_docs, algo = "md5")
           embeddings_cache$timestamp <- Sys.time()
@@ -13198,7 +13205,8 @@ server <- shinyServer(function(input, output, session) {
           sim_matrix <- as.matrix(proxy::simil(embeddings, method = "cosine"))
           comparison_results$results[["embeddings"]] <- list(
             similarity_matrix = sim_matrix,
-            method = "embeddings"
+            method = "embeddings",
+            timestamp = Sys.time()
           )
           TRUE
         }, error = function(e) {
@@ -14339,7 +14347,8 @@ server <- shinyServer(function(input, output, session) {
           # Store embeddings in cache if newly generated
           if (is.null(cached_embeddings) && !is.null(unified_result$embeddings)) {
             embeddings_cache$embeddings <- unified_result$embeddings
-            embeddings_cache$model <- embeddings_cache$model %||% "all-MiniLM-L6-v2"
+            embeddings_cache$model <- "all-MiniLM-L6-v2"
+            embeddings_cache$provider <- "sentence-transformers"
             embeddings_cache$texts_hash <- digest::digest(texts, algo = "md5")
             embeddings_cache$timestamp <- Sys.time()
             embeddings_cache$source <- "topic_modeling_unified"
@@ -14821,7 +14830,9 @@ server <- shinyServer(function(input, output, session) {
         feature_type, "_",
         input$heatmap_category_filter %||% "all", "_",
         digest::digest(input$doc_id_var %||% "", algo = "md5"), "_",
-        digest::digest(input$doc_category_var %||% "", algo = "md5"),
+        digest::digest(input$doc_category_var %||% "", algo = "md5"), "_",
+        # a recalculation with new data or method must not reuse the old heatmap
+        format(comparison_results$results[[feature_type]]$timestamp %||% ""),
         ngram_component
       )
     })
@@ -14865,12 +14876,14 @@ server <- shinyServer(function(input, output, session) {
         )
 
         n_docs <- nrow(filtered_data$matrix)
-        if (n_docs > 500) {
-          return(create_error_plot(
-            paste0("Matrix too large for interactive heatmap (", n_docs, " x ", n_docs,
-                   " = ", format(n_docs^2, big.mark = ","), " cells). Filter by category to reduce size."),
-            color = "#F59E0B"
-          ))
+        # past 150 documents the tiles freeze the browser; keep the most connected ones
+        if (n_docs > 150) {
+          connected <- rowSums(filtered_data$matrix, na.rm = TRUE) - diag(filtered_data$matrix)
+          keep <- sort(utils::head(order(connected, decreasing = TRUE), 150))
+          filtered_data$matrix <- filtered_data$matrix[keep, keep, drop = FALSE]
+          filtered_data$docs_data <- filtered_data$docs_data[keep, , drop = FALSE]
+          showNotification(sprintf("Showing the 150 most connected of %d documents. Filter by category to choose others.", n_docs),
+                           type = "message", duration = 8)
         }
 
         plot <- gg_to_plotly(TextAnalysisR::plot_similarity_heatmap(
@@ -15233,11 +15246,11 @@ server <- shinyServer(function(input, output, session) {
       return(TextAnalysisR:::create_empty_plot_message("Need at least one comparison category"))
     }
 
-    # 500 x 500 cells is the most a browser draws without freezing
+    # 40,000 cells (200 x 200) keeps the plotly widget responsive
     n_cells <- sum(docs_data$category_display == ref_category) * sum(docs_data$category_display %in% col_categories)
-    if (n_cells > 250000) {
+    if (n_cells > 40000) {
       return(TextAnalysisR:::create_empty_plot_message(sprintf(
-        "%s document pairs are too many to draw; filter to fewer documents.", format(n_cells, big.mark = ","))))
+        "%s document pairs are too many to draw; choose a reference category with fewer documents.", format(n_cells, big.mark = ","))))
     }
 
     # Create cross-category heatmap
@@ -18911,6 +18924,7 @@ server <- shinyServer(function(input, output, session) {
           }
         })
 
+        attr(stm_result, "prevalence") <- prevalence_formula_K_n()
         topic_model_result(stm_result)
         topic_model_type("stm")
         generated_labels(NULL)
@@ -20026,6 +20040,7 @@ server <- shinyServer(function(input, output, session) {
 
     provider <- input$stm_label_provider %||% "openai"
     api_key <- NULL
+    model <- NULL
 
     if (provider == "openai") {
       api_key <- get_api_key("openai", input$stm_label_openai_api_key)
@@ -21162,6 +21177,15 @@ server <- shinyServer(function(input, output, session) {
         } else {
           NULL
         }
+        # effects must use the covariates the model was fitted with, not the current sidebar
+        fitted_prevalence <- attr(topic_model_result(), "prevalence")
+        if (!is.null(fitted_prevalence) && length(all.vars(fitted_prevalence)) == 0) fitted_prevalence <- NULL
+        if (!is.null(fitted_prevalence) && !identical(deparse(fitted_prevalence), deparse(prevalence_formula))) {
+          showNotification(paste0("Using the fitted prevalence ", paste(deparse(fitted_prevalence), collapse = " "),
+                                  "; refit the model to estimate other covariates."), type = "warning", duration = 10)
+          prevalence_formula <- fitted_prevalence
+          terms <- all.vars(fitted_prevalence)
+        }
 
         if (!is.null(prevalence_formula) && length(terms) > 0) {
           cat("Prevalence formula:", paste(deparse(prevalence_formula), collapse = " "), "\n")
@@ -21232,7 +21256,10 @@ server <- shinyServer(function(input, output, session) {
   # Step 6: Plot topic prevalence effects by a categorical variable.
 
   observe({
-    selected_cat <- input$stm_categorical_var_2
+    fitted_vars <- all.vars(attr(topic_model_result(), "prevalence") %||% ~1)
+    selected_cat <- if (length(fitted_vars) > 0) {
+      fitted_vars[!vapply(fitted_vars, function(v) is.numeric(out()$meta[[v]]), logical(1))]
+    } else input$stm_categorical_var_2
     updateSelectizeInput(session,
                       "stm_effect_cat_btn",
                       choices = selected_cat,
@@ -21322,7 +21349,10 @@ server <- shinyServer(function(input, output, session) {
   # Step 7: Plot topic prevalence effects by a continuous variable.
 
   observe({
-    selected_con <- input$stm_continuous_var_2
+    fitted_vars <- all.vars(attr(topic_model_result(), "prevalence") %||% ~1)
+    selected_con <- if (length(fitted_vars) > 0) {
+      fitted_vars[vapply(fitted_vars, function(v) is.numeric(out()$meta[[v]]), logical(1))]
+    } else input$stm_continuous_var_2
     updateSelectizeInput(session,
                          "stm_effect_con_btn",
                          choices = selected_con,
@@ -21616,7 +21646,7 @@ server <- shinyServer(function(input, output, session) {
     provider <- input$qc_provider %||% "openai"
     api_key <- get_api_key(provider, input[[paste0("qc_", provider, "_api_key")]])
     if (!check_api_key(api_key, provider, feature)) return(NULL)
-    model <- if (provider == "openai") input$qc_openai_model else input$qc_gemini_model
+    model <- switch(provider, openai = input$qc_openai_model, gemini = input$qc_gemini_model, NULL)
     if (is.null(model) || !nzchar(model)) model <- NULL
     texts <- docs_data$combined_text
     names(texts) <- paste0("doc", seq_along(texts))
@@ -21887,7 +21917,7 @@ server <- shinyServer(function(input, output, session) {
       if (nrow(own) > 0) parts <- c(parts, list(own))
     }
     if (length(parts) == 0) {
-      showNotification("Upload coder files or accept suggestions first.", type = "warning", duration = 7)
+      showNotification("Upload coder files or code units in Annotate first.", type = "warning", duration = 7)
       return()
     }
     parts <- lapply(parts, function(d) {
@@ -21910,7 +21940,8 @@ server <- shinyServer(function(input, output, session) {
       TextAnalysisR::code_agreement(
         combined,
         units = input$qc_agree_units %||% "intersection",
-        align = input$qc_align %||% "presence"),
+        align = input$qc_align %||% "presence",
+        codebook = qc_codebook()),
       error = function(e) {
         showNotification(paste("Agreement error:", e$message), type = "error", duration = 10)
         NULL

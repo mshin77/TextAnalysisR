@@ -8,7 +8,8 @@ sentiment_valence_analysis(
   texts,
   doc_names = NULL,
   neutral_cutoff = 0,
-  polarity_dt = NULL
+  polarity_dt = NULL,
+  neutral_terms = character(0)
 )
 }
 \arguments{
@@ -20,9 +21,15 @@ sentiment_valence_analysis(
 Defaults to 0, classifying by sign only.}
 
 \item{polarity_dt}{Optional custom polarity table from
-\code{\link[sentimentr:update_polarity_table]{sentimentr::update_polarity_table()}}. The default table scores domain terms
-such as "disability" and "intervention" as negative, so a corpus where those
-are neutral descriptors needs its own table.}
+\code{\link[sentimentr:update_polarity_table]{sentimentr::update_polarity_table()}}. When NULL, the sentimentr default
+table is used without \code{neutral_terms}.}
+
+\item{neutral_terms}{Words dropped from the default polarity table because they
+describe the topic, such as "disability" and "intervention"; the polarity
+drop is ignored when \code{polarity_dt} is given. Of these, "significant"
+and "significantly" are also dropped from \code{lexicon::hash_valence_shifters},
+so the statistical sense stops amplifying; "severe" keeps its role. Default
+\code{character(0)} keeps them; \code{\link[=domain_neutral_terms]{domain_neutral_terms()}} is the app's list.}
 }
 \value{
 A list with the same shape as \code{\link[=sentiment_lexicon_analysis]{sentiment_lexicon_analysis()}}:

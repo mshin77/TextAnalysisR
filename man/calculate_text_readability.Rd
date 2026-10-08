@@ -19,14 +19,19 @@ calculate_text_readability(
 Options: "flesch", "flesch_kincaid", "gunning_fog", "smog", "ari", "coleman_liau"}
 
 \item{include_lexical_diversity}{Logical, include the MTLD lexical diversity
-index (default: TRUE)}
+index, computed on lowercased tokens (default: TRUE)}
 
 \item{include_sentence_stats}{Logical, include average sentence length (default: TRUE)}
 
 \item{doc_names}{Optional character vector of document names}
 }
 \value{
-A data frame with document names and readability scores
+A data frame with document names, readability scores, and
+\code{sentence_flag}: TRUE for documents with a mean sentence length over 40
+words (a single long sentence included), where missing sentence boundaries
+(common in PDF lines or unpunctuated text) distort sentence-based
+formulas. Flagged documents keep their scores, and a warning gives their
+count.
 }
 \description{
 Calculates multiple readability metrics for texts including Flesch Reading Ease,

@@ -37,7 +37,9 @@ the absolute Log Ratio effect size (default: "score")}
 Data frame with columns: Keyword, Keyness_Score, Target_Count,
 Reference_Count, Target_per_10k, Reference_per_10k, Log_Ratio
 (log2 ratio of normalized frequencies; zero counts set to 0.5), and
-P_Adjusted (Benjamini-Hochberg).
+P_Adjusted (Benjamini-Hochberg). A non-empty result carries the keyness
+measure in \code{attr(, "measure")}, which \code{\link[=plot_keyness_keywords]{plot_keyness_keywords()}} reads for
+its labels.
 }
 \description{
 Extracts distinctive keywords by comparing a target document group with the

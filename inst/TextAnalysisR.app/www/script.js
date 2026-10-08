@@ -17,14 +17,18 @@ window.toggleTranslate = function() {
     var dropdown = document.getElementById('translate_dropdown');
     if (!dropdown) return;
 
-    if (dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-        dropdown.style.display = 'none';
-    } else {
-        dropdown.classList.add('show');
-        dropdown.style.display = 'block';
-    }
+    var open = !dropdown.classList.contains('show');
+    dropdown.classList.toggle('show', open);
+    dropdown.style.display = open ? 'block' : 'none';
+    $('#translate_icon').attr('aria-expanded', open ? 'true' : 'false');
 }
+
+$(document).on('keydown', function(e) {
+    var dropdown = document.getElementById('translate_dropdown');
+    if (e.key !== 'Escape' || !dropdown || !dropdown.classList.contains('show')) return;
+    window.toggleTranslate();
+    $('#translate_icon').trigger('focus');
+});
 
 // Trigger Google Translate by selecting language in native dropdown
 window.selectGoogleTranslateLanguage = function(langCode) {
@@ -322,7 +326,7 @@ $(document).on('keydown', '#entity_table input[type="text"]', function(e) {
     }
 });
 
-$(document).on('dblclick', '#entity_table td:last-child span', function(e) {
+$(document).on('dblclick', '#entity_table td:last-child .entity-badge', function(e) {
     e.stopPropagation();
     var $td = $(this).closest('td');
     $td.trigger('dblclick');
@@ -396,21 +400,15 @@ $(document).ready(function() {
         });
     }
 
-    var observer = new MutationObserver(function(mutations) {
-        fixTooltipWrapping();
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['class']
-    });
-
-    $(document).on('plotly_hover', function() {
+    // each re-render purges plotly listeners, so the hover handler is bound again on every value
+    var wrapOnHover = function() { window.requestAnimationFrame(fixTooltipWrapping); };
+    $(document).on('shiny:value', function(event) {
         setTimeout(function() {
-            fixTooltipWrapping();
-        }, 10);
+            var el = document.getElementById(event.name);
+            if (!el || !el.on) return;
+            if (el.removeListener) el.removeListener('plotly_hover', wrapOnHover);
+            el.on('plotly_hover', wrapOnHover);
+        }, 0);
     });
 
     if (!$('#accessible-notifications').length) {
@@ -498,6 +496,7 @@ $(document).ready(function() {
             if (!dropdown.contains(e.target) && (!icon || !icon.contains(e.target))) {
                 dropdown.classList.remove('show');
                 dropdown.style.display = 'none';
+                $('#translate_icon').attr('aria-expanded', 'false');
             }
         }
     });
@@ -522,6 +521,7 @@ $(document).ready(function() {
         if (dropdown) {
             dropdown.classList.remove('show');
             dropdown.style.display = 'none';
+            $('#translate_icon').attr('aria-expanded', 'false');
         }
     });
 

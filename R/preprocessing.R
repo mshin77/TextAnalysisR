@@ -183,9 +183,44 @@ to_utf8 <- function(x) {
 }
 
 #' @keywords internal
+.split_pdf_columns <- function(page) {
+  lines <- strsplit(page, "\n", fixed = TRUE)[[1]]
+  width <- nchar(lines)
+  # the right column starts where a run of 3+ spaces ends, not where it begins
+  right_start <- lapply(gregexpr("(?<=\\S) {3,}(?=\\S)", lines, perl = TRUE), function(g) {
+    s <- as.integer(g) + attr(g, "match.length")
+    s[s > 0]
+  })
+  long <- width > 40
+  if (length(unlist(right_start[long])) == 0) return(page)
+  gutter <- as.integer(names(which.max(table(unlist(right_start[long])))))
+  near <- vapply(right_start, function(s) any(abs(s - gutter) <= 3), logical(1))
+  median_width <- stats::median(width[nzchar(trimws(lines))])
+  if (mean(near[long]) < 0.5 || gutter < 0.3 * median_width || gutter > 0.7 * median_width) return(page)
+  # a line with no gap at the gutter spans the page and stays whole in the left half,
+  # unless its leading spaces reach the gutter, which makes it right-column text only
+  cut <- vapply(right_start, function(s) c(s[abs(s - gutter) <= 3], NA_integer_)[1], integer(1))
+  indent <- attr(regexpr("^ *", lines), "match.length")
+  cut[is.na(cut) & indent >= gutter - 4] <- 1L
+  cut[is.na(cut)] <- width[is.na(cut)] + 1L
+  paste(c(trimws(substr(lines, 1, cut - 1L), "right"), trimws(substr(lines, cut, width), "left")), collapse = "\n")
+}
+
+#' @keywords internal
 .pdf_page_lines <- function(pages) {
-  # NFKC splits ligatures such as U+FB01; line-end hyphens rejoin split words
-  pages <- gsub("(\\p{Ll})-\n\\s*(\\p{Ll})", "\\1\\2", stringi::stri_trans_nfkc(pages), perl = TRUE)
+  # NFKC splits ligatures such as U+FB01; a line-end hyphen drops only when the joined word occurs elsewhere
+  pages <- stringi::stri_trans_nfkc(vapply(pages, .split_pdf_columns, character(1), USE.NAMES = FALSE))
+  hyphen_pattern <- "(\\p{L}*\\p{Ll})-\\n\\s*(\\p{Ll}+)"
+  words <- unique(tolower(unlist(stringi::stri_extract_all_regex(
+    stringi::stri_replace_all_regex(pages, hyphen_pattern, " "), "\\p{L}+"))))
+  m <- gregexpr(hyphen_pattern, pages, perl = TRUE)
+  regmatches(pages, m) <- lapply(regmatches(pages, m), function(hit) {
+    parts <- matrix(stringi::stri_match_first_regex(hit, hyphen_pattern), ncol = 3)
+    joined <- paste0(parts[, 2], parts[, 3])
+    # a compound keeps its hyphen only when both halves are words of their own, as in evidence-based
+    compound <- tolower(parts[, 2]) %in% words & tolower(parts[, 3]) %in% words
+    as.character(ifelse(tolower(joined) %in% words | !compound, joined, paste0(parts[, 2], "-", parts[, 3])))
+  })
   page_lines <- lapply(pages, function(page) trimws(strsplit(page, "\n")[[1]]))
   out <- data.frame(text = to_utf8(unlist(page_lines)),
                     page = rep(seq_along(page_lines), lengths(page_lines)),
@@ -221,7 +256,11 @@ to_utf8 <- function(x) {
 #' @return A data frame containing the processed data. PDF rows carry `page`
 #'   and `page_end`, the first and last PDF page of the row's text, so a coded
 #'   quote stays traceable to its source page. Other formats have no page
-#'   columns; combined with PDFs, their rows get `NA`.
+#'   columns; combined with PDFs, their rows get `NA`. When several files are
+#'   imported, each row carries a `file` column with the source file name
+#'   (`file_info$name` when present, otherwise the base name of `filepath`),
+#'   unless the file already has a `file` column. Two-column PDF pages are
+#'   split at the column gutter and read left column first.
 #'
 #' @importFrom utils read.csv
 #'
@@ -269,6 +308,7 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL,
     data <- tibble::tibble(text = .clean_text(text_input))
   } else if (dataset_choice == "Upload Your File") {
     if (is.null(file_info)) stop("No file provided")
+    file_label <- basename(if ("name" %in% names(file_info)) file_info$name else file_info$filepath)
 
     data_list <- lapply(seq_len(nrow(file_info)), function(i) {
       filepath <- file_info$filepath[i]
@@ -319,7 +359,9 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL,
 
       if (is.null(df)) return(NULL)
       df[] <- lapply(df, function(col) if (is.character(col)) .clean_text(col) else col)
-      tibble::as_tibble(df)
+      df <- tibble::as_tibble(df)
+      if (nrow(file_info) > 1 && !"file" %in% names(df)) df$file <- rep(file_label[i], nrow(df))
+      df
     })
 
     data_list <- Filter(Negate(is.null), data_list)
@@ -341,11 +383,16 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL,
 #' indexing field such as `Subject:` or `Load-Date:`. Scattered copyright, length,
 #' byline, and dateline lines are dropped wherever they appear.
 #'
+#' Removal runs only when the text carries a news-export marker: a line that
+#' is exactly `Body`, or starts with `Load-Date:` or `End of Document`. Without
+#' one, a field-like line such as a table's `Notes:` leaves the text intact.
+#'
 #' @param df Data frame of ingested lines, one row per paragraph.
 #' @param text_col Name of the text column.
 #'
-#' @return `df` with metadata rows removed. Rows are kept when no markers are
-#'   found, so text from other sources passes through unchanged.
+#' @return `df` with metadata rows removed, with a message giving the number of
+#'   lines dropped. `df` is returned unchanged when no export marker is found,
+#'   so text from other sources passes through.
 #'
 #' @concept preprocessing
 #' @export
@@ -353,6 +400,7 @@ remove_metadata_lines <- function(df, text_col = "text") {
   if (!text_col %in% names(df) || nrow(df) == 0) return(df)
 
   lines <- trimws(as.character(df[[text_col]]))
+  if (!any(grepl("^Body$|^Load-Date:|^End of Document", lines))) return(df)
   keep <- rep(TRUE, length(lines))
 
   fields <- paste0(
@@ -376,6 +424,7 @@ remove_metadata_lines <- function(df, text_col = "text") {
     !grepl("^Page [0-9]+ of [0-9]+$", lines) &
     !grepl(fields, lines)
 
+  if (any(!keep)) message(sprintf("Removed %d metadata line(s) from a news export.", sum(!keep)))
   df[keep, , drop = FALSE]
 }
 
@@ -704,7 +753,7 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150, pages = NULL) {
 #' Pages with 500 or fewer characters of extracted text (up to 50) are rendered
 #' and uploaded to the vision provider (OpenAI or Google). Check that the
 #' provider is allowed for data under IRB or consent limits. Descriptions are
-#' marked "[AI-generated page description]" to keep them apart from source text.
+#' marked `[AI-generated page description]` to keep them apart from source text.
 #'
 #' @param file_path Character string path to PDF file
 #' @param use_multimodal Logical, enable multimodal extraction
@@ -1615,7 +1664,7 @@ check_multimodal_prerequisites <- function(
 #' Pages with 500 or fewer characters of extracted text (up to 50) are rendered
 #' and uploaded to the vision provider (OpenAI or Google). Check that the
 #' provider is allowed for data under IRB or consent limits. Descriptions are
-#' marked "[AI-generated page description]" to keep them apart from source text.
+#' marked `[AI-generated page description]` to keep them apart from source text.
 #'
 #' @param file_path Character string path to PDF file
 #' @param vision_provider Character: "openai" or "gemini" (default)

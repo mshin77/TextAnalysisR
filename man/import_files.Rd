@@ -26,7 +26,11 @@ line), "page" (one row per page), or "document" (one row per file).}
 A data frame containing the processed data. PDF rows carry \code{page}
 and \code{page_end}, the first and last PDF page of the row's text, so a coded
 quote stays traceable to its source page. Other formats have no page
-columns; combined with PDFs, their rows get \code{NA}.
+columns; combined with PDFs, their rows get \code{NA}. When several files are
+imported, each row carries a \code{file} column with the source file name
+(\code{file_info$name} when present, otherwise the base name of \code{filepath}),
+unless the file already has a \code{file} column. Two-column PDF pages are
+split at the column gutter and read left column first.
 }
 \description{
 This function processes different types of files and text input based on the dataset choice.

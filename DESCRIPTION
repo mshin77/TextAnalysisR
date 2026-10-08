@@ -67,6 +67,7 @@ Suggests:
     jsonlite,
     knitr,
     later,
+    lexicon,
     LexisNexisTools,
     markdown,
     MASS,

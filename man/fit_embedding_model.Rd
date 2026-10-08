@@ -7,7 +7,7 @@
 fit_embedding_model(
   texts,
   method = "umap_hdbscan",
-  n_topics = 10,
+  n_topics = NULL,
   embedding_model = "all-MiniLM-L6-v2",
   backend = "auto",
   clustering_method = "kmeans",
@@ -25,7 +25,7 @@ fit_embedding_model(
   dbscan_minpts = 5,
   representation_method = "c-tfidf",
   diversity = 0.5,
-  reduce_outliers = TRUE,
+  reduce_outliers = FALSE,
   outlier_strategy = "probabilities",
   outlier_threshold = 0,
   seed = 123,
@@ -44,7 +44,11 @@ fit_embedding_model(
 \item For both: "embedding_clustering", "hierarchical_semantic"
 }}
 
-\item{n_topics}{The number of topics to identify. For UMAP+HDBSCAN, use NULL or "auto" for automatic determination, or specify an integer.}
+\item{n_topics}{The number of topics to identify (default: NULL). For
+UMAP+HDBSCAN, NULL keeps the HDBSCAN topics without merging, "auto"
+requests BERTopic's automatic merging, and an integer merges down to that
+count. The k-means and hierarchical methods use 10 when NULL (at most
+the number of documents minus one).}
 
 \item{embedding_model}{The embedding model to use (default: "all-MiniLM-L6-v2").}
 
@@ -55,7 +59,7 @@ fit_embedding_model(
 
 \item{similarity_threshold}{The similarity threshold for topic assignment (default: 0.7).}
 
-\item{min_topic_size}{The minimum number of documents per topic (default: 3).}
+\item{min_topic_size}{The minimum number of documents per topic (default: 10).}
 
 \item{min_cluster_size}{HDBSCAN density threshold (default \code{NULL} falls back to \code{min_topic_size}). Setting this independently lets fine-grained clusters merge into broader topics.}
 
@@ -87,7 +91,9 @@ representation (default: 0.5). Higher values penalize redundant terms
 more strongly. Applies to the R backend; ignored by the Python BERTopic
 backend.}
 
-\item{reduce_outliers}{Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).}
+\item{reduce_outliers}{Logical, if TRUE, reassigns HDBSCAN noise documents to
+topics (default: FALSE). With \code{outlier_threshold = 0} every noise
+document is reassigned, so raise the threshold when enabling it.}
 
 \item{outlier_strategy}{Strategy for outlier reduction using BERTopic:
 "probabilities" (default, uses topic probabilities), "c-tf-idf" (uses

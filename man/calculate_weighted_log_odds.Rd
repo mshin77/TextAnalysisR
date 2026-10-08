@@ -25,6 +25,10 @@ Computes weighted log odds ratios using the method from Monroe, Colaresi,
 and Quinn (2008) "Fightin' Words" via the tidylo package. This method
 weights log odds by variance (z-score) to identify words that reliably
 distinguish between groups, accounting for sampling variability.
+
+tidylo estimates the informative Dirichlet prior from the pooled corpus
+counts and compares each group with the pooled corpus, so the z-scores are
+not directly comparable with a background-corpus prior as in Monroe et al.
 }
 \examples{
 \donttest{

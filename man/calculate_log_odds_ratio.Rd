@@ -45,7 +45,7 @@ Data frame with columns:
 \item log_odds_ratio: Log of odds ratio (positive = more in compared category)
 \item variance: Approximate variance of the log odds ratio
 \item z_score: Log odds ratio divided by its standard error
-\item significant: TRUE when the Benjamini-Hochberg adjusted two-sided p-value of z is below 0.05
+\item significant: TRUE when the Benjamini-Hochberg adjusted two-sided p-value of z is below 0.05, adjusted across all comparisons in the run
 }
 Terms are ranked by absolute z-score.
 }

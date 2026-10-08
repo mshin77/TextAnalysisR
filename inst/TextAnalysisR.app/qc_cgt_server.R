@@ -56,6 +56,9 @@ qc_has_work <- function(p) {
 
 qc_check_saved_file <- function(coder) {
   path <- qc_path_for(coder)
+  # projects autosaved before the R_user_dir default sit in the working directory; opening one moves later saves
+  legacy <- file.path(getwd(), basename(path))
+  if (!file.exists(path) && file.exists(legacy)) path <- legacy
   if (is_remote || !file.exists(path)) {
     qc_pending_file(NULL)
     qc_autosave_ok(TRUE)
@@ -808,8 +811,9 @@ observeEvent(input$qc_draw_holdout, {
                    type = "message", duration = 8)
 })
 
+# accepted AI suggestions are AI-anchored, so agreement uses the coder's own codes only
 qc_project_codes <- function(p, holdout_only) {
-  a <- p$assignments[p$assignments$status %in% c("human", "human-none", "ai-confirmed"), , drop = FALSE]
+  a <- p$assignments[p$assignments$status %in% c("human", "human-none"), , drop = FALSE]
   if (holdout_only && nrow(p$holdout) > 0) a <- a[a$unit_id %in% p$holdout$unit_id, , drop = FALSE]
-  a[, c("doc_id", "unit_id", "start", "end", "code", "coder", "confidence")]
+  a[, c("doc_id", "unit_id", "start", "end", "code", "coder", "confidence", "status")]
 }

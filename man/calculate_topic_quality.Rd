@@ -22,5 +22,8 @@ A list of quality metrics.
 }
 \description{
 Internal function to calculate quality metrics for semantic topic modeling results.
+Outlier topic 0 is excluded from coherence, separation, and size metrics and
+counted in \code{n_outliers}. \code{overall_quality} is the mean of
+coherence and bounded separation \eqn{s / (1 + s)}, so it rises with both.
 }
 \keyword{internal}

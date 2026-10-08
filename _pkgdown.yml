@@ -68,6 +68,8 @@ reference:
   contents:
   - analyze_sentiment
   - sentiment_lexicon_analysis
+  - sentiment_valence_analysis
+  - domain_neutral_terms
   - sentiment_embedding_analysis
   - starts_with("plot_sentiment")
   - plot_emotion_radar
