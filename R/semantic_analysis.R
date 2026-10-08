@@ -4030,13 +4030,15 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #'
 #' @param query Character string, user question
 #' @param documents Character vector, corpus to search
-#' @param provider Character string, provider: "openai" or "gemini"
+#' @param provider Character string, provider: "openai", "gemini", or "ollama"
+#'   (local answer and local retrieval; needs Python with sentence-transformers)
 #' @param api_key Character string, API key (or from
-#'   OPENAI_API_KEY/GEMINI_API_KEY env).
+#'   OPENAI_API_KEY/GEMINI_API_KEY env); not used for ollama.
 #' @param embedding_model Character string, embedding model. Defaults:
-#'   "text-embedding-3-small" (openai), "gemini-embedding-001" (gemini)
+#'   "text-embedding-3-small" (openai), "gemini-embedding-001" (gemini),
+#'   "all-MiniLM-L6-v2" (ollama, local sentence-transformers)
 #' @param chat_model Character string, chat model. Defaults:
-#'   "gpt-4.1-mini" (openai), "gemini-3.5-flash-lite" (gemini)
+#'   "gpt-4.1-mini" (openai), "gemini-3.5-flash-lite" (gemini), "llama3.2" (ollama)
 #' @param top_k Integer, number of documents to retrieve (default: 5)
 #'
 #' @return List with:
@@ -4080,22 +4082,25 @@ plot_similarity_heatmap <- function(similarity_matrix,
 run_rag_search <- function(
   query,
   documents,
-  provider = c("openai", "gemini"),
+  provider = c("openai", "gemini", "ollama"),
   api_key = NULL,
   embedding_model = NULL,
   chat_model = NULL,
   top_k = 5
 ) {
   provider <- match.arg(provider)
+  # Ollama answers locally, so retrieval also stays local with sentence-transformers
+  embedding_provider <- if (provider == "ollama") "sentence-transformers" else provider
 
   if (is.null(api_key)) {
     api_key <- switch(provider,
       "openai" = Sys.getenv("OPENAI_API_KEY"),
-      "gemini" = Sys.getenv("GEMINI_API_KEY")
+      "gemini" = Sys.getenv("GEMINI_API_KEY"),
+      "ollama" = ""
     )
   }
 
-  if (!nzchar(api_key)) {
+  if (provider != "ollama" && !nzchar(api_key)) {
     return(list(
       success = FALSE,
       error = .missing_api_key_message(provider, "package"),
@@ -4118,14 +4123,16 @@ run_rag_search <- function(
   if (is.null(embedding_model)) {
     embedding_model <- switch(provider,
       "openai" = "text-embedding-3-small",
-      "gemini" = "gemini-embedding-001"
+      "gemini" = "gemini-embedding-001",
+      "ollama" = "all-MiniLM-L6-v2"
     )
   }
 
   if (is.null(chat_model)) {
     chat_model <- switch(provider,
       "openai" = "gpt-4.1-mini",
-      "gemini" = "gemini-3.5-flash-lite"
+      "gemini" = "gemini-3.5-flash-lite",
+      "ollama" = "llama3.2"
     )
   }
 
@@ -4133,11 +4140,12 @@ run_rag_search <- function(
   top_k <- min(top_k, length(documents))
 
   doc_embeddings <- tryCatch({
-    get_api_embeddings(
+    get_best_embeddings(
       texts = documents,
-      provider = provider,
+      provider = embedding_provider,
       model = embedding_model,
-      api_key = api_key
+      api_key = api_key,
+      verbose = FALSE
     )
   }, error = function(e) {
     return(list(error = e$message))
@@ -4156,7 +4164,7 @@ run_rag_search <- function(
   if (is.null(doc_embeddings)) {
     return(list(
       success = FALSE,
-      error = .missing_api_key_message(provider, "package"),
+      error = if (provider == "ollama") "Local retrieval needs Python with sentence-transformers; run setup_python_env()." else .missing_api_key_message(provider, "package"),
       answer = "",
       confidence = 0.0,
       sources = character(0)
@@ -4164,11 +4172,12 @@ run_rag_search <- function(
   }
 
   query_embedding <- tryCatch({
-    get_api_embeddings(
+    get_best_embeddings(
       texts = query,
-      provider = provider,
+      provider = embedding_provider,
       model = embedding_model,
-      api_key = api_key
+      api_key = api_key,
+      verbose = FALSE
     )
   }, error = function(e) {
     return(list(error = e$message))
@@ -4187,7 +4196,7 @@ run_rag_search <- function(
   if (is.null(query_embedding)) {
     return(list(
       success = FALSE,
-      error = .missing_api_key_message(provider, "package"),
+      error = if (provider == "ollama") "Local retrieval needs Python with sentence-transformers; run setup_python_env()." else .missing_api_key_message(provider, "package"),
       answer = "",
       confidence = 0.0,
       sources = character(0)

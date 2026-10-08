@@ -673,7 +673,7 @@ Focus on incorporating the most significant keywords while following the guideli
             radioButtons(
               "k_rec_provider",
               "AI Provider:",
-              choices = .llm_provider_choices,
+              choices = .llm_provider_choices_local,
               selected = .llm_provider_default,
               inline = FALSE
             ),
@@ -3083,7 +3083,7 @@ semantic_analysis_ui_content <- function() {
               radioButtons(
                 "rag_provider",
                 "AI Provider:",
-                choices = .llm_provider_choices,
+                choices = .llm_provider_choices_local,
                 selected = .llm_provider_default
               ),
               .remote_notice(),
@@ -3253,7 +3253,7 @@ semantic_analysis_ui_content <- function() {
             radioButtons(
               "cluster_label_provider",
               "AI Provider:",
-              choices = .llm_provider_choices,
+              choices = .llm_provider_choices_local,
               selected = .llm_provider_default,
               inline = FALSE
             ),
