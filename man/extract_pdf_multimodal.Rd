@@ -49,7 +49,7 @@ and vision LLM APIs. No Python required.
 Pages with 500 or fewer characters of extracted text (up to 50) are rendered
 and uploaded to the vision provider (OpenAI or Google). Check that the
 provider is allowed for data under IRB or consent limits. Descriptions are
-marked "\link{AI-generated page description}" to keep them apart from source text.
+marked \verb{[AI-generated page description]} to keep them apart from source text.
 }
 \details{
 \strong{Workflow:}

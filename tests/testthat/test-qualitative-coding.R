@@ -872,3 +872,9 @@ test_that("PABAK uses the number of categories", {
   r <- data.frame(c1 = c("a", "b", "c", "a"), c2 = c("a", "b", "c", "b"))
   expect_equal(TextAnalysisR:::.pabak(r), (3 * 0.75 - 1) / 2)
 })
+
+test_that("code_agreement stops when the codebook has no code column", {
+  a <- tibble::tibble(doc_id = rep(c("d1", "d2"), each = 2), code = c("A", "A", "B", "B"),
+                      coder = rep(c("c1", "c2"), 2))
+  expect_error(code_agreement(a, align = "grid", codebook = data.frame(name = c("A", "B"))), "code")
+})

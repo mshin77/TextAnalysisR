@@ -485,20 +485,31 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   seen <- matrix(FALSE, length(docs), length(coders), dimnames = list(docs, coders))
   seen[cbind(match(reviewed$doc_id, docs), match(reviewed$coder, coders))] <- TRUE
   keep <- if (units == "intersection") rowSums(seen) == ncol(seen) else rowSums(seen) > 0
-  codes <- sort(unique(stats::na.omit(as.character(a$code))))
-  stats::setNames(lapply(codes, function(k) {
+  all_codes <- unique(stats::na.omit(as.character(a$code)))
+  codes <- sort(unique(stats::na.omit(as.character(a$code[a$doc_id %in% docs[keep]]))))
+  out <- stats::setNames(lapply(codes, function(k) {
     hit <- a[!is.na(a$code) & a$code == k, ]
     m <- ifelse(seen, "no", NA_character_)
     m[cbind(match(hit$doc_id, docs), match(hit$coder, coders))] <- "yes"
     m[keep, , drop = FALSE]
   }), codes)
+  attr(out, "codes_left_out") <- length(setdiff(all_codes, codes))
+  out
 }
 
 #' @keywords internal
 .presence_agreement <- function(assignments, metrics, units, by_code) {
   per_code <- .presence_ratings(assignments, units)
+  if (length(per_code) == 0 && isTRUE(attr(per_code, "codes_left_out") > 0)) {
+    stop("No code was applied on the shared units, so presence agreement cannot be computed.", call. = FALSE)
+  }
   if (length(per_code) == 0 || nrow(per_code[[1]]) == 0 || ncol(per_code[[1]]) < 2) {
     stop("At least two coders with shared units are required.", call. = FALSE)
+  }
+  left_out <- attr(per_code, "codes_left_out")
+  if (left_out > 0) {
+    message(sprintf("%d code(s) never applied on shared units were left out of presence agreement.",
+                    left_out))
   }
   code_rows <- dplyr::bind_rows(lapply(names(per_code), function(k) {
     m <- .agreement_metrics(per_code[[k]], metrics)
@@ -535,7 +546,8 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   list(overall = overall,
        by_code = if (by_code) code_rows else NULL,
        disagree = if (nrow(disagree)) disagree else tibble::tibble(doc_id = character(0), code = character(0)),
-       independent = NULL)
+       independent = NULL,
+       codes_left_out = left_out)
 }
 
 #' @keywords internal
@@ -563,20 +575,21 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 }
 
 #' @keywords internal
-.pabak <- function(ratings) {
+.pabak <- function(ratings, n_categories = NULL) {
   if (ncol(ratings) != 2) return(NA_real_)
   po <- .percent_agreement(ratings)
   if (is.na(po)) return(NA_real_)
-  # Byrt et al. (1993): (q * po - 1) / (q - 1) for q categories
-  q <- max(2L, length(unique(stats::na.omit(as.vector(as.matrix(ratings))))))
+  # Byrt et al. (1993) for q = 2; Brennan and Prediger (1981) for q > 2
+  observed <- length(unique(stats::na.omit(as.vector(as.matrix(ratings)))))
+  q <- max(2L, observed, n_categories)
   (q * po - 1) / (q - 1)
 }
 
 #' @keywords internal
-.gwet_ac1 <- function(ratings) {
+.gwet_ac1 <- function(ratings, n_categories = NULL) {
   cats <- sort(unique(as.vector(ratings[!is.na(ratings)])))
-  q <- length(cats)
-  if (q < 2) return(if (q == 1) 1 else NA_real_)
+  if (length(cats) < 2) return(if (length(cats) == 1) 1 else NA_real_)
+  q <- max(length(cats), n_categories)
   ri <- rowSums(!is.na(ratings))
   use <- ri >= 2
   if (!any(use)) return(NA_real_)
@@ -614,13 +627,13 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 }
 
 #' @keywords internal
-.agreement_metrics <- function(ratings, metrics) {
+.agreement_metrics <- function(ratings, metrics, n_categories = NULL) {
   shared <- sum(stats::complete.cases(ratings))
   paired <- sum(rowSums(!is.na(ratings)) >= 2)
   vals <- list()
   if ("percent" %in% metrics) vals$percent <- c(.percent_agreement(ratings), shared)
-  if ("pabak" %in% metrics)   vals$pabak   <- c(.pabak(ratings), shared)
-  if ("ac1" %in% metrics)     vals$ac1     <- c(.gwet_ac1(ratings), paired)
+  if ("pabak" %in% metrics)   vals$pabak   <- c(.pabak(ratings, n_categories), shared)
+  if ("ac1" %in% metrics)     vals$ac1     <- c(.gwet_ac1(ratings, n_categories), paired)
   if ("kappa" %in% metrics)   vals$kappa   <- c(.kappa_estimate(ratings), shared)
   if ("alpha" %in% metrics)   vals$alpha   <- c(.alpha_estimate(ratings), paired)
   estimate <- vapply(vals, `[`, numeric(1), 1L, USE.NAMES = FALSE)
@@ -733,10 +746,19 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #'   reflects that shared calibration, so the two figures answer different
 #'   questions. Applies to grid and presence; ignored when
 #'   `align = "coverage"`.
+#' @param codebook Optional codebook: a data frame with a `code` column, or a
+#'   character vector of codes. Under grid alignment, PABAK and AC1 then take
+#'   the number of categories q from the codebook codes together with any
+#'   other observed category such as "(none)". Without it, q is the number of
+#'   categories observed in the ratings. Presence and per-code statistics are
+#'   binary (q = 2) either way.
 #'
 #' @return A list with `overall`, `by_code` (NULL when `by_code` is FALSE),
 #'   `disagree`, and `independent` (NULL unless `codebook_authors` is supplied
-#'   and at least two other coders remain). For grid alignment these are the
+#'   and at least two other coders remain). Presence alignment adds
+#'   `codes_left_out`, the number of codes never applied on a shared unit;
+#'   these are excluded from `by_code` and the `overall` means, since a code
+#'   absent from every shared unit would otherwise score perfect agreement. For grid alignment these are the
 #'   metric, per-code, and disagreement tables; for coverage they hold
 #'   per-coder-pair span coverage and the uncovered spans. In the metric tables
 #'   `n` counts the units each statistic was computed on: units carrying a code
@@ -753,7 +775,8 @@ code_agreement <- function(assignments,
                            units = c("intersection", "union"),
                            by_code = TRUE,
                            align = c("grid", "presence", "coverage"),
-                           codebook_authors = NULL) {
+                           codebook_authors = NULL,
+                           codebook = NULL) {
   metrics <- match.arg(metrics, several.ok = TRUE)
   units <- match.arg(units)
   align <- match.arg(align)
@@ -768,7 +791,8 @@ code_agreement <- function(assignments,
     res <- .presence_agreement(a, metrics, units, by_code)
     others <- setdiff(unique(a$coder), codebook_authors)
     if (!is.null(codebook_authors) && length(others) >= 2) {
-      res$independent <- .presence_agreement(a[a$coder %in% others, , drop = FALSE], metrics, units, FALSE)$overall
+      res$independent <- suppressMessages(
+        .presence_agreement(a[a$coder %in% others, , drop = FALSE], metrics, units, FALSE)$overall)
     }
     return(res)
   }
@@ -784,14 +808,20 @@ code_agreement <- function(assignments,
   if (nrow(ratings) == 0 || ncol(ratings) < 2) {
     stop("At least two coders with shared units are required.", call. = FALSE)
   }
+  if (is.data.frame(codebook) && !"code" %in% names(codebook)) {
+    stop("codebook needs a 'code' column.", call. = FALSE)
+  }
+  book_codes <- if (is.data.frame(codebook)) codebook$code else codebook
+  n_categories <- if (is.null(book_codes)) NULL else
+    length(union(as.character(book_codes), stats::na.omit(as.vector(ratings))))
   others <- setdiff(colnames(ratings), codebook_authors)
   independent <- if (!is.null(codebook_authors) && length(others) >= 2) {
-    .agreement_metrics(ratings[, others, drop = FALSE], metrics)
+    .agreement_metrics(ratings[, others, drop = FALSE], metrics, n_categories)
   } else {
     NULL
   }
   list(
-    overall = .agreement_metrics(ratings, metrics),
+    overall = .agreement_metrics(ratings, metrics, n_categories),
     by_code = if (by_code) .agreement_by_code(ratings, metrics) else NULL,
     disagree = .qc_disagreements(ratings),
     independent = independent

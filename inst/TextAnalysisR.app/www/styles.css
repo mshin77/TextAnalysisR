@@ -1586,7 +1586,7 @@ div {
 
 [data-theme="dark"] #google_translate_element.show select,
 [data-theme="dark"] #google_translate_element.show .goog-te-combo {
-  background-color: #5C6E88 !important;
+  background-color: #4A5A72 !important;
   color: #e2e8f0 !important;
   border-color: #5F7088 !important;
 }
@@ -1598,7 +1598,7 @@ div {
 }
 
 [data-theme="dark"] #google_translate_element.show option {
-  background-color: #5C6E88 !important;
+  background-color: #4A5A72 !important;
   color: #e2e8f0 !important;
 }
 
@@ -2289,7 +2289,7 @@ body>.skiptranslate {
 [data-theme="dark"] input[type="file"]::file-selector-button {
   background-color: #238636 !important;
   border: 1px solid #238636 !important;
-  color: #e6edf3 !important;
+  color: #ffffff !important;
   font-weight: 600;
   font-size: 16px !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
@@ -2298,7 +2298,7 @@ body>.skiptranslate {
 [data-theme="dark"] input[type="file"]::-webkit-file-upload-button {
   background-color: #238636 !important;
   border: 1px solid #238636 !important;
-  color: #e6edf3 !important;
+  color: #ffffff !important;
   font-weight: 600;
   font-size: 16px !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
@@ -2307,7 +2307,7 @@ body>.skiptranslate {
 [data-theme="dark"] .btn-file {
   background-color: #238636 !important;
   border: 1px solid #238636 !important;
-  color: #e6edf3 !important;
+  color: #ffffff !important;
   font-weight: 600 !important;
 }
 
@@ -2681,11 +2681,11 @@ a.action-link[title*="Info"]:hover {
 }
 
 [data-theme="dark"] .ner-table-container table.dataTable tbody tr.selected {
-  background-color: #5C6E88 !important;
+  background-color: #4A5A72 !important;
 }
 
 [data-theme="dark"] .ner-table-container table.dataTable tbody tr.selected td {
-  background-color: #5C6E88 !important;
+  background-color: #4A5A72 !important;
   color: #e2e8f0 !important;
 }
 
@@ -2829,7 +2829,7 @@ a.action-link[title*="Info"]:hover {
 [data-theme="dark"] .translate-attribution {
   background: #1a1a1a !important;
   border-color: #333 !important;
-  color: #6b7280;
+  color: #9ca3af !important;
 }
 
 /* TTS read-along: current block focus outline (no fill, no layout shift) */

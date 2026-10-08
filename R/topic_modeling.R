@@ -17,6 +17,7 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
 }
 
 .build_covariate_formula <- function(terms) {
+  if (!requireNamespace("stm", quietly = TRUE)) stop("Package 'stm' is required for covariate formulas. Install it with install.packages('stm').")
   f <- stats::as.formula(paste("~", paste(terms, collapse = " + ")))
   environment(f) <- list2env(list(s = stm::s), parent = globalenv())
   f
@@ -80,6 +81,7 @@ utils::globalVariables(c("K", "metric", "value", "label", "hover_text"))
 }
 
 .beta_formula <- function(rhs_formula) {
+  if (!requireNamespace("stm", quietly = TRUE)) stop("Package 'stm' is required for covariate formulas. Install it with install.packages('stm').")
   rhs <- paste(deparse(rhs_formula[[length(rhs_formula)]]), collapse = " ")
   f <- stats::as.formula(paste("y ~", rhs))
   environment(f) <- list2env(list(s = stm::s), parent = globalenv())
@@ -245,6 +247,7 @@ find_optimal_k <- function(dfm_object,
                            width = 800,
                            seed = 123,
                            verbose = TRUE, ...) {
+  if (!requireNamespace("stm", quietly = TRUE)) stop("Package 'stm' is required for find_optimal_k(). Install it with install.packages('stm').")
   out <- quanteda::convert(dfm_object, to = "stm")
   if (is.null(out$meta) || is.null(out$documents) || is.null(out$vocab)) {
     stop("Conversion to STM format failed. Please ensure your dfm_object is correctly formatted.")
@@ -895,13 +898,17 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #'   - For R backend: "umap_dbscan", "umap_kmeans", "umap_hierarchical",
 #'     "tsne_dbscan", "tsne_kmeans", "pca_kmeans", "pca_hierarchical"
 #'   - For both: "embedding_clustering", "hierarchical_semantic"
-#' @param n_topics The number of topics to identify. For UMAP+HDBSCAN, use NULL or "auto" for automatic determination, or specify an integer.
+#' @param n_topics The number of topics to identify (default: NULL). For
+#'   UMAP+HDBSCAN, NULL keeps the HDBSCAN topics without merging, "auto"
+#'   requests BERTopic's automatic merging, and an integer merges down to that
+#'   count. The k-means and hierarchical methods use 10 when NULL (at most
+#'   the number of documents minus one).
 #' @param embedding_model The embedding model to use (default: "all-MiniLM-L6-v2").
 #' @param backend The backend to use: "auto" (default, tries Python then R),
 #'   "python" (requires BERTopic), or "r" (R-native packages only).
 #' @param clustering_method The clustering method for embedding-based approach: "kmeans", "hierarchical", "dbscan", "hdbscan".
 #' @param similarity_threshold The similarity threshold for topic assignment (default: 0.7).
-#' @param min_topic_size The minimum number of documents per topic (default: 3).
+#' @param min_topic_size The minimum number of documents per topic (default: 10).
 #' @param min_cluster_size HDBSCAN density threshold (default `NULL` falls back to `min_topic_size`). Setting this independently lets fine-grained clusters merge into broader topics.
 #' @param cluster_selection_method HDBSCAN cluster selection method: "eom" (Excess of Mass, default) or "leaf" (finer-grained topics).
 #' @param umap_neighbors The number of neighbors for UMAP dimensionality reduction (default: 15).
@@ -920,7 +927,9 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #'   representation (default: 0.5). Higher values penalize redundant terms
 #'   more strongly. Applies to the R backend; ignored by the Python BERTopic
 #'   backend.
-#' @param reduce_outliers Logical, if TRUE, reduces outliers in HDBSCAN clustering (default: TRUE).
+#' @param reduce_outliers Logical, if TRUE, reassigns HDBSCAN noise documents to
+#'   topics (default: FALSE). With \code{outlier_threshold = 0} every noise
+#'   document is reassigned, so raise the threshold when enabling it.
 #' @param outlier_strategy Strategy for outlier reduction using BERTopic:
 #'   "probabilities" (default, uses topic probabilities), "c-tf-idf" (uses
 #'   c-TF-IDF similarity), "embeddings" (uses cosine similarity in embedding
@@ -962,7 +971,7 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #' }
 fit_embedding_model <- function(texts,
                                    method = "umap_hdbscan",
-                                   n_topics = 10,
+                                   n_topics = NULL,
                                    embedding_model = "all-MiniLM-L6-v2",
                                    backend = "auto",
                                    clustering_method = "kmeans",
@@ -980,7 +989,7 @@ fit_embedding_model <- function(texts,
                                    dbscan_minpts = 5,
                                    representation_method = "c-tfidf",
                                    diversity = 0.5,
-                                   reduce_outliers = TRUE,
+                                   reduce_outliers = FALSE,
                                    outlier_strategy = "probabilities",
                                    outlier_threshold = 0.0,
                                    seed = 123,
@@ -1032,7 +1041,7 @@ fit_embedding_model <- function(texts,
   if (verbose) {
     message("Starting semantic-based topic modeling...")
     message("Method: ", method)
-    message("Number of topics: ", n_topics)
+    message("Number of topics: ", n_topics %||% "data-driven")
     message("Backend: Python (BERTopic)")
   }
 
@@ -1141,6 +1150,10 @@ fit_embedding_model <- function(texts,
         fit_result <- topic_model$fit_transform(valid_texts, embeddings = embeddings)
         topic_assignments_raw <- fit_result[[1]]
         topic_probs <- fit_result[[2]]
+        # a single-topic fit returns a 1-D probability array
+        if (!is.null(topic_probs) && length(dim(topic_probs)) < 2) {
+          topic_probs <- matrix(as.vector(topic_probs), ncol = 1)
+        }
 
         topic_assignments <- as.vector(topic_assignments_raw) + 1
 
@@ -1232,7 +1245,7 @@ fit_embedding_model <- function(texts,
         clustering_result <- cluster_embeddings(
           data_matrix = similarity_matrix,
           method = clustering_method,
-          n_clusters = n_topics,
+          n_clusters = n_topics %||% 10,
           seed = seed,
           verbose = verbose
         )
@@ -1263,7 +1276,7 @@ fit_embedding_model <- function(texts,
         pca_result <- stats::prcomp(embeddings, center = TRUE, scale. = FALSE, rank. = min(50, ncol(embeddings)))
         reduced_embeddings <- pca_result$x
 
-        kmeans_result <- stats::kmeans(reduced_embeddings, centers = n_topics, nstart = 25)
+        kmeans_result <- stats::kmeans(reduced_embeddings, centers = n_topics %||% 10, nstart = 25)
         topic_assignments <- kmeans_result$cluster
 
         topic_keywords <- generate_semantic_topic_keywords(
@@ -1290,7 +1303,7 @@ fit_embedding_model <- function(texts,
 
         hclust_result <- stats::hclust(dist_matrix, method = "ward.D2")
 
-        topic_assignments <- stats::cutree(hclust_result, k = n_topics)
+        topic_assignments <- stats::cutree(hclust_result, k = n_topics %||% 10)
 
         topic_keywords <- generate_semantic_topic_keywords(
           texts = valid_texts,
@@ -1323,14 +1336,14 @@ fit_embedding_model <- function(texts,
 
     if (verbose) {
       message("Semantic topic modeling completed in ", round(execution_time, 2), " seconds")
-      message("Topics identified: ", length(unique(result$topic_assignments)))
+      message("Topics identified: ", length(setdiff(unique(result$topic_assignments), 0)))
     }
 
     final_result <- c(result, list(
       quality_metrics = quality_metrics,
       execution_time = execution_time,
       n_documents = length(valid_texts),
-      n_topics = length(unique(result$topic_assignments)),
+      n_topics = length(setdiff(unique(result$topic_assignments), 0)),
       embedding_model = embedding_model,
       timestamp = Sys.time()
     ))
@@ -1358,7 +1371,7 @@ fit_embedding_model <- function(texts,
                                    min_topic_size = 10,
                                    representation_method = "c-tfidf",
                                    diversity = 0.5,
-                                   reduce_outliers = TRUE,
+                                   reduce_outliers = FALSE,
                                    seed = 123,
                                    verbose = TRUE,
                                    precomputed_embeddings = NULL) {
@@ -1366,7 +1379,7 @@ fit_embedding_model <- function(texts,
   if (verbose) {
     message("Starting R-native embedding-based topic modeling...")
     message("Method: ", method)
-    message("Number of topics: ", n_topics)
+    message("Number of topics: ", n_topics %||% "data-driven")
     message("Backend: R (no Python required)")
   }
 
@@ -1611,7 +1624,7 @@ fit_embedding_model <- function(texts,
 #' @export
 fit_embedding_topics <- function(texts,
                                    method = "umap_hdbscan",
-                                   n_topics = 10,
+                                   n_topics = NULL,
                                    embedding_model = "all-MiniLM-L6-v2",
                                    clustering_method = "kmeans",
                                    similarity_threshold = 0.7,
@@ -1622,7 +1635,7 @@ fit_embedding_topics <- function(texts,
                                    umap_n_components = 5,
                                    representation_method = "c-tfidf",
                                    diversity = 0.5,
-                                   reduce_outliers = TRUE,
+                                   reduce_outliers = FALSE,
                                    outlier_strategy = "probabilities",
                                    outlier_threshold = 0.0,
                                    seed = 123,
@@ -2225,12 +2238,12 @@ assess_embedding_stability <- function(
       assignments_i <- models[[i]]$topic_assignments
       assignments_j <- models[[j]]$topic_assignments
 
-      both <- assignments_i > 0 & assignments_j > 0
-      ari <- if (sum(both) < 2) NA else tryCatch({
+      # noise label 0 counts as its own cluster so runs disagreeing on noise are penalized
+      ari <- if (length(assignments_i) < 2) NA else tryCatch({
         if (requireNamespace("aricode", quietly = TRUE)) {
-          aricode::ARI(assignments_i[both], assignments_j[both])
+          aricode::ARI(assignments_i, assignments_j)
         } else {
-          .adjusted_rand(assignments_i[both], assignments_j[both])
+          .adjusted_rand(assignments_i, assignments_j)
         }
       }, error = function(e) NA)
 
@@ -2505,6 +2518,9 @@ generate_topic_keywords <- function(texts, topic_assignments, n_keywords = 10) {
 #'
 #' @description
 #' Internal function to calculate quality metrics for semantic topic modeling results.
+#' Outlier topic 0 is excluded from coherence, separation, and size metrics and
+#' counted in \code{n_outliers}. \code{overall_quality} is the mean of
+#' coherence and bounded separation \eqn{s / (1 + s)}, so it rises with both.
 #'
 #' @param embeddings Document embeddings matrix.
 #' @param topic_assignments Vector of topic assignments.
@@ -2517,9 +2533,9 @@ calculate_topic_quality <- function(embeddings, topic_assignments, similarity_ma
   tryCatch({
     metrics <- list()
 
-    unique_topics <- unique(topic_assignments)
+    unique_topics <- setdiff(unique(topic_assignments), 0)
+    metrics$n_outliers <- sum(topic_assignments == 0)
 
-    # Vectorized topic coherence calculation using vapply
     topic_coherence <- vapply(unique_topics, function(topic) {
       topic_docs <- which(topic_assignments == topic)
       if (length(topic_docs) > 1) {
@@ -2552,14 +2568,15 @@ calculate_topic_quality <- function(embeddings, topic_assignments, similarity_ma
       metrics$mean_topic_separation <- NA
     }
 
-    topic_sizes <- table(topic_assignments)
-    metrics$topic_size_mean <- mean(topic_sizes)
-    metrics$topic_size_sd <- sd(topic_sizes)
-    metrics$topic_size_min <- min(topic_sizes)
-    metrics$topic_size_max <- max(topic_sizes)
+    topic_sizes <- as.numeric(table(topic_assignments[topic_assignments != 0]))
+    metrics$topic_size_mean <- if (length(topic_sizes)) mean(topic_sizes) else NA_real_
+    metrics$topic_size_sd <- if (length(topic_sizes) > 1) sd(topic_sizes) else NA_real_
+    metrics$topic_size_min <- if (length(topic_sizes)) min(topic_sizes) else NA_real_
+    metrics$topic_size_max <- if (length(topic_sizes)) max(topic_sizes) else NA_real_
 
     if (!is.na(metrics$mean_topic_coherence) && !is.na(metrics$mean_topic_separation)) {
-      metrics$overall_quality <- metrics$mean_topic_coherence * (1 / (1 + metrics$mean_topic_separation))
+      bounded_separation <- metrics$mean_topic_separation / (1 + metrics$mean_topic_separation)
+      metrics$overall_quality <- (metrics$mean_topic_coherence + bounded_separation) / 2
     } else {
       metrics$overall_quality <- NA
     }
@@ -2629,7 +2646,7 @@ fit_temporal_model <- function(texts,
     period_results <- fit_embedding_model(
       texts = period_texts,
       method = "umap_hdbscan",
-      n_topics = 10,
+      n_topics = NULL,
       embedding_model = "all-MiniLM-L6-v2",
       verbose = FALSE
     )

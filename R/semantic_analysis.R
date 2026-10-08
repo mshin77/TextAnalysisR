@@ -798,6 +798,10 @@ cluster_embeddings <- function(data_matrix,
         auto_eps <- dbscan_eps == 0
         dbscan_result <- if (auto_eps) {
           if (verbose) message("No eps given: running HDBSCAN...")
+          if (verbose && dbscan_min_samples < 10) {
+            message(sprintf("HDBSCAN minPts raised from %d to 10 to avoid fragmented micro-clusters.",
+                            as.integer(dbscan_min_samples)))
+          }
           dbscan::hdbscan(umap_result$reduced_data, minPts = max(dbscan_min_samples, 10))
         } else {
           dbscan::dbscan(umap_result$reduced_data, eps = dbscan_eps, minPts = dbscan_min_samples)
@@ -2399,6 +2403,32 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
     ggplot2::theme_minimal(base_size = 11)
 }
 
+#' Topic Words Treated as Neutral in Sentiment Scoring
+#'
+#' @description
+#' Words that describe special-education and statistical topics rather than an
+#' evaluation (such as "disability", "intervention", "significant"). Pass the
+#' result to \code{neutral_terms} in [sentiment_lexicon_analysis()] or
+#' [sentiment_valence_analysis()] to leave them unscored.
+#'
+#' @return Character vector of words.
+#'
+#' @concept sentiment
+#' @export
+#'
+#' @examples
+#' head(domain_neutral_terms())
+domain_neutral_terms <- function() .domain_neutral_terms
+
+.domain_neutral_terms <- c(
+  "disability", "disabilities", "disabled", "disorder", "disorders", "impaired",
+  "impairment", "impairments", "deficit", "deficits", "deficiency", "risk", "risks",
+  "difficulty", "difficulties", "struggling", "struggle", "challenging", "challenge",
+  "challenges", "intervention", "interventions", "special", "severe", "significant",
+  "significantly", "error", "errors", "problem", "problems", "limited", "limitation",
+  "limitations", "delay", "delayed", "delays", "failure", "struggled", "deficient"
+)
+
 #' Analyze Sentiment Using Tidytext Lexicons
 #'
 #' @description
@@ -2423,6 +2453,11 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 #'   unigram lexicons; "ngrams" falls back to unigram scoring with a warning (default: "words").
 #' @param ngram_range Retained for backward compatibility; not used for scoring (default: 2)
 #' @param texts Optional character vector of texts used to rebuild a unigram DFM (default: NULL)
+#' @param neutral_terms Words removed from the lexicon before scoring because they
+#'   describe the topic rather than an evaluation, such as "disability",
+#'   "intervention", or "significant". Default \code{character(0)} scores every
+#'   lexicon word; [domain_neutral_terms()] returns a special-education and
+#'   statistics list (the app's default).
 #'
 #' @return A list containing:
 #'   \describe{
@@ -2453,7 +2488,8 @@ sentiment_lexicon_analysis <- function(dfm_object,
                                        texts_df = NULL,
                                        feature_type = "words",
                                        ngram_range = 2,
-                                       texts = NULL) {
+                                       texts = NULL,
+                                       neutral_terms = character(0)) {
 
   if (!requireNamespace("tidytext", quietly = TRUE)) {
     stop("Package 'tidytext' is required. Please install it.")
@@ -2490,6 +2526,11 @@ sentiment_lexicon_analysis <- function(dfm_object,
            call. = FALSE)
     }
   )
+  sentiment_lexicon <- sentiment_lexicon[!sentiment_lexicon$word %in% neutral_terms, ]
+  # Bing lists envious, enviously, enviousness under both polarities; NRC repeats words by design
+  if (lexicon_name != "nrc") {
+    sentiment_lexicon <- sentiment_lexicon[!sentiment_lexicon$word %in% sentiment_lexicon$word[duplicated(sentiment_lexicon$word)], ]
+  }
 
   doc_names <- quanteda::docnames(dfm_object)
 
@@ -2703,9 +2744,14 @@ plot_sentiment_contribution <- function(contributions,
 #' @param neutral_cutoff Absolute score below which a document is called neutral.
 #'   Defaults to 0, classifying by sign only.
 #' @param polarity_dt Optional custom polarity table from
-#'   [sentimentr::update_polarity_table()]. The default table scores domain terms
-#'   such as "disability" and "intervention" as negative, so a corpus where those
-#'   are neutral descriptors needs its own table.
+#'   [sentimentr::update_polarity_table()]. When NULL, the sentimentr default
+#'   table is used without \code{neutral_terms}.
+#' @param neutral_terms Words dropped from the default polarity table because they
+#'   describe the topic, such as "disability" and "intervention"; the polarity
+#'   drop is ignored when \code{polarity_dt} is given. Of these, "significant"
+#'   and "significantly" are also dropped from \code{lexicon::hash_valence_shifters},
+#'   so the statistical sense stops amplifying; "severe" keeps its role. Default
+#'   \code{character(0)} keeps them; [domain_neutral_terms()] is the app's list.
 #'
 #' @return A list with the same shape as [sentiment_lexicon_analysis()]:
 #'   \describe{
@@ -2723,7 +2769,8 @@ plot_sentiment_contribution <- function(contributions,
 sentiment_valence_analysis <- function(texts,
                                        doc_names = NULL,
                                        neutral_cutoff = 0,
-                                       polarity_dt = NULL) {
+                                       polarity_dt = NULL,
+                                       neutral_terms = character(0)) {
   if (!requireNamespace("sentimentr", quietly = TRUE)) {
     stop("Package 'sentimentr' is required. Install it with install.packages('sentimentr').")
   }
@@ -2734,10 +2781,20 @@ sentiment_valence_analysis <- function(texts,
 
   sentences <- sentimentr::get_sentences(unname(texts))
 
+  if (is.null(polarity_dt) && length(neutral_terms) > 0) {
+    polarity_dt <- sentimentr::update_polarity_table(lexicon::hash_sentiment_jockers_rinker,
+                                                     drop = neutral_terms)
+  }
   score_args <- if (is.null(polarity_dt)) list() else list(polarity_dt = polarity_dt)
+  # only statistical "significant(ly)" loses its amplifier role; "severe" keeps intensifying
+  shifter_drop <- intersect(neutral_terms, c("significant", "significantly"))
+  shifter_args <- if (length(shifter_drop) == 0) list() else list(
+    valence_shifters_dt = sentimentr::update_valence_shifter_table(lexicon::hash_valence_shifters,
+                                                                   drop = shifter_drop)
+  )
 
-  by_sentence <- do.call(sentimentr::sentiment, c(list(sentences), score_args))
-  by_doc <- do.call(sentimentr::sentiment_by, c(list(sentences), score_args))
+  by_sentence <- do.call(sentimentr::sentiment, c(list(sentences), score_args, shifter_args))
+  by_doc <- do.call(sentimentr::sentiment_by, c(list(sentences), score_args, shifter_args))
 
   per_doc <- as.data.frame(by_sentence) %>%
     dplyr::group_by(.data$element_id) %>%
@@ -2762,7 +2819,7 @@ sentiment_valence_analysis <- function(texts,
     ) %>%
     as.data.frame()
 
-  terms <- sentimentr::extract_sentiment_terms(sentences)
+  terms <- do.call(sentimentr::extract_sentiment_terms, c(list(sentences), score_args))
   polarized <- sum(lengths(terms$negative)) + sum(lengths(terms$positive))
   total_words <- sum(by_sentence$word_count, na.rm = TRUE)
 
@@ -4247,6 +4304,30 @@ run_rag_search <- function(
 }
 
 
+.keep_top_terms <- function(data, max_terms = 1000L) {
+  term_freq <- data %>%
+    dplyr::group_by(term) %>%
+    dplyr::summarise(frequency = sum(count), .groups = "drop")
+  if (nrow(term_freq) <= max_terms) return(data)
+  keep_terms <- term_freq %>%
+    dplyr::arrange(dplyr::desc(frequency)) %>%
+    utils::head(max_terms) %>%
+    dplyr::pull(term)
+  message(sprintf("Keeping the %d most frequent of %d terms before pairwise computation.",
+                  max_terms, nrow(term_freq)))
+  dplyr::filter(data, term %in% keep_terms)
+}
+
+.calculate_doc_pmi <- function(pairs, data, n_docs) {
+  doc_freq <- data %>%
+    dplyr::distinct(term, document) %>%
+    dplyr::count(term, name = "doc_n")
+  pairs %>%
+    dplyr::left_join(dplyr::rename(doc_freq, item1 = "term", df_x = "doc_n"), by = "item1") %>%
+    dplyr::left_join(dplyr::rename(doc_freq, item2 = "term", df_y = "doc_n"), by = "item2") %>%
+    dplyr::mutate(pmi = log2(.data$n * n_docs / (.data$df_x * .data$df_y))) %>%
+    dplyr::select(-"df_x", -"df_y")
+}
 
 #' @title Analyze and Visualize Word Co-occurrence Networks
 #'
@@ -4259,8 +4340,12 @@ run_rag_search <- function(
 #'   default; vary it to check edge-count sensitivity.
 #' @param normalized Logical; if TRUE, degree and harmonic closeness are divided by n - 1 (default: FALSE).
 #' @param edge_metric Edge weight: "count" (default, raw co-occurrence) or
-#'   "pmi" (pointwise mutual information, correcting the bias toward generic
-#'   high-frequency words; only positive-PMI pairs are kept).
+#'   "pmi" (document-level pointwise mutual information,
+#'   \eqn{\log_2(n_{xy} N / (df_x df_y))}, where \eqn{n_{xy}} is the number of
+#'   documents containing both terms, \eqn{N} the number of documents, and
+#'   \eqn{df} each term's document frequency; zero means independence and only
+#'   positive-PMI pairs are kept). Only the 1000 most frequent terms enter the
+#'   pairwise computation.
 #' @param top_node_n Number of top nodes to display (default: 30).
 #' @param nrows Number of rows to display in the table (default: 1).
 #' @param height The height of the resulting Plotly plot, in pixels (default: 800).
@@ -4281,7 +4366,7 @@ run_rag_search <- function(
 #' @importFrom dplyr count filter mutate select group_by summarise ungroup left_join arrange desc group_map pull
 #' @importFrom tibble as_tibble
 #' @importFrom tidytext tidy
-#' @importFrom widyr pairwise_count pairwise_pmi
+#' @importFrom widyr pairwise_count
 #' @importFrom scales rescale
 #' @importFrom stats quantile setNames
 #' @importFrom DT datatable formatStyle
@@ -4432,16 +4517,16 @@ word_co_occurrence_network <- function(dfm_object,
     effective_co_occur_n <- if (!is.null(local_co_occur_n)) local_co_occur_n else co_occur_n
     effective_top_node_n <- if (!is.null(local_top_node_n)) local_top_node_n else top_node_n
 
+    n_docs <- dplyr::n_distinct(data$document)
+    data <- .keep_top_terms(data)
+
     term_co_occur <- data %>%
       widyr::pairwise_count(term, document, sort = TRUE, upper = FALSE) %>%
       dplyr::filter(n >= effective_co_occur_n)
 
     # count floor controls rare-pair PMI inflation
     if (edge_metric == "pmi") {
-      term_pmi <- data %>%
-        widyr::pairwise_pmi(term, document, sort = FALSE)
-      term_co_occur <- term_co_occur %>%
-        dplyr::inner_join(term_pmi, by = c("item1", "item2")) %>%
+      term_co_occur <- .calculate_doc_pmi(term_co_occur, data, n_docs) %>%
         dplyr::filter(.data$pmi > 0) %>%
         dplyr::mutate(n = .data$pmi)
     }
@@ -4473,8 +4558,8 @@ word_co_occurrence_network <- function(dfm_object,
     if (igraph::vcount(graph) > node_cap) {
       keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
       message(sprintf(
-        "Network has %d nodes; drawing the top %d by degree. Summary metrics use all nodes.",
-        igraph::vcount(graph), node_cap))
+        "Drawing %d of %d nodes (top by degree). Summary metrics use all nodes.",
+        node_cap, igraph::vcount(graph)))
       graph <- igraph::induced_subgraph(graph, keep)
     }
 
@@ -4911,8 +4996,8 @@ word_correlation_network <- function(dfm_object,
     if (igraph::vcount(graph) > node_cap) {
       keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
       message(sprintf(
-        "Network has %d nodes; drawing the top %d by degree. Summary metrics use all nodes.",
-        igraph::vcount(graph), node_cap))
+        "Drawing %d of %d nodes (top by degree). Summary metrics use all nodes.",
+        node_cap, igraph::vcount(graph)))
       graph <- igraph::induced_subgraph(graph, keep)
     }
 

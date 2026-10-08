@@ -44,6 +44,7 @@ export(detect_language_llm)
 export(detect_multi_words)
 export(detect_pdf_content_type)
 export(detect_pdf_content_type_py)
+export(domain_neutral_terms)
 export(draw_holdout)
 export(drop_duplicate_articles)
 export(estimate_topic_effects)
@@ -294,6 +295,5 @@ importFrom(utils,
 )
 importFrom(widyr,
   pairwise_cor,
-  pairwise_count,
-  pairwise_pmi
+  pairwise_count
 )

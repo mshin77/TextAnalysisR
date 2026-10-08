@@ -183,6 +183,7 @@ ui <- fluidPage(
         href = "javascript:void(0);",
         style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 20px; user-select: none;",
         `aria-label` = "Select language",
+        `aria-expanded` = "false",
         title = "Language",
         tags$i(class = "fa fa-globe", `aria-hidden` = "true", style = "pointer-events: none;")
       ),
@@ -216,7 +217,7 @@ ui <- fluidPage(
         # Attribution at bottom
         tags$div(
           class = "translate-attribution",
-          style = "display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 16px; color: #9ca3af; padding: 8px 12px; border-top: 1px solid #e5e7eb; background: #f9fafb; border-radius: 0 0 8px 8px; white-space: nowrap; flex-wrap: nowrap;",
+          style = "display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 16px; color: #6b7280; padding: 8px 12px; border-top: 1px solid #e5e7eb; background: #f9fafb; border-radius: 0 0 8px 8px; white-space: nowrap; flex-wrap: nowrap;",
           tags$span("Powered by"),
           tags$img(src = "https://www.gstatic.com/images/branding/googlelogo/1x/googlelogo_color_42x16dp.png", alt = "Google", height = "12"),
           tags$span("Translate")

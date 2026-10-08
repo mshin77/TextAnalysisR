@@ -10,7 +10,8 @@ sentiment_lexicon_analysis(
   texts_df = NULL,
   feature_type = "words",
   ngram_range = 2,
-  texts = NULL
+  texts = NULL,
+  neutral_terms = character(0)
 )
 }
 \arguments{
@@ -26,6 +27,12 @@ unigram lexicons; "ngrams" falls back to unigram scoring with a warning (default
 \item{ngram_range}{Retained for backward compatibility; not used for scoring (default: 2)}
 
 \item{texts}{Optional character vector of texts used to rebuild a unigram DFM (default: NULL)}
+
+\item{neutral_terms}{Words removed from the lexicon before scoring because they
+describe the topic rather than an evaluation, such as "disability",
+"intervention", or "significant". Default \code{character(0)} scores every
+lexicon word; \code{\link[=domain_neutral_terms]{domain_neutral_terms()}} returns a special-education and
+statistics list (the app's default).}
 }
 \value{
 A list containing:

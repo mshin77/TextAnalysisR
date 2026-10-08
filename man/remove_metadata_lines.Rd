@@ -12,8 +12,9 @@ remove_metadata_lines(df, text_col = "text")
 \item{text_col}{Name of the text column.}
 }
 \value{
-\code{df} with metadata rows removed. Rows are kept when no markers are
-found, so text from other sources passes through unchanged.
+\code{df} with metadata rows removed, with a message giving the number of
+lines dropped. \code{df} is returned unchanged when no export marker is found,
+so text from other sources passes through.
 }
 \description{
 Drops the header and trailer that database exports wrap around each document,
@@ -21,5 +22,9 @@ keeping the title and body. The header runs from the source name to the \code{Bo
 marker; the trailer starts at \code{Classification}, \verb{End of Document}, or the first
 indexing field such as \verb{Subject:} or \verb{Load-Date:}. Scattered copyright, length,
 byline, and dateline lines are dropped wherever they appear.
+
+Removal runs only when the text carries a news-export marker: a line that
+is exactly \code{Body}, or starts with \verb{Load-Date:} or \verb{End of Document}. Without
+one, a field-like line such as a table's \verb{Notes:} leaves the text intact.
 }
 \concept{preprocessing}

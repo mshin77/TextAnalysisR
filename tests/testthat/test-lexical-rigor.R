@@ -87,3 +87,12 @@ test_that("weighted log odds keeps terms a group under-uses", {
   wl <- calculate_weighted_log_odds(d, "grp", top_n = 10, min_count = 5)
   expect_true(any(wl$grp == "A" & wl$feature == "gamma" & wl$log_odds_weighted < 0))
 })
+
+test_that("log odds significance is adjusted across all pairwise comparisons", {
+  d <- quanteda::dfm(quanteda::tokens(rep(c("alpha beta gamma alpha", "beta gamma delta beta", "gamma delta alpha delta"), 6)))
+  quanteda::docvars(d, "grp") <- rep(c("x", "y", "z"), 6)
+  lo <- calculate_log_odds_ratio(d, "grp", comparison_mode = "pairwise", min_count = 1, top_n = 2)
+  expect_equal(nrow(lo), 6)
+  expect_type(lo$significant, "logical")
+  expect_false("p_value" %in% names(lo))
+})

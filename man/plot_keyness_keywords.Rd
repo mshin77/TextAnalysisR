@@ -4,14 +4,24 @@
 \alias{plot_keyness_keywords}
 \title{Plot Statistical Keyness}
 \usage{
-plot_keyness_keywords(keyness_data, title = NULL, group_label = NULL)
+plot_keyness_keywords(
+  keyness_data,
+  title = NULL,
+  group_label = NULL,
+  measure = NULL
+)
 }
 \arguments{
 \item{keyness_data}{Data frame from extract_keywords_keyness()}
 
-\item{title}{Plot title (default: "Top Keywords by Keyness (G-squared)")}
+\item{title}{Plot title (default: "Top Keywords by Keyness" followed by the
+measure, e.g. "(G-squared)")}
 
 \item{group_label}{Optional label for the target group (default: NULL)}
+
+\item{measure}{Keyness measure behind \code{Keyness_Score}: "lr", "chi2",
+"exact", or "pmi". \code{NULL} (default) reads \code{attr(keyness_data, "measure")}
+and falls back to "lr". Sets the axis, hover, and title labels.}
 }
 \value{
 A plotly bar chart

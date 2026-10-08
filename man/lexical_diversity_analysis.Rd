@@ -33,7 +33,8 @@ corpus; documents shorter than the window return NA. Default 50.}
 \value{
 A list containing:
 \itemize{
-\item \code{lexical_diversity}: Data frame with per-document lexical diversity scores
+\item \code{lexical_diversity}: Data frame with per-document lexical
+diversity scores and \code{n_tokens}, the number of tokens per document
 \item \code{summary_stats}: List of summary statistics (mean, median, sd) for each measure
 }
 }
@@ -47,15 +48,21 @@ according to McCarthy & Jarvis (2010) for being independent of text length.
 MTLD (Measure of Textual Lexical Diversity) is calculated using the algorithm
 from McCarthy & Jarvis (2010). It counts the number of "factors" needed to
 reduce TTR below 0.72, then divides the number of tokens by the number of factors.
-This provides a length-independent measure of lexical diversity.
+This provides a length-independent measure of lexical diversity. A factor
+closes only once it spans at least 10 tokens, so early TTR dips in the first
+few tokens do not count; this floor is a package choice, not part of the
+original McCarthy and Jarvis (2010) algorithm.
+Documents under 10 tokens, or where no factor completes in either
+direction, return \code{NA}.
 
 Important notes:
 \itemize{
 \item For MTLD accuracy, pass a tokens object (not DFM) as input
 \item If using DFM, provide the 'texts' parameter for MTLD calculation
 \item MATTR and MSTTR use one fixed window; documents shorter than it return NA
-\item Raw TTR falls mechanically as documents lengthen; compare TTR only
-across documents of similar length
+\item TTR, C, R, CTTR, Maas, K, and D depend on text length (TTR falls
+mechanically as documents lengthen); compare them only across documents
+of similar \code{n_tokens}
 \item MTLD and MATTR are most reliable at 100+ tokens per document
 \item Results are cached when cache_key is provided for repeated analysis
 }

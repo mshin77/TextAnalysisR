@@ -33,8 +33,12 @@ word_co_occurrence_network(
 default; vary it to check edge-count sensitivity.}
 
 \item{edge_metric}{Edge weight: "count" (default, raw co-occurrence) or
-"pmi" (pointwise mutual information, correcting the bias toward generic
-high-frequency words; only positive-PMI pairs are kept).}
+"pmi" (document-level pointwise mutual information,
+\eqn{\log_2(n_{xy} N / (df_x df_y))}, where \eqn{n_{xy}} is the number of
+documents containing both terms, \eqn{N} the number of documents, and
+\eqn{df} each term's document frequency; zero means independence and only
+positive-PMI pairs are kept). Only the 1000 most frequent terms enter the
+pairwise computation.}
 
 \item{top_node_n}{Number of top nodes to display (default: 30).}
 

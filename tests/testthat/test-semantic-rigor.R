@@ -114,3 +114,52 @@ test_that("topic labels insert the keywords into a custom prompt", {
   expect_match(sent[1], "Keywords: reading, fluency. Label it.", fixed = TRUE)
   expect_equal(attr(out, "llm")$provider, "ollama")
 })
+
+test_that("neutral_terms drops topic words such as struggling from scoring", {
+  d <- quanteda::dfm(quanteda::tokens(c("struggling readers made significant gains", "the program ended")))
+  default <- sentiment_lexicon_analysis(d, lexicon = "bing", neutral_terms = domain_neutral_terms())
+  all_terms <- sentiment_lexicon_analysis(d, lexicon = "bing")
+  expect_equal(default$document_sentiment$negative, 0)
+  expect_equal(default$document_sentiment$positive, 1)
+  expect_equal(all_terms$document_sentiment$negative, 1)
+  expect_equal(all_terms$document_sentiment$positive, 2)
+})
+
+test_that("document-level PMI is zero for independent pairs and positive for linked pairs", {
+  skip_if_not_installed("widyr")
+  docs <- c("a b x y", "a c x y", "d b", "d c")
+  data <- tidytext::tidy(quanteda::dfm(quanteda::tokens(docs)))
+  pairs <- widyr::pairwise_count(data, term, document, upper = FALSE)
+  pmi <- .calculate_doc_pmi(pairs, data, n_docs = 4)
+  pair_pmi <- function(x, y) pmi$pmi[(pmi$item1 == x & pmi$item2 == y) | (pmi$item1 == y & pmi$item2 == x)]
+  expect_equal(pair_pmi("a", "b"), 0)
+  expect_equal(pair_pmi("x", "y"), 1)
+  expect_false(any(pmi$item1 == pmi$item2))
+})
+
+test_that("pairwise term trimming keeps the most frequent terms and says so", {
+  data <- data.frame(document = "d1", term = c("a", "b", "c"), count = c(5, 1, 3))
+  expect_message(trimmed <- .keep_top_terms(data, max_terms = 2), "Keeping the 2 most frequent of 3")
+  expect_setequal(trimmed$term, c("a", "c"))
+  expect_identical(.keep_top_terms(data, max_terms = 5), data)
+})
+
+test_that("neutral_terms also stop acting as valence-shifter amplifiers", {
+  skip_if_not_installed("sentimentr")
+  text <- "The program was significantly good."
+  kept <- sentiment_valence_analysis(text)
+  dropped <- sentiment_valence_analysis(text, neutral_terms = "significantly")
+  expect_lt(dropped$document_sentiment$sentiment_score, kept$document_sentiment$sentiment_score)
+})
+
+test_that("topic quality ignores outlier topic 0 and rises with separation", {
+  base <- rbind(diag(2)[rep(1, 3), ] + c(0, 0.1, -0.1), diag(2)[rep(2, 3), ] + c(0, 0.1, -0.1))
+  labels <- rep(1:2, each = 3)
+  near <- calculate_topic_quality(base, labels)
+  far <- calculate_topic_quality(base + cbind(0, rep(c(0, 3), each = 3)), labels)
+  expect_gt(far$overall_quality, near$overall_quality)
+  with_noise <- calculate_topic_quality(rbind(base, c(5, 5), c(-5, 5)), c(labels, 0, 0))
+  expect_equal(with_noise$n_outliers, 2)
+  expect_equal(with_noise$topic_size_min, 3)
+  expect_equal(with_noise$overall_quality, near$overall_quality)
+})

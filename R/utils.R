@@ -1260,6 +1260,9 @@ call_ollama_chat <- function(system_prompt,
                              temperature = 0,
                              max_tokens = 150,
                              host = Sys.getenv("OLLAMA_HOST", "http://localhost:11434")) {
+  if (!requireNamespace("httr", quietly = TRUE)) {
+    stop("httr package is required for Ollama API calls")
+  }
   host <- sub("/$", "", if (grepl("^https?://", host)) host else paste0("http://", host))
   body_list <- list(
     model = model,
@@ -1272,7 +1275,7 @@ call_ollama_chat <- function(system_prompt,
   )
 
   response <- tryCatch(
-    .http_post(url = paste0(host, "/api/chat"), body = body_list, encode = "json", timeout = 300),
+    .http_post(url = paste0(host, "/api/chat"), body = body_list, encode = "json", timeout = 300, times = 1),
     error = function(e) stop("Ollama is not reachable at ", host, ". Start it with `ollama serve`.", call. = FALSE)
   )
   if (httr::status_code(response) != 200) {
@@ -1641,11 +1644,18 @@ get_api_embeddings <- function(texts,
   }
 
   # repeat queries over one corpus reuse the vectors instead of paying again
+  # 8000 characters stays under the 2048 (Gemini) and 8192 (OpenAI) token limits even at 1 token per character for most scripts
+  texts <- substr(texts, 1, 8000)
   cache_key <- rlang::hash(list(texts, provider, model))
-  if (!is.null(.api_embedding_cache[[cache_key]])) return(.api_embedding_cache[[cache_key]])
+  if (!is.null(.api_embedding_cache[[cache_key]])) {
+    .api_embedding_cache[[cache_key]]$at <- as.numeric(Sys.time())
+    return(.api_embedding_cache[[cache_key]]$value)
+  }
 
   n_texts <- length(texts)
   all_embeddings <- list()
+  # batchEmbedContents accepts at most 100 requests
+  if (provider == "gemini") batch_size <- min(batch_size, 100)
 
   for (start in seq(1, n_texts, by = batch_size)) {
     end <- min(start + batch_size - 1, n_texts)
@@ -1660,8 +1670,13 @@ get_api_embeddings <- function(texts,
   }
 
   out <- do.call(rbind, all_embeddings)
-  if (length(ls(.api_embedding_cache)) >= 10) rm(list = ls(.api_embedding_cache), envir = .api_embedding_cache)
-  assign(cache_key, out, envir = .api_embedding_cache)
+  # the least recently used entry goes first, so repeated search queries do not flush the corpus vectors
+  keys <- ls(.api_embedding_cache)
+  if (length(keys) >= 20) {
+    stamps <- vapply(keys, function(k) .api_embedding_cache[[k]]$at, numeric(1))
+    rm(list = keys[which.min(stamps)], envir = .api_embedding_cache)
+  }
+  assign(cache_key, list(value = out, at = as.numeric(Sys.time())), envir = .api_embedding_cache)
   out
 }
 
@@ -1707,7 +1722,8 @@ get_openai_embeddings <- function(texts, model, api_key) {
 #' @keywords internal
 get_gemini_embeddings <- function(texts, model, api_key) {
   requests <- lapply(texts, function(text) {
-    list(model = paste0("models/", model), content = list(parts = list(list(text = text))))
+    list(model = paste0("models/", model), content = list(parts = list(list(text = text))),
+         taskType = "SEMANTIC_SIMILARITY")
   })
 
   response <- .http_post(
@@ -2089,8 +2105,8 @@ log_security_event <- function(event_type, details, session_info, level = "info"
   switch(provider, openai = "OpenAI", gemini = "Gemini", ollama = "Ollama", provider)
 }
 
-.http_post <- function(url, ..., timeout = 60) {
-  httr::RETRY("POST", url = url, ..., httr::timeout(timeout), times = 3, pause_base = 2,
+.http_post <- function(url, ..., timeout = 60, times = 3) {
+  httr::RETRY("POST", url = url, ..., httr::timeout(timeout), times = times, pause_base = 2,
               terminate_on = c(400, 401, 403, 404), quiet = TRUE)
 }
 

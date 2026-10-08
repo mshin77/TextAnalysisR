@@ -97,15 +97,23 @@ server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-3.8-flash")
 .llm_provider_choices <- c("OpenAI (API Key Required)" = "openai", "gemini")
 names(.llm_provider_choices)[2] <- .gemini_provider_label
 .llm_provider_default <- "gemini"
+# a local Ollama server is reachable only when the app runs on the same machine
+.llm_provider_choices_local <- if (is_remote) .llm_provider_choices else c(.llm_provider_choices, "Ollama (local, no key; llama3.2)" = "ollama")
 
 .remote_notice <- function(what = "The text") {
   tags$div(
     class = "status-main-info qc-privacy",
     tags$i(class = "fas fa-shield-alt status-icon status-icon-info", `aria-hidden` = "true"),
-    paste(what, "is sent to the chosen AI provider (OpenAI or Google). For data under IRB or consent limits, check that the provider is allowed.")
+    paste(what, "is sent to the chosen AI provider: OpenAI and Google receive it online, while a local Ollama model keeps it on this computer. For data under IRB or consent limits, check that the provider is allowed.")
   )
 }
 # cached model staleness check must not hang the session
+# restored on app stop, also when started with shiny::runApp() instead of run_app()
+.hf_env_before <- Sys.getenv(c("HF_HUB_ETAG_TIMEOUT", "HF_HUB_DISABLE_TELEMETRY"), unset = NA)
+shiny::onStop(function() {
+  Sys.unsetenv(names(.hf_env_before)[is.na(.hf_env_before)])
+  if (any(!is.na(.hf_env_before))) do.call(Sys.setenv, as.list(.hf_env_before[!is.na(.hf_env_before)]))
+})
 Sys.setenv(HF_HUB_ETAG_TIMEOUT = Sys.getenv("HF_HUB_ETAG_TIMEOUT", "5"))
 Sys.setenv(HF_HUB_DISABLE_TELEMETRY = Sys.getenv("HF_HUB_DISABLE_TELEMETRY", "1"))
 
@@ -419,7 +427,7 @@ topic_modeling_ui_content <- function() {
                 style = "margin-top: 8px;",
                 textAreaInput(
                   "stm_custom_prevalence",
-                  label = NULL,
+                  label = "Prevalence formula",
                   value = "",
                   placeholder = "e.g. reference_type + s(year, df = 4)",
                   width = "100%",
@@ -463,7 +471,7 @@ topic_modeling_ui_content <- function() {
             radioButtons(
               "stm_label_provider",
               "AI Provider:",
-              choices = .llm_provider_choices,
+              choices = .llm_provider_choices_local,
               selected = .llm_provider_default,
               inline = FALSE
             ),
@@ -809,7 +817,7 @@ Focus on incorporating the most significant keywords while following the guideli
             radioButtons(
               "content_provider",
               "AI Provider:",
-              choices = .llm_provider_choices,
+              choices = .llm_provider_choices_local,
               selected = .llm_provider_default,
               inline = FALSE
             ),
@@ -2198,12 +2206,12 @@ lexical_analysis_ui_content <- function() {
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_named", HTML("<span class='sr-only'>Named entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change PERSON color' data-entity='PERSON' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#e91e63;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERSON</span> <span style='color:#475569;'>- People, including fictional</span>"),
-                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change NORP color' data-entity='NORP' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ff8f00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>NORP</span> <span style='color:#475569;'>- Nationalities, religious/political groups</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change PERSON color' data-entity='PERSON' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c2185b;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERSON</span> <span style='color:#475569;'>- People, including fictional</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change NORP color' data-entity='NORP' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#b45309;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>NORP</span> <span style='color:#475569;'>- Nationalities, religious/political groups</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change ORG color' data-entity='ORG' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#1565c0;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORG</span> <span style='color:#475569;'>- Companies, agencies, institutions</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change GPE color' data-entity='GPE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#2e7d32;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>GPE</span> <span style='color:#475569;'>- Countries, cities, states</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change LOC color' data-entity='LOC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#0277bd;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LOC</span> <span style='color:#475569;'>- Non-GPE locations, mountains, water bodies</span>"),
-                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change FAC color' data-entity='FAC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9e9d24;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>FAC</span> <span style='color:#475569;'>- Buildings, airports, highways, bridges</span>")
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change FAC color' data-entity='FAC' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#827717;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>FAC</span> <span style='color:#475569;'>- Buildings, airports, highways, bridges</span>")
                       ),
                       choiceValues = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC"),
                       selected = c("PERSON", "NORP", "ORG", "GPE", "LOC", "FAC")
@@ -2221,7 +2229,7 @@ lexical_analysis_ui_content <- function() {
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change EVENT color' data-entity='EVENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#c62828;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>EVENT</span> <span style='color:#475569;'>- Named hurricanes, battles, wars, sports</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change WORK_OF_ART color' data-entity='WORK_OF_ART' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#734FE2;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>WORK_OF_ART</span> <span style='color:#475569;'>- Titles of books, songs, etc.</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change LAW color' data-entity='LAW' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#03786A;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LAW</span> <span style='color:#475569;'>- Named documents made into laws</span>"),
-                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change LANGUAGE color' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#558b2f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#475569;'>- Any named language</span>")
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change LANGUAGE color' data-entity='LANGUAGE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#33691e;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>LANGUAGE</span> <span style='color:#475569;'>- Any named language</span>")
                       ),
                       choiceValues = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE"),
                       selected = c("PRODUCT", "EVENT", "WORK_OF_ART", "LAW", "LANGUAGE")
@@ -2235,11 +2243,11 @@ lexical_analysis_ui_content <- function() {
                     style = "padding: 8px 0 0 8px;",
                     checkboxGroupInput("ner_numeric", HTML("<span class='sr-only'>Numeric and temporal entities</span>"), inline = FALSE,
                       choiceNames = list(
-                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change DATE color' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#ef6c00;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#475569;'>- Absolute or relative dates/periods</span>"),
-                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change TIME color' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#d84315;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#475569;'>- Times smaller than a day</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change DATE color' data-entity='DATE' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#b35300;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>DATE</span> <span style='color:#475569;'>- Absolute or relative dates/periods</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change TIME color' data-entity='TIME' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#bf360c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>TIME</span> <span style='color:#475569;'>- Times smaller than a day</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change MONEY color' data-entity='MONEY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#9C3AD7;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>MONEY</span> <span style='color:#475569;'>- Monetary values including unit</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change PERCENT color' data-entity='PERCENT' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#00838f;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>PERCENT</span> <span style='color:#475569;'>- Percentage including %</span>"),
-                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change QUANTITY color' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#78909c;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#475569;'>- Measurements (weight, distance)</span>"),
+                        HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change QUANTITY color' data-entity='QUANTITY' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#5f7381;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>QUANTITY</span> <span style='color:#475569;'>- Measurements (weight, distance)</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change ORDINAL color' data-entity='ORDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#866358;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>ORDINAL</span> <span style='color:#475569;'>- first, second, third, etc.</span>"),
                         HTML("<span class='sidebar-color-picker' role='button' tabindex='0' aria-label='Change CARDINAL color' data-entity='CARDINAL' data-source='spacy' style='display:inline-block;width:12px;height:12px;background:#546e7a;border-radius:2px;margin-right:6px;cursor:pointer;'></span><span style='font-weight:500;'>CARDINAL</span> <span style='color:#475569;'>- Numerals not in other category</span>")
                       ),
@@ -3325,6 +3333,11 @@ semantic_analysis_ui_content <- function() {
                   ),
                   selected = "sentimentr"
                 ),
+                checkboxInput(
+                  "sentiment_domain_neutral",
+                  "Treat topic words as neutral (disability, intervention, significant, ...)",
+                  value = TRUE
+                ),
                 conditionalPanel(
                   condition = "input.sentiment_lexicon == 'sentimentr'",
                   tags$p(
@@ -3356,7 +3369,7 @@ semantic_analysis_ui_content <- function() {
                 radioButtons(
                   "llm_sentiment_provider",
                   "AI Provider:",
-                  choices = .llm_provider_choices,
+                  choices = .llm_provider_choices_local,
                   selected = .llm_provider_default,
                   inline = FALSE
                 ),
@@ -4128,7 +4141,7 @@ qualitative_coding_ui_content <- function() {
         tags$i(class = "fa fa-file-alt", `aria-hidden` = "true"),
         tags$label(`for` = "qc_coder_name", class = "sr-only", "Coder name"),
         textInput("qc_coder_name", NULL, value = "coder1", placeholder = "Coder name", width = "160px"),
-        tags$span(class = "qc-save-status", textOutput("qc_save_status", inline = TRUE))),
+        tags$span(class = "qc-save-status", role = "status", textOutput("qc_save_status", inline = TRUE))),
     div(class = "qc-project-actions",
         tags$label(`for` = "qc_project_file", class = "sr-only", "Open a saved coding project (.rds)"),
         fileInput("qc_project_file", NULL, accept = ".rds", buttonLabel = "Open project",
@@ -4216,7 +4229,7 @@ qualitative_coding_ui_content <- function() {
         ),
         radioButtons(
           "qc_provider", "AI Provider:",
-          choices = .llm_provider_choices,
+          choices = .llm_provider_choices_local,
           selected = .llm_provider_default,
           inline = FALSE
         ),
@@ -4300,7 +4313,7 @@ qualitative_coding_ui_content <- function() {
                   accept = c(".csv", ".xlsx", ".xls", ".txt", ".rds"), multiple = TRUE),
         tags$p("One project file (.rds) or Review export per coder.",
                style = "font-size: 13px; color: #475569; margin-top: -8px;"),
-        checkboxInput("qc_include_own", "Include this project's codes", value = TRUE),
+        checkboxInput("qc_include_own", "Include this project's codes (accepted AI suggestions are left out)", value = TRUE),
         checkboxInput("qc_agree_holdout_only", "Holdout units only", value = TRUE),
         radioButtons(
           "qc_align", "Unit alignment",
