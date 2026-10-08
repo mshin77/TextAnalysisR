@@ -752,15 +752,7 @@ lexical_diversity_analysis <- function(x,
 
     # Add Average Sentence Length if texts provided
     if (!is.null(texts) && length(texts) == nrow(lexdiv_results)) {
-      # quanteda sentence tokenizer matches calculate_text_readability()
-      avg_sentence_length <- vapply(texts, function(t) {
-        sents <- quanteda::tokens(t, what = "sentence")[[1]]
-        sents <- sents[nzchar(trimws(sents))]
-        if (length(sents) == 0) return(NA_real_)
-        words <- sum(lengths(quanteda::tokens(sents, what = "word", remove_punct = TRUE)))
-        words / length(sents)
-      }, numeric(1))
-      lexdiv_results$`Avg Sentence Length` <- avg_sentence_length
+      lexdiv_results$`Avg Sentence Length` <- .mean_sentence_length(texts)
       actual_measures <- c(actual_measures, "Avg Sentence Length")
     }
 
@@ -1800,20 +1792,13 @@ calculate_text_readability <- function(texts,
     readability_scores$`Lexical Diversity (MTLD)` <- as.numeric(mtld_values)
   }
 
-  sentence_stats <- vapply(texts, function(t) {
-    sents <- quanteda::tokens(t, what = "sentence")[[1]]
-    sents <- sents[nzchar(trimws(sents))]
-    if (length(sents) == 0) return(c(0, NA_real_))
-    words <- lengths(quanteda::tokens(sents, what = "word", remove_punct = TRUE))
-    c(length(sents), sum(words) / length(sents))
-  }, numeric(2), USE.NAMES = FALSE)
-
+  sentence_length <- .mean_sentence_length(texts)
   if (include_sentence_stats) {
-    readability_scores$`Avg Sentence Length` <- sentence_stats[2, ]
+    readability_scores$`Avg Sentence Length` <- sentence_length
   }
 
   # formulas assume real sentence boundaries; PDF lines and unpunctuated text break that
-  readability_scores$sentence_flag <- !is.na(sentence_stats[2, ]) & sentence_stats[2, ] > 40
+  readability_scores$sentence_flag <- !is.na(sentence_length) & sentence_length > 40
   if (any(readability_scores$sentence_flag)) {
     warning(sprintf(paste0("%d of %d document(s) average over 40 ",
                            "words per sentence; readability scores for these (sentence_flag = TRUE) ",
@@ -2915,11 +2900,14 @@ calculate_log_odds_ratio <- function(dfm_object,
   }
 
   # BH runs over every term in every comparison of the run, then top_n is kept per comparison
-  combined <- do.call(rbind, results)
-  combined$significant <- stats::p.adjust(combined$p_value, method = "BH") < 0.05
-  combined$p_value <- NULL
-  pair <- paste(combined$category1, combined$category2, sep = "\r")
-  combined <- do.call(rbind, lapply(split(combined, factor(pair, levels = unique(pair))), utils::head, top_n))
+  q_values <- stats::p.adjust(unlist(lapply(results, `[[`, "p_value"), use.names = FALSE), method = "BH")
+  offsets <- cumsum(c(0L, vapply(results, nrow, integer(1))))
+  combined <- do.call(rbind, lapply(seq_along(results), function(i) {
+    r <- results[[i]]
+    r$significant <- q_values[offsets[i] + seq_len(nrow(r))] < 0.05
+    r$p_value <- NULL
+    utils::head(r, top_n)
+  }))
   rownames(combined) <- NULL
   combined
 }
@@ -3368,7 +3356,8 @@ plot_lexical_dispersion <- function(dispersion_data,
     dispersion_data <- do.call(rbind, lapply(split(dispersion_data, dispersion_data$term), function(d) {
       if (nrow(d) > per_term) d[sort(withr::with_seed(1, sample(nrow(d), per_term))), ] else d
     }))
-    message(sprintf("Showing a sample of %s occurrences per term.", format(per_term, big.mark = ",")))
+    rlang::inform(sprintf("Showing a sample of %s occurrences per term.", format(per_term, big.mark = ",")),
+                  class = "textanalysisr_plot_notice")
   }
 
   if (is.null(colors)) {
@@ -3503,4 +3492,13 @@ calculate_dispersion_metrics <- function(tokens_object, terms) {
   })
 
   do.call(rbind, results)
+}
+
+#' @keywords internal
+.mean_sentence_length <- function(texts) {
+  sents <- lapply(as.list(quanteda::tokens(as.character(texts), what = "sentence")), function(s) s[nzchar(trimws(s))])
+  n_sent <- lengths(sents)
+  words <- lengths(quanteda::tokens(unlist(sents, use.names = FALSE), what = "word", remove_punct = TRUE))
+  totals <- vapply(split(words, factor(rep(seq_along(sents), n_sent), levels = seq_along(sents))), sum, numeric(1))
+  unname(ifelse(n_sent > 0, totals / n_sent, NA_real_))
 }

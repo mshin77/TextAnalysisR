@@ -56,7 +56,6 @@ run_app <- function(launch.browser = interactive()) {
   # global.R sets these when sourced; restore the caller's values on exit
   app_options <- c("shiny.maxRequestSize", "shiny.timeout", "shiny.useragg", "DT.options")
   withr::local_options(lapply(stats::setNames(nm = app_options), getOption))
-  withr::local_envvar(Sys.getenv(c("HF_HUB_ETAG_TIMEOUT", "HF_HUB_DISABLE_TELEMETRY"), unset = NA))
 
   # trusted: the .env is the user's own file; values last for the app session only
   dotenv <- if (file.exists(".env")) grep("^[A-Za-z_][A-Za-z0-9_]*=", trimws(readLines(".env", warn = FALSE)), value = TRUE) else character(0)

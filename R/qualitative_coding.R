@@ -500,13 +500,13 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #' @keywords internal
 .presence_agreement <- function(assignments, metrics, units, by_code) {
   per_code <- .presence_ratings(assignments, units)
-  if (length(per_code) == 0 && isTRUE(attr(per_code, "codes_left_out") > 0)) {
+  left_out <- attr(per_code, "codes_left_out") %||% 0L
+  if (length(per_code) == 0 && left_out > 0) {
     stop("No code was applied on the shared units, so presence agreement cannot be computed.", call. = FALSE)
   }
   if (length(per_code) == 0 || nrow(per_code[[1]]) == 0 || ncol(per_code[[1]]) < 2) {
     stop("At least two coders with shared units are required.", call. = FALSE)
   }
-  left_out <- attr(per_code, "codes_left_out")
   if (left_out > 0) {
     message(sprintf("%d code(s) never applied on shared units were left out of presence agreement.",
                     left_out))

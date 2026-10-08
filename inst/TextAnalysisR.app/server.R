@@ -61,15 +61,7 @@ server <- shinyServer(function(input, output, session) {
 
   entity_color_map_js <- paste(
     "  var colors = {",
-    "    'PERSON': '#c2185b', 'ORG': '#1565c0', 'GPE': '#2e7d32',",
-    "    'DATE': '#b35300', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a',",
-    "    'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5',",
-    "    'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A',",
-    "    'LANGUAGE': '#33691e', 'LOC': '#0277bd', 'FAC': '#827717',",
-    "    'NORP': '#b45309', 'TIME': '#bf360c', 'QUANTITY': '#5f7381',",
-    "    'DISABILITY': '#c2185b', 'MATHEMATICS': '#357a38',",
-    "    'TECHNOLOGY': '#c2410c',",
-    "    'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#00796b', 'CUSTOM': '#d81b60'",
+    paste0("    ", .entity_colors_js),
     "  };",
     "  if (window.customEntityColors) {",
     "    Object.assign(colors, window.customEntityColors);",
@@ -281,10 +273,8 @@ server <- shinyServer(function(input, output, session) {
 
   # package messages about trimmed or sampled plots otherwise reach only the server console
   with_plot_notices <- function(expr, session_local = session) {
-    withCallingHandlers(expr, message = function(m) {
-      if (grepl("Drawing|sample|trimm|most frequent", conditionMessage(m))) {
-        try(showNotification(trimws(conditionMessage(m)), type = "message", duration = 8, session = session_local), silent = TRUE)
-      }
+    withCallingHandlers(expr, textanalysisr_plot_notice = function(m) {
+      try(showNotification(trimws(conditionMessage(m)), type = "message", duration = 8, session = session_local), silent = TRUE)
     })
   }
 
@@ -1102,25 +1092,23 @@ server <- shinyServer(function(input, output, session) {
     if (length(expressions) == 0) return(toks)
     toks_compound <- quanteda::tokens_compound(toks, pattern = lapply(expressions, function(x) unlist(strsplit(x, "\\s+"))),
                                                concatenator = "_", case_insensitive = TRUE, join = FALSE)
-    all_stopwords <- tolower(stopwords::stopwords("en", source = "snowball"))
     options_set <- applied_edge_options()
     clean_leading <- "leading_stopwords" %in% options_set
     clean_trailing <- "trailing_stopwords" %in% options_set
     if (!clean_leading && !clean_trailing) return(toks_compound)
 
-    docvars_backup <- quanteda::docvars(toks_compound)
-    toks_list <- lapply(as.list(toks_compound), function(v) {
-      vapply(v, function(tok) {
-        if (!grepl("_", tok, fixed = TRUE)) return(tok)
-        parts <- unlist(strsplit(tok, "_", fixed = TRUE))
-        while (clean_leading && length(parts) > 0 && tolower(parts[1]) %in% all_stopwords) parts <- parts[-1]
-        while (clean_trailing && length(parts) > 0 && tolower(parts[length(parts)]) %in% all_stopwords) parts <- parts[-length(parts)]
-        paste(parts, collapse = "_")
-      }, character(1), USE.NAMES = FALSE)
-    })
-    out <- quanteda::tokens_remove(quanteda::as.tokens(toks_list), "")
-    if (!is.null(docvars_backup) && nrow(docvars_backup) > 0) quanteda::docvars(out) <- docvars_backup
-    out
+    # edges are trimmed once per compound type, not once per token occurrence
+    all_stopwords <- tolower(stopwords::stopwords("en", source = "snowball"))
+    compound_types <- grep("_", quanteda::types(toks_compound), fixed = TRUE, value = TRUE)
+    trimmed <- vapply(compound_types, function(tok) {
+      parts <- unlist(strsplit(tok, "_", fixed = TRUE))
+      while (clean_leading && length(parts) > 0 && tolower(parts[1]) %in% all_stopwords) parts <- parts[-1]
+      while (clean_trailing && length(parts) > 0 && tolower(parts[length(parts)]) %in% all_stopwords) parts <- parts[-length(parts)]
+      paste(parts, collapse = "_")
+    }, character(1), USE.NAMES = FALSE)
+    changed <- compound_types != trimmed
+    out <- quanteda::tokens_replace(toks_compound, compound_types[changed], trimmed[changed], valuetype = "fixed")
+    quanteda::tokens_remove(out, "", valuetype = "fixed")
   }
 
   remove_applied <- function(toks) {
@@ -2665,7 +2653,7 @@ server <- shinyServer(function(input, output, session) {
     tokens_before <- isolate(compound_tokens(preprocessed_combined() %||% tokens_obj, applied_expressions()))
 
     doc_count <- quanteda::ndoc(dfm_obj)
-    feature_count_before <- quanteda::nfeat(quanteda::dfm(tokens_before))
+    feature_count_before <- length(unique(tolower(quanteda::types(tokens_before))))
     feature_count_after <- quanteda::nfeat(dfm_obj)
     features_removed <- feature_count_before - feature_count_after
     percent_reduction <- round((features_removed / feature_count_before) * 100, 1)
@@ -3003,23 +2991,9 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$confirm_reset_pipeline, {
-    preprocessed_skip(NULL)
-    processed_tokens(NULL)
-    final_tokens(NULL)
-    lemmatized_tokens(NULL)
-    dfm_tokens(NULL)
-    stopwords_applied(FALSE)
-    dictionary_applied(FALSE)
+    reset_downstream()
     lemma_applied(FALSE)
-    last_clicked(NULL)
     math_mode_used(FALSE)
-    compound_stats(NULL)
-    applied_segment_settings(NULL)
-    applied_removals(character(0))
-    applied_expressions(character(0))
-    applied_edge_options(character(0))
-    step2_apply(NULL)
-    lemma_cache_key(NULL)
 
     step_2_version(0)
     step_3_version(0)
@@ -5197,14 +5171,7 @@ server <- shinyServer(function(input, output, session) {
   editing_sidebar_entity <- reactiveVal(NULL)
   editing_entity_display_color <- reactiveVal(NULL)
 
-  spacy_default_colors <- c(
-    "PERSON" = "#c2185b", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-    "DATE" = "#b35300", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
-    "ORDINAL" = "#866358", "PERCENT" = "#00838f", "PRODUCT" = "#5060D5",
-    "EVENT" = "#c62828", "WORK_OF_ART" = "#734FE2", "LAW" = "#03786A",
-    "LANGUAGE" = "#33691e", "LOC" = "#0277bd", "FAC" = "#827717",
-    "NORP" = "#b45309", "TIME" = "#bf360c", "QUANTITY" = "#5f7381"
-  )
+  spacy_default_colors <- utils::head(.entity_colors, 18)
 
   observeEvent(input$sidebar_color_edit, {
     info <- input$sidebar_color_edit
@@ -5905,15 +5872,7 @@ server <- shinyServer(function(input, output, session) {
 
     # Full color map with standard + domain-specific + custom colors
     color_map_js <- paste0(
-      "'PERSON': '#c2185b', 'ORG': '#1565c0', 'GPE': '#2e7d32', ",
-      "'DATE': '#b35300', 'MONEY': '#9C3AD7', 'CARDINAL': '#546e7a', ",
-      "'ORDINAL': '#866358', 'PERCENT': '#00838f', 'PRODUCT': '#5060D5', ",
-      "'EVENT': '#c62828', 'WORK_OF_ART': '#734FE2', 'LAW': '#03786A', ",
-      "'LANGUAGE': '#33691e', 'LOC': '#0277bd', 'FAC': '#827717', ",
-      "'NORP': '#b45309', 'TIME': '#bf360c', 'QUANTITY': '#5f7381', ",
-      "'DISABILITY': '#c2185b', 'MATHEMATICS': '#357a38', ",
-      "'TECHNOLOGY': '#c2410c', ",
-      "'THEME': '#7c4dff', 'CODE': '#37474f', 'CATEGORY': '#00796b', 'CUSTOM': '#d81b60'",
+      .entity_colors_js,
       if (nzchar(custom_color_js)) paste0(", ", custom_color_js) else ""
     )
 
@@ -6066,18 +6025,7 @@ server <- shinyServer(function(input, output, session) {
         )
     }
 
-    entity_colors <- c(
-      "PERSON" = "#c2185b", "ORG" = "#1565c0", "GPE" = "#2e7d32",
-      "DATE" = "#b35300", "MONEY" = "#9C3AD7", "CARDINAL" = "#546e7a",
-      "ORDINAL" = "#866358", "PERCENT" = "#00838f", "PRODUCT" = "#5060D5",
-      "EVENT" = "#c62828", "WORK_OF_ART" = "#734FE2", "LAW" = "#03786A",
-      "LANGUAGE" = "#33691e", "LOC" = "#0277bd", "FAC" = "#827717",
-      "NORP" = "#b45309", "TIME" = "#bf360c", "QUANTITY" = "#5f7381",
-      "DISABILITY" = "#c2185b", "MATHEMATICS" = "#357a38",
-      "TECHNOLOGY" = "#c2410c",
-      "THEME" = "#7c4dff", "CODE" = "#37474f", "CATEGORY" = "#00796b",
-      "CUSTOM" = "#d81b60"
-    )
+    entity_colors <- .entity_colors
     custom_colors <- isolate(custom_entity_colors())
     if (length(custom_colors) > 0) {
       for (name in names(custom_colors)) {
@@ -6342,18 +6290,8 @@ server <- shinyServer(function(input, output, session) {
           return()
         }
 
-        entity_colors <- c(
-          "PERSON" = "#c2185b", "ORG" = "#2196f3", "GPE" = "#357a38",
-          "DATE" = "#c2410c", "MONEY" = "#9c27b0", "CARDINAL" = "#607d8b",
-          "ORDINAL" = "#886254", "PERCENT" = "#00bcd4", "PRODUCT" = "#3f51b5",
-          "EVENT" = "#f44336", "WORK_OF_ART" = "#673ab7", "LAW" = "#009688",
-          "LANGUAGE" = "#8bc34a", "LOC" = "#03a9f4", "FAC" = "#cddc39",
-          "NORP" = "#ffc107", "TIME" = "#ff5722", "QUANTITY" = "#9e9e9e",
-          "DISABILITY" = "#c2185b", "PROGRAM" = "#2196F3", "TEST" = "#357a38",
-          "CONCEPT" = "#00acc1", "TOOL" = "#c2410c", "METHOD" = "#00BCD4",
-          "THEME" = "#7c4dff", "CODE" = "#546e7a", "CATEGORY" = "#00796b",
-          "CUSTOM" = "#d81b60"
-        )
+        entity_colors <- c(.entity_colors, "PROGRAM" = "#2196F3", "TEST" = "#357a38",
+                           "CONCEPT" = "#00acc1", "TOOL" = "#c2410c", "METHOD" = "#00BCD4")
         if (length(custom_cols_snapshot) > 0) {
           entity_colors[names(custom_cols_snapshot)] <- custom_cols_snapshot
         }
@@ -8838,6 +8776,7 @@ server <- shinyServer(function(input, output, session) {
       lexicon_name <- input$sentiment_lexicon %||% "bing"
       feature_type <- "words"
       ngram_range <- 2
+      neutral <- if (isTRUE(input$sentiment_domain_neutral)) TextAnalysisR::domain_neutral_terms() else character(0)
 
       if (lexicon_name == "sentimentr") {
         if (!"united_texts" %in% names(texts_df)) {
@@ -8852,7 +8791,7 @@ server <- shinyServer(function(input, output, session) {
           TextAnalysisR::sentiment_valence_analysis(
             texts = texts_df$united_texts,
             doc_names = doc_names,
-            neutral_terms = if (isTRUE(input$sentiment_domain_neutral)) TextAnalysisR::domain_neutral_terms() else character(0)
+            neutral_terms = neutral
           ),
           error = function(e) {
             TextAnalysisR:::remove_notification_by_id("sentiment_loading")
@@ -8890,7 +8829,7 @@ server <- shinyServer(function(input, output, session) {
           feature_type = feature_type,
           ngram_range = ngram_range,
           texts = texts_vec,
-          neutral_terms = if (isTRUE(input$sentiment_domain_neutral)) TextAnalysisR::domain_neutral_terms() else character(0)
+          neutral_terms = neutral
         )
       }
 
@@ -9783,18 +9722,19 @@ server <- shinyServer(function(input, output, session) {
 
       selected_metrics <- unname(as.character(selected_metrics))
 
-      readability_scores <- suppressWarnings(TextAnalysisR::calculate_text_readability(
-        texts = texts,
-        metrics = selected_metrics,
-        include_lexical_diversity = FALSE,
-        include_sentence_stats = FALSE,
-        doc_names = doc_names
-      ))
-      n_flagged <- sum(readability_scores$sentence_flag %||% FALSE)
-      if (n_flagged > 0) {
-        showNotification(paste0(n_flagged, " document(s) average over 40 words per sentence; their scores may reflect missing sentence boundaries."),
-                         type = "warning", duration = 8)
-      }
+      readability_scores <- withCallingHandlers(
+        TextAnalysisR::calculate_text_readability(
+          texts = texts,
+          metrics = selected_metrics,
+          include_lexical_diversity = FALSE,
+          include_sentence_stats = FALSE,
+          doc_names = doc_names
+        ),
+        warning = function(w) {
+          showNotification(conditionMessage(w), type = "warning", duration = 8)
+          invokeRestart("muffleWarning")
+        }
+      )
       readability_scores$Words <- word_counts
       n_short <- sum(word_counts < 100)
       if (n_short > 0) {
@@ -11485,7 +11425,6 @@ server <- shinyServer(function(input, output, session) {
           embeddings_list <- list()
           total_batches <- ceiling(n_docs / batch_size)
           successful_batches <- 0
-          failed_batches <- 0
 
           showNotification(
             HTML(paste0(
@@ -11518,7 +11457,6 @@ server <- shinyServer(function(input, output, session) {
             batch_embeddings <- tryCatch({
               model$encode(batch_texts, show_progress_bar = FALSE, normalize_embeddings = TRUE)
             }, error = function(e) {
-              failed_batches <- failed_batches + 1
               showNotification(
                 paste("Error in batch", current_batch, ":", e$message),
                 type = "warning",
@@ -11542,22 +11480,20 @@ server <- shinyServer(function(input, output, session) {
           }
 
           # a missing batch would shift every later row against its document
-          failed_batches <- total_batches - successful_batches
-          if (failed_batches > 0) {
+          if (successful_batches < total_batches) {
             showNotification(sprintf("%d of %d embedding batches failed; nothing was cached. Try again.",
-                                     failed_batches, failed_batches + successful_batches),
+                                     total_batches - successful_batches, total_batches),
                              type = "error", duration = 10)
             return(NULL)
-          } else {
-            showNotification(
-              HTML(paste0(
-                "Embeddings generated successfully<br>",
-                "Processed all ", n_docs, " documents"
-              )),
-              type = "message",
-              duration = 3
-            )
           }
+          showNotification(
+            HTML(paste0(
+              "Embeddings generated successfully<br>",
+              "Processed all ", n_docs, " documents"
+            )),
+            type = "message",
+            duration = 3
+          )
 
           embeddings <- do.call(rbind, embeddings_list)
 
@@ -11731,8 +11667,8 @@ server <- shinyServer(function(input, output, session) {
 
     tryCatch({
       cached_provider <- embeddings_cache$provider %||% "sentence-transformers"
-      if (cached_provider %in% c("openai", "gemini")) spend_ai_call("Search Query", cached_provider, embeddings_cache$model)
       query_embedding <- if (cached_provider %in% c("openai", "gemini")) {
+        spend_ai_call("Search Query", cached_provider, embeddings_cache$model)
         matrix(TextAnalysisR::get_best_embeddings(query, provider = cached_provider, model = embeddings_cache$model,
                                                   api_key = get_api_key(cached_provider), verbose = FALSE), nrow = 1)
       } else {
@@ -21255,11 +21191,15 @@ server <- shinyServer(function(input, output, session) {
 
   # Step 6: Plot topic prevalence effects by a categorical variable.
 
-  observe({
+  # covariates of the fitted model, TRUE where numeric; empty when fitted without covariates
+  fitted_covariates <- reactive({
     fitted_vars <- all.vars(attr(topic_model_result(), "prevalence") %||% ~1)
-    selected_cat <- if (length(fitted_vars) > 0) {
-      fitted_vars[!vapply(fitted_vars, function(v) is.numeric(out()$meta[[v]]), logical(1))]
-    } else input$stm_categorical_var_2
+    vapply(stats::setNames(nm = fitted_vars), function(v) is.numeric(out()$meta[[v]]), logical(1))
+  })
+
+  observe({
+    numeric_var <- fitted_covariates()
+    selected_cat <- if (length(numeric_var) > 0) names(numeric_var)[!numeric_var] else input$stm_categorical_var_2
     updateSelectizeInput(session,
                       "stm_effect_cat_btn",
                       choices = selected_cat,
@@ -21349,10 +21289,8 @@ server <- shinyServer(function(input, output, session) {
   # Step 7: Plot topic prevalence effects by a continuous variable.
 
   observe({
-    fitted_vars <- all.vars(attr(topic_model_result(), "prevalence") %||% ~1)
-    selected_con <- if (length(fitted_vars) > 0) {
-      fitted_vars[vapply(fitted_vars, function(v) is.numeric(out()$meta[[v]]), logical(1))]
-    } else input$stm_continuous_var_2
+    numeric_var <- fitted_covariates()
+    selected_con <- if (length(numeric_var) > 0) names(numeric_var)[numeric_var] else input$stm_continuous_var_2
     updateSelectizeInput(session,
                          "stm_effect_con_btn",
                          choices = selected_con,

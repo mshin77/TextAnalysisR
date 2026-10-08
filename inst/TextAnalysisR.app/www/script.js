@@ -13,11 +13,11 @@ function googleTranslateElementInit() {
     }
 }
 
-window.toggleTranslate = function() {
+window.toggleTranslate = function(force) {
     var dropdown = document.getElementById('translate_dropdown');
     if (!dropdown) return;
 
-    var open = !dropdown.classList.contains('show');
+    var open = typeof force === 'boolean' ? force : !dropdown.classList.contains('show');
     dropdown.classList.toggle('show', open);
     dropdown.style.display = open ? 'block' : 'none';
     $('#translate_icon').attr('aria-expanded', open ? 'true' : 'false');
@@ -494,9 +494,7 @@ $(document).ready(function() {
         var icon = document.getElementById('translate_icon');
         if (dropdown && dropdown.classList.contains('show')) {
             if (!dropdown.contains(e.target) && (!icon || !icon.contains(e.target))) {
-                dropdown.classList.remove('show');
-                dropdown.style.display = 'none';
-                $('#translate_icon').attr('aria-expanded', 'false');
+                window.toggleTranslate(false);
             }
         }
     });
@@ -517,12 +515,7 @@ $(document).ready(function() {
         $('.lang-btn').removeClass('active');
         $(this).addClass('active');
 
-        // Hide dropdown
-        if (dropdown) {
-            dropdown.classList.remove('show');
-            dropdown.style.display = 'none';
-            $('#translate_icon').attr('aria-expanded', 'false');
-        }
+        window.toggleTranslate(false);
     });
 
     var ttsToggle = $('#tts_toggle');

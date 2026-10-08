@@ -1334,16 +1334,17 @@ fit_embedding_model <- function(texts,
 
     execution_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
+    n_found <- length(setdiff(unique(result$topic_assignments), 0))
     if (verbose) {
       message("Semantic topic modeling completed in ", round(execution_time, 2), " seconds")
-      message("Topics identified: ", length(setdiff(unique(result$topic_assignments), 0)))
+      message("Topics identified: ", n_found)
     }
 
     final_result <- c(result, list(
       quality_metrics = quality_metrics,
       execution_time = execution_time,
       n_documents = length(valid_texts),
-      n_topics = length(setdiff(unique(result$topic_assignments), 0)),
+      n_topics = n_found,
       embedding_model = embedding_model,
       timestamp = Sys.time()
     ))
@@ -2569,10 +2570,11 @@ calculate_topic_quality <- function(embeddings, topic_assignments, similarity_ma
     }
 
     topic_sizes <- as.numeric(table(topic_assignments[topic_assignments != 0]))
-    metrics$topic_size_mean <- if (length(topic_sizes)) mean(topic_sizes) else NA_real_
-    metrics$topic_size_sd <- if (length(topic_sizes) > 1) sd(topic_sizes) else NA_real_
-    metrics$topic_size_min <- if (length(topic_sizes)) min(topic_sizes) else NA_real_
-    metrics$topic_size_max <- if (length(topic_sizes)) max(topic_sizes) else NA_real_
+    if (length(topic_sizes) == 0) topic_sizes <- NA_real_
+    metrics$topic_size_mean <- mean(topic_sizes)
+    metrics$topic_size_sd <- sd(topic_sizes)
+    metrics$topic_size_min <- min(topic_sizes)
+    metrics$topic_size_max <- max(topic_sizes)
 
     if (!is.na(metrics$mean_topic_coherence) && !is.na(metrics$mean_topic_separation)) {
       bounded_separation <- metrics$mean_topic_separation / (1 + metrics$mean_topic_separation)
