@@ -4313,8 +4313,8 @@ run_rag_search <- function(
     dplyr::arrange(dplyr::desc(frequency)) %>%
     utils::head(max_terms) %>%
     dplyr::pull(term)
-  message(sprintf("Keeping the %d most frequent of %d terms before pairwise computation.",
-                  max_terms, nrow(term_freq)))
+  rlang::inform(sprintf("Keeping the %d most frequent of %d terms before pairwise computation.",
+                        max_terms, nrow(term_freq)), class = "textanalysisr_plot_notice")
   dplyr::filter(data, term %in% keep_terms)
 }
 
@@ -4557,9 +4557,9 @@ word_co_occurrence_network <- function(dfm_object,
     node_cap <- min(max(effective_top_node_n, 1L), 300L)
     if (igraph::vcount(graph) > node_cap) {
       keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
-      message(sprintf(
+      rlang::inform(sprintf(
         "Drawing %d of %d nodes (top by degree). Summary metrics use all nodes.",
-        node_cap, igraph::vcount(graph)))
+        node_cap, igraph::vcount(graph)), class = "textanalysisr_plot_notice")
       graph <- igraph::induced_subgraph(graph, keep)
     }
 
@@ -4995,9 +4995,9 @@ word_correlation_network <- function(dfm_object,
     node_cap <- min(max(effective_top_node_n, 1L), 300L)
     if (igraph::vcount(graph) > node_cap) {
       keep <- utils::head(order(igraph::degree(graph), decreasing = TRUE), node_cap)
-      message(sprintf(
+      rlang::inform(sprintf(
         "Drawing %d of %d nodes (top by degree). Summary metrics use all nodes.",
-        node_cap, igraph::vcount(graph)))
+        node_cap, igraph::vcount(graph)), class = "textanalysisr_plot_notice")
       graph <- igraph::induced_subgraph(graph, keep)
     }
 
