@@ -1173,7 +1173,11 @@ div[role="main"]:focus,
 /* tall text rows would otherwise centre short cells such as page numbers out of view */
 table.dataTable tbody td {
   vertical-align: top !important;
-  text-align: left !important;
+}
+
+/* text cells read from the left; numeric (dt-right) and centred cells keep their alignment under the header */
+table.dataTable tbody td:not(.dt-right):not(.dt-center):not([style*="text-align"]) {
+  text-align: left;
 }
 
 table.dataTable tbody tr:hover {

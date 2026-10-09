@@ -878,3 +878,12 @@ test_that("code_agreement stops when the codebook has no code column", {
                       coder = rep(c("c1", "c2"), 2))
   expect_error(code_agreement(a, align = "grid", codebook = data.frame(name = c("A", "B"))), "code")
 })
+
+test_that("blank codebook rows are not counted as categories", {
+  a <- tibble::tibble(doc_id = rep(c("d1", "d2", "d3"), each = 2), code = c("A", "A", "B", "B", "A", "B"),
+                      coder = rep(c("c1", "c2"), 3))
+  with_blank <- suppressWarnings(code_agreement(a, align = "grid", codebook = data.frame(code = c("A", "B", ""))))
+  without <- suppressWarnings(code_agreement(a, align = "grid", codebook = data.frame(code = c("A", "B"))))
+  est <- function(r, m) r$overall$estimate[r$overall$metric == m]
+  expect_equal(est(with_blank, "pabak"), est(without, "pabak"))
+})

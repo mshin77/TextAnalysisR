@@ -4,6 +4,7 @@
 ## Run from the package root: Rscript tests/manual/drive-app.R
 
 stopifnot(requireNamespace("chromote", quietly = TRUE), requireNamespace("processx", quietly = TRUE))
+options(chromote.timeout = 60)
 
 port <- 8123
 out_dir <- file.path("tests", "manual", "screenshots")
