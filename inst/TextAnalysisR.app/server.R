@@ -1918,6 +1918,7 @@ server <- shinyServer(function(input, output, session) {
       step_4_based_on(step_3_version())
 
       temp_dfm <- quanteda::dfm(toks_compound)
+      req(has_terms(temp_dfm))
       temp_freq <- quanteda.textstats::textstat_frequency(temp_dfm)
 
       selected_ngrams_normalized <- tolower(gsub(" ", "_", input$multi_word_expressions))
@@ -2302,14 +2303,18 @@ server <- shinyServer(function(input, output, session) {
 
     Sys.sleep(0.1)
 
-    shiny::showModal(
-      shiny::modalDialog(
-        title = "DFM Construction Complete",
-        shiny::verbatimTextOutput("modal_dfm_verbose_output"),
-        easyClose = TRUE,
-        footer = shiny::modalButton("Close")
+    if (!has_terms(dfm_object)) {
+      showNotification(no_words_msg, type = "warning", duration = 12)
+    } else {
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "DFM Construction Complete",
+          shiny::verbatimTextOutput("modal_dfm_verbose_output"),
+          easyClose = TRUE,
+          footer = shiny::modalButton("Close")
+        )
       )
-    )
+    }
 
     step_5_based_on(step_4_version())
 
@@ -2672,8 +2677,8 @@ server <- shinyServer(function(input, output, session) {
 
     if (quanteda::nfeat(dfm_obj) == 0 || sum(dfm_obj) == 0) {
       showNotification(
-        paste("Removing these stopwords leaves no terms.",
-              "Deselect some words, or load more documents."),
+        if (length(applied_removals()) > 0) "Removing these stopwords leaves no terms. Deselect some words, or load more documents."
+        else "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options.",
         type = "warning", duration = 10
       )
       return(NULL)
@@ -2726,7 +2731,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     validate(need(sum(quanteda::ntoken(tokens_for_plot)) > 0,
-                  if (isTRUE(input$remove > 0)) "No words are left after Step 3. Deselect some of the removed words and Apply again." else "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
+                  if (length(applied_removals()) > 0) "No words are left after Step 3. Deselect some of the removed words and Apply again." else "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
     dfm_for_plot <- quanteda::dfm(tokens_for_plot)
 
     gg_to_plotly(dfm_for_plot %>% TextAnalysisR::plot_word_frequency(n = 20))
@@ -2742,7 +2747,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     validate(need(sum(quanteda::ntoken(tokens_for_table)) > 0,
-                  if (isTRUE(input$remove > 0)) "No words are left after Step 3. Deselect some of the removed words and Apply again." else "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
+                  if (length(applied_removals()) > 0) "No words are left after Step 3. Deselect some of the removed words and Apply again." else "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
     dfm_for_table <- quanteda::dfm(tokens_for_table)
 
     quanteda.textstats::textstat_frequency(dfm_for_table)
@@ -2786,10 +2791,6 @@ server <- shinyServer(function(input, output, session) {
     }
 
     req(tokens_to_use)
-
-    # Debug: check what tokens_to_use contains
-
-    first_doc_tokens <- as.character(tokens_to_use[[1]])
 
     # Create cache key based on token content
     spacy_model <- pick_model(input$spacy_model, "en_core_web_sm")
@@ -3940,6 +3941,10 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$generate_dfm_report, {
     req(dfm_init())
+    if (!has_terms(dfm_init())) {
+      showNotification(no_words_msg, type = "warning", duration = 10)
+      return()
+    }
 
     dfm_obj <- dfm_init()
 
@@ -5937,7 +5942,7 @@ server <- shinyServer(function(input, output, session) {
               "  var color = colors[data] || '#757575';",
               "  var lemma = $('<div>').text(row[row.length - 2] || '').html().replace(/\"/g, '&quot;');",
               "  var safe = $('<div>').text(data).html().replace(/\"/g, '&quot;');",
-              "  return '<button type=\"button\" class=\"entity-badge\" data-entity=\"' + safe + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; border: none; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px; cursor: pointer;\" title=\"Edit entity colour\" aria-label=\"Edit colour for entity ' + safe + '\">' + safe + '</button>';",
+              "  return '<button type=\"button\" class=\"entity-badge\" data-entity=\"' + safe + '\" data-lemma=\"' + lemma + '\" style=\"background-color:' + color + '; color: white; border: none; padding: 3px 10px; border-radius: 12px; font-weight: 500; font-size: 16px; cursor: pointer;\" title=\"Edit entity color\" aria-label=\"Edit color for entity ' + safe + '\">' + safe + '</button>';",
               "}",
               sep = "\n"
             ))
@@ -8312,7 +8317,7 @@ server <- shinyServer(function(input, output, session) {
       )
     )
 
-    req(dfm_to_use)
+    req(has_terms(dfm_to_use))
 
     tstat_freq <- quanteda.textstats::textstat_frequency(dfm_to_use)
     tstat_freq_n_100 <- head(tstat_freq, 100)
@@ -12543,8 +12548,8 @@ server <- shinyServer(function(input, output, session) {
     content_hash <- digest::digest(list(
       ndoc = quanteda::ndoc(dfm_data),
       nfeat = quanteda::nfeat(dfm_data),
-      features = quanteda::featnames(dfm_data)[1:min(100, quanteda::nfeat(dfm_data))],
-      matrix_sample = as.matrix(dfm_data)[1:min(10, quanteda::ndoc(dfm_data)), 1:min(100, quanteda::nfeat(dfm_data))]
+      features = quanteda::featnames(dfm_data)[seq_len(min(100, quanteda::nfeat(dfm_data)))],
+      matrix_sample = as.matrix(dfm_data)[seq_len(min(10, quanteda::ndoc(dfm_data))), seq_len(min(100, quanteda::nfeat(dfm_data)))]
     ), algo = "md5")
 
     base_key <- paste(feature_type, content_hash, sep = "_")
@@ -13436,8 +13441,8 @@ server <- shinyServer(function(input, output, session) {
       current_dfm_hash <- digest::digest(list(
         ndoc = quanteda::ndoc(dfm_available),
         nfeat = quanteda::nfeat(dfm_available),
-        features_sample = quanteda::featnames(dfm_available)[1:min(100, quanteda::nfeat(dfm_available))],
-        matrix_sample = as.matrix(dfm_available)[1:min(10, quanteda::ndoc(dfm_available)), 1:min(100, quanteda::nfeat(dfm_available))]
+        features_sample = quanteda::featnames(dfm_available)[seq_len(min(100, quanteda::nfeat(dfm_available)))],
+        matrix_sample = as.matrix(dfm_available)[seq_len(min(10, quanteda::ndoc(dfm_available))), seq_len(min(100, quanteda::nfeat(dfm_available)))]
       ), algo = "md5")
 
       if (!is.null(comparison_results$last_dfm_hash) &&
@@ -17723,7 +17728,7 @@ server <- shinyServer(function(input, output, session) {
   out <- reactive({
     dfm_obj <- get_available_dfm()
 
-    if (is.null(dfm_obj)) {
+    if (!has_terms(dfm_obj)) {
       return(NULL)
     }
 
@@ -20067,7 +20072,7 @@ server <- shinyServer(function(input, output, session) {
 
     if (n_failed > 0) {
       showNotification(
-        sprintf("Labelled %d of %d topics. %d failed and are blank.",
+        sprintf("Labeled %d of %d topics. %d failed and are blank.",
                 n_total - n_failed, n_total, n_failed),
         type = "warning", duration = 10)
     } else {

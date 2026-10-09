@@ -1,8 +1,8 @@
 .ruling_fixture <- function() {
   set.seed(1)
-  centres <- rbind(c(1, 0, 0), c(0, 1, 0), c(0, 0, 1), c(1, 1, 0))
+  centers <- rbind(c(1, 0, 0), c(0, 1, 0), c(0, 0, 1), c(1, 1, 0))
   emb <- do.call(rbind, lapply(1:4, function(k) {
-    sweep(matrix(rnorm(30 * 3, sd = 0.05), ncol = 3), 2, centres[k, ], "+")
+    sweep(matrix(rnorm(30 * 3, sd = 0.05), ncol = 3), 2, centers[k, ], "+")
   }))
   rownames(emb) <- sprintf("u%03d", seq_len(nrow(emb)))
   groups <- c(rep("g1", 30), rep("g2", 30), rep("g3", 30), rep("g1", 30))

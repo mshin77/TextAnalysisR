@@ -73,7 +73,7 @@
 #'   `unassigned` are excluded; place them first with [assign_noise()].
 #' @param method "knn" (default) or "multinom".
 #' @param folds Cross-validation folds (default 5), stratified by category.
-#' @param k Neighbours for `method = "knn"` (default 5).
+#' @param k Neighbors for `method = "knn"` (default 5).
 #' @param balance "none" (default) or "downsample" to equalize category sizes
 #'   within each training fold.
 #' @param unassigned Label marking a document as unassigned, excluded before
@@ -167,7 +167,7 @@ validate_categories <- function(embeddings, categories,
 #' @param embeddings Numeric matrix or data frame, one row per document.
 #' @param categories Category labels; `NA` or any value in `unassigned` marks a
 #'   document as not yet placed.
-#' @param k Neighbours to consult (default 5).
+#' @param k Neighbors to consult (default 5).
 #' @param max_distance Cosine distance beyond which a document stays
 #'   unassigned. `NULL` (default) places every document.
 #' @param unassigned Label marking a document as not yet placed. Defaults to `0`,

@@ -1392,7 +1392,7 @@ plot_keyness_keywords <- function(keyness_data,
 
   has_effect <- "Log_Ratio" %in% names(keyness_data_sorted)
   keyness_data_sorted$Direction <- if (has_effect) {
-    ifelse(keyness_data_sorted$Log_Ratio >= 0, "Favours target", "Favours reference")
+    ifelse(keyness_data_sorted$Log_Ratio >= 0, "Favors target", "Favors reference")
   } else {
     "Keyness"
   }
@@ -1407,7 +1407,7 @@ plot_keyness_keywords <- function(keyness_data,
                                                      fill = .data$Direction, text = hover_text)) +
     ggplot2::geom_col() +
     # both fills stay above 3:1 contrast on white
-    ggplot2::scale_fill_manual(values = c("Favours target" = "#337ab7", "Favours reference" = "#B45309",
+    ggplot2::scale_fill_manual(values = c("Favors target" = "#337ab7", "Favors reference" = "#B45309",
                                           "Keyness" = "#337ab7"), name = NULL) +
     ggplot2::labs(x = paste0("Keyness Score (", stat_label, ")"), y = "", title = title) +
     ggplot2::theme_minimal(base_size = 11) +

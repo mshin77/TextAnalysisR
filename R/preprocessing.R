@@ -700,7 +700,7 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150, pages = NULL) {
   } else character(0)
   num_described <- length(image_descriptions)
 
-  # model output stays one labelled row per page, apart from the source text
+  # model output stays one labeled row per page, apart from the source text
   lines <- .pdf_page_lines(text_pages)
   if (num_described > 0) {
     described <- data.frame(text = sprintf("[AI-generated page description] %s", trimws(image_descriptions)),

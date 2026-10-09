@@ -809,7 +809,7 @@ calculate_topic_probability <- function(stm_model,
 #' @param n_topics Number of topics to discover
 #' @param embedding_model Transformer model for initial embeddings
 #' @param clustering_method Algorithm applied to the embedding similarity
-#'   matrix: "kmeans" (default) or "hierarchical". Both honour `n_topics` and
+#'   matrix: "kmeans" (default) or "hierarchical". Both honor `n_topics` and
 #'   assign every document.
 #' @param min_topic_size Minimum documents per topic.
 #' @param seed Random seed for reproducibility

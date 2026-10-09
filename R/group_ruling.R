@@ -51,12 +51,12 @@
 #' @title Evidence for Ruling on Each Group
 #'
 #' @description
-#' Summarises each group from an unsupervised grouping for a researcher to rule
-#' on: how tightly its units sit around their centre (coherence), which other
+#' Summarizes each group from an unsupervised grouping for a researcher to rule
+#' on: how tightly its units sit around their center (coherence), which other
 #' group sits closest and how close (separation), units drawn at random inside
 #' the group, its furthest member, and the closest group's units that fit this
 #' group best. Random draws rather than the most central units are shown,
-#' because the centre is a biased sample of a group.
+#' because the center is a biased sample of a group.
 #'
 #' @param embeddings Numeric matrix, one row per unit.
 #' @param groups Group label per unit. `NA`, `0`, and `"0"` mark units no group
@@ -89,17 +89,17 @@ group_evidence <- function(embeddings, groups, unit_ids = NULL,
   held <- !is.na(g) & g != "0"
   keys <- sort(unique(g[held]))
   if (length(keys) < 2) stop("At least two groups are required.", call. = FALSE)
-  centres <- t(vapply(keys, function(k) colMeans(x[held & g == k, , drop = FALSE]), numeric(ncol(x))))
-  centres <- .unit_norm(centres)
-  between <- tcrossprod(centres)
+  centers <- t(vapply(keys, function(k) colMeans(x[held & g == k, , drop = FALSE]), numeric(ncol(x))))
+  centers <- .unit_norm(centers)
+  between <- tcrossprod(centers)
   diag(between) <- -Inf
   showable <- !ids %in% as.character(hide)
   rows <- withr::with_seed(seed, lapply(seq_along(keys), function(j) {
     members <- which(held & g == keys[j])
-    fit <- as.vector(x[members, , drop = FALSE] %*% centres[j, ])
+    fit <- as.vector(x[members, , drop = FALSE] %*% centers[j, ])
     near <- which.max(between[j, ])
     rivals <- which(held & g == keys[near])
-    rival_fit <- as.vector(x[rivals, , drop = FALSE] %*% centres[j, ])
+    rival_fit <- as.vector(x[rivals, , drop = FALSE] %*% centers[j, ])
     open <- showable[members]
     open_rivals <- rivals[showable[rivals]]
     open_rival_fit <- rival_fit[showable[rivals]]

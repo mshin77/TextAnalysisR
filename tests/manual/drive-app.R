@@ -100,5 +100,25 @@ check("radar: one trace per group", wait_for("(() => { const e = document.getEle
 check("radar: aria-label follows title", wait_for("(() => { const e = document.getElementById('emotion_radar_plot'); return !!e && /per 1,000 retained tokens/.test(e.getAttribute('aria-label') || ''); })()", 20))
 shot("05-emotion-radar-grouped")
 
+# empty text: a numbers-only column must explain itself, never close the session
+generic_seen <- ""
+watch <- function(secs = 6) {
+  for (i in seq_len(secs * 2)) { generic_seen <<- paste(generic_seen, js("[...document.querySelectorAll('.shiny-notification')].map(n => n.textContent).join(' ')")); Sys.sleep(0.5) }
+}
+connected <- "!!(Shiny.shinyapp && Shiny.shinyapp.isConnected())"
+click_text("Preprocess"); click_text("1. Unite Texts"); Sys.sleep(2)
+js("(() => { document.querySelectorAll('#show_vars input[type=checkbox]').forEach(c => { if (c.checked !== (c.value === 'year')) c.click(); }); return true; })()")
+click_id("apply"); watch(3); wait_for(idle)
+click_text("2. Segment Texts"); click_id("preprocess"); watch(4); wait_for(idle, 120); close_modals()
+click_text("4. Multi-Word Dictionary"); Sys.sleep(2); click_id("dictionary"); watch(4); wait_for(idle); close_modals()
+click_text("3. Remove Stopwords"); Sys.sleep(2); click_id("skip_stopwords"); watch(3); wait_for(idle); close_modals()
+click_text("5. Document-Feature Matrix"); click_id("dfm_btn"); watch(5); wait_for(idle, 120); close_modals()
+click_text("Lexical Analysis"); Sys.sleep(2); click_text("Annotation"); Sys.sleep(2); click_text("Word Forms (Lemmas)"); Sys.sleep(2)
+click_id("skip"); watch(4); wait_for(idle)
+click_text("Dispersion"); watch(4)
+check("empty text: session stays connected", isTRUE(js(connected)))
+check("empty text: no generic error notice", !grepl("unexpected error", generic_seen, ignore.case = TRUE))
+check("empty text: no R errors in the server log", !grepl("Warning: Error|Error in", app$read_output()))
+
 for (label in names(results)) cat(sprintf("[%s] %s\n", if (results[[label]]) "PASS" else "FAIL", label))
 cat(sprintf("%d of %d checks passed; screenshots in %s\n", sum(unlist(results)), length(results), out_dir))

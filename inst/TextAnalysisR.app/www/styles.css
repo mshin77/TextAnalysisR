@@ -1170,12 +1170,12 @@ div[role="main"]:focus,
   font-weight: 600 !important;
 }
 
-/* tall text rows would otherwise centre short cells such as page numbers out of view */
+/* tall text rows would otherwise center short cells such as page numbers out of view */
 table.dataTable tbody td {
   vertical-align: top !important;
 }
 
-/* text cells read from the left; numeric (dt-right) and centred cells keep their alignment under the header */
+/* text cells read from the left; numeric (dt-right) and centered cells keep their alignment under the header */
 table.dataTable tbody td:not(.dt-right):not(.dt-center):not([style*="text-align"]) {
   text-align: left;
 }
