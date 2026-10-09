@@ -64,14 +64,14 @@
 #' @param unit_ids Unit identifiers. Defaults to `rownames(embeddings)`, then
 #'   row positions.
 #' @param n_random Units drawn at random inside each group.
-#' @param n_neighbour Units shown from the closest group.
+#' @param n_neighbor Units shown from the closest group.
 #' @param hide Unit identifiers never shown as evidence, such as a drawn
 #'   holdout. They still count toward coherence and separation.
 #' @param seed Seed for the random draws.
 #'
 #' @return A tibble with one row per group: `group`, `n`, `coherence`,
 #'   `nearest`, `separation`, and list columns `random_units`,
-#'   `boundary_unit`, and `neighbour_units` holding unit identifiers.
+#'   `boundary_unit`, and `neighbor_units` holding unit identifiers.
 #'   Separation above coherence raises the question of a merge; the units
 #'   answer it.
 #'
@@ -79,7 +79,7 @@
 #' @concept qualitative-coding
 #' @export
 group_evidence <- function(embeddings, groups, unit_ids = NULL,
-                           n_random = 3, n_neighbour = 2, hide = NULL, seed = 2026) {
+                           n_random = 3, n_neighbor = 2, hide = NULL, seed = 2026) {
   x <- .unit_norm(embeddings)
   ids <- .ruling_ids(embeddings, unit_ids)
   g <- as.character(groups)
@@ -112,7 +112,7 @@ group_evidence <- function(embeddings, groups, unit_ids = NULL,
       separation = between[j, near],
       random_units = list(ids[pool[sample.int(length(pool), min(n_random, length(pool)))]]),
       boundary_unit = list(ids[pool[which.min(fit[open])]]),
-      neighbour_units = list(ids[open_rivals[order(open_rival_fit, decreasing = TRUE)][seq_len(min(n_neighbour, length(open_rivals)))]]))
+      neighbor_units = list(ids[open_rivals[order(open_rival_fit, decreasing = TRUE)][seq_len(min(n_neighbor, length(open_rivals)))]]))
   }))
   return(dplyr::arrange(dplyr::bind_rows(rows), dplyr::desc(.data$n)))
 }
