@@ -11,12 +11,12 @@
 
 test_that("group_evidence returns one row per group with the evidence columns", {
   f <- .ruling_fixture()
-  ev <- group_evidence(f$emb, f$groups, n_random = 3, n_neighbour = 2)
+  ev <- group_evidence(f$emb, f$groups, n_random = 3, n_neighbor = 2)
   expect_equal(nrow(ev), 3)
   expect_equal(ev$group[1], "g1")
   expect_equal(ev$n, c(60L, 30L, 30L))
   expect_true(all(lengths(ev$random_units) == 3))
-  expect_true(all(lengths(ev$neighbour_units) == 2))
+  expect_true(all(lengths(ev$neighbor_units) == 2))
   expect_true(all(unlist(ev$random_units[ev$group == "g2"]) %in% rownames(f$emb)[61:90 - 30]))
 })
 
@@ -134,7 +134,7 @@ test_that("group_evidence never shows hidden units", {
   f <- .ruling_fixture()
   hidden <- rownames(f$emb)[c(1:20, 31:50, 61:80, 91:110)]
   ev <- group_evidence(f$emb, f$groups, hide = hidden)
-  shown <- unlist(c(ev$random_units, ev$boundary_unit, ev$neighbour_units))
+  shown <- unlist(c(ev$random_units, ev$boundary_unit, ev$neighbor_units))
   expect_false(any(shown %in% hidden))
   expect_equal(ev$n, c(60L, 30L, 30L))
 })

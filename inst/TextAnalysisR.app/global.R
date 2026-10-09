@@ -193,7 +193,7 @@ options(shiny.useragg = isTRUE(tryCatch({
 .palette_input <- function(inputId, label, selected = "Blues") {
   pals <- c("Blues", "Purples", "Greens", "Oranges", "Reds", "Greys",
             "BuGn", "YlOrRd", "PuRd", "RdBu", "BrBG", "PRGn", "RdYlBu")
-  labels <- c("Blues", "Purples", "Greens", "Oranges", "Reds", "Greys",
+  labels <- c("Blues", "Purples", "Greens", "Oranges", "Reds", "Grays",
               "Blue-Green", "Yellow-Orange-Red", "Purple-Red",
               "Red-Blue", "Brown-Teal", "Purple-Green", "Red-Yellow-Blue")
   opts <- lapply(seq_along(pals), function(i) {

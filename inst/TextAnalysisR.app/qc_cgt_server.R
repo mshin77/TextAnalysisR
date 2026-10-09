@@ -422,7 +422,7 @@ observeEvent(list(qc_evidence(), input$qual_coding_tabs), {
   ev <- qc_evidence()
   if (is.null(ev) || !identical(input$qual_coding_tabs, "qc_ruling") || qc_settled()) return()
   if (!is.null(qc_replay()$error)) return()
-  qc_log_read(unique(unlist(c(ev$random_units, ev$boundary_unit, ev$neighbour_units))), "ruling")
+  qc_log_read(unique(unlist(c(ev$random_units, ev$boundary_unit, ev$neighbor_units))), "ruling")
 }, ignoreNULL = FALSE)
 
 output$qc_ruling_status <- renderUI({
@@ -474,7 +474,7 @@ output$qc_ruling_cards <- renderUI({
                 tags$h6("Three random units: one idea?"), quote_list(ev$random_units[[j]]),
                 tags$h6("Furthest member: does the definition cover it?"), quote_list(ev$boundary_unit[[j]]),
                 tags$h6(sprintf("Closest units from %s: do they belong here?", qc_group_key(ev$nearest[j]))),
-                quote_list(ev$neighbour_units[[j]]),
+                quote_list(ev$neighbor_units[[j]]),
                 tags$button(type = "button", class = "btn btn-link qc-more", `data-group` = g,
                             "Read further into this group")),
             div(class = "qc-decision",

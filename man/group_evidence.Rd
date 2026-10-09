@@ -9,7 +9,7 @@ group_evidence(
   groups,
   unit_ids = NULL,
   n_random = 3,
-  n_neighbour = 2,
+  n_neighbor = 2,
   hide = NULL,
   seed = 2026
 )
@@ -25,7 +25,7 @@ row positions.}
 
 \item{n_random}{Units drawn at random inside each group.}
 
-\item{n_neighbour}{Units shown from the closest group.}
+\item{n_neighbor}{Units shown from the closest group.}
 
 \item{hide}{Unit identifiers never shown as evidence, such as a drawn
 holdout. They still count toward coherence and separation.}
@@ -35,7 +35,7 @@ holdout. They still count toward coherence and separation.}
 \value{
 A tibble with one row per group: \code{group}, \code{n}, \code{coherence},
 \code{nearest}, \code{separation}, and list columns \code{random_units},
-\code{boundary_unit}, and \code{neighbour_units} holding unit identifiers.
+\code{boundary_unit}, and \code{neighbor_units} holding unit identifiers.
 Separation above coherence raises the question of a merge; the units
 answer it.
 }
