@@ -2,7 +2,7 @@
 
 # centers sit far from the origin in different directions, so the categories
 # separate under cosine angle as well as Euclidean distance; sd 0.3 at radius
-# 10 leaves no ambiguous neighbourhoods and no random tie-breaking
+# 10 leaves no ambiguous neighborhoods and no random tie-breaking
 .confirm_fixture <- function(n_per = 12,
                              centers = list(c(10, 0), c(0, 10), c(-10, 0))) {
   x <- withr::with_seed(42, do.call(rbind, lapply(centers, function(center) {
@@ -290,7 +290,7 @@ test_that("validate_categories excludes the package's 0 outlier label by default
   expect_false("0" %in% res$by_category$category)
 })
 
-test_that("validate_categories honours a different unassigned label", {
+test_that("validate_categories honors a different unassigned label", {
   skip_if_not_installed("class")
   f <- .confirm_fixture()
   y <- f$y

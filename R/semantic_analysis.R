@@ -811,7 +811,7 @@ cluster_embeddings <- function(data_matrix,
         n_clusters_found <- length(unique(clusters)) - (0 %in% clusters)
         noise_ratio <- sum(clusters == 0) / length(clusters)
         if (noise_ratio > 0.5) {
-          warning(sprintf("%.0f%% of documents were labelled noise; consider a smaller minimum cluster size or a larger eps.",
+          warning(sprintf("%.0f%% of documents were labeled noise; consider a smaller minimum cluster size or a larger eps.",
                           100 * noise_ratio), call. = FALSE)
         }
 
