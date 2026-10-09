@@ -1086,6 +1086,8 @@ server <- shinyServer(function(input, output, session) {
     applied_expressions(character(0))
     applied_edge_options(character(0))
     step2_apply(NULL)
+    dfm_apply(NULL)
+    lemma_applied(FALSE)
     stopwords_applied(FALSE)
     dictionary_applied(FALSE)
     last_clicked(NULL)
@@ -1111,7 +1113,8 @@ server <- shinyServer(function(input, output, session) {
       paste(parts, collapse = "_")
     }, character(1), USE.NAMES = FALSE)
     changed <- compound_types != trimmed
-    out <- quanteda::tokens_replace(toks_compound, compound_types[changed], trimmed[changed], valuetype = "fixed")
+    out <- quanteda::tokens_replace(toks_compound, compound_types[changed], trimmed[changed],
+                                    valuetype = "fixed", case_insensitive = FALSE)
     quanteda::tokens_remove(out, "", valuetype = "fixed")
   }
 
@@ -1319,8 +1322,7 @@ server <- shinyServer(function(input, output, session) {
         )
 
         TextAnalysisR:::show_completion_notification(paste("Combined", length(input$show_vars), "columns into 'Combined Text' while keeping original columns"))
-        # a page number or ID column alone leaves Step 2 with no words to segment
-        if (!any(grepl("[[:alpha:]]", united_data$united_texts))) {
+        if (!isTRUE(input$math_mode) && !any(grepl("[[:alpha:]]", united_data$united_texts))) {
           showNotification("The ticked column(s) contain no words. Tick the column that holds the text (such as 'text') and Apply again.",
                            type = "warning", duration = 12)
         }
@@ -1342,6 +1344,7 @@ server <- shinyServer(function(input, output, session) {
     {
       req(input$apply)
       tbl <- united_tbl()
+      req(tbl)
       names(tbl)[names(tbl) == "united_texts"] <- "Combined Text"
       text_col_idx <- which(vapply(tbl, function(col) {
         is.character(col) && mean(nchar(as.character(col)), na.rm = TRUE) > 60
@@ -1522,7 +1525,7 @@ server <- shinyServer(function(input, output, session) {
 
       try(removeNotification("loadingPreprocess"), silent = TRUE)
       TextAnalysisR:::show_completion_notification(paste("Text preprocessing completed for", quanteda::ndoc(toks_processed), "documents"))
-      if (sum(quanteda::ntoken(toks_processed)) == 0) {
+      if (total_tokens == 0) {
         showNotification("No words are left after Step 2. Check the text column in Step 1 or the Step 2 options.", type = "warning", duration = 12)
       }
 
@@ -1648,7 +1651,11 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     req(preprocessed_combined())
-    req(sum(quanteda::ntoken(preprocessed_combined())) > 0)
+    if (sum(quanteda::ntoken(preprocessed_combined())) == 0) {
+      common_word_suggestions(NULL)
+      updateSelectizeInput(session, "common_words", choices = character(0), selected = character(0))
+      return()
+    }
 
     tryCatch({
       dfm_temp <- quanteda::dfm(preprocessed_combined())
@@ -2208,7 +2215,15 @@ server <- shinyServer(function(input, output, session) {
     buttons = c("copy", "csv", "excel", "pdf", "print")
   ))
 
-  dfm_init <- eventReactive(input$dfm_btn, {
+  # the matrix belongs to the Step 1 apply it was built from; a new apply or a cleared corpus makes it stale
+  dfm_apply <- reactiveVal(NULL)
+  observeEvent(input$dfm_btn, dfm_apply(input$apply), priority = 10)
+  dfm_init <- reactive({
+    req(identical(dfm_apply(), input$apply))
+    dfm_built()
+  })
+
+  dfm_built <- eventReactive(input$dfm_btn, {
     tokens_to_use <- if (!is.null(processed_tokens())) {
       processed_tokens()
     } else if (!is.null(final_tokens())) {
@@ -2710,7 +2725,8 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     }
 
-    validate(need(sum(quanteda::ntoken(tokens_for_plot)) > 0, "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
+    validate(need(sum(quanteda::ntoken(tokens_for_plot)) > 0,
+                  if (isTRUE(input$remove > 0)) "No words are left after Step 3. Deselect some of the removed words and Apply again." else "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
     dfm_for_plot <- quanteda::dfm(tokens_for_plot)
 
     gg_to_plotly(dfm_for_plot %>% TextAnalysisR::plot_word_frequency(n = 20))
@@ -2725,7 +2741,8 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     }
 
-    validate(need(sum(quanteda::ntoken(tokens_for_table)) > 0, "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
+    validate(need(sum(quanteda::ntoken(tokens_for_table)) > 0,
+                  if (isTRUE(input$remove > 0)) "No words are left after Step 3. Deselect some of the removed words and Apply again." else "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
     dfm_for_table <- quanteda::dfm(tokens_for_table)
 
     quanteda.textstats::textstat_frequency(dfm_for_table)
@@ -3009,7 +3026,6 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$confirm_reset_pipeline, {
     reset_downstream()
-    lemma_applied(FALSE)
     math_mode_used(FALSE)
 
     step_2_version(0)

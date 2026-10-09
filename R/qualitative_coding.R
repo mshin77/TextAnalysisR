@@ -812,6 +812,8 @@ code_agreement <- function(assignments,
     stop("codebook needs a 'code' column.", call. = FALSE)
   }
   book_codes <- if (is.data.frame(codebook)) codebook$code else codebook
+  # blank rows from "Add code" are not categories
+  book_codes <- book_codes[!is.na(book_codes) & nzchar(trimws(as.character(book_codes)))]
   n_categories <- if (is.null(book_codes)) NULL else
     length(union(as.character(book_codes), stats::na.omit(as.vector(ratings))))
   others <- setdiff(colnames(ratings), codebook_authors)

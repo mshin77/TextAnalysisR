@@ -470,8 +470,13 @@ $(document).ready(function() {
     });
     new MutationObserver(function() {
         var panel = document.getElementById('shiny-notification-panel');
-        if (panel) {
+        if (panel && !panel.dataset.announced) {
+            panel.dataset.announced = '1';
             shinyNotificationObserver.observe(panel, { childList: true });
+            // the panel arrives with its first notification already inside, before the panel observer starts
+            var first = panel.querySelector('.shiny-notification-content-text');
+            var ariaRegion = document.getElementById('accessible-notifications');
+            if (first && ariaRegion) ariaRegion.textContent = first.textContent.trim();
         }
     }).observe(document.body, { childList: true });
 

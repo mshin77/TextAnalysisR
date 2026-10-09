@@ -3496,6 +3496,7 @@ calculate_dispersion_metrics <- function(tokens_object, terms) {
 
 #' @keywords internal
 .mean_sentence_length <- function(texts) {
+  if (length(texts) == 0) return(numeric(0))
   sents <- lapply(as.list(quanteda::tokens(as.character(texts), what = "sentence")), function(s) s[nzchar(trimws(s))])
   n_sent <- lengths(sents)
   words <- lengths(quanteda::tokens(unlist(sents, use.names = FALSE), what = "word", remove_punct = TRUE))

@@ -96,3 +96,8 @@ test_that("log odds significance is adjusted across all pairwise comparisons", {
   expect_type(lo$significant, "logical")
   expect_false("p_value" %in% names(lo))
 })
+
+test_that("mean sentence length handles empty input and blank texts", {
+  expect_identical(TextAnalysisR:::.mean_sentence_length(character(0)), numeric(0))
+  expect_equal(suppressWarnings(TextAnalysisR:::.mean_sentence_length(c("", "One. Two words.", NA))), c(NA, 1.5, NA))
+})
