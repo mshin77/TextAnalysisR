@@ -1170,6 +1170,12 @@ div[role="main"]:focus,
   font-weight: 600 !important;
 }
 
+/* tall text rows would otherwise centre short cells such as page numbers out of view */
+table.dataTable tbody td {
+  vertical-align: top !important;
+  text-align: left !important;
+}
+
 table.dataTable tbody tr:hover {
   background-color: #f3f4f6 !important;
 }

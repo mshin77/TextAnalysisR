@@ -1041,7 +1041,8 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
       message(n_long, " document(s) exceed ", embedding_model$max_seq_length,
               " word pieces; text past that point is not embedded.")
     }
-    embeddings <- embedding_model$encode(texts, show_progress_bar = verbose, normalize_embeddings = TRUE)
+    # a list keeps a single text as one row; a bare string comes back as a 1-D vector
+    embeddings <- embedding_model$encode(as.list(texts), show_progress_bar = verbose, normalize_embeddings = TRUE)
 
     if (verbose) message("Embeddings generated successfully")
 
@@ -4245,13 +4246,13 @@ run_rag_search <- function(
       api_key = api_key
     )
   }, error = function(e) {
-    return(NULL)
+    structure(list(), message = conditionMessage(e))
   })
 
-  if (is.null(answer)) {
+  if (is.null(answer) || length(answer) == 0) {
     return(list(
       success = FALSE,
-      error = "Failed to generate answer from LLM",
+      error = attr(answer, "message") %||% "Failed to generate answer from LLM",
       answer = "",
       confidence = 0.0,
       sources = top_indices,

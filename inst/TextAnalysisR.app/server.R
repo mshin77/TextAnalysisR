@@ -271,6 +271,10 @@ server <- shinyServer(function(input, output, session) {
     stringsAsFactors = FALSE
   ))
 
+  # word counts on a matrix with no terms error out and close the session
+  has_terms <- function(dfm_obj) !is.null(dfm_obj) && quanteda::nfeat(dfm_obj) > 0 && sum(dfm_obj) > 0
+  no_words_msg <- "No words are left in the document-feature matrix. Check the text column in Step 1 and the Steps 2 to 4 options."
+
   # package messages about trimmed or sampled plots otherwise reach only the server console
   with_plot_notices <- function(expr, session_local = session) {
     withCallingHandlers(expr, textanalysisr_plot_notice = function(m) {
@@ -1315,6 +1319,11 @@ server <- shinyServer(function(input, output, session) {
         )
 
         TextAnalysisR:::show_completion_notification(paste("Combined", length(input$show_vars), "columns into 'Combined Text' while keeping original columns"))
+        # a page number or ID column alone leaves Step 2 with no words to segment
+        if (!any(grepl("[[:alpha:]]", united_data$united_texts))) {
+          showNotification("The ticked column(s) contain no words. Tick the column that holds the text (such as 'text') and Apply again.",
+                           type = "warning", duration = 12)
+        }
         return(united_data)
       },
       error = function(e) {
@@ -1513,6 +1522,9 @@ server <- shinyServer(function(input, output, session) {
 
       try(removeNotification("loadingPreprocess"), silent = TRUE)
       TextAnalysisR:::show_completion_notification(paste("Text preprocessing completed for", quanteda::ndoc(toks_processed), "documents"))
+      if (sum(quanteda::ntoken(toks_processed)) == 0) {
+        showNotification("No words are left after Step 2. Check the text column in Step 1 or the Step 2 options.", type = "warning", duration = 12)
+      }
 
       output$modal_pre_init_verbose_output <- renderPrint({
         cat(paste(final_output, collapse = "\n"))
@@ -1636,6 +1648,7 @@ server <- shinyServer(function(input, output, session) {
 
   observe({
     req(preprocessed_combined())
+    req(sum(quanteda::ntoken(preprocessed_combined())) > 0)
 
     tryCatch({
       dfm_temp <- quanteda::dfm(preprocessed_combined())
@@ -2032,7 +2045,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(dfm_dictionary(), {
-    req(dfm_dictionary())
+    req(has_terms(dfm_dictionary()))
 
     isolate({
       dfm_obj <- dfm_dictionary()
@@ -2305,11 +2318,13 @@ server <- shinyServer(function(input, output, session) {
 
   output$dfm_plot <- plotly::renderPlotly({
     req(dfm_init())
+    validate(need(has_terms(dfm_init()), no_words_msg))
     gg_to_plotly(dfm_init() %>% TextAnalysisR::plot_word_frequency(n = 20))
   })
 
   output$dfm_table <- DT::renderDataTable({
     req(dfm_init())
+    validate(need(has_terms(dfm_init()), no_words_msg))
     quanteda.textstats::textstat_frequency(dfm_init())
   },
   rownames = FALSE,
@@ -2695,6 +2710,7 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     }
 
+    validate(need(sum(quanteda::ntoken(tokens_for_plot)) > 0, "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
     dfm_for_plot <- quanteda::dfm(tokens_for_plot)
 
     gg_to_plotly(dfm_for_plot %>% TextAnalysisR::plot_word_frequency(n = 20))
@@ -2709,6 +2725,7 @@ server <- shinyServer(function(input, output, session) {
       preprocessed_combined()
     }
 
+    validate(need(sum(quanteda::ntoken(tokens_for_table)) > 0, "No words are left after Step 2. Check the text column in Step 1 or the Step 2 options."))
     dfm_for_table <- quanteda::dfm(tokens_for_table)
 
     quanteda.textstats::textstat_frequency(dfm_for_table)
@@ -3120,11 +3137,13 @@ server <- shinyServer(function(input, output, session) {
 
   output$lemma_plot <- plotly::renderPlotly({
     req(dfm_lemma())
+    validate(need(has_terms(dfm_lemma()), no_words_msg))
     gg_to_plotly(dfm_lemma() %>% TextAnalysisR::plot_word_frequency(n = 20))
   })
 
   output$lemma_table <- DT::renderDataTable({
     req(dfm_lemma())
+    validate(need(has_terms(dfm_lemma()), no_words_msg))
     result <- quanteda.textstats::textstat_frequency(dfm_lemma())
     names(result) <- c("Feature", "Frequency", "Rank", "Docfreq", "Group")
     result
@@ -10334,7 +10353,7 @@ server <- shinyServer(function(input, output, session) {
 
   dispersion_vocab <- reactive({
     dfm_to_use <- get_available_dfm()
-    if (is.null(dfm_to_use)) return(NULL)
+    if (!has_terms(dfm_to_use)) return(NULL)
     head(quanteda.textstats::textstat_frequency(dfm_to_use)$feature, 100)
   })
 
