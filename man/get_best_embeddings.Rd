@@ -16,7 +16,8 @@ get_best_embeddings(
 \item{texts}{Character vector of texts to embed}
 
 \item{provider}{Character string: "auto" (default), "sentence-transformers",
-"openai", or "gemini". Use "auto" for automatic detection.}
+"openai", "gemini", or "ollama". Use "auto" for automatic detection.
+"ollama" embeds locally through sentence-transformers.}
 
 \item{model}{Character string specifying the embedding model. If NULL, uses default
 model for the selected provider.}

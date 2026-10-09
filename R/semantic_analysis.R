@@ -12,7 +12,7 @@ NULL
 .resolve_llm_setup <- function(provider, model, api_key, defaults, strict_validate = FALSE) {
   if (is.null(model) || !nzchar(model)) model <- c(defaults, ollama = "llama3.2")[[provider]]
   if (provider == "ollama") return(list(provider = provider, model = model, api_key = ""))
-  if (is.null(api_key)) {
+  if (is.null(api_key) || !nzchar(api_key)) {
     env_var <- switch(provider, openai = "OPENAI_API_KEY", gemini = "GEMINI_API_KEY")
     api_key <- Sys.getenv(env_var)
   }

@@ -25,7 +25,7 @@ validate_categories(
 
 \item{folds}{Cross-validation folds (default 5), stratified by category.}
 
-\item{k}{Neighbours for \code{method = "knn"} (default 5).}
+\item{k}{Neighbors for \code{method = "knn"} (default 5).}
 
 \item{balance}{"none" (default) or "downsample" to equalize category sizes
 within each training fold.}
