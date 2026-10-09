@@ -21,7 +21,7 @@ cluster_embedding_topics(
 \item{embedding_model}{Transformer model for initial embeddings}
 
 \item{clustering_method}{Algorithm applied to the embedding similarity
-matrix: "kmeans" (default) or "hierarchical". Both honour \code{n_topics} and
+matrix: "kmeans" (default) or "hierarchical". Both honor \code{n_topics} and
 assign every document.}
 
 \item{min_topic_size}{Minimum documents per topic.}

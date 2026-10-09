@@ -18,7 +18,7 @@ assign_noise(
 \item{categories}{Category labels; \code{NA} or any value in \code{unassigned} marks a
 document as not yet placed.}
 
-\item{k}{Neighbours to consult (default 5).}
+\item{k}{Neighbors to consult (default 5).}
 
 \item{max_distance}{Cosine distance beyond which a document stays
 unassigned. \code{NULL} (default) places every document.}

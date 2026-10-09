@@ -178,3 +178,29 @@ test_that("RAG with ollama retrieves locally and needs no key", {
   expect_equal(used$embed, "sentence-transformers")
   expect_equal(used$chat, "ollama")
 })
+
+test_that("get_best_embeddings embeds ollama locally and treats a blank model as unset", {
+  used <- list()
+  local_mocked_bindings(
+    check_feature = function(...) TRUE,
+    generate_embeddings = function(texts, model, ...) { used$model <<- model; matrix(1, length(texts), 2) }
+  )
+  emb <- get_best_embeddings("one text", provider = "ollama", model = "", verbose = FALSE)
+  expect_equal(dim(emb), c(1L, 2L))
+  expect_equal(used$model, "all-MiniLM-L6-v2")
+})
+
+test_that("a blank api_key falls back to the environment variable", {
+  withr::local_envvar(OPENAI_API_KEY = "sk-from-env")
+  setup <- TextAnalysisR:::.resolve_llm_setup("openai", NULL, "", defaults = list(openai = "gpt-4.1-mini"))
+  expect_equal(setup$api_key, "sk-from-env")
+  expect_equal(TextAnalysisR:::.resolve_provider("openai", "")$api_key, "sk-from-env")
+})
+
+test_that("the hosted app's missing-key notice does not point to .Renviron", {
+  withr::local_envvar(TEXTANALYSISR_DOCKER = "1")
+  expect_false(grepl("Renviron", TextAnalysisR:::.missing_api_key_message("openai", "shiny")))
+  withr::local_envvar(TEXTANALYSISR_DOCKER = "", DOCKER_CONTAINER = "")
+  skip_if(file.exists("/.dockerenv"))
+  expect_true(grepl("Renviron", TextAnalysisR:::.missing_api_key_message("openai", "shiny")))
+})

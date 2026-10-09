@@ -130,7 +130,7 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
     return(NULL)
   }
   if (provider == "ollama") return(list(provider = provider, api_key = ""))
-  if (is.null(api_key)) api_key <- Sys.getenv(env[[provider]])
+  if (is.null(api_key) || !nzchar(api_key)) api_key <- Sys.getenv(env[[provider]])
   if (!nzchar(api_key)) return(.notify_missing_api_key(provider))
   list(provider = provider, api_key = api_key)
 }

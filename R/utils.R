@@ -1757,7 +1757,8 @@ get_gemini_embeddings <- function(texts, model, api_key) {
 #'
 #' @param texts Character vector of texts to embed
 #' @param provider Character string: "auto" (default), "sentence-transformers",
-#'   "openai", or "gemini". Use "auto" for automatic detection.
+#'   "openai", "gemini", or "ollama". Use "auto" for automatic detection.
+#'   "ollama" embeds locally through sentence-transformers.
 #' @param model Character string specifying the embedding model. If NULL, uses default
 #'   model for the selected provider.
 #' @param api_key Optional API key for OpenAI or Gemini providers. If NULL, falls back
@@ -1809,6 +1810,10 @@ get_best_embeddings <- function(texts,
     }
   }
 
+  # Ollama serves chat here; its embeddings run locally like run_rag_search()
+  if (provider == "ollama") provider <- "sentence-transformers"
+  if (!is.null(model) && !nzchar(model)) model <- NULL
+
   embeddings <- switch(provider,
     "sentence-transformers" = {
       if (!check_feature("python")) {
@@ -1827,7 +1832,7 @@ get_best_embeddings <- function(texts,
     },
     stop(paste0(
       "Unknown provider: ", provider, ". ",
-      "Valid options: auto, sentence-transformers, openai, gemini"
+      "Valid options: auto, sentence-transformers, openai, gemini, ollama"
     ))
   )
 
@@ -2160,6 +2165,10 @@ log_security_event <- function(event_type, details, session_info, level = "info"
   env_var <- if (provider == "openai") "OPENAI_API_KEY" else "GEMINI_API_KEY"
   provider_label <- if (provider == "openai") "OpenAI" else "Gemini"
 
+  # visitors to a hosted app cannot set server environment variables
+  if (context == "shiny" && (check_docker_deployment() || check_web_deployment())) {
+    return(sprintf("%s API key required. Enter it in the API Key field.", provider_label))
+  }
   if (context == "shiny") {
     return(sprintf("%s API key required. Enter in the API Key field or set %s in .Renviron.",
                    provider_label, env_var))

@@ -40,12 +40,12 @@ Separation above coherence raises the question of a merge; the units
 answer it.
 }
 \description{
-Summarises each group from an unsupervised grouping for a researcher to rule
-on: how tightly its units sit around their centre (coherence), which other
+Summarizes each group from an unsupervised grouping for a researcher to rule
+on: how tightly its units sit around their center (coherence), which other
 group sits closest and how close (separation), units drawn at random inside
 the group, its furthest member, and the closest group's units that fit this
 group best. Random draws rather than the most central units are shown,
-because the centre is a biased sample of a group.
+because the center is a biased sample of a group.
 }
 \seealso{
 \code{\link[=apply_ruling]{apply_ruling()}} to act on the verdicts.

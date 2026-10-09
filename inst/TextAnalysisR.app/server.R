@@ -11708,6 +11708,7 @@ server <- shinyServer(function(input, output, session) {
     tryCatch({
       cached_provider <- embeddings_cache$provider %||% "sentence-transformers"
       query_embedding <- if (cached_provider %in% c("openai", "gemini")) {
+        if (!check_api_key(get_api_key(cached_provider), cached_provider, "search query")) return(NULL)
         spend_ai_call("Search Query", cached_provider, embeddings_cache$model)
         matrix(TextAnalysisR::get_best_embeddings(query, provider = cached_provider, model = embeddings_cache$model,
                                                   api_key = get_api_key(cached_provider), verbose = FALSE), nrow = 1)
@@ -12296,7 +12297,7 @@ server <- shinyServer(function(input, output, session) {
       "gemini" = get_api_key("gemini", input$embedding_gemini_api_key),
       NULL
     )
-    if (!is.null(api_key) && !nzchar(api_key)) api_key <- NULL
+    if (provider %in% c("openai", "gemini") && !check_api_key(api_key, provider, "embeddings")) return()
 
     spend_ai_call("Embeddings", provider, model_name)
     loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "... This may briefly slow the app for other users."))
@@ -13158,7 +13159,7 @@ server <- shinyServer(function(input, output, session) {
           "gemini" = get_api_key("gemini", input$search_embedding_gemini_api_key),
           NULL
         )
-        if (!is.null(search_api_key) && !nzchar(search_api_key)) search_api_key <- NULL
+        if (search_provider %in% c("openai", "gemini") && !check_api_key(search_api_key, search_provider, "search embeddings")) return()
 
         spend_ai_call("Search Embeddings", search_provider, search_model)
         loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", search_provider, "..."))
@@ -19188,7 +19189,10 @@ server <- shinyServer(function(input, output, session) {
         "gemini" = get_api_key("gemini", input$topic_embedding_gemini_api_key),
         NULL
       )
-      if (!is.null(api_key) && !nzchar(api_key)) api_key <- NULL
+      if (provider %in% c("openai", "gemini") && !check_api_key(api_key, provider, "topic embeddings")) {
+        shiny::removeNotification("embedding_model_notification")
+        return()
+      }
 
       current_texts_hash <- digest::digest(texts, algo = "md5")
       use_cached <- !is.null(embeddings_cache$embeddings) &&
