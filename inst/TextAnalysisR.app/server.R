@@ -19838,7 +19838,7 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$stm_run, {
     rows <- ceiling((input$K_number %||% 2) / get_ncol_top_terms())
-    updateSliderInput(session, "height", value = min(4000, max(400, rows * (get_top_term_number() * 45 + 80))))
+    updateSliderInput(session, "height", value = min(4000, max(300, rows * (get_top_term_number() * 35 + 60))))
   }, ignoreInit = TRUE)
 
   stm_topic_terms <- reactive({
@@ -20873,7 +20873,7 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$stm_display, {
     n_shown <- if (isTRUE(input$topic_number > 0)) input$topic_number else (input$K_number %||% 2)
-    updateSliderInput(session, "height_topic_prevalence", value = min(4000, max(250, n_shown * 90 + 160)))
+    updateSliderInput(session, "height_topic_prevalence", value = min(4000, max(250, n_shown * 60 + 120)))
   }, ignoreInit = TRUE)
 
   observeEvent(input$stm_display, {

@@ -801,3 +801,20 @@ $(document).ready(function() {
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
 })();
+
+(function() {
+  const overlaps = function(el) {
+    const r = $(el).closest('.form-group').find('.irs-grid-text').filter(function() { return $(this).text() !== ''; }).map(function() { return this.getBoundingClientRect(); }).get();
+    return r.some(function(b, k) { return k > 0 && b.left < r[k - 1].right; });
+  };
+  const thinGrid = function() {
+    $('.js-range-slider').each(function() {
+      const api = $(this).data('ionRangeSlider');
+      if (!api || !this.offsetParent || $(this).data('gridThinned')) return;
+      $(this).data('gridThinned', true);
+      let n = api.options.grid_num || 4;
+      while (overlaps(this) && n > 2) { n = Math.max(2, Math.floor(n * 0.7)); api.update({ grid_num: n }); }
+    });
+  };
+  $(document).on('shiny:connected shown.bs.tab shiny:value', function() { setTimeout(thinGrid, 400); });
+})();

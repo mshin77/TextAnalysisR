@@ -751,7 +751,7 @@ g.hoverlayer tspan {
 }
 
 .modal-body {
-  font-size: 16px;
+  font-size: var(--font-size-msg);
 }
 
 .modal-body pre,
@@ -3399,26 +3399,6 @@ body.splash-on .shinybusy-overlay { display: none !important; }
 .dt-buttons .dt-button,
 .btn:not(.btn-sm):not(.btn-xs) {
   font-size: var(--font-size-sm);
-}
-
-.modal-content:has(.modal-footer > button:only-child) {
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-content:has(.modal-footer > button:only-child) .modal-header {
-  order: 0;
-}
-
-.modal-content:has(.modal-footer > button:only-child) .modal-footer {
-  order: 1;
-  border-top: 0;
-  padding: 0 15px 8px;
-  text-align: right;
-}
-
-.modal-content:has(.modal-footer > button:only-child) .modal-body {
-  order: 2;
 }
 
 .qc-memo-list {

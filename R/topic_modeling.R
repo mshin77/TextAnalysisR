@@ -3360,7 +3360,7 @@ plot_word_probability <- function(top_topic_terms,
                               "Topic: ", labeled_topic, "<br>",
                               measure_label, ": ", sprintf("%.3f", beta)))
   ) +
-    ggplot2::geom_col(show.legend = FALSE, alpha = 0.8) +
+    ggplot2::geom_col(show.legend = FALSE, alpha = 0.8, width = 0.6) +
     ggplot2::facet_wrap(~ labeled_topic, scales = "free", ncol = ncol, strip.position = "top") +
     tidytext::scale_x_reordered() +
     ggplot2::scale_y_continuous(labels = .number_labeller(3)) +
@@ -3456,7 +3456,7 @@ plot_topic_probability <- function(gamma_data,
 
     ggplot_obj <- ggplot2::ggplot(gamma_terms, ggplot2::aes(x = topic_display, y = gamma, fill = topic_display,
                                           text = hover_text)) +
-      ggplot2::geom_col(alpha = 0.8) +
+      ggplot2::geom_col(alpha = 0.8, width = 0.6) +
       ggplot2::coord_flip() +
       ggplot2::scale_y_continuous(labels = .number_labeller(2)) +
       ggplot2::xlab("") +
