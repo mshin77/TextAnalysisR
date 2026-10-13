@@ -1184,6 +1184,11 @@ Focus on incorporating the most significant keywords while following the guideli
             ),
 
             actionButton("embedding_run", "Run Model", class = "btn-primary btn-block"),
+            conditionalPanel(
+              condition = "input.embedding_backend == 'r'",
+              actionButton("embedding_stability", "Check Stability", class = "btn-default btn-block", style = "margin-top: 8px;"),
+              tags$p("Refits with five seeds on the same embeddings.", class = "qc-tip")
+            ),
 
             conditionalPanel(
               condition = "output.has_embedding_categories == true",
@@ -4364,6 +4369,13 @@ qualitative_coding_ui_content <- function() {
             style = "padding: 20px;",
             conditionalPanel(
               condition = "output.has_qc_groups == true",
+              conditionalPanel(
+                condition = "output.has_qc_alignment == true",
+                h4("Change From Raw Clusters"),
+                uiOutput("qc_align_note"),
+                DT::dataTableOutput("qc_align_table"),
+                br()
+              ),
               uiOutput("qc_ruling_cards")
             ),
             conditionalPanel(
@@ -4434,6 +4446,13 @@ qualitative_coding_ui_content <- function() {
           div(
             style = "padding: 20px;",
             conditionalPanel(
+              condition = "output.has_qc_saturation == true",
+              h4("Code Saturation"),
+              uiOutput("qc_saturation_note"),
+              plotly::plotlyOutput("qc_saturation_plot", height = "260px"),
+              br()
+            ),
+            conditionalPanel(
               condition = "output.has_qc_agreement == true",
               h4("Overall")
             ),
@@ -4457,7 +4476,7 @@ qualitative_coding_ui_content <- function() {
             ),
             DT::dataTableOutput("qc_retest_table"),
             conditionalPanel(
-              condition = "output.has_qc_agreement == false && output.has_qc_retest == false",
+              condition = "output.has_qc_agreement == false && output.has_qc_retest == false && output.has_qc_saturation == false",
               .tab_placeholder(
                 tags$i(class = "fas fa-balance-scale", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
                 "Combine coder files and click ",

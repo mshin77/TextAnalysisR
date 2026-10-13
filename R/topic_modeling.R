@@ -2217,6 +2217,8 @@ auto_tune_embedding_topics <- function(
 #' @param select_best Logical, if TRUE, returns the best model by quality (default: TRUE).
 #' @param base_seed Base random seed; each run uses base_seed + (run - 1).
 #' @param verbose Logical, if TRUE, prints progress messages.
+#' @param precomputed_embeddings Optional embedding matrix, one row per element of
+#'   `texts`; reused so embeddings are not generated again (default: NULL).
 #' @param ... Additional arguments passed to fit_embedding_model().
 #'
 #' @return A list containing:
@@ -2261,6 +2263,7 @@ assess_embedding_stability <- function(
     select_best = TRUE,
     base_seed = 123,
     verbose = TRUE,
+    precomputed_embeddings = NULL,
     ...
 ) {
 
@@ -2284,7 +2287,9 @@ assess_embedding_stability <- function(
 
   # Generate embeddings once for efficiency
   if (verbose) message("  Generating embeddings (one-time cost)...")
-  embeddings <- tryCatch({
+  embeddings <- if (!is.null(precomputed_embeddings)) {
+    as.matrix(precomputed_embeddings)[kept_index, , drop = FALSE]
+  } else tryCatch({
     generate_embeddings(texts, model = embedding_model, verbose = FALSE)
   }, error = function(e) {
     stop("Failed to generate embeddings: ", e$message)

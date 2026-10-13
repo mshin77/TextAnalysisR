@@ -11,6 +11,7 @@ assess_embedding_stability(
   select_best = TRUE,
   base_seed = 123,
   verbose = TRUE,
+  precomputed_embeddings = NULL,
   ...
 )
 }
@@ -27,6 +28,9 @@ More runs give a steadier stability estimate.}
 \item{base_seed}{Base random seed; each run uses base_seed + (run - 1).}
 
 \item{verbose}{Logical, if TRUE, prints progress messages.}
+
+\item{precomputed_embeddings}{Optional embedding matrix, one row per element of
+\code{texts}; reused so embeddings are not generated again (default: NULL).}
 
 \item{...}{Additional arguments passed to fit_embedding_model().}
 }

@@ -7,18 +7,14 @@
 #' @keywords internal
 .fill_stages <- function(project) {
   holdout <- project$holdout$unit_id
-  fill <- function(x, value) { x[is.na(x)] <- value[is.na(x)]; x }
-  if (nrow(project$assignments) > 0) {
-    project$assignments$stage <- fill(project$assignments$stage,
-      ifelse(project$assignments$unit_id %in% holdout, "confirm", "annotate"))
-  }
-  if (nrow(project$memos) > 0) {
-    project$memos$stage <- fill(project$memos$stage,
-      ifelse(project$memos$target_type == "category", "refine",
-             ifelse(project$memos$target_id %in% holdout, "confirm", "annotate")))
-  }
-  if (nrow(project$rulings) > 0) project$rulings$stage <- fill(project$rulings$stage, rep("refine", nrow(project$rulings)))
-  if (nrow(project$rounds) > 0) project$rounds$stage <- fill(project$rounds$stage, rep("refine", nrow(project$rounds)))
+  fill <- function(x, value) as.character(ifelse(is.na(x), value, x))
+  a <- project$assignments
+  m <- project$memos
+  project$assignments$stage <- fill(a$stage, ifelse(a$unit_id %in% holdout, "confirm", "annotate"))
+  project$memos$stage <- fill(m$stage, ifelse(m$target_type == "category", "refine",
+                                              ifelse(m$target_id %in% holdout, "confirm", "annotate")))
+  project$rulings$stage <- fill(project$rulings$stage, "refine")
+  project$rounds$stage <- fill(project$rounds$stage, "refine")
   return(project)
 }
 

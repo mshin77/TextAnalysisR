@@ -148,3 +148,40 @@ test_that("add_memo numbers past the largest existing id after filtering", {
   expect_false(any(duplicated(out$memo_id)))
   expect_equal(out$memo_id[nrow(out)], "m4")
 })
+
+test_that("code_saturation counts distinct codes in coding order", {
+  t0 <- as.POSIXct("2026-01-01 10:00:00", tz = "UTC")
+  a <- tibble::tibble(
+    unit_id = c("u1", "u2", "u3", "u3", "u4", "u5"),
+    code = c("a", "a", "b", "a", NA, "c"),
+    status = c("human", "human", "human", "human", "human-none", "ai-confirmed"),
+    timestamp = t0 + c(1, 2, 3, 3, 4, 5))
+  out <- code_saturation(a, window = 2)
+  expect_equal(out$curve$step, 1:5)
+  expect_equal(out$curve$new_codes, c(1L, 0L, 1L, 0L, 1L))
+  expect_equal(out$curve$distinct_codes, c(1L, 1L, 2L, 2L, 3L))
+  expect_equal(out$summary$n_codes, 3L)
+  expect_equal(out$summary$last_new_step, 5L)
+  expect_false(out$summary$saturated)
+})
+
+test_that("code_saturation flags a flat tail and ignores other statuses", {
+  t0 <- as.POSIXct("2026-01-01", tz = "UTC")
+  a <- tibble::tibble(unit_id = paste0("u", 1:6), code = c("a", "b", "a", "b", "a", "b"),
+                      status = c(rep("human", 5), "pending"), timestamp = t0 + 1:6)
+  s <- code_saturation(a, window = 3)$summary
+  expect_equal(s$n_units, 5L)
+  expect_equal(s$last_new_step, 2L)
+  expect_equal(s$units_since_new, 3L)
+  expect_true(s$saturated)
+})
+
+test_that("code_saturation handles no coded units and bad input", {
+  e <- code_saturation(tibble::tibble(unit_id = character(0), code = character(0),
+                                      status = character(0), timestamp = as.POSIXct(character(0))))
+  expect_equal(nrow(e$curve), 0)
+  expect_false(e$summary$saturated)
+  expect_error(code_saturation(data.frame(x = 1)), "assignments must have")
+  expect_error(code_saturation(tibble::tibble(unit_id = "u", code = "a", status = "human",
+                                              timestamp = Sys.time()), window = 0), "window")
+})

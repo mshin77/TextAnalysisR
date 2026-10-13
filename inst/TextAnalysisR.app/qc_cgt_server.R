@@ -768,6 +768,70 @@ observeEvent(input$qc_ann_none, {
   })
 })
 
+# raw vs curated groups
+
+qc_alignment <- reactive({
+  u <- qc_units()
+  req(u, nrow(qc_rulings_rv()) > 0)
+  tryCatch(TextAnalysisR::align_categories(qc_groups(), u$groups0, unassigned = "0"), error = function(e) NULL)
+})
+
+output$has_qc_alignment <- reactive(!is.null(qc_alignment()))
+outputOptions(output, "has_qc_alignment", suspendWhenHidden = FALSE)
+
+output$qc_align_note <- renderUI({
+  a <- qc_alignment()
+  req(a)
+  ari <- if (is.na(a$adjusted_rand)) "not defined" else format(round(a$adjusted_rand, 3), nsmall = 3)
+  tags$p(class = "qc-tip", sprintf(
+    "Adjusted Rand index %s over %d units: 1 means the rulings left the clusters unchanged, near 0 means unrelated.",
+    ari, a$n))
+})
+
+output$qc_align_table <- DT::renderDataTable({
+  b <- qc_alignment()$best_match
+  req(b)
+  dt_table(setNames(b, c("Curated group", "Raw cluster", "Units", "Share")), rownames = FALSE,
+           selection = "none", options = list(dom = "t")) %>% DT::formatPercentage("Share", 1)
+})
+
+# saturation
+
+qc_saturation <- reactive({
+  a <- qc_project()$assignments
+  a <- a[is.na(a$stage) | a$stage != "confirm", , drop = FALSE]
+  TextAnalysisR::code_saturation(a, window = 10)
+})
+
+output$has_qc_saturation <- reactive(nrow(qc_saturation()$curve) > 0)
+outputOptions(output, "has_qc_saturation", suspendWhenHidden = FALSE)
+
+output$qc_saturation_note <- renderUI({
+  s <- qc_saturation()$summary
+  msg <- if (s$saturated) {
+    sprintf("No new code in the last %d units (%d codes after %d units).", s$window, s$n_codes, s$n_units)
+  } else if (is.na(s$last_new_step)) {
+    sprintf("%d units coded, no codes yet.", s$n_units)
+  } else {
+    sprintf("New codes are still appearing: last new code at unit %d of %d (%d codes).", s$last_new_step, s$n_units, s$n_codes)
+  }
+  tags$p(class = "qc-tip", msg)
+})
+
+output$qc_saturation_plot <- plotly::renderPlotly({
+  d <- qc_saturation()$curve
+  req(nrow(d) > 0)
+  d$tip <- sprintf("Unit %d: %d codes%s", d$step, d$distinct_codes,
+                   ifelse(d$new_codes > 0, sprintf(" (+%d new)", d$new_codes), ""))
+  p <- ggplot2::ggplot(d, ggplot2::aes(x = step, y = distinct_codes, text = tip)) +
+    ggplot2::geom_step(color = "#4269BF", group = 1) +
+    ggplot2::geom_point(data = d[d$new_codes > 0, , drop = FALSE], color = "#4269BF", size = 1.5) +
+    ggplot2::labs(x = "Units coded", y = "Distinct codes") +
+    ggplot2::scale_y_continuous(breaks = function(l) unique(round(pretty(l)))) +
+    ggplot2::theme_minimal(base_size = 14)
+  gg_to_plotly(p)
+})
+
 # memos
 
 qc_memo_list <- function(memos) {

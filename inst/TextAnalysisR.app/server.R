@@ -19137,6 +19137,45 @@ server <- shinyServer(function(input, output, session) {
     )
   })
 
+  observeEvent(input$embedding_stability, {
+    texts <- residue_texts() %||% analysis_texts()
+    emb <- embeddings_cache$embeddings
+    from_api <- (input$topic_embedding_provider %||% "sentence-transformers") != "sentence-transformers"
+    if (from_api && (is.null(emb) || nrow(emb) != length(texts))) {
+      showNotification("Run the model first so the embeddings exist.", type = "warning", duration = 7)
+      return()
+    }
+    showNotification("Refitting with five seeds...", type = "message", duration = NULL, id = "embedding_stability_note")
+    on.exit(removeNotification("embedding_stability_note"), add = TRUE)
+    res <- tryCatch(TextAnalysisR::assess_embedding_stability(
+      texts, n_runs = 5, embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2",
+      precomputed_embeddings = if (from_api) emb, verbose = FALSE,
+      method = paste0(input$embedding_dimred_method %||% "umap", "_", input$embedding_method_r %||% "dbscan"),
+      backend = "r",
+      umap_neighbors = min(input$embedding_r_umap_neighbors %||% 15, max(2L, length(texts) - 1L)),
+      umap_n_components = input$embedding_r_umap_n_components %||% 5,
+      umap_min_dist = input$embedding_r_umap_min_dist %||% 0,
+      dbscan_eps = input$embedding_dbscan_eps %||% 0.5,
+      dbscan_minpts = input$embedding_dbscan_minpts %||% 5,
+      min_topic_size = input$embedding_r_min_cluster_size %||% 5,
+      reduce_outliers = input$embedding_r_reduce_outliers %||% TRUE),
+      error = function(e) e)
+    if (inherits(res, "error")) {
+      showNotification(paste("Stability check failed:", conditionMessage(res)), type = "error", duration = 8)
+      return()
+    }
+    m <- res$stability_metrics
+    shiny::showModal(shiny::modalDialog(
+      title = "Seed Stability",
+      dt_table(data.frame(
+        Metric = c("Runs", "Mean ARI", "SD of ARI", "Mean keyword overlap"),
+        Value = c(m$n_successful_runs, format(round(c(m$mean_ari, m$sd_ari, m$mean_jaccard), 3), nsmall = 3))),
+        rownames = FALSE, selection = "none", options = list(dom = "t")),
+      tags$p(res$recommendation, style = "margin-top: 10px;"),
+      tags$p("ARI compares the topic assignments of each pair of runs; 1 means identical.", class = "qc-tip"),
+      footer = shiny::modalButton("Close"), easyClose = TRUE))
+  })
+
   observeEvent(input$embedding_run, {
     embedding_displayed(FALSE)
 
