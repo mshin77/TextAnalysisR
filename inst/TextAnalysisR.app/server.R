@@ -20872,6 +20872,11 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$stm_display, {
+    n_shown <- if (isTRUE(input$topic_number > 0)) input$topic_number else (input$K_number %||% 2)
+    updateSliderInput(session, "height_topic_prevalence", value = min(4000, max(250, n_shown * 90 + 160)))
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$stm_display, {
     gamma_data <- gamma_terms()
     if (is.null(gamma_data)) {
       shiny::showModal(shiny::modalDialog(
