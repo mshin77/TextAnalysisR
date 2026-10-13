@@ -266,11 +266,12 @@ qc_with_colors <- function(cb) {
   cb[] <- lapply(cb, as.character)
   if (!"example" %in% names(cb)) cb$example <- NA_character_
   if (!"color" %in% names(cb)) cb$color <- NA_character_
+  if (!"theme" %in% names(cb)) cb$theme <- NA_character_
   cb$color[!grepl("^#[0-9A-Fa-f]{6}$", cb$color %||% "")] <- NA_character_
   free <- setdiff(qc_code_palette, cb$color)
   need <- which(is.na(cb$color))
   cb$color[need] <- rep_len(if (length(free)) free else qc_code_palette, length(need))
-  cb[, c("code", "definition", "example", "color")]
+  cb[, c("code", "definition", "example", "color", "theme")]
 }
 
 observeEvent(qc_codebook(), {
@@ -766,6 +767,22 @@ observeEvent(input$qc_ann_none, {
     p$assignments <- dplyr::bind_rows(p$assignments[!mine, ], row)
     p
   })
+})
+
+# themes
+
+qc_themes <- reactive({
+  cb <- qc_codebook()
+  req(cb, "theme" %in% names(cb), any(nzchar(trimws(cb$theme %||% ""))))
+  TextAnalysisR::code_themes(qc_project()$assignments, cb)
+})
+
+output$has_qc_themes <- reactive(!is.null(tryCatch(qc_themes(), error = function(e) NULL)))
+outputOptions(output, "has_qc_themes", suspendWhenHidden = FALSE)
+
+output$qc_themes_table <- DT::renderDataTable({
+  dt_table(setNames(qc_themes(), c("Theme", "Codes", "Code count", "Units", "Documents")),
+           rownames = FALSE, selection = "none", options = list(dom = "t"))
 })
 
 # raw vs curated groups

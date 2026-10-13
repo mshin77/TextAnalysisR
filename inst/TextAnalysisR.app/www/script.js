@@ -784,3 +784,20 @@ $(document).ready(function() {
     gear.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 })();
+
+(function () {
+  var pending = false;
+  var label = function () {
+    pending = false;
+    document.querySelectorAll('.input-group > input.form-control[readonly]:not([aria-label])').forEach(function (el) {
+      el.setAttribute('aria-label', 'Selected file');
+    });
+  };
+  var watch = function () {
+    new MutationObserver(function () {
+      if (!pending) { pending = true; requestAnimationFrame(label); }
+    }).observe(document.body, { childList: true, subtree: true });
+    label();
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+})();

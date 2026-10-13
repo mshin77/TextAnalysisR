@@ -150,6 +150,7 @@ reference:
   - log_round
   - round_summary
   - code_saturation
+  - code_themes
   - validate_categories
   - assign_noise
   - align_categories

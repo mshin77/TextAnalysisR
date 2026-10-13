@@ -185,3 +185,24 @@ test_that("code_saturation handles no coded units and bad input", {
   expect_error(code_saturation(tibble::tibble(unit_id = "u", code = "a", status = "human",
                                               timestamp = Sys.time()), window = 0), "window")
 })
+
+test_that("code_themes counts units and documents per theme", {
+  cb <- tibble::tibble(code = c("a", "b", "c", "d"), theme = c("Access", "Access", "Cost", NA))
+  a <- tibble::tibble(
+    unit_id = c("u1", "u1", "u2", "u3", "u4"), doc_id = c("d1", "d1", "d1", "d2", "d3"),
+    code = c("a", "b", "a", "c", "d"), status = c("human", "human", "ai-confirmed", "human", "human"))
+  out <- code_themes(a, cb)
+  expect_equal(out$theme, c("Access", "Cost", "(no theme)"))
+  expect_equal(out$n_codes, c(2L, 1L, 1L))
+  expect_equal(out$n_units, c(2L, 1L, 1L))
+  expect_equal(out$n_docs, c(1L, 1L, 1L))
+  expect_equal(out$codes[1], "a, b")
+})
+
+test_that("code_themes keeps a theme with no coded units and rejects bad input", {
+  cb <- tibble::tibble(code = c("a", "z"), theme = c("Access", "Unused"))
+  a <- tibble::tibble(unit_id = "u1", doc_id = "d1", code = "a", status = "human")
+  expect_equal(code_themes(a, cb)$n_units, c(1L, 0L))
+  expect_error(code_themes(a, data.frame(code = "a")), "codebook must have")
+  expect_error(code_themes(data.frame(x = 1), cb), "assignments must have")
+})

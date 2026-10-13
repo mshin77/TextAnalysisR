@@ -4179,7 +4179,7 @@ qualitative_coding_ui_content <- function() {
           "Define codes with definitions, upload a CSV, or seed codes from topic labels."
         ),
         fileInput("qc_codebook_file", "Upload codebook (CSV)", accept = c(".csv")),
-        tags$p("Columns: code, definition, optional example.",
+        tags$p("Columns: code, definition, optional example and theme.",
                style = "font-size: 16px; color: #475569; margin-top: -4px;"),
         actionButton("qc_add_code", "Add Row", class = "btn-primary btn-block"),
         br(),
@@ -4343,6 +4343,12 @@ qualitative_coding_ui_content <- function() {
           div(
             style = "padding: 20px;",
             DT::dataTableOutput("qc_codebook_table"),
+            conditionalPanel(
+              condition = "output.has_qc_themes == true",
+              br(),
+              h4("Themes"),
+              DT::dataTableOutput("qc_themes_table")
+            ),
             conditionalPanel(
               condition = "output.has_qc_codebook == true",
               tags$p("Double-click a cell to edit. Codes without definitions weaken AI suggestions.",

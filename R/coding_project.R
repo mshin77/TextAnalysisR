@@ -22,7 +22,8 @@
 .project_tables <- function() {
   return(list(
     codebook = tibble::tibble(code = character(0), definition = character(0),
-                              example = character(0), color = character(0)),
+                              example = character(0), color = character(0),
+                              theme = character(0)),
     assignments = tibble::tibble(doc_id = character(0), unit_id = character(0),
                                  start = integer(0), end = integer(0),
                                  code = character(0), coder = character(0),

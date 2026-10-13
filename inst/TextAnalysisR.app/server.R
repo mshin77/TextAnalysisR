@@ -19167,10 +19167,11 @@ server <- shinyServer(function(input, output, session) {
     m <- res$stability_metrics
     shiny::showModal(shiny::modalDialog(
       title = "Seed Stability",
-      dt_table(data.frame(
-        Metric = c("Runs", "Mean ARI", "SD of ARI", "Mean keyword overlap"),
-        Value = c(m$n_successful_runs, format(round(c(m$mean_ari, m$sd_ari, m$mean_jaccard), 3), nsmall = 3))),
-        rownames = FALSE, selection = "none", options = list(dom = "t")),
+      tags$table(class = "table table-condensed",
+        tags$tbody(mapply(function(k, v) tags$tr(tags$td(k), tags$td(v)),
+          c("Runs", "Mean ARI", "SD of ARI", "Mean keyword overlap"),
+          c(m$n_successful_runs, format(round(c(m$mean_ari, m$sd_ari, m$mean_jaccard), 3), nsmall = 3)),
+          SIMPLIFY = FALSE, USE.NAMES = FALSE))),
       tags$p(res$recommendation, style = "margin-top: 10px;"),
       tags$p("ARI compares the topic assignments of each pair of runs; 1 means identical.", class = "qc-tip"),
       footer = shiny::modalButton("Close"), easyClose = TRUE))
@@ -21618,13 +21619,14 @@ server <- shinyServer(function(input, output, session) {
     if (!"example" %in% names(cb)) cb$example <- NA_character_
     # numeric codes in a CSV would not bind with the character rows added later
     cb[] <- lapply(cb, function(col) ifelse(is.na(col), NA_character_, as.character(col)))
-    keep <- intersect(c("code", "definition", "example", "color"), names(cb))
+    if (!"theme" %in% names(cb)) cb$theme <- NA_character_
+    keep <- intersect(c("code", "definition", "example", "color", "theme"), names(cb))
     qc_codebook(tibble::as_tibble(cb[, keep]))
     qc_codebook_source(unique(c(qc_codebook_source(), "Uploaded")))
   })
 
   observeEvent(input$qc_add_code, {
-    blank <- tibble::tibble(code = "", definition = "", example = NA_character_)
+    blank <- tibble::tibble(code = "", definition = "", example = NA_character_, theme = NA_character_)
     current <- qc_codebook()
     if (!is.null(current)) current[] <- lapply(current, as.character)
     qc_codebook(if (is.null(current)) blank else dplyr::bind_rows(current, blank))
@@ -21639,7 +21641,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification("No topic labels available to seed from.", type = "warning", duration = 7)
       return()
     }
-    seeded <- tibble::tibble(code = labels, definition = "", example = NA_character_)
+    seeded <- tibble::tibble(code = labels, definition = "", example = NA_character_, theme = NA_character_)
     current <- qc_codebook()
     if (!is.null(current)) current[] <- lapply(current, as.character)
     combined <- if (is.null(current)) seeded else dplyr::bind_rows(current, seeded)
