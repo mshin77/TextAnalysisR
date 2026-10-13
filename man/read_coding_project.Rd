@@ -15,6 +15,9 @@ A list of class \code{coding_project}.
 \description{
 Reads a project saved by \code{\link[=save_coding_project]{save_coding_project()}}. Tables and columns added
 in later versions are filled in empty, so older files open without loss.
+Rows written before stage tags existed get their \code{stage} from what they are:
+verdicts and rounds are "refine", holdout units are "confirm", other codes
+and unit memos are "annotate", and category memos are "refine".
 }
 \seealso{
 \code{\link[=save_coding_project]{save_coding_project()}}.

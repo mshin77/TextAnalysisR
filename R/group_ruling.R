@@ -9,7 +9,8 @@
     label = character(0),
     definition = character(0),
     coder = character(0),
-    timestamp = as.POSIXct(character(0))))
+    timestamp = as.POSIXct(character(0)),
+    stage = character(0)))
 }
 
 #' @keywords internal

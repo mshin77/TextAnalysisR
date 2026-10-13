@@ -6,7 +6,8 @@
     target_id = character(0),
     round = integer(0),
     text = character(0),
-    created = as.POSIXct(character(0))))
+    created = as.POSIXct(character(0)),
+    stage = character(0)))
 }
 
 #' @title Attach an Analytic Memo to a Unit or Category
@@ -21,6 +22,8 @@
 #' @param target_id Identifier of the unit or category the memo describes.
 #' @param text The memo. Free text; nothing parses it.
 #' @param round Refinement round the memo belongs to (default 1).
+#' @param stage Stage the memo was written in: "detect", "refine", "annotate",
+#'   or "confirm"; `NA` (default) leaves it unrecorded.
 #'
 #' @return The memo table with one row appended.
 #'
@@ -29,8 +32,11 @@
 #' @concept qualitative-coding
 #' @export
 add_memo <- function(memos = NULL, target_type = c("unit", "category"),
-                     target_id, text, round = 1) {
+                     target_id, text, round = 1, stage = NA_character_) {
   target_type <- match.arg(target_type)
+  if (length(stage) != 1 || (!is.na(stage) && !stage %in% .stage_names)) {
+    stop("stage must be NA or one of: ", paste(.stage_names, collapse = ", "), ".", call. = FALSE)
+  }
   if (is.null(memos)) memos <- .memo_columns()
   if (!is.character(text) || length(text) != 1 || is.na(text)) {
     stop("text must be a single string.", call. = FALSE)
@@ -48,7 +54,8 @@ add_memo <- function(memos = NULL, target_type = c("unit", "category"),
     target_id = as.character(target_id),
     round = as.integer(round),
     text = trimws(text),
-    created = Sys.time())
+    created = Sys.time(),
+    stage = as.character(stage))
   return(dplyr::bind_rows(memos, row))
 }
 

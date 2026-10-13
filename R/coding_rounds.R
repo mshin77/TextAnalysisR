@@ -6,7 +6,8 @@
     n_categories = integer(0),
     n_coded = integer(0),
     n_uncoded = integer(0),
-    notes = character(0)))
+    notes = character(0),
+    stage = character(0)))
 }
 
 #' @keywords internal
@@ -44,7 +45,8 @@ log_round <- function(rounds = NULL, n_categories, n_coded, n_uncoded,
     n_categories = .check_count(n_categories, "n_categories"),
     n_coded = .check_count(n_coded, "n_coded"),
     n_uncoded = .check_count(n_uncoded, "n_uncoded"),
-    notes = as.character(notes))
+    notes = as.character(notes),
+    stage = "refine")
   return(dplyr::bind_rows(rounds, row))
 }
 

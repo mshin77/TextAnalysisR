@@ -119,7 +119,8 @@ test_that("Gemini batch request is a JSON array even for named texts", {
 
 test_that("Gemini chat retries without a thinking budget after a 400 and caps the budget", {
   calls <- list()
-  resp <- function(code, txt) structure(list(status_code = code, headers = list(`content-type` = "application/json"),
+  resp <- function(code, txt) structure(list(url = "https://example.test/chat", status_code = code,
+                                             headers = list(`content-type` = "application/json"),
                                              content = charToRaw(txt)), class = "response")
   ok <- '{"candidates":[{"content":{"parts":[{"text":"hi"}]}}]}'
   testthat::local_mocked_bindings(

@@ -3,7 +3,7 @@
 test_that("add_memo starts a table from NULL", {
   m <- add_memo(NULL, "category", "cost", "Overlaps preparation.")
   expect_equal(nrow(m), 1)
-  expect_named(m, c("memo_id", "target_type", "target_id", "round", "text", "created"))
+  expect_named(m, c("memo_id", "target_type", "target_id", "round", "text", "created", "stage"))
   expect_equal(m$target_type, "category")
   expect_equal(m$target_id, "cost")
   expect_equal(m$round, 1L)
@@ -51,7 +51,7 @@ test_that("add_memo rejects an unknown target type", {
 test_that("get_memos returns an empty table for NULL input", {
   out <- get_memos(NULL)
   expect_equal(nrow(out), 0)
-  expect_named(out, c("memo_id", "target_type", "target_id", "round", "text", "created"))
+  expect_named(out, c("memo_id", "target_type", "target_id", "round", "text", "created", "stage"))
 })
 
 test_that("get_memos with no filter returns everything in order", {
@@ -81,7 +81,7 @@ test_that("log_round starts a table and numbers the first round", {
   r <- log_round(NULL, n_categories = 6, n_coded = 177, n_uncoded = 37)
   expect_equal(nrow(r), 1)
   expect_equal(r$round, 1L)
-  expect_named(r, c("round", "logged", "n_categories", "n_coded", "n_uncoded", "notes"))
+  expect_named(r, c("round", "logged", "n_categories", "n_coded", "n_uncoded", "notes", "stage"))
 })
 
 test_that("log_round increments the round number on its own", {

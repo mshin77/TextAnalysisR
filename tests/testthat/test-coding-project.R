@@ -74,3 +74,32 @@ test_that("read_coding_project fills columns an older file lacks", {
   expect_true(all(names(new_coding_project("A")$rulings) %in% names(back$rulings)))
   expect_true(is.na(back$rulings$label))
 })
+
+test_that("stage tags are recorded and validated", {
+  p <- new_coding_project("a")
+  expect_true(all(c("stage") %in% names(p$assignments), "stage" %in% names(p$memos),
+                  "stage" %in% names(p$rulings), "stage" %in% names(p$rounds)))
+  m <- add_memo(NULL, "unit", "u1", "note", round = 1, stage = "annotate")
+  expect_equal(m$stage, "annotate")
+  expect_true(is.na(add_memo(NULL, "unit", "u1", "note")$stage))
+  expect_error(add_memo(NULL, "unit", "u1", "note", stage = "review"), "stage must be")
+  expect_equal(log_round(NULL, 3, 10, 2)$stage, "refine")
+})
+
+test_that("older project files get stages from what the rows are", {
+  p <- new_coding_project("a")
+  p$holdout <- tibble::tibble(unit_id = "u2")
+  p$assignments <- tibble::tibble(doc_id = c("d1", "d2"), unit_id = c("u1", "u2"), start = 1L, end = 5L,
+                                  code = "x", coder = "a", confidence = NA_real_, rationale = NA_character_,
+                                  status = "human", timestamp = Sys.time())
+  p$memos <- dplyr::bind_rows(add_memo(NULL, "unit", "u1", "n"), add_memo(NULL, "category", "x", "n"))
+  p$memos$stage <- NULL
+  p$rulings <- tibble::tibble(round = 1L, group = "g1", n = 4L, verdict = "keep", merge_with = NA_character_,
+                              label = "L", definition = "D", coder = "a", timestamp = Sys.time())
+  path <- tempfile(fileext = ".rds")
+  saveRDS(unclass(p), path)
+  q <- read_coding_project(path)
+  expect_equal(q$assignments$stage, c("annotate", "confirm"))
+  expect_equal(q$memos$stage, c("annotate", "refine"))
+  expect_equal(q$rulings$stage, "refine")
+})

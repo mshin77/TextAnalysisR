@@ -2,6 +2,27 @@
 .project_version <- 1L
 
 #' @keywords internal
+.stage_names <- c("detect", "refine", "annotate", "confirm")
+
+#' @keywords internal
+.fill_stages <- function(project) {
+  holdout <- project$holdout$unit_id
+  fill <- function(x, value) { x[is.na(x)] <- value[is.na(x)]; x }
+  if (nrow(project$assignments) > 0) {
+    project$assignments$stage <- fill(project$assignments$stage,
+      ifelse(project$assignments$unit_id %in% holdout, "confirm", "annotate"))
+  }
+  if (nrow(project$memos) > 0) {
+    project$memos$stage <- fill(project$memos$stage,
+      ifelse(project$memos$target_type == "category", "refine",
+             ifelse(project$memos$target_id %in% holdout, "confirm", "annotate")))
+  }
+  if (nrow(project$rulings) > 0) project$rulings$stage <- fill(project$rulings$stage, rep("refine", nrow(project$rulings)))
+  if (nrow(project$rounds) > 0) project$rounds$stage <- fill(project$rounds$stage, rep("refine", nrow(project$rounds)))
+  return(project)
+}
+
+#' @keywords internal
 .project_tables <- function() {
   return(list(
     codebook = tibble::tibble(code = character(0), definition = character(0),
@@ -11,7 +32,8 @@
                                  code = character(0), coder = character(0),
                                  confidence = numeric(0), rationale = character(0),
                                  status = character(0),
-                                 timestamp = as.POSIXct(character(0))),
+                                 timestamp = as.POSIXct(character(0)),
+                                 stage = character(0)),
     memos = .memo_columns(),
     positionality = tibble::tibble(coder = character(0), statement = character(0),
                                    timestamp = as.POSIXct(character(0))),
@@ -91,6 +113,9 @@ save_coding_project <- function(project, path, backup = TRUE) {
 #' @description
 #' Reads a project saved by [save_coding_project()]. Tables and columns added
 #' in later versions are filled in empty, so older files open without loss.
+#' Rows written before stage tags existed get their `stage` from what they are:
+#' verdicts and rounds are "refine", holdout units are "confirm", other codes
+#' and unit memos are "annotate", and category memos are "refine".
 #'
 #' @param path Path to the `.rds` file.
 #'
@@ -115,6 +140,7 @@ read_coding_project <- function(path) {
     for (col in absent) raw[[tbl]][[col]] <- rep(tables[[tbl]][[col]][NA_integer_], nrow(raw[[tbl]]))
   }
   raw$version <- .project_version
+  raw <- .fill_stages(raw)
   return(structure(raw, class = "coding_project"))
 }
 

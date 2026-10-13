@@ -9,7 +9,8 @@ add_memo(
   target_type = c("unit", "category"),
   target_id,
   text,
-  round = 1
+  round = 1,
+  stage = NA_character_
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ add_memo(
 \item{text}{The memo. Free text; nothing parses it.}
 
 \item{round}{Refinement round the memo belongs to (default 1).}
+
+\item{stage}{Stage the memo was written in: "detect", "refine", "annotate",
+or "confirm"; \code{NA} (default) leaves it unrecorded.}
 }
 \value{
 The memo table with one row appended.

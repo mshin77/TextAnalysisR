@@ -293,7 +293,7 @@ observeEvent(qc_suggestions(), {
     start = as.integer(confirmed$start), end = as.integer(confirmed$end),
     code = as.character(confirmed$code), coder = isolate(qc_coder()),
     confidence = as.numeric(confirmed$confidence), rationale = as.character(confirmed$rationale),
-    status = "ai-confirmed", timestamp = qc_now())
+    status = "ai-confirmed", timestamp = qc_now(), stage = "annotate")
   covered <- unique(as.character(s$unit_id))
   qc_edit_project(function(p) {
     stale <- p$assignments$status == "ai-confirmed" & p$assignments$unit_id %in% covered
@@ -554,7 +554,7 @@ observeEvent(input$qc_close_round, {
     merge_with = ifelse(verdicts == "merge", merge_to, NA_character_),
     label = labels,
     definition = vapply(ev$group, function(g) trimws(value("qc_d_", g, "")), character(1)),
-    coder = qc_coder(), timestamp = qc_now())
+    coder = qc_coder(), timestamp = qc_now(), stage = "refine")
   u <- qc_units()
   notes <- character(0)
   withCallingHandlers(
@@ -591,6 +591,8 @@ output$qc_download_rulings <- downloadHandler(
 )
 
 # annotation
+
+qc_stage_of <- function(id) if (id %in% qc_holdout_rv()$unit_id) "confirm" else "annotate"
 
 qc_ann_units <- reactive({
   u <- qc_units()
@@ -731,7 +733,7 @@ observeEvent(input$qc_ann_apply, {
   }
   row <- tibble::tibble(doc_id = qc_doc_id(cur$id), unit_id = cur$id, start = start, end = end,
                         code = code, coder = qc_coder(), confidence = NA_real_, rationale = NA_character_,
-                        status = "human", timestamp = qc_now())
+                        status = "human", timestamp = qc_now(), stage = qc_stage_of(cur$id))
   qc_edit_project(function(p) {
     keep <- !(p$assignments$unit_id == cur$id & p$assignments$coder == p$coder & p$assignments$status == "human-none")
     p$assignments <- dplyr::bind_rows(p$assignments[keep, ], row)
@@ -757,7 +759,7 @@ observeEvent(input$qc_ann_none, {
   req(cur)
   row <- tibble::tibble(doc_id = qc_doc_id(cur$id), unit_id = cur$id, start = 1L, end = nchar(cur$text),
                         code = NA_character_, coder = qc_coder(), confidence = NA_real_, rationale = NA_character_,
-                        status = "human-none", timestamp = qc_now())
+                        status = "human-none", timestamp = qc_now(), stage = qc_stage_of(cur$id))
   qc_edit_project(function(p) {
     mine <- p$assignments$unit_id == cur$id & p$assignments$coder == p$coder &
       p$assignments$status %in% c("human", "human-none")
@@ -771,7 +773,7 @@ observeEvent(input$qc_ann_save_memo, {
   txt <- trimws(input$qc_ann_memo %||% "")
   req(cur, nzchar(txt))
   qc_edit_project(function(p) {
-    p$memos <- TextAnalysisR::add_memo(p$memos, "unit", cur$id, txt, round = qc_round())
+    p$memos <- TextAnalysisR::add_memo(p$memos, "unit", cur$id, txt, round = qc_round(), stage = qc_stage_of(cur$id))
     p
   })
   showNotification("Memo saved.", type = "message", duration = 3)
