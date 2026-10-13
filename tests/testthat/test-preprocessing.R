@@ -97,10 +97,10 @@ test_that("unite_cols keeps blank-line paragraph breaks and flattens single newl
 })
 
 test_that(".fix_broken_chars restores apostrophes and drops stray markers", {
-  x <- c("don�t stop", "cafï¿½ ", "clean")
+  x <- c("don\ufffdt stop", "caf\u00ef\u00bf\u00bd ", "clean")
   expect_equal(TextAnalysisR:::.fix_broken_chars(x), c("don't stop", "caf ", "clean"))
 })
 
 test_that(".fix_broken_chars handles fraction-expanded markers", {
-  expect_equal(TextAnalysisR:::.fix_broken_chars("SAMGï¿1⁄2ï¿1⁄2s office"), "SAMG's office")
+  expect_equal(TextAnalysisR:::.fix_broken_chars("SAMG\u00ef\u00bf1\u20442\u00ef\u00bf1\u20442s office"), "SAMG's office")
 })

@@ -2009,7 +2009,7 @@ detect_language_llm <- function(texts,
 
 #' @keywords internal
 .fix_broken_chars <- function(x) {
-  broken <- "(ï¿(½|1⁄2)|�)+"
+  broken <- "(\u00ef\u00bf(\u00bd|1\u20442)|\ufffd)+"
   x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
   return(gsub(broken, "", x, perl = TRUE))
 }
