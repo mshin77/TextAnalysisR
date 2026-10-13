@@ -773,7 +773,7 @@ observeEvent(input$qc_ann_none, {
 
 qc_themes <- reactive({
   cb <- qc_codebook()
-  req(cb, "theme" %in% names(cb), any(nzchar(trimws(cb$theme %||% ""))))
+  req(cb, "theme" %in% names(cb), any(!is.na(cb$theme) & nzchar(trimws(cb$theme))))
   TextAnalysisR::code_themes(qc_project()$assignments, cb)
 })
 
