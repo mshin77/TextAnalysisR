@@ -19836,6 +19836,11 @@ server <- shinyServer(function(input, output, session) {
     input$stm_ncol_top_terms %||% 2
   }
 
+  observeEvent(input$stm_run, {
+    rows <- ceiling((input$K_number %||% 2) / get_ncol_top_terms())
+    updateSliderInput(session, "height", value = min(4000, max(400, rows * (get_top_term_number() * 45 + 80))))
+  }, ignoreInit = TRUE)
+
   stm_topic_terms <- reactive({
     if (is.null(topic_model_result())) {
       return(NULL)
