@@ -768,6 +768,48 @@ observeEvent(input$qc_ann_none, {
   })
 })
 
+# memos
+
+qc_memo_list <- function(memos) {
+  if (nrow(memos) == 0) return(tags$p(class = "qc-tip", "No memos yet."))
+  memos <- memos[order(memos$created, decreasing = TRUE), , drop = FALSE]
+  tags$ul(class = "qc-memo-list", lapply(seq_len(nrow(memos)), function(i) {
+    stage <- if (is.na(memos$stage[i])) "memo" else memos$stage[i]
+    tags$li(tags$span(class = "qc-memo-meta", sprintf("%s, round %s", stage, memos$round[i])), memos$text[i])
+  }))
+}
+
+observe({
+  updateSelectInput(session, "qc_cat_memo_code", choices = qc_codebook()$code)
+})
+
+output$qc_cat_memo_list <- renderUI({
+  req(input$qc_cat_memo_code)
+  qc_memo_list(TextAnalysisR::get_memos(qc_project()$memos, "category", input$qc_cat_memo_code))
+})
+
+output$qc_ann_memo_list <- renderUI({
+  cur <- qc_ann_current()
+  req(cur)
+  qc_memo_list(TextAnalysisR::get_memos(qc_project()$memos, "unit", cur$id))
+})
+
+observeEvent(input$qc_cat_memo_save, {
+  code <- input$qc_cat_memo_code
+  txt <- trimws(input$qc_cat_memo %||% "")
+  req(nzchar(code %||% ""), nzchar(txt))
+  qc_edit_project(function(p) {
+    p$memos <- TextAnalysisR::add_memo(p$memos, "category", code, txt, round = qc_round(), stage = "refine")
+    p
+  })
+  updateTextAreaInput(session, "qc_cat_memo", value = "")
+})
+
+output$qc_download_memos <- downloadHandler(
+  filename = function() paste0("memos-", Sys.Date(), ".csv"),
+  content = function(file) utils::write.csv(qc_project()$memos, file, row.names = FALSE)
+)
+
 observeEvent(input$qc_ann_save_memo, {
   cur <- qc_ann_current()
   txt <- trimws(input$qc_ann_memo %||% "")

@@ -3420,3 +3420,14 @@ body.splash-on .shinybusy-overlay { display: none !important; }
 .modal-content:has(.modal-footer > button:only-child) .modal-body {
   order: 2;
 }
+
+.qc-memo-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: var(--font-size-msg);
+}
+
+.qc-memo-meta {
+  margin-right: 6px;
+  color: var(--color-text-muted);
+}

@@ -4161,7 +4161,8 @@ qualitative_coding_ui_content <- function() {
         tags$p("Groups are optional. Without them, every unit is loose. With them, loose units are the ones no group holds.",
                class = "qc-tip"),
         textAreaInput("qc_ann_memo", "Memo on this unit", rows = 3, width = "100%"),
-        actionButton("qc_ann_save_memo", "Save memo", class = "btn-default btn-sm")
+        actionButton("qc_ann_save_memo", "Save memo", class = "btn-default btn-sm"),
+        uiOutput("qc_ann_memo_list")
       ),
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_codebook'",
@@ -4180,7 +4181,13 @@ qualitative_coding_ui_content <- function() {
         conditionalPanel(
           condition = "output.has_generated_labels == true",
           actionButton("qc_seed_labels", "Seed from Topic Labels", class = "btn-primary btn-block")
-        )
+        ),
+        tags$hr(),
+        tags$h5(strong("Memo on a code"), style = "color: #4269BF; margin-bottom: 10px;"),
+        selectInput("qc_cat_memo_code", NULL, choices = NULL),
+        textAreaInput("qc_cat_memo", NULL, rows = 3, width = "100%", placeholder = "Why this code, and what changed"),
+        actionButton("qc_cat_memo_save", "Save memo", class = "btn-default btn-sm"),
+        uiOutput("qc_cat_memo_list")
       ),
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_ai'",
@@ -4278,7 +4285,8 @@ qualitative_coding_ui_content <- function() {
           class = "qc-btn-row",
           downloadButton("qc_download_accepted_csv", "CSV", class = "btn-default"),
           downloadButton("qc_download_accepted_xlsx", "Excel", class = "btn-default")
-        )
+        ),
+        downloadButton("qc_download_memos", "Export memos", class = "btn-default btn-block", style = "margin-top: 8px;")
       ),
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_agree'",
