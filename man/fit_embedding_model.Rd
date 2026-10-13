@@ -30,7 +30,8 @@ fit_embedding_model(
   outlier_threshold = 0,
   seed = 123,
   verbose = TRUE,
-  precomputed_embeddings = NULL
+  precomputed_embeddings = NULL,
+  stop_words = NULL
 )
 }
 \arguments{
@@ -111,6 +112,9 @@ Higher values require stronger evidence for reassignment.}
 \item{precomputed_embeddings}{Optional matrix of pre-computed document embeddings.
 If provided, skips embedding generation to avoid recomputation. Must have
 the same number of rows as the length of texts.}
+
+\item{stop_words}{Optional stop words for the BERTopic keywords: "english" or a
+character vector. Applies to the "umap_hdbscan" method with the Python backend.}
 }
 \value{
 A list containing topic assignments, topic keywords, and quality metrics.

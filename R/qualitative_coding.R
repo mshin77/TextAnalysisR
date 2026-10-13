@@ -316,6 +316,8 @@ generate_codes <- function(texts, codebook = NULL,
 #' @param max_tokens Response token cap; `NULL` (default) scales with `max_codes`.
 #' @param delay Seconds to wait between provider calls (default 1).
 #' @param verbose Logical; print per-unit progress (default TRUE).
+#' @param seed Optional integer sent to OpenAI as the request seed; recorded
+#'   by [code_provenance()].
 #'
 #' @return A tibble with one row per unit-code pair: `doc_id`, `unit_id`,
 #'   `start`, `end` (character offsets of the unit within its document),
@@ -332,7 +334,7 @@ apply_codes <- function(texts, codebook,
                         max_codes = 3,
                         provider = c("auto", "openai", "gemini", "ollama"),
                         model = NULL, temperature = 0, api_key = NULL,
-                        max_tokens = NULL, delay = 1, verbose = TRUE) {
+                        max_tokens = NULL, delay = 1, verbose = TRUE, seed = NULL) {
   unit <- match.arg(unit)
   provider <- match.arg(provider)
   max_codes <- max(1L, as.integer(max_codes))
@@ -365,13 +367,19 @@ apply_codes <- function(texts, codebook,
 
   valid_codes <- codebook$code
   n_units <- nrow(units_tbl)
+  served <- new.env()
+  served$model <- character(0)
+  served$fingerprint <- character(0)
   rows <- lapply(seq_len(n_units), function(i) {
     if (verbose) message("Coding unit ", i, " of ", n_units)
     parsed <- tryCatch({
       response <- call_llm_api(
         provider = provider, system_prompt = system_prompt,
         user_prompt = units_tbl$unit_text[i], model = model,
-        temperature = temperature, max_tokens = max_tokens, api_key = api_key)
+        temperature = temperature, max_tokens = max_tokens, api_key = api_key,
+        seed = seed)
+      served$model <- c(served$model, attr(response, "served_model"))
+      served$fingerprint <- c(served$fingerprint, attr(response, "system_fingerprint"))
       .parse_codes_response(response, valid_codes, max_codes)
     }, error = function(e) {
       tibble::tibble(code = NA_character_, confidence = NA_real_,
@@ -396,8 +404,35 @@ apply_codes <- function(texts, codebook,
             call. = FALSE)
   }
   out <- out[, setdiff(names(out), "offscale")]
-  attr(out, "llm") <- list(provider = provider, model = model, temperature = temperature)
+  attr(out, "llm") <- list(
+    provider = provider, model = model, temperature = temperature, seed = seed,
+    served_model = paste(sort(unique(served$model)), collapse = "; "),
+    system_fingerprint = paste(sort(unique(served$fingerprint)), collapse = "; "),
+    prompt_hash = rlang::hash(.with_us_english(system_prompt)), codebook_hash = rlang::hash(codebook),
+    unit = unit, max_codes = max_codes, n_units = n_units,
+    package_version = as.character(utils::packageVersion("TextAnalysisR")),
+    run_time = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"))
   out
+}
+
+#' @title Coding Run Provenance
+#'
+#' @description
+#' Returns the settings recorded by [apply_codes()] as a one-row tibble:
+#' provider, model, temperature, prompt and codebook hashes, unit, package
+#' version, and run time. Pass a model id with a dated snapshot (for example
+#' "gpt-4o-2024-08-06") to `apply_codes()` so the run can be repeated.
+#'
+#' @param x Output of [apply_codes()].
+#'
+#' @return A one-row tibble.
+#' @concept qualitative-coding
+#' @export
+code_provenance <- function(x) {
+  info <- attr(x, "llm")
+  if (is.null(info)) stop("x has no recorded settings; pass the output of apply_codes().", call. = FALSE)
+  info$model <- info$model %||% NA_character_
+  tibble::as_tibble(lapply(info, function(v) if (is.null(v)) NA else v))
 }
 
 #' @title AI Coding Retest Stability

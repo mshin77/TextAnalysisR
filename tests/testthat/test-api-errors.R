@@ -105,3 +105,39 @@ test_that(".missing_api_key_message returns shiny format for gemini", {
   expect_match(msg, "Gemini API key required")
   expect_match(msg, "GEMINI_API_KEY")
 })
+
+test_that("Gemini batch request is a JSON array even for named texts", {
+  captured <- NULL
+  testthat::local_mocked_bindings(
+    .http_post = function(url, ..., body = NULL, encode = NULL) {
+      captured <<- body
+      stop("stop after capture")
+    })
+  try(get_gemini_embeddings(c(doc1.1 = "a", doc1.2 = "b"), "m", "k"), silent = TRUE)
+  expect_true(grepl('"requests":[{', as.character(captured), fixed = TRUE))
+})
+
+test_that("Gemini chat retries without a thinking budget after a 400 and caps the budget", {
+  calls <- list()
+  resp <- function(code, txt) structure(list(status_code = code, headers = list(`content-type` = "application/json"),
+                                             content = charToRaw(txt)), class = "response")
+  ok <- '{"candidates":[{"content":{"parts":[{"text":"hi"}]}}]}'
+  testthat::local_mocked_bindings(
+    .http_post = function(url, ..., body = NULL, encode = NULL) {
+      calls[[length(calls) + 1]] <<- body
+      if (length(calls) == 1) resp(400L, "{}") else resp(200L, ok)
+    })
+  out <- call_gemini_chat("s", "u", max_tokens = 650, api_key = "k")
+  expect_equal(out, "hi")
+  expect_equal(calls[[1]]$generationConfig$thinkingConfig$thinkingBudget, 162L)
+  expect_null(calls[[2]]$generationConfig$thinkingConfig)
+})
+
+test_that("call_llm_api asks for US English spelling in free text", {
+  seen <- NULL
+  testthat::local_mocked_bindings(
+    call_openai_chat = function(system_prompt, ...) { seen <<- system_prompt; "ok" })
+  call_llm_api("openai", "Base prompt.", "user text", api_key = "k")
+  expect_true(startsWith(seen, "Base prompt."))
+  expect_match(seen, "US English spelling")
+})

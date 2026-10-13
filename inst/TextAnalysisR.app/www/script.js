@@ -752,3 +752,35 @@ $(document).ready(function() {
         Shiny.setInputValue('qc_more', this.getAttribute('data-group'), { priority: 'event' });
     });
 })();
+
+(function() {
+    // section titles are h5 for styling; expose them at level 2 under the page h1
+    function levelHeadings(root) {
+        $(root).find('h5:not([aria-level])').attr({ role: 'heading', 'aria-level': '2' });
+    }
+
+    function labelTable(table) {
+        if (table.getAttribute('aria-label')) return;
+        var host = table.closest('.datatables, .shiny-bound-output');
+        var name = host && host.id ? host.id.replace(/_/g, ' ') : 'Data';
+        table.setAttribute('aria-label', 'Table: ' + name);
+    }
+
+    $(document).on('shiny:value', function() {
+        setTimeout(function() { levelHeadings(document); }, 300);
+    });
+    $(document).on('draw.dt', function(event) {
+        labelTable(event.target);
+    });
+    $(document).ready(function() { levelHeadings(document); });
+})();
+
+(function () {
+  document.addEventListener('click', function (e) {
+    var gear = e.target.closest && e.target.closest('#controls_toggle');
+    if (!gear) return;
+    var tray = gear.parentElement;
+    var open = tray.classList.toggle('controls-open');
+    gear.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+})();

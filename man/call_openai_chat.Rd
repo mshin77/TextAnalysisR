@@ -10,7 +10,8 @@ call_openai_chat(
   model = "gpt-4.1-mini",
   temperature = 0,
   max_tokens = 150,
-  api_key
+  api_key,
+  seed = NULL
 )
 }
 \arguments{
@@ -25,9 +26,12 @@ call_openai_chat(
 \item{max_tokens}{Maximum number of tokens to generate (default: 150)}
 
 \item{api_key}{Character string with OpenAI API key}
+
+\item{seed}{Optional integer sent as the request seed (best-effort determinism)}
 }
 \value{
-Character string with the model's response
+Character string with the model's response; attributes
+\code{served_model} and \code{system_fingerprint} record what the provider reported.
 }
 \description{
 Makes a chat completion request to OpenAI's API.

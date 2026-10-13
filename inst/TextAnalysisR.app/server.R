@@ -137,7 +137,7 @@ server <- shinyServer(function(input, output, session) {
       )
       built <- plotly::plotly_build(p)
       has_text <- vapply(built$x$data, function(tr) {
-        !is.null(tr$text) && any(nzchar(as.character(tr$text)))
+        !is.null(tr$text) && any(nzchar(as.character(tr$text))) && !identical(tr$mode, "text")
       }, logical(1))
       text_traces <- which(has_text)
       skip_traces <- which(!has_text)
@@ -398,7 +398,6 @@ server <- shinyServer(function(input, output, session) {
         "Enable image/chart extraction",
         value = FALSE
       ),
-      .remote_notice("Each image, and each PDF page with little text,"),
       conditionalPanel(
         condition = "input.enable_multimodal == true",
         radioButtons("vision_provider",
@@ -412,7 +411,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
-            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
           selectizeInput("openai_vision_model",
@@ -427,7 +426,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("gemini_vision_api_key", "Gemini API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
-            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           ),
           selectizeInput("gemini_vision_model",
@@ -602,7 +601,7 @@ server <- shinyServer(function(input, output, session) {
       total_mb <- sum(input$file$size) / (1024^2)
       if (total_mb > 100) {
         showModal(modalDialog(
-          title = tags$div(style = "color: #f59e0b;", icon("exclamation-triangle"), " Upload Too Large"),
+          title = tags$div(style = "color: var(--color-warning);", icon("exclamation-triangle"), " Upload Too Large"),
           paste0("The selected files total ", round(total_mb, 2),
                  " MB. Keep the combined upload under 100MB."),
           easyClose = TRUE, footer = modalButton("Close")
@@ -847,7 +846,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (length(notes) > 0) {
         showModal(modalDialog(
-          title = tags$div(style = "color: #f59e0b;", icon("exclamation-triangle"), " Some Files Were Skipped"),
+          title = tags$div(style = "color: var(--color-warning);", icon("exclamation-triangle"), " Some Files Were Skipped"),
           tags$div(style = "white-space: pre-wrap; font-size: 16px;",
                    paste0(names(notes), ": ", notes, collapse = "\n\n")),
           easyClose = TRUE, footer = modalButton("Close")
@@ -891,7 +890,7 @@ server <- shinyServer(function(input, output, session) {
     tags$div(
       style = "margin: -4px 0 12px 0;",
       tags$div(
-        style = "font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 4px;",
+        style = "font-size: var(--font-size-sm); font-weight: 600; color: #475569; margin-bottom: 4px;",
         paste0(nrow(files), if (nrow(files) == 1) " file" else " files",
                " - ", round(sum(files$size) / 1024), " KB")
       ),
@@ -900,7 +899,7 @@ server <- shinyServer(function(input, output, session) {
         reason <- if (name %in% names(skipped)) skipped[[name]] else NULL
         tags$div(
           title = if (is.null(reason)) name else paste0(name, " - ", reason),
-          style = paste0("font-size: 13px; color: ",
+          style = paste0("font-size: var(--font-size-sm); color: ",
                          if (is.null(reason)) "#475569;" else "#b45309;"),
           shorten(name)
         )
@@ -921,7 +920,7 @@ server <- shinyServer(function(input, output, session) {
           if (text_size_mb > 50) {
             showModal(modalDialog(
               title = tags$div(
-                style = "color: #f59e0b;",
+                style = "color: var(--color-warning);",
                 icon("exclamation-triangle"),
                 " Content Too Large"
               ),
@@ -935,7 +934,7 @@ server <- shinyServer(function(input, output, session) {
           if (nchar(text_content) < 10) {
             showModal(modalDialog(
               title = tags$div(
-                style = "color: #f59e0b;",
+                style = "color: var(--color-warning);",
                 icon("exclamation-triangle"),
                 " Text Too Short"
               ),
@@ -1173,10 +1172,10 @@ server <- shinyServer(function(input, output, session) {
     if (is.null(corpus) || nrow(corpus) == 0) return(NULL)
     by_source <- table(corpus$source)
     tags$div(
-      style = "font-size: 13px; color: #475569; margin-bottom: 12px;",
+      style = "font-size: var(--font-size-sm); color: #475569; margin-bottom: 12px;",
       tags$strong(paste0(nrow(corpus), " documents")),
       tags$span(paste0(" (", paste(sprintf("%d %s", by_source, names(by_source)), collapse = ", "), ")"),
-                style = "color: #94a3b8;")
+                style = "color: #475569;")
     )
   })
 
@@ -2942,6 +2941,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         as.character(e)
       }
+      error_msg <- sub("^Failed to initialize spaCy: RuntimeError: ", "", strsplit(error_msg, "\n")[[1]][1])
       showNotification(
         paste("Error in spaCy processing:", error_msg),
         type = "error",
@@ -3011,7 +3011,7 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$reset_pipeline, {
     showModal(modalDialog(
       title = tags$div(
-        style = "color: #f59e0b;",
+        style = "color: var(--color-warning);",
         icon("exclamation-triangle"),
         " Reset All Preprocessing?"
       ),
@@ -3676,7 +3676,7 @@ server <- shinyServer(function(input, output, session) {
       return(data.frame(Message = "No morphology data available"))
     }
 
-    DT::datatable(
+    dt_table(
       summary_df,
       rownames = FALSE,
       options = list(
@@ -4571,6 +4571,7 @@ server <- shinyServer(function(input, output, session) {
 
       showNotification(paste0("Domain preset '", preset$name, "' imported successfully"), type = "message")
     }, error = function(e) {
+      if (inherits(e, "shiny.silent.error")) return(NULL)
       showNotification(paste("Error importing file:", e$message), type = "error")
     })
   })
@@ -4664,7 +4665,7 @@ server <- shinyServer(function(input, output, session) {
       color_esc <- htmltools::htmlEscape(color, attribute = TRUE)
       delete_html <- if (is_user_created) {
         paste0("<span class='entity-delete-btn' role='button' tabindex='0' aria-label='Remove ", cat_label_esc, "' data-category='", cat_esc,
-               "' data-source='domain' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
+               "' data-source='domain' title='Remove' style='margin-left:auto;cursor:pointer;color:var(--color-text-muted);font-size:16px;'>",
                "<i class='fa fa-eraser' aria-hidden='true'></i></span>")
       } else ""
 
@@ -4952,7 +4953,7 @@ server <- shinyServer(function(input, output, session) {
       color_esc <- htmltools::htmlEscape(ent$color %||% "", attribute = TRUE)
       delete_html <- paste0(
         "<span class='entity-delete-btn' role='button' tabindex='0' aria-label='Remove ", name_esc, "' data-category='", name_esc,
-        "' data-source='custom' title='Remove' style='margin-left:auto;cursor:pointer;color:#94a3b8;font-size:16px;'>",
+        "' data-source='custom' title='Remove' style='margin-left:auto;cursor:pointer;color:var(--color-text-muted);font-size:16px;'>",
         "<i class='fa fa-eraser' aria-hidden='true'></i></span>"
       )
 
@@ -5727,7 +5728,7 @@ server <- shinyServer(function(input, output, session) {
       display_df <- custom_df %>%
         dplyr::select(Document, `Variable`, `Token`, Frequency, `First Sentence`, Notes, Keep)
 
-      return(DT::datatable(
+      return(dt_table(
         display_df,
         rownames = FALSE,
         extensions = "Buttons",
@@ -5769,7 +5770,7 @@ server <- shinyServer(function(input, output, session) {
         display_df <- custom_df %>%
           dplyr::select(Document, `Variable`, `Token`, Frequency, `First Sentence`, Notes, Keep)
 
-        return(DT::datatable(
+        return(dt_table(
           display_df,
           rownames = FALSE,
           extensions = "Buttons",
@@ -5918,7 +5919,7 @@ server <- shinyServer(function(input, output, session) {
 
     disabled_cols <- if (has_doc_id) c(0, 1, 2, 3, 4, 5) else c(0, 1, 2, 3, 4)
 
-    DT::datatable(
+    dt_table(
       entity_detail,
       rownames = FALSE,
       extensions = "Buttons",
@@ -6229,7 +6230,7 @@ server <- shinyServer(function(input, output, session) {
       }
     }
 
-    DT::datatable(
+    dt_table(
       display_df,
       rownames = FALSE,
       extensions = "Buttons",
@@ -8547,7 +8548,7 @@ server <- shinyServer(function(input, output, session) {
                         style = "font-weight: bold; text-align: center; font-size: 16px; font-family: 'Roboto', sans-serif; color: #4269BF;"
                       )
                     ),
-                    DT::datatable(
+                    dt_table(
                       .x,
                       rownames = FALSE,
                       extensions = "Buttons",
@@ -8879,6 +8880,7 @@ server <- shinyServer(function(input, output, session) {
       docs_analyzed <- summary_stats$documents_analyzed
 
       sentiment_results$analyzed <- TRUE
+      sentiment_results$method <- "lexicon"
       sentiment_results$data <- doc_sentiment
       sentiment_results$document_data <- doc_sentiment
       sentiment_results$original_data <- texts_df
@@ -8994,7 +8996,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("llm_sentiment_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
-            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         )
@@ -9014,7 +9016,7 @@ server <- shinyServer(function(input, output, session) {
           .password_input("llm_sentiment_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
-            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         )
@@ -9089,11 +9091,17 @@ server <- shinyServer(function(input, output, session) {
       # Store results
       sentiment_results$analyzed <- TRUE
       sentiment_results$data <- llm_sentiment_result
+      n_total <- nrow(llm_sentiment_result)
+      n_scored <- sum(!is.na(llm_sentiment_result$sentiment_label))
       sentiment_results$summary <- list(
-        mean_score = mean(llm_sentiment_result$sentiment_score, na.rm = TRUE),
-        n_positive = sum(llm_sentiment_result$sentiment_label == "positive", na.rm = TRUE),
-        n_negative = sum(llm_sentiment_result$sentiment_label == "negative", na.rm = TRUE),
-        n_neutral = sum(llm_sentiment_result$sentiment_label == "neutral", na.rm = TRUE)
+        total_documents = n_total,
+        documents_analyzed = n_scored,
+        documents_without_sentiment = n_total - n_scored,
+        coverage_percentage = round(n_scored / n_total * 100, 1),
+        positive_docs = sum(llm_sentiment_result$sentiment_label == "positive", na.rm = TRUE),
+        negative_docs = sum(llm_sentiment_result$sentiment_label == "negative", na.rm = TRUE),
+        neutral_docs = sum(llm_sentiment_result$sentiment_label == "neutral", na.rm = TRUE),
+        avg_sentiment_score = mean(llm_sentiment_result$sentiment_score, na.rm = TRUE)
       )
       sentiment_results$method <- "llm"
       sentiment_results$model <- paste(provider, model_name, sep = "/")
@@ -9122,18 +9130,18 @@ server <- shinyServer(function(input, output, session) {
 
   output$sentiment_distribution_plot <- plotly::renderPlotly({
     if (!sentiment_results$analyzed) {
-      return(plot_error("Click 'Analyze Sentiment' to generate results."))
+      return(plot_note("Click 'Analyze Sentiment' to generate results."))
     }
     gg_to_plotly(plot_sentiment_distribution(sentiment_results$data))
   })
 
   output$sentiment_contribution_plot <- plotly::renderPlotly({
     if (!sentiment_results$analyzed) {
-      return(plot_error("Click 'Analyze Sentiment' to generate results."))
+      return(plot_note("Click 'Analyze Sentiment' to generate results."))
     }
     contributions <- sentiment_results$word_contributions
     if (is.null(contributions) || nrow(contributions) == 0) {
-      return(plot_error("No lexicon words matched this corpus."))
+      return(plot_note("No lexicon words matched this corpus."))
     }
     gg_to_plotly(plot_sentiment_contribution(contributions,
                                              top_n = input$sentiment_top_words %||% 20))
@@ -9141,7 +9149,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$sentiment_by_category_plot <- plotly::renderPlotly({
     if (!sentiment_results$analyzed) {
-      return(plot_error("Run sentiment analysis to see results"))
+      return(plot_note("Run sentiment analysis to see results"))
     } else if (!is.null(input$sentiment_category_var) && input$sentiment_category_var != "None" && !is.null(sentiment_results$grouped)) {
       plot_type <- if (is.null(input$category_plot_type)) "bar" else input$category_plot_type
 
@@ -9167,14 +9175,14 @@ server <- shinyServer(function(input, output, session) {
       }
       gg_to_plotly(gg)
     } else {
-      plot_error("Select a category variable to see analysis")
+      plot_note("Select a category variable to see analysis")
     }
   })
 
   output$sentiment_category_table <- renderDT({
     if (sentiment_results$analyzed && !is.null(input$sentiment_category_var) &&
         input$sentiment_category_var != "None" && !is.null(sentiment_results$grouped)) {
-      DT::datatable(
+      dt_table(
         sentiment_results$grouped %>%
           pivot_wider(names_from = sentiment, values_from = proportion, values_fill = 0) %>%
           mutate(across(where(is.numeric), ~ round(., 3))),
@@ -9196,10 +9204,12 @@ server <- shinyServer(function(input, output, session) {
     req(sentiment_results$analyzed)
     {
       coverage_data <- data.frame(
-        Metric = c("Total Documents in Dataset",
-                   "Documents with Sentiment Words",
-                   "Documents without Sentiment Words",
-                   "Coverage Percentage"),
+        Metric = if (identical(sentiment_results$method, "llm")) {
+          c("Total Documents in Dataset", "Documents Scored", "Documents Not Scored", "Coverage Percentage")
+        } else {
+          c("Total Documents in Dataset", "Documents with Sentiment Words",
+            "Documents without Sentiment Words", "Coverage Percentage")
+        },
         Value = c(
           sentiment_results$summary$total_documents,
           paste0(sentiment_results$summary$documents_analyzed,
@@ -9236,7 +9246,7 @@ server <- shinyServer(function(input, output, session) {
 
       combined_data <- rbind(coverage_data, sentiment_data)
 
-      datatable(combined_data,
+      dt_table(combined_data,
                 options = list(
                   dom = "Bt",
                   buttons = c("copy", "csv", "excel", "pdf", "print"),
@@ -9266,7 +9276,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$document_sentiment_plot <- plotly::renderPlotly({
     if (!sentiment_results$analyzed) {
-      return(plot_error("Run sentiment analysis to see results"))
+      return(plot_note("Run sentiment analysis to see results"))
     }
 
     doc_ids <- NULL
@@ -9295,7 +9305,7 @@ server <- shinyServer(function(input, output, session) {
     if (!sentiment_results$analyzed) {
       return(NULL)
     } else if (nrow(sentiment_results$data) == 0) {
-      datatable(
+      dt_table(
         data.frame(Message = "No documents contained sentiment words from the selected lexicon."),
         options = list(dom = "t", pageLength = 1),
         rownames = FALSE
@@ -9323,7 +9333,7 @@ server <- shinyServer(function(input, output, session) {
                  dplyr::any_of(c(Explanation = "explanation")))
       }
 
-      datatable(doc_table,
+      dt_table(doc_table,
                 options = list(
                   pageLength = 10,
                   dom = "Bfrtip",
@@ -9342,11 +9352,11 @@ server <- shinyServer(function(input, output, session) {
 
   output$emotion_radar_plot <- plotly::renderPlotly({
     if (!sentiment_results$analyzed) {
-      return(plot_error("Run sentiment analysis to see results"))
+      return(plot_note("Run sentiment analysis to see results"))
     }
 
     if (is.null(sentiment_results$emotion_scores)) {
-      return(plot_error("Select 'NRC' lexicon to see emotion analysis"))
+      return(plot_note("Select 'NRC' lexicon to see emotion analysis"))
     }
 
     normalize <- !is.null(input$normalize_emotions) && input$normalize_emotions
@@ -9450,7 +9460,7 @@ server <- shinyServer(function(input, output, session) {
         select(Category, Documents, Tokens, Emotion, Score) %>%
         pivot_wider(names_from = Emotion, values_from = Score, values_fill = 0)
 
-      datatable(emotion_table,
+      dt_table(emotion_table,
                 options = list(
                   dom = "Bfrtip",
                   buttons = c("copy", "csv", "excel", "pdf", "print"),
@@ -9478,7 +9488,7 @@ server <- shinyServer(function(input, output, session) {
         ) %>%
         select(Emotion, Score, Percentage)
 
-      datatable(emotion_table,
+      dt_table(emotion_table,
                 options = list(
                   dom = "Bt",
                   buttons = c("copy", "csv", "excel", "pdf", "print"),
@@ -9492,7 +9502,7 @@ server <- shinyServer(function(input, output, session) {
                    backgroundRepeat = "no-repeat",
                    backgroundPosition = "center")
     } else {
-      datatable(
+      dt_table(
         data.frame(Message = "Select NRC lexicon to see emotion scores"),
         options = list(dom = "t", pageLength = 1),
         rownames = FALSE
@@ -9510,13 +9520,15 @@ server <- shinyServer(function(input, output, session) {
             plotly::plotlyOutput("sentiment_distribution_plot", height = "400px", width = "100%")
           )
         ),
-        br(),
-        tags$h5(strong("Words Behind the Scores"), style = "color: #4269BF;"),
-        tags$p("Which words moved the score, negative left and positive right. A word scored on its everyday sense rather than its meaning here is a sign the lexicon does not fit this corpus.",
-               style = "font-size: 13px; color: #475569; max-width: 900px;"),
-        fluidRow(
-          column(12,
-            plotly::plotlyOutput("sentiment_contribution_plot", height = "460px", width = "100%")
+        if (!isTRUE(sentiment_results$method %in% c("llm", "neural"))) tagList(
+          br(),
+          tags$h5(strong("Words Behind the Scores"), style = "color: #4269BF;"),
+          tags$p("Which words moved the score, negative left and positive right. A word scored on its everyday sense rather than its meaning here is a sign the lexicon does not fit this corpus.",
+                 style = "font-size: var(--font-size-sm); color: #475569; max-width: 900px;"),
+          fluidRow(
+            column(12,
+              plotly::plotlyOutput("sentiment_contribution_plot", height = "460px", width = "100%")
+            )
           )
         ),
         br(),
@@ -9806,7 +9818,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$readability_plot <- plotly::renderPlotly({
     if (!readability_results$analyzed) {
-      return(plot_error("Click 'Analyze' to generate results."))
+      return(plot_note("Click 'Analyze' to generate results."))
     }
 
     scores_data <- readability_results$metrics_data
@@ -9817,13 +9829,13 @@ server <- shinyServer(function(input, output, session) {
       metric_names <- setdiff(names(scores_data), c("Document", "Words", "sentence_flag"))
       metric_names <- metric_names[!is.na(metric_names)]
       if (length(metric_names) == 0) {
-        return(plot_error("No valid metrics available"))
+        return(plot_note("No valid metrics available"))
       }
       selected_metric <- metric_names[1]
     }
 
     if (is.na(selected_metric) || !selected_metric %in% names(scores_data)) {
-      return(plot_error("Selected metric not available"))
+      return(plot_note("Selected metric not available"))
     }
 
     if (view_type == "group") {
@@ -9831,7 +9843,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (is.null(group_var) || group_var == "" || group_var == "None" ||
          !group_var %in% names(readability_results$original_data)) {
-        return(plot_error("Please select a group variable in 'Group by'"))
+        return(plot_note("Please select a group variable in 'Group by'"))
       }
 
       group_vals <- as.character(readability_results$original_data[[group_var]])
@@ -9883,7 +9895,7 @@ server <- shinyServer(function(input, output, session) {
           select(Document, `Document ID`, everything())
       }
 
-      datatable(
+      dt_table(
         scores_data,
         options = list(
           pageLength = 20,
@@ -10111,7 +10123,7 @@ server <- shinyServer(function(input, output, session) {
 
     numeric_cols <- names(lex_data)[!names(lex_data) %in% c("Document", "Document ID")]
 
-    datatable(
+    dt_table(
       lex_data,
       options = list(
         pageLength = 20,
@@ -10307,7 +10319,7 @@ server <- shinyServer(function(input, output, session) {
           `BH q < .05` = significant
         )
 
-      datatable(
+      dt_table(
         table_data,
         options = list(
           pageLength = 20,
@@ -10343,7 +10355,7 @@ server <- shinyServer(function(input, output, session) {
           Direction = direction
         )
 
-      datatable(
+      dt_table(
         table_data,
         options = list(
           pageLength = 20,
@@ -10386,13 +10398,15 @@ server <- shinyServer(function(input, output, session) {
   output$dispersion_terms_note <- renderUI({
     if (!is.null(dispersion_vocab())) return(NULL)
     tags$p("No terms yet. Create a DFM in the Preprocess tab first.",
-           style = "font-size: 14px; color: #b45309; margin-bottom: 10px;")
+           style = "font-size: var(--font-size-sm); color: #b45309; margin-bottom: 10px;")
   })
 
   # Run dispersion analysis
   observeEvent(input$run_dispersion, {
-    req(input$dispersion_terms)
-    req(length(input$dispersion_terms) > 0)
+    if (length(input$dispersion_terms) == 0) {
+      TextAnalysisR:::show_error_notification("Please select at least one term.")
+      return()
+    }
 
     # Get tokens from the preprocessing chain
     tokens_to_use <- if (!is.null(final_tokens())) {
@@ -10487,7 +10501,7 @@ server <- shinyServer(function(input, output, session) {
         `Rosengren's S` = rosengren_s
       )
 
-    datatable(
+    dt_table(
       table_data,
       options = list(
         pageLength = 10,
@@ -10601,7 +10615,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$tfidf_keywords_plot <- plotly::renderPlotly({
     if (!keyword_results$analyzed) {
-      return(plot_error("Click 'Extract' to generate results."))
+      return(plot_note("Click 'Extract' to generate results."))
     }
     gg_to_plotly(plot_tfidf_keywords(
       keyword_results$tfidf_data,
@@ -10613,7 +10627,7 @@ server <- shinyServer(function(input, output, session) {
     req(keyword_results$analyzed)
     {
       tfidf_data_desc <- keyword_results$tfidf_data[order(keyword_results$tfidf_data$TF_IDF_Score, decreasing = TRUE), ]
-      datatable(
+      dt_table(
         tfidf_data_desc,
         options = list(
           pageLength = 20,
@@ -10632,7 +10646,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$keyness_keywords_plot <- plotly::renderPlotly({
     if (!keyword_results$analyzed) {
-      return(plot_error("Run keyword extraction to see results"))
+      return(plot_note("Run keyword extraction to see results"))
     }
     gg_to_plotly(plot_keyness_keywords(
       keyword_results$keyness_data,
@@ -10644,14 +10658,14 @@ server <- shinyServer(function(input, output, session) {
     req(keyword_results$analyzed)
     {
       if (nrow(keyword_results$keyness_data) == 0) {
-        datatable(
+        dt_table(
           data.frame(Message = "No keywords to show. Select a grouping variable with at least two groups, or untick 'Only adjusted p < .05'."),
           options = list(dom = "t", pageLength = 1),
           rownames = FALSE
         )
       } else {
         keyness_data_desc <- keyword_results$keyness_data
-        datatable(
+        dt_table(
           keyness_data_desc,
           options = list(
             pageLength = 20,
@@ -10713,7 +10727,7 @@ server <- shinyServer(function(input, output, session) {
     } else {
       tfidf_df_sorted <- keyword_results$tfidf_data[order(keyword_results$tfidf_data$TF_IDF_Score, decreasing = TRUE), ]
 
-      datatable(
+      dt_table(
         tfidf_df_sorted,
         options = list(
           pageLength = 20,
@@ -11012,7 +11026,7 @@ server <- shinyServer(function(input, output, session) {
       column_defs <- append(column_defs, list(list(width = "120px", targets = middle_cols)), 1)
     }
 
-    dt_table <- DT::datatable(
+    dt_table <- dt_table(
       summary_data,
       rownames = FALSE,
       extensions = "Buttons",
@@ -11363,6 +11377,21 @@ server <- shinyServer(function(input, output, session) {
 
     if (!remote_doc_ok(length(texts), "Document similarity")) return(NULL)
 
+    cached_ready <- use_embeddings && !is.null(embeddings_cache$embeddings) &&
+      identical(embeddings_cache$model, embedding_model) &&
+      identical(embeddings_cache$texts_hash, digest::digest(texts[nchar(trimws(texts)) > 0], algo = "md5"))
+    if (cached_ready) {
+      emb <- as.matrix(embeddings_cache$embeddings)
+      unit <- emb / pmax(sqrt(rowSums(emb^2)), .Machine$double.eps)
+      return(list(
+        similarity_matrix = tcrossprod(unit),
+        embeddings = emb,
+        method = "embedding_cosine",
+        model_name = embedding_model,
+        n_docs = nrow(emb)
+      ))
+    }
+
     package_result <- tryCatch({
       TextAnalysisR::calculate_document_similarity(
         texts = texts,
@@ -11446,7 +11475,7 @@ server <- shinyServer(function(input, output, session) {
               is.null(embedding_model_cache$last_used) ||
               as.numeric(difftime(Sys.time(), embedding_model_cache$last_used, units = "mins")) > 30) {
 
-            embedding_model_cache$model <- sentence_transformers$SentenceTransformer(embedding_model)
+            embedding_model_cache$model <- sentence_transformers$SentenceTransformer(TextAnalysisR:::.st_model_ref(embedding_model))
             embedding_model_cache$model_name <- embedding_model
             embedding_model_cache$last_used <- Sys.time()
           }
@@ -11651,7 +11680,7 @@ server <- shinyServer(function(input, output, session) {
       model <- embedding_model_cache$model
     } else {
       showNotification(paste("Loading", model_name, "model..."), type = "message", duration = 2)
-      model <- sentence_transformers$SentenceTransformer(model_name)
+      model <- sentence_transformers$SentenceTransformer(TextAnalysisR:::.st_model_ref(model_name))
       embedding_model_cache$model <- model
       embedding_model_cache$model_name <- model_name
       embedding_model_cache$last_used <- Sys.time()
@@ -11665,6 +11694,7 @@ server <- shinyServer(function(input, output, session) {
         NULL
       }
     }, error = function(e) {
+      if (inherits(e, "shiny.silent.error")) return(NULL)
       showNotification(paste("Error encoding query:", e$message), type = "error")
       return(NULL)
     })
@@ -12152,7 +12182,7 @@ server <- shinyServer(function(input, output, session) {
     updateSelectizeInput(
       session,
       "doc_category_var",
-      choices = c("None" = "None", colnames_cat()),
+      choices = c("None" = "None", colnames_cat_doc()),
       selected = current_category,
       options = list(
         allowEmptyOption = TRUE,
@@ -13130,7 +13160,7 @@ server <- shinyServer(function(input, output, session) {
         search_results_reactive$method_used <- "rag"
 
         showNotification(
-          paste0("Answer generated (Confidence: ",
+          paste0("Answer generated (retrieval similarity: ",
                  round(rag_result$confidence * 100), "%)"),
           type = "message", duration = 5
         )
@@ -14110,6 +14140,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     TextAnalysisR:::show_loading_notification("Running parameter optimization...", id = "optimizationProgress")
+    on.exit(try(removeNotification("optimizationProgress"), silent = TRUE), add = TRUE)
 
     opt_results <- time_operation("parameter_optimization", function() {
       find_optimal_parameters(
@@ -14173,7 +14204,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         paste(feature_label, "similarity must be calculated first. Please go to Similarity tab and calculate similarity."),
         type = "warning",
-        duration = 5
+        duration = 10
       )
       return()
     }
@@ -14294,6 +14325,7 @@ server <- shinyServer(function(input, output, session) {
     n_clusters <- cluster_spec$n
 
     TextAnalysisR:::show_loading_notification(paste("Running", method_display_name, "clustering analysis..."), id = "loadingClustering")
+    on.exit(try(removeNotification("loadingClustering"), silent = TRUE), add = TRUE)
 
     set.seed(input$semantic_cluster_seed)
 
@@ -14305,7 +14337,8 @@ server <- shinyServer(function(input, output, session) {
           # Reuse cached embeddings if available and compatible
           cached_embeddings <- NULL
           if (!is.null(embeddings_cache$embeddings) &&
-              nrow(embeddings_cache$embeddings) == length(texts)) {
+              nrow(embeddings_cache$embeddings) == length(texts) &&
+              identical(embeddings_cache$texts_hash, digest::digest(texts, algo = "md5"))) {
             cached_embeddings <- embeddings_cache$embeddings
             showNotification("Using cached embeddings for topic modeling", type = "message", duration = 2)
           }
@@ -14457,15 +14490,16 @@ server <- shinyServer(function(input, output, session) {
 
     auto_text <- if (!is.null(clustering_result$auto_detected) && clustering_result$auto_detected) {
       detection_method <- clustering_result$detection_method %||% "Auto-detection"
+      how <- if (identical(detection_method, "Manual")) "set manually" else paste("auto-detected via", detection_method)
       if (cluster_method == "dbscan") {
         outlier_info <- if (!is.null(clustering_result$noise_ratio)) {
           paste("| Outlier:", round(clustering_result$noise_ratio * 100, 1), "%")
         } else {
           ""
         }
-        paste("(", clustering_result$n_clusters, "clusters auto-detected via", detection_method, outlier_info, ")")
+        paste0("(", clustering_result$n_clusters, " clusters, ", how, if (nzchar(outlier_info)) paste0(" ", outlier_info), ")")
       } else {
-        paste("(", clustering_result$n_clusters, "clusters auto-detected via", detection_method, ")")
+        paste0("(", clustering_result$n_clusters, " clusters, ", how, ")")
       }
     } else {
       ""
@@ -14674,6 +14708,7 @@ server <- shinyServer(function(input, output, session) {
       return(result)
 
     }, error = function(e) {
+      if (inherits(e, "shiny.silent.error")) return(NULL)
       showNotification(paste("Error in outlier reduction:", e$message), type = "error")
       return(NULL)
     })
@@ -14927,7 +14962,7 @@ server <- shinyServer(function(input, output, session) {
     filtered_docs_data <- filtered_data$docs_data
 
     if (is.null(similarity_matrix) || nrow(similarity_matrix) < 2) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "Need at least 2 documents for similarity analysis"),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
@@ -14991,7 +15026,7 @@ server <- shinyServer(function(input, output, session) {
           )
         )
 
-        result_table <- DT::datatable(
+        result_table <- dt_table(
           stats_df,
           rownames = FALSE,
           extensions = "Buttons",
@@ -15008,7 +15043,7 @@ server <- shinyServer(function(input, output, session) {
         return(result_table)
       },
       error = function(e) {
-        return(DT::datatable(
+        return(dt_table(
           data.frame(Error = paste("Error calculating statistics:", e$message)),
           rownames = FALSE,
           options = list(dom = "t", ordering = FALSE)
@@ -15182,7 +15217,7 @@ server <- shinyServer(function(input, output, session) {
     # Get numeric columns for formatting
     numeric_cols <- names(gap_result$summary_stats)[sapply(gap_result$summary_stats, is.numeric)]
 
-    DT::datatable(
+    dt_table(
       gap_result$summary_stats,
       rownames = FALSE,
       extensions = "Buttons",
@@ -15255,7 +15290,7 @@ server <- shinyServer(function(input, output, session) {
     gap_result <- comparison_results$gap_analysis
 
     if (is.null(gap_result$unique_items) || nrow(gap_result$unique_items) == 0) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "No unique items found below the threshold."),
         rownames = FALSE,
         options = list(dom = "t")
@@ -15264,7 +15299,7 @@ server <- shinyServer(function(input, output, session) {
 
     numeric_cols <- names(gap_result$unique_items)[sapply(gap_result$unique_items, is.numeric)]
 
-    DT::datatable(
+    dt_table(
       gap_result$unique_items,
       rownames = FALSE,
       extensions = "Buttons",
@@ -15282,7 +15317,7 @@ server <- shinyServer(function(input, output, session) {
     gap_result <- comparison_results$gap_analysis
 
     if (is.null(gap_result$missing_items) || nrow(gap_result$missing_items) == 0) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "No missing items found below the threshold."),
         rownames = FALSE,
         options = list(dom = "t")
@@ -15291,7 +15326,7 @@ server <- shinyServer(function(input, output, session) {
 
     numeric_cols <- names(gap_result$missing_items)[sapply(gap_result$missing_items, is.numeric)]
 
-    DT::datatable(
+    dt_table(
       gap_result$missing_items,
       rownames = FALSE,
       extensions = "Buttons",
@@ -15309,7 +15344,7 @@ server <- shinyServer(function(input, output, session) {
     gap_result <- comparison_results$gap_analysis
 
     if (is.null(gap_result$cross_policy) || nrow(gap_result$cross_policy) == 0) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "No cross-category opportunities found in the specified range."),
         rownames = FALSE,
         options = list(dom = "t")
@@ -15318,7 +15353,7 @@ server <- shinyServer(function(input, output, session) {
 
     numeric_cols <- names(gap_result$cross_policy)[sapply(gap_result$cross_policy, is.numeric)]
 
-    DT::datatable(
+    dt_table(
       gap_result$cross_policy,
       rownames = FALSE,
       extensions = "Buttons",
@@ -15591,11 +15626,13 @@ server <- shinyServer(function(input, output, session) {
 
   output$search_query_input <- renderUI({
     method <- input$search_method %||% "keyword"
+    current_query <- isolate(input$semantic_search_query) %||% ""
 
     if (method == "rag") {
       textAreaInput(
         "semantic_search_query",
         "Ask a question",
+        value = current_query,
         placeholder = "E.g., How does assistive technology support learning?",
         rows = 3
       )
@@ -15603,6 +15640,7 @@ server <- shinyServer(function(input, output, session) {
       textAreaInput(
         "semantic_search_query",
         "Search query",
+        value = current_query,
         placeholder = "Enter your search terms...",
         rows = 3
       )
@@ -15732,12 +15770,12 @@ server <- shinyServer(function(input, output, session) {
   output$semantic_search_results <- DT::renderDataTable({
 
     if (search_results_reactive$method_used == "rag") {
-      answer <- search_results_reactive$rag_answer
+      answer <- gsub("\\*\\*|__", "", search_results_reactive$rag_answer)
       confidence <- search_results_reactive$rag_confidence
       sources <- search_results_reactive$rag_sources
 
       rag_display <- data.frame(
-        Field = c("Answer", "Confidence", "Source Documents"),
+        Field = c("Answer", "Retrieval similarity", "Retrieved documents"),
         Value = c(
           answer,
           paste0(round(confidence * 100), "%"),
@@ -15746,7 +15784,7 @@ server <- shinyServer(function(input, output, session) {
         stringsAsFactors = FALSE
       )
 
-      return(DT::datatable(
+      return(dt_table(
         rag_display,
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE),
@@ -15797,7 +15835,7 @@ server <- shinyServer(function(input, output, session) {
         )
       }
 
-      return(DT::datatable(
+      return(dt_table(
         display_results,
         rownames = FALSE,
         caption = paste("Top", nrow(results), "most similar documents"),
@@ -15811,7 +15849,7 @@ server <- shinyServer(function(input, output, session) {
       ))
 
     }, error = function(e) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(
           Error = paste("Error displaying results:", e$message),
           stringsAsFactors = FALSE
@@ -15897,7 +15935,8 @@ server <- shinyServer(function(input, output, session) {
   })
 
   output$has_search_results <- reactive({
-    !is.null(search_results_reactive$results)
+    !is.null(search_results_reactive$results) ||
+      (identical(search_results_reactive$method_used, "rag") && !is.null(search_results_reactive$rag_answer))
   })
   outputOptions(output, "has_search_results", suspendWhenHidden = FALSE)
 
@@ -16091,7 +16130,7 @@ server <- shinyServer(function(input, output, session) {
       table_data$cluster <- document_clustering_results$clusters
     }
 
-    DT::datatable(table_data,
+    dt_table(table_data,
                  extensions = "Buttons",
                  options = list(
                    dom = "Bfrtip",
@@ -16148,7 +16187,7 @@ server <- shinyServer(function(input, output, session) {
       sample_indices <- head(cluster_docs, 5)
       sample_data <- docs_data[sample_indices, c("document_id_display", "combined_text")]
 
-      DT::datatable(sample_data,
+      dt_table(sample_data,
                    options = list(pageLength = 5, scrollX = TRUE, dom = "t"))
     }
   })
@@ -16181,7 +16220,7 @@ server <- shinyServer(function(input, output, session) {
                    colors = "Set1",
                    type = "scatter",
                    mode = "markers",
-                   marker = list(size = 8),
+                   marker = list(size = 6),
                    text = ~hover_text,
                    hoverinfo = "text") %>%
       plotly::layout(
@@ -16226,7 +16265,7 @@ server <- shinyServer(function(input, output, session) {
         stringsAsFactors = FALSE
       )
 
-      DT::datatable(labels_df,
+      dt_table(labels_df,
                     extensions = "Buttons",
                     options = list(
                       dom = "Bfrtip",
@@ -16932,7 +16971,7 @@ server <- shinyServer(function(input, output, session) {
         stringsAsFactors = FALSE
       )
 
-      table_out <- DT::datatable(
+      table_out <- dt_table(
         doc_cluster_df,
         rownames = FALSE,
         extensions = "Buttons",
@@ -17003,7 +17042,7 @@ server <- shinyServer(function(input, output, session) {
         "Calinski-Harabasz: N/A"
       }
 
-      table_out <- DT::datatable(
+      table_out <- dt_table(
         cluster_summary,
         rownames = FALSE,
         extensions = "Buttons",
@@ -17091,7 +17130,7 @@ server <- shinyServer(function(input, output, session) {
           }
 
           if (length(display_cols) > 0) {
-            DT::datatable(
+            dt_table(
               sample_data[, display_cols, drop = FALSE],
               options = list(
                 dom = "t",
@@ -17326,6 +17365,8 @@ server <- shinyServer(function(input, output, session) {
     max_size <- input$wordcloud_max_size %||% 26
     if (length(groups) > 1) max_size <- max(8, round(max_size * 0.6))
 
+    cloud_color <- input$wordcloud_color %||% "#4269BF"
+
     cloud_geom <- if (isTRUE(input$wordcloud_area)) {
       ggwordcloud::geom_text_wordcloud_area
     } else {
@@ -17336,11 +17377,12 @@ server <- shinyServer(function(input, output, session) {
       p <- ggplot2::ggplot(freq, ggplot2::aes(label = feature, size = weight,
                                               color = weight, angle = .data$angle)) +
         cloud_geom(rm_outside = TRUE, shape = input$wordcloud_shape %||% "circle",
-                   eccentricity = 1, family = input$wordcloud_font %||% "sans",
-                   use_richtext = FALSE) +
+                   eccentricity = 1, family = "sans", use_richtext = FALSE) +
         ggplot2::scale_size_area(max_size = max_size) +
-        ggplot2::scale_color_distiller(palette = input$wordcloud_palette %||% "Blues",
-                                       direction = 1) +
+        ggplot2::scale_color_gradient(
+          low = grDevices::colorRampPalette(c("white", cloud_color))(6)[3],
+          high = cloud_color
+        ) +
         ggplot2::theme_minimal() +
         ggplot2::theme(
           plot.background = ggplot2::element_rect(fill = "white", color = NA),
@@ -17362,7 +17404,7 @@ server <- shinyServer(function(input, output, session) {
     )
     if (length(unique(out$Group)) == 1) out$Group <- NULL
 
-    DT::datatable(out, rownames = FALSE, options = list(pageLength = 10, dom = "tip"))
+    dt_table(out, rownames = FALSE, options = list(pageLength = 10, dom = "tip"))
   })
 
   outputOptions(output, "semantic_wordcloud", suspendWhenHidden = FALSE)
@@ -17465,7 +17507,7 @@ server <- shinyServer(function(input, output, session) {
       mode = "markers",
       text = ~paste("Document:", document_id, "<br>Category:", category, "<br>Cluster:", cluster),
       hoverinfo = "text",
-      marker = list(size = 10, opacity = 0.7)
+      marker = list(size = 6, opacity = 0.7)
     ) %>%
       plotly::layout(
         title = list(
@@ -17525,7 +17567,7 @@ server <- shinyServer(function(input, output, session) {
     input$outlier_threshold
 
     if (is.null(input$reduce_outliers) || input$reduce_outliers == 0) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "Click 'Reduce Outliers' to run outlier reduction."),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
@@ -17533,7 +17575,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (is.null(comparison_results$clustering)) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "No clustering results available. Please run clustering analysis first."),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
@@ -17543,7 +17585,7 @@ server <- shinyServer(function(input, output, session) {
     clustering_result <- comparison_results$clustering
 
     if (clustering_result$method != "umap_dbscan") {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "Outlier reduction is only available for UMAP-DBSCAN clustering method."),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
@@ -17551,7 +17593,7 @@ server <- shinyServer(function(input, output, session) {
     }
 
     if (is.null(clustering_result$outlier_reduction_method)) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "No outlier reduction results available. Please run outlier reduction first."),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
@@ -17584,7 +17626,7 @@ server <- shinyServer(function(input, output, session) {
       summary_data$Outliers_Reassigned <- reassigned_count
     }
 
-    DT::datatable(
+    dt_table(
       summary_data,
       rownames = FALSE,
       caption = "Outlier Reduction Results",
@@ -18199,7 +18241,7 @@ server <- shinyServer(function(input, output, session) {
       summary_data <- summary_data %>% arrange(desc(`Overall Score`))
     }
 
-    DT::datatable(
+    dt_table(
       summary_data,
       rownames = FALSE,
       options = list(
@@ -18539,7 +18581,7 @@ server <- shinyServer(function(input, output, session) {
           TRUE ~ .
         ))
 
-      DT::datatable(
+      dt_table(
         summary_data,
         rownames = FALSE,
         options = list(
@@ -18742,32 +18784,15 @@ server <- shinyServer(function(input, output, session) {
       return()
     }
 
-    n_docs <- quanteda::ndoc(get_available_dfm())
-    if (n_docs < 20) {
-      shiny::showModal(shiny::modalDialog(
-        title = tags$div(
-          icon("exclamation-triangle"),
-          " Insufficient Documents for Topic Modeling",
-          style = "color: #DC2626;"
-        ),
-        tags$div(
-          tags$p(
-            paste("Topic modeling requires at least 20 documents for reliable results. Currently:", n_docs, "documents."),
-            style = "margin-bottom: 10px;"
-          ),
-          tags$p(
-            tags$strong("Recommendations:"),
-            style = "margin-bottom: 5px; color: #4269BF;"
-          ),
-          tags$ul(
-            tags$li("Upload a larger dataset with more documents"),
-            tags$li("Topic modeling quality improves significantly with 50+ documents"),
-            tags$li("For best results, use 100+ documents")
-          )
-        ),
-        easyClose = TRUE,
-        footer = shiny::modalButton("Close")
-      ))
+    if (is.null(input$K_number) || is.na(input$K_number)) {
+      showNotification("Enter the number of topics (K).", type = "warning", duration = 7)
+      return()
+    }
+
+    n_docs <- tryCatch(quanteda::ndoc(get_available_dfm()), error = function(e) NA_integer_)
+    if (length(n_docs) == 1 && !is.na(n_docs) && input$K_number >= n_docs) {
+      showNotification(sprintf("Choose fewer topics than documents (%d documents, K = %d).", n_docs, input$K_number),
+                       type = "error", duration = 8)
       return()
     }
 
@@ -19023,6 +19048,7 @@ server <- shinyServer(function(input, output, session) {
   # the corpus at the chosen unit; every analysis stage reads this, not the raw column
   analysis_texts <- reactive({
     raw <- united_tbl()$united_texts
+    req(length(raw) > 0)
     named <- stats::setNames(raw, paste0("doc", seq_along(raw)))
     unit <- input$analysis_unit %||% "paragraph"
     if (unit == "document") return(named)
@@ -19094,13 +19120,13 @@ server <- shinyServer(function(input, output, session) {
       )
     })
     div(
-      style = "margin-top: 14px; font-size: 13px; color: #475569;",
+      style = "margin-top: 14px; font-size: var(--font-size-sm); color: #475569;",
       tags$p(sprintf("Accuracy %.2f across %d categories, %d documents.",
                      res$overall$accuracy, res$overall$n_categories,
                      res$overall$n_documents),
              style = "margin-bottom: 8px;"),
       tags$table(
-        style = "width: 100%; font-size: 13px;",
+        style = "width: 100%; font-size: var(--font-size-sm);",
         tags$thead(tags$tr(
           tags$th("Category", style = "text-align: left; padding-bottom: 4px;"),
           tags$th("n", style = "text-align: right; padding-bottom: 4px;"),
@@ -19411,7 +19437,7 @@ server <- shinyServer(function(input, output, session) {
             topic_df$Diversity <- round(model$topic_diversity, 3)
           }
 
-          DT::datatable(topic_df, options = list(pageLength = 15))
+          dt_table(topic_df, options = list(pageLength = 15))
         }
       })
 
@@ -19651,7 +19677,7 @@ server <- shinyServer(function(input, output, session) {
             topic_df$Diversity <- round(model$topic_diversity, 3)
           }
 
-          DT::datatable(topic_df, options = list(pageLength = 15))
+          dt_table(topic_df, options = list(pageLength = 15))
         }
       })
     }
@@ -19872,6 +19898,7 @@ server <- shinyServer(function(input, output, session) {
         return(topic_terms)
       },
       error = function(e) {
+        if (inherits(e, "shiny.silent.error")) return(NULL)
         showNotification(paste("Error extracting topic-term data:", e$message), type = "warning")
         return(NULL)
       }
@@ -19942,7 +19969,7 @@ server <- shinyServer(function(input, output, session) {
       stringsAsFactors = FALSE
     )
 
-    DT::datatable(
+    dt_table(
       summary_df,
       rownames = FALSE,
       options = list(
@@ -19969,7 +19996,7 @@ server <- shinyServer(function(input, output, session) {
       select(topic, topic_label) %>%
       rename(Topic = topic, `Generated Label` = topic_label)
 
-    DT::datatable(
+    dt_table(
       gen_labels,
       rownames = FALSE,
       options = list(
@@ -20204,7 +20231,7 @@ server <- shinyServer(function(input, output, session) {
         title = paste("Generated", content_type_label),
         size = "l",
         DT::renderDataTable({
-          DT::datatable(
+          dt_table(
             new_content,
             options = list(
               pageLength = 10,
@@ -20260,8 +20287,9 @@ server <- shinyServer(function(input, output, session) {
   # Render generated content table in AI Content tab (editable with export options)
   output$generated_content_table <- DT::renderDataTable({
     req(generated_content())
-    DT::datatable(
-      generated_content(),
+    gen_tbl <- generated_content()
+    dt <- dt_table(
+      gen_tbl,
       editable = TRUE,
       options = list(
         pageLength = 10,
@@ -20278,7 +20306,9 @@ server <- shinyServer(function(input, output, session) {
       extensions = "Buttons",
       rownames = FALSE
     ) %>%
-      DT::formatStyle(columns = names(generated_content()), `font-size` = "16px")
+      DT::formatStyle(columns = names(gen_tbl), `font-size` = "16px")
+    if ("beta" %in% names(gen_tbl)) dt <- DT::formatRound(dt, "beta", digits = 3)
+    dt
   })
 
   # Handle edits to the generated content table
@@ -20385,7 +20415,7 @@ server <- shinyServer(function(input, output, session) {
         axis.title.y = ggplot2::element_text(size = 12)
       )
 
-    plotly_obj <- plotly::ggplotly(ggplot_obj, tooltip = "text", height = plot_height, width = plot_width)
+    plotly_obj <- gg_to_plotly(ggplot_obj, tooltip = "text", height = plot_height, width = plot_width)
 
     plotly_obj$x$layout$annotations <- lapply(
       plotly_obj$x$layout$annotations,
@@ -20397,8 +20427,7 @@ server <- shinyServer(function(input, output, session) {
         margin = list(t = 50, b = 50, l = 80, r = 20),
         hovermode = "closest",
         hoverlabel = list(font = list(family = "Roboto, sans-serif", size = 16), align = "left")
-      ) %>%
-      plotly::style(hoverinfo = "text")
+      )
   })
 
   output$topic_term_plot_uiOutput <- renderUI({
@@ -20488,7 +20517,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$topic_term_table <- DT::renderDataTable({
     if (is.null(topic_table_data()) || nrow(topic_table_data()) == 0) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "No topic-term data available. Please run topic modeling first."),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
@@ -20496,7 +20525,7 @@ server <- shinyServer(function(input, output, session) {
     }
     current_measure <- get_topic_measure()
     topic_table_data() %>%
-      DT::datatable(
+      dt_table(
         rownames = FALSE,
         width = input$width,
         extensions = "Buttons",
@@ -20789,6 +20818,7 @@ server <- shinyServer(function(input, output, session) {
         }
       },
       error = function(e) {
+        if (inherits(e, "shiny.silent.error")) return(NULL)
         showNotification(paste("Error calculating topic prevalence:", e$message), type = "error")
         return(NULL)
       }
@@ -20848,7 +20878,7 @@ server <- shinyServer(function(input, output, session) {
         colors = topic_colors
       )
 
-      plotly::ggplotly(
+      gg_to_plotly(
         ggplot_obj,
         tooltip = "text",
         height = input$height_topic_prevalence,
@@ -20866,7 +20896,7 @@ server <- shinyServer(function(input, output, session) {
     req(input$stm_display)
     if (!is.null(gamma_terms())) {
       div(
-        style = "margin-bottom: 20px; overflow: hidden;",
+        style = "margin-bottom: 20px; overflow-x: auto; max-width: 100%;",
         plotly::plotlyOutput(
           "topic_by_prevalence_plot2",
           height = paste0(input$height_topic_prevalence, "px"),
@@ -20918,7 +20948,7 @@ server <- shinyServer(function(input, output, session) {
         select(topic_label, topic, gamma) %>%
         dplyr::arrange(as.numeric(topic)) %>%
         mutate(across(where(is.numeric), ~ round(., 3))) %>%
-        DT::datatable(
+        dt_table(
           rownames = FALSE,
           extensions = "Buttons",
           options = list(
@@ -21073,7 +21103,7 @@ server <- shinyServer(function(input, output, session) {
 
   output$quote_table <- DT::renderDataTable({
     if (is.null(thoughts()) || nrow(thoughts()) == 0) {
-      return(DT::datatable(
+      return(dt_table(
         data.frame(Message = "No topic thoughts available. Please run topic modeling and select valid parameters first."),
         rownames = FALSE,
         options = list(dom = "t", ordering = FALSE)
@@ -21095,7 +21125,7 @@ server <- shinyServer(function(input, output, session) {
       )
     }
 
-    DT::datatable(
+    dt_table(
       thoughts_data,
       rownames = FALSE,
       options = list(
@@ -21262,6 +21292,7 @@ server <- shinyServer(function(input, output, session) {
         )
       },
       error = function(e) {
+        if (inherits(e, "shiny.silent.error")) return(NULL)
         showNotification(paste("Error calculating categorical effects:", e$message), type = "error")
         return(NULL)
       }
@@ -21280,7 +21311,7 @@ server <- shinyServer(function(input, output, session) {
     })
     output$cat_table <- DT::renderDataTable({
       if (is.null(effects_categorical_var()) || nrow(effects_categorical_var()) == 0) {
-        return(DT::datatable(
+        return(dt_table(
           data.frame(Message = "No categorical effects available. Please run the effect estimation first."),
           rownames = FALSE,
           options = list(dom = "t", ordering = FALSE)
@@ -21289,7 +21320,7 @@ server <- shinyServer(function(input, output, session) {
       effects_categorical_var() %>%
         dplyr::select(topic, value, proportion, lower, upper) %>%
         dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
-        DT::datatable(
+        dt_table(
           rownames = FALSE,
           extensions = "Buttons",
           options = list(
@@ -21305,10 +21336,13 @@ server <- shinyServer(function(input, output, session) {
   output$cat_plot_uiOutput <- renderUI({
     req(input$stm_effect_cat_btn)
     req(input$stm_display_cat)
-    plotly::plotlyOutput(
-      "cat_plot",
-      height = input$height_cat_plot,
-      width = input$width_cat_plot
+    htmltools::tags$div(
+      style = "overflow-x: auto; max-width: 100%;",
+      plotly::plotlyOutput(
+        "cat_plot",
+        height = input$height_cat_plot,
+        width = input$width_cat_plot
+      )
     )
   })
 
@@ -21353,6 +21387,7 @@ server <- shinyServer(function(input, output, session) {
         )
       },
       error = function(e) {
+        if (inherits(e, "shiny.silent.error")) return(NULL)
         showNotification(paste("Error calculating continuous effects:", e$message), type = "error")
         return(NULL)
       }
@@ -21373,7 +21408,7 @@ server <- shinyServer(function(input, output, session) {
     })
     output$con_table <- DT::renderDataTable({
       if (is.null(effects_continuous_var()) || nrow(effects_continuous_var()) == 0) {
-        return(DT::datatable(
+        return(dt_table(
           data.frame(Message = "No continuous effects available. Please run the effect estimation first."),
           rownames = FALSE,
           options = list(dom = "t", ordering = FALSE)
@@ -21382,7 +21417,7 @@ server <- shinyServer(function(input, output, session) {
       effects_continuous_var() %>%
         dplyr::select(topic, value, proportion, lower, upper) %>%
         dplyr::mutate(across(where(is.numeric), ~ round(., 3))) %>%
-        DT::datatable(
+        dt_table(
           rownames = FALSE,
           extensions = "Buttons",
           options = list(
@@ -21398,10 +21433,13 @@ server <- shinyServer(function(input, output, session) {
   output$con_plot_uiOutput <- renderUI({
     req(input$stm_effect_con_btn)
     req(input$stm_display_con)
-    plotly::plotlyOutput(
-      "con_plot",
-      height = input$height_con_plot,
-      width = input$width_con_plot
+    htmltools::tags$div(
+      style = "overflow-x: auto; max-width: 100%;",
+      plotly::plotlyOutput(
+        "con_plot",
+        height = input$height_con_plot,
+        width = input$width_con_plot
+      )
     )
   })
 
@@ -21425,24 +21463,6 @@ server <- shinyServer(function(input, output, session) {
       dplyr::select(dplyr::where(~ is.character(.) || is.factor(.))) %>%
       dplyr::select(dplyr::where(~ dplyr::n_distinct(.) <= (0.2 * nrow(united_tbl()))))
     names(categorical)
-  })
-
-  observe({
-    req(united_tbl())
-    updateSelectizeInput(session,
-                         "doc_id_var",
-                         choices = c("None" = "", colnames_all()),
-                         selected = ""
-    )
-  })
-
-  observe({
-    req(united_tbl())
-    updateSelectizeInput(session,
-                         "doc_category_var",
-                         choices = c("None" = "None", colnames_cat_doc()),
-                         selected = "None"
-    )
   })
 
   observe({
@@ -21478,7 +21498,7 @@ server <- shinyServer(function(input, output, session) {
   output$ai_usage_log_table <- DT::renderDT({
     log <- ai_usage_log()
     req(nrow(log) > 0)
-    DT::datatable(
+    dt_table(
       log[order(log$timestamp, decreasing = TRUE), ],
       rownames = FALSE,
       options = list(pageLength = 10, dom = "tp")
@@ -21493,6 +21513,7 @@ server <- shinyServer(function(input, output, session) {
   # qualitative coding
 
   qc_codebook <- reactiveVal(NULL)
+  qc_codebook_source <- reactiveVal(character(0))
   qc_suggestions <- reactiveVal(NULL)
   qc_coded_texts <- reactiveVal(NULL)
   residue_texts <- reactiveVal(NULL)
@@ -21560,6 +21581,7 @@ server <- shinyServer(function(input, output, session) {
     cb[] <- lapply(cb, function(col) ifelse(is.na(col), NA_character_, as.character(col)))
     keep <- intersect(c("code", "definition", "example", "color"), names(cb))
     qc_codebook(tibble::as_tibble(cb[, keep]))
+    qc_codebook_source(unique(c(qc_codebook_source(), "Uploaded")))
   })
 
   observeEvent(input$qc_add_code, {
@@ -21567,6 +21589,7 @@ server <- shinyServer(function(input, output, session) {
     current <- qc_codebook()
     if (!is.null(current)) current[] <- lapply(current, as.character)
     qc_codebook(if (is.null(current)) blank else dplyr::bind_rows(current, blank))
+    qc_codebook_source(unique(c(qc_codebook_source(), "Typed")))
   })
 
   observeEvent(input$qc_seed_labels, {
@@ -21582,12 +21605,13 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(current)) current[] <- lapply(current, as.character)
     combined <- if (is.null(current)) seeded else dplyr::bind_rows(current, seeded)
     qc_codebook(dplyr::distinct(combined, code, .keep_all = TRUE))
+    qc_codebook_source(unique(c(qc_codebook_source(), "Topic labels (STM)")))
     showNotification("Codebook seeded from topic labels. Add definitions before coding.", type = "message", duration = 8)
   })
 
   output$qc_codebook_table <- DT::renderDataTable({
     req(qc_codebook())
-    DT::datatable(
+    dt_table(
       qc_codebook(),
       editable = TRUE,
       rownames = FALSE,
@@ -21719,7 +21743,7 @@ server <- shinyServer(function(input, output, session) {
     total <- length(unique(sg$unit_id))
     pct <- round(100 * nrow(u) / max(total, 1))
     tags$p(paste0(nrow(u), " of ", total, " units (", pct, "%) received no code."),
-           style = "font-size: 13px; color: #475569; margin-bottom: 8px;")
+           style = "font-size: var(--font-size-sm); color: #475569; margin-bottom: 8px;")
   })
 
   observeEvent(input$qc_cluster_uncoded, {
@@ -21758,23 +21782,32 @@ server <- shinyServer(function(input, output, session) {
   output$qc_suggest_summary <- renderUI({
     req(qc_suggestions())
     s <- qc_suggestions()
-    div(
-      tags$p(sprintf(
-        "%d suggestions across %d units in %d documents (%d units without a fitting code).",
-        sum(!is.na(s$code)), length(unique(s$unit_id)), length(unique(s$doc_id)),
-        length(unique(s$unit_id[s$status == "no code"]))),
-        style = "font-size: 16px; color: #334155;"),
-      tags$p("Confirm or correct each suggestion in the Review tab; only reviewed rows export.",
-             style = "font-size: 13px; color: #475569;")
-    )
+    tags$p(sprintf(
+      "%d suggestions on %d units (%d without a fitting code). Review them next.",
+      sum(!is.na(s$code)), length(unique(s$unit_id)),
+      length(unique(s$unit_id[s$status == "no code"]))),
+      style = "font-size: var(--font-size-msg); color: #334155;")
   })
+
+  output$qc_suggest_preview <- DT::renderDataTable({
+    req(qc_suggestions())
+    s <- qc_suggestions()
+    s <- s[!is.na(s$code), , drop = FALSE]
+    req(nrow(s) > 0)
+    d <- data.frame(
+      code = names(table(s$code)),
+      suggestions = as.integer(table(s$code)),
+      mean_confidence = round(as.numeric(tapply(s$confidence, s$code, mean, na.rm = TRUE)), 2))
+    d <- d[order(-d$suggestions), , drop = FALSE]
+    dt_table(d, rownames = FALSE, selection = "none", options = list(dom = "t"))
+  }, server = FALSE)
 
   output$qc_review_table <- DT::renderDataTable({
     req(qc_suggestions())
     s <- qc_suggestions()
     d <- s[, c("doc_id", "unit_id", "text", "code", "confidence", "rationale", "status",
                intersect(c("page", "page_end"), names(s)))]
-    DT::datatable(
+    dt_table(
       d,
       rownames = FALSE,
       selection = "multiple",
@@ -21924,7 +21957,7 @@ server <- shinyServer(function(input, output, session) {
   })
 
   qc_result_table <- function(d) {
-    DT::datatable(
+    dt_table(
       d,
       rownames = FALSE,
       extensions = "Buttons",
@@ -22054,15 +22087,15 @@ server <- shinyServer(function(input, output, session) {
   output$spacy_model_status <- renderUI({
     st <- spacy_model_installed()
     if (isTRUE(st$installed)) {
-      div(style = "background: #E1F5EE; border-radius: 4px; padding: 6px 8px; font-size: 13px; color: #085041; margin-bottom: 10px;",
+      div(style = "background: #E1F5EE; border-radius: 4px; padding: 6px 8px; font-size: var(--font-size-sm); color: #085041; margin-bottom: 10px;",
           icon("check-circle"), " Installed")
     } else if (isFALSE(st$installed)) {
-      div(style = "background: #FAEEDA; border-radius: 4px; padding: 8px; font-size: 13px; color: #633806; margin-bottom: 10px;",
+      div(style = "background: #FAEEDA; border-radius: 4px; padding: 8px; font-size: var(--font-size-sm); color: #633806; margin-bottom: 10px;",
           icon("triangle-exclamation"), " Not installed. Run:",
-          tags$div(style = "font-family: monospace; font-size: 13px; margin-top: 4px; color: #412402;",
+          tags$div(style = "font-family: monospace; font-size: var(--font-size-sm); margin-top: 4px; color: #412402;",
                    paste("python -m spacy download", st$model)))
     } else {
-      div(style = "background: #F1F5F9; border-radius: 4px; padding: 6px 8px; font-size: 13px; color: #475569; margin-bottom: 10px;",
+      div(style = "background: #F1F5F9; border-radius: 4px; padding: 6px 8px; font-size: var(--font-size-sm); color: #475569; margin-bottom: 10px;",
           icon("circle-info"), " Python not available")
     }
   })

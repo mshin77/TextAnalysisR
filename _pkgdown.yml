@@ -107,6 +107,9 @@ reference:
   - cluster_embedding_topics
   - auto_tune_embedding_topics
   - assess_embedding_stability
+  - save_topic_model
+  - load_topic_model
+  - transform_topic_model
   - get_topic_terms
   - get_topic_prevalence
   - get_topic_texts
@@ -126,6 +129,8 @@ reference:
   - plot_term_trends_continuous
   - validate_cross_models
   - validate_semantic_coherence
+  - calculate_coherence
+  - generate_semantic_topic_keywords
   - calculate_clustering_metrics
   - calculate_cross_similarity
   - analyze_similarity_gaps
@@ -136,6 +141,7 @@ reference:
   contents:
   - apply_codes
   - code_retest
+  - code_provenance
   - code_agreement
   - uncoded_units
   - merge_codes
@@ -216,7 +222,6 @@ reference:
   - truncate_text_with_ellipsis
   - wrap_long_text
   - wrap_text_for_tooltip
-  - calculate_coherence
   - calculate_contrast_ratio
   - calculate_metrics
   - calculate_topic_cluster_correspondence
@@ -230,7 +235,6 @@ reference:
   - create_sr_text
   - describe_image_gemini
   - describe_image_openai
-  - generate_semantic_topic_keywords
   - generate_topic_keywords
   - get_gemini_embeddings
   - get_openai_embeddings

@@ -113,13 +113,21 @@ names(.llm_provider_choices)[2] <- .gemini_provider_label
 )
 .entity_colors_js <- paste(sprintf("'%s': '%s'", names(.entity_colors), .entity_colors), collapse = ", ")
 
-.remote_notice <- function(what = "The text") {
-  tags$div(
-    class = "status-main-info qc-privacy",
-    tags$i(class = "fas fa-shield-alt status-icon status-icon-info", `aria-hidden` = "true"),
-    paste(what, "is sent to the chosen AI provider: OpenAI and Google receive it online, while a local Ollama model keeps it on this computer. For data under IRB or consent limits, check that the provider is allowed.")
-  )
+dt_table <- function(...) {
+  dt <- DT::datatable(...)
+  d <- dt$x$data
+  if (!is.data.frame(d)) return(dt)
+  is_decimal <- vapply(d, function(x) is.numeric(x) && any(abs(x - round(x)) > 1e-9, na.rm = TRUE), logical(1))
+  is_tiny <- vapply(d, function(x) is.numeric(x) && any(x != 0 & abs(x) < 5e-4, na.rm = TRUE), logical(1))
+  round_cols <- names(d)[is_decimal & !is_tiny]
+  sig_cols <- names(d)[is_decimal & is_tiny]
+  if (length(round_cols)) dt <- DT::formatRound(dt, round_cols, digits = 3)
+  if (length(sig_cols)) dt <- DT::formatSignif(dt, sig_cols, digits = 3)
+  dt
 }
+
+plot_note <- function(message) TextAnalysisR::plot_error(message, color = "#475569")
+
 # cached model staleness check must not hang the session
 # restored on app stop, also when started with shiny::runApp() instead of run_app()
 .hf_env_before <- Sys.getenv(c("HF_HUB_ETAG_TIMEOUT", "HF_HUB_DISABLE_TELEMETRY"), unset = NA)
@@ -190,30 +198,6 @@ options(shiny.useragg = isTRUE(tryCatch({
                 style = "font-style: normal; margin-right: 6px;")
 }
 
-.palette_input <- function(inputId, label, selected = "Blues") {
-  pals <- c("Blues", "Purples", "Greens", "Oranges", "Reds", "Greys",
-            "BuGn", "YlOrRd", "PuRd", "RdBu", "BrBG", "PRGn", "RdYlBu")
-  labels <- c("Blues", "Purples", "Greens", "Oranges", "Reds", "Grays",
-              "Blue-Green", "Yellow-Orange-Red", "Purple-Red",
-              "Red-Blue", "Brown-Teal", "Purple-Green", "Red-Yellow-Blue")
-  opts <- lapply(seq_along(pals), function(i) {
-    cols <- RColorBrewer::brewer.pal(5, pals[i])
-    list(value = pals[i], label = labels[i],
-         gradient = paste0("linear-gradient(to right,", paste(cols, collapse = ","), ")"))
-  })
-  swatch <- "function(item, escape) {
-    return '<div class=\"pal-opt\"><span class=\"pal-bar\" style=\"background:' +
-      item.gradient + '\"></span>' + escape(item.label) + '</div>';
-  }"
-  selectizeInput(
-    inputId, label, choices = NULL, selected = selected,
-    options = list(
-      options = opts, valueField = "value", labelField = "label",
-      searchField = "label", items = list(selected),
-      render = I(paste0("{option: ", swatch, ", item: ", swatch, "}"))
-    )
-  )
-}
 .hl <- function(x) tags$strong(x, style = "color: #4269BF;")
 
 .tab_placeholder <- function(icon_name, ..., width = 400) {
@@ -355,7 +339,7 @@ topic_modeling_ui_content <- function() {
             tags$p(
               tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
               "Runs on whole documents; covariate estimates need one row per respondent.",
-              style = "font-size: 13px; color: #475569; margin-bottom: 12px;"
+              style = "font-size: var(--font-size-sm); color: #475569; margin-bottom: 12px;"
             ),
             uiOutput("stm_k_selector_uiOutput"),
             selectInput(
@@ -488,7 +472,6 @@ topic_modeling_ui_content <- function() {
               selected = .llm_provider_default,
               inline = FALSE
             ),
-            .remote_notice(),
             conditionalPanel(
               condition = "input.stm_label_provider == 'openai'",
               selectizeInput(
@@ -501,7 +484,7 @@ topic_modeling_ui_content <- function() {
               .password_input("stm_label_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -517,7 +500,7 @@ topic_modeling_ui_content <- function() {
               .password_input("stm_label_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -677,7 +660,6 @@ Focus on incorporating the most significant keywords while following the guideli
               selected = .llm_provider_default,
               inline = FALSE
             ),
-            .remote_notice(),
 
             conditionalPanel(
               condition = "input.k_rec_provider == 'openai'",
@@ -694,7 +676,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("k_rec_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -714,7 +696,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("k_rec_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -834,7 +816,6 @@ Focus on incorporating the most significant keywords while following the guideli
               selected = .llm_provider_default,
               inline = FALSE
             ),
-            .remote_notice(),
             conditionalPanel(
               condition = "input.content_provider == 'openai'",
               selectizeInput(
@@ -847,7 +828,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("content_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -863,7 +844,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("content_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -909,7 +890,7 @@ Focus on incorporating the most significant keywords while following the guideli
               tags$i(class = "fa fa-info-circle", style = "margin-right: 5px;"),
               "Emerged reads the topic count from the data and leaves poor fits unassigned. ",
               "Specified fixes the count and assigns every document.",
-              style = "font-size: 13px; color: #475569; margin-top: -6px;"
+              style = "font-size: var(--font-size-sm); color: #475569; margin-top: -6px;"
             ),
 
             conditionalPanel(
@@ -918,7 +899,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 style = "border: 1px dashed #B4531E; background: #FBF0E9; border-radius: 5px; padding: 10px 12px; margin-bottom: 14px;",
                 textOutput("residue_texts_label"),
                 actionLink("clear_residue_texts", "Use the full corpus instead",
-                           style = "font-size: 13px;")
+                           style = "font-size: var(--font-size-sm);")
               )
             ),
 
@@ -976,7 +957,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("topic_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -993,7 +974,7 @@ Focus on incorporating the most significant keywords while following the guideli
               .password_input("topic_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -1198,7 +1179,7 @@ Focus on incorporating the most significant keywords while following the guideli
                 actionLink("embedding_use_cluster_count",
                            textOutput("semantic_cluster_count_label", inline = TRUE)),
                 tags$p("Carries the group count found in Semantic Analysis.",
-                       style = "font-size: 13px; color: #475569; margin-top: 2px;")
+                       style = "font-size: var(--font-size-sm); color: #475569; margin-top: 2px;")
               )
             ),
 
@@ -1209,7 +1190,7 @@ Focus on incorporating the most significant keywords while following the guideli
               tags$hr(style = "margin: 16px 0 12px;"),
               tags$label("Confirm categories", class = "control-label"),
               tags$p("Tests whether a classifier recovers the categories from the text alone. A category it cannot recover may belong with another.",
-                     style = "font-size: 13px; color: #475569; margin-top: 2px;"),
+                     style = "font-size: var(--font-size-sm); color: #475569; margin-top: 2px;"),
               selectInput(
                 "confirm_balance",
                 "Balance categories:",
@@ -1755,7 +1736,7 @@ lexical_analysis_ui_content <- function() {
             condition = "input.conditioned2 == 1 && input.linguistic_subtabs == 'lemmas'",
             tags$h5(
               HTML("<strong>Linguistic Analysis</strong> <a href='https://spacy.io/usage/linguistic-features#lemmatization' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
-              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
+              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: var(--font-size-sm); margin-left: 8px;"),
               style = "color: #4269BF; margin-bottom: 10px;"
             ),
             selectInput(
@@ -1955,7 +1936,7 @@ lexical_analysis_ui_content <- function() {
             uiOutput("readability_text_source_ui"),
             tags$p(
               "Formulas assume running prose with sentence punctuation; keyword or title fields distort words per sentence.",
-              style = "font-size: 14px; color: #475569; margin-top: -5px; margin-bottom: 10px;"
+              style = "font-size: var(--font-size-sm); color: #475569; margin-top: -5px; margin-bottom: 10px;"
             ),
             checkboxGroupInput(
               "readability_metrics",
@@ -2886,7 +2867,7 @@ semantic_analysis_ui_content <- function() {
                 .password_input("embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
-                  tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -2902,7 +2883,7 @@ semantic_analysis_ui_content <- function() {
                 .password_input("embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
-                  tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -3057,7 +3038,7 @@ semantic_analysis_ui_content <- function() {
                 .password_input("search_embedding_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
-                  tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -3073,7 +3054,7 @@ semantic_analysis_ui_content <- function() {
                 .password_input("search_embedding_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
-                  tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               )
@@ -3086,7 +3067,6 @@ semantic_analysis_ui_content <- function() {
                 choices = .llm_provider_choices_local,
                 selected = .llm_provider_default
               ),
-              .remote_notice(),
               conditionalPanel(
                 condition = "input.rag_provider == 'openai'",
                 selectizeInput(
@@ -3099,7 +3079,7 @@ semantic_analysis_ui_content <- function() {
                 .password_input("rag_openai_api_key", "API Key:", placeholder = "sk-..."),
                 conditionalPanel(
                   condition = "output.has_openai_key",
-                  tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               ),
@@ -3115,7 +3095,7 @@ semantic_analysis_ui_content <- function() {
                 .password_input("rag_gemini_api_key", "API Key:", placeholder = "AIza..."),
                 conditionalPanel(
                   condition = "output.has_gemini_key",
-                  tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                  tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                     icon("check-circle"), " Key stored. Enter new key to override.")
                 )
               )
@@ -3257,7 +3237,6 @@ semantic_analysis_ui_content <- function() {
               selected = .llm_provider_default,
               inline = FALSE
             ),
-            .remote_notice(),
 
             conditionalPanel(
               condition = "input.cluster_label_provider == 'openai'",
@@ -3271,7 +3250,7 @@ semantic_analysis_ui_content <- function() {
               .password_input("cluster_openai_api_key", "API Key:", placeholder = "sk-..."),
               conditionalPanel(
                 condition = "output.has_openai_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -3288,7 +3267,7 @@ semantic_analysis_ui_content <- function() {
               .password_input("cluster_gemini_api_key", "API Key:", placeholder = "AIza..."),
               conditionalPanel(
                 condition = "output.has_gemini_key",
-                tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+                tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
                   icon("check-circle"), " Key stored. Enter new key to override.")
               )
             ),
@@ -3348,15 +3327,15 @@ semantic_analysis_ui_content <- function() {
                 ),
                 checkboxInput(
                   "sentiment_domain_neutral",
-                  "Treat topic words as neutral (disability, intervention, significant, ...)",
+                  "Score subject terms as neutral",
                   value = TRUE
                 ),
                 conditionalPanel(
                   condition = "input.sentiment_lexicon == 'sentimentr'",
                   tags$p(
                     class = "text-muted",
-                    style = "font-size: 13px; margin: -8px 0 12px 0;",
-                    HTML("Weights each word by nearby negators and amplifiers. Scores are unbounded, so compare within this corpus. <a href='https://github.com/trinker/sentimentr' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;'>Source</a>")
+                    style = "font-size: var(--font-size-sm); margin: -8px 0 12px 0;",
+                    HTML("Adjusts for negators and amplifiers. <a href='https://github.com/trinker/sentimentr' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;'>Source</a>")
                   )
                 ),
                 actionButton("run_sentiment_analysis", "Analyze Sentiment", class = "btn-primary btn-block"),
@@ -3386,7 +3365,6 @@ semantic_analysis_ui_content <- function() {
                   selected = .llm_provider_default,
                   inline = FALSE
                 ),
-                .remote_notice(),
                 uiOutput("llm_sentiment_model_ui"),
                 checkboxInput(
                   "llm_sentiment_explanation",
@@ -3489,7 +3467,11 @@ semantic_analysis_ui_content <- function() {
               "Minimum frequency",
               value = 1, min = 1, step = 1
             ),
-            .palette_input("wordcloud_palette", "Color scale"),
+            if (requireNamespace("colourpicker", quietly = TRUE)) {
+              colourpicker::colourInput("wordcloud_color", "Color scale", value = "#4269BF")
+            } else {
+              textInput("wordcloud_color", "Color scale", value = "#4269BF")
+            },
             selectInput(
               "wordcloud_shape",
               "Shape",
@@ -3499,13 +3481,6 @@ semantic_analysis_ui_content <- function() {
                           "Triangle (rotated)" = "triangle-forward",
                           "Pentagon" = "pentagon", "Star" = "star"),
               selected = "circle"
-            ),
-            selectInput(
-              "wordcloud_font",
-              "Font",
-              choices = c("Sans serif" = "sans", "Serif" = "serif",
-                          "Monospace" = "mono"),
-              selected = "sans"
             ),
             sliderInput(
               "wordcloud_rotate",
@@ -3586,10 +3561,7 @@ semantic_analysis_ui_content <- function() {
                 selected = "degree"
               ),
               if (requireNamespace("colourpicker", quietly = TRUE)) {
-                colourpicker::colourInput("edge_color_cooccur", "Edge color", value = "#5C5CFF",
-                                          palette = "limited",
-                                          allowedCols = c("#5C5CFF", "#4269BF", "#9C3AD7", "#0C795A",
-                                                          "#D9622B", "#B84D94", "#94A3B8", "#3B3B3B"))
+                colourpicker::colourInput("edge_color_cooccur", "Edge color", value = "#5C5CFF")
               } else {
                 textInput("edge_color_cooccur", "Edge color", value = "#5C5CFF")
               },
@@ -3708,10 +3680,7 @@ semantic_analysis_ui_content <- function() {
                 selected = "degree"
               ),
               if (requireNamespace("colourpicker", quietly = TRUE)) {
-                colourpicker::colourInput("edge_color_corr", "Edge color", value = "#5C5CFF",
-                                          palette = "limited",
-                                          allowedCols = c("#5C5CFF", "#4269BF", "#9C3AD7", "#0C795A",
-                                                          "#D9622B", "#B84D94", "#94A3B8", "#3B3B3B"))
+                colourpicker::colourInput("edge_color_corr", "Edge color", value = "#5C5CFF")
               } else {
                 textInput("edge_color_corr", "Edge color", value = "#5C5CFF")
               },
@@ -4164,7 +4133,7 @@ qualitative_coding_ui_content <- function() {
   tags$p(class = "qc-autosave-note", textOutput("qc_autosave_note", inline = TRUE)),
   uiOutput("qc_file_banner"),
   uiOutput("qc_restore_banner"),
-  uiOutput("qc_stepper"),
+  uiOutput("qc_holdout_notice"),
   sidebarLayout(
     sidebarPanel(
       width = 3,
@@ -4172,10 +4141,11 @@ qualitative_coding_ui_content <- function() {
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_ruling'",
         tags$h5(strong("Rule on the groups"), style = "color: #4269BF; margin-bottom: 10px;"),
+        uiOutput("qc_src_groups"),
         tags$div(
           class = "status-main-info",
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
-          "Groups come from an embedding topic model (Topic Modeling). Give every group a verdict, then close the round."
+          "Optional. Needs an embedding topic model. Give every group a verdict, then close the round."
         ),
         uiOutput("qc_ruling_status"),
         actionButton("qc_close_round", "Close round", class = "btn-primary btn-block"),
@@ -4188,7 +4158,7 @@ qualitative_coding_ui_content <- function() {
         tags$h5(strong("Annotate units"), style = "color: #4269BF; margin-bottom: 10px;"),
         selectInput("qc_ann_source", "Show units from",
                     choices = c("Loose units (no group)" = "loose", "Blind holdout" = "holdout")),
-        tags$p("Loose units are the ones no group holds: the place a missing category shows up.",
+        tags$p("Groups are optional. Without them, every unit is loose. With them, loose units are the ones no group holds.",
                class = "qc-tip"),
         textAreaInput("qc_ann_memo", "Memo on this unit", rows = 3, width = "100%"),
         actionButton("qc_ann_save_memo", "Save memo", class = "btn-default btn-sm")
@@ -4196,6 +4166,7 @@ qualitative_coding_ui_content <- function() {
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_codebook'",
         tags$h5(strong("Build the codebook"), style = "color: #4269BF; margin-bottom: 10px;"),
+        uiOutput("qc_src_codebook"),
         tags$div(
           class = "status-main-info",
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
@@ -4214,15 +4185,11 @@ qualitative_coding_ui_content <- function() {
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_ai'",
         tags$h5(strong("Configure AI coding"), style = "color: #4269BF; margin-bottom: 10px;"),
+        uiOutput("qc_src_coding"),
         tags$div(
           class = "status-main-info",
           tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
           "AI output is a suggestion. Each code needs review before export."
-        ),
-        tags$div(
-          class = "status-main-info qc-privacy",
-          tags$i(class = "fas fa-shield-alt status-icon status-icon-info"),
-          "The text of each unit coded is sent to the chosen AI provider. For data under IRB or consent limits, run TextAnalysisR on a local computer and check that the provider is allowed."
         ),
         tags$div(
           class = "status-main-info",
@@ -4238,7 +4205,7 @@ qualitative_coding_ui_content <- function() {
           checkboxInput("qc_stratify_by_topic",
                         "Spread the sample across topics", value = TRUE),
           tags$p("Draws proportionally from each topic instead of taking the first documents.",
-                 style = "font-size: 13px; color: #475569; margin-top: -8px;")
+                 style = "font-size: var(--font-size-sm); color: #475569; margin-top: -8px;")
         ),
         radioButtons(
           "qc_provider", "AI Provider:",
@@ -4246,7 +4213,6 @@ qualitative_coding_ui_content <- function() {
           selected = .llm_provider_default,
           inline = FALSE
         ),
-        .remote_notice(),
         conditionalPanel(
           condition = "input.qc_provider == 'openai'",
           selectizeInput(
@@ -4258,7 +4224,7 @@ qualitative_coding_ui_content <- function() {
           .password_input("qc_openai_api_key", "API Key:", placeholder = "sk-..."),
           conditionalPanel(
             condition = "output.has_openai_key",
-            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         ),
@@ -4273,7 +4239,7 @@ qualitative_coding_ui_content <- function() {
           .password_input("qc_gemini_api_key", "API Key:", placeholder = "AIza..."),
           conditionalPanel(
             condition = "output.has_gemini_key",
-            tags$div(style = "color: #0C795A; font-size: 13px; margin-top: -8px; margin-bottom: 8px;",
+            tags$div(style = "color: #0C795A; font-size: var(--font-size-sm); margin-top: -8px; margin-bottom: 8px;",
               icon("check-circle"), " Key stored. Enter new key to override.")
           )
         ),
@@ -4304,7 +4270,7 @@ qualitative_coding_ui_content <- function() {
                        class = "btn-warning btn-block"),
           downloadButton("qc_download_uncoded", "Export uncoded", class = "btn-default btn-block"),
           tags$p("Clustering sends the residue to Topic Modeling as the next round. Read these for content the codebook misses; recurring themes belong in a revision.",
-                 style = "font-size: 13px; color: #475569; margin-top: 6px;"),
+                 style = "font-size: var(--font-size-sm); color: #475569; margin-top: 6px;"),
           tags$hr(style = "margin: 16px 0 12px;")
         ),
         tags$label("Export accepted", class = "control-label"),
@@ -4316,47 +4282,42 @@ qualitative_coding_ui_content <- function() {
       ),
       conditionalPanel(
         condition = "input.qual_coding_tabs == 'qc_agree'",
-        tags$h5(strong("Inter-coder agreement"), style = "color: #4269BF; margin-bottom: 10px;"),
-        tags$div(
-          class = "status-main-info",
-          tags$i(class = "fas fa-info-circle status-icon status-icon-info"),
-          "Combine coder files exported from the Review tab, then compute chance-corrected agreement."
-        ),
+        tags$h5(strong("Blind holdout"), style = "color: #4269BF; margin-bottom: 10px;"),
+        uiOutput("qc_holdout_summary"),
+        numericInput("qc_holdout_n", "Holdout size", value = 50, min = 10, max = 500, step = 5),
+        selectInput("qc_holdout_strata", "Spread across", choices = c("None" = "")),
+        actionButton("qc_draw_holdout", "Draw holdout", class = "btn-default btn-block"),
+        tags$p("Drawn from units not opened yet.",
+               class = "qc-tip"),
+        hr(),
+        tags$h5(strong("AI retest"), style = "color: #4269BF; margin-bottom: 10px;"),
+        numericInput("qc_retest_runs", "Runs", value = 2, min = 2, max = 5, step = 1),
+        numericInput("qc_retest_sample", "Documents", value = 10, min = 2, max = 100, step = 1),
+        actionButton("qc_run_retest", "Run Retest", class = "btn-primary btn-block", icon = .ai_mark()),
+        hr(),
+        tags$h5(strong("Agreement"), style = "color: #4269BF; margin-bottom: 10px;"),
         fileInput("qc_coder_files", "Coder files",
                   accept = c(".csv", ".xlsx", ".xls", ".txt", ".rds"), multiple = TRUE),
-        tags$p("One project file (.rds) or Review export per coder.",
-               style = "font-size: 13px; color: #475569; margin-top: -8px;"),
-        checkboxInput("qc_include_own", "Include this project's codes (accepted AI suggestions are left out)", value = TRUE),
+        tags$p("One .rds project or Review export per coder.",
+               style = "font-size: var(--font-size-sm); color: #475569; margin-top: -8px;"),
+        checkboxInput("qc_include_own", "Include my codes", value = TRUE),
         checkboxInput("qc_agree_holdout_only", "Holdout units only", value = TRUE),
         radioButtons(
           "qc_align", "Unit alignment",
-          choices = c("Several codes per unit (presence)" = "presence",
-                      "One code per unit (grid)" = "grid",
-                      "Span overlap (coverage)" = "coverage"),
+          choices = c("Several codes per unit" = "presence",
+                      "One code per unit" = "grid",
+                      "Span overlap" = "coverage"),
           selected = "presence"
         ),
         conditionalPanel(
           condition = "input.qc_align != 'coverage'",
           radioButtons(
             "qc_agree_units", "Units",
-            choices = c("Coded by every coder" = "intersection", "Union (missing allowed)" = "union"),
+            choices = c("Coded by every coder" = "intersection", "Any coder" = "union"),
             selected = "intersection"
           )
         ),
-        actionButton("qc_run_agreement", "Compute Agreement", class = "btn-primary btn-block"),
-        hr(),
-        tags$h5(strong("Blind holdout"), style = "color: #4269BF; margin-bottom: 10px;"),
-        uiOutput("qc_holdout_summary"),
-        numericInput("qc_holdout_n", "Holdout size", value = 50, min = 10, max = 500, step = 5),
-        selectInput("qc_holdout_strata", "Spread across", choices = c("None" = "")),
-        actionButton("qc_draw_holdout", "Draw holdout", class = "btn-default btn-block"),
-        tags$p("Drawn only from units no one opened during refinement. Each coder codes it in Annotate before seeing model codes.",
-               class = "qc-tip"),
-        hr(),
-        tags$h5(strong("AI retest stability"), style = "color: #4269BF; margin-bottom: 10px;"),
-        numericInput("qc_retest_runs", "Runs", value = 2, min = 2, max = 5, step = 1),
-        numericInput("qc_retest_sample", "Documents to sample", value = 10, min = 2, max = 100, step = 1),
-        actionButton("qc_run_retest", "Run Retest", class = "btn-primary btn-block", icon = .ai_mark())
+        actionButton("qc_run_agreement", "Compute Agreement", class = "btn-primary btn-block")
       )
     ),
     mainPanel(
@@ -4389,7 +4350,7 @@ qualitative_coding_ui_content <- function() {
           )
         ),
         tabPanel(
-          "Group ruling",
+          "Group Ruling",
           value = "qc_ruling",
           div(
             style = "padding: 20px;",
@@ -4401,9 +4362,9 @@ qualitative_coding_ui_content <- function() {
               condition = "output.has_qc_groups == false",
               .tab_placeholder(
                 tags$i(class = "fas fa-layer-group", style = "font-size: 48px; color: #CBD5E1; margin-bottom: 20px; display: block;"),
-                "Run an embedding topic model in ",
+                "Optional. Needs an embedding topic model (not STM) from ",
                 .hl("Topic Modeling"),
-                " to detect groups, then rule on each one here.",
+                ". To skip it, code in Annotate or AI Coding.",
                 width = NULL
               )
             )
@@ -4424,7 +4385,8 @@ qualitative_coding_ui_content <- function() {
             style = "padding: 20px;",
             conditionalPanel(
               condition = "output.has_qc_suggestions == true",
-              uiOutput("qc_suggest_summary")
+              uiOutput("qc_suggest_summary"),
+              DT::dataTableOutput("qc_suggest_preview")
             ),
             conditionalPanel(
               condition = "output.has_qc_suggestions == false",
@@ -4459,7 +4421,7 @@ qualitative_coding_ui_content <- function() {
           )
         ),
         tabPanel(
-          "Agreement",
+          "Confirm",
           value = "qc_agree",
           div(
             style = "padding: 20px;",

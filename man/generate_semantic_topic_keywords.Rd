@@ -32,4 +32,4 @@ Generate keywords for topics using c-TF-IDF (class-based TF-IDF), similar to BER
 This method treats all documents in a topic as a single document and calculates TF-IDF
 scores relative to other topics.
 }
-\keyword{internal}
+\concept{topic-modeling}

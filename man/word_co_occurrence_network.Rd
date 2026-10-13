@@ -58,7 +58,7 @@ pairwise computation.}
 
 \item{edge_color}{Hex color for network edges.}
 
-\item{node_color_by}{Node coloring method: "community" or "centrality" (default: "community").}
+\item{node_color_by}{Node coloring method: "community" or "frequency" (default: "community").}
 
 \item{seed}{Integer seed for the force-directed layout, so the plot is reproducible (default: 123).}
 

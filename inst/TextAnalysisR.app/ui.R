@@ -119,7 +119,7 @@ ui <- fluidPage(
       .password-toggle {
         position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
         background: none; border: none; cursor: pointer; color: #888;
-        padding: 2px 4px; font-size: 14px; line-height: 1; z-index: 2;
+        padding: 2px 4px; font-size: var(--font-size-sm); line-height: 1; z-index: 2;
       }
       .password-toggle:hover { color: #333; }
     ")),
@@ -223,6 +223,15 @@ ui <- fluidPage(
           tags$span("Translate")
         )
       )
+    ),
+    tags$a(
+      id = "controls_toggle",
+      href = "javascript:void(0);",
+      style = "cursor: pointer; text-decoration: none; color: #5F7088; font-size: 20px; user-select: none;",
+      `aria-label` = "Settings",
+      `aria-expanded` = "false",
+      title = "Settings",
+      tags$i(class = "fa fa-cog", `aria-hidden` = "true", style = "pointer-events: none;")
     )
   ),
   includeCSS("www/styles.css"),
@@ -310,12 +319,13 @@ ui <- fluidPage(
           class = "sidebar-panel",
           tags$h5(
             HTML("<strong>AI Configuration</strong>"),
-            tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
+            tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: var(--font-size-sm); margin-left: 8px;"),
             style = "color: #4269BF; margin-bottom: 10px;"
           ),
           tags$p(class = "text-muted", style = "font-size: 16px;", "API keys entered here apply to all AI features. You can also enter keys per-feature."),
           .password_input("global_openai_api_key", "OpenAI API Key:", placeholder = "sk-..."),
           .password_input("global_gemini_api_key", "Gemini API Key:", placeholder = "AIza..."),
+          tags$p(class = "text-muted", style = "font-size: 16px;", "Text sent to OpenAI or Gemini leaves this computer; Ollama keeps it local. For IRB or consent-limited data, confirm the provider is allowed."),
           tags$hr(),
           tags$h5(
             HTML("<strong>Usage Log</strong>"),
@@ -463,7 +473,7 @@ ui <- fluidPage(
               selected = "document"
             ),
             tags$p("Set before uploading. Every row keeps its PDF page range (page, page_end).",
-                   style = "font-size: 13px; color: #475569; margin-top: -8px;"),
+                   style = "font-size: var(--font-size-sm); color: #475569; margin-top: -8px;"),
             checkboxInput(
               "remove_metadata",
               "Remove database metadata lines",
@@ -533,7 +543,7 @@ Supports:
             condition = "input.conditioned == 1",
             tags$h5(
               HTML("<strong>Select columns</strong> <a href='https://tidyr.tidyverse.org/reference/unite.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
-              tags$span("REQUIRED", style = "background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
+              tags$span("REQUIRED", style = "background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 3px; font-size: var(--font-size-sm); margin-left: 8px;"),
               style = "color: #4269BF; margin-bottom: 10px;"
             ),
             div(class = "checkbox-margin", checkboxGroupInput("show_vars",
@@ -554,14 +564,14 @@ Supports:
                           "Whole rows" = "document"),
               selected = "sentence"
             ),
-            tags$p("Read by embedding topic modeling and AI coding only; other stages use whole rows. Paragraph splitting needs a blank line, rare in spreadsheet text.",
-                   style = "font-size: 13px; color: #475569; margin-top: -8px;")
+            tags$p("Used by embedding topic modeling and AI coding.",
+                   style = "font-size: var(--font-size-sm); color: #475569; margin-top: -8px;")
           ),
           conditionalPanel(
             condition = "input.conditioned == 2",
             tags$h5(
               HTML("<strong>Segment corpus into tokens</strong> <a href='https://quanteda.io/reference/tokens.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
-              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
+              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: var(--font-size-sm); margin-left: 8px;"),
               style = "color: #4269BF; margin-bottom: 10px;"
             ),
             tags$div(
@@ -614,7 +624,7 @@ Supports:
             condition = "input.conditioned == 4",
             tags$h5(
               HTML("<strong>Detect multi-words</strong> <a href='https://www.tidytextmining.com/ngrams' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
-              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
+              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: var(--font-size-sm); margin-left: 8px;"),
               style = "color: #4269BF; margin-bottom: 10px;"
             ),
             checkboxGroupInput(
@@ -693,7 +703,7 @@ Supports:
               style = "display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;",
               tags$h5(
                 HTML("<strong>Document-feature matrix</strong> <a href='https://quanteda.io/reference/dfm.html' target='_blank' rel='noopener noreferrer' onclick='window.open(this.href); return false;' style='font-size: 16px;'>Source</a>"),
-                tags$span("REQUIRED", style = "background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
+                tags$span("REQUIRED", style = "background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 3px; font-size: var(--font-size-sm); margin-left: 8px;"),
                 style = "color: #4269BF; margin: 0;"
               ),
               actionLink("showDFMInfo", tags$i(class = "fas fa-info-circle"),
@@ -716,7 +726,7 @@ Supports:
             condition = "input.conditioned == 3",
             tags$h5(
               strong("Remove stopwords"),
-              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 13px; margin-left: 8px;"),
+              tags$span("OPTIONAL", style = "background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: var(--font-size-sm); margin-left: 8px;"),
               style = "color: #4269BF; margin-bottom: 10px;"
             ),
             selectizeInput(

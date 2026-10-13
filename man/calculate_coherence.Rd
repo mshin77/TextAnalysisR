@@ -2,19 +2,22 @@
 % Please edit documentation in R/topic_modeling.R
 \name{calculate_coherence}
 \alias{calculate_coherence}
-\title{Validate Semantic Coherence}
+\title{Topic Coherence in Embedding Space}
 \usage{
 calculate_coherence(embeddings, topic_assignments)
 }
 \arguments{
-\item{embeddings}{Document embeddings.}
+\item{embeddings}{Document embedding matrix (rows are documents).}
 
-\item{topic_assignments}{Topic assignments.}
+\item{topic_assignments}{Topic assignment per document.}
 }
 \value{
-Coherence metrics.
+A list with \code{coherence_scores}, \code{mean_coherence}, and \code{topic_coherence}
+(named by topic).
 }
 \description{
-Validates semantic coherence of topic assignments.
+Mean pairwise cosine similarity of documents within each topic. This is a
+document-embedding measure, not word-based coherence (UMass, NPMI, C_v). Every
+label in \code{topic_assignments} is scored, including any outlier label.
 }
-\keyword{internal}
+\concept{topic-modeling}

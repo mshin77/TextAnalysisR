@@ -82,3 +82,16 @@ test_that("line-end hyphens join only when the joined word occurs elsewhere", {
   expect_true(any(grepl("evidence-based", out, fixed = TRUE)))
   expect_true(any(grepl("an intervention and", out, fixed = TRUE)))
 })
+
+test_that("pasted text keeps blank-line paragraph breaks", {
+  d <- import_files("Copy and Paste Text", text_input = "One. Two.\n\nThree.\r\n\r\nFour.")
+  expect_equal(d$text, "One. Two.\n\nThree.\n\nFour.")
+  expect_equal(nrow(split_texts(c(a = d$text), "paragraph")), 3L)
+})
+
+test_that("unite_cols keeps blank-line paragraph breaks and flattens single newlines", {
+  df <- data.frame(text = "One  line\nstill one.\n\n\nSecond para.", stringsAsFactors = FALSE)
+  out <- unite_cols(df, c("text"))
+  expect_equal(out$united_texts, "One line still one.\n\nSecond para.")
+  expect_equal(nrow(split_texts(c(a = out$united_texts), "paragraph")), 2L)
+})

@@ -34,3 +34,4 @@ __pycache__$
 ^tests/manual$
 (^|/)\.env$
 ^[^/]+\.rds$
+^inst/TextAnalysisR\.app/coding-project-.*\.rds$

@@ -95,9 +95,8 @@ output$qc_file_banner <- renderUI({
   saved <- tryCatch(format(file.info(path)$mtime, "%Y-%m-%d %H:%M"), error = function(e) "earlier")
   div(class = "qc-restore-banner", role = "status",
       tags$i(class = "fa fa-folder-open", `aria-hidden` = "true"),
-      sprintf(" A saved project for %s was found (%s). Autosave is paused until a choice is made.",
-              qc_coder(), saved),
-      actionButton("qc_open_saved", "Open it", class = "btn-default btn-sm"),
+      tags$span(class = "qc-msg-text", sprintf("Saved project for %s found (%s). Autosave paused.", qc_coder(), saved)),
+      actionButton("qc_open_saved", "Open", class = "btn-default btn-sm"),
       actionButton("qc_start_new", "Start new", class = "btn-link btn-sm"))
 })
 
@@ -149,7 +148,7 @@ observeEvent(qc_project_debounced(), {
     return()
   }
   if (!qc_autosave_ok()) {
-    qc_save_status("Autosave paused · choose Open it or Start new")
+    qc_save_status("Autosave paused · choose Open or Start new")
     return()
   }
   path <- qc_autosave_path()
@@ -210,10 +209,11 @@ output$qc_restore_banner <- renderUI({
   copy <- qc_device_copy()
   if (is.null(copy)) return(NULL)
   n <- length(copy$rulings$group %||% list()) + length(copy$assignments$unit_id %||% list())
+  if (n == 0) return(NULL)
   div(class = "qc-restore-banner", role = "status",
       tags$i(class = "fa fa-history", `aria-hidden` = "true"),
-      sprintf(" Unsaved work from %s UTC was kept on this device (%d entries; memo text is not kept on the device).",
-              sub("T", " ", copy$saved %||% "an earlier session"), n),
+      tags$span(class = "qc-msg-text", sprintf("Unsaved work from %s UTC kept on this device (%d entries, no memo text).",
+              sub("T", " ", copy$saved %||% "an earlier session"), n)),
       actionButton("qc_restore_device", "Restore", class = "btn-default btn-sm"),
       actionButton("qc_discard_device", "Discard", class = "btn-link btn-sm"))
 })
@@ -351,35 +351,56 @@ qc_round <- reactive({
 
 qc_settled <- reactive(TextAnalysisR::ruling_settled(qc_rulings_rv()))
 
-# stepper
+# source lines in the sidebars
 
-output$qc_stepper <- renderUI({
-  p <- qc_project()
-  coded <- p$assignments$status %in% c("human", "human-none")
-  step <- function(n, label, detail, state, target) {
-    actionLink(paste0("qc_go_", target),
-               tagList(tags$span(class = "qc-step-n", n), tags$span(class = "qc-step-label", label),
-                       tags$span(class = "qc-step-detail", detail),
-                       tags$span(class = "sr-only", switch(state, done = "(done)", current = "(current step)", "(not started)"))),
-               class = paste("qc-step", state),
-               `aria-current` = if (state == "current") "step" else NULL)
-  }
-  div(class = "qc-stepper", role = "list",
-      step(1, "Detect", if (is.null(qc_units())) "run an embedding topic model" else
-        sprintf("%d groups", length(unique(setdiff(qc_detection()$groups, "0")))),
-        if (is.null(qc_units())) "todo" else "done", "detect"),
-      step(2, "Refine", if (qc_settled()) "settled" else sprintf("round %d", qc_round()),
-        if (qc_settled()) "done" else if (is.null(qc_units())) "todo" else "current", "ruling"),
-      step(3, "Annotate", sprintf("%d units coded", length(unique(p$assignments$unit_id[coded]))),
-        if (any(coded)) "current" else "todo", "annotate"),
-      step(4, "Confirm", if (nrow(p$holdout) == 0) "draw holdout" else sprintf("holdout %d", nrow(p$holdout)),
-        if (nrow(p$holdout) > 0) "current" else "todo", "agree"))
+qc_tag <- function(label, kind) tags$span(class = paste("qc-tag", kind), label)
+qc_src_row <- function(key, ...) div(class = "qc-route-item", tags$span(class = "qc-route-key", key), ...)
+
+qc_codebook_line <- reactive({
+  cb <- qc_codebook()
+  src <- qc_codebook_source()
+  if (is.null(cb) || nrow(cb) == 0) return(tagList(qc_tag("None", "qc-tag-plain")))
+  tagList(lapply(if (length(src)) src else "Project file",
+                 function(x) qc_tag(x, if (grepl("^Topic labels", x)) "qc-tag-topic" else "qc-tag-plain")),
+          sprintf("%d codes", nrow(cb)))
 })
 
-observeEvent(input$qc_go_detect, updateNavbarPage(session, "main_navbar", selected = "Topic Modeling"), ignoreInit = TRUE)
-observeEvent(input$qc_go_ruling, updateTabsetPanel(session, "qual_coding_tabs", selected = "qc_ruling"))
-observeEvent(input$qc_go_annotate, updateTabsetPanel(session, "qual_coding_tabs", selected = "qc_annotate"))
-observeEvent(input$qc_go_agree, updateTabsetPanel(session, "qual_coding_tabs", selected = "qc_agree"))
+output$qc_src_codebook <- renderUI(div(class = "qc-route", qc_src_row("Source", qc_codebook_line())))
+
+output$qc_src_groups <- renderUI({
+  u <- qc_units()
+  div(class = "qc-route", qc_src_row("Groups",
+    if (is.null(u)) tagList(qc_tag("None", "qc-tag-plain"), "no embedding model") else
+      tagList(qc_tag("Embedding model", "qc-tag-topic"),
+              sprintf("%d groups, round %d", length(unique(setdiff(qc_detection()$groups, "0"))), qc_round()))))
+})
+
+output$qc_src_coding <- renderUI({
+  cb <- qc_codebook()
+  s <- qc_suggestions()
+  model <- switch(input$qc_provider %||% "", openai = input$qc_openai_model, gemini = input$qc_gemini_model, NULL)
+  with_examples <- !is.null(cb) && "example" %in% names(cb) && any(!is.na(cb$example) & nzchar(cb$example))
+  who <- paste(c(input$qc_provider, model)[nzchar(c(input$qc_provider, model))], collapse = " ")
+  div(class = "qc-route",
+      qc_src_row("Codebook", qc_codebook_line()),
+      qc_src_row("Mode", qc_tag(if (with_examples) "AI with examples" else "AI zero-shot", "qc-tag-ai"),
+                 if (nzchar(who)) who),
+      qc_src_row("Groups", if (is.null(qc_units())) tagList(qc_tag("None", "qc-tag-plain"), "not used") else
+        tagList(qc_tag("Embedding model", "qc-tag-topic"), "not used for coding")))
+})
+
+# stepper
+
+output$qc_holdout_notice <- renderUI({
+  p <- qc_project()
+  if (is.null(qc_units()) || nrow(p$holdout) > 0) return(NULL)
+  tags$p(class = "qc-tip",
+    "Draw the blind holdout before ruling or annotating; units opened first cannot be held out. ",
+    actionLink("qc_go_agree_first", "Draw holdout"))
+})
+
+observeEvent(input$qc_go_agree_first, if (input$qc_go_agree_first > 0) updateTabsetPanel(session, "qual_coding_tabs", selected = "qc_agree"), ignoreInit = TRUE)
+
 
 # group ruling
 
@@ -575,15 +596,15 @@ qc_ann_units <- reactive({
   u <- qc_units()
   src <- input$qc_ann_source %||% "loose"
   hidden <- qc_holdout_rv()$unit_id
-  ids <- if (src == "holdout") hidden
-         else if (!is.null(u) && src == "loose") u$ids[qc_groups() == "0"]
-         else if (!is.null(u)) u$ids[qc_groups() == sub("^group:", "", src)]
-         else character(0)
-  if (src != "holdout") ids <- setdiff(ids, hidden)
   texts <- if (!is.null(u)) u$texts else {
-    raw <- analysis_texts()
+    raw <- tryCatch(analysis_texts(), error = function(e) character(0))
     stats::setNames(gsub("\r\n?", "\n", unname(as.character(raw))), names(raw))
   }
+  ids <- if (src == "holdout") hidden
+         else if (is.null(u)) names(texts)
+         else if (src == "loose") u$ids[qc_groups() == "0"]
+         else u$ids[qc_groups() == sub("^group:", "", src)]
+  if (src != "holdout") ids <- setdiff(ids, hidden)
   ids <- ids[ids %in% names(texts)]
   list(ids = ids, texts = texts)
 })
@@ -591,9 +612,9 @@ qc_ann_units <- reactive({
 observe({
   u <- qc_units()
   groups <- if (is.null(u)) character(0) else sort(unique(setdiff(qc_groups(), "0")))
-  n_loose <- if (is.null(u)) 0L else sum(qc_groups() == "0")
+  n_loose <- if (is.null(u)) length(tryCatch(analysis_texts(), error = function(e) NULL)) else sum(qc_groups() == "0")
   choices <- c(stats::setNames("loose", sprintf("Loose units (%d)", n_loose)), "Blind holdout" = "holdout",
-               stats::setNames(paste0("group:", groups), paste("Group", qc_group_key(groups))))
+               if (length(groups)) stats::setNames(paste0("group:", groups), paste("Group", qc_group_key(groups))))
   current <- isolate(input$qc_ann_source)
   fallback <- if (n_loose > 0 || length(groups) == 0) "loose" else paste0("group:", groups[1])
   keep <- !is.null(current) && current %in% choices && !(current == "loose" && n_loose == 0)
@@ -654,7 +675,8 @@ output$qc_ann_panel <- renderUI({
   cur <- qc_ann_current()
   if (is.null(cur)) {
     return(div(class = "qc-empty",
-               if ((input$qc_ann_source %||% "loose") == "holdout") "Draw the blind holdout in the Agreement tab first."
+               if (length(qc_ann_units()$texts) == 0) "Upload and unite texts first (Upload, then Preprocess)."
+               else if ((input$qc_ann_source %||% "loose") == "holdout") "Draw the blind holdout in the Confirm tab first."
                else "No units to show for this source."))
   }
   p <- qc_project()

@@ -15,7 +15,8 @@ apply_codes(
   api_key = NULL,
   max_tokens = NULL,
   delay = 1,
-  verbose = TRUE
+  verbose = TRUE,
+  seed = NULL
 )
 }
 \arguments{
@@ -43,6 +44,9 @@ fits return one row with \code{code = NA}.}
 \item{delay}{Seconds to wait between provider calls (default 1).}
 
 \item{verbose}{Logical; print per-unit progress (default TRUE).}
+
+\item{seed}{Optional integer sent to OpenAI as the request seed; recorded
+by \code{\link[=code_provenance]{code_provenance()}}.}
 }
 \value{
 A tibble with one row per unit-code pair: \code{doc_id}, \code{unit_id},

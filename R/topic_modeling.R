@@ -942,6 +942,8 @@ run_neural_topics_internal <- function(texts, n_topics = 10, hidden_layers = 2,
 #' @param precomputed_embeddings Optional matrix of pre-computed document embeddings.
 #'   If provided, skips embedding generation to avoid recomputation. Must have
 #'   the same number of rows as the length of texts.
+#' @param stop_words Optional stop words for the BERTopic keywords: "english" or a
+#'   character vector. Applies to the "umap_hdbscan" method with the Python backend.
 #'
 #' @return A list containing topic assignments, topic keywords, and quality metrics.
 #'
@@ -994,10 +996,15 @@ fit_embedding_model <- function(texts,
                                    outlier_threshold = 0.0,
                                    seed = 123,
                                    verbose = TRUE,
-                                   precomputed_embeddings = NULL) {
+                                   precomputed_embeddings = NULL,
+                                   stop_words = NULL) {
 
   if (is.null(texts) || length(texts) == 0) {
     stop("No texts provided for analysis")
+  }
+
+  if (!missing(stop_words) && !identical(method, "umap_hdbscan")) {
+    warning("stop_words applies only to method = \"umap_hdbscan\".", call. = FALSE)
   }
 
   backend <- match.arg(backend, c("auto", "python", "r"))
@@ -1081,7 +1088,7 @@ fit_embedding_model <- function(texts,
         return(.notify_missing_python("Semantic topic modeling (sentence-transformers)"))
       }
       sentence_transformers <- .py_import("sentence_transformers")
-      model <- sentence_transformers$SentenceTransformer(embedding_model)
+      model <- sentence_transformers$SentenceTransformer(.st_model_ref(embedding_model))
 
       n_docs <- length(valid_texts)
       batch_size <- if (n_docs > 100) 25 else if (n_docs > 50) 50 else n_docs
@@ -1124,7 +1131,7 @@ fit_embedding_model <- function(texts,
         if (verbose) message("Initializing BERTopic model...")
 
         topic_model <- bertopic$BERTopic(
-          embedding_model = embedding_model,
+          embedding_model = .st_model_ref(embedding_model),
           nr_topics = nr_topics,
           min_topic_size = as.integer(min_topic_size),
           umap_model = reticulate::import("umap")$UMAP(
@@ -1140,6 +1147,8 @@ fit_embedding_model <- function(texts,
             metric = "euclidean",
             prediction_data = TRUE
           ),
+          vectorizer_model = if (!is.null(stop_words)) .py_import("sklearn.feature_extraction.text")$CountVectorizer(
+            stop_words = if (identical(stop_words, "english")) "english" else as.list(stop_words)),
           calculate_probabilities = TRUE,
           verbose = verbose
         )
@@ -1173,7 +1182,8 @@ fit_embedding_model <- function(texts,
                 }
               }
             }
-            topic_model$update_topics(valid_texts, topics = as.integer(topic_assignments - 1))
+            topic_model$update_topics(valid_texts, topics = as.integer(topic_assignments - 1),
+                                      vectorizer_model = topic_model$vectorizer_model)
           } else if (outlier_strategy %in% c("c-tf-idf", "embeddings", "distributions")) {
             new_topics <- topic_model$reduce_outliers(
               valid_texts,
@@ -1183,7 +1193,8 @@ fit_embedding_model <- function(texts,
               embeddings = if (outlier_strategy == "embeddings") embeddings else NULL
             )
             # sync topic info with the new assignments
-            topic_model$update_topics(valid_texts, topics = new_topics)
+            topic_model$update_topics(valid_texts, topics = new_topics,
+                                      vectorizer_model = topic_model$vectorizer_model)
             topic_assignments <- as.vector(new_topics) + 1
             outliers_reassigned <- length(outlier_docs) - sum(topic_assignments == 0)
           }
@@ -1223,6 +1234,7 @@ fit_embedding_model <- function(texts,
           embeddings = embeddings_matrix,
           reduced_embeddings = reduced_embeddings,
           bertopic_model = topic_model,
+          embedding_model = embedding_model,
           topic_info = topic_info,
           probabilities = topic_probs,
           method = "umap_hdbscan",
@@ -1340,7 +1352,7 @@ fit_embedding_model <- function(texts,
       message("Topics identified: ", n_found)
     }
 
-    final_result <- c(result, list(
+    final_result <- c(result[setdiff(names(result), "embedding_model")], list(
       quality_metrics = quality_metrics,
       execution_time = execution_time,
       n_documents = length(valid_texts),
@@ -1420,7 +1432,7 @@ fit_embedding_model <- function(texts,
         return(.notify_missing_python("Embedding generation (sentence-transformers)"))
       }
       sentence_transformers <- .py_import("sentence_transformers")
-      model <- sentence_transformers$SentenceTransformer(embedding_model)
+      model <- sentence_transformers$SentenceTransformer(.st_model_ref(embedding_model))
 
       n_docs <- length(valid_texts)
       batch_size <- if (n_docs > 100) 25 else if (n_docs > 50) 50 else n_docs
@@ -1616,6 +1628,100 @@ fit_embedding_model <- function(texts,
 }
 
 
+#' @title Save a Fitted Topic Model
+#'
+#' @description
+#' Saves the BERTopic model of a [fit_embedding_model()] result to a directory,
+#' with the R-side results in `fit.rds`.
+#'
+#' @details
+#' The model is pickled together with its embedding model, so the saved folder
+#' is tied to the installed bertopic, sentence-transformers, and torch versions.
+#' Load only folders from trusted sources: unpickling can run arbitrary code.
+#'
+#' @param fit Result of [fit_embedding_model()] with `method = "umap_hdbscan"`.
+#' @param path Destination directory.
+#' @param overwrite Replace an existing saved model at `path`. Default: FALSE.
+#'
+#' @return `fit`, invisibly.
+#'
+#' @seealso [load_topic_model()], [transform_topic_model()].
+#' @concept topic-modeling
+#' @export
+save_topic_model <- function(fit, path, overwrite = FALSE) {
+  if (is.null(fit$bertopic_model)) stop("fit has no BERTopic model.", call. = FALSE)
+  if (is.null(fit$embedding_model)) stop("fit has no embedding model name.", call. = FALSE)
+  if (!overwrite && file.exists(file.path(path, "fit.rds"))) {
+    stop(path, " already holds a saved topic model; set overwrite = TRUE.", call. = FALSE)
+  }
+  dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  fit$bertopic_model$save(file.path(path, "bertopic"), serialization = "pickle", save_ctfidf = TRUE,
+                          save_embedding_model = fit$embedding_model)
+  saved <- fit
+  saved$bertopic_model <- NULL
+  saveRDS(saved, file.path(path, "fit.rds"))
+  invisible(fit)
+}
+
+#' @title Load a Fitted Topic Model
+#'
+#' @description
+#' Reads a directory written by [save_topic_model()].
+#'
+#' @details
+#' Load only folders from trusted sources: the BERTopic model is unpickled,
+#' which can run arbitrary code.
+#'
+#' @param path Directory written by [save_topic_model()].
+#'
+#' @return The [fit_embedding_model()] result with `bertopic_model` restored.
+#'
+#' @seealso [save_topic_model()], [transform_topic_model()].
+#' @concept topic-modeling
+#' @export
+load_topic_model <- function(path) {
+  if (!file.exists(file.path(path, "fit.rds"))) stop(path, " is not a saved topic model.", call. = FALSE)
+  .ensure_python("bertopic")
+  fit <- readRDS(file.path(path, "fit.rds"))
+  fit$bertopic_model <- .py_import("bertopic")$BERTopic$load(file.path(path, "bertopic"))
+  fit
+}
+
+#' @title Assign New Documents to a Fitted Topic Model
+#'
+#' @description
+#' Assigns topics to new texts with a fitted BERTopic model.
+#'
+#' @details
+#' Topic IDs follow [fit_embedding_model()]: 1-based, with 0 for outliers.
+#' Outlier reduction applied at fit time is not repeated, so new documents can
+#' be assigned 0 even when the training documents have none. Blank and missing
+#' texts get `NA`.
+#'
+#' @param fit Result of [fit_embedding_model()] or [load_topic_model()].
+#' @param texts Character vector of new documents.
+#' @param embeddings Optional embedding matrix with one row per element of `texts`.
+#'   Required when `fit` was built from API embeddings (OpenAI, Gemini), which
+#'   the stored model cannot recompute.
+#'
+#' @return A data frame with `text` and `topic`.
+#'
+#' @seealso [save_topic_model()], [load_topic_model()].
+#' @concept topic-modeling
+#' @export
+transform_topic_model <- function(fit, texts, embeddings = NULL) {
+  if (is.null(fit$bertopic_model)) stop("fit has no BERTopic model; use load_topic_model().", call. = FALSE)
+  if (!is.character(texts)) stop("texts must be a character vector.", call. = FALSE)
+  valid <- !is.na(texts) & nzchar(trimws(texts))
+  topic <- rep(NA_integer_, length(texts))
+  if (!is.null(embeddings) && nrow(embeddings) != length(texts)) {
+    stop("embeddings must have one row per element of texts.", call. = FALSE)
+  }
+  new_emb <- if (is.null(embeddings)) NULL else embeddings[valid, , drop = FALSE]
+  if (any(valid)) topic[valid] <- as.integer(fit$bertopic_model$transform(texts[valid], embeddings = new_emb)[[1]]) + 1L
+  data.frame(text = texts, topic = topic)
+}
+
 #' @title Embedding-Based Topic Modeling (Deprecated)
 #' @description
 #' This function is deprecated. Please use [fit_embedding_model()] instead.
@@ -1724,7 +1830,7 @@ find_topic_matches <- function(topic_model,
       stop("reticulate package is required for topic similarity")
     }
     sentence_transformers <- .py_import("sentence_transformers")
-    model <- sentence_transformers$SentenceTransformer(embedding_model)
+    model <- sentence_transformers$SentenceTransformer(.st_model_ref(embedding_model))
     query_embedding <- model$encode(query, show_progress_bar = FALSE, normalize_embeddings = TRUE)
 
     if ("beta" %in% names(topic_model) || "theta" %in% names(topic_model)) {
@@ -2338,7 +2444,8 @@ assess_embedding_stability <- function(
 #'
 #' @return A list of keywords for each topic.
 #'
-#' @keywords internal
+#' @concept topic-modeling
+#' @export
 generate_semantic_topic_keywords <- function(texts,
                                             topic_assignments,
                                             n_keywords = 10,
@@ -2702,17 +2809,21 @@ calculate_topic_correspondence <- function(semantic_keywords, stm_keywords) {
   ))
 }
 
-#' @title Validate Semantic Coherence
+#' @title Topic Coherence in Embedding Space
 #'
 #' @description
-#' Validates semantic coherence of topic assignments.
+#' Mean pairwise cosine similarity of documents within each topic. This is a
+#' document-embedding measure, not word-based coherence (UMass, NPMI, C_v). Every
+#' label in `topic_assignments` is scored, including any outlier label.
 #'
-#' @param embeddings Document embeddings.
-#' @param topic_assignments Topic assignments.
+#' @param embeddings Document embedding matrix (rows are documents).
+#' @param topic_assignments Topic assignment per document.
 #'
-#' @return Coherence metrics.
+#' @return A list with `coherence_scores`, `mean_coherence`, and `topic_coherence`
+#'   (named by topic).
 #'
-#' @keywords internal
+#' @concept topic-modeling
+#' @export
 calculate_coherence <- function(embeddings, topic_assignments) {
 
   unique_topics <- unique(topic_assignments)
@@ -3052,7 +3163,7 @@ plot_quality_metrics <- function(search_results) {
 
     plots[[metric]] <- ggplot2::ggplot(plot_df, ggplot2::aes(x = K, y = value, text = .data$hover_text)) +
       ggplot2::geom_line(color = info$color, linewidth = 0.8) +
-      ggplot2::geom_point(color = info$color, size = 2.5) +
+      ggplot2::geom_point(color = info$color, size = 1.5) +
       ggplot2::labs(x = "Number of Topics (K)", y = info$name, title = info$name) +
       ggplot2::theme_minimal(base_size = 11) +
       ggplot2::theme(
@@ -3395,7 +3506,7 @@ plot_topic_effects_categorical <- function(effects_data,
     return(ggplot2::ggplot() +
       ggplot2::annotate("text", x = 0.5, y = 0.5,
         label = "No categorical effects available.\nPlease run the effect estimation first.",
-        size = 5, color = "#ef4444") +
+        size = 5, color = "#475569") +
       ggplot2::theme_void())
   }
 
@@ -3533,7 +3644,7 @@ plot_cluster_terms <- function(terms,
     return(ggplot2::ggplot() +
       ggplot2::annotate("text", x = 0.5, y = 0.5,
         label = "No terms available for this cluster",
-        size = 5, color = "#ef4444") +
+        size = 5, color = "#475569") +
       ggplot2::theme_void())
   }
 

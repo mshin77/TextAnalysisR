@@ -305,7 +305,8 @@ import_files <- function(dataset_choice, file_info = NULL, text_input = NULL,
     data <- tibble::as_tibble(data)
   } else if (dataset_choice == "Copy and Paste Text") {
     if (is.null(text_input)) stop("No text provided")
-    data <- tibble::tibble(text = .clean_text(text_input))
+    paragraphs <- strsplit(gsub("\r\n?", "\n", text_input), "\n[ \t]*\n+")
+    data <- tibble::tibble(text = vapply(paragraphs, function(p) paste(.clean_text(p), collapse = "\n\n"), character(1)))
   } else if (dataset_choice == "Upload Your File") {
     if (is.null(file_info)) stop("No file provided")
     file_label <- basename(if ("name" %in% names(file_info)) file_info$name else file_info$filepath)
@@ -587,8 +588,9 @@ import_images <- function(file_paths,
     return(tibble::tibble(text = character(0), category = character(0)))
   }
   if (is.null(prompt)) {
-    prompt <- paste("Transcribe all visible text in this image, then describe any",
-                    "chart, diagram, table, or figure it contains.")
+    prompt <- paste("Transcribe all visible text in this image as plain text, with a blank line",
+                    "between paragraphs. If the image contains a chart, diagram, table, or figure,",
+                    "add one short description after the text. Use no headings, bullets, or markdown.")
   }
 
   if (is.null(labels)) labels <- basename(file_paths)
@@ -606,7 +608,7 @@ import_images <- function(file_paths,
     if (!file.exists(path)) return(NULL)
 
     encoded <- tryCatch(
-      jsonlite::base64_enc(readBin(path, "raw", file.info(path)$size)),
+      gsub("\\s", "", jsonlite::base64_enc(readBin(path, "raw", file.info(path)$size))),
       error = function(e) NULL
     )
     if (is.null(encoded)) return(NULL)
@@ -654,7 +656,7 @@ render_pdf_pages_to_base64 <- function(file_path, dpi = 150, pages = NULL) {
     tryCatch({
       pdftools::pdf_convert(file_path, format = "png", pages = i,
                             dpi = dpi, filenames = tmp, verbose = FALSE)
-      jsonlite::base64_enc(readBin(tmp, "raw", file.info(tmp)$size))
+      gsub("\\s", "", jsonlite::base64_enc(readBin(tmp, "raw", file.info(tmp)$size)))
     }, error = function(e) NULL)
   })
   names(rendered) <- pages
@@ -864,7 +866,8 @@ unite_cols <- function(df, listed_vars) {
     dplyr::select(all_of(unname(listed_vars))) %>%
     dplyr::mutate(dplyr::across(dplyr::everything(), ~ tidyr::replace_na(as.character(.x), ""))) %>%
     tidyr::unite(col = "united_texts", sep = " ", remove = FALSE) %>%
-    dplyr::mutate(united_texts = trimws(gsub("\\s+", " ", united_texts)))
+    dplyr::mutate(united_texts = trimws(gsub("\u0001", "\n\n", gsub("\\s+", " ",
+      gsub("[ \t]*\r?\n([ \t]*\r?\n)+[ \t]*", "\u0001", united_texts)), fixed = TRUE)))
 
   docvar_tbl <- df %>%
     dplyr::select(-all_of(unname(listed_vars)))

@@ -160,7 +160,7 @@ calculate_document_similarity <- function(texts,
           return(.notify_missing_python("Embedding-based document similarity (sentence-transformers)"))
         }
         sentence_transformers <- .py_import("sentence_transformers")
-        model <- sentence_transformers$SentenceTransformer(embedding_model)
+        model <- sentence_transformers$SentenceTransformer(.st_model_ref(embedding_model))
 
         n_docs <- length(valid_texts)
         batch_size <- if (n_docs > 100) 25 else if (n_docs > 50) 50 else n_docs
@@ -1030,7 +1030,7 @@ generate_embeddings <- function(texts, model = "all-MiniLM-L6-v2", verbose = TRU
 
   tryCatch({
     if (is.null(.st_model_cache[[model]])) {
-      assign(model, .py_import("sentence_transformers")$SentenceTransformer(model), envir = .st_model_cache)
+      assign(model, .py_import("sentence_transformers")$SentenceTransformer(.st_model_ref(model)), envir = .st_model_cache)
     }
     embedding_model <- .st_model_cache[[model]]
     n_long <- tryCatch({
@@ -2394,7 +2394,7 @@ plot_document_sentiment_trajectory <- function(sentiment_data,
 
   ggplot2::ggplot(doc_data, ggplot2::aes(x = .data$doc_index, y = .data$sentiment_score, text = .data$hover_text)) +
     ggplot2::geom_line(color = "#6B7280") +
-    ggplot2::geom_point(ggplot2::aes(color = .data$sentiment_score), size = 2) +
+    ggplot2::geom_point(ggplot2::aes(color = .data$sentiment_score), size = 1.5) +
     ggplot2::scale_color_gradient2(
       low = "#EF4444", mid = "#6B7280", high = "#10B981", midpoint = 0,
       name = "Sentiment Score"
@@ -3240,7 +3240,7 @@ plot_emotion_radar <- function(emotion_data,
     if (length(categories) == 0) {
       return(
         ggplot2::ggplot() +
-          ggplot2::annotate("text", x = 0.5, y = 0.5, label = "No data available", size = 5, color = "#ef4444") +
+          ggplot2::annotate("text", x = 0.5, y = 0.5, label = "No data available", size = 5, color = "#475569") +
           ggplot2::theme_void()
       )
     }
@@ -3254,7 +3254,7 @@ plot_emotion_radar <- function(emotion_data,
                                              group = .data$group_col, color = .data$group_col, fill = .data$group_col,
                                              text = .data$hover_text)) +
       ggplot2::geom_polygon(alpha = 0.1) +
-      ggplot2::geom_point(size = 2) +
+      ggplot2::geom_point(size = 1.5) +
       ggplot2::coord_polar() +
       ggplot2::labs(title = title, x = NULL, y = NULL, color = group_var, fill = group_var) +
       ggplot2::theme_minimal(base_size = 11)
@@ -3279,7 +3279,7 @@ plot_emotion_radar <- function(emotion_data,
 
     ggplot2::ggplot(radar_df, ggplot2::aes(x = .data$emotion, y = .data$score, group = 1, text = .data$hover_text)) +
       ggplot2::geom_polygon(fill = "#8B5CF6", alpha = 0.1, color = "#8B5CF6") +
-      ggplot2::geom_point(color = "#8B5CF6", size = 2) +
+      ggplot2::geom_point(color = "#8B5CF6", size = 1.5) +
       ggplot2::coord_polar() +
       ggplot2::labs(title = title, x = NULL, y = NULL) +
       ggplot2::theme_minimal(base_size = 11)
@@ -3506,9 +3506,9 @@ plot_semantic_viz <- function(analysis_result = NULL,
         p <- ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, text = .data$hover_text))
 
         if ("color_var" %in% names(scatter_df)) {
-          p <- p + ggplot2::geom_point(ggplot2::aes(color = .data$color_var), size = 2, alpha = 0.7)
+          p <- p + ggplot2::geom_point(ggplot2::aes(color = .data$color_var), size = 1.5, alpha = 0.7)
         } else {
-          p <- p + ggplot2::geom_point(color = "steelblue", size = 2, alpha = 0.7)
+          p <- p + ggplot2::geom_point(color = "steelblue", size = 1.5, alpha = 0.7)
         }
 
         p + ggplot2::labs(title = plot_title, x = x_title, y = y_title, color = NULL) +
@@ -3542,7 +3542,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
           scatter_df$hover_text <- paste("Document:", scatter_df$label, "<br>Cluster:", scatter_df$cluster)
 
           ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster, text = .data$hover_text)) +
-            ggplot2::geom_point(size = 2, alpha = 0.7) +
+            ggplot2::geom_point(size = 1.5, alpha = 0.7) +
             ggplot2::labs(title = plot_title, x = "Document Index", y = "Cluster", color = "Cluster") +
             ggplot2::theme_minimal(base_size = 11)
         } else {
@@ -3559,7 +3559,7 @@ plot_semantic_viz <- function(analysis_result = NULL,
           scatter_df$hover_text <- paste("Document:", scatter_df$label, "<br>Cluster:", scatter_df$cluster)
 
           ggplot2::ggplot(scatter_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$cluster, text = .data$hover_text)) +
-            ggplot2::geom_point(size = 2, alpha = 0.7) +
+            ggplot2::geom_point(size = 1.5, alpha = 0.7) +
             ggplot2::labs(title = plot_title, x = "Component 1", y = "Component 2", color = "Cluster") +
             ggplot2::theme_minimal(base_size = 11)
         }
@@ -3931,7 +3931,7 @@ plot_similarity_heatmap <- function(similarity_matrix,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "Need at least 2 documents for similarity analysis",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -4045,7 +4045,7 @@ plot_similarity_heatmap <- function(similarity_matrix,
 #' @return List with:
 #'   - success: Logical
 #'   - answer: Generated answer
-#'   - confidence: Confidence score (0-1)
+#'   - confidence: Mean cosine similarity of the retrieved documents to the query (0-1); a retrieval score, not a check of the answer
 #'   - sources: Vector of source document indices
 #'   - retrieved_docs: Retrieved document chunks
 #'   - scores: Similarity scores
@@ -4227,7 +4227,7 @@ run_rag_search <- function(
     collapse = "\n\n"
   )
 
-  system_prompt <- "You are a helpful research assistant. Answer the user's question based on the provided context documents. Be concise and accurate. If the context doesn't contain relevant information, say so."
+  system_prompt <- "You are a helpful research assistant. Answer the user's question based on the provided context documents. Be concise and accurate. The context holds only the retrieved documents, not the whole corpus. If the context doesn't contain relevant information, say it is not in the retrieved documents, and do not claim the corpus lacks it."
 
   user_prompt <- sprintf(
     "Context Documents:\n%s\n\nQuestion: %s\n\nPlease provide a concise answer based on the context above.",
@@ -4365,7 +4365,7 @@ run_rag_search <- function(
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
 #' @param node_palette Character vector of hex colors for nodes; the default palette is used when NULL.
 #' @param edge_color Hex color for network edges.
-#' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
+#' @param node_color_by Node coloring method: "community" or "frequency" (default: "community").
 #' @param seed Integer seed for the force-directed layout, so the plot is reproducible (default: 123).
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `co_occur_n` and `top_node_n` values for that category (default: NULL).
 #'
@@ -4605,6 +4605,8 @@ word_co_occurrence_network <- function(dfm_object,
     size_metric <- switch(node_size_by,
       "degree" = layout_df$degree,
       "betweenness" = layout_df$betweenness,
+      "closeness" = layout_df$closeness,
+      "eigenvector" = layout_df$eigenvector,
       "frequency" = layout_df$frequency,
       "fixed" = rep(20, nrow(layout_df)),
       layout_df$degree
@@ -4649,6 +4651,8 @@ word_co_occurrence_network <- function(dfm_object,
 
     sort_col <- switch(node_size_by,
       "betweenness" = "betweenness",
+      "closeness"   = "closeness",
+      "eigenvector" = "eigenvector",
       "frequency"   = "frequency",
       "degree"
     )
@@ -4810,7 +4814,7 @@ word_co_occurrence_network <- function(dfm_object,
 #' @param node_size_by Node sizing method: "degree", "betweenness", "closeness", "eigenvector", or "fixed" (default: "degree").
 #' @param node_palette Character vector of hex colors for nodes; the default palette is used when NULL.
 #' @param edge_color Hex color for network edges.
-#' @param node_color_by Node coloring method: "community" or "centrality" (default: "community").
+#' @param node_color_by Node coloring method: "community" or "frequency" (default: "community").
 #' @param seed Integer seed for the force-directed layout, so the plot is reproducible (default: 123).
 #' @param normalized Logical; if TRUE, degree and harmonic closeness are divided by n - 1 (default: FALSE).
 #' @param category_params Optional named list of category-specific parameters. Each element should be a list with `common_term_n`, `corr_n`, and `top_node_n` values for that category (default: NULL).
@@ -5042,6 +5046,8 @@ word_correlation_network <- function(dfm_object,
     size_metric <- switch(node_size_by,
       "degree" = layout_df$degree,
       "betweenness" = layout_df$betweenness,
+      "closeness" = layout_df$closeness,
+      "eigenvector" = layout_df$eigenvector,
       "frequency" = layout_df$frequency,
       "fixed" = rep(20, nrow(layout_df)),
       layout_df$degree
@@ -5087,6 +5093,8 @@ word_correlation_network <- function(dfm_object,
 
     sort_col <- switch(node_size_by,
       "betweenness" = "betweenness",
+      "closeness"   = "closeness",
+      "eigenvector" = "eigenvector",
       "frequency"   = "frequency",
       "degree"
     )

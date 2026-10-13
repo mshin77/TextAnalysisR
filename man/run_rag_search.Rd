@@ -39,7 +39,7 @@ List with:
 \itemize{
 \item success: Logical
 \item answer: Generated answer
-\item confidence: Confidence score (0-1)
+\item confidence: Mean cosine similarity of the retrieved documents to the query (0-1); a retrieval score, not a check of the answer
 \item sources: Vector of source document indices
 \item retrieved_docs: Retrieved document chunks
 \item scores: Similarity scores

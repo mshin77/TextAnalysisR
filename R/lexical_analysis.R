@@ -283,8 +283,9 @@ plot_morphology_feature <- function(data,
     return(
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
-                          label = paste("Feature", feature, "not available"),
-                          size = 5, color = "#ef4444") +
+                          label = paste(strwrap(paste("Feature", feature, "not available"), 16), collapse = "
+"),
+                          size = 4, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -296,8 +297,9 @@ plot_morphology_feature <- function(data,
     return(
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
-                          label = paste("No", feature, "data found"),
-                          size = 5, color = "#ef4444") +
+                          label = paste(strwrap(paste("No", feature, "data found"), 16), collapse = "
+"),
+                          size = 4, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -833,7 +835,7 @@ plot_lexical_diversity_distribution <- function(lexdiv_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No valid data for selected metric",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -924,7 +926,7 @@ plot_word_frequency <- function(dfm_object,
                                 ggplot2::aes(x = feature, y = frequency,
                                             text = paste("Word:", feature,
                                                        "<br>Frequency:", frequency))) +
-    ggplot2::geom_point(color = "#0c1f4a", size = 2.5, alpha = 0.9) +
+    ggplot2::geom_point(color = "#0c1f4a", size = 1.5, alpha = 0.9) +
     ggplot2::scale_x_discrete(expand = ggplot2::expansion(add = 0.5)) +
     ggplot2::coord_flip() +
     ggplot2::labs(x = "", y = "Frequency") +
@@ -1001,7 +1003,7 @@ plot_ngram_frequency <- function(ngram_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No n-grams detected. Adjust parameters and click 'Detect N-grams'",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -1084,7 +1086,7 @@ plot_mwe_frequency <- function(mwe_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No multi-word expressions found",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -1283,7 +1285,7 @@ extract_keywords_keyness <- function(dfm,
   rank_score <- if (rank_by == "log_ratio") {
     out$Log_Ratio
   } else if (measure == "exact") {
-    log(out$Keyness_Score)
+    log(pmin(pmax(out$Keyness_Score, 1e-6), 1e6))
   } else {
     out$Keyness_Score
   }
@@ -1372,7 +1374,7 @@ plot_keyness_keywords <- function(keyness_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "Keyness analysis requires multiple documents",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -1530,7 +1532,7 @@ plot_readability_distribution <- function(readability_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No valid data for selected metric",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -1894,7 +1896,7 @@ plot_term_trends_continuous <- function(term_data,
       text = hover_text
     )
   ) +
-    ggplot2::geom_point(color = "#337ab7", alpha = 0.6, size = 2.5) +
+    ggplot2::geom_point(color = "#337ab7", alpha = 0.6, size = 1.5) +
     ggplot2::geom_line(color = "#337ab7", alpha = 0.6, linewidth = 0.5) +
     ggplot2::facet_wrap(~term, scales = "free") +
     ggplot2::scale_y_continuous(labels = scales::number_format(accuracy = 1)) +
@@ -1958,7 +1960,7 @@ plot_pos_frequencies <- function(pos_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No POS data available",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -3056,7 +3058,7 @@ plot_log_odds_ratio <- function(log_odds_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No log odds data available",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -3076,7 +3078,7 @@ plot_log_odds_ratio <- function(log_odds_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No significant differences found",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -3157,7 +3159,7 @@ plot_weighted_log_odds <- function(weighted_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No weighted log odds data available",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }
@@ -3343,7 +3345,7 @@ plot_lexical_dispersion <- function(dispersion_data,
       ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
                           label = "No term occurrences found in the corpus",
-                          size = 5, color = "#ef4444") +
+                          size = 5, color = "#475569") +
         ggplot2::theme_void()
     )
   }

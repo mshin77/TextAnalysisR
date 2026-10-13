@@ -590,7 +590,7 @@ calculate_word_frequency <- function(dfm_object,
       y = word_frequency,
       group = term
     )) +
-    geom_point(color = "#337ab7", alpha = 0.6, size = 1) +
+    geom_point(color = "#337ab7", alpha = 0.6, size = 1.5) +
     geom_line(color = "#337ab7", alpha = 0.6, linewidth = 0.5) +
     facet_wrap(~ term, scales = "free") +
     ggplot2::scale_y_continuous(labels = scales::number_format(accuracy = 1)) +
@@ -1072,8 +1072,10 @@ check_python_env <- function(envname = "textanalysisr-env") {
 #' @param temperature Numeric temperature for response randomness (default: 0)
 #' @param max_tokens Maximum number of tokens to generate (default: 150)
 #' @param api_key Character string with OpenAI API key
+#' @param seed Optional integer sent as the request seed (best-effort determinism)
 #'
-#' @return Character string with the model's response
+#' @return Character string with the model's response; attributes
+#'   `served_model` and `system_fingerprint` record what the provider reported.
 #'
 #' @concept ai
 #' @keywords internal
@@ -1083,7 +1085,8 @@ call_openai_chat <- function(system_prompt,
                               model = "gpt-4.1-mini",
                               temperature = 0,
                               max_tokens = 150,
-                              api_key) {
+                              api_key,
+                              seed = NULL) {
 
   if (!requireNamespace("httr", quietly = TRUE)) {
     stop("httr package is required for OpenAI API calls")
@@ -1101,6 +1104,7 @@ call_openai_chat <- function(system_prompt,
     temperature = temperature,
     max_tokens = max_tokens
   )
+  if (!is.null(seed)) body_list$seed <- as.integer(seed)
 
   response <- .http_post(
     url = "https://api.openai.com/v1/chat/completions",
@@ -1119,7 +1123,10 @@ call_openai_chat <- function(system_prompt,
   res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
 
   if (!is.null(res_json$choices) && length(res_json$choices) > 0) {
-    return(res_json$choices$message$content[1])
+    out <- res_json$choices$message$content[1]
+    attr(out, "served_model") <- res_json$model
+    attr(out, "system_fingerprint") <- res_json$system_fingerprint
+    return(out)
   }
 
   stop("Unexpected response structure from OpenAI API")
@@ -1175,8 +1182,8 @@ call_gemini_chat <- function(system_prompt,
       temperature = temperature,
       maxOutputTokens = max_tokens,
       thinkingConfig = list(
-        # thinking tokens count against maxOutputTokens; a budget here starves short replies
-        thinkingBudget = if (max_tokens < 512) 0L else 1024L
+        # thinking tokens count against maxOutputTokens; the budget stays a fraction of the cap so replies are not cut off
+        thinkingBudget = if (max_tokens < 512) 0L else as.integer(min(1024, max_tokens %/% 4))
       )
     )
   )
@@ -1186,14 +1193,22 @@ call_gemini_chat <- function(system_prompt,
     model, ":generateContent"
   )
 
-  response <- .http_post(
-    url = url,
-    httr::add_headers(
-      `x-goog-api-key` = api_key
-    ),
-    body = body_list,
-    encode = "json"
-  )
+  post_chat <- function(body) {
+    .http_post(
+      url = url,
+      httr::add_headers(
+        `x-goog-api-key` = api_key
+      ),
+      body = body,
+      encode = "json"
+    )
+  }
+  response <- post_chat(body_list)
+  # some models reject a thinking budget; retry once without it
+  if (httr::status_code(response) == 400) {
+    body_list$generationConfig$thinkingConfig <- NULL
+    response <- post_chat(body_list)
+  }
 
   if (httr::status_code(response) != 200) {
     .stop_api_error("gemini", "chat", httr::status_code(response),
@@ -1299,8 +1314,10 @@ call_ollama_chat <- function(system_prompt,
 #' @param temperature Numeric temperature for response randomness (default: 0)
 #' @param max_tokens Maximum number of tokens to generate (default: 150)
 #' @param api_key Character string with API key (required for openai/gemini)
+#' @param seed Optional integer request seed, sent to OpenAI only (best-effort determinism)
 #'
-#' @return Character string with the model's response
+#' @return Character string with the model's response. OpenAI responses carry
+#'   `served_model` and `system_fingerprint` attributes.
 #'
 #' @concept ai
 #' @seealso [sanitize_llm_input()] to clean text before prompting; [get_best_embeddings()] for vector embeddings; [run_rag_search()] for RAG search (retrieval + generation)
@@ -1330,9 +1347,11 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
                          model = NULL,
                          temperature = 0,
                          max_tokens = 150,
-                         api_key = NULL) {
+                         api_key = NULL,
+                         seed = NULL) {
 
   provider <- match.arg(provider)
+  system_prompt <- .with_us_english(system_prompt)
 
   # Set default models based on provider
   if (is.null(model) || !nzchar(model)) {
@@ -1366,7 +1385,8 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
       model = model,
       temperature = temperature,
       max_tokens = max_tokens,
-      api_key = api_key
+      api_key = api_key,
+      seed = seed
     ),
     "gemini" = call_gemini_chat(
       system_prompt = system_prompt,
@@ -1379,6 +1399,14 @@ call_llm_api <- function(provider = c("openai", "gemini", "ollama"),
   )
 
   return(result)
+}
+
+
+#' @keywords internal
+.with_us_english <- function(system_prompt) {
+  paste0(system_prompt, "
+
+Use US English spelling in any free-text output.")
 }
 
 
@@ -1494,7 +1522,7 @@ describe_image_gemini <- function(image_base64,
         )
       ),
       generationConfig = list(
-        maxOutputTokens = max_tokens
+        maxOutputTokens = max(as.integer(max_tokens), 2048L)
       )
     )
 
@@ -1521,6 +1549,9 @@ describe_image_gemini <- function(image_base64,
     }
 
     res_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+    if (identical(as.character(res_json$candidates$finishReason)[1], "MAX_TOKENS")) {
+      warning("Gemini stopped at the output limit; the image text may be cut off.", call. = FALSE)
+    }
 
     if (!is.null(res_json$candidates) && length(res_json$candidates) > 0) {
       parts <- tryCatch({
@@ -1721,7 +1752,7 @@ get_openai_embeddings <- function(texts, model, api_key) {
 #' Get Gemini Embeddings (Internal)
 #' @keywords internal
 get_gemini_embeddings <- function(texts, model, api_key) {
-  requests <- lapply(texts, function(text) {
+  requests <- lapply(unname(texts), function(text) {
     list(model = paste0("models/", model), content = list(parts = list(list(text = text))),
          taskType = "SEMANTIC_SIMILARITY")
   })
@@ -2142,6 +2173,18 @@ log_security_event <- function(event_type, details, session_info, level = "info"
 }
 
 #' @keywords internal
+.st_model_ref <- function(model) {
+  if (.Platform$OS.type != "windows" || !is.character(model) || length(model) != 1) return(model)
+  home <- Sys.getenv("HF_HOME", file.path(Sys.getenv("USERPROFILE", path.expand("~")), ".cache", "huggingface"))
+  repo <- if (grepl("/", model)) model else paste0("sentence-transformers/", model)
+  snaps <- list.files(file.path(Sys.getenv("HF_HUB_CACHE", file.path(home, "hub")),
+                                paste0("models--", gsub("/", "--", repo)), "snapshots"), full.names = TRUE)
+  snaps <- snaps[file.exists(file.path(snaps, "modules.json"))]
+  if (length(snaps) == 0) return(model)
+  snaps[which.max(file.mtime(snaps))]
+}
+
+#' @keywords internal
 .py_import <- function(module) {
   .use_system_certificates()
   return(reticulate::import(module))
@@ -2224,7 +2267,7 @@ validate_api_key <- function(api_key, strict = TRUE) {
     provider <- "openai"
     min_length <- 40
     length_msg <- "OpenAI keys are typically 48+ characters"
-  } else if (grepl("^AIza", api_key)) {
+  } else if (grepl("^AIza|^AQ\\.", api_key)) {
     provider <- "gemini"
     min_length <- 39
     length_msg <- "Gemini keys are typically 39 characters"
@@ -2232,7 +2275,7 @@ validate_api_key <- function(api_key, strict = TRUE) {
     return(list(
       valid = FALSE,
       provider = NULL,
-      error = "Unknown API key format. OpenAI keys start with 'sk-', Gemini keys start with 'AIza'"
+      error = "Unknown API key format. OpenAI keys start with 'sk-', Gemini keys start with 'AIza' or 'AQ.'"
     ))
   }
 
@@ -2245,7 +2288,7 @@ validate_api_key <- function(api_key, strict = TRUE) {
       return(list(valid = FALSE, provider = provider, error = "API key contains whitespace characters"))
     }
 
-    if (grepl("[^A-Za-z0-9_-]", api_key)) {
+    if (grepl(if (grepl("^AQ\\.", api_key)) "[^A-Za-z0-9_.-]" else "[^A-Za-z0-9_-]", api_key)) {
       return(list(valid = FALSE, provider = provider, error = "API key contains unexpected special characters"))
     }
   }
