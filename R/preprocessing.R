@@ -2006,3 +2006,10 @@ detect_language_llm <- function(texts,
 
   tibble::tibble(language = unname(languages[match_idx[1]]), provider = provider, model = model)
 }
+
+#' @keywords internal
+.fix_broken_chars <- function(x) {
+  broken <- "(ï¿(½|1⁄2)|�)+"
+  x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
+  return(gsub(broken, "", x, perl = TRUE))
+}

@@ -95,3 +95,12 @@ test_that("unite_cols keeps blank-line paragraph breaks and flattens single newl
   expect_equal(out$united_texts, "One line still one.\n\nSecond para.")
   expect_equal(nrow(split_texts(c(a = out$united_texts), "paragraph")), 2L)
 })
+
+test_that(".fix_broken_chars restores apostrophes and drops stray markers", {
+  x <- c("don�t stop", "cafï¿½ ", "clean")
+  expect_equal(TextAnalysisR:::.fix_broken_chars(x), c("don't stop", "caf ", "clean"))
+})
+
+test_that(".fix_broken_chars handles fraction-expanded markers", {
+  expect_equal(TextAnalysisR:::.fix_broken_chars("SAMGï¿1⁄2ï¿1⁄2s office"), "SAMG's office")
+})

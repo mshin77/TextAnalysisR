@@ -704,6 +704,7 @@ server <- shinyServer(function(input, output, session) {
             return(list(note = stats::setNames(res$message %||% "PDF extraction failed", row$name)))
           }
           df <- res$data
+          df[] <- lapply(df, function(col) if (is.character(col)) TextAnalysisR:::.fix_broken_chars(col) else col)
           # database exports with article markers merge into articles; other PDFs keep page per row
           paged <- "page" %in% names(df) && !any(grepl("^End of Document", trimws(df$text)))
 
