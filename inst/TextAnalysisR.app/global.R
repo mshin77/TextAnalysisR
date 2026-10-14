@@ -2269,7 +2269,7 @@ lexical_analysis_ui_content <- function() {
               ),
               selectizeInput(
                 "ner_domain_preset",
-                NULL,
+                "Domain preset",
                 choices = c(
                   "None (Custom)" = "none",
                   "Special Education" = "special_education"
@@ -4189,8 +4189,8 @@ qualitative_coding_ui_content <- function() {
         ),
         tags$hr(),
         tags$h5(strong("Memo on a code"), style = "color: #4269BF; margin-bottom: 10px;"),
-        selectInput("qc_cat_memo_code", NULL, choices = NULL),
-        textAreaInput("qc_cat_memo", NULL, rows = 3, width = "100%", placeholder = "Why this code, and what changed"),
+        selectInput("qc_cat_memo_code", "Code", choices = NULL),
+        textAreaInput("qc_cat_memo", "Memo", rows = 3, width = "100%", placeholder = "Why this code, and what changed"),
         actionButton("qc_cat_memo_save", "Save memo", class = "btn-default btn-sm"),
         uiOutput("qc_cat_memo_list")
       ),

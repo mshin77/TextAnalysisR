@@ -4685,7 +4685,7 @@ server <- shinyServer(function(input, output, session) {
         ),
         div(
           style = "padding: 8px 0 0 0;",
-          selectizeInput(input_id, NULL, choices = cat_choices, selected = cat_selected, multiple = TRUE,
+          selectizeInput(input_id, paste(cat_label, "terms"), choices = cat_choices, selected = cat_selected, multiple = TRUE,
             options = list(create = TRUE, maxItems = NULL))
         )
       )
@@ -12042,6 +12042,7 @@ server <- shinyServer(function(input, output, session) {
     off_diagonal <- similarity_matrix[upper.tri(similarity_matrix) | lower.tri(similarity_matrix)]
 
     metrics <- list(
+      n_docs = nrow(similarity_matrix),
       mean_similarity = mean(off_diagonal, na.rm = TRUE),
       median_similarity = median(off_diagonal, na.rm = TRUE),
       std_similarity = sd(off_diagonal, na.rm = TRUE),
@@ -12842,7 +12843,7 @@ server <- shinyServer(function(input, output, session) {
       if (processed_docs_null) {
         shiny::showModal(shiny::modalDialog(
           title = "Document Configuration Required",
-          p("Please go to Semantic Analysis > Summary and click 'Process' first."),
+          p("Please go to Semantic Analysis > Setup and click 'Process' first."),
           p("This will prepare your documents for similarity analysis."),
           easyClose = TRUE,
           footer = shiny::modalButton("Close")
@@ -13090,7 +13091,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         shiny::showModal(shiny::modalDialog(
           title = "Document Processing Required",
-          p("Please click 'Process' button in Semantic Analysis > Summary first to process your documents."),
+          p("Please click 'Process' button in Semantic Analysis > Setup first to process your documents."),
           p("This will prepare the documents for search."),
           easyClose = TRUE,
           footer = shiny::modalButton("Close")
@@ -13103,7 +13104,7 @@ server <- shinyServer(function(input, output, session) {
       shiny::showModal(shiny::modalDialog(
         title = "Document Processing Required",
         p("Some documents have not been processed yet."),
-        p("Please click 'Process' button in Semantic Analysis > Summary first."),
+        p("Please click 'Process' button in Semantic Analysis > Setup first."),
         easyClose = TRUE,
         footer = shiny::modalButton("Close")
       ))
@@ -13615,7 +13616,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (is.null(dfm_check) || quanteda::ndoc(dfm_check) == 0) {
         TextAnalysisR:::remove_notification_by_id("loadingDimRed")
-        showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 7)
+        showNotification("Please process documents in Semantic Analysis > Setup first.", type = "error", duration = 7)
         return()
       }
 
@@ -13810,7 +13811,7 @@ server <- shinyServer(function(input, output, session) {
 
       if (is.null(dfm_check) || quanteda::ndoc(dfm_check) == 0) {
         TextAnalysisR:::remove_notification_by_id("loadingDocClustering")
-        showNotification("Please process documents in Semantic Analysis > Summary first.", type = "error", duration = 7)
+        showNotification("Please process documents in Semantic Analysis > Setup first.", type = "error", duration = 7)
         return()
       }
 
@@ -14874,7 +14875,7 @@ server <- shinyServer(function(input, output, session) {
         docs_data <- document_display_data()
         if (is.null(docs_data) || nrow(docs_data) < 2) {
           return(create_error_plot(
-            if (is.null(docs_data)) "Process documents in Semantic Analysis > Summary first" else "At least 2 documents required for similarity analysis",
+            if (is.null(docs_data)) "Process documents in Semantic Analysis > Setup first" else "At least 2 documents required for similarity analysis",
             color = "#6c757d"
           ))
         }
@@ -16636,7 +16637,7 @@ server <- shinyServer(function(input, output, session) {
     docs_data <- document_display_data()
     if (is.null(docs_data) || nrow(docs_data) < 2) {
       return(create_error_plot(
-        if (is.null(docs_data)) "Process documents in Semantic Analysis > Summary first" else "At least 2 documents required for clustering",
+        if (is.null(docs_data)) "Process documents in Semantic Analysis > Setup first" else "At least 2 documents required for clustering",
         color = "#6c757d"
       ))
     }
@@ -18057,6 +18058,8 @@ server <- shinyServer(function(input, output, session) {
           "Topic model fitting failed. Try reducing K range or simplifying covariates."
         } else if (grepl("convergence", warning_message, ignore.case = TRUE)) {
           "Model failed to converge. Try increasing max iterations or reducing K range."
+        } else if (grepl("subscript out of bounds", warning_message, fixed = TRUE)) {
+          "Too few documents or terms for this K range. Add documents or skip Search K and set K in Word-Topic."
         } else {
           "Topic model error. Check data quality and try simpler parameters."
         }

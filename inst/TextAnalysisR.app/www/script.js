@@ -581,6 +581,10 @@ $(document).on('shiny:inputchanged', function(event) {
   if (event.name === 'topic_modeling_path') {
     var path = event.value;
     var tabsToHide = ['8', '9', '10'];
+    var activeTab = $('#conditioned3 li.active a');
+    if (path === 'embedding' && tabsToHide.includes(activeTab.attr('data-value'))) {
+      $('#conditioned3 a').first().tab('show');
+    }
     tabsToHide.forEach(function(tabValue) {
       var tabLink = $('#conditioned3 a[data-value="' + tabValue + '"]');
       if (tabLink.length > 0) {
@@ -592,6 +596,43 @@ $(document).on('shiny:inputchanged', function(event) {
       }
     });
   }
+});
+
+function syncTabSelection() {
+  document.querySelectorAll('.nav [data-toggle="tab"]').forEach(function(tab) {
+    var selected = tab.parentElement.classList.contains('active');
+    ['aria-selected', 'aria-expanded'].forEach(function(attribute) {
+      if (tab.getAttribute(attribute) !== String(selected)) tab.setAttribute(attribute, String(selected));
+    });
+    if (tab.getAttribute('role') === 'tab') {
+      var tabIndex = selected ? '0' : '-1';
+      if (tab.getAttribute('tabindex') !== tabIndex) tab.setAttribute('tabindex', tabIndex);
+    }
+  });
+}
+
+$(function() {
+  syncTabSelection();
+  $(document).on('shown.bs.tab shiny:bound shiny:value', syncTabSelection);
+  new MutationObserver(function(records) {
+    if (records.some(function(record) {
+      return record.type === 'childList' || record.target.closest('.nav');
+    })) syncTabSelection();
+  }).observe(document.body, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+
+  var modalTrigger = null;
+  var lastFocus = null;
+  $(document).on('focusin', function(event) {
+    if (!event.target.closest('.modal')) lastFocus = event.target;
+  });
+  $(document).on('show.bs.modal', '.modal', function() {
+    modalTrigger = lastFocus;
+  });
+  $(document).on('hidden.bs.modal', '.modal', function() {
+    var trigger = modalTrigger;
+    modalTrigger = null;
+    if (trigger && trigger.isConnected) trigger.focus();
+  });
 });
 
 // Dark mode toggle function
