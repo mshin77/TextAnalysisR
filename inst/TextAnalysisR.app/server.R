@@ -80,8 +80,8 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$main_navbar, {
     nm <- input$main_navbar
-    if (!is.null(lazy_tabs[[nm]]) && isFALSE(tab_loaded[[nm]])) tab_loaded[[nm]] <- TRUE
-  }, ignoreInit = TRUE)
+    if (!is.null(nm) && !is.null(lazy_tabs[[nm]]) && isFALSE(tab_loaded[[nm]])) tab_loaded[[nm]] <- TRUE
+  })
 
   # choices sent before a lazy tab's HTML arrives are dropped, so tick after each flush
   lazy_ui_ready <- reactiveVal(0)
