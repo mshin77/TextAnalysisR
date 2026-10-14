@@ -12088,10 +12088,6 @@ server <- shinyServer(function(input, output, session) {
     }
   })
 
-  observe({
-    shinyjs::toggleState("embedding_run", condition = !inherits(try(united_tbl(), silent = TRUE), "try-error"))
-  })
-
   get_available_tokens <- function() {
     final_tokens_result <- tryCatch(final_tokens(), error = function(e) NULL)
     if (!is.null(final_tokens_result)) {

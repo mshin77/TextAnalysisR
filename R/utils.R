@@ -36,7 +36,7 @@ globalVariables(names = c(
   "Percentage", "Score", "TF_IDF_Score", "Value", "collocation_ordered",
   "direction", "doc_ordered", "entity_ordered", "feature_ordered", "k",
   "log_odds_ratio", "log_odds_weighted", "metric_val", "pos_ordered",
-  "position", "term_ordered", "count", "term_num"
+  "position", "term_ordered", "count", "term_num", "unit_id", "doc_id"
 ))
 
 
