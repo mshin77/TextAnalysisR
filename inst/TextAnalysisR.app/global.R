@@ -4163,7 +4163,7 @@ qualitative_coding_ui_content <- function() {
         tags$h5(strong("Annotate units"), style = "color: #4269BF; margin-bottom: 10px;"),
         selectInput("qc_ann_source", "Show units from",
                     choices = c("Loose units (no group)" = "loose", "Blind holdout" = "holdout")),
-        tags$p("Groups are optional. Without them, every unit is loose. With them, loose units are the ones no group holds.",
+        tags$p("Groups are optional. Units in no group are loose.",
                class = "qc-tip"),
         textAreaInput("qc_ann_memo", "Memo on this unit", rows = 3, width = "100%"),
         actionButton("qc_ann_save_memo", "Save memo", class = "btn-default btn-sm"),

@@ -180,7 +180,7 @@ body {
   color: #0C795A;
   padding: 6px 12px;
   margin-bottom: 10px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
 }
 
@@ -190,7 +190,7 @@ body {
   color: #B15319;
   padding: 6px 12px;
   margin-bottom: 10px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
 }
 
@@ -200,7 +200,7 @@ body {
   color: #1E71A1;
   padding: 6px 12px;
   margin-bottom: 10px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
 }
 
@@ -211,7 +211,7 @@ body {
   color: #0C795A;
   padding: 10px 12px;
   margin-bottom: 15px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
 }
 
@@ -221,7 +221,7 @@ body {
   color: #B15319;
   padding: 10px 12px;
   margin-bottom: 15px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
 }
 
@@ -231,7 +231,7 @@ body {
   color: #1E71A1;
   padding: 10px 12px;
   margin-bottom: 15px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
 }
 
@@ -241,7 +241,7 @@ body {
   color: #7F1D1D;
   padding: 10px 12px;
   margin-bottom: 15px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
 }
 
@@ -252,7 +252,7 @@ body {
   color: #B15319;
   padding: 12px 16px;
   margin: 15px 0;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -261,7 +261,7 @@ body {
 /* --- STATUS ICONS --- */
 .status-icon {
   margin-right: 8px;
-  font-size: 16px;
+  font-size: var(--font-size-msg);
   flex-shrink: 0;
 }
 
@@ -3009,8 +3009,9 @@ body.splash-on .shinybusy-overlay { display: none !important; }
   display: none;
 }
 
-.qc-save-status {
-  font-size: var(--font-size-sm);
+.qc-save-status,
+.qc-save-status .shiny-text-output {
+  font-size: var(--font-size-msg);
   color: #0C795A;
 }
 
@@ -3158,7 +3159,7 @@ body.splash-on .shinybusy-overlay { display: none !important; }
 .qc-empty {
   padding: 24px;
   color: #475569;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-msg);
   text-align: center;
 }
 

@@ -718,7 +718,7 @@ output$qc_ann_panel <- renderUI({
           }))
     },
     tags$p(class = "qc-tip",
-           "Remove a code with the × beside it. Overlapping codes show as stacked bands. With a keyboard, a code chip without a selected phrase codes the whole unit."))
+           "Remove a code with ×. Overlaps show as stacked bands. A chip with no phrase selected codes the whole unit."))
 })
 
 observeEvent(input$qc_ann_apply, {
