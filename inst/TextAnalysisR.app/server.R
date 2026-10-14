@@ -19197,11 +19197,11 @@ server <- shinyServer(function(input, output, session) {
     }
 
     TextAnalysisR:::show_loading_notification(
-      HTML("Preparing the embedding backend...<br>The first run may take a minute."),
+      HTML(if (identical(input$embedding_backend, "r") || !identical(input$topic_embedding_provider %||% "sentence-transformers", "sentence-transformers")) "Preparing the embedding backend..." else "Loading the Python embedding libraries...<br>The first run can take several minutes."),
       id = "embedding_model_notification"
     )
 
-    if (!identical(input$embedding_backend, "r") && !TextAnalysisR:::require_feature("embeddings", session)) {
+    if (!identical(input$embedding_backend, "r") && identical(input$topic_embedding_provider %||% "sentence-transformers", "sentence-transformers") && !TextAnalysisR:::require_feature("embeddings", session)) {
       shiny::removeNotification("embedding_model_notification")
       return()
     }
