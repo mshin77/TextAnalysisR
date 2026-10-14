@@ -260,10 +260,11 @@ topic_modeling_ui_content <- function() {
                   checked = "checked"
                 ),
                 tags$span("Structural Topic Model", style = "margin-left: 5px;"),
-                actionLink("showSTMInfo", icon("info-circle"),
-                          style = "color: #337ab7; font-size: 16px; margin-left: 8px;",
-                          title = "Learn about STM",
-                          `aria-label` = "Learn about STM")
+                conditionalPanel(condition = "input.conditioned3 == 4",
+                  actionLink("showSTMInfo", icon("info-circle"),
+                            style = "color: #337ab7; font-size: 16px; margin-left: 8px;",
+                            title = "Learn about STM",
+                            `aria-label` = "Learn about STM"))
               )
             ),
             tags$div(
@@ -277,10 +278,11 @@ topic_modeling_ui_content <- function() {
                   value = "embedding"
                 ),
                 tags$span("Embedding-Based Topic Model", style = "margin-left: 5px;"),
-                actionLink("showEmbeddingTopicsInfo", icon("info-circle"),
-                          style = "color: #337ab7; font-size: 16px; margin-left: 8px;",
-                          title = "Learn about Embedding-Based Topics",
-                          `aria-label` = "Learn about Embedding-Based Topics")
+                conditionalPanel(condition = "input.conditioned3 == 4",
+                  actionLink("showEmbeddingTopicsInfo", icon("info-circle"),
+                            style = "color: #337ab7; font-size: 16px; margin-left: 8px;",
+                            title = "Learn about Embedding-Based Topics",
+                            `aria-label` = "Learn about Embedding-Based Topics"))
               )
             )
           ),
