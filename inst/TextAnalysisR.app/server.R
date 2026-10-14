@@ -12081,11 +12081,15 @@ server <- shinyServer(function(input, output, session) {
     dfm_ready <- !is.null(get_available_dfm())
     for (id in c("stm_search", "stm_run", "stm_effect", "stm_display_cat",
                  "stm_display_con", "stm_quote", "topic_generate_labels",
-                 "embedding_run", "embedding_display", "embedding_quote",
+                 "embedding_display", "embedding_quote",
                  "run_log_odds", "run_readability_analysis",
                  "run_lexdiv_analysis", "run_keyword_extraction")) {
       shinyjs::toggleState(id, condition = dfm_ready)
     }
+  })
+
+  observe({
+    shinyjs::toggleState("embedding_run", condition = !inherits(try(united_tbl(), silent = TRUE), "try-error"))
   })
 
   get_available_tokens <- function() {
@@ -19193,11 +19197,11 @@ server <- shinyServer(function(input, output, session) {
     }
 
     TextAnalysisR:::show_loading_notification(
-      HTML("Preparing the embedding backend...<br>The first run starts Python and may take a minute."),
+      HTML("Preparing the embedding backend...<br>The first run may take a minute."),
       id = "embedding_model_notification"
     )
 
-    if (!TextAnalysisR:::require_feature("embeddings", session)) {
+    if (!identical(input$embedding_backend, "r") && !TextAnalysisR:::require_feature("embeddings", session)) {
       shiny::removeNotification("embedding_model_notification")
       return()
     }
