@@ -1438,7 +1438,8 @@ server <- shinyServer(function(input, output, session) {
   raw_tokens <- function() {
     TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts", min_char = 1, lowercase = FALSE,
                               remove_punct = FALSE, remove_symbols = FALSE, remove_numbers = FALSE,
-                              remove_url = FALSE, split_hyphens = FALSE)
+                              remove_url = FALSE, split_hyphens = FALSE) %>%
+      quanteda::tokens_select("[[:alnum:]]", valuetype = "regex")
   }
 
   segment_texts <- function(tbl, settings = NULL) {
@@ -1616,8 +1617,8 @@ server <- shinyServer(function(input, output, session) {
         paste("Average tokens per document:", avg_tokens),
         "",
         "Segmentation Skipped - Text Split Into Words Only:",
-        "  - All punctuation kept",
-        "  - All symbols kept",
+        "  - Punctuation-only tokens dropped",
+        "  - Symbol-only tokens dropped",
         "  - All numbers kept",
         "  - All URLs kept",
         "  - All separators kept",
