@@ -139,13 +139,13 @@ agreement$overall
 
 Which units the coders differed on:
 
-```{r}
+```{r, eval = requireNamespace("irr", quietly = TRUE)}
 agreement$disagree
 ```
 
 Which codes carry those disagreements:
 
-```{r}
+```{r, eval = requireNamespace("irr", quietly = TRUE)}
 agreement$by_code
 ```
 

@@ -599,9 +599,10 @@ $(document).on('shiny:inputchanged', function(event) {
 });
 
 function syncTabSelection() {
-  document.querySelectorAll('.nav [data-toggle="tab"]:not([role="tab"])').forEach(function(tab) {
-    var current = String(tab.parentElement.classList.contains('active'));
-    if (tab.getAttribute('aria-current') !== current) tab.setAttribute('aria-current', current);
+  document.querySelectorAll('.nav [data-toggle="tab"]').forEach(function(tab) {
+    if (tab.parentElement.classList.contains('active')) tab.setAttribute('aria-current', 'true');
+    else tab.removeAttribute('aria-current');
+    tab.removeAttribute('aria-expanded');
   });
 }
 
@@ -857,5 +858,3 @@ $(document).ready(function() {
   $(document).on('shiny:connected shown.bs.tab shiny:value', function() { setTimeout(thinGrid, 400); });
 })();
 
-$(document).on('shiny:busy', function () { document.body.setAttribute('aria-busy', 'true'); });
-$(document).on('shiny:idle', function () { document.body.removeAttribute('aria-busy'); });

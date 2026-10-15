@@ -535,7 +535,7 @@ drop_duplicate_articles <- function(df, text_col = "text", date_col = "date",
   }
   if (is.null(df) || nrow(df) < 2 || !text_col %in% names(df)) return(df)
 
-  dates <- if (date_col %in% names(df)) df[[date_col]] else rep(NA, nrow(df))
+  dates <- if (date_col %in% names(df)) df[[date_col]] else rep("0", nrow(df))
 
   dup <- tryCatch(
     suppressWarnings(suppressMessages(

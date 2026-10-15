@@ -562,7 +562,7 @@ reduce_dimensions <- function(data_matrix,
 
           umap_config <- umap::umap.defaults
           umap_config$n_neighbors <- safe_n_neighbors
-          umap_config$min_dist <- umap_min_dist
+          umap_config$min_dist <- max(umap_min_dist, 0.001)
           umap_config$n_components <- n_components
           umap_config$metric <- umap_metric
           umap_config$random_state <- seed

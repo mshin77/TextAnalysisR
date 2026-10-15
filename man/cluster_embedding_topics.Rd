@@ -10,7 +10,8 @@ cluster_embedding_topics(
   embedding_model = "all-MiniLM-L6-v2",
   clustering_method = c("kmeans", "hierarchical"),
   min_topic_size = 3,
-  seed = 123
+  seed = 123,
+  precomputed_embeddings = NULL
 )
 }
 \arguments{
@@ -27,6 +28,9 @@ assign every document.}
 \item{min_topic_size}{Minimum documents per topic.}
 
 \item{seed}{Random seed for reproducibility}
+
+\item{precomputed_embeddings}{Optional matrix of document embeddings (one row per
+text) to use instead of embedding \code{texts} with \code{embedding_model}.}
 }
 \value{
 List with topic assignments and diagnostics. The cohesion values

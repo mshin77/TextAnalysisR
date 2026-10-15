@@ -813,6 +813,8 @@ calculate_topic_probability <- function(stm_model,
 #'   assign every document.
 #' @param min_topic_size Minimum documents per topic.
 #' @param seed Random seed for reproducibility
+#' @param precomputed_embeddings Optional matrix of document embeddings (one row per
+#'   text) to use instead of embedding `texts` with `embedding_model`.
 #'
 #' @return List with topic assignments and diagnostics. The cohesion values
 #'   are mean pairwise cosine similarity of document embeddings within each
@@ -828,7 +830,8 @@ cluster_embedding_topics <- function(texts, n_topics = 10,
                                      embedding_model = "all-MiniLM-L6-v2",
                                      clustering_method = c("kmeans", "hierarchical"),
                                      min_topic_size = 3,
-                                     seed = 123) {
+                                     seed = 123,
+                                     precomputed_embeddings = NULL) {
   clustering_method <- match.arg(clustering_method)
   result <- fit_embedding_model(
     texts = texts,
@@ -837,7 +840,8 @@ cluster_embedding_topics <- function(texts, n_topics = 10,
     embedding_model = embedding_model,
     clustering_method = clustering_method,
     min_topic_size = min_topic_size,
-    seed = seed
+    seed = seed,
+    precomputed_embeddings = precomputed_embeddings
   )
   cohesion <- tryCatch(
     calculate_coherence(result$embeddings, result$topic_assignments),
@@ -1131,7 +1135,7 @@ fit_embedding_model <- function(texts,
         if (verbose) message("Initializing BERTopic model...")
 
         topic_model <- bertopic$BERTopic(
-          embedding_model = if (!is.null(precomputed_embeddings) && grepl("^(text-embedding|gemini-embedding)", embedding_model)) NULL else .st_model_ref(embedding_model),
+          embedding_model = if (!is.null(precomputed_embeddings) && isTRUE(grepl("embedding-[0-9a-z]", embedding_model))) NULL else .st_model_ref(embedding_model),
           nr_topics = nr_topics,
           min_topic_size = as.integer(min_topic_size),
           umap_model = reticulate::import("umap")$UMAP(
