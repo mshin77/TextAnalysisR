@@ -94,9 +94,9 @@ options(shiny.maxRequestSize = 100 * 1024^2, shiny.timeout = 300)
 # wide tables scroll inside their column on narrow screens
 options(DT.options = list(scrollX = TRUE))
 
-server_gemini_key <- Sys.getenv("GEMINI_API_KEY", "")
+server_gemini_key <- trimws(Sys.getenv("GEMINI_API_KEY", ""))
 has_server_gemini <- nzchar(server_gemini_key)
-server_gemini_model <- Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-3.8-flash")
+server_gemini_model <- trimws(Sys.getenv("GEMINI_DEFAULT_MODEL", "gemini-3.8-flash"))
 
 .gemini_provider_label <- if (has_server_gemini) "Gemini" else "Gemini (API Key Required)"
 .llm_provider_choices <- c("OpenAI (API Key Required)" = "openai", "gemini")
