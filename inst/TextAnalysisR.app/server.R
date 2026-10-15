@@ -1509,7 +1509,7 @@ server <- shinyServer(function(input, output, session) {
       total_tokens <- sum(quanteda::ntoken(toks_processed))
       avg_tokens <- round(mean(quanteda::ntoken(toks_processed)), 1)
       num_types <- length(unique(unlist(as.list(toks_processed))))
-      min_char_used <- input$min_char %||% 2
+      min_char_used <- if (math_mode_enabled) 1L else input$min_char %||% 2
 
       preprocessing_applied <- c()
 
@@ -12896,6 +12896,8 @@ server <- shinyServer(function(input, output, session) {
         comparison_results$calculated_doc_category_var <- input$doc_category_var
         return()
       }
+
+      if (!remote_doc_ok(NROW(processed_documents()), "Document similarity")) return()
 
       shinyjs::hide("words_similarity_ready_status")
       shinyjs::hide("ngrams_similarity_ready_status")
