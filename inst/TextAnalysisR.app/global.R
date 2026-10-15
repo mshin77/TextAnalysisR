@@ -46,6 +46,11 @@ client_id <- function(session) {
   if (is.null(ip) || !nzchar(ip)) "unknown" else ip
 }
 
+.user_requests <- local({
+  store <- list()
+  function(value) if (missing(value)) store else store <<- value
+})
+
 guard_ai_usage <- function(session) {
   if (!is_remote) return(invisible(TRUE))
 

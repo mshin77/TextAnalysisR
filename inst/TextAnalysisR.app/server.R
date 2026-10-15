@@ -68,7 +68,7 @@ server <- shinyServer(function(input, output, session) {
     options(.old_session_options)
   })
 
-  user_requests <- reactiveVal(list())
+  user_requests <- .user_requests
 
   entity_color_map_js <- paste(
     "  var colors = {",
@@ -212,9 +212,11 @@ server <- shinyServer(function(input, output, session) {
     TRUE
   }
 
+  rate_key <- if (is_remote) client_id(session) else session$token
+
   gate_rate_limit <- function(where, notify = shiny::showNotification) {
     tryCatch({
-      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 20, window_seconds = 3600)
+      TextAnalysisR:::check_rate_limit(rate_key, user_requests, max_requests = 20, window_seconds = 3600)
       TRUE
     }, error = function(e) {
       TextAnalysisR:::log_security_event("rate_limit_exceeded", where, session, "warning")
@@ -303,6 +305,17 @@ server <- shinyServer(function(input, output, session) {
       feature = feature, provider = provider, model = model %||% "default",
       stringsAsFactors = FALSE
     )))
+  }
+
+  try_spend_ai_call <- function(feature, provider, model) {
+    if (!provider %in% c("openai", "gemini")) return(TRUE)
+    tryCatch({
+      spend_ai_call(feature, provider, model)
+      TRUE
+    }, error = function(e) {
+      showNotification(conditionMessage(e), type = "error", duration = 10)
+      FALSE
+    })
   }
 
   # spaCy initialization status
@@ -512,6 +525,10 @@ server <- shinyServer(function(input, output, session) {
       updateTextAreaInput(session, "text_input", value = "")
     }
     file_upload_result(NULL)
+    loaded_files(NULL)
+    skipped_files(NULL)
+    clear_embeddings_cache()
+    topic_model_result(NULL)
   })
 
   file_validated <- reactiveVal(NULL)
@@ -522,7 +539,7 @@ server <- shinyServer(function(input, output, session) {
     req(input$file)
 
     tryCatch({
-      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
+      TextAnalysisR:::check_rate_limit(rate_key, user_requests, max_requests = 100, window_seconds = 3600)
 
       invisible(lapply(seq_len(nrow(input$file)), function(i) {
         row <- input$file[i, ]
@@ -1088,6 +1105,7 @@ server <- shinyServer(function(input, output, session) {
                   return(example_data)
                 }
               )
+              try(removeNotification("loadingText"), silent = TRUE)
               return(result)
             }
           )
@@ -1102,6 +1120,7 @@ server <- shinyServer(function(input, output, session) {
     applied_removals(character(0))
     applied_expressions(character(0))
     applied_edge_options(character(0))
+    math_mode_used(FALSE)
     step2_apply(NULL)
     dfm_apply(NULL)
     lemma_applied(FALSE)
@@ -1179,6 +1198,8 @@ server <- shinyServer(function(input, output, session) {
     file_upload_result(NULL)
     loaded_files(NULL)
     skipped_files(NULL)
+    clear_embeddings_cache()
+    topic_model_result(NULL)
     shinyjs::reset("file")
     updateTextAreaInput(session, "text_input", value = "")
     reset_downstream()
@@ -12351,8 +12372,8 @@ server <- shinyServer(function(input, output, session) {
     if (provider %in% c("openai", "gemini") && !check_api_key(api_key, provider, "embeddings")) return()
 
     if (!remote_doc_ok(length(texts_vec), "Embedding generation")) return()
-    spend_ai_call("Embeddings", provider, model_name)
-    loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "... This may briefly slow the app for other users."))
+    if (!try_spend_ai_call("Embeddings", provider, model_name)) return()
+    TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "... This may briefly slow the app for other users."), id = "embedGenLoading")
 
     tryCatch({
       embeddings <- TextAnalysisR::get_best_embeddings(
@@ -12364,7 +12385,7 @@ server <- shinyServer(function(input, output, session) {
       )
 
       if (is.null(embeddings) || !is.matrix(embeddings) || nrow(embeddings) == 0) {
-        TextAnalysisR:::remove_notification_by_id(loading_id)
+        TextAnalysisR:::remove_notification_by_id("embedGenLoading")
         TextAnalysisR:::show_error_notification(
           paste0(
             "Embeddings unavailable for provider '", provider,
@@ -12383,7 +12404,7 @@ server <- shinyServer(function(input, output, session) {
       embeddings_cache$source <- "generate_embeddings"
       embeddings_cache$n_docs <- nrow(embeddings)
 
-      TextAnalysisR:::remove_notification_by_id(loading_id)
+      TextAnalysisR:::remove_notification_by_id("embedGenLoading")
 
       TextAnalysisR:::show_completion_notification(
         paste0(
@@ -12393,7 +12414,7 @@ server <- shinyServer(function(input, output, session) {
       )
 
     }, error = function(e) {
-      TextAnalysisR:::remove_notification_by_id(loading_id)
+      TextAnalysisR:::remove_notification_by_id("embedGenLoading")
 
       error_options <- "Options: 1) Use Sentence Transformers, 2) Set OPENAI_API_KEY or GEMINI_API_KEY."
       TextAnalysisR:::show_error_notification(
@@ -13064,7 +13085,7 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$run_semantic_search, {
     tryCatch({
-      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
+      TextAnalysisR:::check_rate_limit(rate_key, user_requests, max_requests = 100, window_seconds = 3600)
     }, error = function(e) {
       TextAnalysisR:::log_security_event(
         "rate_limit_exceeded",
@@ -13215,8 +13236,9 @@ server <- shinyServer(function(input, output, session) {
         )
         if (search_provider %in% c("openai", "gemini") && !check_api_key(search_api_key, search_provider, "search embeddings")) return()
 
-        spend_ai_call("Search Embeddings", search_provider, search_model)
-        loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", search_provider, "..."))
+        if (!remote_doc_ok(tryCatch(nrow(united_tbl()), error = function(e) 0L), "Search embeddings")) return()
+        if (!try_spend_ai_call("Search Embeddings", search_provider, search_model)) return()
+        TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", search_provider, "..."), id = "searchEmbedLoading")
 
         embed_result <- tryCatch({
           embeddings <- TextAnalysisR::get_best_embeddings(
@@ -13246,7 +13268,7 @@ server <- shinyServer(function(input, output, session) {
           FALSE
         })
 
-        TextAnalysisR:::remove_notification_by_id(loading_id)
+        TextAnalysisR:::remove_notification_by_id("searchEmbedLoading")
 
         if (!isTRUE(embed_result)) return()
         similarity_data <- comparison_results$results[["embeddings"]]
@@ -13497,7 +13519,7 @@ server <- shinyServer(function(input, output, session) {
         ndoc = quanteda::ndoc(dfm_available),
         nfeat = quanteda::nfeat(dfm_available),
         features_sample = quanteda::featnames(dfm_available)[seq_len(min(100, quanteda::nfeat(dfm_available)))],
-        matrix_sample = as.matrix(dfm_available)[seq_len(min(10, quanteda::ndoc(dfm_available))), seq_len(min(100, quanteda::nfeat(dfm_available)))]
+        matrix_sample = as.matrix(dfm_available[seq_len(min(10, quanteda::ndoc(dfm_available))), seq_len(min(100, quanteda::nfeat(dfm_available)))])
       ), algo = "md5")
 
       if (!is.null(comparison_results$last_dfm_hash) &&
@@ -14323,6 +14345,9 @@ server <- shinyServer(function(input, output, session) {
     )
 
     method_display_name <- method_display_names[[cluster_method]] %||% cluster_method
+
+    if (cluster_method %in% c("embedding", "semantic_unified") &&
+        !remote_doc_ok(tryCatch(nrow(united_tbl()), error = function(e) 0L), method_display_name)) return()
 
     existing_embedding <- NULL
     embedding_method <- NULL
@@ -17935,7 +17960,7 @@ server <- shinyServer(function(input, output, session) {
 
   K_search <- eventReactive(input$stm_search, {
     tryCatch({
-      TextAnalysisR:::check_rate_limit(session$token, user_requests, max_requests = 100, window_seconds = 3600)
+      TextAnalysisR:::check_rate_limit(rate_key, user_requests, max_requests = 100, window_seconds = 3600)
     }, error = function(e) {
       TextAnalysisR:::log_security_event(
         "rate_limit_exceeded",
@@ -19178,7 +19203,8 @@ server <- shinyServer(function(input, output, session) {
     showNotification("Refitting with five seeds...", type = "message", duration = NULL, id = "embedding_stability_note")
     on.exit(removeNotification("embedding_stability_note"), add = TRUE)
     res <- tryCatch(TextAnalysisR::assess_embedding_stability(
-      texts, n_runs = 5, embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2",
+      texts, n_runs = 5,
+      embedding_model = if (is.null(emb)) pick_model(input$topic_embedding_st_model, "all-MiniLM-L6-v2") else embeddings_cache$model,
       precomputed_embeddings = if (from_api) emb, verbose = FALSE,
       method = paste0(input$embedding_dimred_method %||% "umap", "_", input$embedding_method_r %||% "dbscan"),
       backend = "r",
@@ -19300,6 +19326,10 @@ server <- shinyServer(function(input, output, session) {
           message("Reusing cached embeddings (", model_name, ")")
           precomputed <- embeddings_cache$embeddings
         } else {
+          if (!try_spend_ai_call("Topic Modeling Embeddings", provider, model_name)) {
+            shiny::removeNotification("embedding_model_notification")
+            return()
+          }
           message("Generating embeddings via ", provider, " (", model_name, ")...")
           precomputed <- TextAnalysisR::get_best_embeddings(
             texts = texts,
@@ -19317,8 +19347,6 @@ server <- shinyServer(function(input, output, session) {
           embeddings_cache$n_docs <- nrow(precomputed)
         }
       }
-
-      spend_ai_call("Topic Modeling Embeddings", provider, model_name)
 
       raw_output <- capture.output({
         if (backend == "fixed") {
