@@ -33,12 +33,23 @@ guard_stm_init <- function(requested, vocab_n) {
 .remote_doc_limit <- 3000L
 .remote_qc_doc_limit <- 100L
 
+.local_install_note <- "Install with <code>install.packages(\"TextAnalysisR\")</code>, then start with <code>TextAnalysisR::run_app()</code>."
+
+local_memory_note <- function(n) {
+  gb <- 3 * 8 * as.numeric(n)^2 / 1024^3
+  if (gb < 1) sprintf("%.0f MB", gb * 1024) else sprintf("%.1f GB", gb)
+}
+
+local_run_note <- function(feature, n, limit = NULL) {
+  cap <- if (is.null(limit)) "is not available on the hosted app" else sprintf("is limited to %s documents on the hosted app", format(limit, big.mark = ","))
+  need <- if (3 * 8 * as.numeric(n)^2 / 1024^2 >= 100) sprintf(" About %s of free memory is needed.", local_memory_note(n)) else ""
+  HTML(sprintf("%s %s; this data has %s documents. Run it locally.%s %s",
+               feature, cap, format(n, big.mark = ","), need, .local_install_note))
+}
+
 remote_doc_ok <- function(n, feature) {
   if (is_remote && n > .remote_doc_limit) {
-    showNotification(
-      sprintf("%s over %d documents exceeds the hosted memory limit (this corpus has %d). Run large corpora in the R package.", feature, .remote_doc_limit, n),
-      type = "warning", duration = 10
-    )
+    showNotification(local_run_note(feature, n, .remote_doc_limit), type = "warning", duration = 20)
     return(FALSE)
   }
   TRUE
@@ -19185,9 +19196,11 @@ server <- shinyServer(function(input, output, session) {
     embedding_displayed(FALSE)
 
     if (is_remote) {
+      n_docs <- tryCatch(nrow(united_tbl()), error = function(e) NULL)
       showNotification(
-        "Embedding-based topic modeling exceeds the hosted memory limit. Run it in the R package.",
-        type = "warning", duration = 10
+        if (is.null(n_docs)) HTML(paste("Embedding-based topic modeling is not available on the hosted app. Run it locally.", .local_install_note))
+        else local_run_note("Embedding-based topic modeling", n_docs),
+        type = "warning", duration = 20
       )
       return()
     }
@@ -21705,8 +21718,8 @@ server <- shinyServer(function(input, output, session) {
     n <- min(length(texts), input$qc_n_docs %||% 20)
     # the hosted app pays per unit coded, so one click cannot run thousands of calls
     if (is_remote && n > .remote_qc_doc_limit) {
-      showNotification(sprintf("The hosted app codes up to %d rows per run; run larger samples in the R package.",
-                               .remote_qc_doc_limit), type = "warning", duration = 8)
+      showNotification(HTML(sprintf("The hosted app codes up to %d rows per run; this sample has %d. Run larger samples locally. %s",
+                                    .remote_qc_doc_limit, n, .local_install_note)), type = "warning", duration = 20)
       n <- .remote_qc_doc_limit
     }
     idx <- seq_len(n)
