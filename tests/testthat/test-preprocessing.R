@@ -104,3 +104,7 @@ test_that(".fix_broken_chars restores apostrophes and drops stray markers", {
 test_that(".fix_broken_chars handles fraction-expanded markers", {
   expect_equal(TextAnalysisR:::.fix_broken_chars("SAMG\u00ef\u00bf1\u20442\u00ef\u00bf1\u20442s office"), "SAMG's office")
 })
+
+test_that(".fix_broken_chars keeps apostrophes after non-ASCII letters", {
+  expect_equal(TextAnalysisR:::.fix_broken_chars("caf\u00e9\ufffds"), "caf\u00e9's")
+})

@@ -155,7 +155,7 @@ plot_log_odds_ratio(log_odds)
 `calculate_weighted_log_odds()` weights the ratio by a z-score (Monroe et al.), so reliably distinctive
 terms rank above rare terms with extreme ratios (uses the tidylo package).
 
-```{r}
+```{r, eval = requireNamespace("tidylo", quietly = TRUE)}
 weighted_odds <- calculate_weighted_log_odds(
   dfm_object,
   group_var = "reference_type",

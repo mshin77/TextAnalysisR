@@ -1,4 +1,5 @@
 test_that(".build_covariate_formula builds a resolvable RHS", {
+  skip_if_not_installed("stm")
   f <- TextAnalysisR:::.build_covariate_formula("reference_type + s(year, df = 4)")
   expect_s3_class(f, "formula")
   expect_equal(paste(deparse(f), collapse = " "), "~reference_type + s(year, df = 4)")

@@ -1,5 +1,5 @@
 /* Mobile */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* Hamburger on the top-left; the TTS/dark/translate controls are fixed top-right */
   .navbar-toggle {
     float: left !important;
@@ -61,7 +61,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .qc-card-body {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -26,7 +26,6 @@ inst/TextAnalysisR\.app/\.claude$
 ^\.lintr$
 ^tests/testthat/security\.log$
 ^scratch_.*\.R$
-^/tmp$
 __pycache__$
 \.pyc$
 \.bak$

@@ -23,9 +23,10 @@ For table extraction from PDFs, use \code{\link{extract_tables_from_pdf_py}}.
 }
 \examples{
 \donttest{
-pdf_path <- "path/to/document.pdf"
-content_type <- detect_pdf_content_type(pdf_path)
-print(content_type)
+if (interactive()) {
+  content_type <- detect_pdf_content_type(file.choose())
+  print(content_type)
+}
 }
 }
 \concept{pdf}

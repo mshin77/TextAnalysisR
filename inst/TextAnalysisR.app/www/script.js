@@ -599,25 +599,20 @@ $(document).on('shiny:inputchanged', function(event) {
 });
 
 function syncTabSelection() {
-  document.querySelectorAll('.nav [data-toggle="tab"]').forEach(function(tab) {
-    var selected = tab.parentElement.classList.contains('active');
-    ['aria-selected', 'aria-expanded'].forEach(function(attribute) {
-      if (tab.getAttribute(attribute) !== String(selected)) tab.setAttribute(attribute, String(selected));
-    });
-    if (tab.getAttribute('role') === 'tab') {
-      var tabIndex = selected ? '0' : '-1';
-      if (tab.getAttribute('tabindex') !== tabIndex) tab.setAttribute('tabindex', tabIndex);
-    }
+  document.querySelectorAll('.nav [data-toggle="tab"]:not([role="tab"])').forEach(function(tab) {
+    var current = String(tab.parentElement.classList.contains('active'));
+    if (tab.getAttribute('aria-current') !== current) tab.setAttribute('aria-current', current);
   });
 }
 
 $(function() {
   syncTabSelection();
   $(document).on('shown.bs.tab shiny:bound shiny:value', syncTabSelection);
-  new MutationObserver(function(records) {
-    if (records.some(function(record) {
-      return record.type === 'childList' || record.target.closest('.nav');
-    })) syncTabSelection();
+  var syncPending = false;
+  new MutationObserver(function() {
+    if (syncPending) return;
+    syncPending = true;
+    requestAnimationFrame(function() { syncPending = false; syncTabSelection(); });
   }).observe(document.body, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
 
   var modalTrigger = null;
@@ -831,7 +826,9 @@ $(document).ready(function() {
   var label = function () {
     pending = false;
     document.querySelectorAll('.input-group > input.form-control[readonly]:not([aria-label])').forEach(function (el) {
-      el.setAttribute('aria-label', 'Selected file');
+      var group = el.closest('.shiny-input-container');
+      var title = group && group.querySelector('label.control-label');
+      el.setAttribute('aria-label', title && title.textContent.trim() ? title.textContent.trim() : 'Selected file');
     });
   };
   var watch = function () {
@@ -859,3 +856,6 @@ $(document).ready(function() {
   };
   $(document).on('shiny:connected shown.bs.tab shiny:value', function() { setTimeout(thinGrid, 400); });
 })();
+
+$(document).on('shiny:busy', function () { document.body.setAttribute('aria-busy', 'true'); });
+$(document).on('shiny:idle', function () { document.body.removeAttribute('aria-busy'); });

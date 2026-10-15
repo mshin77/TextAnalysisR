@@ -435,9 +435,7 @@ remove_metadata_lines <- function(df, text_col = "text") {
 # apostrophe between letters, dropped elsewhere since quote direction is lost.
 .clean_text <- function(x) {
   if (!length(x)) return(x)
-  broken <- "(\u00ef\u00bf\u00bd|\ufffd)+"
-  x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
-  x <- gsub(broken, "", x, perl = TRUE)
+  x <- .fix_broken_chars(x)
   x <- gsub("<(br|/p|/li|/ul|/ol|/div|/tr|/td|/h[1-6])\\b[^<>]*>", " ", x,
             ignore.case = TRUE, perl = TRUE)
   x <- gsub("</?[[:alpha:]][[:alnum:]]*([[:space:]][^<>]*)?/?>", "", x, perl = TRUE)
@@ -597,6 +595,10 @@ import_images <- function(file_paths,
 
   mime <- c(png = "image/png", jpg = "image/jpeg", jpeg = "image/jpeg",
             webp = "image/webp", gif = "image/gif")
+
+  if (!requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("Package 'jsonlite' is required. Install it with install.packages('jsonlite').")
+  }
 
   rows <- lapply(seq_along(file_paths), function(i) {
     path <- file_paths[i]
@@ -935,7 +937,7 @@ unite_cols <- function(df, listed_vars) {
 #' @param stopwords_language Character; language for stopwords (default: "en").
 #' @param custom_stopwords Character vector; additional words to remove (default: NULL).
 #' @param custom_valuetype Character; valuetype for custom_stopwords pattern matching, one of "glob", "regex", or "fixed" (default: "glob").
-#' @param math_mode Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols, and single-character tokens such as labels and units) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE} and \code{min_char} to \code{1}, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, parentheses, brackets, braces, quotation marks, em dashes, and en dashes. Any explicitly supplied \code{min_char} is overridden. Use for math or STEM corpora where operators, numerals, one-letter labels ("angle A"), and one-letter units ("5 m") carry meaning (default: FALSE).
+#' @param math_mode Logical; if \code{TRUE}, preserve math content (numbers, operators, symbols, and single-character tokens such as labels and units) by forcing \code{remove_punct}, \code{remove_symbols}, and \code{remove_numbers} all to \code{FALSE} and \code{min_char} to \code{1}, then strip only sentence-end punctuation such as periods, commas, question marks, exclamation marks, colons, semicolons, quotation marks, em dashes, and en dashes; parentheses, brackets, and braces are kept. Any explicitly supplied \code{min_char} is overridden. Use for math or STEM corpora where operators, numerals, one-letter labels ("angle A"), and one-letter units ("5 m") carry meaning (default: FALSE).
 #' @param verbose Logical; print verbose output (default: FALSE).
 #' @param ... Additional arguments passed to \code{quanteda::tokens}.
 #'
@@ -1258,9 +1260,10 @@ extract_text_from_pdf <- function(file_path) {
 #'
 #' @examples
 #' \donttest{
-#' pdf_path <- "path/to/document.pdf"
-#' content_type <- detect_pdf_content_type(pdf_path)
-#' print(content_type)
+#' if (interactive()) {
+#'   content_type <- detect_pdf_content_type(file.choose())
+#'   print(content_type)
+#' }
 #' }
 detect_pdf_content_type <- function(file_path) {
   if (requireNamespace("pdftools", quietly = TRUE)) {
@@ -2010,6 +2013,6 @@ detect_language_llm <- function(texts,
 #' @keywords internal
 .fix_broken_chars <- function(x) {
   broken <- "(\u00ef\u00bf(\u00bd|1\u20442)|\ufffd)+"
-  x <- gsub(paste0("(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
+  x <- gsub(paste0("(*UCP)(?<=[[:alnum:]])", broken, "(?=[[:alnum:]])"), "'", x, perl = TRUE)
   return(gsub(broken, "", x, perl = TRUE))
 }

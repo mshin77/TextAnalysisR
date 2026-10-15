@@ -111,7 +111,7 @@ uncoded_units(suggestions, texts)
 
 `code_agreement()` takes assignments from two or more coders.
 
-```{r}
+```{r, eval = requireNamespace("irr", quietly = TRUE)}
 # synthetic assignments
 assignments <- tibble::tibble(
   doc_id = rep(paste0("doc", 1:10), each = 2),
@@ -155,7 +155,7 @@ indicator being the other's complement.
 Chance-corrected statistics turn negative when observed agreement falls below what the marginals
 predict, which happens when nearly every unit carries the same code:
 
-```{r}
+```{r, eval = requireNamespace("irr", quietly = TRUE)}
 # synthetic assignments, one code dominating
 skewed <- tibble::tibble(
   doc_id = rep(paste0("doc", 1:8), each = 2),

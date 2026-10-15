@@ -1131,7 +1131,7 @@ fit_embedding_model <- function(texts,
         if (verbose) message("Initializing BERTopic model...")
 
         topic_model <- bertopic$BERTopic(
-          embedding_model = .st_model_ref(embedding_model),
+          embedding_model = if (!is.null(precomputed_embeddings) && grepl("^(text-embedding|gemini-embedding)", embedding_model)) NULL else .st_model_ref(embedding_model),
           nr_topics = nr_topics,
           min_topic_size = as.integer(min_topic_size),
           umap_model = reticulate::import("umap")$UMAP(

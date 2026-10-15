@@ -49,7 +49,7 @@ local_run_note <- function(feature, n, limit = NULL) {
 
 remote_doc_ok <- function(n, feature) {
   if (is_remote && n > .remote_doc_limit) {
-    showNotification(local_run_note(feature, n, .remote_doc_limit), type = "warning", duration = 20)
+    showNotification(local_run_note(feature, n, .remote_doc_limit), type = "warning", duration = NULL)
     return(FALSE)
   }
   TRUE
@@ -363,6 +363,7 @@ server <- shinyServer(function(input, output, session) {
     if (python_available) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         style = "margin-top: -10px;",
         tags$i(class = "fa fa-check-circle status-icon status-icon-info"),
         tags$strong("PDF Table Mode:"),
@@ -371,6 +372,7 @@ server <- shinyServer(function(input, output, session) {
     } else {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         style = "margin-top: -10px;",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$strong("PDF Basic Mode:"),
@@ -378,6 +380,7 @@ server <- shinyServer(function(input, output, session) {
         tags$a(
           "Setup Python",
           href = "#",
+          role = "button",
           onclick = "Shiny.setInputValue('show_python_setup', Math.random()); return false;",
           style = "text-decoration: underline;"
         )
@@ -798,7 +801,7 @@ server <- shinyServer(function(input, output, session) {
       }
 
       already <- loaded_files()
-      new_idx <- which(!(input$file$name %in% already$name))
+      new_idx <- which(!(paste(input$file$name, input$file$size) %in% paste(already$name, already$size)))
 
       if (length(new_idx) == 0) {
         try(removeNotification("loadingFile"), silent = TRUE)
@@ -832,9 +835,14 @@ server <- shinyServer(function(input, output, session) {
 
       deduped <- 0L
       if (isTRUE(input$dedupe_articles) && "text" %in% names(result)) {
-        before <- nrow(result)
-        result <- TextAnalysisR::drop_duplicate_articles(result)
-        deduped <- before - nrow(result)
+        prior <- file_upload_result()
+        combined <- dplyr::bind_rows(
+          if (!is.null(prior) && nrow(prior) > 0) dplyr::mutate(prior, .new_batch = FALSE),
+          dplyr::mutate(result, .new_batch = TRUE)
+        )
+        kept <- TextAnalysisR::drop_duplicate_articles(combined)
+        deduped <- nrow(combined) - nrow(kept)
+        result <- kept[kept$.new_batch, setdiff(names(kept), ".new_batch"), drop = FALSE]
       }
 
       if ("text" %in% names(result)) {
@@ -915,9 +923,10 @@ server <- shinyServer(function(input, output, session) {
         reason <- if (name %in% names(skipped)) skipped[[name]] else NULL
         tags$div(
           title = if (is.null(reason)) name else paste0(name, " - ", reason),
+          class = if (!is.null(reason)) "upload-skipped",
           style = paste0("font-size: var(--font-size-sm); color: ",
-                         if (is.null(reason)) "#475569;" else "#b45309;"),
-          shorten(name)
+                         if (is.null(reason)) "#475569;" else "#92400e;"),
+          if (is.null(reason)) shorten(name) else paste0(shorten(name), " - skipped: ", reason)
         )
       })
     )
@@ -1434,7 +1443,7 @@ server <- shinyServer(function(input, output, session) {
     texts
   }
 
-  # Step 2 skipped: split on whitespace only, as the skip dialog states
+  # Step 2 skipped: words only, tokens without a letter or digit dropped
   raw_tokens <- function() {
     TextAnalysisR::prep_texts(united_tbl(), text_field = "united_texts", min_char = 1, lowercase = FALSE,
                               remove_punct = FALSE, remove_symbols = FALSE, remove_numbers = FALSE,
@@ -1595,6 +1604,7 @@ server <- shinyServer(function(input, output, session) {
     final_tokens(NULL)
     lemmatized_tokens(NULL)
     last_clicked(NULL)
+    math_mode_used(FALSE)
     applied_segment_settings(list(segment_options = c("remove_separators", "split_tags", "include_docvars"),
                                   min_char = 1, math_mode = FALSE))
 
@@ -1621,7 +1631,7 @@ server <- shinyServer(function(input, output, session) {
         "  - Symbol-only tokens dropped",
         "  - All numbers kept",
         "  - All URLs kept",
-        "  - All separators kept",
+        "  - Separators removed",
         "  - No minimum character filtering",
         "  - Hyphens not split",
         "  - No cleaning or preprocessing applied"
@@ -2469,7 +2479,7 @@ server <- shinyServer(function(input, output, session) {
         paste("  - Keep acronyms:", if ("keep_acronyms" %in% segment_opts) "Yes" else "No"),
         paste("  - Keep padding:", if ("padding" %in% segment_opts) "Yes" else "No"),
         paste("  - Minimum characters per token:", input$min_char %||% 2),
-        paste("  - Math Mode:", if (isTRUE(input$math_mode)) "Enabled" else "Disabled"),
+        paste("  - Math Mode:", if (isTRUE(math_mode_used())) "Enabled" else "Disabled"),
         ""
       )
 
@@ -3413,6 +3423,7 @@ server <- shinyServer(function(input, output, session) {
     if (!has_basic) {
       tags$div(
         class = "status-main-warning",
+        role = "status",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
         tags$span(
           "No basic features selected. Please select at least one of: ",
@@ -3465,18 +3476,21 @@ server <- shinyServer(function(input, output, session) {
     if (is_web) {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$span("Morphology requires local/Docker")
       )
     } else if (!is.null(morph_data()) && nrow(morph_data()) > 0) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$span(paste0("Morphology analyzed (", nrow(morph_data()), " tokens)"))
       )
     } else {
       tags$div(
         class = "status-sidebar-info",
+        role = "status",
         tags$i(class = "fa fa-info-circle status-icon status-icon-info"),
         tags$span("Click 'Analyze Morphology' after running POS")
       )
@@ -3489,6 +3503,7 @@ server <- shinyServer(function(input, output, session) {
       # Restricted web deployment - show info message
       tags$div(
         class = "status-main-warning",
+        role = "status",
         style = "margin-bottom: 15px;",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$span("Basic POS/NER available. Full morphology requires "),
@@ -3503,12 +3518,14 @@ server <- shinyServer(function(input, output, session) {
       if (!is.null(spacy_error)) {
         tags$div(
           class = "status-sidebar-warning",
+          role = "status",
           tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
           tags$span("spaCy unavailable - basic features only")
         )
       } else if (spacy_ready) {
         tags$div(
           class = "status-sidebar-success",
+          role = "status",
           tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
           tags$span("spaCy ready - full features available")
         )
@@ -3516,6 +3533,7 @@ server <- shinyServer(function(input, output, session) {
         # spaCy not yet initialized but available - show green status
         tags$div(
           class = "status-sidebar-success",
+          role = "status",
           tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
           tags$span("spaCy available - click Apply to start")
         )
@@ -9603,6 +9621,7 @@ server <- shinyServer(function(input, output, session) {
     if (sentiment_results$analyzed && !is.null(sentiment_results$emotion_scores)) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$strong("Ready:"), "Emotion analysis data is available."
       )
@@ -9615,6 +9634,7 @@ server <- shinyServer(function(input, output, session) {
     if (!sentiment_results$analyzed || is.null(sentiment_results$emotion_scores)) {
       tags$div(
         class = "status-main-warning",
+        role = "status",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
         tags$strong("Important:"),
         tags$span(" To see emotion analysis, you must:"),
@@ -12295,6 +12315,7 @@ server <- shinyServer(function(input, output, session) {
     if (!is.null(embeddings_cache$embeddings)) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$strong("Embeddings Ready: "),
         tags$span(paste(
@@ -12306,6 +12327,7 @@ server <- shinyServer(function(input, output, session) {
     } else {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$strong("No Embeddings Generated: "),
         tags$span("Generate embeddings to enable semantic analyses.")
@@ -12347,6 +12369,7 @@ server <- shinyServer(function(input, output, session) {
     )
     if (provider %in% c("openai", "gemini") && !check_api_key(api_key, provider, "embeddings")) return()
 
+    if (!remote_doc_ok(length(texts_vec), "Embedding generation")) return()
     spend_ai_call("Embeddings", provider, model_name)
     loading_id <- TextAnalysisR:::show_loading_notification(paste0("Generating embeddings using ", provider, "... This may briefly slow the app for other users."))
 
@@ -15457,6 +15480,7 @@ server <- shinyServer(function(input, output, session) {
     if (config_outdated) {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
         tags$strong("Configuration Changed:"), "Document configuration has been modified. Please recalculate similarity data in the Similarity tab to reflect the new settings."
       )
@@ -15470,6 +15494,7 @@ server <- shinyServer(function(input, output, session) {
 
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$strong("Ready:"), paste(feature_label, "similarity data is available for dimensionality reduction.")
       )
@@ -15483,6 +15508,7 @@ server <- shinyServer(function(input, output, session) {
 
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$strong("Note:"), paste(feature_label, "similarity requires calculation first. Go to Similarity tab and calculate with '", feature_label, "' feature space.")
       )
@@ -15528,12 +15554,14 @@ server <- shinyServer(function(input, output, session) {
     if (data_available) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$strong("Ready:"), paste(feature_label, "similarity data is available for document grouping.")
       )
     } else {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
         tags$strong("Calculate Required:"), paste(" Go to Similarity tab and calculate", feature_label, "similarity first.")
       )
@@ -15579,12 +15607,14 @@ server <- shinyServer(function(input, output, session) {
     if (data_available) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$strong("Ready:"), paste(feature_label, "similarity data is available for sentiment analysis.")
       )
     } else {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
         tags$strong("Calculate Required:"), paste(" Go to Similarity tab and calculate", feature_label, "similarity first.")
       )
@@ -15626,18 +15656,21 @@ server <- shinyServer(function(input, output, session) {
     if (!data_available) {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$strong("Note:"), paste(feature_label, "similarity requires calculation first. Go to Similarity tab and calculate with '", feature_label, "' feature space.")
       )
     } else if (!clustering_available) {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-info-circle status-icon status-icon-warning"),
         tags$strong("Note:"), "Cluster labeling requires clustering first. Go to Groups tab and discover groups."
       )
     } else {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$strong("Ready:"), "Clustering data is available for labeling."
       )
@@ -15705,6 +15738,7 @@ server <- shinyServer(function(input, output, session) {
     if (method_available) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$strong("Ready:"), paste(method_label, "data is available for search.")
       )
@@ -15717,6 +15751,7 @@ server <- shinyServer(function(input, output, session) {
 
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
         tags$strong("Calculate Required:"), paste(" Go to Similarity tab and calculate", feature_label, "similarity first.")
       )
@@ -18993,6 +19028,7 @@ server <- shinyServer(function(input, output, session) {
       if (python_ok) {
         tags$div(
           class = "status-sidebar-success",
+          role = "status",
           style = "margin-bottom: 10px;",
           tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
           tags$span("Python + sentence-transformers ready")
@@ -19000,6 +19036,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         tags$div(
           class = "status-sidebar-warning",
+          role = "status",
           style = "margin-bottom: 10px;",
           tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
           tags$span("Python required. Run: "),
@@ -19011,6 +19048,7 @@ server <- shinyServer(function(input, output, session) {
       if (!is.null(api_key) && nzchar(api_key)) {
         tags$div(
           class = "status-sidebar-success",
+          role = "status",
           style = "margin-bottom: 10px;",
           tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
           tags$span("OpenAI API key set")
@@ -19018,6 +19056,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         tags$div(
           class = "status-sidebar-warning",
+          role = "status",
           style = "margin-bottom: 10px;",
           tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
           tags$span("OpenAI API key required")
@@ -19028,6 +19067,7 @@ server <- shinyServer(function(input, output, session) {
       if (!is.null(api_key) && nzchar(api_key)) {
         tags$div(
           class = "status-sidebar-success",
+          role = "status",
           style = "margin-bottom: 10px;",
           tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
           tags$span("Gemini API key set")
@@ -19035,6 +19075,7 @@ server <- shinyServer(function(input, output, session) {
       } else {
         tags$div(
           class = "status-sidebar-warning",
+          role = "status",
           style = "margin-bottom: 10px;",
           tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
           tags$span("Gemini API key required")
@@ -19052,6 +19093,7 @@ server <- shinyServer(function(input, output, session) {
     if (bertopic_ok) {
       tags$div(
         class = "status-sidebar-success",
+        role = "status",
         style = "margin-bottom: 10px;",
         tags$i(class = "fa fa-check-circle status-icon status-icon-success"),
         tags$span("BERTopic ready")
@@ -19059,6 +19101,7 @@ server <- shinyServer(function(input, output, session) {
     } else {
       tags$div(
         class = "status-sidebar-warning",
+        role = "status",
         style = "margin-bottom: 10px;",
         tags$i(class = "fa fa-exclamation-triangle status-icon status-icon-warning"),
         tags$span("BERTopic not found. Run: "),
@@ -19161,7 +19204,11 @@ server <- shinyServer(function(input, output, session) {
 
   observeEvent(input$embedding_stability, {
     texts <- residue_texts() %||% analysis_texts()
-    emb <- embeddings_cache$embeddings
+    if (is_remote) {
+      showNotification(local_run_note("Embedding stability", length(texts)), type = "warning", duration = NULL)
+      return()
+    }
+    emb <- if (identical(embeddings_cache$texts_hash, digest::digest(texts, algo = "md5"))) embeddings_cache$embeddings
     from_api <- (input$topic_embedding_provider %||% "sentence-transformers") != "sentence-transformers"
     if (from_api && (is.null(emb) || nrow(emb) != length(texts))) {
       showNotification("Run the model first so the embeddings exist.", type = "warning", duration = 7)
@@ -19207,7 +19254,7 @@ server <- shinyServer(function(input, output, session) {
       showNotification(
         if (is.null(n_docs)) HTML(paste("Embedding-based topic modeling is not available on the hosted app. Run it locally.", .local_install_note))
         else local_run_note("Embedding-based topic modeling", n_docs),
-        type = "warning", duration = 20
+        type = "warning", duration = NULL
       )
       return()
     }
@@ -19235,11 +19282,6 @@ server <- shinyServer(function(input, output, session) {
         easyClose = TRUE,
         footer = shiny::modalButton("Close")
       ))
-      return()
-    }
-
-    if (!remote_doc_ok(nrow(united_tbl()), "Embedding-based topic modeling")) {
-      shiny::removeNotification("embedding_model_notification")
       return()
     }
 

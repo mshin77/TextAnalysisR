@@ -4,15 +4,6 @@ suppressPackageStartupMessages({
   library(shinyjs)
 })
 
-# Detect web/Docker deployment (hide GPU option in these environments)
-is_web <- tryCatch({
-  TextAnalysisR:::check_web_deployment()
-}, error = function(e) FALSE)
-is_docker <- tryCatch({
-  TextAnalysisR:::check_docker_deployment()
-}, error = function(e) FALSE)
-is_remote_ui <- is_web || is_docker
-
 
 ui <- fluidPage(
   lang = "en",

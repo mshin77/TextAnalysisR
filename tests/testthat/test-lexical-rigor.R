@@ -81,6 +81,7 @@ test_that("log odds plot draws one panel per comparison", {
 })
 
 test_that("weighted log odds keeps terms a group under-uses", {
+  skip_if_not_installed("tidylo")
   d <- quanteda::dfm(quanteda::tokens(c(paste(rep("gamma", 60), collapse = " "), "gamma alpha alpha",
                                          paste(rep("alpha", 40), collapse = " "), "beta beta gamma")))
   quanteda::docvars(d, "grp") <- c("B", "A", "A", "B")

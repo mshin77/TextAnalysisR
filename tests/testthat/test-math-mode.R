@@ -17,13 +17,13 @@ test_that(".normalize_math_notation folds LaTeX markup to plain grammar", {
 test_that(".normalize_math_notation folds LaTeX and unicode operators alike", {
   n <- TextAnalysisR:::.normalize_math_notation
   expect_equal(n("x \\leq 5"), "x <= 5")
-  expect_equal(n("x ≤ 5"), "x <= 5")
+  expect_equal(n("x \u2264 5"), "x <= 5")
   expect_equal(n("x \\geq 5"), "x >= 5")
-  expect_equal(n("x ≥ 5"), "x >= 5")
+  expect_equal(n("x \u2265 5"), "x >= 5")
   expect_equal(n("x \\neq 5"), "x != 5")
-  expect_equal(n("x ≠ 5"), "x != 5")
-  expect_equal(n("3 × 4"), "3 * 4")
-  expect_equal(n("8 ÷ 2"), "8 / 2")
+  expect_equal(n("x \u2260 5"), "x != 5")
+  expect_equal(n("3 \u00d7 4"), "3 * 4")
+  expect_equal(n("8 \u00f7 2"), "8 / 2")
   expect_equal(n("5 \\pm 1"), "5 +/- 1")
 })
 

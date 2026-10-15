@@ -2350,7 +2350,7 @@ lexical_analysis_ui_content <- function() {
                   actionButton("apply_custom_entity", icon("plus"),
                     class = "btn-primary btn-sm",
                     style = "height: 34px; width: 34px; padding: 0;",
-                    title = "Add custom entity")
+                    title = "Add custom entity", `aria-label` = "Add custom entity")
                 )
               ),
               selectizeInput("uncategorized_tokens", HTML("<span class='sr-only'>Uncategorized tokens to assign</span>"),

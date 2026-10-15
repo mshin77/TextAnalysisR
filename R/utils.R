@@ -167,7 +167,7 @@ show_web_banner <- function(disabled = NULL) {
 
   if (is.null(disabled)) {
     disabled <- c("Python PDF processing", "Local AI",
-                  "Embedding analysis", "Large files (>10MB)")
+                  "Embedding analysis", "Large files (>100MB)")
   }
 
   feature_list <- paste0("<li>", htmltools::htmlEscape(disabled), "</li>", collapse = "")
@@ -191,7 +191,7 @@ show_web_banner <- function(disabled = NULL) {
             "install.packages('TextAnalysisR')"
           )
         ),
-        shiny::HTML(paste0("<ul style='margin: 5px 0; padding-left: 20px; color: #6B7280;'>", feature_list, "</ul>"))
+        shiny::HTML(paste0("<ul style='margin: 5px 0; padding-left: 20px; color: #4B5563;'>", feature_list, "</ul>"))
       )
     )
   )
