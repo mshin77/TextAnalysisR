@@ -778,21 +778,23 @@ server <- shinyServer(function(input, output, session) {
         if (!"category" %in% names(df)) df$category <- label
 
         dropped <- 0L
+        merged <- 0L
         if (isTRUE(input$remove_metadata) && !parsed_export && !tabular) {
           before <- nrow(df)
           arts <- as_articles(df$text)
           if (length(arts) > 0) {
             df <- data.frame(text = arts, stringsAsFactors = FALSE)
+            merged <- before - nrow(df)
           } else {
             df <- TextAnalysisR::remove_metadata_lines(df)
+            dropped <- before - nrow(df)
           }
-          dropped <- before - nrow(df)
         }
         if (nrow(df) == 0) {
           return(list(note = stats::setNames("only metadata found", row$name)))
         }
 
-        list(data = df, dropped = dropped, articles = if (parsed_export) nrow(df) else 0L)
+        list(data = df, dropped = dropped, merged = merged, articles = if (parsed_export) nrow(df) else 0L)
       }
 
       already <- loaded_files()
@@ -845,12 +847,14 @@ server <- shinyServer(function(input, output, session) {
 
       described <- sum(unlist(lapply(parts, function(p) p$images %||% 0)))
       dropped <- sum(unlist(lapply(parts, function(p) p$dropped %||% 0)))
+      merged <- sum(unlist(lapply(parts, function(p) p$merged %||% 0)))
 
       TextAnalysisR:::show_completion_notification(
         paste0("Loaded ", nrow(result), " documents from ", length(frames),
                if (length(frames) == 1) " file" else " files",
                if (described > 0) paste0(" (", described, " images described)") else "",
                if (dropped > 0) paste0(" — ", dropped, " metadata rows removed") else "",
+               if (merged > 0) paste0(" — ", merged, " lines merged into documents") else "",
                if (deduped > 0) paste0(" — ", deduped, " duplicate articles removed") else "")
       )
 
