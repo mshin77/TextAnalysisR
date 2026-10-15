@@ -4506,3 +4506,20 @@ qualitative_coding_ui_content <- function() {
   )
   )
 }
+
+# warm start for the hosted app
+if (is_remote || nzchar(Sys.getenv("TEXTANALYSISR_WARM"))) {
+  warm_start <- Sys.time()
+  tabs <- list(
+    "Lexical Analysis" = lexical_analysis_ui_content,
+    "Semantic Analysis" = semantic_analysis_ui_content,
+    "Topic Modeling" = topic_modeling_ui_content,
+    "Qualitative Coding" = qualitative_coding_ui_content
+  )
+  for (nm in names(tabs)) tryCatch(cached_ui(nm, tabs[[nm]]), error = function(e) NULL)
+  for (pkg in c("quanteda", "stm", "plotly", "DT", "igraph", "visNetwork", "ggraph", "tidytext", "dplyr", "ggplot2")) {
+    suppressWarnings(suppressMessages(requireNamespace(pkg, quietly = TRUE)))
+  }
+  message(sprintf("Warm start done in %.1f s", as.numeric(difftime(Sys.time(), warm_start, units = "secs"))))
+  rm(warm_start, tabs)
+}
