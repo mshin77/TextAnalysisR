@@ -42,7 +42,7 @@ local_memory_note <- function(n) {
 
 local_run_note <- function(feature, n, limit = NULL) {
   cap <- if (is.null(limit)) "is not available on the hosted app" else sprintf("is limited to %s documents on the hosted app", format(limit, big.mark = ","))
-  need <- if (3 * 8 * as.numeric(n)^2 / 1024^2 >= 100) sprintf(" About %s of free memory is needed.", local_memory_note(n)) else ""
+  need <- if (3 * 8 * as.numeric(n)^2 / 1024^2 >= 100) sprintf(" About %s of free memory is needed for the calculation, on top of the data itself.", local_memory_note(n)) else ""
   HTML(sprintf("%s %s; this data has %s documents. Run it locally.%s %s",
                feature, cap, format(n, big.mark = ","), need, .local_install_note))
 }
