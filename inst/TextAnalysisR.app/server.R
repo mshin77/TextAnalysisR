@@ -527,7 +527,7 @@ server <- shinyServer(function(input, output, session) {
     file_upload_result(NULL)
     loaded_files(NULL)
     skipped_files(NULL)
-    clear_embeddings_cache()
+    clear_embeddings_cache(notify = FALSE)
     topic_model_result(NULL)
   })
 
@@ -1198,7 +1198,7 @@ server <- shinyServer(function(input, output, session) {
     file_upload_result(NULL)
     loaded_files(NULL)
     skipped_files(NULL)
-    clear_embeddings_cache()
+    clear_embeddings_cache(notify = FALSE)
     topic_model_result(NULL)
     shinyjs::reset("file")
     updateTextAreaInput(session, "text_input", value = "")
@@ -11245,7 +11245,7 @@ server <- shinyServer(function(input, output, session) {
     comparison_results$last_doc_category_var <- input$doc_category_var
   }, ignoreNULL = FALSE)
 
-  clear_embeddings_cache <- function() {
+  clear_embeddings_cache <- function(notify = TRUE) {
     embeddings_cache$embeddings <- NULL
     embeddings_cache$model <- NULL
     embeddings_cache$provider <- NULL
@@ -11253,7 +11253,7 @@ server <- shinyServer(function(input, output, session) {
     embeddings_cache$category_filter <- NULL
     embeddings_cache$timestamp <- NULL
     embeddings_cache$by_category <- list()
-    showNotification("Embedding cache cleared", type = "message")
+    if (notify) showNotification("Embedding cache cleared", type = "message")
   }
 
   output$cache_management_ui <- renderUI({
