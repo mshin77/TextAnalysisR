@@ -14343,15 +14343,10 @@ server <- shinyServer(function(input, output, session) {
     method_display_names <- list(
       "dbscan" = if (has_dimred_results) paste("DBSCAN on", dimred_results$last_method) else "DBSCAN",
       "kmeans" = "K-means",
-      "hierarchical" = "Hierarchical",
-      "embedding" = "Similarity + K-means Topics",
-      "semantic_unified" = "Unified Semantic Topic Modeling"
+      "hierarchical" = "Hierarchical"
     )
 
     method_display_name <- method_display_names[[cluster_method]] %||% cluster_method
-
-    if (cluster_method %in% c("embedding", "semantic_unified") &&
-        !remote_doc_ok(tryCatch(nrow(united_tbl()), error = function(e) 0L), method_display_name)) return()
 
     existing_embedding <- NULL
     embedding_method <- NULL
@@ -14384,78 +14379,7 @@ server <- shinyServer(function(input, output, session) {
 
     clustering_result <- tryCatch(
       {
-        if (cluster_method == "semantic_unified") {
-          texts <- document_display_data()$combined_text
-
-          # Reuse cached embeddings if available and compatible
-          cached_embeddings <- NULL
-          if (!is.null(embeddings_cache$embeddings) &&
-              nrow(embeddings_cache$embeddings) == length(texts) &&
-              identical(embeddings_cache$texts_hash, digest::digest(texts, algo = "md5"))) {
-            cached_embeddings <- embeddings_cache$embeddings
-            showNotification("Using cached embeddings for topic modeling", type = "message", duration = 2)
-          }
-
-          unified_result <- TextAnalysisR::fit_embedding_model(
-            texts = texts,
-            method = input$unified_method,
-            n_topics = input$unified_n_topics,
-            embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2",
-            clustering_method = "kmeans",
-            min_topic_size = input$unified_min_topic_size,
-            seed = input$semantic_cluster_seed,
-            verbose = FALSE,
-            precomputed_embeddings = cached_embeddings
-          )
-
-          # Store embeddings in cache if newly generated
-          if (is.null(cached_embeddings) && !is.null(unified_result$embeddings)) {
-            embeddings_cache$embeddings <- unified_result$embeddings
-            embeddings_cache$model <- "all-MiniLM-L6-v2"
-            embeddings_cache$provider <- "sentence-transformers"
-            embeddings_cache$texts_hash <- digest::digest(texts, algo = "md5")
-            embeddings_cache$timestamp <- Sys.time()
-            embeddings_cache$source <- "topic_modeling_unified"
-            embeddings_cache$n_docs <- nrow(unified_result$embeddings)
-          }
-
-          analysis_results$semantic_unified <- unified_result
-
-          list(
-            clusters = unified_result$topic_assignments,
-            method = "semantic_unified",
-            n_clusters = unified_result$n_topics,
-            n_clusters_found = unified_result$n_topics,
-            auto_detected = FALSE,
-            detection_method = "Unified Semantic Modeling",
-            topics = unified_result$topics,
-            topic_keywords = unified_result$topic_keywords,
-            embeddings = unified_result$embeddings,
-            similarity_matrix = unified_result$similarity_matrix
-          )
-        } else if (cluster_method == "embedding") {
-          texts <- document_display_data()$combined_text
-
-          embedding_result <- TextAnalysisR::cluster_embedding_topics(
-            texts = texts,
-            n_topics = input$embedding_n_topics,
-            embedding_model = embeddings_cache$model %||% "all-MiniLM-L6-v2",
-            seed = input$semantic_cluster_seed
-          )
-
-          analysis_results$embedding_topic_model <- embedding_result
-
-          list(
-            clusters = embedding_result$topic_assignments,
-            method = "embedding",
-            n_clusters = embedding_result$n_topics,
-            n_clusters_found = embedding_result$n_topics,
-            auto_detected = FALSE,
-            detection_method = "Similarity + K-means Topics",
-            topics = embedding_result$topics,
-            topic_keywords = embedding_result$topic_keywords
-          )
-        } else if (cluster_method == "dbscan" && !is.null(existing_embedding)) {
+        if (cluster_method == "dbscan" && !is.null(existing_embedding)) {
           compute_clustering(
             similarity_matrix = similarity_matrix,
             method = cluster_method,
