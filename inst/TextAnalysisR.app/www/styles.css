@@ -599,6 +599,7 @@ button.btn.action-button:active {
 
 .shiny-notification {
   color: #1E3A8A !important;
+  overflow-wrap: anywhere;
   font-size: var(--font-size-msg) !important;
   opacity: 1 !important;
   pointer-events: auto !important;

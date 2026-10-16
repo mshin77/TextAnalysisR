@@ -244,7 +244,7 @@ server <- shinyServer(function(input, output, session) {
       input$qc_openai_api_key, input$search_embedding_openai_api_key
     )
     valid <- keys[!is.null(keys) & nzchar(keys)]
-    if (length(valid) > 0) ai_config$openai_api_key <- valid[1]
+    ai_config$openai_api_key <- if (length(valid) > 0) valid[1] else if (is_remote) "" else Sys.getenv("OPENAI_API_KEY")
   }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
   observeEvent({
@@ -268,7 +268,7 @@ server <- shinyServer(function(input, output, session) {
       input$qc_gemini_api_key, input$search_embedding_gemini_api_key
     )
     valid <- keys[!is.null(keys) & nzchar(keys)]
-    if (length(valid) > 0) ai_config$gemini_api_key <- valid[1]
+    ai_config$gemini_api_key <- if (length(valid) > 0) valid[1] else if (has_server_gemini) server_gemini_key else if (is_remote) "" else Sys.getenv("GEMINI_API_KEY")
   }, ignoreInit = TRUE, ignoreNULL = FALSE)
 
   output$has_openai_key <- reactive({ nzchar(ai_config$openai_api_key %||% "") })
@@ -544,9 +544,12 @@ server <- shinyServer(function(input, output, session) {
       invisible(lapply(seq_len(nrow(input$file)), function(i) {
         row <- input$file[i, ]
         tryCatch(
-          TextAnalysisR:::validate_file_upload(
-            list(name = row$name, size = row$size, datapath = row$datapath)
-          ),
+          {
+            block_remote_rds(row$name)
+            TextAnalysisR:::validate_file_upload(
+              list(name = row$name, size = row$size, datapath = row$datapath)
+            )
+          },
           error = function(e) stop(row$name, ": ", conditionMessage(e), call. = FALSE)
         )
       }))
@@ -1727,6 +1730,7 @@ server <- shinyServer(function(input, output, session) {
   custom_dict_terms <- reactive({
     req(input$custom_dict)
     ok <- tryCatch({
+      block_remote_rds(input$custom_dict$name)
       TextAnalysisR:::validate_file_upload(input$custom_dict); TRUE
     }, error = function(e) {
       showNotification(paste("Custom dictionary rejected:", e$message), type = "error", duration = 7)
@@ -22011,6 +22015,11 @@ server <- shinyServer(function(input, output, session) {
       # datapath drops the original extension, which picks the reader
       parts <- lapply(seq_len(nrow(up)), function(i) {
         ext <- tolower(tools::file_ext(up$name[i]))
+        if (is_remote && ext == "rds") {
+          showNotification(paste0(up$name[i], ": .rds files are not accepted on the hosted app. Use CSV or XLSX."),
+                           type = "error", duration = 10)
+          return(NULL)
+        }
         project <- if (ext == "rds") tryCatch(TextAnalysisR::read_coding_project(up$datapath[i]),
                                               error = function(e) NULL) else NULL
         if (!is.null(project)) return(qc_project_codes(project, isTRUE(input$qc_agree_holdout_only)))

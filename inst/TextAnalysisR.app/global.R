@@ -1,6 +1,12 @@
 is_web <- TextAnalysisR:::check_web_deployment()
-is_docker <- TextAnalysisR:::check_docker_deployment()
-is_remote <- is_web || is_docker
+is_remote <- is_web || nzchar(Sys.getenv("TEXTANALYSISR_HOSTED"))
+
+block_remote_rds <- function(name) {
+  if (is_remote && any(tolower(tools::file_ext(name)) == "rds")) {
+    stop(".rds files are not accepted on the hosted app. Use CSV or XLSX, or run the app locally.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
 
 # python module probe
 .py_modules <- new.env(parent = emptyenv())
