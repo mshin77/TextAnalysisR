@@ -2592,6 +2592,9 @@ get_sentences <- function(x, model = "en_core_web_sm") {
 #' @concept lexical
 #' @export
 get_word_similarity <- function(word1, word2, model = "en_core_web_md") {
+  if (!requireNamespace("reticulate", quietly = TRUE)) {
+    return(.notify_missing_python("spaCy-backed features"))
+  }
   if (!spacy_initialized() || !isTRUE(.spacy_env$model == model)) {
     init_spacy_nlp(model)
   }

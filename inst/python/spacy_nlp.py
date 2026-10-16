@@ -302,58 +302,60 @@ class SpacyNLP:
 
         # Use nlp.pipe() for efficient batch processing with disabled components
         pipe_context = self.nlp.select_pipes(disable=disable_components) if disable_components else nullcontext()
-        with pipe_context:
-          for doc_idx, doc in enumerate(self.nlp.pipe(texts, batch_size=batch_size)):
-            # Report progress if callback provided
-            if progress_callback and (doc_idx % 10 == 0 or doc_idx == total - 1):
-                progress_callback(doc_idx + 1, total)
-            doc_id = f"text{doc_idx + 1}"
+        try:
+            with pipe_context:
+              for doc_idx, doc in enumerate(self.nlp.pipe(texts, batch_size=batch_size)):
+                # Report progress if callback provided
+                if progress_callback and (doc_idx % 10 == 0 or doc_idx == total - 1):
+                    progress_callback(doc_idx + 1, total)
+                doc_id = f"text{doc_idx + 1}"
 
-            # Build sentence start index map for efficient head lookup
-            if include_dependency:
-                sent_starts = {sent.start: sent_idx for sent_idx, sent in enumerate(doc.sents)}
+                # Build sentence start index map for efficient head lookup
+                if include_dependency:
+                    sent_starts = {sent.start: sent_idx for sent_idx, sent in enumerate(doc.sents)}
 
-            for sent_idx, sent in enumerate(doc.sents):
-                sent_start = sent.start  # Token index offset for this sentence
+                for sent_idx, sent in enumerate(doc.sents):
+                    sent_start = sent.start  # Token index offset for this sentence
 
-                for token_idx, token in enumerate(sent):
-                    row = {
-                        "doc_id": doc_id,
-                        "sentence_id": sent_idx + 1,
-                        "token_id": token_idx + 1,
-                        "token": token.text
-                    }
+                    for token_idx, token in enumerate(sent):
+                        row = {
+                            "doc_id": doc_id,
+                            "sentence_id": sent_idx + 1,
+                            "token_id": token_idx + 1,
+                            "token": token.text
+                        }
 
-                    if include_pos:
-                        row["pos"] = token.pos_
+                        if include_pos:
+                            row["pos"] = token.pos_
 
-                    if include_tag:
-                        row["tag"] = token.tag_
+                        if include_tag:
+                            row["tag"] = token.tag_
 
-                    if include_lemma:
-                        row["lemma"] = token.lemma_
+                        if include_lemma:
+                            row["lemma"] = token.lemma_
 
-                    if include_entity:
-                        # Format: "ENTITY_IOB" or "" for non-entities
-                        if token.ent_type_:
-                            row["entity"] = f"{token.ent_type_}_{token.ent_iob_}"
-                        else:
-                            row["entity"] = ""
+                        if include_entity:
+                            # Format: "ENTITY_IOB" or "" for non-entities
+                            if token.ent_type_:
+                                row["entity"] = f"{token.ent_type_}_{token.ent_iob_}"
+                            else:
+                                row["entity"] = ""
 
-                    if include_dependency:
-                        # Efficient head lookup using token indices
-                        head_idx = token.head.i - sent_start + 1
-                        row["head_token_id"] = head_idx if 0 < head_idx <= len(sent) else 0
-                        row["dep_rel"] = token.dep_
+                        if include_dependency:
+                            # Efficient head lookup using token indices
+                            head_idx = token.head.i - sent_start + 1
+                            row["head_token_id"] = head_idx if 0 < head_idx <= len(sent) else 0
+                            row["dep_rel"] = token.dep_
 
-                    if include_morph:
-                        # Return as string in Universal Dependencies format
-                        row["morph"] = str(token.morph)
+                        if include_morph:
+                            # Return as string in Universal Dependencies format
+                            row["morph"] = str(token.morph)
 
-                    results.append(row)
+                        results.append(row)
 
-        if temp_sentencizer:
-            self.nlp.remove_pipe("sentencizer")
+        finally:
+            if temp_sentencizer:
+                self.nlp.remove_pipe("sentencizer")
         return _to_r_safe_df(pd.DataFrame(results))
 
     def lemmatize(
