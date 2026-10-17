@@ -454,6 +454,11 @@ ui <- fluidPage(
                        ".png", ".jpg", ".jpeg", ".webp", ".gif")
           ),
           conditionalPanel(
+            condition = "input.dataset_choice != 'Upload Your File'",
+            tags$p("Browse is enabled when Dataset is set to Upload Your File.",
+                   style = "font-size: var(--font-size-sm); color: #475569; margin-top: -8px;")
+          ),
+          conditionalPanel(
             condition = "input.dataset_choice == 'Upload Your File'",
             uiOutput("upload_manifest"),
             selectInput(

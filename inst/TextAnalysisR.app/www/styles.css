@@ -839,6 +839,11 @@ input[type="file"] {
   font-size: 16px;
 }
 
+.btn-file:has(input[type="file"]:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* Slider (ion-rangeslider) text sizing */
 .irs-min,
 .irs-max,
