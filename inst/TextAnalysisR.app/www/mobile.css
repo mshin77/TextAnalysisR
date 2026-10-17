@@ -27,6 +27,11 @@
     min-height: 44px;
   }
 
+  .input-group .form-control[readonly],
+  .input-group .btn.btn-file {
+    min-height: 0;
+  }
+
   pre {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
