@@ -4138,7 +4138,6 @@ qualitative_coding_ui_content <- function() {
   div(
     class = "qc-project-bar",
     div(class = "qc-project-who",
-        tags$i(class = "fa fa-file-alt", `aria-hidden` = "true"),
         tags$label(`for` = "qc_coder_name", class = "sr-only", "Coder name"),
         textInput("qc_coder_name", NULL, value = "coder1", placeholder = "Coder name", width = "160px"),
         tags$span(class = "qc-save-status", role = "status", textOutput("qc_save_status", inline = TRUE))),

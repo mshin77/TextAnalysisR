@@ -32,6 +32,10 @@
     min-height: 0;
   }
 
+  .qc-project-bar .form-control {
+    min-height: 0;
+  }
+
   pre {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
