@@ -1168,7 +1168,7 @@ fit_embedding_model <- function(texts,
           topic_probs <- matrix(as.vector(topic_probs), ncol = 1)
         }
 
-        topic_assignments <- as.vector(topic_assignments_raw) + 1
+        topic_assignments <- as.integer(unlist(topic_assignments_raw)) + 1L
 
         outlier_docs <- which(topic_assignments == 0)
         outliers_reassigned <- 0
@@ -1196,10 +1196,12 @@ fit_embedding_model <- function(texts,
               threshold = outlier_threshold,
               embeddings = if (outlier_strategy == "embeddings") embeddings else NULL
             )
+            # reduce_outliers returns a list under some numpy/reticulate versions
+            new_topics <- as.integer(unlist(new_topics))
             # sync topic info with the new assignments
             topic_model$update_topics(valid_texts, topics = new_topics,
                                       vectorizer_model = topic_model$vectorizer_model)
-            topic_assignments <- as.vector(new_topics) + 1
+            topic_assignments <- new_topics + 1L
             outliers_reassigned <- length(outlier_docs) - sum(topic_assignments == 0)
           }
         }
