@@ -183,10 +183,7 @@ qc_load_project <- function(p) {
 }
 
 observeEvent(input$qc_project_file, {
-  p <- tryCatch({
-                  block_remote_rds(input$qc_project_file$name)
-                  TextAnalysisR::read_coding_project(input$qc_project_file$datapath)
-                },
+  p <- tryCatch(TextAnalysisR::read_coding_project(input$qc_project_file$datapath),
                 error = function(e) {
                   showNotification(paste("Could not open the project:", e$message), type = "error", duration = 10)
                   NULL

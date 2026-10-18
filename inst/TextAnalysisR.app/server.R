@@ -21939,14 +21939,10 @@ server <- shinyServer(function(input, output, session) {
       # datapath drops the original extension, which picks the reader
       parts <- lapply(seq_len(nrow(up)), function(i) {
         ext <- tolower(tools::file_ext(up$name[i]))
-        if (is_remote && ext == "rds") {
-          showNotification(paste0(up$name[i], ": .rds files are not accepted on the hosted app. Use CSV or XLSX."),
-                           type = "error", duration = 10)
+        if (ext == "rds") {
+          showNotification(paste0(up$name[i], ": use the Review export as CSV or Excel."), type = "error", duration = 10)
           return(NULL)
         }
-        project <- if (ext == "rds") tryCatch(TextAnalysisR::read_coding_project(up$datapath[i]),
-                                              error = function(e) NULL) else NULL
-        if (!is.null(project)) return(qc_project_codes(project, isTRUE(input$qc_agree_holdout_only)))
         dest <- tempfile(pattern = "qc_coder_", fileext = paste0(".", ext))
         on.exit(unlink(dest), add = TRUE)
         file.copy(up$datapath[i], dest, overwrite = TRUE)
