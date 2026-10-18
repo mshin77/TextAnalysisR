@@ -558,6 +558,15 @@ $(document).ready(function() {
   }
 });
 
+// Browse switches with the dataset choice before the server replies
+function syncFileInput() {
+  var choice = $('#dataset_choice').val();
+  $('#file').prop('disabled', choice !== 'Upload Your File');
+}
+
+$(document).on('change', '#dataset_choice', syncFileInput);
+$(document).ready(syncFileInput);
+
 // Shiny notification close button handler
 $(document).on('shiny:notification', function(event) {
   event.notification.closeButton = true;
