@@ -3,11 +3,7 @@
   if (!is.data.frame(codebook) || nrow(codebook) == 0) {
     stop("codebook must be a non-empty data frame.", call. = FALSE)
   }
-  need <- c("code", "definition")
-  miss <- setdiff(need, names(codebook))
-  if (length(miss) > 0) {
-    stop("codebook is missing required column(s): ", paste(miss, collapse = ", "), call. = FALSE)
-  }
+  .require_columns(codebook, c("code", "definition"), "codebook")
   codebook$code <- as.character(codebook$code)
   if (anyDuplicated(codebook$code) > 0) {
     stop("codebook has duplicate codes.", call. = FALSE)
@@ -15,12 +11,44 @@
   codebook$definition <- as.character(codebook$definition)
   example <- if ("example" %in% names(codebook)) as.character(codebook$example) else NA_character_
   color <- if ("color" %in% names(codebook)) as.character(codebook$color) else NA_character_
-  tibble::tibble(
+  return(tibble::tibble(
     code = codebook$code,
     definition = codebook$definition,
     example = example,
     color = color
-  )
+  ))
+}
+
+#' @keywords internal
+.doc_ids <- function(texts) {
+  return(if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts)))
+}
+
+#' @keywords internal
+.extract_json <- function(response) {
+  start <- regexpr("\\{", response)
+  end <- regexpr("\\}(?=[^}]*$)", response, perl = TRUE)
+  if (start < 1 || end < 1 || end < start) return(NULL)
+  return(tryCatch(jsonlite::fromJSON(substr(response, start, end), simplifyVector = TRUE),
+                  error = function(e) NULL))
+}
+
+#' @keywords internal
+.require_llm_packages <- function() {
+  if (!requireNamespace("httr", quietly = TRUE) || !requireNamespace("jsonlite", quietly = TRUE)) {
+    stop("The 'httr' and 'jsonlite' packages are required. ",
+         "Install with install.packages(c('httr', 'jsonlite')).", call. = FALSE)
+  }
+  return(invisible(TRUE))
+}
+
+#' @keywords internal
+.warn_failed_units <- function(failed, total) {
+  if (failed > 0) {
+    warning(sprintf("%d of %d units failed to reach the provider; status is 'error' for those rows.",
+                    failed, total), call. = FALSE)
+  }
+  return(invisible(failed))
 }
 
 #' @keywords internal
@@ -42,7 +70,7 @@
     pos <<- start + nchar(p)
     c(start, start + nchar(p) - 1L)
   }, integer(2), USE.NAMES = FALSE)
-  tibble::tibble(unit_text = parts, start = bounds[1, ], end = bounds[2, ])
+  return(tibble::tibble(unit_text = parts, start = bounds[1, ], end = bounds[2, ]))
 }
 
 #' @title Split Texts Into Units of Analysis
@@ -71,7 +99,7 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
                           unit_text = character(0), start = integer(0),
                           end = integer(0))
   if (length(texts) == 0) return(empty)
-  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  doc_id <- .doc_ids(texts)
   texts <- as.character(texts)
 
   out <- dplyr::bind_rows(lapply(seq_along(texts), function(i) {
@@ -90,14 +118,8 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
   none <- tibble::tibble(code = NA_character_, confidence = NA_real_,
                          rationale = NA_character_, status = "none",
                          error = NA_character_, offscale = FALSE)
-  start <- regexpr("\\{", response)
-  end <- regexpr("\\}(?=[^}]*$)", response, perl = TRUE)
-  if (start < 1 || end < 1 || end < start) return(none)
-  parsed <- tryCatch(
-    jsonlite::fromJSON(substr(response, start, end), simplifyVector = TRUE),
-    error = function(e) NULL
-  )
-  a <- tryCatch(tibble::as_tibble(parsed$assignments), error = function(e) NULL)
+  parsed <- .extract_json(response)
+  a <-tryCatch(tibble::as_tibble(parsed$assignments), error = function(e) NULL)
   if (is.null(a) || nrow(a) == 0 || !"code" %in% names(a)) return(none)
   a$code <- as.character(a$code)
   a <- a[!is.na(a$code) & a$code %in% valid_codes & !duplicated(a$code), , drop = FALSE]
@@ -107,8 +129,8 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
   conf[offscale] <- NA_real_
   keep <- order(conf, decreasing = TRUE, na.last = TRUE)[seq_len(min(nrow(a), max_codes))]
   rationale <- if ("rationale" %in% names(a)) as.character(a$rationale)[keep] else NA_character_
-  tibble::tibble(code = a$code[keep], confidence = conf[keep], rationale = rationale,
-                 status = "ok", error = NA_character_, offscale = any(offscale))
+  return(tibble::tibble(code = a$code[keep], confidence = conf[keep], rationale = rationale,
+                        status = "ok", error = NA_character_, offscale = any(offscale)))
 }
 
 #' @keywords internal
@@ -118,7 +140,7 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
     ex_txt <- if (is.na(ex) || !nzchar(ex)) "" else paste0(" Example: ", ex)
     paste0("- ", codebook$code[i], ": ", codebook$definition[i], ex_txt)
   }, character(1))
-  paste(lines, collapse = "\n")
+  return(paste(lines, collapse = "\n"))
 }
 
 #' @keywords internal
@@ -132,7 +154,7 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
   if (provider == "ollama") return(list(provider = provider, api_key = ""))
   if (is.null(api_key) || !nzchar(api_key)) api_key <- Sys.getenv(env[[provider]])
   if (!nzchar(api_key)) return(.notify_missing_api_key(provider))
-  list(provider = provider, api_key = api_key)
+  return(list(provider = provider, api_key = api_key))
 }
 
 #' @keywords internal
@@ -140,21 +162,15 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
   if (nrow(book) == 0) return("none yet")
   used <- tabulate(match(assigned, book$code), nbins = nrow(book))
   keep <- utils::head(order(used, decreasing = TRUE), min(nrow(book), k))
-  paste(sprintf("- %s: %s", book$code[keep], book$definition[keep]), collapse = "\n")
+  return(paste(sprintf("- %s: %s", book$code[keep], book$definition[keep]), collapse = "\n"))
 }
 
 #' @keywords internal
 .parse_new_code <- function(response, existing) {
   none <- list(code = NA_character_, definition = NA_character_,
                opened_new = FALSE, status = "none")
-  start <- regexpr("\\{", response)
-  end <- regexpr("\\}(?=[^}]*$)", response, perl = TRUE)
-  if (start < 1 || end < 1 || end < start) return(none)
-  parsed <- tryCatch(
-    jsonlite::fromJSON(substr(response, start, end), simplifyVector = TRUE),
-    error = function(e) NULL
-  )
-  code <- trimws(as.character(parsed$code)[1])
+  parsed <- .extract_json(response)
+  code <-trimws(as.character(parsed$code)[1])
   if (is.na(code) || !nzchar(code)) return(none)
   hit <- match(tolower(code), tolower(existing))
   if (!is.na(hit)) {
@@ -163,7 +179,7 @@ split_texts <- function(texts, unit = c("sentence", "paragraph", "document")) {
   }
   definition <- trimws(as.character(parsed$definition)[1])
   if (is.na(definition) || !nzchar(definition)) return(none)
-  list(code = code, definition = definition, opened_new = TRUE, status = "ok")
+  return(list(code = code, definition = definition, opened_new = TRUE, status = "ok"))
 }
 
 #' @title Build a Codebook From Texts
@@ -215,11 +231,7 @@ generate_codes <- function(texts, codebook = NULL,
                            max_tokens = 200, delay = 1, verbose = TRUE) {
   unit <- match.arg(unit)
   provider <- match.arg(provider)
-  if (!requireNamespace("httr", quietly = TRUE) ||
-      !requireNamespace("jsonlite", quietly = TRUE)) {
-    stop("The 'httr' and 'jsonlite' packages are required. ",
-         "Install with install.packages(c('httr', 'jsonlite')).", call. = FALSE)
-  }
+  .require_llm_packages()
   book <- tibble::tibble(code = character(0), definition = character(0),
                          first_unit = character(0))
   if (!is.null(codebook)) {
@@ -227,7 +239,7 @@ generate_codes <- function(texts, codebook = NULL,
     book <- tibble::tibble(code = seeded$code, definition = seeded$definition,
                            first_unit = NA_character_)
   }
-  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  doc_id <- .doc_ids(texts)
   units_tbl <- split_texts(stats::setNames(as.character(texts), doc_id), unit)
   if (nrow(units_tbl) == 0) {
     stop("texts contain no codable units.", call. = FALSE)
@@ -285,13 +297,9 @@ generate_codes <- function(texts, codebook = NULL,
     if (p < n_units) Sys.sleep(delay)
   }
   trace <- dplyr::bind_rows(rows)
-  failed <- sum(trace$status == "error")
-  if (failed > 0) {
-    warning(sprintf("%d of %d units failed to reach the provider; status is 'error' for those rows.",
-                    failed, nrow(trace)), call. = FALSE)
-  }
-  list(codebook = book, trace = trace,
-       llm = list(provider = resolved$provider, model = model, temperature = temperature))
+  .warn_failed_units(sum(trace$status == "error"), nrow(trace))
+  return(list(codebook = book, trace = trace,
+              llm = list(provider = resolved$provider, model = model, temperature = temperature)))
 }
 
 #' @title Apply a Codebook to Texts
@@ -339,13 +347,9 @@ apply_codes <- function(texts, codebook,
   provider <- match.arg(provider)
   max_codes <- max(1L, as.integer(max_codes))
   max_tokens <- if (is.null(max_tokens)) 120L + 80L * max_codes else as.integer(max_tokens)
-  if (!requireNamespace("httr", quietly = TRUE) ||
-      !requireNamespace("jsonlite", quietly = TRUE)) {
-    stop("The 'httr' and 'jsonlite' packages are required. ",
-         "Install with install.packages(c('httr', 'jsonlite')).", call. = FALSE)
-  }
+  .require_llm_packages()
   codebook <- .validate_codebook(codebook)
-  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  doc_id <- .doc_ids(texts)
   texts <- as.character(texts)
 
   units_tbl <- split_texts(stats::setNames(texts, doc_id), unit)
@@ -394,11 +398,7 @@ apply_codes <- function(texts, codebook,
       status = parsed$status, error = parsed$error, offscale = parsed$offscale)
   })
   out <- dplyr::bind_rows(rows)
-  failed <- length(unique(out$unit_id[out$status == "error"]))
-  if (failed > 0) {
-    warning(sprintf("%d of %d units failed to reach the provider; status is 'error' for those rows.",
-                    failed, n_units), call. = FALSE)
-  }
+  .warn_failed_units(length(unique(out$unit_id[out$status == "error"])), n_units)
   if (any(out$offscale)) {
     warning("Confidence values outside 0 to 1 were dropped; those rows keep the code with confidence NA.",
             call. = FALSE)
@@ -412,7 +412,7 @@ apply_codes <- function(texts, codebook,
     unit = unit, max_codes = max_codes, n_units = n_units,
     package_version = as.character(utils::packageVersion("TextAnalysisR")),
     run_time = format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"))
-  out
+  return(out)
 }
 
 #' @title Coding Run Provenance
@@ -432,7 +432,7 @@ code_provenance <- function(x) {
   info <- attr(x, "llm")
   if (is.null(info)) stop("x has no recorded settings; pass the output of apply_codes().", call. = FALSE)
   info$model <- info$model %||% NA_character_
-  tibble::as_tibble(lapply(info, function(v) if (is.null(v)) NA else v))
+  return(tibble::as_tibble(lapply(info, function(v) if (is.null(v)) NA else v)))
 }
 
 #' @title AI Coding Retest Stability
@@ -459,7 +459,7 @@ code_provenance <- function(x) {
 #' @concept qualitative-coding
 #' @export
 code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, ...) {
-  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  doc_id <- .doc_ids(texts)
   idx <- withr::with_seed(seed, sample(seq_along(texts), min(sample_n, length(texts))))
   sampled <- stats::setNames(as.character(texts)[idx], doc_id[idx])
 
@@ -494,14 +494,14 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
       n = nrow(m))
   }, numeric(3))
 
-  list(
+  return(list(
     summary = tibble::tibble(
       metric = c("retest_agreement", "shuffled_baseline"),
       estimate = c(mean(pair_stats["retest", ]), mean(pair_stats["baseline", ])),
       n_units = as.integer(round(mean(pair_stats["n", ]))),
       n_runs = length(runs)),
     runs = dplyr::bind_rows(runs)
-  )
+  ))
 }
 
 .qc_none <- "(none)"
@@ -509,10 +509,7 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
 #' @keywords internal
 .presence_ratings <- function(assignments, units = c("intersection", "union")) {
   units <- match.arg(units)
-  miss <- setdiff(c("doc_id", "code", "coder"), names(assignments))
-  if (length(miss) > 0) {
-    stop("assignments is missing column(s): ", paste(miss, collapse = ", "), call. = FALSE)
-  }
+  .require_columns(assignments, c("doc_id", "code", "coder"), "assignments")
   a <- unique(assignments[c("doc_id", "code", "coder")])
   reviewed <- unique(a[c("doc_id", "coder")])
   docs <- sort(unique(reviewed$doc_id))
@@ -529,7 +526,7 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
     m[keep, , drop = FALSE]
   }), codes)
   attr(out, "codes_left_out") <- length(setdiff(all_codes, codes))
-  out
+  return(out)
 }
 
 #' @keywords internal
@@ -578,20 +575,17 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
     tibble::as_tibble(cbind(data.frame(doc_id = rownames(m)[differ], code = k,
                                        stringsAsFactors = FALSE), d))
   }))
-  list(overall = overall,
-       by_code = if (by_code) code_rows else NULL,
-       disagree = if (nrow(disagree)) disagree else tibble::tibble(doc_id = character(0), code = character(0)),
-       independent = NULL,
-       codes_left_out = left_out)
+  return(list(overall = overall,
+              by_code = if (by_code) code_rows else NULL,
+              disagree = if (nrow(disagree)) disagree else tibble::tibble(doc_id = character(0), code = character(0)),
+              independent = NULL,
+              codes_left_out = left_out))
 }
 
 #' @keywords internal
 .qc_ratings <- function(assignments, units = c("intersection", "union")) {
   units <- match.arg(units)
-  miss <- setdiff(c("doc_id", "code", "coder"), names(assignments))
-  if (length(miss) > 0) {
-    stop("assignments is missing column(s): ", paste(miss, collapse = ", "), call. = FALSE)
-  }
+  .require_columns(assignments, c("doc_id", "code", "coder"), "assignments")
   a <- assignments[!duplicated(assignments[c("doc_id", "coder")]), c("doc_id", "code", "coder")]
   a$code <- ifelse(is.na(a$code), .qc_none, as.character(a$code))
   wide <- tidyr::pivot_wider(a, id_cols = "doc_id", names_from = "coder", values_from = "code")
@@ -599,14 +593,14 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   rownames(m) <- wide$doc_id
   storage.mode(m) <- "character"
   if (units == "intersection") m <- m[stats::complete.cases(m), , drop = FALSE]
-  m
+  return(m)
 }
 
 #' @keywords internal
 .percent_agreement <- function(ratings) {
   cc <- ratings[stats::complete.cases(ratings), , drop = FALSE]
   if (nrow(cc) == 0) return(NA_real_)
-  mean(apply(cc, 1, function(r) length(unique(r)) == 1))
+  return(mean(apply(cc, 1, function(r) length(unique(r)) == 1)))
 }
 
 #' @keywords internal
@@ -617,7 +611,7 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   # Byrt et al. (1993) for q = 2; Brennan and Prediger (1981) for q > 2
   observed <- length(unique(stats::na.omit(as.vector(as.matrix(ratings)))))
   q <- max(2L, observed, n_categories)
-  (q * po - 1) / (q - 1)
+  return((q * po - 1) / (q - 1))
 }
 
 #' @keywords internal
@@ -628,18 +622,18 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   ri <- rowSums(!is.na(ratings))
   use <- ri >= 2
   if (!any(use)) return(NA_real_)
-  R <- ratings[use, , drop = FALSE]
+  rated <- ratings[use, , drop = FALSE]
   ri <- ri[use]
-  pa_i <- vapply(seq_len(nrow(R)), function(i) {
-    counts <- table(factor(R[i, !is.na(R[i, ])], levels = cats))
+  pa_i <- vapply(seq_len(nrow(rated)), function(i) {
+    counts <- table(factor(rated[i, !is.na(rated[i, ])], levels = cats))
     sum(counts * (counts - 1)) / (ri[i] * (ri[i] - 1))
   }, numeric(1))
   pa <- mean(pa_i)
   pik <- vapply(cats, function(k) {
-    mean(vapply(seq_len(nrow(R)), function(i) sum(R[i, ] == k, na.rm = TRUE) / ri[i], numeric(1)))
+    mean(vapply(seq_len(nrow(rated)), function(i) sum(rated[i, ] == k, na.rm = TRUE) / ri[i], numeric(1)))
   }, numeric(1))
   pe <- sum(pik * (1 - pik)) / (q - 1)
-  (pa - pe) / (1 - pe)
+  return((pa - pe) / (1 - pe))
 }
 
 #' @keywords internal
@@ -651,14 +645,14 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   } else {
     tryCatch(irr::kappam.fleiss(cc), error = function(e) NULL)
   }
-  if (is.null(res) || !is.finite(res$value)) NA_real_ else res$value
+  return(if (is.null(res) || !is.finite(res$value)) NA_real_ else res$value)
 }
 
 #' @keywords internal
 .alpha_estimate <- function(ratings) {
   coded <- matrix(as.integer(factor(ratings)), nrow = nrow(ratings))
   res <- tryCatch(irr::kripp.alpha(t(coded), method = "nominal"), error = function(e) NULL)
-  if (is.null(res) || !is.finite(res$value)) NA_real_ else res$value
+  return(if (is.null(res) || !is.finite(res$value)) NA_real_ else res$value)
 }
 
 #' @keywords internal
@@ -674,7 +668,7 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   estimate <- vapply(vals, `[`, numeric(1), 1L, USE.NAMES = FALSE)
   n <- vapply(vals, `[`, numeric(1), 2L, USE.NAMES = FALSE)
   n[is.na(estimate)] <- NA_real_
-  tibble::tibble(metric = names(vals), estimate = estimate, n = as.integer(n))
+  return(tibble::tibble(metric = names(vals), estimate = estimate, n = as.integer(n)))
 }
 
 #' @keywords internal
@@ -686,7 +680,7 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
     m$code <- k
     m[, c("code", "metric", "estimate", "n")]
   })
-  dplyr::bind_rows(rows)
+  return(dplyr::bind_rows(rows))
 }
 
 #' @keywords internal
@@ -697,19 +691,16 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   })
   d <- ratings[differ, , drop = FALSE]
   ids <- rownames(d)
-  tibble::as_tibble(cbind(
+  return(tibble::as_tibble(cbind(
     data.frame(doc_id = if (is.null(ids)) character(0) else ids, stringsAsFactors = FALSE),
     as.data.frame(d, stringsAsFactors = FALSE)
-  ))
+  )))
 }
 
 #' @keywords internal
 .span_coverage <- function(assignments, by_code = TRUE) {
   need <- c("doc_id", "code", "coder", "start", "end")
-  miss <- setdiff(need, names(assignments))
-  if (length(miss) > 0) {
-    stop("align = 'coverage' requires column(s): ", paste(miss, collapse = ", "), call. = FALSE)
-  }
+  .require_columns(assignments, need, "assignments")
   a <- assignments[!is.na(assignments$code), need]
   coders <- unique(a$coder)
   if (length(coders) < 2) {
@@ -718,15 +709,15 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   pairs <- expand.grid(coder = coders, other = coders, stringsAsFactors = FALSE)
   pairs <- pairs[pairs$coder != pairs$other, ]
   cov_df <- dplyr::bind_rows(lapply(seq_len(nrow(pairs)), function(i) {
-    A <- a[a$coder == pairs$coder[i], , drop = FALSE]
-    B <- a[a$coder == pairs$other[i], , drop = FALSE]
-    hit <- vapply(seq_len(nrow(A)), function(j) {
-      b <- B[B$doc_id == A$doc_id[j] & B$code == A$code[j], , drop = FALSE]
-      any(b$start <= A$end[j] & A$start[j] <= b$end)
+    own_spans <- a[a$coder == pairs$coder[i], , drop = FALSE]
+    other_spans <- a[a$coder == pairs$other[i], , drop = FALSE]
+    hit <- vapply(seq_len(nrow(own_spans)), function(j) {
+      b <- other_spans[other_spans$doc_id == own_spans$doc_id[j] & other_spans$code == own_spans$code[j], , drop = FALSE]
+      any(b$start <= own_spans$end[j] & own_spans$start[j] <= b$end)
     }, logical(1))
-    A$other <- pairs$other[i]
-    A$covered <- hit
-    A
+    own_spans$other <- pairs$other[i]
+    own_spans$covered <- hit
+    own_spans
   }))
   overall <- cov_df %>%
     dplyr::group_by(.data$coder, .data$other) %>%
@@ -743,7 +734,7 @@ code_retest <- function(texts, codebook, n_runs = 2, sample_n = 50, seed = 123, 
   disagree <- cov_df %>%
     dplyr::filter(!.data$covered) %>%
     dplyr::select("doc_id", "coder", "code", "start", "end", "other")
-  list(overall = overall, by_code = by_code_tbl, disagree = tibble::as_tibble(disagree))
+  return(list(overall = overall, by_code = by_code_tbl, disagree = tibble::as_tibble(disagree)))
 }
 
 #' @title Inter-Coder Agreement From Code Assignments
@@ -847,7 +838,6 @@ code_agreement <- function(assignments,
     stop("codebook needs a 'code' column.", call. = FALSE)
   }
   book_codes <- if (is.data.frame(codebook)) codebook$code else codebook
-  # blank rows from "Add code" are not categories
   book_codes <- book_codes[!is.na(book_codes) & nzchar(trimws(as.character(book_codes)))]
   n_categories <- if (is.null(book_codes)) NULL else
     length(union(as.character(book_codes), stats::na.omit(as.vector(ratings))))
@@ -857,12 +847,12 @@ code_agreement <- function(assignments,
   } else {
     NULL
   }
-  list(
+  return(list(
     overall = .agreement_metrics(ratings, metrics, n_categories),
     by_code = if (by_code) .agreement_by_code(ratings, metrics) else NULL,
     disagree = .qc_disagreements(ratings),
     independent = independent
-  )
+  ))
 }
 
 #' @title Units With No Code Assigned
@@ -885,17 +875,13 @@ code_agreement <- function(assignments,
 #' @concept qualitative-coding
 #' @export
 uncoded_units <- function(assignments, texts) {
-  need <- c("doc_id", "unit_id", "start", "end", "code")
-  miss <- setdiff(need, names(assignments))
-  if (length(miss) > 0) {
-    stop("assignments is missing column(s): ", paste(miss, collapse = ", "), call. = FALSE)
-  }
+  .require_columns(assignments, c("doc_id", "unit_id", "start", "end", "code"), "assignments")
   empty <- tibble::tibble(doc_id = character(0), unit_id = character(0),
                           start = integer(0), end = integer(0),
                           unit_text = character(0))
   if (nrow(assignments) == 0) return(empty)
 
-  doc_id <- if (!is.null(names(texts))) names(texts) else as.character(seq_along(texts))
+  doc_id <- .doc_ids(texts)
   lookup <- stats::setNames(as.character(texts), doc_id)
 
   reached <- if ("status" %in% names(assignments)) {

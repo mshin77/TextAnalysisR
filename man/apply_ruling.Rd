@@ -39,6 +39,14 @@ compared against; each split then re-partitions that group alone, choosing
 the number of parts with the highest cosine silhouette among those whose
 every part meets \code{min_size}.
 }
+\details{
+Merges apply before splits. Merge chains resolve to their last target, so
+"g1" into "g2" and "g2" into "g3" in one round leave every unit of the three
+groups in "g3". A split verdict on a group that also receives a merge in the
+same round partitions the merged units, not the group as it stood before the
+round. A split verdict on a group merged away in the same round has no
+effect. Units with an \code{NA} group pass through unchanged.
+}
 \seealso{
 \code{\link[=group_evidence]{group_evidence()}}, \code{\link[=ruling_settled]{ruling_settled()}}.
 }

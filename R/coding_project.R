@@ -5,6 +5,21 @@
 .stage_names <- c("detect", "refine", "annotate", "confirm")
 
 #' @keywords internal
+.human_statuses <- c("human", "human-none")
+
+#' @keywords internal
+.coded_statuses <- c("human", "ai-confirmed")
+
+#' @keywords internal
+.require_columns <- function(x, need, arg) {
+  miss <- setdiff(need, if (is.data.frame(x)) names(x) else character(0))
+  if (length(miss) > 0) {
+    stop(arg, " is missing column(s): ", paste(miss, collapse = ", "), ".", call. = FALSE)
+  }
+  return(invisible(x))
+}
+
+#' @keywords internal
 .fill_stages <- function(project) {
   holdout <- project$holdout$unit_id
   fill <- function(x, value) as.character(ifelse(is.na(x), value, x))
@@ -132,10 +147,11 @@ read_coding_project <- function(path) {
   tables <- .project_tables()
   missing_tables <- setdiff(names(tables), names(raw))
   raw[missing_tables] <- tables[missing_tables]
-  for (tbl in names(tables)) {
-    absent <- setdiff(names(tables[[tbl]]), names(raw[[tbl]]))
-    for (col in absent) raw[[tbl]][[col]] <- rep(tables[[tbl]][[col]][NA_integer_], nrow(raw[[tbl]]))
-  }
+  raw[names(tables)] <- Map(function(have, proto) {
+    absent <- setdiff(names(proto), names(have))
+    have[absent] <- lapply(proto[absent], function(col) rep(col[NA_integer_], nrow(have)))
+    return(have)
+  }, raw[names(tables)], tables)
   raw$version <- .project_version
   raw <- .fill_stages(raw)
   return(structure(raw, class = "coding_project"))

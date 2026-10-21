@@ -15,19 +15,17 @@
 #' @concept qualitative-coding
 #' @export
 code_themes <- function(assignments, codebook) {
-  if (!is.data.frame(codebook) || !all(c("code", "theme") %in% names(codebook))) {
-    stop("codebook must have columns: code, theme.", call. = FALSE)
-  }
-  if (!is.data.frame(assignments) || !all(c("unit_id", "doc_id", "code", "status") %in% names(assignments))) {
-    stop("assignments must have columns: unit_id, doc_id, code, status.", call. = FALSE)
-  }
+  .require_columns(codebook, c("code", "theme"), "codebook")
+  .require_columns(assignments, c("unit_id", "doc_id", "code", "status"), "assignments")
   theme <- trimws(as.character(codebook$theme))
   theme[is.na(theme) | !nzchar(theme)] <- "(no theme)"
   cb <- tibble::tibble(code = as.character(codebook$code), theme = theme)
-  a <- assignments[assignments$status %in% c("human", "ai-confirmed") & !is.na(assignments$code), , drop = FALSE]
+  a <- assignments[assignments$status %in% .coded_statuses & !is.na(assignments$code), , drop = FALSE]
   used <- dplyr::inner_join(tibble::tibble(unit_id = a$unit_id, doc_id = a$doc_id, code = as.character(a$code)), cb, by = "code")
-  covered <- dplyr::summarise(dplyr::group_by(used, theme), n_units = dplyr::n_distinct(unit_id), n_docs = dplyr::n_distinct(doc_id))
-  out <- dplyr::summarise(dplyr::group_by(cb, theme), codes = paste(code, collapse = ", "), n_codes = dplyr::n())
+  covered <- dplyr::summarise(dplyr::group_by(used, .data$theme),
+                              n_units = dplyr::n_distinct(.data$unit_id), n_docs = dplyr::n_distinct(.data$doc_id))
+  out <- dplyr::summarise(dplyr::group_by(cb, .data$theme),
+                          codes = paste(.data$code, collapse = ", "), n_codes = dplyr::n())
   out <- dplyr::left_join(out, covered, by = "theme")
   out$n_units[is.na(out$n_units)] <- 0L
   out$n_docs[is.na(out$n_docs)] <- 0L

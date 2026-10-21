@@ -148,3 +148,27 @@ test_that("draw_holdout checks strata length and keeps missing strata as their o
   expect_length(picked, 4)
   expect_equal(sum(picked %in% ids[11:20]), 2)
 })
+
+test_that("apply_ruling resolves a merge chain before splitting the merged group", {
+  f <- .ruling_fixture()
+  ruling <- tibble::tibble(group = c("g1", "g2", "g3"), verdict = c("merge", "merge", "split"),
+                           merge_with = c("g2", "g3", NA))
+  out <- apply_ruling(f$groups, ruling, f$emb, min_size = 10)
+  expect_true(all(startsWith(out, "g3")))
+  expect_false(any(out %in% c("g1", "g2", "g3")))
+  expect_gte(length(unique(out)), 2)
+  expect_equal(length(unique(out[61:90])), 1)
+  expect_false(out[1] == out[61])
+})
+
+test_that("apply_ruling passes NA groups through merges and splits", {
+  f <- .ruling_fixture()
+  g <- f$groups
+  g[c(1, 31, 61)] <- NA
+  ruling <- tibble::tibble(group = c("g3", "g1"), verdict = c("merge", "split"), merge_with = c("g2", NA))
+  out <- apply_ruling(g, ruling, f$emb, min_size = 10)
+  expect_true(all(is.na(out[c(1, 31, 61)])))
+  expect_false(anyNA(out[-c(1, 31, 61)]))
+  expect_true(all(out[62:90] == "g2"))
+  expect_true(all(startsWith(out[c(2:30, 91:120)], "g1")))
+})

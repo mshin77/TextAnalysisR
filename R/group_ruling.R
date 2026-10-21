@@ -37,6 +37,17 @@
 }
 
 #' @keywords internal
+.split_candidates <- function(x, min_size, max_parts, seed) {
+  distinct <- nrow(unique(round(x, 10)))
+  if (nrow(x) < 2 * min_size || distinct < 2) return(list())
+  top <- max(2, min(max_parts, floor(nrow(x) / min_size), distinct))
+  fits <- withr::with_seed(seed, lapply(2:top, function(parts) {
+    tryCatch(stats::kmeans(x, centers = parts, nstart = 10)$cluster, error = function(e) NULL)
+  }))
+  return(Filter(function(p) !is.null(p) && min(table(p)) >= min_size, fits))
+}
+
+#' @keywords internal
 .cosine_silhouette <- function(x, parts) {
   d <- 1 - tcrossprod(x)
   s <- vapply(seq_len(nrow(x)), function(i) {
@@ -127,6 +138,14 @@ group_evidence <- function(embeddings, groups, unit_ids = NULL,
 #' the number of parts with the highest cosine silhouette among those whose
 #' every part meets `min_size`.
 #'
+#' @details
+#' Merges apply before splits. Merge chains resolve to their last target, so
+#' "g1" into "g2" and "g2" into "g3" in one round leave every unit of the three
+#' groups in "g3". A split verdict on a group that also receives a merge in the
+#' same round partitions the merged units, not the group as it stood before the
+#' round. A split verdict on a group merged away in the same round has no
+#' effect. Units with an `NA` group pass through unchanged.
+#'
 #' @param groups Group label per unit, as given to [group_evidence()].
 #' @param ruling Data frame with `group`, `verdict` ("keep", "split", or
 #'   "merge"), and `merge_with` (the target group, for merges).
@@ -144,11 +163,7 @@ group_evidence <- function(embeddings, groups, unit_ids = NULL,
 #' @export
 apply_ruling <- function(groups, ruling, embeddings = NULL, min_size = 10,
                          max_parts = 4, seed = 2026) {
-  need <- c("group", "verdict")
-  miss <- setdiff(need, names(ruling))
-  if (length(miss) > 0) {
-    stop("ruling is missing column(s): ", paste(miss, collapse = ", "), call. = FALSE)
-  }
+  .require_columns(ruling, c("group", "verdict"), "ruling")
   verdict <- tolower(trimws(as.character(ruling$verdict)))
   bad <- setdiff(verdict, c("keep", "split", "merge"))
   if (length(bad) > 0) stop("Unknown verdict(s): ", paste(bad, collapse = ", "), call. = FALSE)
@@ -177,12 +192,7 @@ apply_ruling <- function(groups, ruling, embeddings = NULL, min_size = 10,
   x <- if (length(splits) > 0) .unit_norm(embeddings) else NULL
   for (k in splits) {
     members <- which(g == k)
-    distinct <- nrow(unique(round(x[members, , drop = FALSE], 10)))
-    options <- if (length(members) < 2 * min_size || distinct < 2) list() else
-      Filter(function(p) !is.null(p) && min(table(p)) >= min_size, withr::with_seed(seed, lapply(
-        2:max(2, min(max_parts, floor(length(members) / min_size), distinct)),
-        function(parts) tryCatch(stats::kmeans(x[members, , drop = FALSE], centers = parts, nstart = 10)$cluster,
-                                 error = function(e) NULL))))
+    options <- .split_candidates(x[members, , drop = FALSE], min_size, max_parts, seed)
     if (length(options) == 0) {
       warning("Group ", k, " cannot be split into parts of at least ", min_size,
               " units; it keeps its label.", call. = FALSE)

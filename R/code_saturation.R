@@ -18,14 +18,11 @@
 #' @concept qualitative-coding
 #' @export
 code_saturation <- function(assignments, window = 10) {
-  need <- c("unit_id", "code", "status", "timestamp")
-  if (!is.data.frame(assignments) || !all(need %in% names(assignments))) {
-    stop("assignments must have columns: ", paste(need, collapse = ", "), ".", call. = FALSE)
-  }
+  .require_columns(assignments, c("unit_id", "code", "status", "timestamp"), "assignments")
   if (length(window) != 1 || is.na(window) || window < 1) {
     stop("window must be a single number of at least 1.", call. = FALSE)
   }
-  a <- assignments[assignments$status %in% c("human", "human-none", "ai-confirmed"), , drop = FALSE]
+  a <- assignments[assignments$status %in% c(.human_statuses, "ai-confirmed"), , drop = FALSE]
   first_time <- tapply(as.numeric(a$timestamp), a$unit_id, min)
   units <- as.character(names(sort(first_time)))
   new_codes <- tabulate(as.integer(tapply(match(a$unit_id, units), a$code, min)), nbins = length(units))

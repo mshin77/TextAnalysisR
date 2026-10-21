@@ -181,7 +181,7 @@ test_that("code_saturation handles no coded units and bad input", {
                                       status = character(0), timestamp = as.POSIXct(character(0))))
   expect_equal(nrow(e$curve), 0)
   expect_false(e$summary$saturated)
-  expect_error(code_saturation(data.frame(x = 1)), "assignments must have")
+  expect_error(code_saturation(data.frame(x = 1)), "assignments is missing column")
   expect_error(code_saturation(tibble::tibble(unit_id = "u", code = "a", status = "human",
                                               timestamp = Sys.time()), window = 0), "window")
 })
@@ -203,6 +203,6 @@ test_that("code_themes keeps a theme with no coded units and rejects bad input",
   cb <- tibble::tibble(code = c("a", "z"), theme = c("Access", "Unused"))
   a <- tibble::tibble(unit_id = "u1", doc_id = "d1", code = "a", status = "human")
   expect_equal(code_themes(a, cb)$n_units, c(1L, 0L))
-  expect_error(code_themes(a, data.frame(code = "a")), "codebook must have")
-  expect_error(code_themes(data.frame(x = 1), cb), "assignments must have")
+  expect_error(code_themes(a, data.frame(code = "a")), "codebook is missing column")
+  expect_error(code_themes(data.frame(x = 1), cb), "assignments is missing column")
 })

@@ -31,8 +31,6 @@ qc_set_project <- function(p) {
 
 qc_edit_project <- function(fn) qc_set_project(fn(isolate(qc_project())))
 
-qc_now <- function() Sys.time()
-
 qc_color <- function(colors, code) {
   col <- unname(colors[code])
   ifelse(is.na(col), qc_fallback_color, col)
@@ -56,7 +54,6 @@ qc_has_work <- function(p) {
 
 qc_check_saved_file <- function(coder) {
   path <- qc_path_for(coder)
-  # projects autosaved before the R_user_dir default sit in the working directory; opening one moves later saves
   legacy <- file.path(getwd(), basename(path))
   if (!file.exists(path) && file.exists(legacy)) path <- legacy
   if (is_remote || !file.exists(path)) {
@@ -103,21 +100,13 @@ output$qc_file_banner <- renderUI({
 observeEvent(input$qc_open_saved, {
   path <- qc_pending_file()
   req(path)
-  p <- tryCatch(TextAnalysisR::read_coding_project(path), error = function(e) {
-    showNotification(paste("Could not open the saved project:", conditionMessage(e)), type = "error", duration = 10)
-    NULL
-  })
-  if (is.null(p)) return()
-  qc_load_project(p)
-  qc_pending_file(NULL)
-  qc_autosave_ok(TRUE)
-  showNotification(sprintf("Opened the saved project of %s.", p$coder), type = "message", duration = 6)
+  qc_open(path, "the saved project")
 })
 
 observeEvent(input$qc_start_new, {
   path <- qc_pending_file()
   req(path)
-  kept <- sub("\\.rds$", paste0("-", format(qc_now(), "%Y%m%d-%H%M%S"), ".rds"), path)
+  kept <- sub("\\.rds$", paste0("-", format(Sys.time(), "%Y%m%d-%H%M%S"), ".rds"), path)
   moved <- file.rename(path, kept)
   qc_pending_file(NULL)
   qc_autosave_ok(TRUE)
@@ -130,7 +119,7 @@ qc_project_debounced <- debounce(reactive(qc_project()), 1500)
 
 qc_device_payload <- function(p) {
   keep <- function(d) as.list(as.data.frame(d, stringsAsFactors = FALSE))
-  list(coder = p$coder, saved = format(qc_now(), "%Y-%m-%dT%H:%M:%S", tz = "UTC"),
+  list(coder = p$coder, saved = format(Sys.time(), "%Y-%m-%dT%H:%M:%S", tz = "UTC"),
        codebook = keep(p$codebook[, setdiff(names(p$codebook), "example")]),
        assignments = keep(p$assignments[, setdiff(names(p$assignments), "rationale")]),
        memos = keep(p$memos[, setdiff(names(p$memos), "text")]),
@@ -144,7 +133,7 @@ observeEvent(qc_project_debounced(), {
   if (!qc_has_work(p) && nrow(p$codebook) == 0) return()
   session$sendCustomMessage("qcDeviceSave", qc_device_payload(p))
   if (is_remote) {
-    qc_save_status(paste("Kept on this device", format(qc_now(), "%H:%M:%S"), "· download to keep a copy"))
+    qc_save_status(paste("Kept on this device", format(Sys.time(), "%H:%M:%S"), "· download to keep a copy"))
     return()
   }
   if (!qc_autosave_ok()) {
@@ -159,7 +148,7 @@ observeEvent(qc_project_debounced(), {
     TRUE
   }, error = function(e) FALSE)
   if (ok) qc_saved_this_session(TRUE)
-  qc_save_status(if (ok) paste("Saved", format(qc_now(), "%H:%M:%S"), "to", basename(path))
+  qc_save_status(if (ok) paste("Saved", format(Sys.time(), "%H:%M:%S"), "to", basename(path))
                  else "Autosave failed · download the project")
 }, ignoreInit = TRUE)
 
@@ -182,20 +171,21 @@ qc_load_project <- function(p) {
   if (nrow(p$codebook) > 0) qc_codebook(p$codebook)
 }
 
-observeEvent(input$qc_project_file, {
-  p <- tryCatch(TextAnalysisR::read_coding_project(input$qc_project_file$datapath),
-                error = function(e) {
-                  showNotification(paste("Could not open the project:", e$message), type = "error", duration = 10)
-                  NULL
-                })
+qc_open <- function(path, what) {
+  p <- tryCatch(TextAnalysisR::read_coding_project(path), error = function(e) {
+    showNotification(paste0("Could not open ", what, ": ", conditionMessage(e)), type = "error", duration = 10)
+    NULL
+  })
   if (is.null(p)) return()
   qc_load_project(p)
   qc_pending_file(NULL)
   qc_autosave_ok(TRUE)
-  showNotification(sprintf("Opened the project of %s.", p$coder), type = "message", duration = 6)
-})
+  showNotification(sprintf("Opened %s of %s.", what, p$coder), type = "message", duration = 6)
+}
 
-# device copy for a dropped connection; holds no response text or memo text
+observeEvent(input$qc_project_file, qc_open(input$qc_project_file$datapath, "the project"))
+
+# device copy
 
 qc_device_copy <- reactiveVal(NULL)
 
@@ -218,6 +208,16 @@ output$qc_restore_banner <- renderUI({
       actionButton("qc_discard_device", "Discard", class = "btn-link btn-sm"))
 })
 
+qc_coerce_like <- function(col, template) {
+  if (inherits(template, "POSIXct")) {
+    return(as.POSIXct(sub("Z$", "", as.character(col)), tz = "UTC",
+                      tryFormats = c("%Y-%m-%dT%H:%M:%OS", "%Y-%m-%d %H:%M:%OS")))
+  }
+  if (is.integer(template)) return(as.integer(col))
+  if (is.numeric(template)) return(as.numeric(col))
+  return(as.character(col))
+}
+
 qc_from_device <- function(copy) {
   p <- TextAnalysisR::new_coding_project(copy$coder %||% "coder1")
   to_tbl <- function(x, template) {
@@ -228,19 +228,12 @@ qc_from_device <- function(copy) {
       if (is.null(col)) return(rep(NA, n))
       unlist(lapply(as.list(col), function(v) if (is.null(v)) NA else v))
     }))
-    for (nm in intersect(names(template), names(d))) {
-      if (inherits(template[[nm]], "POSIXct")) {
-        d[[nm]] <- as.POSIXct(sub("Z$", "", as.character(d[[nm]])), tz = "UTC",
-                              tryFormats = c("%Y-%m-%dT%H:%M:%OS", "%Y-%m-%d %H:%M:%OS"))
-      } else if (is.integer(template[[nm]])) d[[nm]] <- as.integer(d[[nm]])
-      else if (is.numeric(template[[nm]])) d[[nm]] <- as.numeric(d[[nm]])
-      else d[[nm]] <- as.character(d[[nm]])
-    }
+    shared <- intersect(names(template), names(d))
+    d[shared] <- Map(qc_coerce_like, d[shared], template[shared])
     dplyr::bind_rows(template, d)
   }
-  for (tbl in c("codebook", "assignments", "memos", "rulings", "units_read", "holdout")) {
-    p[[tbl]] <- to_tbl(copy[[tbl]], p[[tbl]])
-  }
+  tbls <- c("codebook", "assignments", "memos", "rulings", "units_read", "holdout")
+  p[tbls] <- Map(to_tbl, copy[tbls], p[tbls])
   if (!is.null(copy$detection$unit_ids)) {
     p$detection <- list(unit_ids = as.character(unlist(copy$detection$unit_ids)),
                         groups = as.character(unlist(copy$detection$groups)))
@@ -283,8 +276,6 @@ observeEvent(qc_codebook(), {
   })
 }, ignoreNULL = TRUE)
 
-qc_code_colors <- reactive(qc_colors_rv())
-
 observeEvent(qc_suggestions(), {
   s <- qc_suggestions()
   if (is.null(s)) return()
@@ -294,7 +285,7 @@ observeEvent(qc_suggestions(), {
     start = as.integer(confirmed$start), end = as.integer(confirmed$end),
     code = as.character(confirmed$code), coder = isolate(qc_coder()),
     confidence = as.numeric(confirmed$confidence), rationale = as.character(confirmed$rationale),
-    status = "ai-confirmed", timestamp = qc_now(), stage = "annotate")
+    status = "ai-confirmed", timestamp = Sys.time(), stage = "annotate")
   covered <- unique(as.character(s$unit_id))
   qc_edit_project(function(p) {
     stale <- p$assignments$status == "ai-confirmed" & p$assignments$unit_id %in% covered
@@ -333,14 +324,12 @@ qc_replay <- reactive({
   d <- qc_detection()
   if (is.null(u) || is.null(d$groups)) return(list(groups = NULL, error = NULL))
   if (d$mismatch) return(list(groups = d$groups, error = "mismatch"))
-  g <- d$groups
   r <- qc_rulings_rv()
-  for (k in sort(unique(r$round))) {
-    g <- tryCatch(suppressWarnings(TextAnalysisR::apply_ruling(g, r[r$round == k, ], u$emb)),
-                  error = function(e) structure(conditionMessage(e), class = "qc_replay_error"))
-    if (inherits(g, "qc_replay_error")) return(list(groups = d$groups, error = as.character(g)))
-  }
-  list(groups = g, error = NULL)
+  tryCatch(
+    list(groups = Reduce(function(g, k) suppressWarnings(TextAnalysisR::apply_ruling(g, r[r$round == k, ], u$emb)),
+                         sort(unique(r$round)), d$groups),
+         error = NULL),
+    error = function(e) list(groups = d$groups, error = conditionMessage(e)))
 })
 
 qc_groups <- reactive(qc_replay()$groups)
@@ -555,7 +544,7 @@ observeEvent(input$qc_close_round, {
     merge_with = ifelse(verdicts == "merge", merge_to, NA_character_),
     label = labels,
     definition = vapply(ev$group, function(g) trimws(value("qc_d_", g, "")), character(1)),
-    coder = qc_coder(), timestamp = qc_now(), stage = "refine")
+    coder = qc_coder(), timestamp = Sys.time(), stage = "refine")
   u <- qc_units()
   notes <- character(0)
   withCallingHandlers(
@@ -645,9 +634,15 @@ observeEvent(qc_ann_current()$id, {
   updateTextAreaInput(session, "qc_ann_memo", value = if (length(memo)) memo[length(memo)] else "")
 })
 
+qc_unit_row <- function(cur, start, end, code, status) {
+  tibble::tibble(doc_id = qc_doc_id(cur$id), unit_id = cur$id, start = start, end = end,
+                 code = code, coder = qc_coder(), confidence = NA_real_, rationale = NA_character_,
+                 status = status, timestamp = Sys.time(), stage = qc_stage_of(cur$id))
+}
+
 qc_unit_spans <- function(p, id) {
   a <- p$assignments
-  a[a$unit_id == id & a$coder == p$coder & a$status %in% c("human", "human-none"), , drop = FALSE]
+  a[a$unit_id == id & a$coder == p$coder & a$status %in% TextAnalysisR:::.human_statuses, , drop = FALSE]
 }
 
 qc_highlight <- function(text, spans, colors) {
@@ -684,7 +679,7 @@ output$qc_ann_panel <- renderUI({
   }
   p <- qc_project()
   spans <- qc_unit_spans(p, cur$id)
-  colors <- qc_code_colors()
+  colors <- qc_colors_rv()
   none <- any(spans$status == "human-none")
   coded <- spans[!is.na(spans$code), , drop = FALSE]
   tagList(
@@ -732,9 +727,7 @@ observeEvent(input$qc_ann_apply, {
     start <- max(1L, as.integer(sel$start) + 1L)
     end <- min(nchar(cur$text), as.integer(sel$end))
   }
-  row <- tibble::tibble(doc_id = qc_doc_id(cur$id), unit_id = cur$id, start = start, end = end,
-                        code = code, coder = qc_coder(), confidence = NA_real_, rationale = NA_character_,
-                        status = "human", timestamp = qc_now(), stage = qc_stage_of(cur$id))
+  row <- qc_unit_row(cur, start, end, code, "human")
   qc_edit_project(function(p) {
     keep <- !(p$assignments$unit_id == cur$id & p$assignments$coder == p$coder & p$assignments$status == "human-none")
     p$assignments <- dplyr::bind_rows(p$assignments[keep, ], row)
@@ -758,12 +751,10 @@ observeEvent(input$qc_ann_remove, {
 observeEvent(input$qc_ann_none, {
   cur <- qc_ann_current()
   req(cur)
-  row <- tibble::tibble(doc_id = qc_doc_id(cur$id), unit_id = cur$id, start = 1L, end = nchar(cur$text),
-                        code = NA_character_, coder = qc_coder(), confidence = NA_real_, rationale = NA_character_,
-                        status = "human-none", timestamp = qc_now(), stage = qc_stage_of(cur$id))
+  row <- qc_unit_row(cur, 1L, nchar(cur$text), NA_character_, "human-none")
   qc_edit_project(function(p) {
     mine <- p$assignments$unit_id == cur$id & p$assignments$coder == p$coder &
-      p$assignments$status %in% c("human", "human-none")
+      p$assignments$status %in% TextAnalysisR:::.human_statuses
     p$assignments <- dplyr::bind_rows(p$assignments[!mine, ], row)
     p
   })
@@ -934,13 +925,17 @@ observeEvent(input$qc_draw_holdout, {
   }
   strata <- NULL
   if (nzchar(input$qc_holdout_strata %||% "")) {
-    doc_vals <- united_tbl()[[input$qc_holdout_strata]]
-    doc_index <- suppressWarnings(as.integer(sub("^doc([0-9]+).*$", "\\1", ids)))
+    tbl <- united_tbl()
+    rows <- seq_len(nrow(tbl))
+    named <- "doc_id" %in% names(tbl)
+    keys <- c(paste0("doc", rows), if (named) as.character(tbl$doc_id))
+    positions <- c(rows, if (named) rows)
+    doc_index <- positions[match(qc_doc_id(ids), keys)]
     if (anyNA(doc_index)) {
       showNotification("These units cannot be traced to their source rows, so the holdout is drawn without spreading.",
                        type = "warning", duration = 8)
     } else {
-      strata <- as.character(doc_vals[doc_index])
+      strata <- as.character(tbl[[input$qc_holdout_strata]][doc_index])
     }
   }
   read <- p$units_read[p$units_read$step != "holdout", , drop = FALSE]
@@ -958,9 +953,8 @@ observeEvent(input$qc_draw_holdout, {
                    type = "message", duration = 8)
 })
 
-# accepted AI suggestions are AI-anchored, so agreement uses the coder's own codes only
 qc_project_codes <- function(p, holdout_only) {
-  a <- p$assignments[p$assignments$status %in% c("human", "human-none"), , drop = FALSE]
+  a <- p$assignments[p$assignments$status %in% TextAnalysisR:::.human_statuses, , drop = FALSE]
   if (holdout_only && nrow(p$holdout) > 0) a <- a[a$unit_id %in% p$holdout$unit_id, , drop = FALSE]
   a[, c("doc_id", "unit_id", "start", "end", "code", "coder", "confidence", "status")]
 }

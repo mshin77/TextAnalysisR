@@ -1,13 +1,10 @@
 #' @keywords internal
 .stratified_folds <- function(y, folds, seed) {
-  fold_id <- integer(length(y))
-  withr::with_seed(seed, {
-    for (lvl in unique(y)) {
-      idx <- which(y == lvl)
-      fold_id[sample(idx)] <- rep_len(seq_len(folds), length(idx))
-    }
-  })
-  return(fold_id)
+  return(withr::with_seed(seed, Reduce(function(fold_id, lvl) {
+    idx <- which(y == lvl)
+    fold_id[sample(idx)] <- rep_len(seq_len(folds), length(idx))
+    return(fold_id)
+  }, unique(y), integer(length(y)))))
 }
 
 #' @keywords internal
@@ -111,7 +108,6 @@ validate_categories <- function(embeddings, categories,
   y <- y[keep]
   n_excluded <- sum(!keep)
 
-  # a category smaller than the fold count cannot appear in every fold
   counts <- table(y)
   too_small <- names(counts)[counts < folds]
   if (length(too_small) > 0) {
@@ -127,14 +123,14 @@ validate_categories <- function(embeddings, categories,
   }
 
   fold_id <- .stratified_folds(y, folds, seed)
-  predicted <- character(length(y))
-  for (i in seq_len(folds)) {
+  predicted <- Reduce(function(predicted, i) {
     test <- which(fold_id == i)
     train <- which(fold_id != i)
     if (balance == "downsample") train <- .downsample(train, y, seed + i)
     predicted[test] <- .fit_predict(x[train, , drop = FALSE], y[train],
                                     x[test, , drop = FALSE], method, k, seed + i)
-  }
+    return(predicted)
+  }, seq_len(folds), character(length(y)))
 
   by_category <- .class_metrics(y, predicted, levels_use)
   accuracy <- mean(predicted == y)
@@ -248,7 +244,6 @@ align_categories <- function(human, machine, unassigned = 0) {
 
   tab <- table(human = h, machine = m)
 
-  # adjusted Rand index from the contingency table
   choose2 <- function(v) sum(v * (v - 1) / 2)
   sum_ij <- choose2(as.vector(tab))
   sum_i <- choose2(rowSums(tab))
